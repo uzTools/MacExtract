@@ -3977,6 +3977,57 @@ static int LoadMKey(short vol, long dir, ConstStr255Param name,
  * not where this layer's file is once an envelope has been taken off —
  * and it is where the other parts of a wrapped set are still sitting.
  * Pass the same as inVol/inDir when there is no chain. */
+#ifndef UNC_MAC_AUTOTEST
+/* Where should the files go: asked by RunExtract once the format is known,
+ * for the first layer of a file only (gAskDest), and after it the progress
+ * window opens (ProgOpen). Cancel ends the launch (ExitToShell). */
+static Boolean gAskDest;
+static short gDestVol;
+static Point gDestWhere;
+static void ProgOpen(Progress *pr, ConstStr255Param name);
+
+static int AskDest(short *vol)
+{
+    SFReply dest;
+    /* Where should the files go? Standard File keeps ONE current
+     * folder across SFGetFile and SFPutFile, so this opens in the
+     * folder the archive was just chosen from: pressing Return
+     * extracts beside the archive, which is what this application
+     * did before it asked at all. Navigating elsewhere is the
+     * point — a set of floppies cannot write its output to the
+     * disk it is about to ask you to eject.
+     *
+     * SFPutFile is the classic way to pick a FOLDER (there is no
+     * folder picker before System 7's CustomGetFile hooks, and
+     * this binary must run on System 6). Only the location of the
+     * reply is used; the name in the box is inert.
+     *
+     * THE DEFAULT NAME MUST NOT NAME A FILE THAT IS THERE. It was
+     * `reply.fName` for a day, which is the archive's own name in
+     * the archive's own folder, so Save always hit Standard File's
+     * "Replace existing "archive.sit"?" — on the DEFAULT path, the
+     * one that means "beside the archive". Nothing is written under
+     * this name whichever button is pressed, but the alert asks the
+     * user to overwrite the file they just opened. A constant is
+     * used instead: the box is inert, so it may as well say what
+     * the button does.
+     *
+     * KEEP THE PROMPT SHORT. Standard File's prompt is a single
+     * static text item about 200 points wide and it does not wrap:
+     * "Extract the files into this folder:" was photographed on
+     * System 6 rendering as "Extract the files into this", with
+     * the word that carried the meaning cut off. */
+    SFPutFile(gDestWhere, "\p" S_SF_DEST_PROMPT,
+              "\p" S_SF_DEST_NAME, NULL, &dest);
+    if (!dest.good) return 0;
+    /* Both refNums are working directories on System 7 and later and
+     * plain volume refNums on System 6; dirID 0 is correct for either
+     * (FORMATS.md, the working-directory row). */
+    *vol = dest.vRefNum;
+    return 1;
+}
+#endif
+
 static int RunExtract(short inVol, long inDir, ConstStr255Param name,
                       short outVol, long outDir,
                       short origVol, long origDir,
@@ -4082,6 +4133,27 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
         if (famZip == kZipFamLast &&
             !(segOK && desc.scheme == UNC_FORMAT_ZIPSEG))
             famZip = 0;
+#ifndef UNC_MAC_AUTOTEST
+        /* The one look at a single file, kept for the dispatch below.
+         * The destination is asked only of a file something here will
+         * extract: any other goes on to fail as it always did, writing
+         * nothing, and is told so without the question (the maintainer,
+         * 2026-10-18). Cancel there ends the launch on the spot; the
+         * archive is the one file open. */
+        if (!(famSplit || famZip || segOK))
+            extractedAs = unc_sniff(&pio);
+        if (gAskDest && (famSplit || famZip || segOK ||
+                         unc_format_extractable(extractedAs))) {
+            if (!AskDest(&outVol)) {
+                FSClose(refNum);
+                ExitToShell();
+            }
+            outDir = 0;
+            gDestVol = outVol;
+            ProgOpen((Progress *)prog->ctx, name);
+        }
+        gAskDest = false;
+#endif
         if (famSplit || famZip || segOK) {
             sh = (SegHost *)NewPtr((Size)sizeof(SegHost));
             segScratch = NewPtr((Size)unc_segment_scratch_size());
@@ -4406,7 +4478,9 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
          * exactly this internally: same work, and the caller learns what
          * the layer was — which is what decides whether there is another
          * one under it. */
+#ifdef UNC_MAC_AUTOTEST
         extractedAs = unc_sniff(&io);
+#endif
 #ifdef UNC_AT_OVERLAY
         /* Before the engine's first allocation, always: the budget is taken
          * there (mal_take_budget), so what this frees is simply part of the
@@ -5981,48 +6055,53 @@ static void ShowReport(const unsigned char *outcome)
     gRepDlg = NULL;
 }
 
-static void ExtractOne(short vRefNum, long dirID, ConstStr255Param name,
-                       short outVol, long outDir)
+/* The progress window, opened once the destination is known. */
+static void ProgOpen(Progress *pr, ConstStr255Param name)
 {
-    Progress pr;
-    UncProgress prog;
-    int ret, entries, errors;
-    UncFormat topFmt = UNC_FORMAT_UNKNOWN;
-    Str255 outcome;
-    short alrt;
-
-    RepReset();          /* this file's report, not the last one's */
-    ContigSample();
-    pr.dlg = GetNewDialog(kProgressDLOG, NULL, (WindowPtr)-1);
-    pr.cancelled = false;
-    pr.lastTicks = 0;
-    pr.shownPct = -1;      /* forces the first tick to draw */
-    pr.shownRem = -2;
-    gBarPct = 0;
-    if (pr.dlg) {
+    pr->dlg = GetNewDialog(kProgressDLOG, NULL, (WindowPtr)-1);
+    if (pr->dlg) {
         Str255 s;
         Handle h;
         short kind;
         Rect box;
 
         /* The bar is a userItem, so nothing draws it until it has a proc. */
-        GetDialogItem(pr.dlg, kBarItem, &kind, &h, &box);
-        SetDialogItem(pr.dlg, kBarItem, kind,
+        GetDialogItem(pr->dlg, kBarItem, &kind, &h, &box);
+        SetDialogItem(pr->dlg, kBarItem, kind,
                       (Handle)NewUserItemUPP(BarUserItem), &box);
 
         s[0] = 0;
         PStrCat(s, S_PROG_EXTRACTING);
         { short i; for (i = 1; i <= (short)name[0] && s[0] < 255; i++)
                        s[++s[0]] = name[i]; }
-        GetDialogItem(pr.dlg, kStatusItem, &kind, &h, &box);
+        GetDialogItem(pr->dlg, kStatusItem, &kind, &h, &box);
         if (h) SetDialogItemText(h, s);
 
-        GetDialogItem(pr.dlg, kDetailItem, &kind, &h, &box);
+        GetDialogItem(pr->dlg, kDetailItem, &kind, &h, &box);
         if (h) SetDialogItemText(h, "\p" S_PROG_START);
 
-        SetPort((GrafPtr)pr.dlg);
-        DrawDialog(pr.dlg);
+        SetPort((GrafPtr)pr->dlg);
+        DrawDialog(pr->dlg);
     }
+}
+
+static void ExtractOne(short vRefNum, long dirID, ConstStr255Param name,
+                       short outVol, long outDir)
+{
+    Progress pr;
+    UncProgress prog;
+    int ret, entries, errors;
+    Str255 outcome;
+    short alrt;
+
+    RepReset();          /* this file's report, not the last one's */
+    ContigSample();
+    pr.dlg = NULL;       /* opened by RunExtract, after the destination */
+    pr.cancelled = false;
+    pr.lastTicks = 0;
+    pr.shownPct = -1;      /* forces the first tick to draw */
+    pr.shownRem = -2;
+    gBarPct = 0;
     prog.ctx = &pr;
     prog.tick = prog_tick;
 
@@ -6053,9 +6132,6 @@ static void ExtractOne(short vRefNum, long dirID, ConstStr255Param name,
 
         BlockMoveData(name, curName, name[0] + 1);
         delName[0] = 0;
-        /* What the FIRST layer turned out to be, kept for the alert: a
-         * file this engine names but cannot open is the one failure whose
-         * answer is a different program, and the name is the answer. */
         shape.fmt = UNC_FORMAT_UNKNOWN;
 
         /* Once per operation, not once per layer: these three are what
@@ -6075,7 +6151,7 @@ static void ExtractOne(short vRefNum, long dirID, ConstStr255Param name,
             ret = RunExtract(curVol, curDir, curName, outVol, outDir,
                              vRefNum, dirID,
                              &prog, &entries, &errors, &shape);
-            if (depth == 0) topFmt = shape.fmt;
+            if (depth == 0) outVol = gDestVol;
             /* This layer worked, so the envelope it came out of is
              * litter now. Removed before the next layer runs, so a
              * chain does not leave a trail of intermediates. */
@@ -6210,19 +6286,6 @@ static void ExtractOne(short vRefNum, long dirID, ConstStr255Param name,
         /* The budget had room and the Memory Manager still could not find
          * one piece that big, so a bigger memory size need not help. */
         PStrCat(outcome, S_OUT_FRAGMENTED);
-    else if (ret == UNC_ERR_UNSUPPORTED && entries == 0 &&
-             topFmt != UNC_FORMAT_UNKNOWN && !unc_format_extractable(topFmt)) {
-        /* Ahead of the generic message, and the reason detect-only exists
-         * at all: this file is not damaged and re-downloading it will not
-         * help — it is a format somebody else's program opens. Naming it
-         * is the whole of what this program can contribute to a file it
-         * will never extract (DECISIONS.md 2026-08-27). Kept short: the
-         * alert wraps between 32 and 36 characters, and the longest name
-         * in the table makes 46. */
-        PStrCat(outcome, S_OUT_FOREIGN);
-        PStrCat(outcome, unc_format_name(topFmt));
-        PStrCat(outcome, S_OUT_FOREIGN_END);
-    }
     else if (ret != UNC_OK && entries > 0)
         /* The archive stopped being readable part way down, and what
          * was read is on the disk: "this file could not be extracted"
@@ -6574,7 +6637,7 @@ static void HeapLogFlush(void)
 
 int main(void)
 {
-    Point where, dwhere;
+    Point where;
 
     /* LMGetApplLimit: the GetApplLimit glue is absent from the
      * Multiversal import libraries; the low-memory accessor is the
@@ -6636,11 +6699,11 @@ int main(void)
      * position is the cue available. Measured: the open dialog is
      * 366x216 and the destination one 322x200, so at +30 both still sit
      * whole on a 512x342 Mac Plus screen. */
-    dwhere.h = where.h + 30;
-    dwhere.v = where.v + 30;
+    gDestWhere.h = where.h + 30;
+    gDestWhere.v = where.v + 30;
 
     for (;;) {
-        SFReply reply, dest;
+        SFReply reply;
         /* The prompt stays empty because SFGetFile ignores it.
          * Source: Inside Macintosh: Files, Standard File Package —
          * the `prompt` parameter of SFGetFile and SFPGetFile is
@@ -6667,42 +6730,16 @@ int main(void)
             if (!reply.good) break;
         }
 
-        /* Where should the files go? Standard File keeps ONE current
-         * folder across SFGetFile and SFPutFile, so this opens in the
-         * folder the archive was just chosen from: pressing Return
-         * extracts beside the archive, which is what this application
-         * did before it asked at all. Navigating elsewhere is the
-         * point — a set of floppies cannot write its output to the
-         * disk it is about to ask you to eject.
-         *
-         * SFPutFile is the classic way to pick a FOLDER (there is no
-         * folder picker before System 7's CustomGetFile hooks, and
-         * this binary must run on System 6). Only the location of the
-         * reply is used; the name in the box is inert.
-         *
-         * THE DEFAULT NAME MUST NOT NAME A FILE THAT IS THERE. It was
-         * `reply.fName` for a day, which is the archive's own name in
-         * the archive's own folder, so Save always hit Standard File's
-         * "Replace existing "archive.sit"?" — on the DEFAULT path, the
-         * one that means "beside the archive". Nothing is written under
-         * this name whichever button is pressed, but the alert asks the
-         * user to overwrite the file they just opened. A constant is
-         * used instead: the box is inert, so it may as well say what
-         * the button does.
-         *
-         * KEEP THE PROMPT SHORT. Standard File's prompt is a single
-         * static text item about 200 points wide and it does not wrap:
-         * "Extract the files into this folder:" was photographed on
-         * System 6 rendering as "Extract the files into this", with
-         * the word that carried the meaning cut off. */
-        SFPutFile(dwhere, "\p" S_SF_DEST_PROMPT,
-                  "\p" S_SF_DEST_NAME, NULL, &dest);
-        if (!dest.good) continue;      /* changed their mind: pick again */
 
         /* Both refNums are working directories on System 7 and later
          * and plain volume refNums on System 6; dirID 0 is correct for
          * either (FORMATS.md, the working-directory row). */
-        ExtractOne(reply.vRefNum, 0, reply.fName, dest.vRefNum, 0);
+        /* The destination is asked inside RunExtract, once the format is
+         * known (AskDest): a file nothing here can extract is told so
+         * without the question, and Cancel there quits (the maintainer,
+         * 2026-10-18). */
+        gAskDest = true;
+        ExtractOne(reply.vRefNum, 0, reply.fName, 0, 0);
 #ifdef UNC_AT_OVERLAY
         /* The decoders this archive did not need are gone, and reading
          * them again is a disk access the eager lifetime exists to avoid.

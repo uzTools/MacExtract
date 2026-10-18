@@ -3692,12 +3692,12 @@ cannot parse. Measured once instead, on **2026-08-26**:
 all three parseable by p7zip. They are not in the corpus, so `ci.sh` does not
 repeat it.
 
-**Both front ends say the name.** The CLI prints *"recognized as RAR, which
-v1 cannot extract"*; the Macintosh application's alert reads **"MacExtract
-cannot open RAR files."**, photographed on System 6.0.8 on 2026-08-26
-(`tools/vmac/README.md`, *Photographing the detect-only alert*). That
-sentence is the point of the whole file: the archive is intact, and the next
-move is a program that opens it.
+**The CLI says the name**: *"recognized as RAR, which v1 cannot extract"*.
+The Macintosh application said it too, *"MacExtract cannot open RAR
+files."*, from 2026-08-26 to 2026-10-18; since then it says *"This file could
+not be extracted."*, as for a file that is no archive, and says it before
+asking where to extract (DECISIONS.md 2026-10-18, *the question after the
+look*).
 
 **Four joined on 2026-08-29**, when their references were fetched — and one
 of the four, lzip, had been sitting in `reference/deark` since deark was
@@ -5706,7 +5706,7 @@ quoted beside. It cancels in a DIFFERENCE taken from one probe pair, which is
 why the overlay gains are measured that way (*What it buys, against the
 control*), and 320 B of the residue there is exactly this: **117,040 B saved
 between the shipped pair against 116,720 B between the probe pair**, both
-measured 2026-09-27. The shipped pair is **149,536 B** since 2026-10-18's
+measured 2026-09-27. The shipped pair is **149,552 B** since 2026-10-18's
 Spotlight comment, 148,240 B after 2026-10-17's
 dates in the Macintosh's own zone, 147,936 B after that day's Mac OS X sidecars, 143,872 B after that day's merge of the archives' Finder info (every reader in an image or the control, none in the shipped build), 139,280 B after that day's merge of StuffIt classic's and DiskDoubler's Finder info, 138,896 B after that day's merge of the envelopes' Finder info, 138,864 B after that branch alone, 138,608 B after that day's review of the Finder metadata, 138,576 B after that day's metadata, 138,544 B after 2026-10-16's
 time left from the byte counts, 138,576 B after that day's
@@ -5851,7 +5851,7 @@ been chosen is a read at the moment the application's own floppy may be out.
 The budget a tier gives the engine is therefore not one number any more. It
 is the resident build's budget for that tier — the figures under *512 KB
 machines* and *Floor target verification* — plus what the release leaves,
-which is the 149,536 B of `CODE` and A5 the shipped build does not carry
+which is the 149,552 B of `CODE` and A5 the shipped build does not carry
 (*Three configurations, one tree*), less the images this format keeps and 8 B
 of block header each, less a **666 B residue**: 320 B of that is the probe
 build's own weight and **346 B is unattributed — the same 346 B either side of
@@ -5899,19 +5899,19 @@ budget per format, and one per layer*).
 
 | sniffed format | images kept | granted, against the control |
 |---|---|---|
-| **AppleLink package** | **sqp, codecs** | **+140,410 B** (arithmetic: no `.pkg` is in the Mac sample) — the largest grant any format gets, because `ovl_sqp` is the smallest of the sixteen images at 2,040 B |
-| Now Compress | now, codecs | **+137,286 B** (measured) |
-| SuperDisk! | superdisk, codecs | +135,308 B (arithmetic: no SuperDisk! fixture is in the Mac sample) |
-| LZH | lzh, codecs | **+131,208 B** (measured) |
-| PackIt | packit, ciphers, codecs | **+129,542 B** (measured) |
-| DiskDoubler | cptdd, codecs | **+126,514 B** (measured) |
-| StuffIt SpaceSaver | spacesaver, codecs | +125,728 B (arithmetic: no SpaceSaver fixture is in the Mac sample) |
-| ARC | arc, ciphers, codecs | **+123,712 B** (measured) |
-| Compact Pro, Compact Pro segment | cptdd, ciphers, codecs | +116,262 B (arithmetic), and **+126,514 B** where the directory says no entry is encrypted (measured) |
-| Tar | zipold, codecs | **+130,842 B** (measured) |
-| StuffIt, StuffIt 5 | stuffit, ciphers, codecs | **+102,324 B** (measured; the −24 B of 2026-10-10, the +28 of 2026-10-11 and the +12 of 2026-10-15 with `ovl_stuffit` are arithmetic, no tier re-run) |
-| Zip, spanned zip | exo, zipold, ciphers, codecs | +89,298 B (arithmetic), **+99,550 B** unencrypted (measured) |
-| every envelope, and every segment scheme that joins to a file | the whole bundle, kept | **−30,062 B** (measured; the −24 B of 2026-10-10, the +28 of 2026-10-11 and the +12 of 2026-10-15 with the bundle are arithmetic, no tier re-run) |
+| **AppleLink package** | **sqp, codecs** | **+140,426 B** (arithmetic: no `.pkg` is in the Mac sample) — the largest grant any format gets, because `ovl_sqp` is the smallest of the sixteen images at 2,040 B |
+| Now Compress | now, codecs | **+137,302 B** (measured) |
+| SuperDisk! | superdisk, codecs | +135,324 B (arithmetic: no SuperDisk! fixture is in the Mac sample) |
+| LZH | lzh, codecs | **+131,224 B** (measured) |
+| PackIt | packit, ciphers, codecs | **+129,558 B** (measured) |
+| DiskDoubler | cptdd, codecs | **+126,530 B** (measured) |
+| StuffIt SpaceSaver | spacesaver, codecs | +125,744 B (arithmetic: no SpaceSaver fixture is in the Mac sample) |
+| ARC | arc, ciphers, codecs | **+123,728 B** (measured) |
+| Compact Pro, Compact Pro segment | cptdd, ciphers, codecs | +116,278 B (arithmetic), and **+126,530 B** where the directory says no entry is encrypted (measured) |
+| Tar | zipold, codecs | **+130,858 B** (measured) |
+| StuffIt, StuffIt 5 | stuffit, ciphers, codecs | **+102,340 B** (measured; the −24 B of 2026-10-10, the +28 of 2026-10-11 and the +12 of 2026-10-15 with `ovl_stuffit` are arithmetic, no tier re-run) |
+| Zip, spanned zip | exo, zipold, ciphers, codecs | +89,314 B (arithmetic), **+99,566 B** unencrypted (measured) |
+| every envelope, and every segment scheme that joins to a file | the whole bundle, kept | **−30,046 B** (measured; the −24 B of 2026-10-10, the +28 of 2026-10-11 and the +12 of 2026-10-15 with the bundle are arithmetic, no tier re-run) |
 
 **The Spotlight comment moved every row on 2026-10-18, re-taken from `run_tiers.gain()`**: `OVL_SAVED` +1,296 (the control CODE +1,344 and A5 +48, the shipped build CODE +80 and A5 +16), `ovl_zipold` +1,324 and the bundle +1,324 — so +1,296 where `ovl_zipold` is not kept, −28 for tar and zip and −28 for the bundle row; on the machine each row's change less the 1,392 of TIERS (derived): every format not keeping `ovl_zipold` −96, tar, zip and an envelope −1,420 (DECISIONS.md 2026-10-18, *the comment Spotlight kept*). Arithmetic; `run_tiers.py --check` moves no tally.
 
@@ -6015,7 +6015,7 @@ rose, because the control took 2,148 B for the same format.
 **The last row is the one no tally had shown**: a `.hqx`, a `.gz`, a `.Z` or
 a MacBinary wrapper does not know what is under it, so the bundle stays and
 that layer runs with **less** memory than a resident build would have given
-it — 178,924 B held against 149,536 B saved. It costs nothing on the tiers
+it — 178,924 B held against 149,552 B saved. It costs nothing on the tiers
 because the layer under the envelope gets its own budget a moment later
 (*What an archive keeps*), and the envelope's own decode is small: the
 heaviest in the Mac sample is `popper-1.7.tar.Z`'s LZW at 147,764 B, which

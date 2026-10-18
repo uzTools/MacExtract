@@ -113,8 +113,9 @@ the only thing that works when you are swapping floppies.
 
 **Recognises but does not extract:** StuffIt X and the PC-side and modern
 archives — RAR, 7-Zip, xz, bzip2, Zstandard, lzip, lrzip, Cabinet, WIM, Zoo,
-ARJ, cpio, `ar`/`.deb` and Apple Archive (`.aar`). You get *"MacExtract
-cannot open RAR files."*, not something that looks like a damaged download.
+ARJ, cpio, `ar`/`.deb` and Apple Archive (`.aar`). The Mac says *"This file
+could not be extracted."* straight after you pick it, without asking where to
+put anything; the command-line tool names the format.
 
 ## Compared with what Aladdin sold
 

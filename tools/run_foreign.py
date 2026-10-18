@@ -260,7 +260,8 @@ def main():
         #
         # One fixture IS a foreign archive on purpose: the Mac OS 9 tier
         # boots one file per format and needed something to raise the
-        # "MacExtract cannot open RAR files." alert with
+        # refusal alert with ("This file could not be extracted." since
+        # 2026-10-18)
         # (tools/vmac/os9sample.txt). It is checked here rather than
         # excused — an exception that is only skipped is an exception
         # nobody grades — so it must be claimed as RAR, and the sweep

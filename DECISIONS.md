@@ -435,6 +435,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-17 (the sidecars Mac OS X left beside the file) — a zip's `__MACOSX/…/._name` and a tar's `._name` are put back on their file: resource fork, Finder info, comment, dates and lock
 - 2026-10-17 (dates in the Macintosh's own zone) — the engine marks which dates are instants, and the application writes those in the Mac's zone where it can say what that is
 - 2026-10-18 (the comment Spotlight kept) — a Mac OS X sidecar's Spotlight comment becomes the file's Get Info comment, as UTF-8 that the shell folds into MacRoman
+- 2026-10-18 (the question after the look) — the destination is asked once the format is known, a file nothing here extracts is refused before it, Cancel there ends the launch, and the app no longer names a format it cannot open
 
 ---
 
@@ -7804,6 +7805,9 @@ a whole number of sectors. UDIF wants a reference — and the entry below
 then took disk images out of scope altogether (OPEN_ITEMS.md, part 1).
 
 ## 2026-08-26 — a name is only worth something inside the frame the user came with
+
+**Superseded for the Macintosh application 2026-10-18** (*the question after
+the look*): it no longer names the format. The CLI still does.
 
 Yesterday's disk-image probe was removed the day after it shipped, and nine
 PC-side archive formats were named in its place. Both halves come out of one
@@ -28307,3 +28311,33 @@ where. (2) Line endings: Mac OS X's comment is presumably LF-separated
 (3) A standalone `._name` read as AppleDouble (`fmt_applesingle.c`) does
 not read the Spotlight comment; only a sidecar paired in a zip or tar
 does. (4) A list past the 1,024-byte window.
+
+## 2026-10-18 (the question after the look) — the destination is asked once the format is known, a file nothing here extracts is refused before it, Cancel there ends the launch, and the app no longer names a format it cannot open
+
+**The maintainer's three calls, the same day.** Cancel at *Extract into this
+folder:* ends the launch, where it went back to the Open dialog. A file
+nothing here can extract is told so without being asked where to put
+anything. And the alert for a format the engine names but does not open,
+*"MacExtract cannot open RAR files."* (2026-08-26, *a name is only worth
+something inside the frame the user came with*), is gone: to someone at the
+Mac, a file it cannot extract is a file it cannot extract, and both now read
+*"This file could not be extracted."* The CLI still names the format.
+
+**Where the question went.** It is asked inside `RunExtract` (`AskDest`),
+just after the split-family and segment checks and, for a single file, the
+one sniff, which the dispatch below now reuses instead of sniffing again;
+it is asked only of a file something here extracts, and any other goes on to
+fail as it always did, writing nothing. Cancel calls `ExitToShell` with the
+archive closed. The progress window opens after the question (`ProgOpen`).
+So the file is looked at once and the question comes after the look. The
+first cut sniffed every file a second time from `main()`, at +192 B; the
+maintainer pointed out that the look already happens, and that Cancel
+needs no path back up the calls, only an exit.
+
+**Measured.** System 7.0.1 under Mini vMac: a RAR gets the alert where the
+destination dialog was and the application then quits; a StuffIt archive
+gets the destination dialog, and Escape there quits it, where `main`'s
+build shows the Open dialog again (the control).
+
+**Price.** Shipped CODE +44, A5 −44 against `main`: 0 B of budget; the
+named alert's removal pays for the rest.

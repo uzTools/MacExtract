@@ -53,9 +53,11 @@ grown before, on request.
 | Checking a MIME part's `Content-MD5` | **not implemented**; a `message/partial` anchor that is not a part — the set pasted into one file, or part 1 with a signature after it — comes out wrong with exit 0, as from munpack | decided 2026-10-11: built and priced at **+1,446 B** of `ovl_text` for a header mpack writes and nothing here has seen in a file this project did not make (FORMATS.md, *`message/partial`*; DECISIONS.md 2026-10-11, *the digest our own oracle could not compute*) |
 | Zip64 addressing past 4 GB | **counts and the per-entry escape are read; over-4-GB fields are refused** (`UNC_ERR_UNSUPPORTED` per archive, `UNC_ERR_TOOLARGE` per entry; `unc_zipseg_describe` refuses a spanned set) | a format change, not a type change (DECISIONS.md 2026-08-28, *what a width costs*; FORMATS.md, *Size limits*); tar reaches past 4 GB today |
 
-Everything detect-only is **named** by `unc_sniff`, and both front ends say
-the name: the CLI prints *"recognized as RAR, which v1 cannot extract"* and
-the Macintosh application's alert reads *"MacExtract cannot open RAR files."*
+Everything detect-only is **named** by `unc_sniff`, and the CLI says the
+name: *"recognized as RAR, which v1 cannot extract"*. The Macintosh
+application says only *"This file could not be extracted."*, before asking
+where to extract, since 2026-10-18 (DECISIONS.md, *the question after the
+look*).
 
 ## Limits of the formats themselves
 

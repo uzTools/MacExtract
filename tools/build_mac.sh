@@ -558,7 +558,10 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # and the UTF-16 to UTF-8 conversion in src/unc_sidecar.c, 48 B of it the
 # attribute's name and the "bplist0" magic as data (DECISIONS.md
 # 2026-10-18, *the comment Spotlight kept*).
-UNC_MAC_CODE_DEFAULT=188280
+# 2026-10-18, the question after the look (DECISIONS.md): the destination
+# asked once the format is known, Cancel there quits, and the named-format
+# alert gone; shipped CODE +44, A5 -44: 0 B of budget.
+UNC_MAC_CODE_DEFAULT=188308
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -729,7 +732,7 @@ UNC_MAC_CODE_DEFAULT=188280
 # -12 on 2026-10-17 with the code ceiling's +428: padding.
 # +12 on 2026-10-17 with the code ceiling's +660: gZone, a vector slot,
 # and padding.
-UNC_MAC_A5_DEFAULT=37608
+UNC_MAC_A5_DEFAULT=37596
 # A CEILING PER CONFIGURATION, because one ceiling measured on another build
 # cannot fire. The figures above are the RESIDENT control build, which carries
 # every decoder; the shipped build's resident code is a third of that, so
@@ -1087,8 +1090,11 @@ UNC_MAC_A5_DEFAULT=37608
 # and the lazy build moved -20 for the same change (hypothesis: layout).
 # **96 B off every extraction's budget** (DECISIONS.md 2026-10-18, *the
 # comment Spotlight kept*).
-UNC_MAC_CODE_EAGER=57748
-UNC_MAC_A5_EAGER=18604
+# 2026-10-18, the question after the look (DECISIONS.md): the destination
+# asked once the format is known, Cancel there quits, and the named-format
+# alert gone; shipped CODE +44, A5 -44: 0 B of budget.
+UNC_MAC_CODE_EAGER=57792
+UNC_MAC_A5_EAGER=18560
 # +8 on 2026-10-02 for the same reason as the eager pair above: the
 # overlay call that now says WHICH of StuffIt 2.x's ciphers an entry
 # wants. A5 fell to 19,096 and its ceiling is left where it was.
@@ -1152,7 +1158,7 @@ UNC_MAC_A5_EAGER=18604
 # pair above); A5 18,696, under its ceiling.
 # +84 code on 2026-10-18, the Spotlight comment (the eager pair above);
 # A5 18,676, under its ceiling.
-UNC_MAC_CODE_LAZY=56172
+UNC_MAC_CODE_LAZY=56212
 UNC_MAC_A5_LAZY=19200
 if [ -n "$UNC_OVL_RESIDENT" ]; then
     UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-$UNC_MAC_CODE_DEFAULT}

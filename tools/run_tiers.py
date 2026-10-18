@@ -140,9 +140,9 @@ REPO = os.path.dirname(HERE)
 # **And by 1,392 B more 2026-10-18, DERIVED**: TIERS_CONTROL rose by that
 # much with the Spotlight comment (below).
 TIERS = {
-    "sys3-512K": (187604, "System 3.0, Macintosh 512Ke (225,956 B free)"),
-    "sys6-512K": (92204, "System 6.0.8, Macintosh 512Ke (130,556 B free)"),
-    "floor-1M":  (616492, "System 6.0.8, 1 MB Mac Plus — the floor target"),
+    "sys3-512K": (187588, "System 3.0, Macintosh 512Ke (225,956 B free)"),
+    "sys6-512K": (92188, "System 6.0.8, Macintosh 512Ke (130,556 B free)"),
+    "floor-1M":  (616476, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
 
 # RE-TAKEN on all three machines 2026-10-09 (`-D UNC_OVL_RESIDENT -D
@@ -272,7 +272,10 @@ TIERS = {
 # **Raised by 1,392 B more 2026-10-18, and TIERS lowered by the same,
 # DERIVED**: the Spotlight comment, the control's CODE +1,344 and A5 +48
 # (DECISIONS.md 2026-10-18, *the comment Spotlight kept*).
-TIERS_CONTROL = 225888     # build/mac-resident, CODE + A5, 2026-10-18, meta-spotlight
+# **+16 2026-10-18, and TIERS -16, DERIVED**: the question after the look,
+# the control's CODE +28 and A5 -12 against the shipped pair's 0, so
+# OVL_SAVED +16 and no grant moves on the machine.
+TIERS_CONTROL = 225904     # build/mac-resident, CODE + A5, 2026-10-18
 # **What this control cannot see: the autotest harness.** TIERS was read
 # on the machine from an autotest build (`UNC_MAC_AUTOTEST`), and
 # build/mac-resident has no harness in it, so harness growth lowers what a
@@ -613,7 +616,7 @@ EXPECT = {
 # +1,392 (CODE +1,344, A5 +48) against the shipped pair's +96 (CODE +80,
 # A5 +16, the shell's UTF-8 fold no longer inlined) (DECISIONS.md
 # 2026-10-18, *the comment Spotlight kept*).
-OVL_SAVED = 149536
+OVL_SAVED = 149552
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
 # every kept image is one — as is the bundle an envelope holds on to.

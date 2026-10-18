@@ -110,9 +110,9 @@ derived-800saywhat301j.sit                 # StuffIt 5 with UTF-8 names, 91648 B
                                            #   DECOMPOSED, so the count of '_'
                                            #   is the assertion
 
-synth-os9-rar.rar                          # NOT extracted: the alert reading
-                                           #   "MacExtract cannot open RAR
-                                           #   files." (M38). Both sides
+synth-os9-rar.rar                          # NOT extracted: the refusal alert
+                                           #   (generic since 2026-10-18;
+                                           #   named from M38). Both sides
                                            #   produce nothing and agree,
                                            #   which verify_output() treats
                                            #   as the pass it is

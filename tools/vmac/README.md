@@ -3141,10 +3141,11 @@ memory one is — the run fails before the phase clicks Cancel.
     interactive.py --emu mv-4M -o /tmp/rarshot /tmp/Sample.rar
 
 Photographed 2026-08-26 with a RAR archive out of libarchive's test suite:
-**"MacExtract cannot open RAR files."**, one line, the alert's default OK
-button. Any of the named-but-declined formats does it (FORMATS.md, *Archives
-named but not extracted*); the sentence is built from `unc_format_name`, so
-the longest of them draws 46 characters and still fits two lines.
+*"MacExtract cannot open RAR files."* Since 2026-10-18 the alert is *"This
+file could not be extracted."* and comes before the destination dialog, so
+it is in `1b-destination.png` (DECISIONS.md 2026-10-18, *the question after
+the look*); any of the named-but-declined formats, and any file that is no
+archive, does it.
 
 **`interactive.py` exits 1 on this run and that is not a failure**: its
 phase-2 check is that the CLI and the Mac agree on extracted output, and

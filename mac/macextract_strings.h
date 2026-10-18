@@ -13,9 +13,8 @@
  * some of them word for word.
  *
  * The engine's own text (format names, unc_strerror) is in src/unc_engine.c,
- * shared with the CLI; two of its strings reach this application:
- * unc_format_name in S_OUT_FOREIGN_*, unc_strerror(UNC_ERR_MODULE) in a
- * report line. The version in S_ABOUT is held to UNC_VERSION by
+ * shared with the CLI; one of its strings reaches this application:
+ * unc_strerror(UNC_ERR_MODULE) in a report line. The version in S_ABOUT is held to UNC_VERSION by
  * tools/check_docs.py.
  */
 #ifndef MACEXTRACT_STRINGS_H
@@ -156,9 +155,6 @@
 #define S_OUT_NEEDS_FREE    "K more memory than this Macintosh has free."
 #define S_OUT_FRAGMENTED    "Memory is too broken up. Quit other programs " \
                             "and try again."
-/* "MacExtract cannot open <format> files." */
-#define S_OUT_FOREIGN       "MacExtract cannot open "
-#define S_OUT_FOREIGN_END   " files."
 #define S_OUT_STOPPED       "Extraction stopped part way through this " \
                             "archive."
 #define S_OUT_FAILED        "This file could not be extracted."

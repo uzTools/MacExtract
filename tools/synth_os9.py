@@ -62,7 +62,8 @@ def kind_rar():
     signature is all there is to it — `run_foreign.py` grades that
     reading, including the neighbouring bytes that must NOT be claimed —
     and a refusal is what this fixture exists to photograph on Mac OS 9:
-    the alert reading "MacExtract cannot open RAR files." (M38)."""
+    the refusal alert ("This file could not be extracted." since
+    2026-10-18; "MacExtract cannot open RAR files." from M38)."""
     return b"Rar!\x1a\x07\x00" + bytes(64)
 
 
