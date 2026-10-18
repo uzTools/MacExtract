@@ -363,6 +363,21 @@ def sweep(mac, fixdir, stride, problems):
         if cands:
             bare, _ = full_extract(mac, path, ["--no-comment"])
             comments = tuple(p for p in cands if p not in bare)
+        # An envelope layer the CLI KEEPS because the layer inside it
+        # failed (cli/main.c: the previous layer's file is removed only
+        # when this one "extracted cleanly") is not an entry either, and
+        # it is kept whatever was selected. Asked for the same way: what
+        # `-nr` writes, the layer itself, and that the full run kept too.
+        # A layer that unwrapped cleanly is gone from `full`, so this
+        # allows nothing there. Met 2026-10-18, when two new fixtures moved
+        # the stride onto uu-wild-terrainman.uu, a cut uuencode whose
+        # StuffIt archive is truncated (DECISIONS.md 2026-10-18, *the
+        # comment Spotlight kept*).
+        kept = ()
+        if "truncated" in err or "failed" in err:
+            layer, _ = full_extract(mac, path, ["-nr"])
+            kept = tuple(p for p in layer if "/" not in p and p in full)
+        comments = comments + kept
         # Data forks only: a sidecar is not an entry of its own, it
         # rides along with the entry whose fork it is.
         picks = [p for p in sorted(full)

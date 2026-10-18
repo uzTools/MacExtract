@@ -584,7 +584,8 @@ static int only_wanted(DiskSink *s, const char *name)
  * `-` is a field the archive did not state; lock is `-`, `n` (stated, not
  * locked) or `L`. A date the engine marks as an instant, in UTC
  * (UNC_META_*_UTC), has a `Z` after its hex; one without is a wall clock
- * (include/macextract.h). This is the CLI's whole share of the metadata: it writes
+ * (include/macextract.h). A comment the engine marks as UTF-8
+ * (UNC_META_CMT_UTF8) has a `U` after its hex. This is the CLI's whole share of the metadata: it writes
  * none of it to a Linux disk, where nothing would hold it — the `._NAME`
  * sidecar is the resource fork alone, the form `unar -k hidden` writes and
  * the differential suite compares (DECISIONS.md 2026-10-17). */
@@ -608,8 +609,10 @@ static void print_meta(const UncEntryInfo *e, const char *name)
     else printf(" -");
     printf(" %s ", e->locked == UNC_LOCK_YES ? "L"
                  : e->locked == UNC_LOCK_NO ? "n" : "-");
-    if (e->comment && e->comment_len) print_hex(e->comment, e->comment_len);
-    else printf("-");
+    if (e->comment && e->comment_len) {
+        print_hex(e->comment, e->comment_len);
+        if (e->meta & UNC_META_CMT_UTF8) printf("U");
+    } else printf("-");
     printf(" %s\n", name);
     /* And the two dates every entry has, which no other listing shows:
      * a 't' row, created then modified, '-' where the engine says 0

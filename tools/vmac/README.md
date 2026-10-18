@@ -2810,8 +2810,10 @@ the locked bit, and per folder the DInfo, DXInfo and dates; `--fcmt` lists
 a System 6-or-earlier `Desktop` file's `FCMT` comments. `metarun.py` runs
 `synth-as-meta.as`, `synth-sqp-meta.pkg`, a generated `nested.pkg`
 (A/x, A/B/y, A/z, folder dates held across a subfolder) and
-`synth-macosx.zip` (Mac OS X's sidecars, since 2026-10-17) with
-`-D UNC_AT_DTCOMMENT`,
+`synth-macosx.zip` (Mac OS X's sidecars, since 2026-10-17) and
+`synth-macosx-spot.zip` (their Spotlight comments, folded into MacRoman,
+since 2026-10-18; on 7.0.1 the Desktop Manager gives back 199 bytes of a
+255-byte comment) with `-D UNC_AT_DTCOMMENT`,
 keeps the disks (`sys30.py --keep-disks` too, since 2026-10-17) and grades
 every value against the synthesizers' input, with the shell's two
 deliberate changes (inited cleared, fdComment cleared). Results:

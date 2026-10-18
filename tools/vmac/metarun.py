@@ -6,8 +6,9 @@
     tools/vmac/metarun.py --expander [--check-expander RUNDIR]
 
 Extracts `synth-as-meta.as`, `synth-sqp-meta.pkg`, `nested.pkg` (made
-per run: A/x, A/B/y, A/z with a date on each folder) and `synth-macosx.zip`
-(Mac OS X's sidecars, tools/synth_macosx.py) with the autotest
+per run: A/x, A/B/y, A/z with a date on each folder), `synth-macosx.zip`
+(Mac OS X's sidecars, tools/synth_macosx.py) and `synth-macosx-spot.zip`
+(their Spotlight comments, folded into MacRoman) with the autotest
 build and `-D UNC_AT_DTCOMMENT` (tools/vmac/run.py, or sys30.py for the
 System 3.0 tier), keeps the disks, and reads back what the shell wrote:
 
@@ -61,7 +62,7 @@ import synth_macosx                                             # noqa: E402
 
 EPOCH_2000 = 0xB492F400
 FIX = ("synth-as-meta.as", "synth-sqp-meta.pkg", "nested.pkg",
-       "synth-macosx.zip")
+       "synth-macosx.zip", "synth-macosx-spot.zip")
 # `nested.pkg` is generated per run into .tmp/ (nested_items): files
 # written into a folder after one of its subfolders, A/x, A/B/y, A/z, with
 # a date on each folder (DECISIONS.md 2026-10-17, *the date held once per
@@ -154,6 +155,30 @@ def expected():
                             md=(md[1] + EPOCH_2000) & 0xFFFFFFFF,
                             bk=(md[2] + EPOCH_2000) & 0xFFFFFFFF)
     exp["synth-macosx.zip"] = e
+    # The Spotlight comments (tools/synth_macosx.py, `zip-spot`): each
+    # file's comment as the shell hands it to the Desktop Manager — the
+    # engine's UTF-8 folded into MacRoman, '_' for a character MacRoman
+    # lacks (mac/macextract_mac.c, Utf8ToMacRoman) — and no comment where
+    # the engine states none, which is checked too.
+    e = {}
+    for path, w in synth_macosx.describe("zip-spot")["emit"].items():
+        g = dict(finfo=shell_finfo(bytes.fromhex(w["finfo"])).hex(),
+                 fxinfo=shell_fxinfo(bytes.fromhex(w["fxinfo"]),
+                                     path == "Spot").hex())
+        if path != "Spot":
+            g["locked"] = 0
+            c = w["comment"]
+            if c == "-":
+                g["comment"] = b""
+            elif c.endswith("U"):
+                g["comment"] = b"".join(
+                    ch.encode("mac-roman", "replace").replace(b"?", b"_")
+                    if ch != "?" else b"?"
+                    for ch in bytes.fromhex(c[:-1]).decode("utf-8"))
+            else:
+                g["comment"] = bytes.fromhex(c)
+        e[path.replace("/", ":")] = g
+    exp["synth-macosx-spot.zip"] = e
     exp["nested.pkg"] = {"A": dict(cr=0xB0000000, md=0xB0000001),
                          "A:B": dict(cr=0xB0000010, md=0xB0000002),
                          "A:x": dict(locked=0), "A:B:y": dict(locked=0),
@@ -254,6 +279,11 @@ def check(rundir):
             print("metarun:   %-12s PBDTGetComment %d %r" % (nm, err, cm))
             if want is None:
                 continue
+            # The Desktop Manager gives back 199 bytes of a comment: a
+            # 255-byte one, written whole, read back as its first 199 on
+            # System 7.0.1 (PBDTGetComment asked for 255), measured
+            # 2026-10-18 (DECISIONS.md, *the comment Spotlight kept*).
+            want = want[:199]
             n += 1
             if hasdt and cm != want:
                 bad.append("%s: %s comment %r, wanted %r" % (fx, nm, cm, want))

@@ -1481,6 +1481,9 @@ static const unsigned short kMacRomanHigh[128] = {
 
 /* One engine path, UTF-8 -> MacRoman, IN PLACE. Returns the new length
  * and sets one bit of *lost per path component that lost a character.
+ * Nothing is written past the new length: a comment marked
+ * UNC_META_CMT_UTF8 is folded here too, in the engine's own buffer,
+ * which has no byte after it to spare (include/macextract.h).
  *
  * An HFS name is MacRoman bytes and StuffIt 5 states its names in UTF-8
  * (macextract.h, `name_utf8`), so without this the Macintosh writes the
@@ -1546,7 +1549,6 @@ static int Utf8ToMacRoman(uint8_t *p, int len, uint32_t *lost)
             *lost |= (uint32_t)1 << comp;
         }
     }
-    p[o] = 0;
     return o;
 }
 
@@ -2035,9 +2037,21 @@ static int SINK_BEGIN(void *ctx, const UncEntryInfo *info)
      * (Utf8ToMacRoman). It shortens in place, so `s->cur` — this
      * shell's own copy — is where it lands, and the report, the failure
      * lines and the folder hashes all read the folded bytes. */
-    if (info->name_utf8)
+    if (info->name_utf8) {
         s->cur.name_len = (uint16_t)Utf8ToMacRoman(s->cur.name,
                                                    (int)info->name_len, &lost);
+        s->cur.name[s->cur.name_len] = 0;
+    }
+    /* A UTF-8 comment (a pax record's, or Mac OS X's Spotlight comment)
+     * folds the same way, where the engine keeps it — macextract.h lets
+     * a host shorten it in place — so that the Desktop Manager is handed
+     * MacRoman. A character MacRoman lacks becomes '_' and nothing
+     * reports it: the comment is worth less than the name. */
+    if ((info->meta & UNC_META_CMT_UTF8) && s->cur.comment_len) {
+        uint32_t clost;
+        s->cur.comment_len = (uint16_t)Utf8ToMacRoman(
+            (uint8_t *)s->cur.comment, (int)s->cur.comment_len, &clost);
+    }
     nm = s->cur.name;
     nlen = (int)s->cur.name_len;
 #ifndef UNC_MAC_STAGE_WRITES

@@ -45,6 +45,9 @@ other than the engine:
       prints `-` FAILS. Also that no sidecar or `__MACOSX` folder is
       listed where synth_macosx.py says it must not be, and that every
       resource fork extracted from the `-edge` archives is the sidecar's.
+      The `-spot` pair's Spotlight comments too, against the generator,
+      against libarchive's blob read by spot_comment and plistlib (the
+      tar as well), and against `lsar` one case at a time (spot_lsar).
 
 Every date is printed with a `Z` after it where the engine marks it an
 instant (UNC_META_*_UTC), and graded with its mark: the generated cases
@@ -605,6 +608,7 @@ def archive_lsar(path):
             o["ctime"] = lsar_date(e["XADCreationDate"])
         if "XADComment" in e:
             o["comment"] = e["XADComment"].encode("mac-roman", "replace").hex()
+            o["comment_s"] = e["XADComment"]
         if "XADPosixPermissions" in e:
             o["lock"] = "n" if e["XADPosixPermissions"] & 0o200 else "L"
         elif "XADDOSFileAttributes" in e:
@@ -987,6 +991,11 @@ def archive_corpus(cli):
                 src = o.get("src", "lsar") if k != "comment" else "lsar"
                 n[src + " " + k] = n.get(src + " " + k, 0) + 1
                 want, got = o[k], r[k]
+                if k == "comment" and got.endswith("U"):
+                    # UTF-8 where the engine marks it so: lsar's string,
+                    # cut as the engine cuts (UNC_META_CMT_UTF8).
+                    import synth_macosx as sm
+                    want = sm.utf8_cut(o["comment_s"]).hex() + "U"
                 if k in ("mtime", "ctime") and not want.endswith("Z"):
                     z = zone_want(fmt, o, k)
                     if z is None:
@@ -1009,7 +1018,7 @@ def archive_check(cli, corpus_too):
     work = tempfile.mkdtemp(prefix="meta-arch-")
     fails = []
     exp = archive_expectations(cli, work, fails)
-    compared = tried = caught = zones = 0
+    compared = tried = caught = zones = marks = 0
     for label, p, want, extra in exp:
         got, _fmt = archive_rows(cli, p, extra)
         fails += archive_compare(got, want, label)
@@ -1034,9 +1043,16 @@ def archive_check(cli, corpus_too):
                     zones += 1
                     caught += bool(archive_compare(g, {name: {k: w[k]}},
                                                    label))
+                # And a comment's UTF-8 mark alone (UNC_META_CMT_UTF8).
+                if k == "comment" and v != "-":
+                    g[name][k] = v[:-1] if v.endswith("U") else v + "U"
+                    tried += 1
+                    marks += 1
+                    caught += bool(archive_compare(g, {name: {k: w[k]}},
+                                                   label))
     print("run_meta: archives, %d field(s) compared, %d control(s) caught "
-          "of %d (%d of them a date's zone mark alone)"
-          % (compared, caught, tried, zones))
+          "of %d (%d of them a date's zone mark alone, %d a comment's "
+          "UTF-8 mark)" % (compared, caught, tried, zones, marks))
     if caught != tried or not tried:
         fails.append("an archive control passed: the comparison is not "
                      "comparing")
@@ -1217,6 +1233,7 @@ def ad_fields(blob):
     if len(blob) < 26 or blob[:8] != bytes.fromhex("0005160700020000"):
         return o
     n = struct.unpack(">H", blob[24:26])[0]
+    spot = None
     for i in range(n):
         eid, off, ln = struct.unpack(">III", blob[26 + 12 * i:38 + 12 * i])
         b = blob[off:off + ln]
@@ -1234,7 +1251,62 @@ def ad_fields(blob):
             at = 3 if eid == 10 else 1
             if len(b) > at:
                 o["lock"] = "L" if b[at] & 1 else "n"
+        if eid == 9:
+            spot = spot_comment(blob, off, ln)
+    # Mac OS X's Spotlight comment, only where nothing else states one
+    # (XADMaster's rule, reference/XADMaster/XADArchiveParser.m).
+    if "comment" not in o and spot is not None:
+        o["comment"] = spot
     return o
+
+
+SPOT_NAME = b"com.apple.metadata:kMDItemFinderComment\0"
+
+
+def spot_comment(blob, foff, flen):
+    """The Spotlight comment in an AppleDouble blob, as `l --meta` prints
+    it (UTF-8 hex and a U), or None. The attribute block is parsed here,
+    from XADMaster's reading of it (reference/XADMaster/XADAppleDouble.m,
+    parseAppleDoubleExtendedAttributes: 2 bytes of pad, 'ATTR', 32 bytes,
+    the count, then 4-aligned entries of offset, length, flags, namelen,
+    name), and the property list by Python's plistlib — not the engine's
+    reader. One rule is the engine's and is stated, not derived: a list
+    that does not end inside the sidecar's first 1,024 bytes (UNC_AD_WIN)
+    is not read (DECISIONS.md 2026-10-18, *the comment Spotlight kept*)."""
+    import plistlib
+    if flen <= 70:
+        return None
+    h = foff + 34
+    if blob[h:h + 4] != b"ATTR" or len(blob) < h + 36:
+        return None
+    n = struct.unpack(">H", blob[h + 34:h + 36])[0]
+    p = h + 36
+    for _ in range(n):
+        if len(blob) < p + 11:
+            return None
+        off, ln, _f, nl = struct.unpack(">IIHB", blob[p:p + 11])
+        if blob[p + 11:p + 11 + nl] == SPOT_NAME:
+            if off + ln > 1024:
+                return None
+            try:
+                v = plistlib.loads(blob[off:off + ln],
+                                   fmt=plistlib.FMT_BINARY)
+            except Exception:
+                return None
+            if not isinstance(v, str):
+                return None
+            out = b""
+            for ch in v:
+                try:
+                    c = ch.encode("utf-8")
+                except UnicodeEncodeError:   # a lone surrogate
+                    return None
+                if len(out) + len(c) > 255:
+                    break
+                out += c
+            return out.hex() + "U" if out else None
+        p += (11 + nl + 3) & ~3
+    return None
 
 
 def libarchive_rows(path):
@@ -1278,6 +1350,45 @@ def libarchive_rows(path):
     return out
 
 
+def spot_lsar(cli, work, problems):
+    """Each Spotlight case of tools/synth_macosx.py, alone in a zip of its
+    own (lsar stops listing an archive at the first property list it
+    cannot parse), held against `lsar`: XADMaster's attribute walk and
+    GNUstep's property-list reader, a whole second chain. Left out by
+    design: `Both`, whose entry-4 comment XADMaster does not read, and
+    `Huge`, past the window (DECISIONS.md 2026-10-18, *the comment
+    Spotlight kept*). Returns (compared, lsar could not read)."""
+    import zipfile
+    import synth_macosx as sm
+    n = unread = 0
+    d = os.path.join(work, "spot-lsar")
+    os.makedirs(d, exist_ok=True)
+    for p, (b, _w) in sorted(sm.spot_cases().items()):
+        leaf = p.rpartition("/")[2]
+        if p == "Spot" or leaf in ("Both", "Huge"):
+            continue
+        fx = os.path.join(d, leaf + ".zip")
+        with zipfile.ZipFile(fx, "w") as z:
+            z.writestr(leaf, b"data\r")
+            z.writestr("__MACOSX/._" + leaf, b)
+        r = subprocess.run(["lsar", "-j", fx], capture_output=True)
+        try:
+            rows = [e for e in json.loads(r.stdout)["lsarContents"]
+                    if e["XADFileName"] == leaf]
+        except (ValueError, KeyError):
+            rows = []
+        if not rows:
+            unread += 1
+            continue
+        c = [e["XADComment"] for e in rows if "XADComment" in e]
+        want = sm.utf8_cut(c[0]).hex() + "U" if c else "-"
+        got = meta_rows(cli, fx).get(leaf, {}).get("comment")
+        n += 1
+        if got != want:
+            problems.append("spot %s: comment %s, lsar %s" % (leaf, got, want))
+    return n, unread
+
+
 def sidecar_expectations(cli, work, problems):
     """[(fixture, {entry: {field: value}}, fields)] for the sidecars, and
     the absence and resource-fork checks appended to `problems`."""
@@ -1287,7 +1398,9 @@ def sidecar_expectations(cli, work, problems):
     out = []
     files = {"zip": "synth-macosx.zip", "tar": "synth-macosx.tar",
              "zip-edge": "synth-macosx-edge.zip",
-             "tar-edge": "synth-macosx-edge.tar"}
+             "tar-edge": "synth-macosx-edge.tar",
+             "zip-spot": "synth-macosx-spot.zip",
+             "tar-spot": "synth-macosx-spot.tar"}
     for kind, fn in sorted(files.items()):
         fx = os.path.join(REPO, "fixtures", fn)
         if not os.path.exists(fx):
@@ -1314,19 +1427,25 @@ def sidecar_expectations(cli, work, problems):
             if hashlib.sha256(b).hexdigest() != w["rsrc"]:
                 problems.append("%s: %s's resource fork is %d B, wanted %d"
                                 % (fn, n, len(b), w["rsrc_size"]))
-    # libarchive, on every zip that has a sidecar in it.
+    # libarchive, on every zip that has a sidecar in it, and on the
+    # Spotlight tar: libarchive pairs a tar sidecar with whatever member
+    # comes next, which is this engine's rule only where the writer's
+    # order holds — not in the -edge tar, whose Ghost would pair with Far.
     fdir = os.path.join(REPO, "fixtures")
     for fn in sorted(os.listdir(fdir)):
-        if not fn.lower().endswith(".zip"):
-            continue
         fx = os.path.join(fdir, fn)
-        import zipfile
-        try:
-            names = zipfile.ZipFile(fx).namelist()
-        except Exception:
+        if fn == "synth-macosx-spot.tar":
+            pass
+        elif not fn.lower().endswith(".zip"):
             continue
-        if not any(x.startswith("__MACOSX/") for x in names):
-            continue
+        else:
+            import zipfile
+            try:
+                names = zipfile.ZipFile(fx).namelist()
+            except Exception:
+                continue
+            if not any(x.startswith("__MACOSX/") for x in names):
+                continue
         rows = libarchive_rows(fx)
         if rows is None:
             problems.append("libarchive.so.13 is not installed: the second "
@@ -1360,6 +1479,11 @@ def main():
     envwork = tempfile.mkdtemp(prefix="meta-env-")
     exp += envelope_expectations(a.cli, envwork, fails)
     exp += sidecar_expectations(a.cli, envwork, fails)
+    sn, su = spot_lsar(a.cli, envwork, fails)
+    print("run_meta: Spotlight comments, %d case(s) held against lsar, "
+          "%d it cannot read" % (sn, su))
+    if not sn:
+        fails.append("no Spotlight case was held against lsar")
     for fx, want, fields in exp:
         if not os.path.exists(fx):
             print("run_meta: %s is missing — generate it (fixtures/SOURCES.md)"
@@ -1388,6 +1512,11 @@ def main():
                 g[k] = "-" if g[k] != "-" else "00"
                 tried += 1
                 caught += bool(compare(name, g, w, (k,)))
+                if k == "comment" and got[name][k].endswith("U"):
+                    # The UTF-8 mark alone (UNC_META_CMT_UTF8).
+                    g[k] = got[name][k][:-1]
+                    tried += 1
+                    caught += bool(compare(name, g, w, (k,)))
     print("run_meta: %d field(s) compared, %d control(s) caught of %d"
           % (n, caught, tried))
     if caught != tried or not tried:

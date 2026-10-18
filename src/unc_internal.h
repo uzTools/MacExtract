@@ -1191,7 +1191,7 @@ typedef struct UncAdCap {
 void unc_ad_init(UncAdCap *a, uint32_t size);
 int  unc_ad_feed(UncAdCap *a, const uint8_t *p, uint32_t n); /* 1: done */
 void unc_ad_end(UncAdCap *a);       /* the stream ended: decide */
-void unc_ad_apply(const UncAdCap *a, UncEntryInfo *e);
+void unc_ad_apply(UncAdCap *a, UncEntryInfo *e);   /* once per capture */
 
 #define UNC_SIDE_NO   0       /* an ordinary name                       */
 #define UNC_SIDE_DIR  1       /* a folder under __MACOSX: not emitted   */

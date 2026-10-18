@@ -101,9 +101,15 @@ hand.
                        sidecar (magic, version, entry 2 or 9, a Finder
                        info of 32 zero bytes stating none) and that one
                        pairs with the file beside it — XADMacArchiveParser.m
-                       and XADAppleDouble.m. Facts, not code; the writers
+                       and XADAppleDouble.m; and, since 2026-10-18, which
+                       extended attribute is the Spotlight comment and
+                       that it yields to a comment stated otherwise —
+                       XADArchiveParser.m. Facts, not code; the writers
                        they describe are cited from Apple's copyfile and
-                       libarchive (both permissive).
+                       libarchive (both permissive), and the property
+                       list from Apple's CoreFoundation (CFBinaryPList.c,
+                       ForFoundationOnly.h; APSL 2.0), from which no code
+                       is copied.
   src/unc_internal.h   the LZAH preload above. The MIME line rule left
                        on 2026-10-05 for deark's dbuf_find_line, which
                        is in the same file this header already cited

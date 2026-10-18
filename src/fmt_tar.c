@@ -243,8 +243,15 @@ int unc_tar_extract(UncCtx *c)
                                                         UNC_ENTRY_COMMENT_MAX);
                         if (xcmt) {
                             uint32_t q;
-                            if (n > UNC_ENTRY_COMMENT_MAX)
+                            /* UTF-8 ("the value field for all other
+                             * keywords ... shall be encoded using UTF-8",
+                             * reference/notes/posix_ustar.txt, pax), so
+                             * the cut backs off a continuation byte. */
+                            if (n > UNC_ENTRY_COMMENT_MAX) {
                                 n = UNC_ENTRY_COMMENT_MAX;
+                                while (n && (iobuf[val + n] & 0xC0u) == 0x80u)
+                                    n--;
+                            }
                             for (q = 0; q < n; q++) xcmt[q] = iobuf[val + q];
                             xclen = n;
                         }
@@ -307,6 +314,7 @@ int unc_tar_extract(UncCtx *c)
         if (xclen) {
             e.comment = xcmt;
             e.comment_len = (uint16_t)xclen;
+            e.meta |= UNC_META_CMT_UTF8;
         }
         xmtime = xclen = 0;
         e.rsrc_size = 0;

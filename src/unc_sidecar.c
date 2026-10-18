@@ -104,9 +104,193 @@ void unc_ad_end(UncAdCap *a)
     if (have) a->state = UNC_AD_YES;
 }
 
-void unc_ad_apply(const UncAdCap *a, UncEntryInfo *e)
+/* ------------------------------------------------------------------ */
+/* The Spotlight comment, out of the extended attributes              */
+/* ------------------------------------------------------------------ */
+
+static int side_eq(const uint8_t *a, const uint8_t *b, uint32_t n)
 {
-    uint32_t i, n, k;
+    while (n--) if (*a++ != *b++) return 0;
+    return 1;
+}
+
+/* The attribute's name, NUL and all: its `namelen` counts the NUL.
+ * Source: reference/XADMaster/XADArchiveParser.m, which reads this one
+ * attribute as the comment; reference/notes/copyfile.c, attr_entry_t
+ * ("length of name including NULL termination char"). */
+static const uint8_t k_spot[] = "com.apple.metadata:kMDItemFinderComment";
+
+/* A big-endian integer of 1..4 bytes. Source:
+ * reference/notes/CFBinaryPList.c, _getSizedInt. */
+static uint32_t side_int(const uint8_t *p, uint32_t n)
+{
+    uint32_t v = 0;
+    while (n--) v = (v << 8) | *p++;
+    return v;
+}
+
+/* Mac OS X 10.5 and later keep the Finder's comment as the extended
+ * attribute `com.apple.metadata:kMDItemFinderComment`, and copyfile
+ * packs every extended attribute into entry 9 after its 32 bytes of
+ * Finder info. That attribute's value, if it is a binary property list
+ * whose top object is a string, becomes the entry's comment, as UTF-8
+ * (UNC_META_CMT_UTF8). Anything else — no such attribute, another kind
+ * of top object, a list that is not wholly inside the window, a string
+ * with a UTF-16 unit UTF-8 cannot hold — leaves the comment unstated,
+ * and never fails the file (DECISIONS.md 2026-10-18, *the comment
+ * Spotlight kept*).
+ *
+ * The attribute block. Source: reference/notes/copyfile.c,
+ * attr_header_t, attr_entry_t and ATTR_ENTRY_LENGTH — two bytes of pad
+ * after the Finder info, then u32 magic 'ATTR', debug_tag, total_size,
+ * data_start, data_length, three reserved words, u16 flags, u16
+ * num_attrs (36 bytes); then each entry is u32 offset (from the start of
+ * the FILE), u32 length, u16 flags, u8 namelen, the name, padded to 4.
+ * XADMaster reads the block only where entry 9 is longer than 70 bytes
+ * (reference/XADMaster/XADAppleDouble.m), which is 32 + 2 + 36.
+ *
+ * The property list. Source: reference/notes/CFBinaryPList.c,
+ * __CFBinaryPlistGetTopLevelInfo, _readInt and the ASCII and Unicode16
+ * cases of __CFBinaryPlistCreateObjectFiltered; the trailer's layout is
+ * reference/notes/CF_ForFoundationOnly.h, CFBinaryPlistTrailer (5 unused
+ * bytes, sort version, offset int size, object ref size, then u64 object
+ * count, top object, offset-table offset). Every check CF makes of the
+ * header and trailer is made here; on top of it, a value that needs more
+ * than 32 bits is refused, as is an integer wider than 4 bytes. A 0x5n
+ * string is ASCII: a byte with the top bit set fails CF's ASCII decoding
+ * and Python's plistlib alike, and is refused. A 0x6n string is UTF-16BE
+ * code units; a surrogate pair becomes one 4-byte sequence and a lone
+ * surrogate refuses the string.
+ *
+ * Written over the window, which nothing reads after this: the UTF-8
+ * goes from the attribute block's own start (entry 9 + 34) and the
+ * UTF-16 it comes from is first moved to the window's END, so that the
+ * output, at most UNC_ENTRY_COMMENT_MAX bytes, can only overtake it in a
+ * layout no writer makes; a write that would is refused instead. The cut
+ * at UNC_ENTRY_COMMENT_MAX falls between characters. */
+static void side_spot(UncAdCap *a, UncEntryInfo *e, uint32_t foff,
+                      uint32_t flen)
+{
+    uint8_t *w = a->win;
+    const uint8_t *b, *t;
+    uint32_t lim = a->got, h = foff + 34, p, k, n, doff = 0, dlen = 0;
+    uint32_t nobj, top, otab, ois, ors, off, q, cnt, m, o, s, d;
+
+    if (flen <= 70 || foff > lim) return;
+    if (flen < lim - foff) lim = foff + flen;  /* the entries, inside 9 */
+    if (h > lim || lim - h < 36 || unc_get_u32be(w + h) != 0x41545452u)
+        return;
+    n = unc_get_u16be(w + h + 34);
+    for (p = h + 36, k = 0; k < n; k++) {
+        uint32_t nl;
+        if (p > lim || lim - p < 11) return;
+        nl = w[p + 10];
+        if (lim - p - 11 < nl) return;
+        if (nl == sizeof k_spot && side_eq(w + p + 11, k_spot, nl)) {
+            doff = unc_get_u32be(w + p);
+            dlen = unc_get_u32be(w + p + 4);
+            break;
+        }
+        p += (11 + nl + 3) & ~3u;
+    }
+    if (k == n || doff > a->got || dlen > a->got - doff) return;
+
+    /* The header and the trailer. */
+    b = w + doff;
+    if (dlen < 32 + 8 + 1 || !side_eq(b, (const uint8_t *)"bplist0", 7))
+        return;
+    t = b + dlen - 32;
+    ois = t[6];
+    ors = t[7];
+    if (unc_get_u32be(t + 8) || unc_get_u32be(t + 16) ||
+        unc_get_u32be(t + 24))
+        return;
+    nobj = unc_get_u32be(t + 12);
+    top = unc_get_u32be(t + 20);
+    otab = unc_get_u32be(t + 28);
+    if (nobj < 1 || top >= nobj || otab < 9 || otab >= dlen - 32 ||
+        ois < 1 || ois > 4 || ors < 1)
+        return;
+    if (nobj > (dlen - 32 - otab) / ois || otab + nobj * ois != dlen - 32)
+        return;
+    if ((ors < 4 && (nobj >> (8 * ors))) || (ois < 4 && (otab >> (8 * ois))))
+        return;
+    for (k = 0; k < nobj; k++)
+        if (side_int(b + otab + k * ois, ois) >= otab) return;
+    off = side_int(b + otab + top * ois, ois);
+    if (off < 8) return;
+
+    /* The top object: a string, its count in the marker or after it. */
+    m = b[off];
+    q = off + 1;
+    cnt = m & 0x0Fu;
+    if (cnt == 0x0Fu) {
+        uint32_t isz;
+        if (q >= otab || (b[q] & 0xF0u) != 0x10u || (b[q] & 0x0Fu) > 2)
+            return;
+        isz = 1u << (b[q] & 0x0Fu);
+        q++;
+        if (isz > otab - q) return;
+        cnt = side_int(b + q, isz);
+        q += isz;
+    }
+    m &= 0xF0u;
+    if ((m != 0x50u && m != 0x60u) || cnt > otab - q ||
+        (m == 0x60u && cnt * 2 > otab - q))
+        return;
+    if (m == 0x50u) {
+        for (k = 0; k < cnt; k++) if (b[q + k] & 0x80u) return;
+        if (cnt > UNC_ENTRY_COMMENT_MAX) cnt = UNC_ENTRY_COMMENT_MAX;
+        o = cnt;
+        d = doff + q;
+    } else {
+        /* At most one unit per byte out, so no more than this is read. */
+        uint32_t u = cnt < UNC_ENTRY_COMMENT_MAX ? cnt : UNC_ENTRY_COMMENT_MAX;
+        s = UNC_AD_WIN - 2 * u;
+        for (k = 2 * u; k-- > 0; ) w[s + k] = b[q + k];
+        d = h;
+        for (o = 0, k = 0; k < u; ) {
+            uint32_t c = unc_get_u16be(w + s + 2 * k), un = 1, nb;
+            if (c >= 0xD800u && c < 0xE000u) {
+                uint32_t c2;
+                if (c >= 0xDC00u) return;
+                if (k + 1 >= u) {
+                    if (u == cnt) return;
+                    break;                     /* the cut, between pairs */
+                }
+                c2 = unc_get_u16be(w + s + 2 * k + 2);
+                if (c2 < 0xDC00u || c2 >= 0xE000u) return;
+                c = 0x10000u + ((c - 0xD800u) << 10) + (c2 - 0xDC00u);
+                un = 2;
+            }
+            nb = c < 0x80u ? 1u : c < 0x800u ? 2u : c < 0x10000u ? 3u : 4u;
+            if (o + nb > UNC_ENTRY_COMMENT_MAX) break;
+            if (d + o + nb > s + 2 * (k + un)) return;
+            if (nb == 1) w[d + o] = (uint8_t)c;
+            else {
+                uint32_t j = nb;
+                while (--j) {
+                    w[d + o + j] = (uint8_t)(0x80u | (c & 0x3Fu));
+                    c >>= 6;
+                }
+                w[d + o] = (uint8_t)((0xF00u >> nb) | c);
+            }
+            o += nb;
+            k += un;
+        }
+    }
+    if (o) {
+        e->comment = w + d;
+        e->comment_len = (uint16_t)o;
+        e->meta |= UNC_META_CMT_UTF8;
+    }
+}
+
+/* What the sidecar states, onto the file's entry. Once per capture: the
+ * Spotlight comment is decoded over the window (side_spot). */
+void unc_ad_apply(UncAdCap *a, UncEntryInfo *e)
+{
+    uint32_t i, n, k, foff = 0, flen = 0;
     if (a->state != UNC_AD_YES) return;
     n = unc_get_u16be(a->win + 24);
     for (i = 0; i < n; i++) {
@@ -117,27 +301,32 @@ void unc_ad_apply(const UncAdCap *a, UncEntryInfo *e)
         /* The lengths unc_as_record reads; the comment at the engine's
          * ceiling. */
         uint32_t take = id == 4 ? UNC_ENTRY_COMMENT_MAX : 32;
+        if (id == 9) { foff = off; flen = len; }
         if (len < take) take = len;
         if (off > a->got || take > a->got - off) continue;
         if (id == 4) {
-            if (take) { e->comment = b; e->comment_len = (uint16_t)take; }
+            if (take) {
+                e->comment = b;
+                e->comment_len = (uint16_t)take;
+                e->meta &= (uint8_t)~UNC_META_CMT_UTF8;
+            }
         } else if (id >= 8 && id <= 12) {
             /* 32 zero bytes of Finder info are copyfile's "none". */
             for (k = 0; id == 9 && k < take && !b[k]; k++) {}
             if (id != 9 || k < take) unc_as_record(e, id, b, take);
         }
     }
+    /* The Spotlight comment only where nothing else stated one:
+     * XADMaster's rule, "if there is not already a comment"
+     * (reference/XADMaster/XADArchiveParser.m). An entry-4 comment, the
+     * zip's own per-file comment, a 0x334d Finder comment and a pax
+     * `comment` record all win over it. */
+    if (!e->comment_len && flen) side_spot(a, e, foff, flen);
 }
 
 /* ------------------------------------------------------------------ */
 /* Names                                                              */
 /* ------------------------------------------------------------------ */
-
-static int side_eq(const uint8_t *a, const uint8_t *b, uint32_t n)
-{
-    while (n--) if (*a++ != *b++) return 0;
-    return 1;
-}
 
 static const uint8_t k_macosx[] = "__MACOSX/";
 

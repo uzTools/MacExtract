@@ -497,10 +497,16 @@ echo "references ready"
 # tools/run_meta.py drives through ctypes as the second oracle) is bsdtar:
 # its pax writer puts `._name` before `name`, and its zip reader pairs
 # `__MACOSX/` sidecars by name. Pinned, so the citations stay put.
+# CoreFoundation's binary property list, CF-1153.18 (the tag's commit), for
+# the one object the Spotlight comment is: CFBinaryPList.c's top-level
+# checks and its ASCII and UTF-16 string cases, and ForFoundationOnly.h for
+# the trailer's struct and the marker values.
 for _f in copyfile.c:apple-oss-distributions/copyfile/9f91eb6ced021952278816cdc76ad68da8631ccb/copyfile.c \
           libarchive_write_set_format_pax.c:libarchive/libarchive/v3.7.4/libarchive/archive_write_set_format_pax.c \
           libarchive_read_support_format_zip.c:libarchive/libarchive/v3.7.4/libarchive/archive_read_support_format_zip.c \
-          libarchive_read_support_format_tar.c:libarchive/libarchive/v3.7.4/libarchive/archive_read_support_format_tar.c; do
+          libarchive_read_support_format_tar.c:libarchive/libarchive/v3.7.4/libarchive/archive_read_support_format_tar.c \
+          CFBinaryPList.c:apple-oss-distributions/CF/dc54c6bb1c1e5e0b9486c1d26dd5bef110b20bf3/CFBinaryPList.c \
+          CF_ForFoundationOnly.h:apple-oss-distributions/CF/dc54c6bb1c1e5e0b9486c1d26dd5bef110b20bf3/ForFoundationOnly.h; do
     [ -f "reference/notes/${_f%%:*}" ] || \
         curl -sfL -o "reference/notes/${_f%%:*}" \
             "https://raw.githubusercontent.com/${_f#*:}"

@@ -715,6 +715,54 @@ int main(int argc, char **argv)
                         "written, nothing reported\n");
             gHasDT = 1;
         }
+        /* A comment the engine marks as UTF-8 (UNC_META_CMT_UTF8): the
+         * Desktop Manager is handed it folded into MacRoman — e-acute,
+         * u-umlaut and the copyright sign by their MacRoman bytes, a
+         * character MacRoman lacks as '_' — and folded in the engine's
+         * buffer, which macextract.h lets a host shorten. The same bytes
+         * unmarked are the control: they must reach the Desktop Manager
+         * as they are, or the check could not tell the fold happened. */
+        {
+            static const uint8_t u8[] = "Caf\xc3\xa9 M\xc3\xbcller \xc2\xa9 "
+                                        "\xe6\x97\xa5\xf0\x9f\x98\x80";
+            static const uint8_t mr[] = "Caf\x8e M\x9fller \xa9 __";
+            int pass;
+            for (pass = 0; pass < 2; pass++) {
+                MacSink sk2; UncEntryInfo info;
+                char dir[600], path[900];
+                uint8_t buf[sizeof u8];
+                CatRec *r;
+                size_t want = pass ? sizeof u8 - 1 : sizeof mr - 1;
+                const uint8_t *wb = pass ? u8 : mr;
+                snprintf(dir, sizeof dir, "%s/utf8c%d", base, pass);
+                mkdir(dir, 0755);
+                snprintf(gOutDir, sizeof gOutDir, "%s", dir);
+                snprintf(gDirs[0], sizeof gDirs[0], "%s", gOutDir);
+                gNumDirs = 1;
+                memset(gCat, 0, sizeof gCat);
+                RepReset();
+                memset(&sk2, 0, sizeof sk2); sk2.vRefNum = 1; sk2.rootDirID = 0;
+                memset(&info, 0, sizeof info);
+                memcpy(info.name, "Doc", 3); info.name_len = 3;
+                memcpy(buf, u8, sizeof u8 - 1);
+                info.comment = buf;
+                info.comment_len = (uint16_t)(sizeof u8 - 1);
+                info.meta = pass ? 0 : UNC_META_CMT_UTF8;
+                if (sink_begin(&sk2, &info) == 0) sink_end(&sk2, UNC_OK);
+                snprintf(path, sizeof path, "%s/Doc", dir);
+                r = cat_rec(path, 0);
+                if (!r || r->clen != (int)want || memcmp(r->comment, wb, want)) {
+                    fprintf(stderr, "meta [UTF-8 comment, %s]: the Desktop "
+                            "Manager got %d byte(s), wanted %d\n",
+                            pass ? "unmarked control" : "marked",
+                            r ? r->clen : -1, (int)want);
+                    ok = 0;
+                } else
+                    fprintf(stderr, "meta [UTF-8 comment, %s]: %d byte(s), "
+                            "as wanted\n", pass ? "unmarked control"
+                            : "marked, folded", (int)want);
+            }
+        }
         fprintf(stderr, "meta: %s\n", ok ? "every field written, every "
                 "control caught" : "FAILED");
         return ok ? 0 : 1;

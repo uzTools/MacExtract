@@ -171,12 +171,13 @@ and `tools/run_meta.py` holds it.
 
 Since 2026-10-17 a zip's `__MACOSX/…/._name` and a tar's `._name` are put
 back on their file (DECISIONS.md, *the sidecars Mac OS X left beside the
-file*). Left, none with a specimen here:
+file*), their Spotlight comment since 2026-10-18. Left, none with a
+specimen here:
 
-- **The Spotlight comment**: the extended attribute
-  `com.apple.metadata:kMDItemFinderComment`, a binary property list,
-  after the Finder info. A bplist reader and a Unicode-to-MacRoman table;
-  the maintainer's call.
+- **A Spotlight comment past the window**: one whose property list ends
+  after byte 1,024 of the sidecar is dropped, and so is one in a
+  standalone `._name` read as AppleDouble (DECISIONS.md 2026-10-18, *the
+  comment Spotlight kept*). No specimen has either.
 - **A tar sidecar written after its file**: out as itself. bsdtar never
   writes that order; a pax header between the two is stepped over, but no
   specimen has one (hypothesis: bsdtar writes one for a non-ASCII name).
@@ -202,8 +203,11 @@ written it stays 0x00 on 7.0.1 too (DECISIONS.md 2026-10-17). **Not
 `fdScript`**: a file with `fdScript` 0 came back 0x70 the same way, and
 another with `fdScript` 0 did not (DECISIONS.md 2026-10-17, *the sidecars
 Mac OS X left beside the file*). The two that changed are both locked and
-both given a comment (hypothesis). Closes with a run that separates those
-two, FXInfo read back by the autotest before the Finder can see the file.
+both given a comment; **not the comment alone** — six files given one and
+not locked kept 0x00 on the same 7.0.1 disk, measured 2026-10-18
+(DECISIONS.md, *the comment Spotlight kept*), so the lock is left
+(hypothesis). Closes with a locked file and no comment, FXInfo read back
+by the autotest before the Finder can see the file.
 
 ## Hand-written 68000 assembly: candidates, held for one VM pass
 

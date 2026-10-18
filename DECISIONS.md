@@ -434,6 +434,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-17 (the archives' own Finder info) — PackIt, StuffIt 5, Now Compress, SuperDisk!, Private File, ArcMac and ARC, zip, tar, gzip and LZH deliver the Finder info, dates, lock and comment they hold
 - 2026-10-17 (the sidecars Mac OS X left beside the file) — a zip's `__MACOSX/…/._name` and a tar's `._name` are put back on their file: resource fork, Finder info, comment, dates and lock
 - 2026-10-17 (dates in the Macintosh's own zone) — the engine marks which dates are instants, and the application writes those in the Mac's zone where it can say what that is
+- 2026-10-18 (the comment Spotlight kept) — a Mac OS X sidecar's Spotlight comment becomes the file's Get Info comment, as UTF-8 that the shell folds into MacRoman
 
 ---
 
@@ -27904,7 +27905,8 @@ after the Finder info: on Mac OS X 10.5 and later, the Finder's Spotlight
 comment is the attribute `com.apple.metadata:kMDItemFinderComment`, a
 binary property list — the descendant of the Get Info comment. Reading it
 means a bplist parser and a Unicode-to-MacRoman table in the engine; **not
-done, the maintainer's call** (no specimen here carries one: Aqua Candy's
+done, the maintainer's call** (made 2026-10-18 and done: *the comment
+Spotlight kept*, below) (no specimen here carries one: Aqua Candy's
 sidecars have no attributes, the 2024 one has two others). The lock: Mac
 OS X keeps it as `UF_IMMUTABLE`, which copyfile does not pack, and a zip's
 own external attributes are not this change's.
@@ -28171,3 +28173,137 @@ wall clock of the machine that made the zip, what its maker and every
 Macintosh-era tool saw, where the Unix time is exact but an instant. And a
 sidecar is paired wherever the central directory puts it, at the 138 B
 that costs over pairing neighbours only, so a re-zipped tree pairs too.
+
+## 2026-10-18 (the comment Spotlight kept) — a Mac OS X sidecar's Spotlight comment becomes the file's Get Info comment, as UTF-8 that the shell folds into MacRoman
+
+**The maintainer's call, 2026-10-18: support it.** On Mac OS X 10.5 and
+later the Finder keeps a file's comment as the extended attribute
+`com.apple.metadata:kMDItemFinderComment`, a binary property list, and
+copyfile packs it into the sidecar's entry 9 after the 32 bytes of Finder
+info. `src/unc_sidecar.c` (`side_spot`, called from `unc_ad_apply`) now
+walks that attribute block, finds the one attribute by name, reads the
+list's top object and keeps it only if it is a string. Sources: the block
+is reference/notes/copyfile.c (`attr_header_t`, `attr_entry_t`,
+`ATTR_ENTRY_LENGTH`) as XADAppleDouble.m reads it; the list is
+CoreFoundation's own reader, newly pinned (CF-1153.18,
+reference/notes/CFBinaryPList.c and CF_ForFoundationOnly.h): every
+header and trailer check of `__CFBinaryPlistGetTopLevelInfo`, then the
+`0x5n` ASCII and `0x6n` UTF-16 cases with their count in the marker or
+after it as an `0x1n` integer. Refused, and the comment left unstated
+rather than the file failed: any other kind of top object, a value that
+needs more than 32 bits or an integer wider than 4 bytes, an ASCII string
+with a byte over 0x7F, a lone surrogate (both of which Python's plistlib
+refuses too), a list that is not wholly inside the window.
+
+**The encoding.** What existed: the engine converts nothing for names
+(`name_utf8`, StuffIt 5), the shell folds those into MacRoman
+(`Utf8ToMacRoman`), and tar's pax `comment` — UTF-8 by POSIX ("the value
+field for all other keywords ... shall be encoded using UTF-8",
+reference/notes/posix_ustar.txt) — reached the Desktop Manager as raw
+UTF-8, unmarked. So the shape is the name's: the engine turns UTF-16 into
+UTF-8, marks the comment with **`UNC_META_CMT_UTF8`** (0x40, a free bit of
+`meta`, so `UncEntryInfo` does not grow), and the shell folds a marked
+comment with the same function, '_' for a character MacRoman lacks. The
+pax comment is marked too, and its 255-byte cut now backs off a UTF-8
+continuation byte. The fold happens **in the engine's buffer**:
+macextract.h now lets a host shorten a marked comment in place until
+`end_entry`, and `Utf8ToMacRoman` stopped writing a NUL past the length it
+returns (the name's caller writes it). A buffer of the shell's own would
+have been 256 B of `MacSink` in `ExtractOne`'s frame, on every
+extraction's stack, or 256 B of A5. `l --meta` prints a `U` after a marked
+comment's hex.
+
+**Which comment wins.** XADMaster takes the Spotlight comment "if there is
+not already a comment" (reference/XADMaster/XADArchiveParser.m), and so
+does this: an entry-4 comment, a zip's per-file comment, a `0x334d`
+Finder comment and a pax `comment` all win over it. Entry 4 also beats
+the zip's and pax's own, as before. XADMaster does not read entry 4, so on
+a sidecar holding both `lsar` reports the Spotlight one; that difference
+is this engine's on purpose — entry 4 is the classic Get Info comment
+itself, and an RFC 1740 writer that added it said so.
+
+**Where it is decoded.** Over the 1,024-byte window the sidecar is
+already captured in (`UNC_AD_WIN`), which nothing reads after the apply:
+the UTF-16 is moved to the window's end, the UTF-8 written from the
+attribute block's start (entry 9 + 34), and a write that would overtake
+unread UTF-16 refuses the comment, which no writer's layout can make
+happen for a 255-byte result. **Heap +0.** The cost of that choice: a
+list that ends past byte 1,024 of the sidecar is dropped. With the
+comment the only attribute that is an ASCII comment of about 800
+characters or a UTF-16 one of about 400 (arithmetic from copyfile's
+layout, not measured); the cut to `UNC_ENTRY_COMMENT_MAX`, on a character
+boundary, then keeps 255 bytes. Hypothesis: real comments are far shorter
+— no specimen says either way.
+
+**What System 7.0.1 keeps.** A 255-byte comment, handed to
+`PBDTSetComment` whole, reads back as its first **199 bytes** through
+`PBDTGetComment` asked for 255 — measured 2026-10-18 with a comment whose
+200th byte is a digit, after a first run with a space there could not
+tell a cut from a trimmed space. This is the Desktop Manager's and was so
+for every 200-to-255-byte comment before this change; `metarun.py`
+expects it. And `fdXFlags`: six files given a comment and NOT locked kept
+the archive's 0x00 on the same 7.0.1 disk, so the comment alone is not
+what turns it into 0x70 (OPEN_ITEMS.md, *System 7.0.1 rewrites one byte
+of FXInfo*).
+
+**Specimens.** `tools/synth_macosx.py --kind zip-spot` and `tar-spot`
+(Info-ZIP and GNU tar, copyfile's layout, Python's plistlib writing each
+list as CF does): an ASCII comment between two other attributes, UTF-16
+ones with é, ü, ©, à and with characters MacRoman lacks (CJK, an emoji's
+surrogate pair, €, ≠), 300 ASCII and 130 é (cut at 255 and at 254), one of
+900 that ends past the window, an array, a number, a list cut short, an
+ASCII one with a high byte, a lone surrogate, a sidecar with entry 4 as
+well, and a folder's. **No real archive carrying one was found** in six
+Discmaster requests: `kMDItemFinderComment` returns nothing in its search,
+and four 2006–2014 Finder zips under `__MACOSX` carry `TextEncoding`,
+`quarantine` and `xcode.*` attributes and no comment.
+
+**Graded by.** `tools/run_meta.py`: the generator's values (by
+construction); libarchive's own pairing of every zip with a sidecar and of
+the `-spot` tar, its AppleDouble blob walked by a second attribute reader
+in the suite (XADAppleDouble.m's reading, not copyfile.c's) and the list
+decoded by plistlib; and `lsar` on each case alone in a zip, because lsar
+stops listing an archive at the first list it cannot parse — 9 compared,
+1 (`LongU`) it lists nothing for. Controls: `side_spot` not called, 28
+failures; the mark not set, 17; the cut not on a character, 4; each
+comment's mark toggled alone, in both control loops. The shell:
+`tests/mac_sink_test.c --meta`, a marked comment reaching the mock
+Desktop Manager folded and the same bytes unmarked reaching it raw, and
+with the fold removed the first fails. On Mini vMac, System 7.0.1, an
+8 MB output volume: every comment read back with `PBDTGetComment`
+(`tools/vmac/metarun.py`, `synth-macosx-spot.zip` added), 91 values, the
+two wrong being that `fdXFlags` item, on files that are not this change's.
+
+**Price**, against `origin/main` (e5959ca), every configuration built:
+shipped (eager) **CODE +80, A5 +16 — 96 B off every extraction's
+budget**: `Utf8ToMacRoman`, called twice, is no longer inlined into
+`sink_begin` (always_inline measured +256 code, A5 +0); the 16 B of A5 are
+zero bytes at the head of `.data` and the lazy build moved −20 for the
+same change (hypothesis: layout). Lazy CODE +84, A5 −20; resident control
+CODE +1,344, A5 +48 (the attribute's name and `bplist0`). Images:
+`ovl_zipold` +1,324 to 11,608 B, 21,160 B under 32,768; `ovl_exo`
+unchanged (31,284, 1,484 under); the bundle +1,324. `OVL_SAVED` 148,240 →
+149,536, `TIERS_CONTROL` 224,496 → 225,888, `TIERS` −1,392, DERIVED; on the
+machine a grant falls 96 B, a tar's, a zip's and an envelope's 1,420.
+Heap +0. Stack: `unc_ad_apply` 56 → 80 B with `side_spot` inlined, off
+every decode chain; `sink_begin` 416 → 420 B and `Utf8ToMacRoman` 28 under
+it; the engine's deepest chain does not move.
+
+**A check this moved: `tools/run_only.py`.** Its corpus sweep takes every
+Nth fixture by name, and two more fixtures moved it onto
+`uu-wild-terrainman.uu`, a cut uuencode whose StuffIt archive is
+truncated: the CLI keeps the `.sit` layer when the layer inside it fails,
+by design, and the sweep read that kept file as written outside the
+selection — two failures, the same with `origin/main`'s CLI in this tree
+(measured). The kept layer is now asked for as the archive comment is:
+what `-nr` writes, where the full run kept it too, and only when that run
+reported a failure; a layer that unwrapped cleanly is absent from the full
+run, so nothing is allowed there.
+
+**Left for the maintainer.** (1) The Desktop Manager's 199 bytes against
+the engine's 255: whether the shell should cut a comment itself, and
+where. (2) Line endings: Mac OS X's comment is presumably LF-separated
+(hypothesis, no specimen), and nothing converts it to the classic CR.
+(3) A standalone `._name` read as AppleDouble (`fmt_applesingle.c`) does
+not read the Spotlight comment; only a sidecar paired in a zip or tar
+does. (4) A list past the 1,024-byte window.

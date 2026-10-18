@@ -6,6 +6,8 @@ AppleDouble sidecars whose every value is known by construction.
     tools/synth_macosx.py --kind tar -o fixtures/synth-macosx.tar
     tools/synth_macosx.py --kind zip-edge -o fixtures/synth-macosx-edge.zip
     tools/synth_macosx.py --kind tar-edge -o fixtures/synth-macosx-edge.tar
+    tools/synth_macosx.py --kind zip-spot -o fixtures/synth-macosx-spot.zip
+    tools/synth_macosx.py --kind tar-spot -o fixtures/synth-macosx-spot.tar
     tools/synth_macosx.py --describe zip
 
 The archives are written by Info-ZIP zip and GNU tar (`zip -X`, `tar
@@ -57,15 +59,19 @@ def rsrc(tag):
     return bytes(f)
 
 
-def copyfile_sidecar(finfo, fork, xattrs=()):
-    """copyfile's layout: entry 9 at 50, entry 2 after the attributes."""
+def copyfile_sidecar(finfo, fork, xattrs=(), extra=()):
+    """copyfile's layout: entry 9 at 50, entry 2 after the attributes.
+    `extra` entries (id, bytes) go in the table after those two, and their
+    data after the fork — not copyfile's, which writes only the two, but
+    the shape of a sidecar some other writer added to."""
     attrs = b""
+    f0 = 26 + 12 * (2 + len(extra))
     if xattrs:
         # The ATTR header (copyfile.c, attr_header_t after the AppleDouble
         # header): magic, debug_tag, total_size, data_start, data_length,
         # three reserved words, flags, num_attrs — then 4-aligned entries.
         ents, data = b"", b""
-        start_ents = 50 + 32 + 2 + 36
+        start_ents = f0 + 32 + 2 + 36
         elen = sum((11 + len(n) + 1 + 3) & ~3 for n, _ in xattrs)
         dstart = start_ents + elen
         off = dstart
@@ -80,12 +86,16 @@ def copyfile_sidecar(finfo, fork, xattrs=()):
                                       dstart, len(data), 0, 0, 0, 0,
                                       len(xattrs)) + ents + data
     flen = 32 + len(attrs)
-    roff = 50 + flen
+    roff = f0 + flen
     hdr = struct.pack(">II16sH", 0x00051607, 0x00020000, b"Mac OS X        ",
-                      2)
-    hdr += struct.pack(">III", 9, 50, flen) + struct.pack(">III", 2, roff,
+                      2 + len(extra))
+    hdr += struct.pack(">III", 9, f0, flen) + struct.pack(">III", 2, roff,
                                                           len(fork))
-    return hdr + finfo + attrs + fork
+    tail, at = b"", roff + len(fork)
+    for eid, b in extra:
+        hdr += struct.pack(">III", eid, at + len(tail), len(b))
+        tail += b
+    return hdr + finfo + attrs + fork + tail
 
 
 def rfc_sidecar(entries):
@@ -149,6 +159,78 @@ def files():
     return data, side
 
 
+# Mac OS X's Spotlight comment: the extended attribute
+# com.apple.metadata:kMDItemFinderComment, a binary property list
+# (reference/XADMaster/XADArchiveParser.m reads it as the comment). The
+# lists are Python's plistlib's, which writes a str as CF does
+# (reference/notes/CFBinaryPList.c, _appendString): ASCII where every
+# character is, UTF-16BE otherwise. Each case: (the attribute's bytes, the
+# comment the engine must state as UTF-8 bytes or None, a note).
+SPOT_NAME = "com.apple.metadata:kMDItemFinderComment"
+SPOT_ASCII = "A Spotlight comment, as Mac OS X 10.5 keeps it."
+SPOT_ACCENTS = "Caf\u00e9 M\u00fcller \u00a9 2008, \u00e0 la carte"
+SPOT_LACKS = "\u65e5\u672c\u8a9e and \U0001F600, \u20ac 5 \u2260 \u2260"
+SPOT_FOLDER = "A folder's Spotlight comment."
+SPOT_LONG_A = "".join("%04d" % i for i in range(75))           # 300 chars
+SPOT_LONG_U = "\u00e9" * 130                     # 260 UTF-8 bytes: cut to 254
+SPOT_HUGE = "x" * 900       # the list ends past the sidecar's first 1,024 B
+SPOT_ENTRY4 = b"The sidecar's own entry 4, which wins."
+
+
+def bplist(v):
+    import plistlib
+    return plistlib.dumps(v, fmt=plistlib.FMT_BINARY)
+
+
+def utf8_cut(text, cap=255):
+    """The engine's cut: whole characters, at most `cap` UTF-8 bytes."""
+    out = b""
+    for ch in text:
+        b = ch.encode("utf-8")
+        if len(out) + len(b) > cap:
+            break
+        out += b
+    return out
+
+
+def spot_cases():
+    """{path: (sidecar bytes, wanted comment bytes or None)} for Spot/."""
+    fi = finfo(b"TEXT", b"ttxt", 0x0000, 0x10, 0x20)
+    di = DINFO + DXINFO
+
+    def side(v, others=(), fin=fi, extra=()):
+        xa = sorted([(SPOT_NAME, v)] + list(others))
+        return copyfile_sidecar(fin, b"", xa, extra)
+    trunc = bplist("A comment cut short")
+    return {
+        # Between two other attributes, in copyfile's sorted order.
+        "Spot/Ascii": (side(bplist(SPOT_ASCII), [
+            ("com.apple.lastuseddate#PS", b"\x01" * 16),
+            ("com.apple.quarantine", b"0081;4b8c0e00;Safari;")]),
+            SPOT_ASCII.encode()),
+        "Spot/Accents": (side(bplist(SPOT_ACCENTS)),
+                         SPOT_ACCENTS.encode("utf-8")),
+        "Spot/Lacks": (side(bplist(SPOT_LACKS)), SPOT_LACKS.encode("utf-8")),
+        "Spot/LongA": (side(bplist(SPOT_LONG_A)),
+                       SPOT_LONG_A.encode()[:255]),
+        "Spot/LongU": (side(bplist(SPOT_LONG_U)), utf8_cut(SPOT_LONG_U)),
+        "Spot/Huge": (side(bplist(SPOT_HUGE)), None),
+        "Spot/Array": (side(bplist(["An array, not a string"])), None),
+        "Spot/Number": (side(bplist(1990)), None),
+        "Spot/Cut": (side(trunc[:-5]), None),
+        # An ASCII string with a byte that is not ASCII, and a UTF-16 one
+        # whose only unit is a high surrogate with no low one after it.
+        "Spot/HighBit": (side(bplist("x").replace(b"\x51x", b"\x51\x80")),
+                         None),
+        "Spot/Lone": (side(bplist("\u00e9").replace(b"\x61\x00\xe9",
+                                                    b"\x61\xd8\x00")), None),
+        "Spot/Both": (side(bplist(SPOT_ASCII), extra=[(4, SPOT_ENTRY4)]),
+                      SPOT_ENTRY4),
+        "Spot": (side(bplist(SPOT_FOLDER), fin=di),
+                 SPOT_FOLDER.encode()),
+    }
+
+
 def sidename(path, macosx):
     d, _, leaf = path.rpartition("/")
     n = (d + "/" if d else "") + "._" + leaf
@@ -175,6 +257,20 @@ def order(kind):
                 ("Folder/._NotAD", 0), ("Folder/NotAD", 0),
                 ("__MACOSX/", 1), ("__MACOSX/Folder/", 1),
                 (m("Folder/Ghost"), 0), (m("Folder/Far"), 0)]
+    if kind in ("zip-spot", "tar-spot"):
+        z = kind == "zip-spot"
+        out = [("Spot/", 1)]
+        if z:
+            out += [("__MACOSX/", 1), (sidename("Spot", True), 0),
+                    ("__MACOSX/Spot/", 1)]
+        else:
+            out = [(sidename("Spot", False), 0)] + out
+        for p in sorted(spot_cases()):
+            if p == "Spot":
+                continue
+            out += [(p, 0), (sidename(p, True), 0)] if z else \
+                [(sidename(p, False), 0), (p, 0)]
+        return out
     s = lambda p: sidename(p, False)
     if kind == "tar":
         return [(s("Folder"), 0), ("Folder/", 1),
@@ -190,6 +286,10 @@ def order(kind):
 
 def build(kind, out):
     data, side = files()
+    for p, (b, _w) in spot_cases().items():
+        side[p] = b
+        if p != "Spot":
+            data[p] = ("%s's data fork.\r" % p[5:]).encode() * 3
     with tempfile.TemporaryDirectory() as tmp:
         tree = os.path.join(tmp, "t")
         names = order(kind)
@@ -237,6 +337,8 @@ def build(kind, out):
 
 def describe(kind):
     """{emitted name: fields}, and the names that must not be emitted."""
+    if kind in ("zip-spot", "tar-spot"):
+        return describe_spot(kind)
     data, side = files()
     sha = lambda b: hashlib.sha256(b).hexdigest()
     want = {}
@@ -291,7 +393,24 @@ def describe(kind):
     return {"emit": want, "absent": absent}
 
 
-KINDS = ("zip", "tar", "zip-edge", "tar-edge")
+def describe_spot(kind):
+    """The Spotlight cases: every file's Finder info from its sidecar, and
+    its comment, UTF-8 (`l --meta` marks it U) except the entry-4 one,
+    which is the archive's own bytes."""
+    want = {}
+    for p, (b, c) in spot_cases().items():
+        foff = struct.unpack(">I", b[30:34])[0]
+        fi = b[foff:foff + 32]
+        cm = "-" if c is None else c.hex() + ("" if c == SPOT_ENTRY4
+                                               else "U")
+        want[p] = dict(finfo=fi[:16].hex(), fxinfo=fi[16:].hex(), lock="n",
+                       backup="-", comment=cm, rsrc=hashlib.sha256(b"")
+                       .hexdigest(), rsrc_size=0)
+    names = [n.rstrip("/") for n, _ in order(kind)]
+    return {"emit": want, "absent": [n for n in names if n not in want]}
+
+
+KINDS = ("zip", "tar", "zip-edge", "tar-edge", "zip-spot", "tar-spot")
 
 
 def main():

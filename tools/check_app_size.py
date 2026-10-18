@@ -221,9 +221,12 @@ TAKEN = "2026-10-14"
 # -> 176,908 the same day: Mac OS X's sidecars, `ovl_zipold` +3,374 and
 # `ovl_exo` +972 (DECISIONS.md 2026-10-17, *the sidecars Mac OS X left
 # beside the file*).
-EXPECT_BUNDLE = 176908
+# -> 178,924 2026-10-18: the Spotlight comment, `ovl_zipold` +1,324, and
+# the dates in the Macintosh's own zone before it (+692, inside the
+# tolerance) (DECISIONS.md 2026-10-18, *the comment Spotlight kept*).
+EXPECT_BUNDLE = 178924
 TOLERANCE_BUNDLE = 2048
-TAKEN_BUNDLE = "2026-10-14"
+TAKEN_BUNDLE = "2026-10-18"
 
 
 def main():

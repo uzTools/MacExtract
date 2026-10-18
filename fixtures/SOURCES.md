@@ -21,7 +21,11 @@ is libarchive's test file, uuencoded there: `uudecode` it. And the Mac OS X
 sidecar specimens (`Aqua_Candy_Two.zip`, a Finder zip from a 2006 Macworld
 UK disc; `synth-macosx*`) are graded by `tools/run_meta.py` as well as by
 the manifests, which cannot state the `-edge` pair at all (DECISIONS.md
-2026-10-17, *the sidecars Mac OS X left beside the file*).
+2026-10-17, *the sidecars Mac OS X left beside the file*). The `-spot`
+pair, Spotlight comments in the sidecars' extended attributes, has no
+manifest either and is graded by `tools/run_meta.py` alone (DECISIONS.md
+2026-10-18, *the comment Spotlight kept*); no real archive carrying such
+a comment was found.
 
 | name | sha256 | size | url |
 |---|---|---|---|
@@ -934,6 +938,8 @@ the manifests, which cannot state the `-edge` pair at all (DECISIONS.md
 | synth-exo-zip-store.zip | 41013301e866c46e0c63b5915ac0098d9fbc045f64edaeaf6bf4ac37da16df04 | 8404 | synthetic:tools/synth_exo.py --kind zip-store |
 | synth-macosx-edge.tar | eab9cacf41e73204e4d95fb22b4e92e217504d0819fe9efae093f935e3b307f0 | 10240 | synthetic:tools/synth_macosx.py --kind tar-edge |
 | synth-macosx-edge.zip | 9a5e16448e1673d32396e7d7786d37b7f4039d54d7b44c0b913e9e3fa0227ab3 | 1126 | synthetic:tools/synth_macosx.py --kind zip-edge |
+| synth-macosx-spot.tar | d1af1c5e39ae32c37f6c7ace587d7126f9e367b4e64af31fa604c46769b9897f | 30720 | synthetic:tools/synth_macosx.py --kind tar-spot |
+| synth-macosx-spot.zip | 3256f776df570eeed0c54437bc1d542951780aa28477a482c689e81a897f7588 | 5468 | synthetic:tools/synth_macosx.py --kind zip-spot |
 | synth-macosx.tar | d8747c4907aff667847b9728e12afb9f8a430f26fe65e6e67c938e3da19c2102 | 20480 | synthetic:tools/synth_macosx.py --kind tar |
 | synth-macosx.zip | f86330893620a05b79d243db7de96fc1303a82977af2efed571cc54063f661bc | 1887 | synthetic:tools/synth_macosx.py --kind zip |
 | synth-now-mixed.now | e87810e9df1e0a663436531cc7ab2f34153b81fffcefd10b467ccbd7dc6f89ae | 7803 | synthetic:tools/synth_now.py |

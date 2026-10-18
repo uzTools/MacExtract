@@ -180,11 +180,20 @@ def tar_meta():
         add("rw", 0o644, 1000000000,
             w=dict(lock="n", mtime=mac_of_unix(1000000000), comment="-",
                    ctime="-", finfo="-"))
-        # The pax record wins over the header's own mtime, fraction and all.
+        # The pax record wins over the header's own mtime, fraction and
+        # all. Its comment is UTF-8 (POSIX pax), which `l --meta` marks U.
         add("pax", 0o600, 1000000000,
-            pax={"mtime": "1200000000.75", "comment": "a pax comment"},
+            pax={"mtime": "1200000000.75",
+                 "comment": "a pax comment, caf\u00e9"},
             w=dict(lock="n", mtime=mac_of_unix(1200000000),
-                   comment=h(b"a pax comment"), ctime="-", finfo="-"))
+                   comment=h("a pax comment, caf\u00e9".encode()) + "U",
+                   ctime="-", finfo="-"))
+        # Past UNC_ENTRY_COMMENT_MAX: cut where a character ends, at 254.
+        add("paxlong", 0o644, 1000000000,
+            pax={"comment": "\u00e9" * 130},
+            w=dict(lock="n", mtime=mac_of_unix(1000000000),
+                   comment=h("\u00e9".encode() * 127) + "U",
+                   ctime="-", finfo="-"))
         # And applies to that member only.
         add("after", 0o200, 1100000000,
             w=dict(lock="n", mtime=mac_of_unix(1100000000), comment="-",

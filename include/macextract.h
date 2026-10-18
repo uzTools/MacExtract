@@ -400,7 +400,11 @@ typedef struct UncEntryInfo {
      * encoding, not NUL-terminated; NULL and 0 when there is none. The
      * bytes are the ENGINE's and stay valid until end_entry returns for
      * this entry (a host copying the struct copies the pointer, not the
-     * text). At most UNC_ENTRY_COMMENT_MAX. */
+     * text). At most UNC_ENTRY_COMMENT_MAX. Where UNC_META_CMT_UTF8 is
+     * set they are UTF-8 instead, cut on a character boundary, and the
+     * host may rewrite them IN PLACE, to the same length or shorter,
+     * until end_entry returns (the Macintosh shell folds them into
+     * MacRoman there, as it does a `name_utf8` name). */
     const uint8_t *comment;
     uint16_t comment_len;
     uint8_t  meta;             /* UNC_META_* bits: which of the above */
@@ -432,6 +436,11 @@ typedef struct UncEntryInfo {
 #define UNC_META_CR_UTC  0x08  /* create_date is an instant, in UTC   */
 #define UNC_META_MD_UTC  0x10  /* mod_date is an instant, in UTC      */
 #define UNC_META_BK_UTC  0x20  /* backup_date is an instant, in UTC   */
+/* The comment is UTF-8, not the 8-bit encoding of the archive's family:
+ * a pax `comment` record (POSIX pax, "shall be encoded using UTF-8") and
+ * Mac OS X's Spotlight comment, a property-list string the engine turns
+ * from UTF-16 into UTF-8 (src/unc_sidecar.c). */
+#define UNC_META_CMT_UTF8 0x40
 
 #define UNC_LOCK_UNKNOWN 0
 #define UNC_LOCK_NO      1

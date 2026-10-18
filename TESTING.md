@@ -3032,6 +3032,11 @@ halves of that. The sweep has to permit the file, and it does not guess
 the NAME — a nested archive's comment is named after the archive inside
 the envelope, not after the fixture — it asks: what a `--no-comment` run
 of the same archive does not write is the comment, by definition.
+**An envelope layer kept because the layer inside it failed** is the same
+kind of file (added 2026-10-18): where the full run reports a failure, the
+sweep allows what `-nr` writes and the full run kept, and nothing where the
+layer unwrapped cleanly (DECISIONS.md 2026-10-18, *the comment Spotlight
+kept*).
 
 **What it cannot see.** Whether a skip SAVED anything: a format that
 seeks past a skipped entry and one that must decode and discard it —
@@ -3372,6 +3377,7 @@ is silent. Graded against:
 | the archive formats (`archive_check`), generated per run by `tools/synth_archmeta.py`: a zip with a MacZip file and folder (`0x334d` stored, Finder comment, backup date) and eight entries of foreign permissions and per-file comments; a pax tar; a gzip with MTIME and FCOMMENT; a Private File with its FInfo and FXInfo; an ArcMac entry; Now QuickFiler's sentinel archive (`nowmeta.build`); SuperDisk!'s (`sdmeta.build`); StuffIt 5's sentinel copy of `derived-FloatingNotes.sit` (`sitmeta.sit5_sentinel`), and the same with each second block's CRC spoiled, which must state nothing | the writing side of each layout, field by field (Python's `zipfile`, `tarfile`, the documents' tables); the sentinel archives re-read by the measurement tools' own walkers. And two second readers: `rexnebular_1_0_0.zip`'s `0x334d` records decoded as Info-ZIP's own Macintosh UnZip decodes them (`DecodeMac3ExtraField`), and its lock as that UnZip's `mapattr` takes it; PackIt's lock word in `derived-PackIt.pit` and `synth-packit-1.pit` as `macunpack -3` copies it to byte 81 |
 | `--corpus`, archives (`archive_corpus`) | every zip, tar, gzip, LZH, ARC and StuffIt 5 fixture and every lhasa test archive, against `lsar` run in UTC — mtime and ctime where XADMaster saw no Macintosh source, comment and lock; and for LZH lhasa's own header dumps (`test/output/*-hdr.txt`) in place of `lsar`'s Unix-style dates, 0x41 times and POSIX lock, which XADMaster misreads (DECISIONS.md 2026-10-17, *the archives' own Finder info*): 655 fields on 2026-10-17. Plus StuffIt 5's archive comment on `Sample Archive.sit` in the cache, against `lsar` |
 | Mac OS X's sidecars (`sidecar_expectations`): `synth-macosx.zip`, `.tar` and the `-edge` pair, from `tools/synth_macosx.py` | the generator's values (`--describe`), including which names must NOT be listed — a sidecar, a `__MACOSX` folder — and, for the `-edge` pair, each resource fork extracted byte for byte; and for every zip holding a `__MACOSX` member (`Aqua_Candy_Two.zip`, the Finder's own; libarchive's test zip; the generated two) **libarchive 3.7.4 through ctypes** (`zip:mac-ext`), whose AppleDouble blob per entry is parsed in the suite: an entry it pairs with nothing must state nothing. Added 2026-10-17 (DECISIONS.md, *the sidecars Mac OS X left beside the file*); controls: the apply step removed fails 417 fields, the pairing removed fails 15 "listed" checks |
+| the Spotlight comment: the `-spot` pair from `tools/synth_macosx.py` (13 entries: ASCII, UTF-16 with and without MacRoman's characters, cut at 255, past the window, not a string, cut short, a high byte, a lone surrogate, entry 4 as well, a folder's) | the generator's values; the `-spot` tar through libarchive too, and in every libarchive blob the attribute block walked by a second reader in the suite (`spot_comment`, XADAppleDouble.m's reading) and the list decoded by Python's **plistlib**; and **`lsar`** on each case alone in a zip (`spot_lsar`): 9 compared, `Both` and `Huge` left out by design. A UTF-8 comment's `U` mark is graded with it. Added 2026-10-18 (DECISIONS.md, *the comment Spotlight kept*); controls: the reader not called fails 28 rows, the mark not set 17, a cut inside a character 4, and every `U` toggled alone |
 | `--corpus`, envelopes (`envelope_corpus`) | every fixture the engine sniffs as MacBinary (deark), uuencode or base64 (the begin line), MIME (Python's `email`, then `lsar`), each ZipIt payload in a zip (Python's `zipfile`, then deark), and the MacGzip and ZipIt specimens in the cache when present: 507 fields of 255 entries on 2026-10-17 |
 
 | DiskDoubler 3.7's own compressed file | the catalog record the subject had before 3.7 compressed it (`tools/vmac/ddmeta.py --writer`'s result; skipped where absent) |
@@ -3379,7 +3385,8 @@ is silent. Graded against:
 
 Each field is then tampered with in the engine's row, one at a time, and the
 comparison must fail: 37 controls, 37 caught, and 228 of 228 in the
-archive tables. Seven scratch copies of the engine with one rule each
+archive tables (1,511 and 361 on 2026-10-18, a comment's `U` mark toggled
+alone among them). Seven scratch copies of the engine with one rule each
 undone — StuffIt 5's CRC gate, zip's host rule, LZH's POSIX mode, the
 DOS leap day, the pax mtime, one byte of `0x334d`'s FXInfo order,
 PackIt's lock word — each fail the suite (measured 2026-10-17). **In the envelope tables a
@@ -3400,7 +3407,10 @@ mock catalog in which creating or deleting an item stamps its folder with
 with the comment id cleared, three dates on each, the lock on one file and
 not the other, the comment through the mock Desktop Manager, and the
 folder's modification date after two files are created inside it; then no
-comment and no report line on a volume without a Desktop Manager. Six
+comment and no report line on a volume without a Desktop Manager; then
+(2026-10-18) a comment marked `UNC_META_CMT_UTF8` reaching the Desktop
+Manager folded into MacRoman, and the same bytes unmarked reaching it raw
+— with the fold removed the first fails (measured once). Six
 controls make the mock drop one write each, and each fails exactly its own
 check; a build without the folder-date restore fails that check (measured
 once, 2026-10-17).
@@ -3437,8 +3447,10 @@ on any real file — none in the corpus or the cache has either, so those
 two are graded on the generator alone. With `--expander`: the dates (not in
 `l --meta`; `metarun.py --expander` reads them off the disk), and any
 StuffIt reader but Expander 4.0.2. Of the sidecars: entries 4, 8, 10 and
-12 on a real file (copyfile writes only 2 and 9), and the extended
-attributes after the Finder info, which nothing reads. The real File Manager and Desktop Manager: that is
+12 on a real file (copyfile writes only 2 and 9); a Spotlight comment on
+a real file (none found, DECISIONS.md 2026-10-18), and the window rule,
+which `spot_comment` states rather than derives, so a wrong window cannot
+fail it; any other extended attribute, which nothing reads. The real File Manager and Desktop Manager: that is
 `tools/vmac/metarun.py` on an emulator (`tools/vmac/README.md`). What the
 Finder then does with any of it.
 
@@ -5687,7 +5699,7 @@ not who spent it.
   through the File Manager, and nothing here buffers the way the Mac
   shell does.
 - **Any file it is not handed.** It is a sweep, so what it measures is
-  the population you give it: the corpus is 992 files, and the
+  the population you give it: the corpus is 994 files, and the
   interesting population for a REJECTION cost is files that are not
   archives at all — `reference/`, this repository's own trees, the
   specimen cache. 8,364 of those were swept on 2026-10-05, which is

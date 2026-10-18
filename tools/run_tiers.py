@@ -137,10 +137,12 @@ REPO = os.path.dirname(HERE)
 # by that much with Mac OS X's sidecars (below).
 # **And by 672 B more the same day, DERIVED**: TIERS_CONTROL rose by that
 # much with the dates in the Macintosh's own zone (below).
+# **And by 1,392 B more 2026-10-18, DERIVED**: TIERS_CONTROL rose by that
+# much with the Spotlight comment (below).
 TIERS = {
-    "sys3-512K": (188996, "System 3.0, Macintosh 512Ke (225,956 B free)"),
-    "sys6-512K": (93596, "System 6.0.8, Macintosh 512Ke (130,556 B free)"),
-    "floor-1M":  (617884, "System 6.0.8, 1 MB Mac Plus — the floor target"),
+    "sys3-512K": (187604, "System 3.0, Macintosh 512Ke (225,956 B free)"),
+    "sys6-512K": (92204, "System 6.0.8, Macintosh 512Ke (130,556 B free)"),
+    "floor-1M":  (616492, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
 
 # RE-TAKEN on all three machines 2026-10-09 (`-D UNC_OVL_RESIDENT -D
@@ -267,7 +269,10 @@ TIERS = {
 # **Raised by 672 B more 2026-10-17, and TIERS lowered by the same 672,
 # DERIVED**: the dates in the Macintosh's own zone, the control's CODE +660
 # and A5 +12 (DECISIONS.md 2026-10-17, *dates in the Macintosh's own zone*).
-TIERS_CONTROL = 224496     # build/mac-resident, CODE + A5, 2026-10-17, meta-localtime
+# **Raised by 1,392 B more 2026-10-18, and TIERS lowered by the same,
+# DERIVED**: the Spotlight comment, the control's CODE +1,344 and A5 +48
+# (DECISIONS.md 2026-10-18, *the comment Spotlight kept*).
+TIERS_CONTROL = 225888     # build/mac-resident, CODE + A5, 2026-10-18, meta-spotlight
 # **What this control cannot see: the autotest harness.** TIERS was read
 # on the machine from an autotest build (`UNC_MAC_AUTOTEST`), and
 # build/mac-resident has no harness in it, so harness growth lowers what a
@@ -604,7 +609,11 @@ EXPECT = {
 # to make room, so `ovl_exo` -1,424, `ovl_zipold` +1,672, `ovl_lzh` +40,
 # the bundle +288 (DECISIONS.md 2026-10-17, *dates in the Macintosh's own
 # zone*).
-OVL_SAVED = 148240
+# **+1,296 2026-10-18, -> 149,536**: the Spotlight comment, the control's
+# +1,392 (CODE +1,344, A5 +48) against the shipped pair's +96 (CODE +80,
+# A5 +16, the shell's UTF-8 fold no longer inlined) (DECISIONS.md
+# 2026-10-18, *the comment Spotlight kept*).
+OVL_SAVED = 149536
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
 # every kept image is one — as is the bundle an envelope holds on to.
@@ -745,7 +754,7 @@ IMAGES = {
     "OVL_ID_SQP":         2040,
     "OVL_ID_SUPERDISK":   7142,
     "OVL_ID_TEXT":        12162,
-    "OVL_ID_ZIPOLD":      10284,
+    "OVL_ID_ZIPOLD":      11608,
 }
 # **ZIPOLD +3,374 B and EXO +972 B, the bundle +4,344 B, 2026-10-17**:
 # Mac OS X's sidecars, the shared code in ZIPOLD and zip's half in EXO,
@@ -755,7 +764,10 @@ IMAGES = {
 # day**: the dates in the Macintosh's own zone, and Implode moved into
 # ZIPOLD so that EXO links: 1,484 B under its 32 KB now, ZIPOLD 22,484
 # (DECISIONS.md 2026-10-17, *dates in the Macintosh's own zone*).
-BUNDLE = 177600
+# **ZIPOLD +1,324 B, the bundle +1,324 B, 2026-10-18**: the Spotlight
+# comment, read in src/unc_sidecar.c; ZIPOLD is 21,160 B under its 32 KB
+# (DECISIONS.md 2026-10-18, *the comment Spotlight kept*).
+BUNDLE = 178924
 
 # What the SHIPPED lane asserts, and it is the refused fixtures BY NAME
 # rather than a tally: a tier that refuses two different fixtures and still
