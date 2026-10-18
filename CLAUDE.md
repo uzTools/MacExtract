@@ -11,7 +11,7 @@ The engine is the product. The Mac app is a thin shell.
 
 ## Where things stand
 
-**M0–M69 are DONE and nothing is in flight.** Every Macintosh archive family
+**M0–M70 are DONE and nothing is in flight.** Every Macintosh archive family
 in FORMATS.md's table extracts; the rest of that table is named-only or
 detect-only by decision. The engine passes a **978-fixture** differential suite
 against `unar` and, where `unar` fails, `macunpack`, plus 9,780 robustness variants. The Macintosh application extracts byte-exact on every

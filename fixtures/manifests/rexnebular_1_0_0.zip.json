@@ -285,6 +285,6 @@
  "sha256": "413ed07cba844da89d87d8e12ef18307aae11980a7d1c5a56d9c72e0af50cfb0",
  "size": 31167318,
  "ungraded": {
-  "dates": "XADMaster adds CrGMTOffs and deark subtracts it, both labelling the result UTC, so no second implementation adjudicates Info-ZIP 0x334d's three Macintosh dates. Every entry here carries CrGMTOffs = -18000, so this engine's unadjusted dates stand 5 h from lsar's on all 22 (FORMATS.md, *Zip's Macintosh extra fields*)."
+  "dates": "XADMaster adds CrGMTOffs; the document, deark and Info-ZIP's own UnZip subtract it, and this engine does since 2026-10-17, marking the three Macintosh dates as UTC instants (DECISIONS.md 2026-10-17, *dates in the Macintosh's own zone*). Every entry here carries CrGMTOffs = -18000, so lsar, the only oracle this suite reads, stands 10 h from this engine on all 22; tools/run_meta.py grades them from the 0x334d record instead."
  }
 }
