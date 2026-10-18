@@ -11,7 +11,6 @@
 typedef struct UncFormatDesc {
     UncFormat   fmt;
     const char *name;
-    int         extractable;
     /* Holds exactly one file and is worth looking inside: the layers a
      * real download is chained from (.sit.hqx, .cpt.bin, .tar.Z). NOT
      * every format that happens to yield one file — a zip holding a
@@ -32,74 +31,59 @@ typedef struct UncFormatDesc {
      * neither can strand a fork on a layer that is deleted
      * (DECISIONS.md 2026-08-26, 2026-08-27). */
     int         envelope;
-    /* The extractor, or NULL for a format this engine only names.
-     * UNC_FORMAT_SPLIT is the one row where `extractable` is set
-     * and this is NULL: see its comment in the table. */
+    /* The extractor, or NULL for the three formats read only as a SET:
+     * see UNC_FORMAT_SPLIT's comment in the table. Every row but
+     * UNC_FORMAT_UNKNOWN's is a format this engine extracts; since
+     * 2026-10-18 it names none it does not (DECISIONS.md 2026-10-18,
+     * *the formats it only named*). */
     UncExtract  extract;
 } UncFormatDesc;
 
 static const UncFormatDesc unc_formats[] = {
-    { UNC_FORMAT_UNKNOWN,     "unknown",             0, 0, NULL },
-    { UNC_FORMAT_MACBINARY,   "MacBinary",           1, 1, unc_macbinary_extract },
-    { UNC_FORMAT_APPLESINGLE, "AppleSingle",         1, 1, unc_appledouble_extract },
-    { UNC_FORMAT_APPLEDOUBLE, "AppleDouble",         1, 1, unc_appledouble_extract },
-    { UNC_FORMAT_BINHEX,      "BinHex 4",            1, 1, unc_binhex_extract },
+    { UNC_FORMAT_UNKNOWN,     "unknown",             0, NULL },
+    { UNC_FORMAT_MACBINARY,   "MacBinary",           1, unc_macbinary_extract },
+    { UNC_FORMAT_APPLESINGLE, "AppleSingle",         1, unc_appledouble_extract },
+    { UNC_FORMAT_APPLEDOUBLE, "AppleDouble",         1, unc_appledouble_extract },
+    { UNC_FORMAT_BINHEX,      "BinHex 4",            1, unc_binhex_extract },
     /* .hex and .hcx, both written by BinHex 2.0 (src/fmt_hecx.c). An
      * envelope on the same terms as BinHex 4: it carries its own forks.
      * Reached through unc_binhex_extract, which looks at UncCtx.fmt. */
-    { UNC_FORMAT_BINHEX_OLD,  "BinHex hex/hcx",      1, 1, unc_binhex_extract },
-    { UNC_FORMAT_PACKIT,      "PackIt",              1, 0, unc_packit_extract },
-    { UNC_FORMAT_COMPACTPRO,  "Compact Pro",         1, 0, unc_cpt_extract },
-    { UNC_FORMAT_SIT,         "StuffIt",             1, 0, unc_sit_extract },
-    { UNC_FORMAT_SIT5,        "StuffIt 5",           1, 0, unc_sit5_extract },
-    { UNC_FORMAT_ZIP,         "Zip",                 1, 0, unc_zip_extract },
-    { UNC_FORMAT_GZIP,        "Gzip",                1, 1, unc_gzip_extract },
-    { UNC_FORMAT_COMPRESS_Z,  "Unix compress",       1, 1, unc_compressz_extract },
-    { UNC_FORMAT_TAR,         "Tar",                 1, 0, unc_tar_extract },
-    { UNC_FORMAT_SITX,        "StuffIt X",           0, 0, NULL },
-    { UNC_FORMAT_DISKDOUBLER, "DiskDoubler",         1, 0, unc_dd_extract },
-    { UNC_FORMAT_NOWCOMPRESS, "Now Compress",        1, 0, unc_now_extract },
-    { UNC_FORMAT_LZH,         "LZH",                 1, 0, unc_lzh_extract },
-    { UNC_FORMAT_SITSEG,      "StuffIt segment",     1, 0, unc_sitseg_extract },
-    { UNC_FORMAT_ZIPSEG,      "Zip segment",         1, 0, unc_zipseg_extract },
+    { UNC_FORMAT_BINHEX_OLD,  "BinHex hex/hcx",      1, unc_binhex_extract },
+    { UNC_FORMAT_PACKIT,      "PackIt",              0, unc_packit_extract },
+    { UNC_FORMAT_COMPACTPRO,  "Compact Pro",         0, unc_cpt_extract },
+    { UNC_FORMAT_SIT,         "StuffIt",             0, unc_sit_extract },
+    { UNC_FORMAT_SIT5,        "StuffIt 5",           0, unc_sit5_extract },
+    { UNC_FORMAT_ZIP,         "Zip",                 0, unc_zip_extract },
+    { UNC_FORMAT_GZIP,        "Gzip",                1, unc_gzip_extract },
+    { UNC_FORMAT_COMPRESS_Z,  "Unix compress",       1, unc_compressz_extract },
+    { UNC_FORMAT_TAR,         "Tar",                 0, unc_tar_extract },
+    { UNC_FORMAT_DISKDOUBLER, "DiskDoubler",         0, unc_dd_extract },
+    { UNC_FORMAT_NOWCOMPRESS, "Now Compress",        0, unc_now_extract },
+    { UNC_FORMAT_LZH,         "LZH",                 0, unc_lzh_extract },
+    { UNC_FORMAT_SITSEG,      "StuffIt segment",     0, unc_sitseg_extract },
+    { UNC_FORMAT_ZIPSEG,      "Zip segment",         0, unc_zipseg_extract },
     /* Extractable, but only as a SET: unc_extract_as has no case for it,
      * because one part of a plain split is an anonymous slice of bytes
      * and there is no header to read it as. The host decides by name
      * and calls unc_extract_segments. */
-    { UNC_FORMAT_SPLIT,       "Split file",          1, 0, NULL },
-    { UNC_FORMAT_CPTSEG,      "Compact Pro segment", 1, 0, NULL },
+    { UNC_FORMAT_SPLIT,       "Split file",          0, NULL },
+    { UNC_FORMAT_CPTSEG,      "Compact Pro segment", 0, NULL },
     /* Extractable only as a SET, like the two rows above: one part of a
      * message/partial set is half a message, and unc_extract_as has no
      * case for it. */
-    { UNC_FORMAT_MIMESEG,     "message/partial part", 1, 0, NULL },
-    { UNC_FORMAT_UU,          "uuencode",            1, 1, unc_uu_extract },
-    { UNC_FORMAT_ARC,         "ARC",                 1, 0, unc_arc_extract },
-    { UNC_FORMAT_SUPERDISK,   "SuperDisk!",          1, 0, unc_superdisk_extract },
-    { UNC_FORMAT_DDSEG,       "DiskDoubler split",   1, 0, unc_ddseg_extract },
-    { UNC_FORMAT_SPACESAVER,  "StuffIt SpaceSaver",  1, 0, unc_spacesaver_extract },
-    { UNC_FORMAT_BTOA,        "btoa",                1, 1, unc_btoa_extract },
-    { UNC_FORMAT_BASE64,      "base64",              1, 1, unc_b64_extract },
-    { UNC_FORMAT_MIME,        "MIME message",        1, 0, unc_mime_extract },
-    { UNC_FORMAT_SQP,         "AppleLink package",   1, 0, unc_sqp_extract },
+    { UNC_FORMAT_MIMESEG,     "message/partial part", 0, NULL },
+    { UNC_FORMAT_UU,          "uuencode",            1, unc_uu_extract },
+    { UNC_FORMAT_ARC,         "ARC",                 0, unc_arc_extract },
+    { UNC_FORMAT_SUPERDISK,   "SuperDisk!",          0, unc_superdisk_extract },
+    { UNC_FORMAT_DDSEG,       "DiskDoubler split",   0, unc_ddseg_extract },
+    { UNC_FORMAT_SPACESAVER,  "StuffIt SpaceSaver",  0, unc_spacesaver_extract },
+    { UNC_FORMAT_BTOA,        "btoa",                1, unc_btoa_extract },
+    { UNC_FORMAT_BASE64,      "base64",              1, unc_b64_extract },
+    { UNC_FORMAT_MIME,        "MIME message",        0, unc_mime_extract },
+    { UNC_FORMAT_SQP,         "AppleLink package",   0, unc_sqp_extract },
     /* An envelope: one file in, one file out — and the file PF Encrypt
      * puts in is always a StuffIt archive it made first (fmt_pf.c). */
-    { UNC_FORMAT_PRIVATEFILE, "Private File",        1, 1, unc_pf_extract },
-    /* Named, never extracted (src/fmt_foreign.c). */
-    { UNC_FORMAT_RAR,         "RAR",                 0, 0, NULL },
-    { UNC_FORMAT_RAR5,        "RAR 5",               0, 0, NULL },
-    { UNC_FORMAT_7Z,          "7-Zip",               0, 0, NULL },
-    { UNC_FORMAT_XZ,          "xz",                  0, 0, NULL },
-    { UNC_FORMAT_BZIP2,       "bzip2",               0, 0, NULL },
-    { UNC_FORMAT_CAB,         "Microsoft Cabinet",   0, 0, NULL },
-    { UNC_FORMAT_ZOO,         "Zoo",                 0, 0, NULL },
-    { UNC_FORMAT_AR,          "ar archive",          0, 0, NULL },
-    { UNC_FORMAT_CPIO,        "cpio",                0, 0, NULL },
-    { UNC_FORMAT_ARJ,         "ARJ",                 0, 0, NULL },
-    { UNC_FORMAT_ZSTD,        "Zstandard",           0, 0, NULL },
-    { UNC_FORMAT_LZIP,        "lzip",                0, 0, NULL },
-    { UNC_FORMAT_LRZIP,       "lrzip",               0, 0, NULL },
-    { UNC_FORMAT_WIM,         "WIM",                 0, 0, NULL },
-    { UNC_FORMAT_AAR,         "Apple Archive",       0, 0, NULL },
+    { UNC_FORMAT_PRIVATEFILE, "Private File",        1, unc_pf_extract },
 };
 
 static const UncFormatDesc *unc_desc(UncFormat f)
@@ -116,10 +100,12 @@ const char *unc_format_name(UncFormat f)
     return d ? d->name : "unknown";
 }
 
+/* Every row but UNKNOWN's is extractable since 2026-10-18; what this
+ * still refuses is a value with no row at all — the two retired slots
+ * in macextract.h, and anything out of range. */
 int unc_format_extractable(UncFormat f)
 {
-    const UncFormatDesc *d = unc_desc(f);
-    return d ? d->extractable : 0;
+    return f != UNC_FORMAT_UNKNOWN && unc_desc(f) != NULL;
 }
 
 int unc_format_is_envelope(UncFormat f)
@@ -172,7 +158,6 @@ static const UncProbe unc_sniff_order[] = {
     unc_sitseg_probe,
     /* DiskDoubler's `SPLT`: two copies of its magic, 90 bytes apart. */
     unc_ddseg_probe,
-    unc_sitx_probe,
     /* 'SIT!' again, but with 'DFD3' behind it: SpaceSaver's header, and
      * the StuffIt probe above would never claim it (its second long is
      * 'rLau'). */
@@ -184,14 +169,6 @@ static const UncProbe unc_sniff_order[] = {
      * bytes from the end. Neither StuffIt probe above can take one: their
      * magics are 'SIT!' and the StuffIt 5 banner (fmt_pf.c). */
     unc_pf_probe,
-    /* The PC-side archives, all of them a constant at a fixed offset, so
-     * the whole set costs a handful of byte compares on a buffer already
-     * read. They sit with the other magic numbers and ahead of
-     * MacBinary's CRC for the same reason MacBinary sits ahead of the
-     * zip scan: a test that cannot be wrong should not be paid for
-     * twice. Nothing here can take a file from a Mac format — every one
-     * is a constant no Mac archive begins with (fmt_foreign.c). */
-    unc_foreign_probe,
     /* MacBinary has no magic number, only a header CRC and structural
      * constraints, which is why it used to sit LAST — the weakest test
      * claims a file only when nothing stronger has. It is here instead

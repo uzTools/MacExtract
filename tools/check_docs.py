@@ -629,8 +629,8 @@ CORPUS_FIGURES = [
     # is not a figure to correct.
     ("PROGRESS.md", r"`macunpack`; ([\d,]+) robustness variants clean",
      "robust", "the robustness suite's size"),
-    ("FORMATS.md", r"0 false positives in ([\d,]+) corpus files", "files",
-     "the foreign-format sweep's population"),
+    ("FORMATS.md", r"No fixture changes format in\s+([\d,]+) corpus files",
+     "files", "run_foreign.py's corpus sweep's population"),
     ("FORMATS.md", r"exactly the \d+ of ([\d,]+) corpus files", "files",
      "the AppleLink sweep's population"),
     ("TESTING.md", r"the corpus is ([\d,]+) files", "files",

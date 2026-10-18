@@ -41,7 +41,7 @@ GROUPS = [
     ("deflate (zip + gzip)",
      ["inflate", "inftrees", "inffast", "adler32", "unc_inflate", "zutil"]),
     ("engine core, util, segment joining",
-     ["unc_engine", "unc_util", "unc_segment", "fmt_stubs", "fmt_foreign"]),
+     ["unc_engine", "unc_util", "unc_segment", "fmt_stubs"]),
     ("encryption: ciphers and key schedules", ["unc_crypt"]),
 ]
 

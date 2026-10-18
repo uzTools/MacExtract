@@ -1,25 +1,13 @@
 /*
- * fmt_stubs.c — detect-only probes: formats v1 names in unc_sniff but
- * does not extract, so a UI can tell the user what the file is.
+ * fmt_stubs.c — the probes of two formats whose readers live elsewhere
+ * (fmt_now.c, fmt_dd.c). It held the detect-only probes once; the last
+ * of them, StuffIt X's, went on 2026-10-18 with every format this
+ * engine named but did not extract (DECISIONS.md 2026-10-18, *the
+ * formats it only named*).
  *
  * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
  */
 #include "unc_internal.h"
-
-/* StuffIt X: 8-byte magic "StuffIt!" or "StuffIt?".
- * Source: reference/deark/modules/unsupported.c, which recognises the
- * same seven characters and the same two eighth ones (MIT, see NOTICE)
- * — a second reading of a magic number Aladdin never published, and
- * the reason this probe owes XADMaster nothing. */
-UncFormat unc_sitx_probe(const uint8_t *head, int32_t len, UncIO *io)
-{
-    (void)io;
-    if (len < 8) return UNC_FORMAT_UNKNOWN;
-    return (head[0] == 'S' && head[1] == 't' && head[2] == 'u' &&
-           head[3] == 'f' && head[4] == 'f' && head[5] == 'I' &&
-           head[6] == 't' && (head[7] == '!' || head[7] == '?'))
-           ? UNC_FORMAT_SITX : UNC_FORMAT_UNKNOWN;
-}
 
 /* Now Compress: 00 02 magic, plausible file count, Pascal name, and a
  * byte-sum checksum over bytes 24..129 stored at 130 — which is the

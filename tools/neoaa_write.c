@@ -2,12 +2,13 @@
  * neoaa_write.c — write an Apple Archive with libNeoAppleArchive, then
  * read it back with the same library.
  *
- * This is the oracle for the Apple Archive probe (FORMATS.md, *Archives
- * named but not extracted*). It is the same tier as bzip2, xz and 7z in
- * tools/run_foreign.py: the subject is written by an implementation that
- * is not ours, and parsed again by that implementation before the probe
- * is asked about it, so a specimen the probe rejects is known to be a
- * real archive rather than a header this repository invented.
+ * It writes the Apple Archive specimens tools/run_foreign.py requires
+ * the engine NOT to recognise (since 2026-10-18 it recognises no format
+ * it does not extract). It is the same tier as bzip2, xz and 7z there:
+ * the subject is written by an implementation that is not ours, and
+ * parsed again by that implementation before the engine is asked about
+ * it, so a specimen is known to be a real archive rather than a header
+ * this repository invented.
  *
  * Built by tools/build_neoaa.sh; not part of the engine, and not
  * compiled by ci.sh's build. License: LGPL-2.1-or-later (the library it

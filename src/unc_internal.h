@@ -781,8 +781,7 @@ void unc_path_leaf(const UncPath *p, UncEntryInfo *e,
 /* the rest take it and ignore it, which is the price of unc_sniff    */
 /* being an ORDERED TABLE rather than a chain of twenty-eight `if`s.  */
 /* Returning the format rather than a flag is what lets one probe     */
-/* answer for several: AppleSingle and AppleDouble share a magic, and */
-/* fmt_foreign.c answers for ten PC formats at once.                  */
+/* answer for several: AppleSingle and AppleDouble share a magic.     */
 /* ------------------------------------------------------------------ */
 
 struct UncCtx;
@@ -1525,14 +1524,8 @@ int unc_arc_extract(UncCtx *c);
 UncFormat unc_lzh_probe(const uint8_t *head, int32_t len, UncIO *io);
 int unc_lzh_extract(UncCtx *c);
 
-/* Foreign archives (fmt_foreign.c): PC-side formats named but never
- * extracted. One probe for all of them; returns the format or
- * UNC_FORMAT_UNKNOWN. Head buffer only, no io. */
-UncFormat unc_foreign_probe(const uint8_t *head, int32_t len,
-                            UncIO *io);
-
-/* Detect-only probes */
-UncFormat unc_sitx_probe(const uint8_t *head, int32_t len, UncIO *io);
+/* Probes kept resident, apart from their readers (fmt_stubs.c,
+ * fmt_superdisk_probe.c, fmt_spacesaver_probe.c). */
 UncFormat unc_nowcompress_probe(const uint8_t *head, int32_t len, UncIO *io);
 UncFormat unc_superdisk_probe(const uint8_t *head, int32_t len, UncIO *io);
 UncFormat unc_spacesaver_probe(const uint8_t *head, int32_t len, UncIO *io);

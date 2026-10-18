@@ -1104,9 +1104,9 @@ def verify_output(xfer, fixture, workdir, partial=False, password=None):
                      f"{ARCHIVE_ON_VOLUME} into an empty directory")
 
     if not expected and not names:
-        # Both sides produced nothing, which for a detect-only format is the
-        # CORRECT outcome and not a failure: the engine recognises it and
-        # declines. Treating "nothing" as failure would mark a working refusal
+        # Both sides produced nothing, which for a file that is not an
+        # archive the engine has (synth-os9-rar.rar) is the CORRECT outcome
+        # and not a failure: the engine declines it. Treating "nothing" as failure would mark a working refusal
         # as broken — and refusing cleanly on an unsupported format is
         # behaviour worth verifying on Mac OS 9 like any other.
         why = subprocess.run([cli, "l", "-nr", asmac], capture_output=True,
@@ -1740,9 +1740,10 @@ def verify_autotest_hfs(inimg, outimg, fixture, workdir, samevol=False):
         lines.append(f"  {label:>13}: Mac {got}  Linux {want}"
                      f"{'' if same else '   <- MISMATCH'}")
     # An archive the ENGINE refuses is not a failure of the Macintosh: this
-    # harness grades the Mac against the same engine on Linux, and a
-    # detect-only format (RAR, and every other row of FORMATS.md that is named
-    # but not extracted) is refused on both sides with nothing written. The
+    # harness grades the Mac against the same engine on Linux, and a file
+    # that is not an archive the engine has (synth-os9-rar.rar, a RAR, which
+    # nothing here recognises since 2026-10-18) is refused on both sides
+    # with nothing written. The
     # reference exits non-zero and writes no file; the Mac must then report a
     # refusal of its own and write no file, and agreeing is a PASS. It stays
     # strict where it can: identical counts, a non-zero ret on the Mac, and

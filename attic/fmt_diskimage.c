@@ -12,7 +12,8 @@
  * so naming something outside that frame changes nothing they can act
  * on — the file is still not extracted and the next move is still not
  * this program. Naming an archive we decline is the opposite, and that
- * is what replaced this (src/fmt_foreign.c).
+ * is what replaced this (src/fmt_foreign.c, itself removed 2026-10-18:
+ * the engine names nothing it does not extract now).
  *
  * Below, in the order they left the tree:
  *

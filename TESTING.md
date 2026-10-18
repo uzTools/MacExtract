@@ -4488,59 +4488,46 @@ more than once, and an address is half of what identifies them.
 that rebuilds the resource from the 3.0.7 installer, which is copyrighted and
 not committed — `--witness` skips cleanly without it.
 
-## Archives named but not extracted (`tools/run_foreign.py`, in `ci.sh`)
+## Archives this engine does not have (`tools/run_foreign.py`, in `ci.sh`)
 
-Added 2026-08-26, replacing the disk-image suite that came out the same day
-(`attic/`). `src/fmt_foreign.c` is signatures and nothing else, so the test is
-the signature, its neighbours, and the corpus.
+Added 2026-08-26 to grade the formats the engine named and did not extract;
+**a negative test since 2026-10-18**, when that naming went (DECISIONS.md
+2026-10-18, *the formats it only named*). It holds every reader to what the
+old probe gave for free by running first: such a file is not an archive.
 
 ```sh
 python3 tools/run_foreign.py --macextract build/dev/macextract
 ```
 
-**Four grades of case, and the suite says which is which.** bzip2, xz, 7z,
-cpio (three header shapes) and ar are written by their own tools here and then
-**opened by p7zip** — a specimen that p7zip cannot parse proves nothing about
-a probe, so that check is asserted rather than assumed. **Apple Archive is the
-same grade with the writer built for it**: `tools/build_neoaa.sh` compiles
-libNeoAppleArchive out of `reference/`, and `tools/neoaa_write.c` writes one
-archive per shape — raw `AA01`, `pbze`, `pbzz`, `pbzb` — then reads each back
-with that same library and exits nonzero if it will not parse, which is what
-p7zip does for the others. Zoo, ARJ and Cabinet
-are hand-built headers that **deark** must identify as `zoo`, `arj` and `cab`;
-if deark does not agree, the case is worthless and fails. RAR and RAR 5 have
-neither — no writer here, no deark module, and p7zip refuses to name a stub it
-cannot parse — so in `ci.sh` they rest on the constants in
-`reference/XADMaster`, with real archives measured once outside it (FORMATS.md,
-*Archives named but not extracted*).
+**The contract, per specimen:** `sniff` prints `unknown`, and `x` exits
+non-zero, says *"format not recognized"* and leaves its output directory
+empty. **The specimens must be real first**: bzip2, xz, 7z, WIM, cpio (three
+header shapes) and ar are written by their own tools and must be **opened by
+p7zip**; four Apple Archives are written and read back by libNeoAppleArchive
+(`tools/build_neoaa.sh`, `tools/neoaa_write.c`); StuffIt X, RAR 1.3, 1.5–4
+and 5, Cabinet, Zoo, ARJ and lzip are hand-built headers that **deark** must
+identify as that format, or the case fails. Zstandard (a frame and two
+skippable frames) and lrzip rest on their published magics alone.
+`tests/unit_formats.c`'s `test_foreign` asks the same of every magic the old
+probes accepted, in a buffer of zeros and one of 0xFF, without tools.
 
-**The negatives are the point of a signature file**: the eighth RAR byte, the
-7-Zip reserved byte, xz's terminator, bzip2's two stream magics and its level
-digit, Zoo's magic at offset 0 instead of 0x14, ARJ with a broken header CRC
-and with a size out of bounds, `070703`, `!<arch>!`, an Apple Archive header
-smaller than its own six-byte prologue, one whose first field subtype is
-outside the closed set, and a `pbz` stream naming a codec that is not one.
-Each was mutation-tested against a probe with that field deleted.
+**And the corpus is swept**: every fixture with a manifest must sniff as its
+oracle's format (`run_diff.py`'s `IMPLEMENTED`), every other fixture as
+something, and `synth-os9-rar.rar` — a RAR on purpose, the Mac OS 9 tier's
+refusal sample — must meet the specimens' contract.
 
-**And the corpus is swept**: not one of the fixtures may come back as a
-foreign archive. Naming a Macintosh archive as a PC one is worse than not
-naming it, because the user would then be sent to a program that cannot open
-it either. **One fixture is exempt and graded rather than skipped**:
-`synth-os9-rar.rar` is a RAR on purpose — the Mac OS 9 tier boots one file per
-format and needed something to raise the refusal alert (2026-08-27) — so the
-sweep requires it to sniff as RAR and requires everything else not to.
+**It can fail, measured 2026-10-18**: `origin/main`'s CLI, which still named
+them, fails 52 of 97 checks (all 26 specimens); a build with a probe that
+claims `MSCF` as a zip and no LZH probe fails 3 — `s.cab` twice and the
+corpus sweep, on the LZH fixtures.
 
-**What this cannot see.** Whether a real Zoo, ARJ or Cabinet archive is named —
-those three are graded on headers built here, which deark identifies but which
-no archiver wrote. Nor whether Apple's OWN `aa` writes anything
-libNeoAppleArchive does not: every Apple Archive here comes from the one
-implementation the probe was also written from, so a shape only Apple emits
-would be invisible to both. That needs a macOS, and is MANUAL_TESTS.md's kind
-of gap, not this suite's. The `pbzx` and `pbz4` codec letters are untested for
-the same reason twice over — libNeoAppleArchive names them and does not yet
-write them. And nothing here tests what a named-but-declined archive
-does on the Macintosh: that is one alert, photographed once
-(`tools/vmac/README.md`, *Photographing the detect-only alert*).
+**What this cannot see.** A reader that claims a real archive of one of these
+families whose head differs from every specimen here — a self-extracting
+`.exe`, a RAR with a comment block first, a multi-volume part, or a shape only
+Apple's own `aa` writes. Zoo, ARJ, Cabinet, RAR, StuffIt X and lzip are
+headers deark identifies, not files an archiver wrote. Nor what the Macintosh
+does with one beyond the Mac OS 9 tier's single RAR: that is one alert
+(`tools/vmac/README.md`, *Photographing the refusal alert*).
 
 ## StuffIt SpaceSaver (`tools/run_spacesaver.py`, in `ci.sh`)
 

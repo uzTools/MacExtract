@@ -3,12 +3,12 @@
 # reference/ tree, plus tools/neoaa_write.c, to get an Apple Archive
 # WRITER on this machine. Nothing under reference/ is modified.
 #
-# WHY. Apple Archive is named and never extracted (OPEN_ITEMS.md, part 1),
-# and the probe was written from libNeoAppleArchive's own header — so
-# grading it against a header this repository builds would be grading our
-# reading of that source against itself. This library writes real
-# archives in all four shapes the probe has to recognise: raw `AA01` and
-# the `pbze`/`pbzz`/`pbzb` codecs.
+# WHY. Apple Archive is out of scope (OPEN_ITEMS.md, part 1), and since
+# 2026-10-18 the engine does not recognise it either: tools/run_foreign.py
+# requires a real one to sniff as unknown and extract nothing. A header
+# this repository built would only prove that about our own reading of
+# the format. This library writes real archives in four shapes: raw
+# `AA01` and the `pbze`/`pbzz`/`pbzb` codecs.
 #
 # libNeoAppleArchive's own Makefile wants clang, homebrew's openssl and
 # an install step; none of that is needed for the writer, so the three

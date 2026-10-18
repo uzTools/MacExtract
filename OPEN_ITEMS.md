@@ -43,21 +43,21 @@ grown before, on request.
 | Choosing which entries come out, in the Macintosh application | **not implemented; the CLI's `--only` ships** | decided 2026-09-26: a tick list is paid for by every run. The engine keeps both halves a host needs (`UncOptions.list_only`, a `begin_entry` returning >0); built on the kept branch `selective-extract` (BRANCHES.md; DECISIONS.md 2026-09-26, *the feature that was parked, and is now out*) |
 | Hardware decoding — an FPU, a coprocessor, a NuBus codec card | **not implemented, nothing measured for one to do** | every codec is integer work; Arsenic's two divides are 0.72 % of a run (FORMATS.md, *What is still hot*), and a second `-mcpu=68020` build is out too (DECISIONS.md 2026-09-23, *hardware decoding*) |
 | The Macintosh 512K — 64 KB of ROM | **the interface runs; extraction needs HFS** | measured 2026-09-01; the download gets as far as Standard File since 2026-10-16 (`GrowApplZone`, merged from the branch `rom64k`), and only a Hard Disk 20 supplies HFS, which nobody has run (FORMATS.md, *A true Macintosh 512K*; MANUAL_TESTS.md §6). A **128K** is out on the heap TOTAL, corrected 2026-10-06 (FORMATS.md, *A Macintosh 128K*, *Overlays*) |
-| StuffIt X (`.sitx`) | **detect-only** | out by the brief |
+| StuffIt X (`.sitx`) | **not recognised** since 2026-10-18 (named until then) | out by the brief (DECISIONS.md 2026-10-18, *the formats it only named*) |
 | PKWARE "strong encryption" in a zip (flag 0x40) | **named, refused per entry** | its key material is in a record nothing here parses, and XADMaster refuses it too; every other cipher these formats have is decrypted (FORMATS.md, *Encryption*) |
 | Disk images (`.image`, `.img`, `.iso`, `.cdr`, `.toast`, `.dmg`, `.smi`), and Disk Copy 4.2 | **not recognised**, and not extracted | a filesystem, not a codec; the probes are kept in `attic/` (DECISIONS.md 2026-08-26, *read the volume, not the extension*). DART was in from 2026-09-09 to 2026-09-25 and left for MacMount (DECISIONS.md 2026-09-25, *the disk images that found another home*) |
 | PMarc (`-pm0-`, `-pm1-`, `-pm2-`) and `-lhx-` | **not recognised** | a different family behind an LZH-shaped header; neither reached a Macintosh |
 | Self-extracting LZH (an executable with an archive behind it) | **not recognised** | nothing in the file says where the first header is, unlike a zip, whose offsets are absolute — which is why a self-extracting zip is recognised since 2026-10-05 (DECISIONS.md 2026-10-05, *the scan that was already being paid for*) |
-| RAR, 7z, bzip2, xz, Cabinet, Zoo, ar/`.deb`, cpio, ARJ | **named, never extracted** | not Macintosh formats, and each is served by a maintained extractor (DECISIONS.md 2026-08-26, *a name is only worth something inside the frame the user came with*; FORMATS.md, *Archives named but not extracted*) |
+| RAR, 7z, bzip2, xz, Cabinet, Zoo, ar/`.deb`, cpio, ARJ, Zstandard, lzip, lrzip, WIM, Apple Archive | **not recognised** since 2026-10-18 (named until then) | not Macintosh formats, and each is served by a maintained extractor; the maintainer's decision 2026-10-18 that nothing is recognised that is not extracted (DECISIONS.md 2026-10-18, *the formats it only named*). `tools/run_foreign.py` holds every reader to that (TESTING.md, *Archives this engine does not have*) |
 | Alysis SuperDisk! method 13 | **not implemented, and no specimen is wanted** | its module compresses and refuses to decompress, so nothing anywhere could grade a decoder (FORMATS.md, *Module 13*; DECISIONS.md 2026-08-29, *the specimen that would have settled nothing*) |
 | Checking a MIME part's `Content-MD5` | **not implemented**; a `message/partial` anchor that is not a part — the set pasted into one file, or part 1 with a signature after it — comes out wrong with exit 0, as from munpack | decided 2026-10-11: built and priced at **+1,446 B** of `ovl_text` for a header mpack writes and nothing here has seen in a file this project did not make (FORMATS.md, *`message/partial`*; DECISIONS.md 2026-10-11, *the digest our own oracle could not compute*) |
 | Zip64 addressing past 4 GB | **counts and the per-entry escape are read; over-4-GB fields are refused** (`UNC_ERR_UNSUPPORTED` per archive, `UNC_ERR_TOOLARGE` per entry; `unc_zipseg_describe` refuses a spanned set) | a format change, not a type change (DECISIONS.md 2026-08-28, *what a width costs*; FORMATS.md, *Size limits*); tar reaches past 4 GB today |
 
-Everything detect-only is **named** by `unc_sniff`, and the CLI says the
-name: *"recognized as RAR, which v1 cannot extract"*. The Macintosh
-application says only *"This file could not be extracted."*, before asking
-where to extract, since 2026-10-18 (DECISIONS.md, *the question after the
-look*).
+Nothing is detect-only since 2026-10-18: a file of a format this engine
+does not extract is `UNC_FORMAT_UNKNOWN`, the CLI says *"format not
+recognized"*, and the Macintosh application *"This file could not be
+extracted."* without asking where to extract (DECISIONS.md 2026-10-18, *the
+question after the look*, *the formats it only named*).
 
 ## Limits of the formats themselves
 

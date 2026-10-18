@@ -29,7 +29,7 @@ unarchiver is telling you they believe they have an archive, and naming
 something outside that frame changes nothing they can do: the file is
 still not extracted and the next move is still not this program. Naming
 an archive this engine declines is the opposite case, and that is what
-took their place (`src/fmt_foreign.c`). DECISIONS.md 2026-08-26 has the
+took their place (`src/fmt_foreign.c`, itself removed 2026-10-18). DECISIONS.md 2026-08-26 has the
 argument; OPEN_ITEMS.md part 1 records disk images as out of scope in
 both directions now, extraction and naming.
 

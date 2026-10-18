@@ -3966,31 +3966,52 @@ static void ss_sniff_is(const char *text, UncFormat want)
 }
 
 /* ------------------------------------------------------------------ */
-/* Foreign archives: named, never extracted (src/fmt_foreign.c)        */
+/* Formats this engine does not have: not an archive                  */
 /*                                                                     */
-/* Signatures only, so the tests are the signature and its neighbours: */
-/* every accepted magic, and for each one the near-miss that must be   */
-/* refused. tools/run_foreign.py is where real archives written by     */
-/* bzip2, xz, 7z, cpio and ar are put through the same probe; this is  */
-/* the half that needs no tools installed.                             */
+/* Until 2026-10-18 sixteen PC-side and modern formats were NAMED      */
+/* here and never extracted (DECISIONS.md 2026-10-18, *the formats it  */
+/* only named*). Their probes ran ahead of MacBinary's CRC and every   */
+/* weaker test, so nothing else was ever asked about one. Now nothing  */
+/* claims them, and that has to be shown rather than assumed: each     */
+/* magic the old probes accepted, in a file that is otherwise zeros    */
+/* and in one that is otherwise 0xFF, sniffs as UNKNOWN                */
+/* and extracts as UNC_ERR_FORMAT with nothing written.                */
+/* tools/run_foreign.py puts real archives through the same question. */
 /* ------------------------------------------------------------------ */
-static void fgn_is(const uint8_t *data, int32_t len, UncFormat want)
+static void fgn_none(const uint8_t *data, int32_t len)
 {
     UncIO io;
     MemIO m;
+    UncAlloc al;
+    UncSink sk;
+    CapSink cap;
     test_make_memio(&io, &m, data, (uint32_t)len);
-    CHECK(unc_sniff(&io) == want);
+    CHECK(unc_sniff(&io) == UNC_FORMAT_UNKNOWN);
+    test_make_memio(&io, &m, data, (uint32_t)len);
+    test_make_alloc(&al);
+    cap_make(&sk, &cap);
+    CHECK(unc_extract(&io, &sk, &al, NULL, NULL) == UNC_ERR_FORMAT);
+    CHECK(cap.count == 0);
 }
 
-/* A signature followed by enough zeros that no length test is what
- * rejects it: 64 bytes past the longest magic here. */
-static void fgn_sig(const char *sig, int32_t siglen, UncFormat want)
+/* The signature at `off`, then filler to 128 bytes: zeros, which are
+ * what MacBinary's constraints want, and then 0xFF, so that a test
+ * wanting zeros is not the only thing that refuses it. */
+static void fgn_sig_at(const char *sig, int32_t siglen, int32_t off)
 {
     uint8_t buf[128];
-    int32_t i;
-    for (i = 0; i < (int32_t)sizeof buf; i++) buf[i] = 0;
-    for (i = 0; i < siglen; i++) buf[i] = (uint8_t)sig[i];
-    fgn_is(buf, (int32_t)sizeof buf, want);
+    int32_t i, fill;
+    for (fill = 0; fill < 2; fill++) {
+        for (i = 0; i < (int32_t)sizeof buf; i++)
+            buf[i] = fill ? 0xFF : 0;
+        for (i = 0; i < siglen; i++) buf[off + i] = (uint8_t)sig[i];
+        fgn_none(buf, (int32_t)sizeof buf);
+    }
+}
+
+static void fgn_sig(const char *sig, int32_t siglen)
+{
+    fgn_sig_at(sig, siglen, 0);
 }
 
 static void test_foreign(void)
@@ -3998,146 +4019,81 @@ static void test_foreign(void)
     uint8_t buf[128];
     int32_t i;
 
-    /* RAR: three generations, and the eighth byte is what separates the
-     * two that share a signature. */
-    fgn_sig("Rar!\x1a\x07\x00", 7, UNC_FORMAT_RAR);
-    fgn_sig("Rar!\x1a\x07\x01\x00", 8, UNC_FORMAT_RAR5);
-    fgn_sig("RE~^", 4, UNC_FORMAT_RAR);                  /* RAR 1.3/1.4 */
-    fgn_sig("Rar!\x1a\x07\x02", 7, UNC_FORMAT_UNKNOWN);
+    /* The enumerators either side of the two retired gaps keep the
+     * values they shipped with (include/macextract.h). */
+    CHECK(UNC_FORMAT_TAR == 12);
+    CHECK(UNC_FORMAT_SITX_RETIRED == 13);
+    CHECK(UNC_FORMAT_DISKDOUBLER == 14);
+    CHECK(UNC_FORMAT_MIME == 29);
+    CHECK(UNC_FORMAT_MIMESEG == 45);
+    CHECK(UNC_FORMAT_BINHEX_OLD == 48);
+    CHECK(!unc_format_extractable(UNC_FORMAT_SITX_RETIRED));
+    for (i = 30; i <= 44; i++)
+        CHECK(!unc_format_extractable((UncFormat)i));
+    CHECK(unc_format_extractable(UNC_FORMAT_MIMESEG));
 
-    fgn_sig("7z\xbc\xaf\x27\x1c\x00", 7, UNC_FORMAT_7Z);
-    fgn_sig("7z\xbc\xaf\x27\x1c\x01", 7, UNC_FORMAT_UNKNOWN);
+    /* StuffIt X. Source: reference/deark/modules/unsupported.c. */
+    fgn_sig("StuffIt!", 8);
+    fgn_sig("StuffIt?", 8);
+    /* RAR, three generations. Source: reference/deark/modules/rar.c. */
+    fgn_sig("Rar!\x1a\x07\x00", 7);
+    fgn_sig("Rar!\x1a\x07\x01\x00", 8);
+    fgn_sig("RE~^", 4);
+    /* 7-Zip, xz, bzip2 (both stream magics). Source: deark's
+     * unsupported.c. "\xfd7..." would eat the 7 as a hex digit. */
+    fgn_sig("7z\xbc\xaf\x27\x1c\x00", 7);
+    fgn_sig("\xfd" "7zXZ\x00", 6);
+    fgn_sig("BZh9\x31\x41\x59\x26\x53\x59", 10);
+    fgn_sig("BZh1\x17\x72\x45\x38\x50\x90", 10);
+    /* Cabinet, ar, cpio's five shapes. Source: deark's cab.c, ar.c,
+     * cpio.c. */
+    fgn_sig("MSCF", 4);
+    fgn_sig("!<arch>\x0a", 8);
+    fgn_sig("070707", 6);
+    fgn_sig("070701", 6);
+    fgn_sig("070702", 6);
+    fgn_sig("\xc7\x71", 2);
+    fgn_sig("\x71\xc7", 2);
+    /* Zoo, at 0x14. Source: deark's zoo.c. */
+    fgn_sig_at("\xdc\xa7\xc4\xfd", 4, 0x14);
+    /* Zstandard and its skippable frames. Source:
+     * reference/notes/zstd_rfc8878.txt, 3.1.1 and 3.1.2. */
+    fgn_sig("\x28\xb5\x2f\xfd", 4);
+    fgn_sig("\x50\x2a\x4d\x18", 4);
+    fgn_sig("\x5f\x2a\x4d\x18", 4);
+    /* lzip, lrzip, WIM. Sources: deark's unsupported.c,
+     * reference/lrzip/lrzip.c, reference/wimlib's header.h. */
+    fgn_sig("LZIP", 4);
+    fgn_sig("LRZI\x00\x06", 6);
+    fgn_sig("MSWIM\0\0\0\xd0\0\0\0", 12);
+    /* Apple Archive, raw and compressed. Source:
+     * reference/libNeoAppleArchive; the lzma and lz4 letters from
+     * reference/notes/Apple_Archive.md. */
+    fgn_sig("AA01\x06\x00", 6);
+    fgn_sig("YAA1\x06\x00", 6);
+    fgn_sig("AA01\x0a\x00TYP1", 10);
+    fgn_sig("pbze", 4);
+    fgn_sig("pbzz", 4);
+    fgn_sig("pbzb", 4);
+    fgn_sig("pbzx", 4);
+    fgn_sig("pbz4", 4);
 
-    /* "\xfd7..." would eat the 7 as a third hex digit. */
-    fgn_sig("\xfd" "7zXZ\x00", 6, UNC_FORMAT_XZ);
-    fgn_sig("\xfd" "7zXZ\x01", 6, UNC_FORMAT_UNKNOWN);
-
-    /* bzip2 needs the level digit AND one of the two stream magics: the
-     * second is an empty archive, which has no block in it. */
-    fgn_sig("BZh9\x31\x41\x59\x26\x53\x59", 10, UNC_FORMAT_BZIP2);
-    fgn_sig("BZh1\x17\x72\x45\x38\x50\x90", 10, UNC_FORMAT_BZIP2);
-    fgn_sig("BZh9", 4, UNC_FORMAT_UNKNOWN);
-    fgn_sig("BZh0\x31\x41\x59\x26\x53\x59", 10, UNC_FORMAT_UNKNOWN);
-
-    fgn_sig("MSCF", 4, UNC_FORMAT_CAB);
-    fgn_sig("!<arch>\x0a", 8, UNC_FORMAT_AR);
-    fgn_sig("!<arch>!", 8, UNC_FORMAT_UNKNOWN);
-
-    /* cpio: three ASCII magics and both byte orders of the binary one. */
-    fgn_sig("070707", 6, UNC_FORMAT_CPIO);
-    fgn_sig("070701", 6, UNC_FORMAT_CPIO);
-    fgn_sig("070702", 6, UNC_FORMAT_CPIO);
-    fgn_sig("070703", 6, UNC_FORMAT_UNKNOWN);
-    fgn_sig("\xc7\x71", 2, UNC_FORMAT_CPIO);
-    fgn_sig("\x71\xc7", 2, UNC_FORMAT_CPIO);
-
-    /* Zoo's magic is at 0x14, so the same four bytes at 0 are nothing. */
-    for (i = 0; i < (int32_t)sizeof buf; i++) buf[i] = 0;
-    buf[0x14] = 0xdc; buf[0x15] = 0xa7; buf[0x16] = 0xc4; buf[0x17] = 0xfd;
-    fgn_is(buf, (int32_t)sizeof buf, UNC_FORMAT_ZOO);
-    fgn_sig("\xdc\xa7\xc4\xfd", 4, UNC_FORMAT_UNKNOWN);
-
-    /* ARJ: two bytes of magic, so the header size and its CRC-32 are what
-     * make it a claim. */
+    /* ARJ: its magic and a basic header whose CRC-32 checks out, which
+     * is the whole of what the old probe asked. Source:
+     * reference/deark/modules/arj.c. */
     {
-        uint8_t arj[64];
         uint32_t crc;
         int32_t hlen = 34;
-        for (i = 0; i < (int32_t)sizeof arj; i++) arj[i] = 0;
-        arj[0] = 0x60; arj[1] = 0xea;
-        arj[2] = (uint8_t)hlen; arj[3] = 0;          /* little-endian */
-        arj[4] = 34; arj[5] = 11; arj[6] = 1; arj[7] = 1; arj[8] = 2;
-        crc = ~unc_crc32(0xFFFFFFFFu, arj + 4, hlen);
-        arj[4 + hlen + 0] = (uint8_t)crc;
-        arj[4 + hlen + 1] = (uint8_t)(crc >> 8);
-        arj[4 + hlen + 2] = (uint8_t)(crc >> 16);
-        arj[4 + hlen + 3] = (uint8_t)(crc >> 24);
-        fgn_is(arj, (int32_t)sizeof arj, UNC_FORMAT_ARJ);
-
-        arj[4 + hlen] ^= 0xff;                        /* broken CRC */
-        fgn_is(arj, (int32_t)sizeof arj, UNC_FORMAT_UNKNOWN);
-        arj[4 + hlen] ^= 0xff;
-
-        arj[2] = 0; arj[3] = 0x10;                    /* size 4096: too big */
-        fgn_is(arj, (int32_t)sizeof arj, UNC_FORMAT_UNKNOWN);
-    }
-
-    /* Zstandard: the ordinary frame magic, and the skippable-frame range
-     * 0x184D2A50..5F, which is sixteen valid magics and one that is not.
-     * Source: reference/notes/zstd_rfc8878.txt, 3.1.1 and 3.1.2. */
-    fgn_sig("\x28\xb5\x2f\xfd", 4, UNC_FORMAT_ZSTD);
-    fgn_sig("\x50\x2a\x4d\x18", 4, UNC_FORMAT_ZSTD);
-    fgn_sig("\x5f\x2a\x4d\x18", 4, UNC_FORMAT_ZSTD);
-    fgn_sig("\x60\x2a\x4d\x18", 4, UNC_FORMAT_UNKNOWN);
-    fgn_sig("\x4f\x2a\x4d\x18", 4, UNC_FORMAT_UNKNOWN);
-    fgn_sig("\x28\xb5\x2f\xfe", 4, UNC_FORMAT_UNKNOWN);
-
-    /* lzip: four ASCII bytes and nothing else to check, which is why
-     * deark rates it 50 where it rates xz 90. */
-    fgn_sig("LZIP", 4, UNC_FORMAT_LZIP);
-    fgn_sig("LZIQ", 4, UNC_FORMAT_UNKNOWN);
-
-    /* lrzip: "LRZI" plus a header the writer always emits whole, so a
-     * file shorter than MAGIC_LEN is not one however it starts. */
-    fgn_sig("LRZI\x00\x06", 6, UNC_FORMAT_LRZIP);
-    {
-        uint8_t lrz[23];                              /* one short of 24 */
-        for (i = 0; i < (int32_t)sizeof lrz; i++) lrz[i] = 0;
-        lrz[0] = 'L'; lrz[1] = 'R'; lrz[2] = 'Z'; lrz[3] = 'I';
-        fgn_is(lrz, (int32_t)sizeof lrz, UNC_FORMAT_UNKNOWN);
-    }
-
-    /* WIM: eight bytes of magic, corroborated by the one header size
-     * wimlib accepts. */
-    for (i = 0; i < (int32_t)sizeof buf; i++) buf[i] = 0;
-    buf[0] = 'M'; buf[1] = 'S'; buf[2] = 'W'; buf[3] = 'I'; buf[4] = 'M';
-    buf[8] = 208;
-    fgn_is(buf, (int32_t)sizeof buf, UNC_FORMAT_WIM);
-    buf[8] = 207;
-    fgn_is(buf, (int32_t)sizeof buf, UNC_FORMAT_UNKNOWN);
-    buf[8] = 208; buf[5] = 1;                         /* magic is 8 bytes */
-    fgn_is(buf, (int32_t)sizeof buf, UNC_FORMAT_UNKNOWN);
-
-    /* Apple Archive. Raw is `AA01` or the legacy `YAA1`, then the first
-     * header's own size, which counts those six bytes and so is never
-     * below 6; where the header holds a field, the field's subtype byte
-     * at +9 is out of a closed set, which is what four letters of text
-     * fail. Compressed is `pbz` and a codec letter.
-     * Source: reference/libNeoAppleArchive, internal.h and
-     * neo_aa_header.c; the lzma and lz4 letters from
-     * reference/notes/Apple_Archive.md. */
-    fgn_sig("AA01\x06\x00", 6, UNC_FORMAT_AAR);
-    fgn_sig("YAA1\x06\x00", 6, UNC_FORMAT_AAR);
-    fgn_sig("AA01\x0a\x00TYP1", 10, UNC_FORMAT_AAR);
-    fgn_sig("AA01", 4, UNC_FORMAT_UNKNOWN);           /* size 0 */
-    fgn_sig("AA01\x05\x00", 6, UNC_FORMAT_UNKNOWN); /* size below 6 */
-    fgn_sig("AA01\x0a\x00TYP?", 10, UNC_FORMAT_UNKNOWN);  /* subtype */
-    fgn_sig("AA02\x06\x00", 6, UNC_FORMAT_UNKNOWN);
-    fgn_sig("YAA2\x06\x00", 6, UNC_FORMAT_UNKNOWN);
-    fgn_sig("pbze", 4, UNC_FORMAT_AAR);
-    fgn_sig("pbzz", 4, UNC_FORMAT_AAR);
-    fgn_sig("pbzb", 4, UNC_FORMAT_AAR);
-    fgn_sig("pbzx", 4, UNC_FORMAT_AAR);
-    fgn_sig("pbz4", 4, UNC_FORMAT_AAR);
-    fgn_sig("pbzq", 4, UNC_FORMAT_UNKNOWN);
-    fgn_sig("pbYe", 4, UNC_FORMAT_UNKNOWN);
-
-    /* Named, and refused without writing anything. */
-    {
-        UncIO io;
-        MemIO m;
-        UncAlloc al;
-        UncSink sk;
-        CapSink cap;
         for (i = 0; i < (int32_t)sizeof buf; i++) buf[i] = 0;
-        buf[0] = 'M'; buf[1] = 'S'; buf[2] = 'C'; buf[3] = 'F';
-        test_make_memio(&io, &m, buf, sizeof buf);
-        test_make_alloc(&al);
-        cap_make(&sk, &cap);
-        CHECK(unc_extract(&io, &sk, &al, NULL, NULL) == UNC_ERR_UNSUPPORTED);
-        CHECK(cap.count == 0);
-        CHECK(!unc_format_extractable(UNC_FORMAT_CAB));
-        CHECK(!unc_format_extractable(UNC_FORMAT_RAR));
+        buf[0] = 0x60; buf[1] = 0xea;
+        buf[2] = (uint8_t)hlen; buf[3] = 0;          /* little-endian */
+        buf[4] = 34; buf[5] = 11; buf[6] = 1; buf[7] = 1; buf[8] = 2;
+        crc = ~unc_crc32(0xFFFFFFFFu, buf + 4, hlen);
+        buf[4 + hlen + 0] = (uint8_t)crc;
+        buf[4 + hlen + 1] = (uint8_t)(crc >> 8);
+        buf[4 + hlen + 2] = (uint8_t)(crc >> 16);
+        buf[4 + hlen + 3] = (uint8_t)(crc >> 24);
+        fgn_none(buf, (int32_t)sizeof buf);
     }
 }
 

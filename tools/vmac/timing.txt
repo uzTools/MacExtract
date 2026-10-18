@@ -28,7 +28,7 @@ derived-KeyGraphics.sit                    # StuffIt 5      4611 B (Arsenic)
 derived-PCCTS.tar                          # Tar           286720 B — largest
 derived-MUSFMT10.ZIP                       # Zip           171960 B
 
-# --- detect-only, so these measure the sniff and nothing else -------------
+# --- detect-only when this list was written; both extract since M12 -------
 derived-MacPass390.sea                     # DiskDoubler   155792 B
 derived-Expand_Now_1.0.1.sea               # Now Compress   61824 B
 

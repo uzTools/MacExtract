@@ -208,9 +208,12 @@ open('reference/notes/cpt_users_guide.txt', 'w').write(re.sub(r'\n{3,}', '\n\n',
     rm -f /tmp/cpt_guide.pdf
 fi
 
-# zstd — RFC 8878, the Zstandard frame format. The only reference this
-# project needs for it: the frame magic (0xFD2FB528, little-endian) and
-# the skippable-frame range 0x184D2A50..5F, both in section 3.1.1/3.1.2.
+# zstd — RFC 8878, the Zstandard frame format: the frame magic
+# (0xFD2FB528, little-endian) and the skippable-frame range
+# 0x184D2A50..5F, sections 3.1.1/3.1.2. Nothing in src/ reads it since
+# 2026-10-18; it is the source of the Zstandard specimens
+# tools/run_foreign.py and tests/unit_formats.c require to be NOT
+# recognised (DECISIONS.md 2026-10-18, *the formats it only named*).
 [ -f reference/notes/zstd_rfc8878.txt ] || \
     curl -sL -o reference/notes/zstd_rfc8878.txt \
         "https://www.rfc-editor.org/rfc/rfc8878.txt"
@@ -244,7 +247,8 @@ fi
 
 # lrzip (Con Kolivas) — `write_magic` and `get_magic` in lrzip.c are the
 # format's header: "LRZI", a major and a minor version byte, in a 24-byte
-# MAGIC_LEN block.
+# MAGIC_LEN block. The source of the lrzip specimens the same two tests
+# require to be NOT recognised, as zstd's above.
 if [ ! -d reference/lrzip ]; then
     mkdir -p reference/lrzip
     curl -sL -o /tmp/lrzip.tar.gz \
@@ -253,24 +257,14 @@ if [ ! -d reference/lrzip ]; then
     rm -f /tmp/lrzip.tar.gz
 fi
 
-# wimlib (Eric Biggers) — the only complete reading of Microsoft's WIM
-# there is; `include/wimlib/header.h` carries WIM_MAGIC ("MSWIM\0\0\0")
-# and WIM_HEADER_DISK_SIZE, which is what corroborates it.
-if [ ! -d reference/wimlib ]; then
-    mkdir -p reference/wimlib
-    curl -sL -o /tmp/wimlib.tar.gz \
-        "http://deb.debian.org/debian/pool/main/w/wimlib/wimlib_1.14.5.orig.tar.gz"
-    tar xzf /tmp/wimlib.tar.gz -C reference/wimlib --strip-components=1
-    rm -f /tmp/wimlib.tar.gz
-fi
-
 # libNeoAppleArchive (Snoolie K, MIT) — the only open reading of Apple
 # Archive there is, and not a reimplementation of Apple's closed
 # libAppleArchive but a from-scratch one. `libNeoAppleArchive_internal.h`
 # carries the magics (AAR_MAGIC/YAA_MAGIC and the pbz* set) and
 # `neo_aa_header.c` the six-byte header prologue and the closed set of
-# field subtypes that corroborate it. Naming only: extraction stays out
-# by the brief.
+# field subtypes that corroborate it. Nothing in src/ reads it since
+# 2026-10-18: tools/build_neoaa.sh builds its WRITER, whose four shapes
+# tools/run_foreign.py requires to be NOT recognised.
 [ -d reference/libNeoAppleArchive ] || \
     git clone --depth 1 https://github.com/0xilis/libNeoAppleArchive \
         reference/libNeoAppleArchive
@@ -278,7 +272,7 @@ fi
 
 # The archiveteam wiki's Apple Archive page, kept for the two codec bytes
 # libNeoAppleArchive names but does not yet write: lzma `pbzx` (70627A78)
-# and lz4 `pbz4` (70627A34). Its own docs/NeoAAArchiveGeneric.md says
+# and lz4 `pbz4` (70627A34), two of tests/unit_formats.c's specimens. Its own docs/NeoAAArchiveGeneric.md says
 # both belong to the format and are "not yet added", so the wiki is what
 # supplies the bytes. https is refused by that host; http works.
 [ -f reference/notes/Apple_Archive.md ] || \

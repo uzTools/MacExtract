@@ -436,6 +436,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-17 (dates in the Macintosh's own zone) — the engine marks which dates are instants, and the application writes those in the Mac's zone where it can say what that is
 - 2026-10-18 (the comment Spotlight kept) — a Mac OS X sidecar's Spotlight comment becomes the file's Get Info comment, as UTF-8 that the shell folds into MacRoman
 - 2026-10-18 (the question after the look) — the destination is asked once the format is known, a file nothing here extracts is refused before it, Cancel there ends the launch, and the app no longer names a format it cannot open
+- 2026-10-18 (the formats it only named) — the engine and the CLI stop recognising the sixteen formats they never extracted, and a negative test keeps the safety the recognition gave
 
 ---
 
@@ -3226,6 +3227,10 @@ extracted, and nothing of ours left on the volume, against the Linux
 CLI on the same three files.
 
 ## 2026-08-14 — the detect-only claim had no test, and LZH stays out of scope
+
+**Superseded 2026-10-18** (*the formats it only named*): nothing is
+detect-only any more, and `run_diff.py` grades a fixture of a format the
+engine does not have as not an archive.
 
 Asked why LZH is out of scope, and the answer in the documents was thin —
 "the optional half of M8" — while the evidence for it is strong and was
@@ -7807,7 +7812,9 @@ then took disk images out of scope altogether (OPEN_ITEMS.md, part 1).
 ## 2026-08-26 — a name is only worth something inside the frame the user came with
 
 **Superseded for the Macintosh application 2026-10-18** (*the question after
-the look*): it no longer names the format. The CLI still does.
+the look*): it no longer names the format. **Superseded 2026-10-18** for
+the engine and the CLI too: nothing is named that is not extracted (*the
+formats it only named*).
 
 Yesterday's disk-image probe was removed the day after it shipped, and nine
 PC-side archive formats were named in its place. Both halves come out of one
@@ -9543,6 +9550,10 @@ is exactly what a vendor expander rejecting it predicts.
 
 ## 2026-08-29 (four more names) — one of the five references was already here
 
+**Superseded 2026-10-18** (*the formats it only named*): the four are not
+recognised any more; their references grade `tools/run_foreign.py`'s
+specimens.
+
 OPEN_ITEMS.md carried *"Five archive formats are still unnamed for want of a
 reference: zstd, lzip, brotli, lrzip and WIM"*, with the note that rule #1
 does not bend for a constant that is easy to look up. Four are named now and
@@ -10965,6 +10976,10 @@ only one the user ever reads, and nothing in a byte-comparison suite can
 fail on it.
 
 ## 2026-09-01 (the search, not the reference) — Apple Archive, and what rewriting a probe actually buys
+
+**Superseded 2026-10-18** (*the formats it only named*): Apple Archive is
+not recognised any more; libNeoAppleArchive writes the specimens that must
+not be.
 
 **The claim was about a search.** `OPEN_ITEMS.md` had *"Apple Archive (`.aar`)
 is unnamed for want of a reference — missing: an implementation or spec in
@@ -18451,6 +18466,10 @@ image this project has had installed since August.
 
 
 ## 2026-09-27 (the signatures that were already on the disk) — a row said its replacements were not on this machine, and eight of the ten were compiled by ci.sh every run
+
+**Superseded 2026-10-18** for `src/fmt_foreign.c` and StuffIt X's probe
+(*the formats it only named*): that code is gone. PackIt's recogniser is
+unaffected.
 
 `OPEN_ITEMS.md`'s XADMaster inventory carried a row for
 `src/fmt_foreign.c`, `src/fmt_sit_probe.c` and
@@ -28321,7 +28340,8 @@ anything. And the alert for a format the engine names but does not open,
 *"MacExtract cannot open RAR files."* (2026-08-26, *a name is only worth
 something inside the frame the user came with*), is gone: to someone at the
 Mac, a file it cannot extract is a file it cannot extract, and both now read
-*"This file could not be extracted."* The CLI still names the format.
+*"This file could not be extracted."* The CLI still names the format
+(superseded the same day: *the formats it only named*).
 
 **Where the question went.** It is asked inside `RunExtract` (`AskDest`),
 just after the split-family and segment checks and, for a single file, the
@@ -28341,3 +28361,87 @@ build shows the Open dialog again (the control).
 
 **Price.** Shipped CODE +44, A5 −44 against `main`: 0 B of budget; the
 named alert's removal pays for the rest.
+
+## 2026-10-18 (the formats it only named) — the engine and the CLI stop recognising the sixteen formats they never extracted, and a negative test keeps the safety the recognition gave
+
+**The maintainer's decision, 2026-10-18: the project no longer recognises
+formats it cannot extract.** The Mac had stopped naming them that morning
+(*the question after the look*); this takes the recognition itself out, the
+CLI included. StuffIt X, RAR (1.3/1.4, 1.5–4.x, 5), 7-Zip, xz, bzip2,
+Cabinet, Zoo, ar, cpio, ARJ, Zstandard, lzip, lrzip, WIM and Apple Archive
+are `UNC_FORMAT_UNKNOWN`, and the CLI says *"format not recognized"*, as for
+any file. It supersedes 2026-08-26 (*a name is only worth something inside
+the frame the user came with*), 2026-08-29 (*four more names*), 2026-09-01
+(*the search, not the reference*) and the naming half of 2026-08-14.
+
+**What went.** `src/fmt_foreign.c` whole, `unc_sitx_probe`, sixteen table
+rows, the table's `extractable` column (every row left but UNKNOWN's is
+extractable), the CLI's *"recognized as X, which v1 cannot extract"* exit
+and the extractable test in its unwrap loop, `run_diff.py`'s `DETECT_ONLY`
+(a fixture of a format the engine lacks is graded as not an archive now),
+and the detect-only unit tests, rewritten as negatives. `unc_format_extractable` stays in the API,
+answering for a value with a row (which keeps `-f unknown` from resolving
+to a retired slot; `cli/main.c`, `format_by_name`).
+
+**The enum: reserved, not renumbered.** `UNC_FORMAT_SITX` was value 13 and
+the fifteen others 30–44, both in the middle. Closing the gaps would
+renumber every enumerator after them, which the header has refused since
+`UNC_FORMAT_DISKCOPY_RETIRED` (2026-08-27). So 13 is
+`UNC_FORMAT_SITX_RETIRED`, 30–44 are a commented gap with
+`UNC_FORMAT_MIMESEG = 45` numbered explicitly, and `test_foreign` pins the
+values either side of both gaps; every enumerator compiled to the value it
+had on `origin/main` (measured, both headers).
+
+**The safety, kept and measured.** The removed probe ran ahead of MacBinary's
+CRC and every weaker test, so no other reader had ever been asked about such
+a file. Measured: `tools/run_foreign.py`, rewritten as a negative test,
+requires 26 specimens — real archives from bzip2, xz, 7z (7z and WIM), cpio
+(three shapes) and ar, opened by p7zip; four Apple Archives from
+libNeoAppleArchive; StuffIt X, three RAR signatures, Cabinet, Zoo, ARJ and
+lzip headers deark identifies; Zstandard and lrzip on their magics; and
+`synth-os9-rar.rar` — to sniff `unknown` and make `x` write nothing; and the
+corpus sweep requires every manifest's fixture to sniff as its oracle's
+format. All pass. Across the 994 corpus files, the CLI before and after
+differ on exactly one, that RAR. One-off, outside `ci.sh`: **441 real files
+on this machine** — 398 `ar` (`.deb`s and static libraries), 24 bzip2, 8 WIM
+(wimlib's tests), 2 xz, 2 RAR, one 7z — all `unknown` now, 435 of them
+named before.
+
+**The controls.** `origin/main`'s CLI fails 52 of the 97 checks (every
+specimen). A build with a probe claiming `MSCF` as a zip and the LZH probe
+removed fails 3: `s.cab` sniffed and refused as a zip, and the corpus sweep
+on the LZH fixtures; the same build fails `test_foreign` twice (the `MSCF`
+buffers). `run_tiers.py`'s table parser, which read the old column count,
+failed on the new table until it was taught the new one ("parsed 0
+formats").
+
+**`synth-os9-rar.rar` stays**, as the Mac OS 9 tier's not-an-archive sample.
+It has no manifest and never had (`unar` cannot make one of a 71-byte stub;
+fixtures/SOURCES.md), so `run_diff.py` never used it: its expectation lives
+in `run_foreign.py` (`NOT_ARCHIVES`) and in `tools/vmac/os9.py`, which grades
+both sides refusing with nothing written. On the Mac it reaches the same
+*"This file could not be extracted."* (`UNC_ERR_FORMAT` where it was
+`UNC_ERR_UNSUPPORTED`; neither has an alert of its own). Not re-run on an
+emulator: no Macintosh code changed.
+
+**Price, against `origin/main` (eadcabb), each configuration built the same
+way.** CODE **−1,328 B** and A5 **−704 B** in all three (eager 57,792 →
+56,464 and 18,560 → 17,856; lazy 56,212 → 54,884 and 18,668 → 17,964; the
+control 188,308 → 186,980 and 37,596 → 36,892): `unc_foreign_probe` 1,156 B
+and `unc_sitx_probe` 90 B of code; `unc_formats` 960 → 512 B and
+`unc_sniff_order` 124 → 116 B, the rest the names and literals. No image
+and not the bundle moved, so `OVL_SAVED` (149,552) and every grant against
+the control did not; **2,032 B more for every extraction on every tier**,
+TIERS +2,032 and TIERS_CONTROL −2,032 (derived, not re-taken on a machine).
+Stack: `unc_sniff` 540 + 12 B unchanged, and a 28 B leaf off it gone; the
+deepest chain (3,350 B) is not on this path. Heap: the probe allocated
+nothing. Extractions lost: none — `run_tiers.py --check` gives the same
+refusals by name in both lanes. Download 251,904 → 249,856 B.
+
+**Left for the maintainer.** (1) `unc_format_extractable` could go from the
+public API, every caller now asking `!= UNC_FORMAT_UNKNOWN` instead; kept,
+since removing a function is an API break this did not need. (2) The
+README's comparison table keeps its StuffIt X row (🔴), which is true.
+(3) `reference/wimlib` is no longer fetched (`tools/fetch_references.sh`):
+WIM's specimen is written by p7zip, and nothing cites wimlib; the shared
+`reference/` copy was left in place.

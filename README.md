@@ -111,11 +111,12 @@ inside them, so names do not matter; for zip and `.NNN` sets the names are all
 there is, so keep them. Send the output to a different disk from the parts —
 the only thing that works when you are swapping floppies.
 
-**Recognises but does not extract:** StuffIt X and the PC-side and modern
-archives — RAR, 7-Zip, xz, bzip2, Zstandard, lzip, lrzip, Cabinet, WIM, Zoo,
-ARJ, cpio, `ar`/`.deb` and Apple Archive (`.aar`). The Mac says *"This file
-could not be extracted."* straight after you pick it, without asking where to
-put anything; the command-line tool names the format.
+**Does not open:** StuffIt X and the PC-side and modern archives — RAR,
+7-Zip, xz, bzip2, Zstandard, Cabinet, `ar`/`.deb`, cpio and the rest. To
+MacExtract they are files like any other it does not read: the Mac says
+*"This file could not be extracted."* straight after you pick it, without
+asking where to put anything, and the command-line tool says *format not
+recognized*.
 
 ## Compared with what Aladdin sold
 

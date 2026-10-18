@@ -561,7 +561,9 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # 2026-10-18, the question after the look (DECISIONS.md): the destination
 # asked once the format is known, Cancel there quits, and the named-format
 # alert gone; shipped CODE +44, A5 -44: 0 B of budget.
-UNC_MAC_CODE_DEFAULT=188308
+# -1,328 code on 2026-10-18, the formats it only named (the eager pair
+# below; the same pieces, all resident in every configuration).
+UNC_MAC_CODE_DEFAULT=186980
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -732,7 +734,10 @@ UNC_MAC_CODE_DEFAULT=188308
 # -12 on 2026-10-17 with the code ceiling's +428: padding.
 # +12 on 2026-10-17 with the code ceiling's +660: gZone, a vector slot,
 # and padding.
-UNC_MAC_A5_DEFAULT=37596
+# -704 on 2026-10-18 with the code ceiling's -1,328: the sixteen formats'
+# table rows, the `extractable` column and their names (DECISIONS.md
+# 2026-10-18, *the formats it only named*).
+UNC_MAC_A5_DEFAULT=36892
 # A CEILING PER CONFIGURATION, because one ceiling measured on another build
 # cannot fire. The figures above are the RESIDENT control build, which carries
 # every decoder; the shipped build's resident code is a third of that, so
@@ -1093,8 +1098,15 @@ UNC_MAC_A5_DEFAULT=37596
 # 2026-10-18, the question after the look (DECISIONS.md): the destination
 # asked once the format is known, Cancel there quits, and the named-format
 # alert gone; shipped CODE +44, A5 -44: 0 B of budget.
-UNC_MAC_CODE_EAGER=57792
-UNC_MAC_A5_EAGER=18560
+# -1,328 code and -704 A5 on 2026-10-18, the formats it only named, gone
+# (DECISIONS.md 2026-10-18, *the formats it only named*): the probe
+# `unc_foreign_probe` (1,156 B) and `unc_sitx_probe` (90 B), the sixteen
+# table rows and the `extractable` column (`unc_formats` 960 -> 512 B),
+# two slots of `unc_sniff_order` (-8) and their names and literals.
+# **2,032 B onto every extraction's budget**, the same in all three
+# configurations, so OVL_SAVED does not move.
+UNC_MAC_CODE_EAGER=56464
+UNC_MAC_A5_EAGER=17856
 # +8 on 2026-10-02 for the same reason as the eager pair above: the
 # overlay call that now says WHICH of StuffIt 2.x's ciphers an entry
 # wants. A5 fell to 19,096 and its ceiling is left where it was.
@@ -1158,7 +1170,9 @@ UNC_MAC_A5_EAGER=18560
 # pair above); A5 18,696, under its ceiling.
 # +84 code on 2026-10-18, the Spotlight comment (the eager pair above);
 # A5 18,676, under its ceiling.
-UNC_MAC_CODE_LAZY=56212
+# -1,328 code on 2026-10-18, the formats it only named (the eager pair
+# above); A5 -704 to 17,964, under its ceiling.
+UNC_MAC_CODE_LAZY=54884
 UNC_MAC_A5_LAZY=19200
 if [ -n "$UNC_OVL_RESIDENT" ]; then
     UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-$UNC_MAC_CODE_DEFAULT}

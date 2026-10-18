@@ -2129,7 +2129,8 @@ copied the fixture to `as-the-mac-saw-it/archive.sit` for that exact reason
 since 2026-08-08; the `--autotest` and `--hfsplus` verifiers were written
 later and did not inherit it. Both do now. `synth-os9-rar.rar` failed for the
 other reason: `ret=-6` with nothing written is the CORRECT refusal for a
-detect-only format, and the route demanded `UNC_OK`. It now passes when both
+detect-only format, and the route demanded `UNC_OK` (it is `ret=-1`, a file
+that is no archive, since the RAR stopped being named on 2026-10-18). It now passes when both
 sides refuse — the reference exiting non-zero with no files, the Mac
 reporting a non-zero `ret` with no files — and prints the reference's own
 message, while staying strict everywhere else, so a Macintosh that writes
@@ -3132,10 +3133,10 @@ fixed time, and a run that fails BEFORE then leaves its result alert up in
 that frame. Photographed 2026-08-24: *Needs 72K more memory. Give MacExtract
 more in Get Info.*
 
-### Photographing the detect-only alert
+### Photographing the refusal alert
 
-No build trick and no fixture: hand the application a file it NAMES and
-cannot open, and the alert is in `2-extracting.png` for the same reason the
+No build trick and no fixture: hand the application a file it cannot open,
+and the alert is in `2-extracting.png` for the same reason the
 memory one is — the run fails before the phase clicks Cancel.
 
     interactive.py --emu mv-4M -o /tmp/rarshot /tmp/Sample.rar
@@ -3144,8 +3145,9 @@ Photographed 2026-08-26 with a RAR archive out of libarchive's test suite:
 *"MacExtract cannot open RAR files."* Since 2026-10-18 the alert is *"This
 file could not be extracted."* and comes before the destination dialog, so
 it is in `1b-destination.png` (DECISIONS.md 2026-10-18, *the question after
-the look*); any of the named-but-declined formats, and any file that is no
-archive, does it.
+the look*); any file the engine does not recognise does it, and since
+2026-10-18 a RAR is one (DECISIONS.md 2026-10-18, *the formats it only
+named*).
 
 **`interactive.py` exits 1 on this run and that is not a failure**: its
 phase-2 check is that the CLI and the Mac agree on extracted output, and

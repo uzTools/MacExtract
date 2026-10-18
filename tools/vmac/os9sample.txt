@@ -110,9 +110,10 @@ derived-800saywhat301j.sit                 # StuffIt 5 with UTF-8 names, 91648 B
                                            #   DECOMPOSED, so the count of '_'
                                            #   is the assertion
 
-synth-os9-rar.rar                          # NOT extracted: the refusal alert
-                                           #   (generic since 2026-10-18;
-                                           #   named from M38). Both sides
+synth-os9-rar.rar                          # NOT an archive: the refusal alert
+                                           #   (a RAR, named from M38; not
+                                           #   recognised at all since
+                                           #   2026-10-18). Both sides
                                            #   produce nothing and agree,
                                            #   which verify_output() treats
                                            #   as the pass it is

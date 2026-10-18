@@ -67,7 +67,7 @@ CARRIES = {
 # Mentions a reference only to say what it no longer owes, or to
 # compare against it. Nothing here is borrowed.
 HISTORICAL = {
-    "fmt_exo.c", "fmt_exo_probe.c", "fmt_foreign.c", "fmt_superdisk.c",
+    "fmt_exo.c", "fmt_exo_probe.c", "fmt_superdisk.c",
     "fmt_uu.c", "fmt_binhex.c",
     "sit_arsenic.c", "unc_encinfo.c", "unc_huffman.c", "crypt_tables.h",
     "fmt_cpt.c", "fmt_cptseg.c", "fmt_now.c", "unc_util.c",

@@ -139,10 +139,13 @@ REPO = os.path.dirname(HERE)
 # much with the dates in the Macintosh's own zone (below).
 # **And by 1,392 B more 2026-10-18, DERIVED**: TIERS_CONTROL rose by that
 # much with the Spotlight comment (below).
+# **All three RAISED by 2,032 B 2026-10-18, DERIVED**: TIERS_CONTROL fell
+# by that much when the engine stopped naming the formats it does not
+# extract (below).
 TIERS = {
-    "sys3-512K": (187588, "System 3.0, Macintosh 512Ke (225,956 B free)"),
-    "sys6-512K": (92188, "System 6.0.8, Macintosh 512Ke (130,556 B free)"),
-    "floor-1M":  (616476, "System 6.0.8, 1 MB Mac Plus — the floor target"),
+    "sys3-512K": (189620, "System 3.0, Macintosh 512Ke (225,956 B free)"),
+    "sys6-512K": (94220, "System 6.0.8, Macintosh 512Ke (130,556 B free)"),
+    "floor-1M":  (618508, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
 
 # RE-TAKEN on all three machines 2026-10-09 (`-D UNC_OVL_RESIDENT -D
@@ -275,7 +278,12 @@ TIERS = {
 # **+16 2026-10-18, and TIERS -16, DERIVED**: the question after the look,
 # the control's CODE +28 and A5 -12 against the shipped pair's 0, so
 # OVL_SAVED +16 and no grant moves on the machine.
-TIERS_CONTROL = 225904     # build/mac-resident, CODE + A5, 2026-10-18
+# **-2,032 2026-10-18, and TIERS +2,032, DERIVED**: the formats it only
+# named, gone — the control's CODE -1,328 and A5 -704, the shipped pair's
+# exactly the same, so OVL_SAVED does not move and every grant on the
+# machine rises by 2,032 (DECISIONS.md 2026-10-18, *the formats it only
+# named*).
+TIERS_CONTROL = 223872     # build/mac-resident, CODE + A5, 2026-10-18
 # **What this control cannot see: the autotest harness.** TIERS was read
 # on the machine from an autotest build (`UNC_MAC_AUTOTEST`), and
 # build/mac-resident has no harness in it, so harness growth lowers what a
@@ -812,9 +820,11 @@ def formats(path=os.path.join(REPO, "src", "unc_engine.c")):
     if len(body) != 2:
         raise SystemExit("run_tiers: cannot find unc_formats[] in %s" % path)
     out = {}
-    for m in re.finditer(r"\{\s*(UNC_FORMAT_\w+),\s*\"([^\"]*)\",\s*(\d)\s*,"
-                         r"\s*(\d)\s*,", body[1]):
-        out[m.group(1)] = (m.group(2), m.group(4) == "1")
+    # { fmt, name, envelope, extract } since 2026-10-18, when the
+    # `extractable` column went with the formats it only named.
+    for m in re.finditer(r"\{\s*(UNC_FORMAT_\w+),\s*\"([^\"]*)\",\s*(\d)\s*,",
+                         body[1]):
+        out[m.group(1)] = (m.group(2), m.group(3) == "1")
     if len(out) < 30:
         raise SystemExit("run_tiers: parsed %d formats, expected 30+ — the "
                          "engine's table changed shape" % len(out))

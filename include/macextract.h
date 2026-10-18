@@ -51,9 +51,14 @@ typedef enum UncFormat {
     UNC_FORMAT_COMPRESS_Z,    /* .Z — Unix compress (16-bit LZW)      */
     UNC_FORMAT_TAR,           /* .tar                                 */
 
-    /* Detect-only (named so a UI can tell the user what the file is) */
-    UNC_FORMAT_SITX,          /* .sitx — StuffIt X (unsupported v1)   */
-    UNC_FORMAT_DISKDOUBLER,   /* DiskDoubler (unsupported v1)         */
+    /* RETIRED 2026-10-18 with every format this engine named and did
+     * not extract (DECISIONS.md 2026-10-18, *the formats it only
+     * named*): a reserved slot, as the one below is, so that no
+     * enumerator after it changes value. It was UNC_FORMAT_SITX,
+     * StuffIt X; unc_sniff never returns it now, and a .sitx is
+     * UNC_FORMAT_UNKNOWN. */
+    UNC_FORMAT_SITX_RETIRED,
+    UNC_FORMAT_DISKDOUBLER,   /* DiskDoubler                          */
     /* RETIRED 2026-08-27 (attic/), and kept as a reserved slot so that
      * no enumerator after it changes value: it shipped in every
      * release up to v0.23.0. unc_sniff never returns it now.       */
@@ -83,8 +88,6 @@ typedef enum UncFormat {
     /* Brought in scope 2026-08-22; appended for the same ABI reason. */
     UNC_FORMAT_SPACESAVER,    /* StuffIt SpaceSaver compressed file     */
 
-    /* Named, not extracted, since 2026-08-23. */
-
     /* Brought in scope 2026-08-23; appended for the same ABI reason. */
     UNC_FORMAT_BTOA,          /* btoa/atob ASCII armour                 */
 
@@ -92,29 +95,18 @@ typedef enum UncFormat {
     UNC_FORMAT_BASE64,        /* base64, bare or "begin-base64"         */
     UNC_FORMAT_MIME,          /* a MIME message, incl. appledouble      */
 
-    /* Named, not extracted, since 2026-08-27 (src/fmt_foreign.c). None
-     * of these is a Macintosh format and none is in scope to extract;
-     * what naming them buys is a user who came here with an archive
-     * being told which one it is, instead of "not recognized".      */
-    UNC_FORMAT_RAR,           /* .rar — RAR 1.3/1.4 and 1.5-4.x         */
-    UNC_FORMAT_RAR5,          /* .rar — RAR 5                           */
-    UNC_FORMAT_7Z,            /* .7z                                    */
-    UNC_FORMAT_XZ,            /* .xz                                    */
-    UNC_FORMAT_BZIP2,         /* .bz2                                   */
-    UNC_FORMAT_CAB,           /* .cab — Microsoft Cabinet               */
-    UNC_FORMAT_ZOO,           /* .zoo                                   */
-    UNC_FORMAT_AR,            /* ar / .deb                              */
-    UNC_FORMAT_CPIO,          /* .cpio, and the payload of a .cpgz      */
-    UNC_FORMAT_ARJ,           /* .arj                                   */
-    UNC_FORMAT_ZSTD,          /* .zst — Zstandard                       */
-    UNC_FORMAT_LZIP,          /* .lz                                    */
-    UNC_FORMAT_LRZIP,         /* .lrz                                   */
-    UNC_FORMAT_WIM,           /* .wim — Windows Imaging                 */
-    UNC_FORMAT_AAR,           /* .aar/.yaa — Apple Archive              */
+    /* RETIRED 2026-10-18: values 30..44 were the fifteen PC-side and
+     * modern archives this engine named and never extracted — RAR,
+     * RAR 5, 7-Zip, xz, bzip2, Microsoft Cabinet, Zoo, ar, cpio, ARJ,
+     * Zstandard, lzip, lrzip, WIM and Apple Archive, in that order.
+     * Such a file is UNC_FORMAT_UNKNOWN now. The gap is reserved rather than closed so
+     * that no enumerator after it changes value; the next one is
+     * numbered explicitly for that reason, and tests/unit_formats.c
+     * pins the values either side of both gaps. */
 
     /* One part of a message/partial set — a message split across
      * several FILES. Joined, never extracted on its own. */
-    UNC_FORMAT_MIMESEG,
+    UNC_FORMAT_MIMESEG = 45,
 
     /* Brought in scope 2026-10-05; appended for the same ABI reason. */
     UNC_FORMAT_SQP,           /* .pkg — AppleLink package (SqueezePlay) */
@@ -131,7 +123,9 @@ typedef enum UncFormat {
 /* Human-readable name for a format ("StuffIt 5", "MacBinary", ...). */
 const char *unc_format_name(UncFormat f);
 
-/* Nonzero if the engine can extract this format (vs. detect-only). */
+/* Nonzero for a format this engine has: every value unc_sniff returns
+ * but UNC_FORMAT_UNKNOWN. Zero for UNKNOWN, the retired slots and
+ * anything out of range. Nothing is detect-only since 2026-10-18. */
 int unc_format_extractable(UncFormat f);
 
 /* Nonzero if this format holds exactly one file and is worth looking

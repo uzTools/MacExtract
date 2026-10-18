@@ -62,35 +62,30 @@ IMPLEMENTED = {
     "BinHex hex/hcx": "BinHex hex/hcx",
 }
 
-# Formats v1 names but does not extract. Until 2026-08-14 a fixture of one
-# of these was simply skipped — counted as "formats pending" and asserted
-# on in no way at all — which left the whole detect-only claim untested:
-# `unc_sniff` names them "so a UI can tell the user what the file is"
-# (CLAUDE.md) and nothing checked that it does. They are now graded on
-# the two things the claim actually promises: the NAME agrees with the
-# oracle's, and extraction refuses without writing anything.
-DETECT_ONLY = {
-    "StuffIt X": "StuffIt X",
-    "DiskCopy": "Disk Copy 4.2",
-}
-
-
-def check_detect_only(macextract, fx, ourname):
-    """A format v1 names but does not extract. Two promises, both checked:
-    `sniff` agrees with the oracle about WHAT it is, and `x` refuses
-    without writing anything. Returns a list of problems."""
+# A fixture whose oracle names a format this engine does not have. Until
+# 2026-08-14 one was simply skipped, and until 2026-10-18 it was graded as
+# "detect-only": named as the oracle names it, and refused. The engine names
+# nothing it cannot extract since then (DECISIONS.md 2026-10-18, *the
+# formats it only named*), so such a file must be what any other file it
+# does not know is — `unknown` to sniff, refused by `x`, nothing written.
+# No manifest in the corpus has such a format today; this is what grades
+# the next one instead of skipping it.
+def check_not_ours(macextract, fx):
+    """Returns a list of problems."""
     bad = []
     r = subprocess.run([macextract, "sniff", fx], capture_output=True,
                        timeout=120)
     got = r.stdout.decode("utf-8", "replace").strip()
-    if got != ourname:
-        bad.append(f"sniff says {got!r}, the oracle says {ourname!r}")
+    if got != "unknown":
+        bad.append(f"sniff says {got!r}, for a format this engine does "
+                   f"not have")
     with tempfile.TemporaryDirectory() as tmp:
         r = subprocess.run([macextract, "x", "-o", tmp, fx],
                            capture_output=True, timeout=300)
         files, dirs = collect_outputs(tmp)
         if r.returncode == 0:
-            bad.append("extraction exited 0 for a format v1 cannot extract")
+            bad.append("extraction exited 0 for a format this engine "
+                       "does not have")
         if files or dirs:
             bad.append(f"extraction wrote {len(files)} file(s) and "
                        f"{len(dirs)} folder(s); it must write nothing")
@@ -567,10 +562,10 @@ def main():
     manifests = sorted(f for f in os.listdir(mandir)
                        if f.endswith(".json")) if os.path.isdir(mandir) else []
 
-    ran = passed = skipped_fmt = skipped_missing = 0
+    ran = passed = skipped_missing = 0
     graded_flags = [0]
     ungraded = []
-    detect_ran = detect_bad = 0
+    notours_ran = notours_bad = 0
     over_budget = 0
     unadj_forks = unadj_fixtures = oos_entries = unadj_masked = 0
     fails = []
@@ -595,19 +590,15 @@ def main():
         if args.max_size and os.path.getsize(fxpath) > args.max_size:
             continue
         if not args.all and fmt not in IMPLEMENTED:
-            if fmt in DETECT_ONLY:
-                work.append((man, fmt, "detect"))
-                continue
-            skipped_fmt += 1
+            work.append((man, fmt, "notours"))
             continue
         work.append((man, fmt, "diff"))
 
     def run_one(item):
         man, fmt, kind = item
-        if kind == "detect":
-            return check_detect_only(args.macextract,
-                                     os.path.join(FIXDIR, man["fixture"]),
-                                     DETECT_ONLY[fmt])
+        if kind == "notours":
+            return check_not_ours(args.macextract,
+                                  os.path.join(FIXDIR, man["fixture"]))
         flags = [0]
         return check_fixture(args.macextract, man, args.verbose,
                              args.budget, flags) + (flags[0],)
@@ -616,16 +607,16 @@ def main():
         results = list(ex.map(run_one, work))
 
     for (man, fmt, kind), result in zip(work, results):
-        if kind == "detect":
-            detect_ran += 1
+        if kind == "notours":
+            notours_ran += 1
             bad = result
             if bad:
-                detect_bad += 1
-                print(f"DETECT FAIL {man['fixture']}")
+                notours_bad += 1
+                print(f"NOT-OURS FAIL {man['fixture']} ({fmt})")
                 for b in bad:
                     print(f"    {b}")
             elif args.verbose:
-                print(f"detect ok: {man['fixture']} ({fmt})")
+                print(f"not ours, refused: {man['fixture']} ({fmt})")
             continue
         ran += 1
         problems, unadj, masked, declared, flags = result
@@ -673,23 +664,15 @@ def main():
     cap = f" under a {args.budget} B budget" if args.budget else ""
     cap += f" (fixtures <= {args.max_size} B)" if args.max_size else ""
     print(f"diff{cap}: {passed}/{ran} fixtures ok "
-          f"({skipped_fmt} formats pending, {skipped_missing} fixtures absent)")
+          f"({skipped_missing} fixtures absent)")
     if over_budget:
         print(f"  over budget: {over_budget} archive(s) need more than a 1 MB "
               f"Mac Plus has and are refused per entry, as pinned in "
               f"OVER_BUDGET_1MB (FORMATS.md, *Budget*)")
-    if detect_ran:
-        print(f"  detect-only: {detect_ran - detect_bad}/{detect_ran} named as "
-              f"the oracle names them, and refused cleanly")
-    else:
-        # Said out loud rather than left as a line that stopped
-        # printing. LZH was the only detect-only fixture the corpus
-        # ever had, and it extracts since 2026-08-23; the formats left
-        # in DETECT_ONLY have no specimen here at all (OPEN_ITEMS.md),
-        # so this check has nothing to run on and grades nothing.
-        print("  detect-only: NO fixture exercises this path — the "
-              "formats still in DETECT_ONLY have no specimen in the "
-              "corpus (OPEN_ITEMS.md)")
+    if notours_ran:
+        print(f"  not ours: {notours_ran - notours_bad}/{notours_ran} "
+              f"fixture(s) of a format this engine does not have, "
+              f"refused as unknown")
     # No fixture is ever skipped for what OUR engine says about it; an
     # entry the oracle names as out of v1 scope is graded on its name and
     # on anything the engine did produce, and counted here.
@@ -716,7 +699,7 @@ def main():
         print(f"    of those, {unadj_masked} fork(s) DO agree with a third "
               f"implementation on an emulated Mac, with the resource "
               f"header's OS-stamped bytes 16..127 masked")
-    return 1 if (fails or detect_bad) else 0
+    return 1 if (fails or notours_bad) else 0
 
 
 if __name__ == "__main__":

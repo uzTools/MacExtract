@@ -1994,8 +1994,10 @@ static uint32_t seg_size_of(void *ctx, const UncSegmentDesc *desc, int part)
 static UncFormat format_by_name(const char *s)
 {
     UncFormat f;
+    /* Not the retired slots, whose name is "unknown" too. */
     for (f = (UncFormat)1; f < UNC_FORMAT__COUNT; f++)
-        if (strcmp(unc_format_name(f), s) == 0) return f;
+        if (unc_format_extractable(f) &&
+            strcmp(unc_format_name(f), s) == 0) return f;
     return UNC_FORMAT_UNKNOWN;
 }
 
@@ -2327,12 +2329,6 @@ nextlayer:
 
     if (fmt == UNC_FORMAT_UNKNOWN) {
         fprintf(stderr, "macextract: %s: format not recognized\n", file);
-        fclose(fio.f);
-        return 1;
-    }
-    if (!unc_format_extractable(fmt)) {
-        fprintf(stderr, "macextract: %s: recognized as %s, which v1 cannot extract\n",
-                file, unc_format_name(fmt));
         fclose(fio.f);
         return 1;
     }
@@ -2904,7 +2900,7 @@ nextlayer:
             pio.size = fio_size;
             pfmt = unc_sniff(&pio);
             fclose(pf);
-            if (pfmt != UNC_FORMAT_UNKNOWN && unc_format_extractable(pfmt)) {
+            if (pfmt != UNC_FORMAT_UNKNOWN) {
                 if (verbose)
                     fprintf(stderr, "unwrapping: %s (%s)\n",
                             sink.last_ok_path, unc_format_name(pfmt));

@@ -106,9 +106,15 @@ import sys
 # left inside the tolerance. `run_tiers.py --check` moves no tally in
 # either lane. -> 67,456 the same day, -128: the shim went (CODE -68,
 # A5 +4), both encodings entering through one overlay call.
-EXPECT = 67456
+# RE-TAKEN 2026-10-18, 67,456 -> 66,944, for the formats it only named,
+# gone: resident `CODE` -1,328 and A5 -704 in all three configurations
+# (tools/build_mac.sh's eager pair has them by symbol), which moved this
+# file 69,120 -> 66,944; the other 1,664 is what M70 left inside the
+# tolerance. `run_tiers.py --check` moves no tally in either lane
+# (DECISIONS.md 2026-10-18, *the formats it only named*).
+EXPECT = 66944
 TOLERANCE = 2048
-TAKEN = "2026-10-14"
+TAKEN = "2026-10-18"
 
 # And the BUNDLE, watched from 2026-09-26 for one reason: FORMATS.md quotes it
 # in three places and nothing measured it, so it was wrong by 544 B — the

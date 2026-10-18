@@ -287,7 +287,7 @@ def main():
               f"{os.path.basename(fixture)} — no oracle manifest, so the "
               f"Linux side is adjudicated by its own suite, not here")
 
-    # A detect-only or otherwise-unsupported format yields 0 files from the
+    # A file the engine does not recognise, or cannot extract, yields 0 files from the
     # SAME engine's Linux CLI. Then the only correct behaviour on the Mac is to
     # also extract nothing — consistent refusal, not a byte match.
     if enf == 0:

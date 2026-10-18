@@ -311,10 +311,10 @@ Macintosh self-extracting archive is opened as the archive it is, zip
 ones included (above). Resource
 forks, type and creator codes and dates all survive, so an extracted
 application simply runs. StuffIt X and the PC-side and modern
-archives -- RAR, 7-Zip, xz, bzip2, Zstandard, lzip, lrzip,
-Cabinet, WIM, Zoo, ARJ, cpio, ar and Apple Archive (.aar) --
-are named rather than opened: you are told what the file is instead of
-being left with something that looks like a damaged download.
+archives -- RAR, 7-Zip, xz, bzip2, Cabinet, cpio and the rest -- are
+not opened: to MacExtract they are files like any other it does not
+read, and it says "This file could not be extracted." before asking
+where to put anything.
 
 Disk images are out of scope, and v0.33.0 is where that became true of
 DART as well: a DART, NDIF or UDIF holds a floppy rather than files, and

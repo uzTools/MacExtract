@@ -24,7 +24,7 @@ under *Table notes*.
 - AppleLink packages: SqueezePlay, read out of Aladdin's own expander
 - Private File: Aladdin's encrypted single file
 - Finder info in the archive: what each format's own expander puts back
-- Archives named but not extracted
+- Archives this engine does not have
 - Envelope auto-unwrap
 - Segmented archives (multi-part sets)
 - Hardening
@@ -72,7 +72,6 @@ under *Table notes*.
 | Compact Pro segment (multi-part) | extract | RLE / LZH+RLE — the Compact Pro reader, over the segments | 2 generated sets + 2 cut by Compact Pro 1.51 itself | 20 KB | full |
 | DiskDoubler split (`SPLT`) | extract | — (join only; the joined file is the next layer) | 6 real parts (3 sets, cut by DiskDoubler itself, in `fixtures/`) + 8 generated sets, adjudicated against the published files they were cut from — no oracle exists | 8 KB | full |
 | Split file (plain .001/.002) | extract | — (join only; the joined file is the next layer) | 3 generated sets, adjudicated against the bytes that were cut, `unar` where it can join, and our unsplit read | 8 KB | full |
-| StuffIt X (.sitx) | detect only | — | — (no fixture) | — | — |
 | DiskDoubler (DD, DDAR, DDA2) | extract | **all eleven**: 0 store, 1 Unix compress, 2/5 splay Huffman, 3 RLE90, 4 StuffIt Huffman, 6/9 AD LZSS, 7 Stac LZS, 8 Compact Pro, 10 DDn✦ | 88 fixtures (6 harvested + 82 CC0 files graded against their own originals, in `ci.sh` since 2026-08-21) + 19 BinHexed copies of those + 28 specimens (2 written by DiskDoubler 3.7 under Mini vMac, 2 off its distribution disk, 24 off Salient's 3.1.2 disk)✦ | 8–392 KB✦ | full |
 | Now Compress | extract | stored, LZSS, Huffman, Huffman+LZSS, "new" LZSS✧ | 2 real fixtures + 14 generated archives (all five shapes, adjudicated by `unar`); `synth-now-mixed.now` also has an `unar` manifest and is in the differential suite | 137 KB with one block slot, 235 KB with four✧ | full |
 | ARC / ArcMac (.arc) | extract | 1/2 store, 3 RLE90, 4 squeeze+RLE90, 5/6/7 crunch, 8 12-bit LZW+RLE90, 9 13-bit LZW, **0x0a crushed (PAK) and 0x0b distilled since 2026-08-25, 0x0a trimmed (ARC 7.x) and the ARC 7 container since 2026-08-25**, 0x7f compress; ArcMac's two-fork payload since 2026-08-16★★★; **garbled (password-XORed) members decrypted** | 10 generated archives (methods 1-9, adjudicated by `unar`) + 3 written by Debian's `arc` 5.21q; **2 real PAK specimens + 7 archives PAK 2.51 wrote under DOSBox** (`tools/pak.py`); `synth-arc-mixed.arc`, `arc2pak1.pak` and `derived-INTRECHO.pak` have manifests and are in the differential suite | 4–46.5 KB★ | full |
@@ -85,7 +84,6 @@ under *Table notes*.
 | LZH / LHA (.lzh, .lha) | extract | -lh0- store, -lh1- (LHarc's adaptive Huffman, shared with StuffIt method 5), **-lh2- (both codes adaptive, the position tree growing with the output)**, **-lh3- (static, rebuilt per block)**, -lh4-/-lh5-/-lh6-/-lh7- (static Huffman over a 4/8/32/64 KB window), -lhd- directories, LArc's -lz4-/-lz5-/-lzs-; header levels 0, 1, 2 and 3; **MacLHA's MacBinary payload unwrapped into two forks**; every method the format has except PMarc✵ | 8 fixtures (1 real Amiga archive + 7 of lhasa's) + **182 archives from fourteen writers**, each graded against `unar` and against lhasa, + 12 sets written by LHa 1.14i itself, + 15 -lh2- and 6 -lh3- entries generated for the purpose✵ | 4–74 KB✵ | full |
 | AppleLink package (.pkg) | extract | LZW (Unix `compress` at 13 bits) and stored, both forks, versions 0 and 1, folders★★★★ | **67 forks of 8 real packages** — every path the format has — against `derive_sqp.py`'s independent reading and each record's own declared length, 4 of them against a recorded sha256, + 6 synthesised packages (22 forks) in the differential suite, + **every LZW fork decoded by `gzip` through a `.Z` header**★★★★ | 8–41 KB★★★★ | full |
 | Private File (.pf) | extract (envelope) | RC4 under the first 5 (export build) or up to 16 bytes of MD5(password); the payload is the StuffIt archive PF Encrypt makes first | no corpus file and no other reader: **3 files Private File 2.0 itself wrote**, graded byte-exact through every layer against the subjects that went in (*Private File*, below) | 5 KB | full |
-| RAR, RAR 5, 7-Zip, xz, bzip2, Cabinet, Zoo, ar/.deb, cpio, ARJ, Zstandard, lzip, lrzip, WIM, Apple Archive | **named only**, never extracted | — | archives written here by bzip2, xz, 7z, cpio and ar and confirmed by p7zip, and **Apple Archives written and re-read by libNeoAppleArchive** in all four shapes; real RAR, RAR 5 and CAB out of libarchive's test suite; synthetic Zoo, ARJ and Cabinet identified by deark; 0 false positives in 994 corpus files (*Archives named but not extracted*, below) | — | — |
 
 ## Table notes
 
@@ -3647,90 +3645,35 @@ the corpus's 237 MacBinary headers hold a nonzero `fdLocation` (two of them (−
 MacBinary I; of the 14 ZipIt payloads Python's `zipfile` reads (16 in all, `run_zipit.py`), 5 are MacBinary III (ZipIt 2.2.2),
 two with `fdXFlags` 0x80 and one an alias with 73's bit 7 set.
 
-## Archives named but not extracted
+## Archives this engine does not have
 
-**Named since 2026-08-26**, extraction still out by the brief (OPEN_ITEMS.md,
-part 1). Fourteen PC-side and modern families, one probe,
-`src/fmt_foreign.c`:
+**Since 2026-10-18 the engine recognises nothing it does not extract**
+(DECISIONS.md 2026-10-18, *the formats it only named*). StuffIt X and the
+fifteen PC-side and modern families it used to name — RAR 1.3/1.4, 1.5–4.x
+and 5, 7-Zip, xz, bzip2, Microsoft Cabinet, Zoo, ar/`.deb`, cpio, ARJ,
+Zstandard, lzip, lrzip, WIM and Apple Archive — are `UNC_FORMAT_UNKNOWN`,
+and the CLI says *"format not recognized"*, as for any other file. Their
+enumerators are reserved, not reused (`include/macextract.h`).
 
-| format | test | source |
-|---|---|---|
-| RAR 1.5–4.x | `Rar!` 1a 07 00 | `IsRARSignature`, XADMaster `XADRARParser.m` |
-| RAR 5 | `Rar!` 1a 07 01 00 | `IsRAR5Signature`, XADMaster `XADRAR5Parser.m` |
-| RAR 1.3/1.4 | `RE~^` | `IsAncientRARSignature`, same file |
-| 7-Zip | `7z` bc af 27 1c 00 | `Is7ZipSignature`, XADMaster `XAD7ZipParser.m` |
-| xz | fd `7zXZ` 00 | XADMaster `XADXZParser.m` |
-| bzip2 | `BZh` + level digit + the block **or** end-of-stream magic | XADMaster `XADBzip2Parser.m` |
-| Microsoft Cabinet | `MSCF` | XADMaster `XADCABParser.m` |
-| Zoo | dc a7 c4 fd **at 0x14** | XADMaster `XADZooParser.m`, deark `zoo.c` |
-| ar / `.deb` | `!<arch>` 0a | deark `ar.c`, `de_identify_ar` |
-| cpio | `070707`, `070701`, `070702`, or the binary magic in either byte order | deark `cpio.c`, `identify_cpio_internal` |
-| ARJ | 60 ea at 0, header size 32..2600, header CRC-32 | XADMaster `XADARJParser.m` (the CRC), deark `arj.c` (the bounds) |
-| Zstandard | 28 b5 2f fd, **or** a skippable frame 5x 2a 4d 18 | RFC 8878 §3.1.1 and §3.1.2, `reference/notes/zstd_rfc8878.txt` |
-| lrzip | `LRZI` and at least `MAGIC_LEN` = 24 bytes | `write_magic`/`get_magic`, `reference/lrzip/lrzip.c` |
-| WIM | `MSWIM` 00 00 00, header size at +8 = 208 | `WIM_MAGIC`, `WIM_HEADER_DISK_SIZE`, `reference/wimlib/include/wimlib/header.h` |
-| Apple Archive | `AA01` or legacy `YAA1`, header size at +4 ≥ 6, and the first field's subtype byte at +9 in a closed set of sixteen; **or** `pbz` and a codec letter `e`/`z`/`b`/`x`/`4` | `AAR_MAGIC`, `YAA_MAGIC`, `PBZ*_MAGIC` in `reference/libNeoAppleArchive/libNeoAppleArchive/libNeoAppleArchive_internal.h`; the prologue and the subtype set in `neo_aa_header.c`; the `x` and `4` letters from `reference/notes/Apple_Archive.md` |
-| lzip | `LZIP`, and nothing to corroborate it with | deark `unsupported.c`, `get_fmt` — which rates it **50** where it rates xz 90 |
+**Measured: no other reader claims one.** Their probe ran ahead of
+MacBinary's CRC and every weaker test, so until then nothing else had been
+asked about such a file. `tools/run_foreign.py` (in `ci.sh`) now requires
+**26 specimens** to sniff as `unknown` and to make `macextract x` write
+nothing: bzip2, xz, 7z, WIM, cpio in three header shapes and ar written here
+by their own tools and opened by p7zip; four Apple Archives written and read
+back by libNeoAppleArchive; StuffIt X, the three RAR signatures, Cabinet,
+Zoo, ARJ and lzip headers identified by deark; Zstandard and lrzip on their
+published magics; and `synth-os9-rar.rar`. **No fixture changes format in
+994 corpus files**: each manifest's fixture sniffs as its oracle names it,
+and the only one that went to `unknown` is that RAR. `origin/main`'s CLI
+fails 52 of its 97 checks (TESTING.md, *Archives this engine does not
+have*).
 
-**What grades them** (`tools/run_foreign.py`, in `ci.sh`): archives written
-here by bzip2, xz, 7z, cpio in its three header shapes and ar — each one then
-opened by p7zip, so the subject is known to be a real archive before the probe
-is asked about it; synthetic Zoo, ARJ and Cabinet headers identified by
-**deark**; and every corroborating field spoiled in turn, each of those
-negatives mutation-tested against a probe with that field removed. **0 false
-positives across the 994 corpus files**, re-established on every `ci.sh`
-run — with the corpus's one deliberate `RAR`, which the Mac OS 9 tier
-needs to raise its alert with, CHECKED rather than excused
-(`tools/run_foreign.py`).
-
-**RAR and RAR 5 are the two with no oracle in `ci.sh`** — nothing here writes
-one, deark has no module for them, and p7zip will not identify a stub it
-cannot parse. Measured once instead, on **2026-08-26**:
-`test_read_format_rar.rar`, `test_read_format_rar5_stored.rar` and
-`test_read_format_cab_filename_cp932.cab` from libarchive's test suite
-(uudecoded by this engine's own `.uu` reader), all three named correctly and
-all three parseable by p7zip. They are not in the corpus, so `ci.sh` does not
-repeat it.
-
-**The CLI says the name**: *"recognized as RAR, which v1 cannot extract"*.
-The Macintosh application said it too, *"MacExtract cannot open RAR
-files."*, from 2026-08-26 to 2026-10-18; since then it says *"This file could
-not be extracted."*, as for a file that is no archive, and says it before
-asking where to extract (DECISIONS.md 2026-10-18, *the question after the
-look*).
-
-**Four joined on 2026-08-29**, when their references were fetched — and one
-of the four, lzip, had been sitting in `reference/deark` since deark was
-cloned for ARC's Distilled method. The item that tracked them read *"no
-implementation or spec for them is in `reference/`"*, and for lzip that was
-never true (BLOCKERS.md).
-
-**lzip is the weakest probe in this file and is ordered last for it.** Four
-ASCII bytes with nothing behind them: a text file that opens with the word
-LZIPPER is claimed, which is measured rather than feared. deark rates it 50
-against xz's 90 for the same reason, and this engine has no confidence to
-report — so it is tested after every corroborated magic, and only a file that
-matched nothing else can reach it.
-
-**brotli is not on that list and never will be.** RFC 7932 §9.1 is the entire
-stream header — one to seven bits of WBITS, no magic, no signature, no
-version byte — so a raw brotli stream cannot be identified from its contents
-by this or any other program. That is a property of the format, not a missing
-reference, and it moved to OPEN_ITEMS.md part 1 on 2026-08-29.
-`reference/notes/brotli_rfc7932.txt` is kept as the evidence for a negative.
-
-A `.zipx` needs nothing: it is a zip, the zip probe claims it, and its entries
-are refused one at a time by method. A `.cpgz` is gzip, the gzip layer unwraps
-to the cpio inside it, and that cpio is now named too.
-
-**Apple Archive joined on 2026-09-01**, graded the way bzip2 and 7z are — by
-an implementation that is not ours, writing the specimens. libNeoAppleArchive
-— MIT, and not a reimplementation of Apple's closed libAppleArchive but a
-from-scratch reading of the format — builds here with `tools/build_neoaa.sh`
-and writes archives in all four shapes the probe has to recognise, each read
-back by that same library before the probe is asked (`tools/neoaa_write.c`).
-The item that tracked it read *"unnamed for want of a reference"*; what was
-missing was the search, not the reference (BLOCKERS.md).
+**brotli was never on the list**: RFC 7932 §9.1 is the whole stream
+header, with no magic, so nothing can identify one
+(`reference/notes/brotli_rfc7932.txt`). A `.zipx` is a zip and its entries
+are refused by method; a `.cpgz` is a gzip, and the cpio it unwraps to is a
+file like any other.
 
 ## Envelope auto-unwrap
 
@@ -5422,9 +5365,21 @@ on 2026-10-11 (*Reduce*), and sixteen since.
 
 | build | switch | resident `CODE` | A5 | `MacExtract.code.bin` | `MacExtract.bin` |
 |---|---|---|---|---|---|
-| **eager — SHIPPED** | (default) | **55,712 B** | 19,088 B | **67,456 B** | **238,720 B** |
-| lazy | `UNC_OVL_LAZY=1` | 54,136 B | 19,192 B | 65,792 B | 237,184 B |
-| resident — the control | `UNC_OVL_RESIDENT=1` | **175,348 B** | **38,028 B** | 208,000 B | 211,968 B |
+| **eager — SHIPPED** | (default) | **56,464 B** | 17,856 B | **66,944 B** | **249,856 B** |
+| lazy | `UNC_OVL_LAZY=1` | 54,884 B | 17,964 B | 65,408 B | 248,320 B |
+| resident — the control | `UNC_OVL_RESIDENT=1` | **186,980 B** | **36,892 B** | 218,624 B | 222,464 B |
+
+CORRECTED 2026-10-18: the rows were 2026-10-14's until then, and are
+read off the three builds of the paragraph below.
+
+**Re-measured 2026-10-18, for the formats it only named, gone**
+(DECISIONS.md 2026-10-18, *the formats it only named*), against
+`origin/main` (eadcabb) built the same way: all three configurations
+**−1,328 B of `CODE` and −704 of A5**, so `OVL_SAVED` does not move and
+neither does any image or the bundle; every TIERS budget **+2,032**
+(derived), and `run_tiers.py --check` moves no tally in either lane. The
+downloads −2,048 (eager 251,904 → 249,856 B), `MacExtract.code.bin`
+69,120 → 66,944 B.
 
 **Re-measured 2026-10-18, for the Spotlight comment** (DECISIONS.md
 2026-10-18, *the comment Spotlight kept*), against `origin/main` (e5959ca)
@@ -5440,9 +5395,8 @@ of A5**, lazy **+352 and +16**, the control **+660 and +12**; Implode moved
 from `ovl_exo` to `ovl_zipold` (`ovl_exo` −1,424 to 31,284 B, 1,484 B under
 the 32,768 its PC-relative references span; `ovl_zipold` +1,672 to 10,284
 B), `ovl_lzh` +40, the bundle +288, `OVL_SAVED` +304, every TIERS budget
-−672 (derived). The rows above are older than this paragraph and older
-than several since; the ratchets in `tools/build_mac.sh` are the current
-figures. `run_tiers.py --check` moves no tally.
+−672 (derived). (The rows above were older than this paragraph until
+2026-10-18.) `run_tiers.py --check` moves no tally.
 
 **Re-measured 2026-10-14, for BinHex before 4.0** (DECISIONS.md
 2026-10-14, *the BinHex before 4.0*), against HEAD built the same way,
@@ -5767,7 +5721,7 @@ and to 162,064 on 2026-10-10 for `ovl_stuffit` +24, and to 163,588 on
 instead, at 162,980 (*Reduce*). And to 164,264 the same day for `ovl_stuffit` +676, `JPEG Lossy` at every width and mode, the index unmoved, and to 164,576 on 2026-10-12 for `ovl_stuffit` +312, Arsenic's progress, and to 164,816 on 2026-10-13 for `ovl_text` +240, MIME's, and to 167,220 on 2026-10-14 for `ovl_binhex` +2,404, BinHex before 4.0.
 It is not resident while an archive
 is extracted, which is the point of the build; `tools/check_app_size.py`
-therefore watches the 67,456 B `MacExtract.code.bin` and not the download.
+therefore watches the 66,944 B `MacExtract.code.bin` (2026-10-18) and not the download.
 (That figure read 64,768 B until 2026-10-05, when the AppleLink probe
 raised it, and 64,512 B until 2026-10-01, which was the
 ratchet's EXPECT rather than the build's size — 256 B inside its
@@ -6070,12 +6024,12 @@ this table's successor rows quote. Summing per object also overstates
 what SHIPS, because `--gc-sections` drops what nothing calls: the linked
 figure is `tools/code_map.py`'s, below.
 
-The application ships as **238,720 B** of MacBinary (`dist/MacExtract.bin`,
-re-read 2026-10-14 off the build `tools/make_dist.sh` copies), and since
+The application ships as **249,856 B** of MacBinary (`dist/MacExtract.bin`,
+re-read 2026-10-18 off the build `tools/make_dist.sh` copies), and since
 2026-09-25 that is no longer all resident:
-**67,456 B** is
+**66,944 B** is
 `MacExtract.code.bin`, which the Segment Loader reads at launch and never
-purges, and **167,208 B** is the `'OVLY'` bundle, which is read at launch and
+purges, and **178,924 B** is the `'OVLY'` bundle, which is read at launch and
 mostly given back before the engine takes its budget (*Overlays*). What stays
 costs the heap one for one: the link line produces a single
 `MacExtract.code.bin`, and `Elf2Mac/LdScript.cc` emits `*(.rodata*)` inside
@@ -8420,7 +8374,7 @@ master image:
 | `synth-os9-mime.mim` | multipart/appledouble | 1 | 320 | 176 | ✅ byte-exact, both forks and the type |
 | `synth-now-mixed.now` | Now Compress | 1 | 15,096 | 0 | ✅ byte-exact — added 2026-09-04, the third folder-walking format |
 | `derived-800saywhat301j.sit` | StuffIt 5, UTF-8 names | 19 | 141,510 | 103,343 | ✅ byte-exact — added **2026-09-22**, the fold's first run on this tier; three names MacRoman cannot spell come out as 7, 7 and 13 `_`, and `Icon\r` comes out invisible with its 51,781-byte resource fork |
-| `synth-os9-rar.rar` | RAR: must REFUSE | 0 | — | — | ✅ declined, and Linux declines the same file; the alert is photographed |
+| `synth-os9-rar.rar` | a RAR, so not an archive: must REFUSE | 0 | — | — | ✅ declined, and Linux declines the same file; the alert is photographed. Run while the engine still NAMED it a RAR; it is `unknown` since 2026-10-18, which reaches the same alert (*Archives this engine does not have*) |
 
 **22/22**, 71 files, 941,756 data bytes and 452,596 resource-fork bytes
 compared, **all of it in one `--launch` sweep on 2026-10-10**, the same
