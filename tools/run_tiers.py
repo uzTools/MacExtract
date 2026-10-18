@@ -135,10 +135,12 @@ REPO = os.path.dirname(HERE)
 # by that much with the archives' Finder info (below).
 # **All three lowered by 4,096 B 2026-10-17, DERIVED**: TIERS_CONTROL rose
 # by that much with Mac OS X's sidecars (below).
+# **And by 672 B more the same day, DERIVED**: TIERS_CONTROL rose by that
+# much with the dates in the Macintosh's own zone (below).
 TIERS = {
-    "sys3-512K": (189668, "System 3.0, Macintosh 512Ke (225,956 B free)"),
-    "sys6-512K": (94268, "System 6.0.8, Macintosh 512Ke (130,556 B free)"),
-    "floor-1M":  (618556, "System 6.0.8, 1 MB Mac Plus — the floor target"),
+    "sys3-512K": (188996, "System 3.0, Macintosh 512Ke (225,956 B free)"),
+    "sys6-512K": (93596, "System 6.0.8, Macintosh 512Ke (130,556 B free)"),
+    "floor-1M":  (617884, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
 
 # RE-TAKEN on all three machines 2026-10-09 (`-D UNC_OVL_RESIDENT -D
@@ -262,7 +264,10 @@ TIERS = {
 # DERIVED**: Mac OS X's sidecars, the control's CODE +4,084 and A5 +12;
 # the shipped pair +32 (A5), so OVL_SAVED +4,064 (DECISIONS.md 2026-10-17,
 # *the sidecars Mac OS X left beside the file*).
-TIERS_CONTROL = 223824     # build/mac-resident, CODE + A5, 2026-10-17, at the merge of meta-archives
+# **Raised by 672 B more 2026-10-17, and TIERS lowered by the same 672,
+# DERIVED**: the dates in the Macintosh's own zone, the control's CODE +660
+# and A5 +12 (DECISIONS.md 2026-10-17, *dates in the Macintosh's own zone*).
+TIERS_CONTROL = 224496     # build/mac-resident, CODE + A5, 2026-10-17, meta-localtime
 # **What this control cannot see: the autotest harness.** TIERS was read
 # on the machine from an autotest build (`UNC_MAC_AUTOTEST`), and
 # build/mac-resident has no harness in it, so harness growth lowers what a
@@ -593,7 +598,13 @@ EXPECT = {
 # **+4,064 the same day, -> 147,936**: Mac OS X's sidecars, the control's
 # +4,096 against the shipped pair's +32 (DECISIONS.md 2026-10-17, *the
 # sidecars Mac OS X left beside the file*).
-OVL_SAVED = 147936
+# **+304 the same day, -> 148,240**: the dates in the Macintosh's own
+# zone, the control's +672 (CODE +660, A5 +12) against the shipped pair's
+# +368 (CODE +356, A5 +12); Implode moved from `ovl_exo` to `ovl_zipold`
+# to make room, so `ovl_exo` -1,424, `ovl_zipold` +1,672, `ovl_lzh` +40,
+# the bundle +288 (DECISIONS.md 2026-10-17, *dates in the Macintosh's own
+# zone*).
+OVL_SAVED = 148240
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
 # every kept image is one — as is the bundle an envelope holds on to.
@@ -725,8 +736,8 @@ IMAGES = {
     "OVL_ID_CODECS":      6404,
     "OVL_ID_CPTDD":       15936,
     "OVL_ID_CRYPT":       10244,
-    "OVL_ID_EXO":         32708,
-    "OVL_ID_LZH":         11202,
+    "OVL_ID_EXO":         31284,
+    "OVL_ID_LZH":         11242,
     "OVL_ID_NOW":         5164,
     "OVL_ID_PACKIT":      2656,
     "OVL_ID_SPACESAVER":  16722,
@@ -734,13 +745,17 @@ IMAGES = {
     "OVL_ID_SQP":         2040,
     "OVL_ID_SUPERDISK":   7142,
     "OVL_ID_TEXT":        12162,
-    "OVL_ID_ZIPOLD":      8612,
+    "OVL_ID_ZIPOLD":      10284,
 }
 # **ZIPOLD +3,374 B and EXO +972 B, the bundle +4,344 B, 2026-10-17**:
 # Mac OS X's sidecars, the shared code in ZIPOLD and zip's half in EXO,
 # which is 60 B under the 32 KB it can reach (DECISIONS.md 2026-10-17, *the
 # sidecars Mac OS X left beside the file*).
-BUNDLE = 177312
+# **EXO -1,424 B, ZIPOLD +1,672 B, LZH +40 B, the bundle +288 B, the same
+# day**: the dates in the Macintosh's own zone, and Implode moved into
+# ZIPOLD so that EXO links: 1,484 B under its 32 KB now, ZIPOLD 22,484
+# (DECISIONS.md 2026-10-17, *dates in the Macintosh's own zone*).
+BUNDLE = 177600
 
 # What the SHIPPED lane asserts, and it is the refused fixtures BY NAME
 # rather than a tally: a tier that refuses two different fixtures and still

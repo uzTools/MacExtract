@@ -550,7 +550,10 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # image's code resident here: src/unc_sidecar.c, new, zip's half of them in
 # src/fmt_exo.c and tar's in src/fmt_tar.c (DECISIONS.md 2026-10-17, *the
 # sidecars Mac OS X left beside the file*).
-UNC_MAC_CODE_DEFAULT=186276
+# +660 code on 2026-10-17 for the dates in the Macintosh's own zone
+# (DECISIONS.md): the eager pair's resident pieces, and here the readers
+# that are images there — tar, gzip, zip's 0x334d offsets, LZH's marks.
+UNC_MAC_CODE_DEFAULT=186936
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -719,7 +722,9 @@ UNC_MAC_CODE_DEFAULT=186276
 # +72 on 2026-10-17 with the code ceiling's +4,520: three copies of the
 # 24-byte days-before-month table, resident in this configuration only.
 # -12 on 2026-10-17 with the code ceiling's +428: padding.
-UNC_MAC_A5_DEFAULT=37548
+# +12 on 2026-10-17 with the code ceiling's +660: gZone, a vector slot,
+# and padding.
+UNC_MAC_A5_DEFAULT=37560
 # A CEILING PER CONFIGURATION, because one ceiling measured on another build
 # cannot fire. The figures above are the RESIDENT control build, which carries
 # every decoder; the shipped build's resident code is a third of that, so
@@ -1062,8 +1067,16 @@ UNC_MAC_A5_DEFAULT=37548
 # ovl_exo, and unc_copy_fork for tar), 36 B, less alignment. **32 B off
 # every extraction's budget**; the code is all in images (DECISIONS.md
 # 2026-10-17, *the sidecars Mac OS X left beside the file*).
-UNC_MAC_CODE_EAGER=57312
-UNC_MAC_A5_EAGER=18576
+# +356 code and +12 A5 on 2026-10-17 for the dates in the Macintosh's own
+# zone: **368 B off every extraction's budget.** By object: the shell +316
+# (ZoneProbe 146, ZoneMove, and the three marked dates moved in
+# sink_begin), unc_macbinary_meta +22 (a payload's dates clear the
+# container's mark), unc_as_record +16 (AppleSingle's marks); the A5 is
+# gZone, +4, the vector slot Implode's move to ovl_zipold needs, +4, and
+# 4 of `.data` alignment (DECISIONS.md 2026-10-17, *dates in the
+# Macintosh's own zone*).
+UNC_MAC_CODE_EAGER=57668
+UNC_MAC_A5_EAGER=18588
 # +8 on 2026-10-02 for the same reason as the eager pair above: the
 # overlay call that now says WHICH of StuffIt 2.x's ciphers an entry
 # wants. A5 fell to 19,096 and its ceiling is left where it was.
@@ -1123,7 +1136,9 @@ UNC_MAC_A5_EAGER=18576
 # +460 code on 2026-10-17, the envelopes' Finder info (the eager pair
 # above); A5 18,652, under its ceiling.
 # +16 code on 2026-10-17, the same mask.
-UNC_MAC_CODE_LAZY=55736
+# +352 code on 2026-10-17, the dates in the Macintosh's own zone (the eager
+# pair above); A5 18,696, under its ceiling.
+UNC_MAC_CODE_LAZY=56088
 UNC_MAC_A5_LAZY=19200
 if [ -n "$UNC_OVL_RESIDENT" ]; then
     UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-$UNC_MAC_CODE_DEFAULT}

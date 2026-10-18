@@ -302,6 +302,8 @@ int unc_tar_extract(UncCtx *c)
                 e.mod_date = unc_unix_to_mac((uint32_t)mt);
         }
         if (xmtime) e.mod_date = xmtime;
+        /* Both are Unix times: an instant (macextract.h). */
+        if (e.mod_date) e.meta |= UNC_META_MD_UTC;
         if (xclen) {
             e.comment = xcmt;
             e.comment_len = (uint16_t)xclen;

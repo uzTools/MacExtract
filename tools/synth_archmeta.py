@@ -4,8 +4,11 @@ tools/run_meta.py's archive lanes (`archive_*` there).
 
 Each builder returns (bytes, want): `want` maps an entry's listed name to
 the fields `macextract l --meta` must print for it — finfo, fxinfo
-(32 hex digits), backup, ctime, mtime (8 hex digits, Mac seconds), lock
-('L', 'n'), comment (hex) — with '-' where the archive states nothing.
+(32 hex digits), backup, ctime, mtime (8 hex digits, Mac seconds, then
+`Z` where the format's document makes the date an instant — a Unix time,
+a 0x334d date with its GMT offset — and nothing after a wall clock: an
+MS-DOS or Macintosh date), lock ('L', 'n'), comment (hex) — with '-'
+where the archive states nothing.
 The values are built from the layouts' own documents, field by field,
 in the WRITING direction; the engine reads them back in the other. Where
 a builder starts from a real archive (StuffIt 5, SuperDisk!, Now
@@ -40,7 +43,17 @@ def h(b):
 
 
 def mac_of_unix(t):
-    return "%08x" % (t + MAC_EPOCH)
+    """An instant: `Z` after it (macextract.h, UNC_META_*_UTC)."""
+    return "%08x" % (t + MAC_EPOCH) + "Z"
+
+
+def mac_of_m3(local, gmt):
+    """A 0x334d date: with its offset ("local time - UTC", the document's
+    *Attributes*), the instant local - offset, marked; without, the
+    writer's wall clock as stored."""
+    if gmt is None:
+        return "%08x" % local
+    return "%08x" % ((local - gmt) & 0xFFFFFFFF) + "Z"
 
 
 def mac_of_dos(y, mo, d, hh, mi, ss):
@@ -110,8 +123,9 @@ def zip_meta():
     add("mac.txt", b"MacZip\n", 7, 0x81240001, (2001, 2, 3, 4, 5, 6),
         comment=b"zip comment", extra=_m3_field(b"TEXT", b"ttxt", att, -18000),
         w=dict(finfo=h(_finfo_be(b"TEXT", b"ttxt", 0x0120, 0x40, -0x10, 5)),
-               fxinfo=h(_fxinfo_be(fx)), backup="%08x" % bk,
-               ctime="%08x" % cr, mtime="%08x" % md, lock="L",
+               fxinfo=h(_fxinfo_be(fx)), backup=mac_of_m3(bk, -18000),
+               ctime=mac_of_m3(cr, -18000), mtime=mac_of_m3(md, -18000),
+               lock="L",
                comment=h(b"a Finder comment")))
     # A MacZip folder: the type and creator slots hold its rectangle, no
     # GMT offsets (flag bit 4), a backup date of 0 ("never": unstated).
@@ -123,8 +137,9 @@ def zip_meta():
         extra=_m3_field(rect[:4], rect[4:], att, None),
         w=dict(finfo=h(rect + struct.pack(">HhhH", 0x03f0, 0x7b, 0x117,
                                           0x100)),
-               fxinfo=h(_fxinfo_be(fxd)), backup="-", ctime="%08x" % cr,
-               mtime="%08x" % md, lock="n", comment="-"))
+               fxinfo=h(_fxinfo_be(fxd)), backup="-",
+               ctime=mac_of_m3(cr, None), mtime=mac_of_m3(md, None),
+               lock="n", comment="-"))
     # Foreign permissions, and DOS dates where no Mac field states one.
     for name, host, attr, lock in (
             ("unix-ro", 3, (0o100444 << 16), "L"),

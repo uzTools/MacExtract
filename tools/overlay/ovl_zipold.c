@@ -11,6 +11,10 @@
  * Tar's reader too, since 2026-10-17 (src/fmt_tar.c says why): the eager
  * release keeps this image, and only this one, for a tar.
  *
+ * Implode too (src/unc_implode.c), since 2026-10-17, when `ovl_exo` reached
+ * the 32 KB it can span (DECISIONS.md 2026-10-17, *dates in the Macintosh's
+ * own zone*).
+ *
  * The Mac OS X sidecars too (src/unc_sidecar.c), since 2026-10-17: zip
  * calls them from `ovl_exo` through the vector this image patches, and tar
  * from inside it (DECISIONS.md 2026-10-17, *the sidecars Mac OS X left

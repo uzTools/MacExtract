@@ -297,8 +297,10 @@ typedef struct UncEntryInfo {
     uint32_t type;          /* Mac type code, 0 if unknown    */
     uint32_t creator;       /* Mac creator code, 0 if unknown */
     uint16_t finder_flags;  /* Finder flags, 0 if unknown     */
-    uint32_t create_date;   /* Mac epoch (1904) secs, 0 if unknown */
-    uint32_t mod_date;      /* Mac epoch (1904) secs, 0 if unknown */
+    /* Mac epoch (1904) secs, 0 if unknown. A WALL-CLOCK time unless its
+     * UNC_META_*_UTC bit is set (below, with `meta`). */
+    uint32_t create_date;
+    uint32_t mod_date;
 
     uint32_t data_size;     /* uncompressed data fork size, or UNC_SIZE_UNKNOWN */
     uint32_t rsrc_size;     /* uncompressed rsrc fork size, or UNC_SIZE_UNKNOWN */
@@ -411,6 +413,25 @@ typedef struct UncEntryInfo {
 #define UNC_META_FINFO   0x01  /* finder_info holds 16 archive bytes  */
 #define UNC_META_FXINFO  0x02  /* xfinder_info holds 16 archive bytes */
 #define UNC_META_BACKUP  0x04  /* backup_date is the archive's        */
+/* Which dates are INSTANTS. Two kinds of date reach a host
+ * (DECISIONS.md 2026-10-17, *the archives' own Finder info*, and
+ * *dates in the Macintosh's own zone*):
+ *
+ *   bit CLEAR, date nonzero — a wall clock, carried as the archive holds
+ *       it: a Macintosh date, an MS-DOS date and time, a 0x334d date
+ *       without its GMT offsets. The archive does not say which zone it
+ *       was read in, and neither does the engine.
+ *   bit SET — an instant (a Unix time, a Windows FILETIME, AppleSingle's
+ *       GMT seconds, a 0x334d date with its offsets applied), written as
+ *       the Macintosh date whose wall clock reads that instant in UTC. A
+ *       host that knows its own offset east of UTC ADDS it; one that
+ *       does not writes the date as it is, in UTC.
+ *   date 0 — not stated, whatever the bit.
+ *
+ * The engine itself knows no zone. */
+#define UNC_META_CR_UTC  0x08  /* create_date is an instant, in UTC   */
+#define UNC_META_MD_UTC  0x10  /* mod_date is an instant, in UTC      */
+#define UNC_META_BK_UTC  0x20  /* backup_date is an instant, in UTC   */
 
 #define UNC_LOCK_UNKNOWN 0
 #define UNC_LOCK_NO      1

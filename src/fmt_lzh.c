@@ -804,6 +804,8 @@ static int lzh_header(UncCtx *c, uint32_t pos, LzhEnt *e, UncEntryInfo *info,
                          unc_get_u16le(h + LZH_H_TIME))
         : (unc_get_u32le(h + LZH_H_TIME)
            ? unc_unix_to_mac(unc_get_u32le(h + LZH_H_TIME)) : 0);
+    /* Levels 2 and 3: a Unix time, an instant (macextract.h). */
+    if (level >= 2 && info->mod_date) info->meta |= UNC_META_MD_UTC;
 
     if (level == 0 || level == 1) {
         uint32_t namelen, nameat;
@@ -945,8 +947,15 @@ static int lzh_header(UncCtx *c, uint32_t pos, LzhEnt *e, UncEntryInfo *info,
      * mtime for level 1, header.doc.euc), and a POSIX mode over the
      * MS-DOS attributes for the lock — no owner write (0200), or the
      * read-only bit (0x01). */
-    if (e->xmtime) info->mod_date = e->xmtime;
-    if (e->xctime) info->create_date = e->xctime;
+    /* Every one of them a Unix time or a FILETIME: an instant. */
+    if (e->xmtime) {
+        info->mod_date = e->xmtime;
+        info->meta |= UNC_META_MD_UTC;
+    }
+    if (e->xctime) {
+        info->create_date = e->xctime;
+        info->meta |= UNC_META_CR_UTC;
+    }
     if (e->mode >= 0)
         info->locked = (e->mode & 0200) ? UNC_LOCK_NO : UNC_LOCK_YES;
     else

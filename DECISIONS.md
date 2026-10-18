@@ -433,6 +433,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-17 (the window Expander puts back) — StuffIt classic states exactly what Expander 4.0.2 restores, DiskDoubler restores the location its own Expand drops, and its header CRC was already checked
 - 2026-10-17 (the archives' own Finder info) — PackIt, StuffIt 5, Now Compress, SuperDisk!, Private File, ArcMac and ARC, zip, tar, gzip and LZH deliver the Finder info, dates, lock and comment they hold
 - 2026-10-17 (the sidecars Mac OS X left beside the file) — a zip's `__MACOSX/…/._name` and a tar's `._name` are put back on their file: resource fork, Finder info, comment, dates and lock
+- 2026-10-17 (dates in the Macintosh's own zone) — the engine marks which dates are instants, and the application writes those in the Mac's zone where it can say what that is
 
 ---
 
@@ -27996,3 +27997,169 @@ walks the directory once without allocating.
 - **Extractions lost**: none — `run_tiers.py --check`, both lanes, all
   three tiers: shipped 74/74, 72/74, 68/74 and resident 74/74, 70/74,
   63/74, as on `main`.
+## 2026-10-17 (dates in the Macintosh's own zone) — the engine marks which dates are instants, and the application writes those in the Mac's zone where it can say what that is
+
+**The maintainer's decision, 2026-10-17, and an explicit exception to one
+behaviour on every System.** A date that is an instant is shown in the
+Macintosh's LOCAL time when the Macintosh can say what its zone is, and in
+UTC only when it cannot. So the application now does something different
+by System — on System 3.0, which has no Gestalt, an instant stays in UTC;
+from System 6.0.8 on, with the zone set, it does not — and that is decided,
+not drift. It supersedes *the archives' own Finder info*'s time-zone rule
+only for instants; wall clocks are carried unchanged as before.
+
+**The engine, zone-free.** Three bits of `UncEntryInfo.meta`,
+`UNC_META_CR_UTC`, `_MD_UTC` and `_BK_UTC` (include/macextract.h): set,
+the date is an instant written as the Macintosh date that reads it in UTC;
+clear, a wall clock; a date of 0 is "not stated" whatever the bit. Set by:
+tar's ustar and pax mtime; gzip's MTIME; LZH's level 2/3 base time, 0x54,
+0x41 (both dates) and level 0's Unix area; AppleSingle/AppleDouble entry 8,
+which RFC 1740 defines as GMT (and so MIME's `multipart/appledouble`, which
+reads the same record); and zip `0x334d` where its GMT offsets are present.
+A MacBinary payload's dates (MacLHA, ZipIt) replace the container's and
+clear its mark (`unc_macbinary_meta`). MS-DOS and Macintosh dates are never
+marked. `l --meta` prints a `Z` after a marked date's hex.
+
+**`0x334d`'s dates CHANGE.** Yesterday's entry took them unadjusted,
+"local, the GMT offsets unused", and `fmt_exo.c` argued that local is what
+the sink wants. Local to the WRITER is not local to the reader: each offset
+is "local … time - UTC" (reference/notes/zip_extrafld_infozip.txt), so
+local − offset is the instant, which deark's `ef_infozipmac` computes and
+which Info-ZIP's own Macintosh UnZip computes before adding the reading
+Mac's zone (unzip60 `mactime.c`, `AdjustForTZmoveMac`). XADMaster adds the
+offset and is the outlier. So, with the offsets, local − offset, marked;
+without (flag bit 4), the stored wall clock. Measured: all 22 of
+`rexnebular_1_0_0.zip`'s entries now state dates 18,000 s later in UTC
+(their offsets are −18,000); on a Mac set to the same zone the disk
+would get back exactly what MacZip stored (derived, not run). That the old comment's reasoning was
+wrong is in BLOCKERS.md, *Withdrawn claims*.
+
+**AppleSingle: the RFC is followed, and its most common Macintosh writer
+does not follow it — the maintainer's to decide.** mpack's `macfile.c`
+writes and reads entry 8 as the Mac's own wall clock plus the epoch, no
+zone (`dates.create = fpb->ioFlCrDat + CONVERT_TIME`). An AppleDouble mpack
+wrote therefore now lands on a zone-set Mac shifted by that Mac's offset,
+where mpack's own reader would not shift it. A netatalk- or Unix-written
+one is GMT, as the RFC says. Nothing in the record says which writer it
+was. Followed: the RFC (a spec, cited); not taken: guessing the writer.
+
+**The shell (mac/macextract_mac.c, `ZoneProbe`, `ZoneShift`).** Once per
+launch, at the first marked date, mpack's method (`macmpack.c`,
+`rfc822_date`), each step guarded and each word cited where it is written:
+ROM85 > 0, as `ovl_reloc.c`'s flush reads it; the Gestalt trap implemented,
+mpack's `TrapAvailable` test (`macninit.c`: the OS trap's address against
+the Toolbox `_Unimplemented`'s) with Multiverse's `GetOSTrapAddress` and
+`GetToolTrapAddress` inlines; `Gestalt('scri')` as Universal Interfaces
+3.4's inline (`0xA1AD, 0x2288`, Multiverse has it only as glue), noErr and
+**at least 200, decimal, as mpack compares it** — the brief said 0x200,
+and no source in reach gives that figure, so mpack's literal is what is
+written; `ReadLocation` as Universal Interfaces 3.4's inline (`MOVE.L
+#$000C00E4,D0; _ReadXPRam`, `0x203C 0x000C 0x00E4 0xA051`, the same words
+in OSUtils.h, .p and .a; Multiverse does not declare it). gmtDelta is the
+low 3 bytes at offset 9, sign-extended from bit 23 (Inside Macintosh:
+Operating System Utilities, *The Geographic Location Record*, Listing 4-9,
+read 2026-10-17 off developer.apple.com's legacy archive). Every marked
+date gets the offset added in `sink_begin`, before StampCat and before a
+folder's held date; a date it would carry out of range, or to 0, stays UTC.
+
+**"Never set" against "set to GMT".** Inside Macintosh: "If the geographic
+location record has never been set, all fields contain 0." All twelve
+bytes zero is taken as unknown; a Mac set to a GMT city has a latitude, and
+gmtDelta 0. Both give an offset of 0, so the distinction changes nothing
+written — it is kept so the code says which case it is in.
+
+**Daylight saving: gmtDelta whole, dlsDelta not added — hypothesis.**
+Inside Macintosh calls dlsDelta "the offset for the hour field" and does
+not say whether gmtDelta already includes it. Three readings say it does,
+none of them Apple's: mpack prints a gmtDelta of −4 h with dlsDelta bit 7
+as "EDT", Info-ZIP's MacZip uses gmtDelta alone, and Mini vMac's (disabled)
+X11 code fills it from `tm_gmtoff`, daylight saving included. What would
+settle it is the Map control panel's DST box toggled once and the record
+read back (OPEN_ITEMS.md). And only the offset NOW is known: a July date
+extracted in January is a daylight-saving hour out, as Info-ZIP's caveat
+says of its own port.
+
+**The emulator, and the claim it corrected.** "Mini vMac keeps PRAM in its
+own file" is not true of this build: `RTC_Init` (src/RTCEMDEV.c) zeroes
+PRAM at every launch and writes `CurMacLatitude`, `CurMacLongitude` and
+`CurMacDelta` to 0xE4, 0xE8 and 0xEC — exactly the 12 bytes ReadLocation
+reads — and on X11 those stay 0 (`#if 0 && AutoTimeZone`). So the zone is a
+build: `mv-4M-tz` (tools/vmac/setup.sh), 5 h west, with a location, its
+three initial values patched. The Map control panel was not driven.
+
+**Measured** (`tools/vmac/tzrun.py`, `synth-exo-tar.tar`, six Unix mtimes,
+read back with `hfscat.py`): **System 7.0.1 with the zone, every date −18,000
+s; System 7.0.1 without, every date as the engine states it (UTC); System
+6.0.8 with the zone, −18,000 s; System 3.0 with the zone, UTC.** So System
+6.0.8 has Gestalt and a Script Manager that passes mpack's test, and a zone
+set there is used — the brief expected UTC on 6.0.8, and the maintainer's
+"local when possible" is what the measurement makes it. The Script Manager
+version itself was not read out. And the other half: `derived-MUSFMT10.ZIP`'s
+29 MS-DOS dates on System 7.0.1 with the zone, none moved. Control: each
+of the four disks graded against the other shift fails 6 of 6. Re-run on
+System 7.0.1 after the rebase onto 40a5f7f and Implode's move (below):
+the tar with and without the zone as before, `synth-exo-zip-implode.zip`'s
+4 MS-DOS dates unmoved with the zone, and that archive and
+`derived-MUSFMT10.ZIP` byte-exact through `run.py`, Implode now decoding
+out of `ovl_zipold`.
+
+**Tests.** `mac_sink_test --zone` (tests/run_mac_sink.sh): a folder with
+both dates marked and its date held across a file written in it, a file
+with a wall-clock creation date and marked modification and backup, a file
+with nothing marked, at −5 h, +1 h and none; two controls, a shift wanted
+where none is made and every date wanted moved, each fail. `run_meta.py`
+grades the mark wherever it grades a date: the generated cases want `Z`
+from the layouts (tar, gzip, zip with and without offsets, AppleSingle),
+`rexnebular`'s dates are recomputed from its `0x334d` records, MacLHA's
+MacBinary payload must be unmarked, and in the corpus a date's mark comes
+from the format's document — tar and gzip `Z`, zip and ARC not, LZH level
+2/3 `Z`, and level 0/1 from a walk of the extension headers written in the
+suite from header.doc (`lzh_instants`): 119 marked and 245 wall-clock dates
+graded, 3 ungraded, on 2026-10-17. Controls: 69 of the 343 archive controls
+toggle a mark alone and are all caught; five scratch engines, one rule each
+undone — tar's mark (40 failures), AppleSingle's (3), `0x334d`'s offsets
+(48), LZH's extension mark (33), the MacBinary payload's clear (3) — each
+fail the suite. `run_diff.py` compares files and their forks, never a date,
+so it cannot see this change.
+
+**`ovl_exo` was full, and Implode left it.** Rebased onto `origin/main`
+40a5f7f, where Mac OS X's sidecars left `ovl_exo` at 32,708 B, 60 under the
+32,768 its 16-bit PC-relative references span, this branch's +164 there
+(gzip's mark and 0x334d's offsets) did not link ("relocation truncated to
+fit: R_68K_PC16 against g_ovl_fns"). Implode moved, unchanged but for its
+signature, into `src/unc_implode.c` and `ovl_zipold` beside Shrink and
+Reduce, reached through the vector `ovl_zipold` patches as they are. The
+options, priced (measured where built, the rest arithmetic from
+`run_tiers.gain()` and the object sizes):
+
+| option | `ovl_exo` headroom | CODE / A5 | grants | stack | |
+|---|---|---|---|---|---|
+| **Implode → `ovl_zipold`** (built) | **1,484 B** | 0 / +4 (one vector slot) | zip −76, tar −1,664, envelopes −76, every other format 0 | +0: the forward is a tail `jmp` (disassembled) | **taken** |
+| Unix compress → a new seventeenth image | ~380 B | ~0 / +4, and a 12 B directory entry | zip +482, tar 0, envelopes −12 | +0 | no: little headroom, and "sixteen images" is stated in a dozen places, CLAUDE.md among them |
+| gzip and compress out of `ovl_exo` | ~1.3 KB and more, not built | — | zip +1.3 KB | — | no: gzip needs zlib's inflate, which zip needs too, and no image yet calls into `ovl_exo` |
+| 0x334d/ZipIt reading → `ovl_zipold` | not measured | — | as Implode | — | no: it inflates the record, the same call back into `ovl_exo` |
+| Implode → `ovl_codecs` | 1,588 B | 0 / +4 | every format but tar −1.6 KB | +0 | no: every format keeps that image |
+
+What a shipped grant pays for the choice is tar's 1,664 B; zip's and
+gzip's move 76 B, the forward and the export entry. Headroom after it:
+`ovl_exo` 31,284 B (1,484 under 32,768), `ovl_zipold` 10,284 B (22,484).
+
+**Price**, against `origin/main` (40a5f7f), every configuration built:
+shipped (eager) **CODE +356, A5 +12 — 368 B off every extraction's
+budget** (the shell +316: `ZoneProbe` 146 B, `ZoneMove`, the three calls in
+`sink_begin`; `unc_macbinary_meta` +22; `unc_as_record` +16; A5 `gZone` +4,
+Implode's vector slot +4, alignment +4); lazy CODE +352, A5 +16; resident
+control CODE +660, A5 +12. Images: `ovl_exo` −1,424, `ovl_zipold` +1,672,
+`ovl_lzh` +40; the bundle +288. `OVL_SAVED` 147,936 → 148,240,
+`TIERS_CONTROL` 223,824 → 224,496, `TIERS` −672, DERIVED. On the machine a
+grant falls 368 B, an LZH's 408, a zip's 616, an envelope's 656 and a
+tar's 2,040 (FORMATS.md, *What each format is granted*). `run_tiers.py
+--check`: no tally moves on either lane — **no extraction lost**. Stack:
+`sink_begin`'s frame is unchanged (360 B); `ZoneProbe` is kept out of it
+and adds 24 B under it once per launch; zip's `ZipAttrSink` keeps the
+offsets, +12 B in `zip_mac_attrs`'s frame.
+
+**Left for the maintainer.** AppleSingle written by mpack (above). The
+daylight-saving reading (above). Whether mpack's 200 meant 0x200: the
+version System 6.0.8 and 7.0.1 return was not read out, only that both
+pass 200.

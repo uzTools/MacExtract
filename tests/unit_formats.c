@@ -411,9 +411,13 @@ static void test_applesingle(void)
         CHECK(cap.info[1].create_date == 0);
         CHECK(cap.info[1].mod_date == 0x10u + 0xB492F400u);
         CHECK(!(cap.info[1].meta & UNC_META_BACKUP));
+        /* The one date stated is GMT, so marked an instant; the two
+         * unknown ones carry no mark (DECISIONS.md 2026-10-17, *dates in
+         * the Macintosh's own zone*). */
+        CHECK(cap.info[1].meta == UNC_META_MD_UTC);
         memcpy(arc, "APPLausT\x01\x00\x00\x10\x00\x20\x00\x00", 16);
         unc_as_record(&cap.info[1], 9, arc, 16);
-        CHECK(cap.info[1].meta == UNC_META_FINFO);
+        CHECK(cap.info[1].meta == (UNC_META_FINFO | UNC_META_MD_UTC));
         CHECK(cap.info[1].finder_info[11] == 0x10);
         CHECK(cap.info[1].finder_flags == 0x0100);
     }

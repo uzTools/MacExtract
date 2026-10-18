@@ -155,6 +155,10 @@ verify ./build/mac_sink_asan ram   # exercise the Mac app's RAM-slurp/xio_* path
 # files, a failed entry's delete (DECISIONS.md 2026-10-17, *the date held
 # once per folder*).
 ./build/mac_sink_asan --dirdates "$(mktemp -d)" || { echo "mac-sink: dirdates FAILED"; exit 1; }
+# The dates the engine marks as instants, moved into the machine's zone,
+# and no other date, at three offsets, with two controls that must fail
+# (DECISIONS.md 2026-10-17, *dates in the Macintosh's own zone*).
+./build/mac_sink_asan --zone "$(mktemp -d)" || { echo "mac-sink: zone FAILED"; exit 1; }
 # The time left in the progress dialog: it must not go back up while the
 # rate holds (DECISIONS.md 2026-10-16, *the estimate that went back up*).
 ./build/mac_sink_asan --eta || { echo "mac-sink: eta FAILED"; exit 1; }

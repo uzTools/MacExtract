@@ -579,9 +579,12 @@ static int only_wanted(DiskSink *s, const char *name)
  *
  *   m <FInfo|DInfo 32 hex> <FXInfo|DXInfo 32 hex> <backup 8 hex>
  *     <lock> <comment hex> NAME
+ *   t <created 8 hex> <modified 8 hex> NAME
  *
  * `-` is a field the archive did not state; lock is `-`, `n` (stated, not
- * locked) or `L`. This is the CLI's whole share of the metadata: it writes
+ * locked) or `L`. A date the engine marks as an instant, in UTC
+ * (UNC_META_*_UTC), has a `Z` after its hex; one without is a wall clock
+ * (include/macextract.h). This is the CLI's whole share of the metadata: it writes
  * none of it to a Linux disk, where nothing would hold it — the `._NAME`
  * sidecar is the resource fork alone, the form `unar -k hidden` writes and
  * the differential suite compares (DECISIONS.md 2026-10-17). */
@@ -599,7 +602,9 @@ static void print_meta(const UncEntryInfo *e, const char *name)
     printf(" ");
     if (e->meta & UNC_META_FXINFO) print_hex(e->finder_info + 16, 16);
     else printf("-");
-    if (e->meta & UNC_META_BACKUP) printf(" %08lx", (unsigned long)e->backup_date);
+    if (e->meta & UNC_META_BACKUP)
+        printf(" %08lx%s", (unsigned long)e->backup_date,
+               (e->meta & UNC_META_BK_UTC) ? "Z" : "");
     else printf(" -");
     printf(" %s ", e->locked == UNC_LOCK_YES ? "L"
                  : e->locked == UNC_LOCK_NO ? "n" : "-");
@@ -610,9 +615,13 @@ static void print_meta(const UncEntryInfo *e, const char *name)
      * a 't' row, created then modified, '-' where the engine says 0
      * ("not stated", macextract.h). */
     printf("t ");
-    if (e->create_date) printf("%08lx", (unsigned long)e->create_date);
+    if (e->create_date)
+        printf("%08lx%s", (unsigned long)e->create_date,
+               (e->meta & UNC_META_CR_UTC) ? "Z" : "");
     else printf("-");
-    if (e->mod_date) printf(" %08lx", (unsigned long)e->mod_date);
+    if (e->mod_date)
+        printf(" %08lx%s", (unsigned long)e->mod_date,
+               (e->meta & UNC_META_MD_UTC) ? "Z" : "");
     else printf(" -");
     printf(" %s\n", name);
 }

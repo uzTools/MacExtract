@@ -3405,6 +3405,20 @@ controls make the mock drop one write each, and each fails exactly its own
 check; a build without the folder-date restore fails that check (measured
 once, 2026-10-17).
 
+**Dates and their zone (added 2026-10-17, DECISIONS.md, *dates in the
+Macintosh's own zone*).** `l --meta` prints a `Z` after a date the engine
+marks as an instant. `run_meta.py` grades the mark wherever it grades a
+date: from the layouts in the generated cases, from `rexnebular`'s own
+`0x334d` offsets, and in the corpus from each format's document (tar and
+gzip marked, zip and ARC not, LZH by header level and, for levels 0 and 1,
+by `lzh_instants`, a walk of the extension headers written in the suite):
+119 marked and 245 wall-clock dates on 2026-10-17, 3 ungraded. 69 controls
+toggle a mark alone. **`mac_sink_test --zone`** holds the shell's half:
+marked dates moved by a mocked offset (−5 h, +1 h, none), unmarked ones
+not, a folder's held date included, with two controls that must fail. It
+cannot see what ReadLocation answers; `tools/vmac/tzrun.py` reads that off
+emulated disks (tools/vmac/README.md, *Dates in the Macintosh's zone*).
+
 **`mac_sink_test --dirdates`** holds the one-entry folder-date cache to the
 three orders the second review named — a subfolder between a folder's
 files (A/x, A/B/y, A/z), a folder entry after its files, a failed entry's

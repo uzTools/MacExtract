@@ -42,7 +42,7 @@ unc_entry_clear unc_entry_path_append unc_entry_set_name unc_entry_set_path
 unc_fork_flush unc_fork_out unc_fork_split unc_fork_write unc_huff_decode unc_huff_read_tree
 unc_io_size32 unc_lzah_decode unc_lzw_free unc_macbinary_meta
 unc_lzw_init unc_lzw_read unc_macbinary_probe unc_password unc_path_init
-unc_shrink_decode unc_reduce_decode
+unc_shrink_decode unc_reduce_decode unc_implode_decode
 unc_path_leaf unc_path_pop unc_path_push unc_progress_add unc_read_at
 unc_read_full unc_crc16_arc unc_crc16_xmodem unc_progress_at
 unc_readline unc_crypt_packit_des unc_crypt_packit_xor unc_crypt_rc4
@@ -77,9 +77,10 @@ unc_lzw_free unc_lzw_init unc_lzw_read
 # Zip's Shrink and Reduce, which only zip calls: their own image, kept for
 # zip alone, patching itself into the vector the same way (ovl_zipold.c).
 # The Mac OS X sidecars too, since 2026-10-17, which zip calls from ovl_exo
-# and tar from inside this image.
+# and tar from inside this image. Implode too, since 2026-10-17, when
+# ovl_exo reached its 32 KB.
 ZIPOLD = """
-unc_shrink_decode unc_reduce_decode
+unc_shrink_decode unc_reduce_decode unc_implode_decode
 unc_ad_init unc_ad_feed unc_ad_end unc_ad_apply unc_side_kind unc_side_of
 unc_side_zip_open unc_side_zip_pair
 """.split()

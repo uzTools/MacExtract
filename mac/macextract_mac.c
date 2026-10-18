@@ -1902,6 +1902,120 @@ static int sink_begin(void *ctx, const UncEntryInfo *info)
 
 static void StampCat(MacSink *s);
 
+/* ------------------------------------------------------------------ */
+/* The Macintosh's own zone, for the dates the engine marks as instants */
+/* ------------------------------------------------------------------ */
+
+/* The engine writes an instant (a Unix time, a FILETIME, AppleSingle's
+ * GMT seconds) as the Macintosh date whose wall clock reads it in UTC,
+ * and marks it (UNC_META_*_UTC, macextract.h). A Macintosh date is the
+ * wall clock of its own zone, so this adds the machine's offset east of
+ * GMT to each marked date, and leaves every other one alone. Where the
+ * machine cannot say what its zone is, the offset is 0 and the date is
+ * written in UTC, as before. That is a behaviour that differs by System,
+ * decided by the maintainer as the exception to one behaviour on every
+ * System (DECISIONS.md 2026-10-17, *dates in the Macintosh's own zone*).
+ *
+ * The offset is read once per launch, the first time an entry has a
+ * marked date: mpack's method (reference/mpack/macmpack.c, rfc822_date),
+ * each step with its own guard.
+ *  1. A 128K ROM or later: the low-memory word ROM85 (0x028E) is
+ *     positive, as mac/ovl_reloc.c's flush reads it; a 64K ROM has no
+ *     trap table to ask the next question of.
+ *  2. The Gestalt trap is implemented: its OS-trap address is not the
+ *     Toolbox _Unimplemented's — mpack's TrapAvailable (reference/mpack/
+ *     macninit.c), with Multiverse.h's GetOSTrapAddress (0xA346) and
+ *     GetToolTrapAddress (0xA746). System 3.0 has no Gestalt, and a call
+ *     to an unimplemented trap is a system error.
+ *  3. Gestalt(gestaltScriptMgrVersion) answers noErr and at least 200,
+ *     mpack's own comparison, decimal as it wrote it; ReadLocation was
+ *     the Script Manager's (Inside Macintosh: Operating System
+ *     Utilities, Table 4-4).
+ *  4. ReadLocation's 12 bytes: latitude, longitude, then dlsDelta in the
+ *     byte at 8 and gmtDelta, "seconds east of GMT", in the 3 bytes at 9,
+ *     sign-extended from bit 23 (Inside Macintosh: Operating System
+ *     Utilities, *The Geographic Location Record* and Listing 4-9). "If
+ *     the geographic location record has never been set, all fields
+ *     contain 0" (the same chapter): then the zone is unknown.
+ * gmtDelta is taken whole and dlsDelta is not added: mpack labels a
+ * gmtDelta of -4 h with dlsDelta's bit 7 set "EDT", Info-ZIP's MacZip
+ * (unzip60/macos/source/mactime.c, GMTDelta) uses gmtDelta alone, and
+ * Mini vMac fills the field from the host's tm_gmtoff, daylight saving
+ * included (OSGLUXWN.c) — three readings that the current offset is
+ * gmtDelta, none of them Apple's (hypothesis; DECISIONS.md). Only the
+ * offset NOW is known, so a date from the other half of the year is a
+ * daylight-saving hour out, as Info-ZIP's own caveat says of its port. */
+#ifdef UNC_SINK_TEST
+#define ZoneProbe() gMockZone          /* tests/mac_sink_test.c sets it */
+#else
+__attribute__((noinline)) static long ZoneProbe(void)
+{
+    unsigned char loc[12];
+    long resp = 0, d;
+    int k, any = 0;
+    if (*(const short *)0x028EL <= 0) return 0;          /* ROM85 */
+    if (GetOSTrapAddress(0xA1AD) == GetToolTrapAddress(_Unimplemented))
+        return 0;
+    {
+        /* Gestalt inline: selector in D0, the response in A0, stored
+         * through A1; the result in D0. Source: Universal Interfaces 3.4,
+         * Gestalt.h: `#pragma parameter __D0 Gestalt(__D0, __A1)`,
+         * TWOWORDINLINE(0xA1AD, 0x2288). Multiverse declares it as glue. */
+        register long d0 __asm__("d0") = 0x73637269L;     /* 'scri' */
+        register long *a1 __asm__("a1") = &resp;
+        __asm__ volatile (".short 0xA1AD\n\t.short 0x2288"
+                          : "+r" (d0), "+r" (a1)
+                          :
+                          : "d1", "d2", "a0", "cc", "memory");
+        if ((short)d0 != 0 || resp < 200) return 0;
+    }
+    {
+        /* ReadLocation inline: the record's address in A0, then
+         * MOVE.L #$000C00E4,D0 (12 bytes of extended parameter RAM from
+         * 0xE4) and _ReadXPRam. Source: Universal Interfaces 3.4,
+         * OSUtils.h (`#pragma parameter ReadLocation(__A0)`,
+         * FOURWORDINLINE(0x203C, 0x000C, 0x00E4, 0xA051)), the same words
+         * in OSUtils.p and as the _ReadLocation macro in OSUtils.a. */
+        register unsigned char *a0 __asm__("a0") = loc;
+        __asm__ volatile (".short 0x203C, 0x000C, 0x00E4, 0xA051"
+                          : "+r" (a0)
+                          :
+                          : "d0", "d1", "d2", "a1", "cc", "memory");
+    }
+    for (k = 0; k < 12; k++) any |= loc[k];
+    if (!any) return 0;                                   /* never set */
+    d = ((long)loc[9] << 16) | ((long)loc[10] << 8) | loc[11];
+    if (d & 0x00800000L) d |= (long)0xFF000000L;
+    return d;
+}
+#endif
+
+/* The offset, or kZoneUnread until the first marked date asks: no
+ * gmtDelta reaches it, the field being 24 bits wide. */
+#define kZoneUnread 0x7FFFFFFFL
+static long gZone = kZoneUnread;
+
+/* One marked date, moved into the machine's zone. A date the offset
+ * would carry out of a Macintosh date's range, or to 0 ("not stated"),
+ * stays in UTC. */
+__attribute__((noinline)) static void ZoneMove(uint32_t *d)
+{
+    uint32_t t = *d, u = t + (uint32_t)gZone;
+    if (t && u && (gZone > 0 ? u > t : u < t)) *d = u;
+}
+
+/* The marked dates of `e`, each moved (ZoneMove). */
+static void ZoneShift(UncEntryInfo *e)
+{
+    uint8_t m = e->meta;
+    if (!(m & (UNC_META_CR_UTC | UNC_META_MD_UTC | UNC_META_BK_UTC)))
+        return;
+    if (gZone == kZoneUnread) gZone = ZoneProbe();
+    if (m & UNC_META_CR_UTC) ZoneMove(&e->create_date);
+    if (m & UNC_META_MD_UTC) ZoneMove(&e->mod_date);
+    if (m & UNC_META_BK_UTC) ZoneMove(&e->backup_date);
+}
+
 static int SINK_BEGIN(void *ctx, const UncEntryInfo *info)
 {
     MacSink *s = (MacSink *)ctx;
@@ -1914,6 +2028,7 @@ static int SINK_BEGIN(void *ctx, const UncEntryInfo *info)
     OSErr err;
 
     s->cur = *info;
+    ZoneShift(&s->cur);   /* before StampCat or a folder's held date */
     s->entries++;
     /* StuffIt 5's names are UTF-8; an HFS name is MacRoman bytes. The
      * fold happens once, here, and everything below sees one encoding

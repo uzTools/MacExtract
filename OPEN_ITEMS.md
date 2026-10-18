@@ -184,6 +184,18 @@ file*). Left, none with a specimen here:
   writes that order; a pax header between the two is stepped over, but no
   specimen has one (hypothesis: bsdtar writes one for a non-ASCII name).
 
+## Dates in the Macintosh's zone: what is not measured
+
+Since 2026-10-17 a date the engine marks as an instant is written in the
+Mac's zone where it can say what that is (DECISIONS.md 2026-10-17, *dates in
+the Macintosh's own zone*). Measured on emulated System 3.0, 6.0.8 and 7.0.1
+with the zone put into PRAM by the emulator build, not by Map.
+
+| what | status | what would close it |
+|---|---|---|
+| whether gmtDelta already includes daylight saving | **hypothesis**: three non-Apple readers say it does; dlsDelta is not added | Map's daylight-saving box toggled once on 7.0.1, and the 12 bytes read back |
+| AppleSingle/AppleDouble written by mpack, whose entry 8 is the writer's wall clock and not RFC 1740's GMT | **the maintainer's decision**: the RFC is followed, so such a file moves by the reader's offset | a rule to tell the writer apart, or a decision to treat entry 8 as wall clock |
+
 ## System 7.0.1 rewrites one byte of FXInfo
 
 FXInfo +9 (`fdXFlags`) reads 0x70 on a System 7.0.1 output disk where the

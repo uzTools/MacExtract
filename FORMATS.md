@@ -5426,6 +5426,17 @@ on 2026-10-11 (*Reduce*), and sixteen since.
 | lazy | `UNC_OVL_LAZY=1` | 54,136 B | 19,192 B | 65,792 B | 237,184 B |
 | resident — the control | `UNC_OVL_RESIDENT=1` | **175,348 B** | **38,028 B** | 208,000 B | 211,968 B |
 
+**Re-measured 2026-10-17, for the dates in the Macintosh's own zone**
+(DECISIONS.md 2026-10-17, *dates in the Macintosh's own zone*), against
+`origin/main` (40a5f7f) built the same way: eager **+356 B of `CODE` and +12
+of A5**, lazy **+352 and +16**, the control **+660 and +12**; Implode moved
+from `ovl_exo` to `ovl_zipold` (`ovl_exo` −1,424 to 31,284 B, 1,484 B under
+the 32,768 its PC-relative references span; `ovl_zipold` +1,672 to 10,284
+B), `ovl_lzh` +40, the bundle +288, `OVL_SAVED` +304, every TIERS budget
+−672 (derived). The rows above are older than this paragraph and older
+than several since; the ratchets in `tools/build_mac.sh` are the current
+figures. `run_tiers.py --check` moves no tally.
+
 **Re-measured 2026-10-14, for BinHex before 4.0** (DECISIONS.md
 2026-10-14, *the BinHex before 4.0*), against HEAD built the same way,
 which is what the rows above are (CORRECTED: they were 2026-10-11's until
@@ -5688,8 +5699,8 @@ quoted beside. It cancels in a DIFFERENCE taken from one probe pair, which is
 why the overlay gains are measured that way (*What it buys, against the
 control*), and 320 B of the residue there is exactly this: **117,040 B saved
 between the shipped pair against 116,720 B between the probe pair**, both
-measured 2026-09-27. The shipped pair is **147,936 B** since 2026-10-17's
-Mac OS X sidecars, 143,872 B after that day's merge of the archives' Finder info (every reader in an image or the control, none in the shipped build), 139,280 B after that day's merge of StuffIt classic's and DiskDoubler's Finder info, 138,896 B after that day's merge of the envelopes' Finder info, 138,864 B after that branch alone, 138,608 B after that day's review of the Finder metadata, 138,576 B after that day's metadata, 138,544 B after 2026-10-16's
+measured 2026-09-27. The shipped pair is **148,240 B** since 2026-10-17's
+dates in the Macintosh's own zone, 147,936 B after that day's Mac OS X sidecars, 143,872 B after that day's merge of the archives' Finder info (every reader in an image or the control, none in the shipped build), 139,280 B after that day's merge of StuffIt classic's and DiskDoubler's Finder info, 138,896 B after that day's merge of the envelopes' Finder info, 138,864 B after that branch alone, 138,608 B after that day's review of the Finder metadata, 138,576 B after that day's metadata, 138,544 B after 2026-10-16's
 time left from the byte counts, 138,576 B after that day's
 `GrowApplZone`, 138,544 B after 2026-10-14's refusal of a fork over 2 GB, 138,576 B after that day's BinHex before 4.0, 136,448 B after 2026-10-13's
 eject before a split set's next part, 136,464 B after that day's MIME progress, 136,240 B after 2026-10-12's Arsenic progress, 135,920 B after that day's reload for a list of archives, 136,080 B after that day's menu bar, 136,064 B after 2026-10-11's fixes from the LC 475, 136,112 B after that day's `JPEG Lossy` work and
@@ -5697,8 +5708,8 @@ eject before a split set's next part, 136,464 B after that day's MIME progress, 
 DiskDoubler buffer reuse) (*Three configurations, one tree*); the probe pair has not been re-measured,
 so the 320 B is that day's difference and not today's.
 
-The bundle is **177,312 B** — the sixteen images sum to 177,102 B, so its
-index costs **210 B** (172,968 and 172,756 until 2026-10-17's Mac OS X sidecars, *the sidecars Mac OS X left beside the file*; 168,020 and 167,810 until 2026-10-17's archives' Finder info, *the archives' own Finder info*; 167,612 and 167,402 until 2026-10-17's `ovl_stuffit`
+The bundle is **177,600 B** — the sixteen images sum to 177,390 B, so its
+index costs **210 B** (177,312 and 177,102 until 2026-10-17's dates in the Macintosh's own zone, Implode moved into `ovl_zipold`; 172,968 and 172,756 until 2026-10-17's Mac OS X sidecars, *the sidecars Mac OS X left beside the file*; 168,020 and 167,810 until 2026-10-17's archives' Finder info, *the archives' own Finder info*; 167,612 and 167,402 until 2026-10-17's `ovl_stuffit`
 +380 and `ovl_cptdd` +28, *the window Expander puts back*; CORRECTED 2026-10-17:
 167,256 and 212 B until `ovl_lzh` went 9,586 → 9,576, 2 → 0 mod 4) (+14 B on 2026-10-11 with the sixteenth image,
 `ovl_zipold`: 12 of directory and 2 of padding): a 4-byte header, 12 bytes
@@ -5831,7 +5842,7 @@ been chosen is a read at the moment the application's own floppy may be out.
 The budget a tier gives the engine is therefore not one number any more. It
 is the resident build's budget for that tier — the figures under *512 KB
 machines* and *Floor target verification* — plus what the release leaves,
-which is the 147,936 B of `CODE` and A5 the shipped build does not carry
+which is the 148,240 B of `CODE` and A5 the shipped build does not carry
 (*Three configurations, one tree*), less the images this format keeps and 8 B
 of block header each, less a **666 B residue**: 320 B of that is the probe
 build's own weight and **346 B is unattributed — the same 346 B either side of
@@ -5879,19 +5890,21 @@ budget per format, and one per layer*).
 
 | sniffed format | images kept | granted, against the control |
 |---|---|---|
-| **AppleLink package** | **sqp, codecs** | **+138,810 B** (arithmetic: no `.pkg` is in the Mac sample) — the largest grant any format gets, because `ovl_sqp` is the smallest of the sixteen images at 2,040 B |
-| Now Compress | now, codecs | **+135,686 B** (measured) |
-| SuperDisk! | superdisk, codecs | +133,708 B (arithmetic: no SuperDisk! fixture is in the Mac sample) |
-| LZH | lzh, codecs | **+129,648 B** (measured) |
-| PackIt | packit, ciphers, codecs | **+127,942 B** (measured) |
-| DiskDoubler | cptdd, codecs | **+124,914 B** (measured) |
-| StuffIt SpaceSaver | spacesaver, codecs | +124,128 B (arithmetic: no SpaceSaver fixture is in the Mac sample) |
-| ARC | arc, ciphers, codecs | **+122,112 B** (measured) |
-| Compact Pro, Compact Pro segment | cptdd, ciphers, codecs | +114,662 B (arithmetic), and **+124,914 B** where the directory says no entry is encrypted (measured) |
-| Tar | zipold, codecs | **+132,238 B** (measured) |
-| StuffIt, StuffIt 5 | stuffit, ciphers, codecs | **+100,724 B** (measured; the −24 B of 2026-10-10, the +28 of 2026-10-11 and the +12 of 2026-10-15 with `ovl_stuffit` are arithmetic, no tier re-run) |
-| Zip, spanned zip | exo, zipold, ciphers, codecs | +89,270 B (arithmetic), **+99,522 B** unencrypted (measured) |
-| every envelope, and every segment scheme that joins to a file | the whole bundle, kept | **−30,050 B** (measured; the −24 B of 2026-10-10, the +28 of 2026-10-11 and the +12 of 2026-10-15 with the bundle are arithmetic, no tier re-run) |
+| **AppleLink package** | **sqp, codecs** | **+139,114 B** (arithmetic: no `.pkg` is in the Mac sample) — the largest grant any format gets, because `ovl_sqp` is the smallest of the sixteen images at 2,040 B |
+| Now Compress | now, codecs | **+135,990 B** (measured) |
+| SuperDisk! | superdisk, codecs | +134,012 B (arithmetic: no SuperDisk! fixture is in the Mac sample) |
+| LZH | lzh, codecs | **+129,912 B** (measured) |
+| PackIt | packit, ciphers, codecs | **+128,246 B** (measured) |
+| DiskDoubler | cptdd, codecs | **+125,218 B** (measured) |
+| StuffIt SpaceSaver | spacesaver, codecs | +124,432 B (arithmetic: no SpaceSaver fixture is in the Mac sample) |
+| ARC | arc, ciphers, codecs | **+122,416 B** (measured) |
+| Compact Pro, Compact Pro segment | cptdd, ciphers, codecs | +114,966 B (arithmetic), and **+125,218 B** where the directory says no entry is encrypted (measured) |
+| Tar | zipold, codecs | **+130,870 B** (measured) |
+| StuffIt, StuffIt 5 | stuffit, ciphers, codecs | **+101,028 B** (measured; the −24 B of 2026-10-10, the +28 of 2026-10-11 and the +12 of 2026-10-15 with `ovl_stuffit` are arithmetic, no tier re-run) |
+| Zip, spanned zip | exo, zipold, ciphers, codecs | +89,326 B (arithmetic), **+99,578 B** unencrypted (measured) |
+| every envelope, and every segment scheme that joins to a file | the whole bundle, kept | **−30,034 B** (measured; the −24 B of 2026-10-10, the +28 of 2026-10-11 and the +12 of 2026-10-15 with the bundle are arithmetic, no tier re-run) |
+
+**The dates in the Macintosh's own zone moved every row on 2026-10-17, re-taken from `run_tiers.gain()`**: `OVL_SAVED` +304 (the control CODE +660 and A5 +12, the shipped build CODE +356 and A5 +12), and Implode moved from `ovl_exo` to `ovl_zipold` so that `ovl_exo` links: `ovl_exo` −1,424, `ovl_zipold` +1,672, `ovl_lzh` +40, the bundle +288 — so +304 where none of those images is kept, +264 for LZH, −1,368 for tar, +56 for zip and +16 for the bundle row; on the machine each row's change less the 672 of TIERS (derived): every format keeping none of those images −368, LZH −408, zip −616, tar −2,040, an envelope −656 (DECISIONS.md 2026-10-17, *dates in the Macintosh's own zone*). Arithmetic; `run_tiers.py --check` moves no tally.
 
 **Mac OS X's sidecars moved every row on 2026-10-17, re-taken from `run_tiers.gain()`**: `OVL_SAVED` +4,064 (the control CODE +4,084 and A5 +12, the shipped build A5 +32), `ovl_zipold` +3,374 and `ovl_exo` +972, the bundle +4,344 — so +4,064 where neither image is kept, −282 for zip, +690 for tar and −280 for the bundle row (DECISIONS.md 2026-10-17, *the sidecars Mac OS X left beside the file*). Arithmetic; `run_tiers.py --check` moves no tally.
 
@@ -5991,7 +6004,7 @@ rose, because the control took 2,148 B for the same format.
 **The last row is the one no tally had shown**: a `.hqx`, a `.gz`, a `.Z` or
 a MacBinary wrapper does not know what is under it, so the bundle stays and
 that layer runs with **less** memory than a resident build would have given
-it — 177,312 B held against 147,936 B saved. It costs nothing on the tiers
+it — 177,600 B held against 148,240 B saved. It costs nothing on the tiers
 because the layer under the envelope gets its own budget a moment later
 (*What an archive keeps*), and the envelope's own decode is small: the
 heaviest in the Mac sample is `popper-1.7.tar.Z`'s LZW at 147,764 B, which

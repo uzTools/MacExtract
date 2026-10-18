@@ -195,6 +195,38 @@ build_mv mv-1M 1M a
 # 2026-10-14, *the disk the dialogs were on*).
 build_mv mv-4M-1d 4M a 2
 
+# A machine whose Map control panel has been set: 5 h west of GMT, no
+# daylight saving, a location that is not (0,0). This Mini vMac keeps no
+# PRAM between launches — RTC_Init (src/RTCEMDEV.c) zeroes it and writes
+# CurMacLatitude, CurMacLongitude and CurMacDelta to extended parameter
+# RAM 0xE4, 0xE8 and 0xEC at every boot, the 12 bytes ReadLocation reads
+# (Inside Macintosh: Operating System Utilities, chapter 4) — and on X11
+# they stay 0, the AutoTimeZone code being `#if 0` in OSGLUXWN.c. So the
+# zone is the three initial values, patched in src/COMOSGLU.h before the
+# build (tools/vmac/README.md, *Dates in the Macintosh's zone*;
+# DECISIONS.md 2026-10-17, *dates in the Macintosh's own zone*).
+if [ -x mv-4M-tz/minivmac ]; then
+    echo "have mv-4M-tz/minivmac"
+else
+    rm -rf mv-4M-tz
+    mkdir -p mv-4M-tz
+    tar xzf minivmac.src.tgz -C mv-4M-tz --strip-components=1
+    ( cd mv-4M-tz
+      gcc -o setup_t setup/tool.c
+      ./setup_t -t lx64 -m Plus -mem 4M -speed a -as 0 -bg 1 \
+                -sound 0 -magnify 0 -drives 6 -n "macextract-4M-tz" > setup.sh
+      bash setup.sh >/dev/null
+      sed -i -e 's/^GLOBALVAR ui5b CurMacLatitude = 0;/GLOBALVAR ui5b CurMacLatitude = 0x1CF00000;/' \
+             -e 's/^GLOBALVAR ui5b CurMacLongitude = 0;/GLOBALVAR ui5b CurMacLongitude = 0xCB600000;/' \
+             -e 's/^GLOBALVAR ui5b CurMacDelta = 0;/GLOBALVAR ui5b CurMacDelta = 0x00FFB9B0;/' \
+             src/COMOSGLU.h
+      grep -q "CurMacDelta = 0x00FFB9B0" src/COMOSGLU.h \
+          || { echo "setup: mv-4M-tz: COMOSGLU.h not patched" >&2; exit 1; }
+      make >/dev/null 2>&1 )
+    [ -x mv-4M-tz/minivmac ] || { echo "setup: failed to build mv-4M-tz" >&2; exit 1; }
+    echo "built mv-4M-tz/minivmac"
+fi
+
 # 'z' = 1x, authentic 7 MHz Mac Plus timing. Needed for anything that has to
 # observe the machine WHILE it works — the progress dialog and Cmd-. cancel
 # are invisible at all-out speed, because the extraction is over before a

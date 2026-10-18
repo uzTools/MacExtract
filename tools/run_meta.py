@@ -46,8 +46,14 @@ other than the engine:
       listed where synth_macosx.py says it must not be, and that every
       resource fork extracted from the `-edge` archives is the sidecar's.
 
+Every date is printed with a `Z` after it where the engine marks it an
+instant (UNC_META_*_UTC), and graded with its mark: the generated cases
+from their layouts, and the corpus from each format's document
+(zone_want, lzh_instants).
+
 Then a CONTROL per field: the engine's row is tampered with, one field at
-a time, and the comparison must fail — or it was comparing nothing.
+a time, and the comparison must fail — or it was comparing nothing; for a
+date, its mark is also toggled alone.
 
 **What it cannot see.** With --expander: the dates (not in `l --meta`),
 what the SHELL then writes (tools/vmac/sitgrade.py runs the application),
@@ -79,9 +85,16 @@ MAC_EPOCH = 2082844800                       # 1904-01-01 to 1970-01-01
 
 
 def meta_rows(cli, path):
+    """`l --meta`'s 'm' rows, and the 't' row's two dates beside them as
+    ctime and mtime, keyed by name."""
     r = subprocess.run([cli, "l", "--meta", path], capture_output=True)
     out = {}
     for line in r.stdout.decode("utf-8", "surrogateescape").splitlines():
+        if line.startswith("t ") and out:
+            f = line.split(" ", 3)
+            if f[3] in out:
+                out[f[3]].update(ctime=f[1], mtime=f[2])
+            continue
         if not line.startswith("m "):
             continue
         f = line.split(" ", 6)
@@ -110,10 +123,19 @@ def lsar_rows(path):
                 o["fxinfo"] = b[16:32].hex()
         if "XADComment" in e:
             o["comment"] = e["XADComment"].encode("mac-roman").hex()
-        if "XADLastBackupDate" in e:
-            t = calendar.timegm(time.strptime(e["XADLastBackupDate"][:19],
-                                              "%Y-%m-%d %H:%M:%S"))
-            o["backup"] = "%08x" % ((t + MAC_EPOCH) & 0xFFFFFFFF)
+        # AppleSingle's and AppleDouble's dates are "Greenwich Mean Time"
+        # (reference/notes/rfc1740.txt, entry 8): instants, which
+        # `l --meta` marks with a Z; every other format's here is a
+        # Macintosh date, a wall clock.
+        z = "Z" if d.get("lsarFormatName") in ("AppleSingle",
+                                               "AppleDouble") else ""
+        for key, field in (("XADLastBackupDate", "backup"),
+                           ("XADCreationDate", "ctime"),
+                           ("XADLastModificationDate", "mtime")):
+            if key in e:
+                t = calendar.timegm(time.strptime(e[key][:19],
+                                                  "%Y-%m-%d %H:%M:%S"))
+                o[field] = "%08x" % ((t + MAC_EPOCH) & 0xFFFFFFFF) + z
         out[e["XADFileName"]] = o
     return out
 
@@ -141,7 +163,7 @@ def expectations(cli):
         if d["backup"] is None:
             w["backup"] = "-"
         out.append((fx, want, ("finfo", "fxinfo", "comment", "backup",
-                               "lock")))
+                               "lock", "ctime", "mtime")))
     fx = os.path.join(REPO, "fixtures", "synth-sqp-meta.pkg")
     items, version = synth_sqp.case_meta()
     want = {}
@@ -181,7 +203,10 @@ def corpus(cli):
         if not os.path.isfile(p):
             continue
         rows = meta_rows(cli, p)
-        stated = {n: {k: v for k, v in r.items() if v != "-"}
+        # The 't' row's dates are the archive lanes' (archive_corpus); here
+        # the 'm' row's fields, as before.
+        stated = {n: {k: v for k, v in r.items()
+                      if v != "-" and k not in ("ctime", "mtime")}
                   for n, r in rows.items()}
         if not any(stated.values()):
             continue
@@ -586,6 +611,8 @@ def archive_lsar(path):
             o["lock"] = "L" if e["XADDOSFileAttributes"] & 1 else "n"
         o["mac"] = any(k in e for k in ("XADFileType", "XADIsMacBinary",
                                         "XADMightBeMacBinary"))
+        if "LHAHeaderLevel" in e:
+            o["lhalevel"] = e["LHAHeaderLevel"]
         out[e["XADFileName"]] = o
     return out, props.get("XADComment")
 
@@ -631,6 +658,22 @@ def maczip_want(path):
                 w["finfo"] = (d[6:14] + struct.pack(">HhhH", fdflags, v, hh,
                                                     fldr)).hex()
                 w["fxinfo"] = struct.pack(">HHHHBBHI", *fx).hex()
+                # The dates, the writer's wall clock, and where flag bit 4
+                # is clear the "local time - UTC" offsets after them: the
+                # instant is local - offset, marked Z (the document's
+                # *Attributes*; deark's ef_infozipmac does the same). A
+                # date within a day of either end is "never"
+                # (DECISIONS.md 2026-10-17, *the archives' own Finder
+                # info*), and is left to the engine's fallback.
+                dates = struct.unpack("<III", rec[26:38])
+                offs = (struct.unpack("<iii", rec[38:50])
+                        if not fl & 0x10 else None)
+                for j, key in enumerate(("ctime", "mtime", "backup")):
+                    t = dates[j]
+                    if not 86400 <= t <= 0xFFFFFFFF - 86400:
+                        continue
+                    w[key] = ("%08x" % t if offs is None else
+                              "%08x" % ((t - offs[j]) & 0xFFFFFFFF) + "Z")
             q += 4 + sz
         want[zi.filename.rstrip("/")] = w
     return want
@@ -671,6 +714,19 @@ def archive_expectations(cli, work, problems):
     rex = os.path.join(fx, "rexnebular_1_0_0.zip")
     if os.path.exists(rex):
         out.append(("rexnebular_1_0_0.zip", rex, maczip_want(rex), ()))
+    # A MacBinary payload's dates are Macintosh ones, wall clock: they
+    # replace an LZH level 2 header's Unix time and its mark. MacLHA's
+    # level 2 entry holds both, an hour apart (DECISIONS.md 2026-10-17,
+    # *the archives' own Finder info*); lsar's entry reports the
+    # payload's, and its inner record the header's instant.
+    ml = os.path.join(fx, "lhasa-maclha-l2_lh1.lzh")
+    if os.path.exists(ml):
+        r = subprocess.run(["lsar", "-j", ml], capture_output=True,
+                           env=dict(os.environ, TZ="UTC"))
+        e = json.loads(r.stdout)["lsarContents"][0]
+        out.append(("lhasa-maclha-l2_lh1.lzh", ml, {e["XADFileName"]: dict(
+            mtime=lsar_date(e["XADLastModificationDate"]),
+            ctime=lsar_date(e["XADCreationDate"]))}, ()))
     # PackIt's lock word, against macunpack.
     for fn in ("derived-PackIt.pit", "synth-packit-1.pit"):
         p = os.path.join(fx, fn)
@@ -734,12 +790,16 @@ def lhasa_headers(archive):
         # hour east of UTC on all of them, so those are lsar's to grade.
         unix = int(kv.get("header_level", "0")) >= 2 or \
             kv.get("os_type", "")[:2] == "85"
+        # Every date taken from lhasa here is an instant — a FILETIME, or
+        # a Unix time (level 2 and 3's own, 0x54's, level 0's Unix
+        # area) — so each carries `l --meta`'s Z; a level 0/1 MS-DOS
+        # date stays lsar's, a wall clock, unmarked (zone_want).
         if "win_modification_time" in kv:
-            o["mtime"] = ft(kv["win_modification_time"])
+            o["mtime"] = ft(kv["win_modification_time"]) + "Z"
         elif unix and int(kv.get("timestamp", "0")):
-            o["mtime"] = "%08x" % (int(kv["timestamp"]) + MAC_EPOCH)
+            o["mtime"] = "%08x" % (int(kv["timestamp"]) + MAC_EPOCH) + "Z"
         if "win_creation_time" in kv:
-            o["ctime"] = ft(kv["win_creation_time"])
+            o["ctime"] = ft(kv["win_creation_time"]) + "Z"
         if "unix_perms" in kv and kv.get("os_type", "")[:2] != "75":
             o["lock"] = "n" if int(kv["unix_perms"], 8) & 0o200 else "L"
         out[name] = o
@@ -802,12 +862,78 @@ def archive_names(path):
         return tarfile.open(path).getnames()
     except Exception:
         return None
+def lzh_instants(path):
+    """Per header, in archive order: which of a level 0 or 1 entry's
+    dates are instants — 'mtime' where 0x54 (a Unix time) or level 0's
+    Unix area ('U', with its mtime) is there, 'mtime' and 'ctime' where
+    0x41 (FILETIMEs) is. A level 2 or 3 header is None: its base time is
+    a Unix time already (zone_want). Read from the layouts in
+    reference/lha/header.doc.euc (section A, the three base headers and
+    the extension chain) and reference/lha/src/header.c (get_header: the
+    level 0 extended area, EXTEND_UNIX), not from the engine; a header
+    this cannot walk ends the list."""
+    b = open(path, "rb").read()
+    out, pos = [], 0
+    while pos + 22 <= len(b) and b[pos] != 0:
+        level = b[pos + 20]
+        if level not in (0, 1):
+            return out
+        hs = b[pos] + 2
+        nl = b[pos + 21]
+        comp = struct.unpack("<I", b[pos + 7:pos + 11])[0]
+        inst = set()
+        if level == 0:
+            if hs >= 24 + nl + 12 and b[pos + 24 + nl:pos + 25 + nl] == b"U":
+                inst.add("mtime")
+            out.append(inst)
+            pos += hs + comp
+            continue
+        at, ext = pos + hs - 2, 0
+        while at + 2 <= len(b):
+            sz = struct.unpack("<H", b[at:at + 2])[0]
+            if sz == 0:
+                break
+            t = b[at + 2] if at + 2 < len(b) else None
+            if t == 0x54:
+                inst.add("mtime")
+            elif t == 0x41:
+                inst |= {"mtime", "ctime"}
+            ext += sz
+            at += sz
+        out.append(inst)
+        pos += hs + comp            # level 1's "skip size" counts the chain
+    return out
+
+
+def zone_want(fmt, o, k):
+    """The mark `l --meta` must put after a date lsar gave the value of:
+    "Z" where the format's own document makes it an instant, "" where a
+    wall clock, None where neither reader here can say (DECISIONS.md
+    2026-10-17, *dates in the Macintosh's own zone*). From the formats'
+    documents, not from the engine: tar's mtime and pax's are Unix times
+    (POSIX), gzip's MTIME too (RFC 1952); zip's and ARC's dates here are
+    MS-DOS ones (APPNOTE.TXT 4.4.6; 0x334d's are Macintosh-sourced and
+    skipped above); an LZH level 2 or 3 base header holds a Unix time
+    (header.doc). A level 0 or 1 date is the MS-DOS one unless an
+    extension replaced it, which lsar does not say and lzh_instants
+    does; where that walk failed, ungraded."""
+    if fmt in ("Tar", "Gzip"):
+        return "Z"
+    if fmt in ("Zip", "ARC"):
+        return ""
+    if fmt == "LZH":
+        if o.get("lhalevel", 0) >= 2:
+            return "Z"
+        if o.get("inst") is not None:
+            return "Z" if k in o["inst"] else ""
+    return None
 
 
 def archive_corpus(cli):
     """Every DATED fixture, and every lhasa test archive, against lsar:
     mtime and ctime where XADMaster saw no Macintosh source, comment and
-    lock wherever both state them. Returns (fails, counts per field)."""
+    lock wherever both state them, and each date's zone mark
+    (zone_want). Returns (fails, counts per field)."""
     paths = [os.path.join(REPO, "fixtures", f)
              for f in sorted(os.listdir(os.path.join(REPO, "fixtures")))]
     lh = os.path.join(REPO, "reference", "lhasa", "test", "archives")
@@ -824,7 +950,10 @@ def archive_corpus(cli):
         unixtime = zip_unix_times(p) if fmt == "Zip" else set()
         sidecar = sidecar_stated(p) if fmt in ("Zip", "Tar") else set()
         lha = lhasa_headers(p) if fmt == "LZH" else None
-        for name, r in rows.items():
+        inst = lzh_instants(p) if fmt == "LZH" else None
+        if inst is not None and len(inst) != len(rows):
+            inst = None                 # cannot be paired by position
+        for i, (name, r) in enumerate(rows.items()):
             o = oracle.get(name)
             # lhasa lower-cases a name that is all capitals (fix_msdos_allcaps).
             if lha is not None and name not in lha and name.lower() in lha:
@@ -844,6 +973,8 @@ def archive_corpus(cli):
                 o["src"] = "lhasa"
             if o is None:
                 continue
+            if inst is not None:
+                o = dict(o, inst=inst[i])
             for k in ("mtime", "ctime", "comment", "lock"):
                 if k in ("mtime", "ctime") and (o["mac"] or fmt not in DATED):
                     continue
@@ -855,10 +986,21 @@ def archive_corpus(cli):
                     continue
                 src = o.get("src", "lsar") if k != "comment" else "lsar"
                 n[src + " " + k] = n.get(src + " " + k, 0) + 1
-                if r[k] != o[k]:
+                want, got = o[k], r[k]
+                if k in ("mtime", "ctime") and not want.endswith("Z"):
+                    z = zone_want(fmt, o, k)
+                    if z is None:
+                        got = got.rstrip("Z")
+                        n["zone ungraded"] = n.get("zone ungraded", 0) + 1
+                    else:
+                        want += z
+                if k in ("mtime", "ctime") and got is r[k]:
+                    zk = "zone " + ("Z" if want.endswith("Z") else "wall")
+                    n[zk] = n.get(zk, 0) + 1
+                if got != want:
                     bad.append("%s: %s: %s %s, %s %s"
                                % (os.path.relpath(p, REPO), name, k, r[k],
-                                  src, o[k]))
+                                  src, want))
     return bad, n
 
 
@@ -867,7 +1009,7 @@ def archive_check(cli, corpus_too):
     work = tempfile.mkdtemp(prefix="meta-arch-")
     fails = []
     exp = archive_expectations(cli, work, fails)
-    compared = tried = caught = 0
+    compared = tried = caught = zones = 0
     for label, p, want, extra in exp:
         got, _fmt = archive_rows(cli, p, extra)
         fails += archive_compare(got, want, label)
@@ -881,8 +1023,20 @@ def archive_check(cli, corpus_too):
                 g[name][k] = "-" if g[name].get(k) != "-" else "00"
                 tried += 1
                 caught += bool(archive_compare(g, {name: {k: w[k]}}, label))
+                # And a date's zone alone: the same value with its mark
+                # taken away or added must fail too, or the mark is not
+                # being graded (DECISIONS.md 2026-10-17, *dates in the
+                # Macintosh's own zone*).
+                v = got[name].get(k, "-")
+                if k in ("ctime", "mtime", "backup") and v != "-":
+                    g[name][k] = v[:-1] if v.endswith("Z") else v + "Z"
+                    tried += 1
+                    zones += 1
+                    caught += bool(archive_compare(g, {name: {k: w[k]}},
+                                                   label))
     print("run_meta: archives, %d field(s) compared, %d control(s) caught "
-          "of %d" % (compared, caught, tried))
+          "of %d (%d of them a date's zone mark alone)"
+          % (compared, caught, tried, zones))
     if caught != tried or not tried:
         fails.append("an archive control passed: the comparison is not "
                      "comparing")
@@ -1073,7 +1227,9 @@ def ad_fields(blob):
         elif eid == 8 and len(b) >= 12:
             v = struct.unpack(">I", b[8:12])[0]
             if v != 0x80000000:
-                o["backup"] = "%08x" % ((v + 0xB492F400) & 0xFFFFFFFF)
+                # GMT (RFC 1740): an instant, marked Z (DECISIONS.md
+                # 2026-10-17, *dates in the Macintosh's own zone*).
+                o["backup"] = "%08x" % ((v + 0xB492F400) & 0xFFFFFFFF) + "Z"
         elif eid in (10, 12):
             at = 3 if eid == 10 else 1
             if len(b) > at:

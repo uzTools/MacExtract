@@ -271,7 +271,8 @@ def describe(kind):
         ent("Folder/Meta",
             finfo(b"APPL", b"MEta", 0x2000, 0x30, 0x40)[:16],
             struct.pack(">H", 0x0201) + b"\0" * 14, rsrc("Meta"), lock="L",
-            backup="%08x" % ((META_DATES[2] + EPOCH_2000) & 0xFFFFFFFF),
+            # GMT (RFC 1740), so `l --meta` marks it Z.
+            backup="%08x" % ((META_DATES[2] + EPOCH_2000) & 0xFFFFFFFF) + "Z",
             comment=COMMENT.hex())
     if "Folder/Zero" in names:
         ent("Folder/Zero")

@@ -149,6 +149,7 @@ static uint32_t gNow = 0xD0000000u;    /* the mock's clock, one per change */
 #define DROP_COMMENT 0x10
 #define DROP_DIRMD   0x20
 static int gDrop;
+static long gMockZone;   /* the machine's offset east of GMT (ZoneProbe) */
 static int gHasDT = 1;                 /* the volume has a Desktop Manager */
 static int gDTSetCalls;
 
@@ -716,6 +717,102 @@ int main(int argc, char **argv)
         }
         fprintf(stderr, "meta: %s\n", ok ? "every field written, every "
                 "control caught" : "FAILED");
+        return ok ? 0 : 1;
+    }
+    if (argc >= 2 && strcmp(argv[1], "--zone") == 0) {
+        /* The dates the engine marks as instants (UNC_META_*_UTC) are
+         * moved into the machine's zone, and no other date is (ZoneShift;
+         * DECISIONS.md 2026-10-17, *dates in the Macintosh's own zone*).
+         * A folder with both dates marked, whose modification date is held
+         * across a file written inside it; a file with a wall-clock
+         * creation date and marked modification and backup dates; a file
+         * with nothing marked. Run at three offsets, west, east and none,
+         * each read back off the mock catalog. Then two controls, each of
+         * which must FAIL: the shift expected where the mock machine has
+         * no zone (the check sees a shift), and every date expected moved
+         * (the check sees the dates that must not move). Cannot see: what
+         * ReadLocation answers on a real Macintosh, which ZoneProbe asks
+         * and this mock does not — that is the emulator run's
+         * (tools/vmac/README.md, *Dates in the Macintosh's zone*). */
+        static const struct { long run, want; int all; const char *what; }
+            runs[] = {
+            { -18000L, -18000L, 0, "west 5 h" },
+            {   3600L,   3600L, 0, "east 1 h" },
+            {      0L,      0L, 0, "no zone" },
+            {      0L,   3600L, 0, "control: a shift wanted, none made" },
+            {   3600L,   3600L, 1, "control: every date wanted moved" },
+        };
+        const char *base = argc >= 3 ? argv[2] : "/tmp/zone_out";
+        size_t k;
+        int ok = 1;
+        for (k = 0; k < sizeof runs / sizeof runs[0]; k++) {
+            MacSink sk2; UncEntryInfo info;
+            char dir[600], path[900];
+            CatRec *rd, *rf, *rw;
+            uint32_t z = (uint32_t)runs[k].want;
+            uint32_t zm = runs[k].all ? z : 0;     /* what an unmarked gets */
+            int bad;
+            snprintf(dir, sizeof dir, "%s/z%u", base, (unsigned)k);
+            mkdir(base, 0755);
+            mkdir(dir, 0755);
+            snprintf(gOutDir, sizeof gOutDir, "%s", dir);
+            snprintf(gDirs[0], sizeof gDirs[0], "%s", gOutDir);
+            gNumDirs = 1;
+            memset(gCat, 0, sizeof gCat);
+            RepReset();
+            gMockZone = runs[k].run;
+            gZone = kZoneUnread;            /* a new launch, as it were */
+            memset(&sk2, 0, sizeof sk2); sk2.vRefNum = 1; sk2.rootDirID = 0;
+
+            memset(&info, 0, sizeof info);
+            memcpy(info.name, "Fold", 4); info.name_len = 4; info.is_dir = 1;
+            info.create_date = 0xA0000001u; info.mod_date = 0xA0000002u;
+            info.meta = UNC_META_CR_UTC | UNC_META_MD_UTC;
+            sink_begin(&sk2, &info);
+
+            memset(&info, 0, sizeof info);
+            memcpy(info.name, "Fold/Doc", 8); info.name_len = 8;
+            info.create_date = 0xA0000011u; info.mod_date = 0xA0000012u;
+            info.backup_date = 0xA0000013u;
+            info.meta = UNC_META_BACKUP | UNC_META_MD_UTC | UNC_META_BK_UTC;
+            info.data_size = 5; info.rsrc_size = 0;
+            if (sink_begin(&sk2, &info) == 0) {
+                sink_write(&sk2, UNC_FORK_DATA, "hello", 5);
+                sink_end(&sk2, UNC_OK);
+            }
+
+            memset(&info, 0, sizeof info);
+            memcpy(info.name, "Fold/Wall", 9); info.name_len = 9;
+            info.create_date = 0xA0000021u; info.mod_date = 0xA0000022u;
+            info.backup_date = 0xA0000023u;
+            info.meta = UNC_META_BACKUP;
+            info.data_size = 0; info.rsrc_size = 0;
+            if (sink_begin(&sk2, &info) == 0) sink_end(&sk2, UNC_OK);
+            DirFlush(&sk2);
+
+            snprintf(path, sizeof path, "%s/Fold", dir);
+            rd = cat_rec(path, 0);
+            snprintf(path, sizeof path, "%s/Fold/Doc", dir);
+            rf = cat_rec(path, 0);
+            snprintf(path, sizeof path, "%s/Fold/Wall", dir);
+            rw = cat_rec(path, 0);
+            bad = !rd || !rf || !rw ||
+                  rd->cr != 0xA0000001u + z || rd->md != 0xA0000002u + z ||
+                  rf->cr != 0xA0000011u + zm || rf->md != 0xA0000012u + z ||
+                  rf->bk != 0xA0000013u + z ||
+                  rw->cr != 0xA0000021u + zm || rw->md != 0xA0000022u + zm ||
+                  rw->bk != 0xA0000023u + zm;
+            fprintf(stderr, "zone [%s]: %s\n", runs[k].what,
+                    bad ? "dates differ" : "dates as wanted");
+            if (bad != (strncmp(runs[k].what, "control", 7) == 0)) {
+                fprintf(stderr, "zone [%s]: %s\n", runs[k].what,
+                        bad ? "FAILED" : "the check PASSED a wrong date");
+                ok = 0;
+            }
+        }
+        gMockZone = 0; gZone = kZoneUnread;
+        fprintf(stderr, "zone: %s\n", ok ? "marked dates moved, wall clocks "
+                "kept, both controls caught" : "FAILED");
         return ok ? 0 : 1;
     }
     if (argc >= 2 && strcmp(argv[1], "--dirdates") == 0) {

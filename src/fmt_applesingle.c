@@ -100,9 +100,20 @@ void unc_as_record(UncEntryInfo *e, uint32_t id, const uint8_t *p, uint32_t n)
             d = unc_get_u32be(p + k);
             if (d == 0x80000000u) continue;
             d += AS_EPOCH_2000_AS_MAC;
-            if (k == 0) e->create_date = d;
-            else if (k == 4) e->mod_date = d;
-            else { e->backup_date = d; e->meta |= UNC_META_BACKUP; }
+            /* GMT seconds: an instant, so each date is marked UTC
+             * (macextract.h; DECISIONS.md 2026-10-17, *dates in the
+             * Macintosh's own zone*, which also has mpack's writer,
+             * which does not follow the RFC here). */
+            if (k == 0) {
+                e->create_date = d;
+                e->meta |= UNC_META_CR_UTC;
+            } else if (k == 4) {
+                e->mod_date = d;
+                e->meta |= UNC_META_MD_UTC;
+            } else {
+                e->backup_date = d;
+                e->meta |= UNC_META_BACKUP | UNC_META_BK_UTC;
+            }
         }
         break;
     case 9:

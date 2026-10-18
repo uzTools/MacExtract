@@ -182,6 +182,11 @@ int unc_macbinary_meta(UncEntryInfo *e, const uint8_t *b)
     e->finder_flags = (uint16_t)((b[73] << 8) | b[101]);
     e->create_date  = unc_get_u32be(b + 91);
     e->mod_date     = unc_get_u32be(b + 95);
+    /* A Macintosh date is a wall clock. A container that had stated an
+     * instant there (LZH, zip) keeps its own only where this one is 0,
+     * and restores the mark with it. */
+    if (e->create_date) e->meta &= (uint8_t)~UNC_META_CR_UTC;
+    if (e->mod_date) e->meta &= (uint8_t)~UNC_META_MD_UTC;
     for (k = 0; k < 16; k++) e->finder_info[k] = b[65 + k];
     e->finder_info[8] = hi;
     e->finder_info[9] = b[101];

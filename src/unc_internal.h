@@ -1388,6 +1388,14 @@ int unc_reduce_decode(UncAlloc *al, UncBufIn *in, uint32_t factor,
                       uint32_t usize, uint32_t *crc, uint8_t *obuf,
                       uint32_t ocap, UncPutRun emit, void *ectx);
 
+/* Zip method 6, Implode (unc_implode.c): its dictionary and tree count
+ * from the general-purpose `flags`, PKZIP 1.01/1.02's minimum match
+ * length where `mmlbug`. Decodes `usize` bytes from `in`, adds them to
+ * `*crc` and hands them to `emit`. */
+int unc_implode_decode(UncAlloc *al, UncBufIn *in, uint32_t flags,
+                       uint32_t usize, uint32_t *crc, uint32_t mmlbug,
+                       UncPutRun emit, void *ectx);
+
 /* Arsenic (method 15) core, in sit_arsenic.c. Writes into the fork
  * writer directly, and has it keep the CRC-32 the stream ends with:
  * `f` comes back set to UNC_CK_CRC32, flushed, and checked. It used to

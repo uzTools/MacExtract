@@ -8,13 +8,15 @@
  * application carries none (FORMATS.md, *Overlays*).
  *
  * THE TIME ZONE RULE (DECISIONS.md 2026-10-17, *the archives' own Finder
- * info*; the maintainer's to confirm):
+ * info*, and *dates in the Macintosh's own zone*, the maintainer's):
  *   - an MS-DOS date and time is the WALL CLOCK of the machine that
  *     wrote it, with no zone; so is a Macintosh date. It is carried
- *     across as wall clock, unchanged.
+ *     across as wall clock, unchanged, and not marked.
  *   - a Unix time (and a Windows FILETIME) is an instant, UTC. The
  *     engine knows no zone, so it becomes the Macintosh date whose wall
- *     clock reads that instant in UTC: unix + 2,082,844,800.
+ *     clock reads that instant in UTC: unix + 2,082,844,800 — and the
+ *     reader sets that date's UNC_META_*_UTC bit (macextract.h), so a
+ *     host that knows its zone can show it in local time.
  *
  * 0 is "not stated" to every host (macextract.h), so a date this cannot
  * represent — before 1904, after 2040-02-06 06:28:15, or a field out of

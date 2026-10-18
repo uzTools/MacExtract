@@ -2007,6 +2007,18 @@ a harness can click is not the same list.
   survived:** the claim was about a format, and was tested against the
   one function named after the format's header (DECISIONS.md 2026-10-17,
   *the window Expander puts back*).
+- **"FlCrDat is the local Mac time already, and local is what the sink
+  wants, so no offset of either sign enters"** — `src/fmt_exo.c` on
+  `0x334d`'s dates, and *the archives' own Finder info*'s "the GMT offsets
+  unused", 2026-10-17. **Withdrawn the same day**: the dates are the
+  WRITER's local time, and the reader's is another zone; the offsets are
+  there to move between the two, and the format's own UnZip uses them
+  (`AdjustForTZmoveMac`). **Cost: every MacZip date** was written one
+  writer-zone-minus-reader-zone out on any Mac but the writer's — 5 h on
+  all 22 of `rexnebular_1_0_0.zip`'s for a reader in UTC. **Why it
+  survived:** XADMaster and deark disagree on the sign, and that was read
+  as the question being moot rather than as a question with a document
+  (DECISIONS.md 2026-10-17, *dates in the Macintosh's own zone*).
 
 ### Corrected figures and superseded write-ups
 

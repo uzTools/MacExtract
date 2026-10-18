@@ -128,6 +128,7 @@ else()
     list(FILTER ENGINE_SRC EXCLUDE REGEX "unc_lzw\\.c$")
     list(FILTER ENGINE_SRC EXCLUDE REGEX "unc_reduce\\.c$")
     list(FILTER ENGINE_SRC EXCLUDE REGEX "unc_shrink\\.c$")
+    list(FILTER ENGINE_SRC EXCLUDE REGEX "unc_implode\\.c$")
     list(FILTER ENGINE_SRC EXCLUDE REGEX "unc_lzah\\.c$")
 endif()
 
@@ -686,6 +687,7 @@ add_custom_command(
             ${CMAKE_CURRENT_BINARY_DIR}/ovl_forwards_zipold_gen.c
             ${ENGINE_DIR}/src/unc_shrink.c
             ${ENGINE_DIR}/src/unc_reduce.c
+            ${ENGINE_DIR}/src/unc_implode.c
             ${ENGINE_DIR}/src/fmt_tar.c
             ${ENGINE_DIR}/src/fmt_exo_probe.c
             ${ENGINE_DIR}/src/unc_sidecar.c
@@ -694,6 +696,7 @@ add_custom_command(
             ${CMAKE_CURRENT_BINARY_DIR}/ovl_zipold_exports_gen.h
             ${ENGINE_DIR}/src/unc_shrink.c
             ${ENGINE_DIR}/src/unc_reduce.c
+            ${ENGINE_DIR}/src/unc_implode.c
             ${ENGINE_DIR}/src/fmt_tar.c
             ${ENGINE_DIR}/src/fmt_exo_probe.c
             ${ENGINE_DIR}/src/unc_sidecar.c

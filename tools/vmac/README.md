@@ -2847,6 +2847,26 @@ What the Finder then does with any of it: draws the icon there, opens the
 window at that rectangle, shows the comment. A folder's comment: neither
 fixture gives a folder one.
 
+### Dates in the Macintosh's zone — `tzrun.py`
+
+    tzrun.py                                   # the four tiers, synth-exo-tar.tar
+    tzrun.py --tier sys7-tz fixtures/derived-MUSFMT10.ZIP   # wall clocks: none move
+    tzrun.py --check sys7-tz .tmp/vmacrun-*/   # re-grade a kept run
+
+Extracts one archive per tier with `--keep-disks` and holds every catalog
+date to `l --meta`: a date marked `Z` moved by the tier's zone, every other
+one not. The zone is the emulator's: **this Mini vMac keeps no PRAM between
+launches** — `RTC_Init` zeroes it and writes the location record at
+0xE4..0xEF from three globals, 0 on X11 — so `setup.sh` builds `mv-4M-tz`
+with those globals patched (5 h west, a non-zero location). Tiers:
+System 7.0.1 on `mv-4M-tz` (−18,000 s) and on `mv-4M` (never set: 0),
+System 6.0.8 on `mv-4M-tz` (−18,000 s) and System 3.0 on `mv-4M-tz` (no
+Gestalt: 0). Results: DECISIONS.md 2026-10-17, *dates in the Macintosh's
+own zone*.
+
+**What it cannot see.** The Map control panel itself, and its
+daylight-saving box. Mac OS 9. A 512 KB machine.
+
 ### What the Finder does with a restored position — `finderpos.py`
 
     finderpos.py -o DIR                                  # System 7.0.1
