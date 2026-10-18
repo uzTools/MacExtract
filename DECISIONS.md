@@ -28163,3 +28163,11 @@ offsets, +12 B in `zip_mac_attrs`'s frame.
 daylight-saving reading (above). Whether mpack's 200 meant 0x200: the
 version System 6.0.8 and 7.0.1 return was not read out, only that both
 pass 200.
+
+**Two of the maintainer's calls, 2026-10-18** (on *the sidecars Mac OS X
+left beside the file*). A zip entry's MS-DOS time is kept, and Info-ZIP's
+Unix time beside it (`0x5455`/`0x5855`) is not read: the MS-DOS time is the
+wall clock of the machine that made the zip, what its maker and every
+Macintosh-era tool saw, where the Unix time is exact but an instant. And a
+sidecar is paired wherever the central directory puts it, at the 138 B
+that costs over pairing neighbours only, so a re-zipped tree pairs too.

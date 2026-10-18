@@ -177,9 +177,6 @@ file*). Left, none with a specimen here:
   `com.apple.metadata:kMDItemFinderComment`, a binary property list,
   after the Finder info. A bplist reader and a Unicode-to-MacRoman table;
   the maintainer's call.
-- **A zip entry's Unix time** (`0x5455`/`0x5855`), which Mac OS X writes
-  beside the MS-DOS one: exact, but UTC; the engine keeps the MS-DOS
-  wall clock. The maintainer's call.
 - **A tar sidecar written after its file**: out as itself. bsdtar never
   writes that order; a pax header between the two is stepped over, but no
   specimen has one (hypothesis: bsdtar writes one for a non-ASCII name).
