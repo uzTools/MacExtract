@@ -152,10 +152,12 @@ REPO = os.path.dirname(HERE)
 # top of the output (below).
 # **And by 64 B more the same day, DERIVED**: the top folder's custom-icon
 # bit set when the run ends (below).
+# **RAISED by 64 B 2026-10-19, DERIVED**: TIERS_CONTROL fell by that much
+# with the toolchain update (below).
 TIERS = {
-    "sys3-512K": (188420, "System 3.0, Macintosh 512Ke (225,956 B free)"),
-    "sys6-512K": (93020, "System 6.0.8, Macintosh 512Ke (130,556 B free)"),
-    "floor-1M":  (617308, "System 6.0.8, 1 MB Mac Plus — the floor target"),
+    "sys3-512K": (188484, "System 3.0, Macintosh 512Ke (225,956 B free)"),
+    "sys6-512K": (93084, "System 6.0.8, Macintosh 512Ke (130,556 B free)"),
+    "floor-1M":  (617372, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
 
 # RE-TAKEN on all three machines 2026-10-09 (`-D UNC_OVL_RESIDENT -D
@@ -318,7 +320,11 @@ TIERS = {
 # bit set when the run ends (DECISIONS.md 2026-10-19, *the icon that came late*): the control's
 # CODE +76 and A5 -12 against the shipped pair's +96 (CODE +72, A5 +24), so
 # OVL_SAVED -32.
-TIERS_CONTROL = 225072     # build/mac-resident, CODE + A5, 2026-10-18
+# **-64 2026-10-19, and TIERS +64, DERIVED**: Retro68 afedcdc with
+# multiversal 057c802 inlines PurgeSpace (DECISIONS.md 2026-10-19, *the toolchain that inlined PurgeSpace*): the
+# control's CODE -72 and A5 +8 against the shipped pair's -96 (CODE -72,
+# A5 -24), so OVL_SAVED +32.
+TIERS_CONTROL = 225008     # build/mac-resident, CODE + A5, 2026-10-18
 # **What this control cannot see: the autotest harness.** TIERS was read
 # on the machine from an autotest build (`UNC_MAC_AUTOTEST`), and
 # build/mac-resident has no harness in it, so harness growth lowers what a
@@ -671,7 +677,9 @@ EXPECT = {
 # **-32 2026-10-19, -> 149,504**: the top folder's custom-icon bit set when
 # the run ends, the control's +64 against the shipped pair's +96
 # (DECISIONS.md 2026-10-19, *the icon that came late*).
-OVL_SAVED = 149504
+# **+32 2026-10-19, -> 149,536**: the toolchain update, the control's -64
+# against the shipped pair's -96 (DECISIONS.md 2026-10-19, *the toolchain that inlined PurgeSpace*).
+OVL_SAVED = 149536
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
 # every kept image is one — as is the bundle an envelope holds on to.

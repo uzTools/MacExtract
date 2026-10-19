@@ -443,6 +443,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-18 (the icon Expander registers) — an application keeps its inited bit and its position, as StuffIt Expander keeps them, and the shell registers its bundle in the Desktop Database as Expander does
 - 2026-10-19 (the icon that came late) — a top folder's custom-icon bit is set when the run ends, so the Desktop shows its icon; the destination's date, tried first, did nothing
 - 2026-10-19 (the place outside the archive) — an item at the top of the output is given the location (−1, −1), and the Finder the next free place; everything under it keeps the archive's
+- 2026-10-19 (the toolchain that inlined PurgeSpace) — Retro68 afedcdc with multiversal 057c802 is the toolchain the figures are measured with; its inlined PurgeSpace gives 96 B back to every extraction
 
 ---
 
@@ -28735,3 +28736,22 @@ the folder at a free spot, opened its window at the stored rectangle
 unshifted with frScroll (50, 49) applied; `Ascii Converter FAT` its own
 icon. On the OS 9 Desktop Norbik's custom icon stayed generic: *the icon
 that came late* again, not this change.
+
+## 2026-10-19 (the toolchain that inlined PurgeSpace) — Retro68 afedcdc with multiversal 057c802 is the toolchain the figures are measured with; its inlined PurgeSpace gives 96 B back to every extraction
+
+**What changed.** The maintainer updated `/opt/Retro68-build` on
+2026-10-19 to Retro68 `afedcdc` (2026-10-17), whose multiversal `057c802`
+carries this project's three upstream reports: #322's glue fields
+(`52f0d12`), #323's `GetAppFiles` (`d7642c2`), and pull request 20, traps
+with register outputs generated inline (`f619744`).
+
+**Measured, the same source built with both** (`nm -S` on
+`MacExtract.code.bin.gdb`): the only differences are `PURGESPACE`'s 22 B
+of glue, gone, and `mal_alloc`, 204 → 160 B, the call now inline. Shipped
+CODE −72 and A5 −24: **96 B back on every extraction's budget**, as the
+entry on `_MaxMem` predicted for `PurgeSpace` (CODE −80 there, by hand).
+The control CODE −72 and A5 +8, so `OVL_SAVED` +32 and `TIERS` +64,
+derived. Every ceiling is re-taken; `tools/build_mac.sh` names the
+toolchain, since an older one builds larger and fails them. #323 changes
+nothing here: `DropNext` reads `AppParmHandle` itself, 216 B smaller than
+the glue.

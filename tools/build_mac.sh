@@ -3,6 +3,10 @@
 #
 # Locates a Retro68 toolchain via (in order): $RETRO68, m68k-apple-macos-gcc
 # in PATH, or /opt/Retro68-build/toolchain. Skips gracefully when absent.
+# The ceilings below are measured with Retro68 afedcdc (2026-10-17) and its
+# multiversal 057c802, the first to inline traps with register outputs
+# (multiversal pull request 20); an older one builds larger and fails them
+# (DECISIONS.md 2026-10-19, *the toolchain that inlined PurgeSpace*).
 # Output: $UNC_MAC_BUILD_DIR/macextract.{APPL,bin,dsk}, build/mac by default.
 #
 # The build directory is settable because CMake reads UNC_AT_* and UNC_OVL_*
@@ -579,7 +583,9 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # the output (DECISIONS.md 2026-10-19, *the place outside the archive*): the control.
 # +76 code and -12 A5 on 2026-10-19: the top folder's custom-icon bit set
 # when the run ends (DECISIONS.md 2026-10-19, *the icon that came late*): the control.
-UNC_MAC_CODE_DEFAULT=188176
+# -72 code on 2026-10-19: the toolchain update, PurgeSpace inlined
+# (DECISIONS.md 2026-10-19, *the toolchain that inlined PurgeSpace*): the control.
+UNC_MAC_CODE_DEFAULT=188104
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -1140,8 +1146,10 @@ UNC_MAC_A5_DEFAULT=36908
 # the output (DECISIONS.md 2026-10-19, *the place outside the archive*): 0 B of budget.
 # +72 code and +24 A5 on 2026-10-19: the top folder's custom-icon bit set
 # when the run ends (DECISIONS.md 2026-10-19, *the icon that came late*): 96 B off every budget.
-UNC_MAC_CODE_EAGER=57652
-UNC_MAC_A5_EAGER=17916
+# -72 code and -24 A5 on 2026-10-19: the toolchain update, PurgeSpace
+# inlined (DECISIONS.md 2026-10-19, *the toolchain that inlined PurgeSpace*): 96 B back on every budget.
+UNC_MAC_CODE_EAGER=57580
+UNC_MAC_A5_EAGER=17892
 # +8 on 2026-10-02 for the same reason as the eager pair above: the
 # overlay call that now says WHICH of StuffIt 2.x's ciphers an entry
 # wants. A5 fell to 19,096 and its ceiling is left where it was.
@@ -1214,7 +1222,8 @@ UNC_MAC_A5_EAGER=17916
 # A5 17,984, under its ceiling.
 # +20 code on 2026-10-19, the same.
 # +76 code on 2026-10-19, the same.
-UNC_MAC_CODE_LAZY=56076
+# -72 code on 2026-10-19, the toolchain update.
+UNC_MAC_CODE_LAZY=56004
 UNC_MAC_A5_LAZY=19200
 if [ -n "$UNC_OVL_RESIDENT" ]; then
     UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-$UNC_MAC_CODE_DEFAULT}
