@@ -10,33 +10,19 @@ Linux command-line version too, built from the same engine.
 
 ## What it looks like
 
-One 245K application on an 800K floppy, an open carton lettered EXTRACT, drawn
-for 1-bit, 16-colour and 256-colour screens:
+One 245K application. Pick an archive, or on System 7 and later drop it on
+the icon; Return extracts it beside the archive.
 
-![The floppy image open on a System 6 desktop, holding one item: MacExtract](docs/screens/0-icon.png)
-
-Pick an archive, then say where the files go; Return puts them next to the
-archive. On System 7 and later you can also **drop the archive on the
-application's icon**, whatever type the file claims to be. Watch it work,
-with a real estimate, because on a Mac Plus some archives take twenty
-minutes. Cancel at any point and anything half-written is cleaned up:
-
-![Progress window titled MacExtract: Extracting archive.sit, 30%, about 39 seconds left](docs/screens/2-extracting.png)
-
-If anything had to change on the way — a name HFS cannot keep (31 characters
-max), two files or two folders whose names are the same for those 31
-characters, an entry that would not come out — you are told which. Nothing is
-overwritten and nothing is folded together: the second one gets a `~1`.
-**Save as Text** files the whole list as a document:
-
-![A scrolling list: MyQuarterlyReportForTheBoard.rtf renamed to MyQuarterlyReportForTheBoar.rtf, Notes.txt renamed to Notes~1.txt, two folders whose names shorten alike renamed to two different folders, an entry damaged, and eighteen photographs each named in full with what it became; under the list, in bold, Extraction finished, and the buttons Save as Text and OK](docs/screens/4b-report.png)
-
-If an archive was split across floppies and a part is not where the last one
-was, that floppy is ejected and you are asked for the next — and told straight
-away if you point at the wrong one, because parts are recognised by what is
-inside them:
-
-![Alert reading: Part 2 of "derived-Cal.sit" has not been found. About 33K still to read. Locate it, skip it, or cancel. Buttons: Cancel, Skip, Find...](docs/screens/5-locate-part.png)
+<table>
+<tr>
+<td width="50%"><img src="docs/screens/0-icon.png" width="400" alt="MacExtract's icon on a System 6 floppy"><br>One application, one floppy.</td>
+<td width="50%"><img src="docs/screens/2-extracting.png" width="400" alt="Progress window: 30%, about 39 seconds left"><br>A real time estimate. Cancel cleans up.</td>
+</tr>
+<tr>
+<td><img src="docs/screens/4b-report.png" width="400" alt="Report listing renamed and damaged entries, with Save as Text"><br>Every renamed or failed file is listed. Nothing is overwritten.</td>
+<td><img src="docs/screens/5-locate-part.png" width="400" alt="Alert: Part 2 has not been found, with Find, Skip and Cancel"><br>Split across floppies? It asks for the next one.</td>
+</tr>
+</table>
 
 ## Download
 
