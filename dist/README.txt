@@ -1,4 +1,4 @@
-MacExtract v0.40.0 — bootstrap distribution
+MacExtract v0.41.0 — bootstrap distribution
 ==========================================
 
 A bare Classic Mac has no way to open a .sit/.cpt/.hqx until it HAS an
@@ -46,6 +46,36 @@ are the same story for the same reason: that method looks back over as much as
 256 KB, and the room has to be there. Those entries are skipped with a message
 and the rest of the archive still comes out. Every other format fits in
 512 KB, and with 1 MB the question does not arise.
+
+v0.41.0 puts files and folders back exactly as they were before they
+were archived, wherever the archive kept it: each icon's place in its
+window, each folder's window -- where it opens, its size, its view and
+scroll -- the Get Info comment, all three dates, the Locked box, custom
+icons, and the Finder flags behind them. An application keeps its place
+and its own icon, as StuffIt Expander puts it back. A zip made by the
+Mac OS X Finder gives back the resource forks, types, creators and
+comments it stored in its __MACOSX folder, Spotlight comments included,
+and that folder is not left behind. Dates an archive kept in universal
+time are shown in your Mac's own time zone. A file another system marked
+read-only comes out locked. What comes out at the top lands at the next
+free spot in the window or on the desktop, rather than where it sat on
+the Mac it was archived on.
+
+The Macintosh application changed in small ways, all found on real
+hardware. It looks at the file first, and asks where to put anything
+only if it can open it; a file it cannot read gets "Unknown format.",
+and one that is damaged before its first file "Archive damaged.".
+Cancel at "Extract into this folder:" quits. The password dialog says
+"Enter the password for ..." and, after a wrong one -- an empty one
+counts -- "Incorrect password." When a part of a split archive is
+missing, Find... opens in the folder holding the parts, not the one you
+are extracting into. The progress window says how long is left and no
+longer flickers. And one crash is gone: opening part of a split StuffIt
+archive in a folder that also held an AppleSingle file with a comment.
+
+Formats this program could name but not open -- ARJ, RAR and the rest --
+are no longer named: everything it does not extract is simply a file it
+does not read.
 
 v0.40.0 is what the first real Macintosh to run it found -- an LC 475,
 in its owner's hands. The biggest: on a Macintosh, a zip whose name ends

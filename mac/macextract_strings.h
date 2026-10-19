@@ -26,7 +26,7 @@
 #define S_MENU_FILE         "File"
 #define S_MENU_QUIT         "Quit"
 
-#define S_ABOUT             "MacExtract 0.40.0"
+#define S_ABOUT             "MacExtract 0.41.0"
 
 #define S_BTN_OK            "OK"
 #define S_BTN_CANCEL        "Cancel"
