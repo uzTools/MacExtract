@@ -28756,6 +28756,10 @@ toolchain, since an older one builds larger and fails them. #323 changes
 nothing here: `DropNext` reads `AppParmHandle` itself, 216 B smaller than
 the glue.
 
+**#322's fix, priced**: `HOpen`/`HOpenRF`/`HDelete` in place of the shell's
+own blocks, shipped CODE +216 and A5 +8 (`HDelete` alone +32); the blocks
+stay (OPEN_ITEMS.md, *The shell's own File Manager blocks*).
+
 **`_MaxMem` is no longer inline asm**: `GrowApplZone` calls `MaxMem(&grow)`,
 which the same pull request generates inline, as *the purge MaxApplZone
 never did* foresaw: shipped CODE and A5 unchanged, 57,580 and 17,892 B.

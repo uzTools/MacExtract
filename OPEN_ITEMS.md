@@ -267,16 +267,26 @@ before 4.0*). Left:
   the writer, and reading the layout out of it is the route Packit III
   1.3 gave PackIt's ciphers (NOTICE).
 
-## The shell's own File Manager blocks, until Retro68's glue sets every field
+## The shell's own File Manager blocks, until multiversal's glue is inline
 
-Decided 2026-10-15 to move `MyOpenFork` to Retro68's `HOpen`/`HOpenRF`
-and `MyHDelete` to `HDelete` (DECISIONS.md, *the rest of the block*).
-`MyHCreate` stays: `HCreate` also reads and rewrites the Finder info, two
-more traps per entry for a type `sink_end` stamps anyway. `HDelete` is
-correct today; `HOpen` is blocked by Retro68 #322 (`ioFVersNum`: `fnfErr`
-on MFS). Closes when a Retro68 carrying it is the toolchain here: switch,
-price it on the 68000 build, state that minimum Retro68 in the build
-docs, rebuild `dist/`, and re-run every emulated tier once.
+#322 is fixed in the toolchain here (Retro68 `afedcdc`), and the switch
+decided 2026-10-15 (*the rest of the block*) was priced 2026-10-19:
+`HOpen`/`HOpenRF`/`HDelete` in place of `MyOpenFork`/`MyHDelete`, shipped
+CODE +216 and A5 +8, **+224 B** (`HDelete` alone +32), for the same
+fields set. The blocks stay (measured; DECISIONS.md 2026-10-19, *the
+toolchain that inlined PurgeSpace*).
+
+Closes when multiversal generates its File Manager glue inline, as pull
+request 20 did for register outputs: then the switch should cost about
+0 B (hypothesis). Proposed upstream **after MacExtract's first public
+release** (the maintainer, 2026-10-19), as pull requests one after the
+other: (1) the mechanism with `HOpen`, `HOpenRF`, `HDelete`; (2) the other
+opens; (3) create, delete, rename; (4) Finder info and `GetWDInfo`;
+(5) read, write, position, EOF, close; (6) volumes. Measure each against a
+locally patched header first. MacExtract links seven of these as glue
+today, 298 B: `FSRead` 58, `FSWrite` 58, `SetFPos` 42, `GetEOF` 38,
+`SetEOF` 36, `FlushVol` 36, `FSClose` 30 (measured, `nm -S`); inline at
+every call site they may cost more than they save (not measured).
 
 ## The double-click helpers: what is left before they ship
 
