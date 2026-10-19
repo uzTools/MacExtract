@@ -97,15 +97,23 @@ reading the programs' code).
 \*\* Ten things StuffIt Deluxe 2.0 itself wrote: five Optimizers and five
 ciphers, each checked against an archive 2.0.1 made.
 
-**Speed is a wash.** On the same 7 MHz Mac Plus, MacExtract and Expander
-4.0.2 take about the same on StuffIt (1 minute for 280 KB), MacExtract is a
-little faster on Compact Pro (2¼ against 2½ minutes) and much faster on a
-StuffIt inside BinHex (4½ against 7). Details in [FORMATS.md](FORMATS.md).
+**Speed**, both on the same 7 MHz Mac Plus, same archives, same disk:
+
+| Archive | MacExtract | Expander 4.0.2 |
+|---|---|---|
+| A few KB of StuffIt | 3 s | 3 s |
+| 280 KB StuffIt | 56 s | 56 s |
+| 250 KB Compact Pro | **80 s** | 156 s |
+| 300 KB BinHex with a StuffIt archive inside | **250 s** | 426 s |
+
+The Deluxes do not run on a Mac Plus. Details in [FORMATS.md](FORMATS.md).
 
 ## What you need, and how long you will wait
 
 - **Minimum:** System 3.0, 68000, 512 KB: a Macintosh 512Ke, or a Plus with
-  its 1986 system. A Macintosh 128K is too small.
+  its 1986 system. A true Macintosh 512K (64K ROM) starts it, but extracting
+  needs HFS, which that machine has only with a Hard Disk 20; nobody has
+  tried one yet. A Macintosh 128K is too small.
 - **For everything:** 1 MB. In 512 KB some large StuffIt 5 archives, and a
   few other big ones, skip the entries that do not fit and extract the rest.
 - **Runs on** System 6, System 7, Mac OS 8 and 9, PowerPC included.
@@ -114,9 +122,16 @@ StuffIt inside BinHex (4½ against 7). Details in [FORMATS.md](FORMATS.md).
 - **Memory under System 7:** about 800 KB in Get Info is enough for every
   archive tested.
 
-On a 1 MB Mac Plus, the slowest machine supported, most archives of a few
-hundred KB take 1–2 minutes. StuffIt 5 is slower: up to 12 minutes for
-200 KB. A faster Mac is proportionally faster.
+On a 1 MB Mac Plus, the slowest machine supported:
+
+| Archive | Time |
+|---|---|
+| A few KB, any format | seconds |
+| A few hundred KB, most formats | 1–2 minutes |
+| 150 KB StuffIt 5 | 6 minutes |
+| 200 KB StuffIt 5 unpacking to 640 KB, worst case measured | 12 minutes |
+
+A faster Mac is proportionally faster.
 
 ## Linux
 
