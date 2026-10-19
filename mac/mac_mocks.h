@@ -149,7 +149,12 @@ typedef struct DTPBRec {
     Ptr        ioDTBuffer;
     int32_t    ioDTReqCount;
     int32_t    ioDTActCount;
+    char       ioFiller1;
+    SignedByte ioIconType;
+    short      ioFiller2;
     int32_t    ioDirID;
+    OSType     ioFileCreator;
+    OSType     ioFileType;
 } DTPBRec;
 #pragma pack(pop)
 
@@ -186,5 +191,19 @@ OSErr PBHGetVolParmsSync(HParamBlockRec *pb);
 OSErr PBDTGetPath(DTPBRec *pb);
 OSErr PBDTSetCommentSync(DTPBRec *pb);
 OSErr PBDTFlushSync(DTPBRec *pb);
+OSErr PBDTAddAPPLSync(DTPBRec *pb);
+OSErr PBDTAddIconSync(DTPBRec *pb);
+/* The Resource Manager, as far as DTBundle reads an application's fork. */
+short  CurResFile(void);
+void   UseResFile(short ref);
+void   SetResLoad(Boolean load);
+short  HOpenResFile(short vref, long dir, ConstStr255Param name, SignedByte perm);
+void   CloseResFile(short ref);
+short  Count1Resources(OSType type);
+Handle Get1IndResource(OSType type, short index);
+Handle Get1Resource(OSType type, short id);
+void   ReleaseResource(Handle h);
+void   HLock(Handle h);
+Size   GetHandleSize(Handle h);
 
 #endif /* MAC_MOCKS_H */

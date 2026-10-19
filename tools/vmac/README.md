@@ -2816,8 +2816,9 @@ a System 6-or-earlier `Desktop` file's `FCMT` comments. `metarun.py` runs
 since 2026-10-18; on 7.0.1 the Desktop Manager gives back 199 bytes of a
 255-byte comment) with `-D UNC_AT_DTCOMMENT`,
 keeps the disks (`sys30.py --keep-disks` too, since 2026-10-17) and grades
-every value against the synthesizers' input, with the shell's two
-deliberate changes (inited cleared, fdComment cleared). Results:
+every value against the synthesizers' input, with the shell's one
+deliberate change (fdComment cleared; inited is kept where the Finder
+info is stated, a bundle's too, since 2026-10-18). Results:
 DECISIONS.md 2026-10-17, *the metadata, carried to the disk*.
 
 **`--expander`** runs seven corpus archives that hold every StuffIt
@@ -2826,9 +2827,9 @@ archives Expander extracted whole, through the application (`run.py
 --keep-disks --expect`, one boot each, about 5 s all-out), and holds every
 catalog record on the output disk to the one StuffIt Expander 4.0.2 wrote
 for the same entry (`sitmeta.py`'s results): FInfo/DInfo, FXInfo/DXInfo,
-three dates, the lock. The only difference allowed is the shell's
-bundle rule. Its control is built in (Expander's records without that
-rule and one byte shifted) and a second was run once: `origin/main`'s
+three dates, the lock. No difference is allowed: the shell's bundle rule
+went 2026-10-18 (*the icon Expander registers*). Its control is built in
+(Expander's records, one byte shifted) and a second was run once: `origin/main`'s
 application, 112 of 496 values wrong (DECISIONS.md 2026-10-17, *the
 window Expander puts back*). It needs `build/rel/macextract` for run.py's
 own verdict.
@@ -2878,6 +2879,8 @@ daylight-saving box. Mac OS 9. A 512 KB machine.
     finderpos.py -o DIR                                  # System 7.0.1
     finderpos.py -o DIR --system System6.hfv --out-at 472,108
     finderpos.py -o DIR --seeded [...]     # onto a volume with a desktop
+    finderpos.py -o DIR --seeded --creator zQx7 --launch --rebuild 2 \
+        -DUNC_AT_NODTREG                   # the control, launched, rebuilt
 
 Extracts a generated package (a folder with a window rectangle, three
 files placed off any automatic grid, and MacExtract itself as an
@@ -2889,15 +2892,21 @@ count of the creator in `Desktop DB` on System 7). `--seeded` first boots
 the blank volume once in the Finder, so it already has a desktop — the
 user's-disk case, through `run.py --out-from IMG`. System 6 has no
 type-select, so `--out-at` is the volume's desktop icon; a run without it
-photographs the desktop and stops. Results: DECISIONS.md 2026-10-17, *the
-bit that kept the position*.
+photographs the desktop and stops. `--creator` gives the application a
+signature no desktop here has seen; `--launch` opens and quits it from the
+Finder; `--rebuild N` boots again with Command-Option held; `--out-kb 1440`
+is a floppy; `-D` passes a build switch (`UNC_AT_NODTREG`, the control
+without the bundle registration). Results: DECISIONS.md 2026-10-17, *the
+bit that kept the position*, and 2026-10-18, *the icon Expander registers*.
 
 **Two traps it hit.** Typing before `Mac.origin()` sends the keys to the X
 root (the window gets focus at the first coordinate lookup), and
 `Mac.shot()` parks the pointer, so a held menu photographed with it is
 released off-screen: Shut Down never ran and the image was torn.
 
-**What it cannot see.** System 3.0; a desktop rebuild; how the Finder
+**What it cannot see.** System 3.0; Mac OS 9 (that run was a one-off
+driver over `os9.py`, *the icon Expander registers*); the icon after
+`--rebuild`, whose volume window opens behind the folder's; how the Finder
 places what it relocates, beyond the catalog and the frame; System 7's
 `Desktop DB` beyond a byte count.
 

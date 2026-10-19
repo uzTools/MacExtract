@@ -440,6 +440,8 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-18 (the allocator nobody had built yet) — a split set beside an AppleSingle with a comment crashed the application; the peek now has an allocator of its own
 - 2026-10-18 (the comment the root kept) — a Get Info comment reached the disk only at a volume's root; Find… opens where the parts are; the progress line no longer flickers
 - 2026-10-18 (the format nobody reads) — "Unknown format." and "Archive damaged." replace "This file could not be extracted."; what the iMac pass measured
+- 2026-10-18 (the icon Expander registers) — an application keeps its inited bit and its position, as StuffIt Expander keeps them, and the shell registers its bundle in the Desktop Database as Expander does
+- 2026-10-19 (the icon that came late) — the destination's date is set when the run ends, for a folder the Finder drew before its custom icon was set
 
 ---
 
@@ -27303,7 +27305,9 @@ rebuilt. So an application gets its icon and the Finder's choice of
 place, and everything else keeps its position. Measured both ways on both
 Systems' seeded volumes: documents and folder kept, application placed and
 registered. **Not measured:** whether a desktop rebuild later registers a
-kept-inited application anyway; System 3.0's Finder.
+kept-inited application anyway (it does, measured 2026-10-18); System 3.0's
+Finder. **Superseded 2026-10-18** (*the icon Expander registers*): inited
+is kept on a bundle too, and the shell registers the bundle itself.
 
 **The source volume's directory IDs are cleared**, as fdComment is:
 fdPutAway and frPutAway (+12) and a folder's frOpenChain (+4) name
@@ -27665,7 +27669,8 @@ lock L on `Wf2`. Nothing implemented from it.
   kept the position*): inited cleared where the flags carry a bundle,
   which Expander keeps. It reaches FOLDERS too, so a folder whose
   garbage frFlags include 0x2000 loses inited where Expander keeps it;
-  no corpus folder does.
+  no corpus folder does. Gone 2026-10-18 (*the icon Expander
+  registers*): no difference is allowed now.
 
 **The flags the shell writes are the stated ones.** The first cut gave
 `finder_flags` Expander's masked value, and the differential suite failed
@@ -28557,3 +28562,115 @@ leans on:
 - **`.DS_Store` comes out invisible**, all 16 of `Aqua_Candy_Two.zip`'s:
   their `__MACOSX` sidecars carry flags 0x4000; Sherlock found them only
   when asked for invisible files.
+
+## 2026-10-18 (the icon Expander registers) — an application keeps its inited bit and its position, as StuffIt Expander keeps them, and the shell registers its bundle in the Desktop Database as Expander does
+
+**Why.** The rule of *the bit that kept the position* cleared inited on a
+file with a bundle, so that System 7.0.1 would register the application,
+and the Finder then placed the icon itself. On the maintainer's LC 475
+(7.6.1) and iMac (9.2.2), Expander 4.0.2 keeps `Ascii Converter FAT`'s
+flags at 0x2100 and its position, and shows its own icon; MacExtract's
+copy showed it moved. The maintainer: the position is critical, and must be
+what the archive holds and what Expander produces. The open question was
+whether those Macs' desktops already knew the creator.
+
+**Measured, with a creator no desktop here has seen** (`finderpos.py
+--seeded --creator zQx7`, the application's signature renamed through its
+whole fork; Mac OS 9.2 through a one-off driver over `os9.py`, the transfer
+volume's `Desktop DB` built at mount, before the extraction):
+
+| System, volume | inited kept, not registered | Finder actions after | inited kept, registered |
+|---|---|---|---|
+| 7.0.1, 8 MB, a Desktop DB | **generic icon**, `zQx7` 0 times in `Desktop DB` | launched and quit: still generic, still 0; desktop rebuilt (Command-Option): 14 times | **own icon at (30, 300)**, 14 times; nothing moved |
+| 9.2, 32 MB, a Desktop DB | **generic icon** | launched and quit: still generic | **own icon at (30, 300)** |
+| 6.0.8, 8 MB, a Desktop file | — (no Desktop Manager) | — | own icon, kept; the Finder put `APPL`, `BNDL` and `zQx7` in `Desktop` itself |
+| 7.0.1, 1,440K floppy, a Desktop file | **generic icon**, `zQx7` in no resource of `Desktop` | — | — (no Desktop Manager: nothing to register with) |
+
+And Expander 4.0.2 itself on 7.0.1, `Ascii Converter.sit` (creator
+`ASci`, never seen here), extracted with Expander as the boot shell and
+read before any Finder ran: onto the boot volume, `ASci` 0 → **10 times in
+`Desktop DB`, written by Expander**, and the Finder then draws the own icon
+at the archive's (0, 33), flags 0x2100; onto a seeded floppy, `ASci` in
+nothing and a **generic icon**, flags 0x2100, the position kept. So the
+real Macs' result was Expander's registration, not their desktops' memory.
+
+**What Expander does**, read off its engine (`SEng` 1, 0xd48 onwards,
+disassembled): `PBHGetVolParms`, and nothing more without
+`bHasDesktopMgr`; `PBGetCatInfo`; `PBDTGetPath`; `PBDTGetAPPL`, its answer
+unused; `PBDTAddAPPL` (creator, name, parent); the resource fork opened
+read-only with `SetResLoad(false)`; for every `BNDL`, the `ICN#` and
+`FREF` lists, and per `FREF` the `ICN#` of its local id — present, then
+`ICN#`, `icl4`, `icl8`, `ics#`, `ics4`, `ics8` through `PBDTAddIcon` as
+icon types 1 to 6 under that file type; the `FREF` types other than the
+file's own collected (at most 64) and added as icon type −1 under
+`'paul'`, 256 bytes; no `PBDTFlush`.
+
+**Decision.** Keep the archive's inited bit wherever it stated the Finder
+info whole, a bundle's included — Expander exactly — and register a
+file's bundle as Expander does, in `StampCat`'s new `DTBundle`, on the
+same calls in the same order. Two departures, both outside what Expander
+can be seen to do: `PBDTGetPath` alone stands for the volume test, as for
+the comment (it refuses every volume without a Desktop Manager, measured
+2026-10-17); and every read of the `BNDL` is held inside its handle, and a
+`FREF` shorter than 6 bytes skipped, because these are the archive's
+bytes. Then one `PBDTFlush`, after the comment where there is one.
+`-D UNC_AT_NODTREG` builds the shell without the registration, the
+control in the table's first column.
+
+**Same as Expander everywhere measured, and the one gap is Expander's
+too**: a System 7 floppy has no Desktop Manager, so neither registers, and
+the application stays generic until the desktop is rebuilt. A System 6
+volume needs nothing. Not measured: System 7.5 to 8.6 (no installed image
+here; 7.5.5's was not kept), System 3.0's Finder, HFS+, an application
+whose bundle names icon families the Finder registers and Expander does
+not.
+
+**Tests.** `mac_sink_test --meta`: `Fold/App` now carries a resource fork
+(a `BNDL` owning `ICN#` and `FREF`, two `FREF`s, two `ICN#`, one `ics#`)
+and must come out 0x2100 with its position, registered in Expander's
+order: the application, `ICN#` and `ics#` for `APPL`, `ICN#` for `TEXT`,
+and `TEXT` under `'paul'`; its fork closed and the resource chain put
+back. The control drop of that registration fails it. A `BNDL` whose
+counts run past its handle registers the application and an empty list
+and reads nothing else; with the bounds removed, ASan reports the read.
+`metarun.py --expander` now allows no difference from Expander's records:
+24 archives, **496 values, all as Expander wrote them**, 24/24 forks PASS;
+the control (one byte shifted) disagrees on 51. `metarun.py` on 6.0.8: 91
+values, all as stated; on 7.0.1: 91, the two wrong being the known
+`fdXFlags` item (OPEN_ITEMS.md, *System 7.0.1 rewrites one byte of
+FXInfo*). The last `finderpos.py --seeded` with the bounds in (creator
+`zQx9`): registered 14 times, nothing moved.
+
+**Price**, re-measured at the merge onto *the format nobody reads*
+(`tools/build_mac.sh`): shipped (eager) CODE +760 and A5 +40, **800 B off
+every extraction's budget**; lazy CODE +764, A5 under its ceiling;
+resident control CODE +764 and A5 −12, so `OVL_SAVED` 149,552 → 149,504
+and `TIERS` −752, derived;
+`run_tiers.py --check` moves no tally. Bounds-checking the `BNDL` measured
+CODE +48 and A5 +16 of that. Stack (`-Os -fstack-usage`): `StampCat` 200 → 272 B, under
+`sink_begin` (420) as before for a folder, so that chain is 72 B deeper;
+the Resource Manager's own calls are on it too and are not measured.
+
+## 2026-10-19 (the icon that came late) — the destination's date is set when the run ends, for a folder the Finder drew before its custom icon was set
+
+**Seen by the maintainer** on Mac OS 9.2.2: `NorbikNudleys_Icons.sit`
+extracted into `Out` showed its top folder plain until `Out`'s window was
+closed and opened again, then with its custom icon. Small, and not a
+discordance with the archive: the catalog was right all along.
+
+**Measured on emulated Mac OS 9.2** (QEMU, plain HFS, four runs): the
+Finder does draw such a folder plain mid-run — before `Icon\r` exists — and
+had redrawn it with its icon by the end of every run, with nothing changing
+`Out`'s date. So the real machine's failure to redraw is **not reproduced**
+and its cause is unknown. System 7.0.1 never shows that icon at all: its
+`Icon\r` holds only an `icns`.
+
+**The change, a hypothesis**: the Finder rereads a window whose folder's
+modification date moves, so the destination's date is set to now once the
+run ends (`DirMd`, which now resolves the destination's directory 0 through
+its working directory). It is also simply right: the folder did change, and
+the hold kept its date only for the folders the archive made. Measured
+emulated: the date moves; the icon behaves the same either way there.
+Shipped CODE −4, A5 +4 (`DirMd` no longer inlined): 0 B of budget;
+the control unchanged, nothing derived moves. Whether it cures the iMac is
+the maintainer's test.

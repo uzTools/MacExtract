@@ -22,10 +22,11 @@ System 3.0 tier), keeps the disks, and reads back what the shell wrote:
       volume and each file's comment read back with PBDTGetComment.
 
 The expected values are the synthesizers' input (tools/synth_as.py,
-tools/synth_sqp.py) with the rules the shell applies on purpose: Finder
-flag 0x0100 (inited) cleared on a file with a bundle and kept otherwise,
-and FXInfo's fdComment and fdPutAway (a folder's frOpenChain too) cleared
-(mac/macextract_mac.c, StampCat; DECISIONS.md 2026-10-17). The comment is
+tools/synth_sqp.py) with the rule the shell applies on purpose: FXInfo's
+fdComment and fdPutAway (a folder's frOpenChain too) cleared
+(mac/macextract_mac.c, StampCat; DECISIONS.md 2026-10-17). The Finder
+flags are the stated ones, inited included, a bundle's too (DECISIONS.md
+2026-10-18, *the icon Expander registers*). The comment is
 expected where the volume reports bHasDesktopMgr and absent where it does
 not.
 
@@ -35,10 +36,9 @@ and every rule of FORMATS.md's table (`SIT_PICK`), and the sentinel
 archives Expander extracted whole, each run through the application and
 every catalog record read back, then held field for field against the
 record Expander wrote for the same entry (tools/vmac/sitmeta.py's
-results): FInfo/DInfo, FXInfo/DXInfo, three dates, the lock. The one
-difference expected is the shell's own, on purpose: inited (0x0100) is
-cleared where the flags carry a bundle (0x2000), which Expander keeps
-(DECISIONS.md 2026-10-17, *the bit that kept the position*).
+results): FInfo/DInfo, FXInfo/DXInfo, three dates, the lock. No
+difference is expected: since 2026-10-18 the shell keeps inited on a
+bundle as Expander does (DECISIONS.md, *the icon Expander registers*).
 
 **What it cannot see.** The Finder: whether it then DRAWS an icon at the
 position, opens the window at the rectangle, or shows the comment — none
@@ -88,15 +88,10 @@ def fixture_path(f):
 
 
 def shell_finfo(b, flags=None):
-    """The 16 bytes as the shell writes them: inited (0x0100) kept, unless
-    the file has a bundle (0x2000), where it is cleared so the Finder
-    registers it (DECISIONS.md 2026-10-17, *the bit that kept the
-    position*)."""
-    b = bytearray(b)
-    f = (b[8] << 8) | b[9]
-    if f & 0x2000:
-        f &= ~0x0100
-    b[8], b[9] = f >> 8, f & 0xFF
+    """The 16 bytes as the shell writes them: as stated, inited (0x0100)
+    included, a bundle's too, as StuffIt Expander keeps it — the shell
+    registers the bundle itself (DECISIONS.md 2026-10-18, *the icon
+    Expander registers*)."""
     return bytes(b)
 
 
@@ -330,15 +325,12 @@ def sit_cases():
 
 
 def shell_rec(kind, rec):
-    """Expander's record as the shell is meant to write it: the bundle
-    rule, and FXInfo's source-volume ids cleared (0 in all Expander wrote,
-    so the second changes nothing; it is stated so a change would show)."""
+    """Expander's record as the shell is meant to write it: FXInfo's
+    source-volume ids cleared (0 in all Expander wrote, so this changes
+    nothing; it is stated so a change would show). The Finder flags are
+    Expander's, inited on a bundle included (DECISIONS.md 2026-10-18, *the
+    icon Expander registers*)."""
     b = bytearray(rec)
-    fo = 4 + 8 if kind == "file" else 22 + 8
-    f = (b[fo] << 8) | b[fo + 1]
-    if f & 0x2000:
-        f &= ~0x0100
-    b[fo], b[fo + 1] = f >> 8, f & 0xFF
     xo = 56 if kind == "file" else 38
     b[xo + 10:xo + 16] = bytes(6)
     if kind == "dir":
@@ -354,8 +346,8 @@ SIT_FIELDS = {"file": (("FInfo", 4, 16), ("FXInfo", 56, 16), ("locked", 2, 1),
 
 def check_expander(rundir, cases, control=False):
     """Every entry of every archive the run kept, against Expander's
-    record. With `control`, the expected records are Expander's with the
-    shell's rule NOT applied and one field shifted, and must fail."""
+    record. With `control`, the expected records are Expander's with one
+    field shifted, and must fail."""
     import json
     runs = json.load(open(os.path.join(rundir, "metarun-sit.json")))
     bad, n = [], 0
@@ -434,8 +426,8 @@ def grade_expander(rundir, cases, want_n):
     for b in bad:
         print("metarun: FAIL %s" % b)
     print("metarun: Expander 4.0.2, %d archive(s), %d value(s) read back, "
-          "%s; the control (Expander's records less the shell's rule, one "
-          "byte shifted) disagrees on %d" % (
+          "%s; the control (Expander's records, one byte shifted) "
+          "disagrees on %d" % (
               len(runs), n, "all as Expander wrote them" if not bad
               else "%d WRONG" % len(bad), len(cbad)))
     if not cbad:

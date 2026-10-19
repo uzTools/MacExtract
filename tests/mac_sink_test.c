@@ -156,6 +156,7 @@ static uint32_t gNow = 0xD0000000u;    /* the mock's clock, one per change */
 #define DROP_LOCK    0x08
 #define DROP_COMMENT 0x10
 #define DROP_DIRMD   0x20
+#define DROP_DTREG   0x40
 static int gDrop;
 static long gMockZone;   /* the machine's offset east of GMT (ZoneProbe) */
 static int gHasDT = 1;                 /* the volume has a Desktop Manager */
@@ -272,6 +273,132 @@ OSErr PBDTSetCommentSync(DTPBRec *pb)
     return noErr;
 }
 OSErr PBDTFlushSync(DTPBRec *pb) { (void)pb; return noErr; }
+
+/* The Desktop Database registrations DTBundle makes, recorded: the
+ * application (creator, name, parent) and each icon (type, creator, file
+ * type, its bytes' first word and length). DROP_DTREG throws them away. */
+#define MAX_DTREG 32
+static struct { int icon; unsigned char itype; OSType cr, ft; long len;
+                uint8_t first[4]; char name[64]; long dir; } gDTReg[MAX_DTREG];
+static int gDTRegN;
+static void dt_record(DTPBRec *pb, int icon)
+{
+    if (gDrop & DROP_DTREG || gDTRegN >= MAX_DTREG) return;
+    memset(&gDTReg[gDTRegN], 0, sizeof gDTReg[0]);
+    gDTReg[gDTRegN].icon = icon;
+    gDTReg[gDTRegN].cr = pb->ioFileCreator;
+    gDTReg[gDTRegN].dir = pb->ioDirID;
+    if (icon) {
+        gDTReg[gDTRegN].itype = (unsigned char)pb->ioIconType;
+        gDTReg[gDTRegN].ft = pb->ioFileType;
+        gDTReg[gDTRegN].len = pb->ioDTReqCount;
+        memcpy(gDTReg[gDTRegN].first, pb->ioDTBuffer, 4);
+    } else
+        pstr(pb->ioNamePtr, gDTReg[gDTRegN].name, sizeof gDTReg[0].name);
+    gDTRegN++;
+}
+OSErr PBDTAddAPPLSync(DTPBRec *pb)
+{ if (pb->ioDTRefNum != 99) return paramErr; dt_record(pb, 0); return noErr; }
+OSErr PBDTAddIconSync(DTPBRec *pb)
+{ if (pb->ioDTRefNum != 99) return paramErr; dt_record(pb, 1); return noErr; }
+
+/* One resource file at a time: the fork read whole and its map walked
+ * (Inside Macintosh: More Macintosh Toolbox, 1-121). Handles are malloc'd
+ * pointer cells that ReleaseResource frees; gResOpen counts what is still
+ * open, so a file left open fails the test. */
+static uint8_t *gRes; static long gResLen; static int gResOpen;
+static short gCurRes = 1;
+static int gResLive;
+static uint32_t rb32(const uint8_t *p)
+{ return (uint32_t)p[0] << 24 | (uint32_t)p[1] << 16 | (uint32_t)p[2] << 8 | p[3]; }
+static unsigned rb16(const uint8_t *p) { return (unsigned)(p[0] << 8 | p[1]); }
+short CurResFile(void) { return gCurRes; }
+void UseResFile(short ref) { gCurRes = ref; }
+#ifndef UNC_AT_OVERLAY
+/* The overlay lane links tests/ovlbox/ovlbox.c, whose own Memory and
+ * Resource Manager stubs serve the loader; there no application fork is
+ * opened, so these are never reached, and the bundle is not registered. */
+void SetResLoad(Boolean load) { (void)load; }
+#endif
+short HOpenResFile(short vref, long dir, ConstStr255Param name, SignedByte perm)
+{
+    char path[800]; FILE *f;
+    (void)vref; (void)perm;
+#ifdef UNC_AT_OVERLAY
+    (void)dir; (void)name; (void)path; (void)f;
+    return -1;
+#endif
+    if (gRes) return -1;
+    full_path(dir, name, 1, path, sizeof path);
+    if (!(f = fopen(path, "rb"))) return -1;
+    fseek(f, 0, SEEK_END);
+    gResLen = ftell(f);
+    fseek(f, 0, SEEK_SET);
+    gRes = malloc(gResLen > 16 ? (size_t)gResLen : 16);
+    gResLen = (long)fread(gRes, 1, (size_t)gResLen, f);
+    fclose(f);
+    /* a fork whose header points outside it is no resource file: -1, as
+     * the Resource Manager answers one it cannot read */
+    if (gResLen < 16 || rb32(gRes + 4) + 30 > (uint32_t)gResLen ||
+        rb32(gRes) > (uint32_t)gResLen) {
+        free(gRes); gRes = NULL; return -1;
+    }
+    gResOpen = 1; gCurRes = 7;
+    return 7;
+}
+void CloseResFile(short ref)
+{ if (ref == 7) { free(gRes); gRes = NULL; gResOpen = 0; gCurRes = 1; } }
+/* The type list entry for `type`, or NULL. */
+static const uint8_t *res_type(OSType type, const uint8_t **map)
+{
+    const uint8_t *m, *tl; unsigned i, n;
+    if (!gRes || gCurRes != 7) return NULL;
+    m = gRes + rb32(gRes + 4);
+    tl = m + rb16(m + 24);
+    n = rb16(tl) + 1;
+    for (i = 0; i < n; i++)
+        if (rb32(tl + 2 + 8 * i) == type) { *map = m; return tl + 2 + 8 * i; }
+    return NULL;
+}
+static Handle res_load(const uint8_t *ref)
+{
+    long off = rb32(gRes) + (long)(rb32(ref + 4) & 0xFFFFFF);
+    long len = (long)rb32(gRes + off);
+    Handle h = malloc(sizeof(Ptr) + sizeof(long));
+    *h = malloc((size_t)len + sizeof(long));
+    memcpy(*h + sizeof(long), gRes + off + 4, (size_t)len);
+    memcpy(*h, &len, sizeof(long));
+    *h += sizeof(long);
+    gResLive++;
+    return h;
+}
+short Count1Resources(OSType type)
+{
+    const uint8_t *m, *t = res_type(type, &m);
+    return t ? (short)(rb16(t + 4) + 1) : 0;
+}
+Handle Get1IndResource(OSType type, short index)
+{
+    const uint8_t *m, *t = res_type(type, &m);
+    if (!t || index < 1 || index > (short)(rb16(t + 4) + 1)) return NULL;
+    return res_load(m + rb16(m + 24) + rb16(t + 6) + 12 * (index - 1));
+}
+Handle Get1Resource(OSType type, short id)
+{
+    const uint8_t *m, *t = res_type(type, &m), *r;
+    unsigned i;
+    if (!t) return NULL;
+    r = m + rb16(m + 24) + rb16(t + 6);
+    for (i = 0; i <= rb16(t + 4); i++, r += 12)
+        if ((short)rb16(r) == id) return res_load(r);
+    return NULL;
+}
+#ifndef UNC_AT_OVERLAY
+void ReleaseResource(Handle h)
+{ if (h) { free(*h - sizeof(long)); free(h); gResLive--; } }
+void HLock(Handle h) { (void)h; }
+Size GetHandleSize(Handle h) { long n; memcpy(&n, *h - sizeof(long), sizeof n); return n; }
+#endif
 
 OSErr FSRead(short ref, long *count, void *buf)
 {
@@ -445,6 +572,49 @@ OSErr PBDirCreateSync(HParamBlockRec *pb)
 /* Drive the engine through the Mac sink on a real archive.           */
 /* ------------------------------------------------------------------ */
 
+/* A resource fork holding `n` resources (type, id, bytes), laid out as
+ * Inside Macintosh: More Macintosh Toolbox, 1-121 gives it, one type
+ * list entry per run of equal types. Returns its length. */
+typedef struct { OSType type; short id; const uint8_t *b; unsigned len; } MockRes;
+static unsigned build_fork(uint8_t *o, const MockRes *r, unsigned n)
+{
+    unsigned i, d = 0, nt = 0, t, mo, tl, rl;
+    uint8_t *m;
+    memset(o, 0, 4096);
+    for (i = 0; i < n; i++) {                    /* the data, after 256 B */
+        o[258 + d] = (uint8_t)(r[i].len >> 8); o[259 + d] = (uint8_t)r[i].len;
+        memcpy(o + 260 + d, r[i].b, r[i].len);
+        d += 4 + r[i].len;
+    }
+    for (i = 0; i < n; i++) if (!i || r[i].type != r[i - 1].type) nt++;
+    mo = 256 + d;
+    m = o + mo;
+    tl = 28; rl = tl + 2 + 8 * nt;
+    m[25] = (uint8_t)tl;
+    m[tl] = (uint8_t)((nt - 1) >> 8); m[tl + 1] = (uint8_t)(nt - 1);
+    for (i = 0, t = 0, d = 0; i < n; i++) {
+        uint8_t *e = m + rl + 12 * i;
+        if (!i || r[i].type != r[i - 1].type) {
+            unsigned c = 0, j;
+            uint8_t *te = m + tl + 2 + 8 * t++;
+            for (j = i; j < n && r[j].type == r[i].type; j++) c++;
+            te[0] = (uint8_t)(r[i].type >> 24); te[1] = (uint8_t)(r[i].type >> 16);
+            te[2] = (uint8_t)(r[i].type >> 8);  te[3] = (uint8_t)r[i].type;
+            te[4] = (uint8_t)((c - 1) >> 8); te[5] = (uint8_t)(c - 1);
+            te[6] = (uint8_t)((rl - tl + 12 * i) >> 8);
+            te[7] = (uint8_t)(rl - tl + 12 * i);
+        }
+        e[0] = (uint8_t)(r[i].id >> 8); e[1] = (uint8_t)r[i].id;
+        e[2] = 0xFF; e[3] = 0xFF;
+        e[5] = (uint8_t)(d >> 16); e[6] = (uint8_t)(d >> 8); e[7] = (uint8_t)d;
+        d += 4 + r[i].len;
+    }
+    o[2] = 1;                                    /* data at 256 */
+    o[4] = (uint8_t)(mo >> 24); o[5] = (uint8_t)(mo >> 16);
+    o[6] = (uint8_t)(mo >> 8);  o[7] = (uint8_t)mo;
+    return mo + rl + 12 * n;
+}
+
 int main(int argc, char **argv)
 {
     MacIO mio;
@@ -552,6 +722,7 @@ int main(int argc, char **argv)
             { DROP_LOCK,    "lock" },
             { DROP_COMMENT, "comment" },
             { DROP_DIRMD,   "folder date" },
+            { DROP_DTREG,   "bundle registration" },
         };
         size_t k;
         int ok = 1;
@@ -606,17 +777,42 @@ int main(int argc, char **argv)
                 sink_end(&sk2, UNC_OK);
             }
 
-            /* An application: a bundle (0x2000), whose inited bit is
-             * cleared so the Finder registers it (finderpos.py). */
-            memset(&info, 0, sizeof info);
-            memcpy(info.name, "Fold/App", 8); info.name_len = 8;
-            info.type = 0x4150504Cu; info.creator = 0x4D457874u;
-            info.finder_flags = 0x2100;
-            memcpy(info.finder_info, finfo, 16);
-            info.finder_info[8] = 0x21;          /* the stated flags too */
-            info.meta = UNC_META_FINFO;
-            info.data_size = 0; info.rsrc_size = 0;
-            if (sink_begin(&sk2, &info) == 0) sink_end(&sk2, UNC_OK);
+            /* An application: a bundle (0x2000), its inited bit KEPT
+             * with its position, as StuffIt Expander keeps it, and its
+             * bundle registered in the Desktop Database as Expander
+             * registers it: the application, the icons of each FREF's
+             * ICN# family, and the FREF types under 'paul'. */
+            {
+                static const uint8_t bndl[] = { 'M','E','x','t', 0,0, 0,1,
+                    'I','C','N','#', 0,1, 0,0, 0,128, 0,1, 0,129,
+                    'F','R','E','F', 0,1, 0,0, 0,128, 0,1, 0,129 };
+                static const uint8_t fr0[] = { 'A','P','P','L', 0,0, 0 };
+                static const uint8_t fr1[] = { 'T','E','X','T', 0,1, 0 };
+                static uint8_t icn0[256], icn1[256], ics0[64], fork[4096];
+                const MockRes res[] = {
+                    { 0x424E444Cu, 128, bndl, sizeof bndl },
+                    { 0x46524546u, 128, fr0, sizeof fr0 },
+                    { 0x46524546u, 129, fr1, sizeof fr1 },
+                    { 0x49434E23u, 128, icn0, 256 },
+                    { 0x49434E23u, 129, icn1, 256 },
+                    { 0x69637323u, 128, ics0, 64 } };
+                unsigned flen;
+                icn0[0] = 0xA0; icn1[0] = 0xA1; ics0[0] = 0xA2;
+                flen = build_fork(fork, res, 6);
+                memset(&info, 0, sizeof info);
+                memcpy(info.name, "Fold/App", 8); info.name_len = 8;
+                info.type = 0x4150504Cu; info.creator = 0x4D457874u;
+                info.finder_flags = 0x2100;
+                memcpy(info.finder_info, finfo, 16);
+                info.finder_info[8] = 0x21;      /* the stated flags too */
+                info.meta = UNC_META_FINFO;
+                info.data_size = 0; info.rsrc_size = flen;
+                gDTRegN = 0;
+                if (sink_begin(&sk2, &info) == 0) {
+                    sink_write(&sk2, UNC_FORK_RSRC, fork, flen);
+                    sink_end(&sk2, UNC_OK);
+                }
+            }
 
             /* A FOLDER whose stated flags carry 0x2000, garbage for a
              * folder: its inited bit stays, with its position (the bundle
@@ -664,8 +860,34 @@ int main(int argc, char **argv)
                 if (!ra) bad |= DROP_FINFO;
                 else {
                     memcpy(&fa, ra->finfo, 16);
-                    if (fa.fdFlags != 0x2000) bad |= DROP_FINFO;
+                    if (fa.fdFlags != 0x2100 ||
+                        memcmp(ra->finfo + 10, finfo + 10, 6))
+                        bad |= DROP_FINFO;
                 }
+            }
+            /* What Expander's engine registers, in its order, and the
+             * application's fork closed and the resource chain put back. */
+            {
+                static const struct { int icon; unsigned char it;
+                                      OSType ft; long len; uint8_t b0; } want[] = {
+                    { 0, 0, 0, 0, 0 },
+                    { 1, 1, 0x4150504Cu, 256, 0xA0 },
+                    { 1, 4, 0x4150504Cu, 64, 0xA2 },
+                    { 1, 1, 0x54455854u, 256, 0xA1 },
+                    { 1, 0xFF, 0x7061756Cu, 256, 'T' } };
+                size_t w;
+                if (gDTRegN != (int)(sizeof want / sizeof want[0]) || gRes ||
+                    gCurRes != 1)
+                    bad |= DROP_DTREG;
+                else for (w = 0; w < sizeof want / sizeof want[0]; w++)
+                    if (gDTReg[w].icon != want[w].icon ||
+                        gDTReg[w].cr != 0x4D457874u ||
+                        (!want[w].icon && strcmp(gDTReg[w].name, "App")) ||
+                        (want[w].icon && (gDTReg[w].itype != want[w].it ||
+                         gDTReg[w].ft != want[w].ft ||
+                         gDTReg[w].len != want[w].len ||
+                         gDTReg[w].first[0] != want[w].b0)))
+                        bad |= DROP_DTREG;
             }
             snprintf(path, sizeof path, "%s/Fold/Sub", dir);
             {
@@ -705,6 +927,45 @@ int main(int argc, char **argv)
             }
         }
         gDrop = 0;
+        /* A bundle whose counts run past its handle — the archive's bytes,
+         * so anything: the application is registered, nothing is read
+         * outside the BNDL (ASan says so if it is), the fork is closed. */
+        {
+            static const uint8_t bad[] = { 'M','E','x','t', 0,0, 0,0,
+                'F','R','E','F', 0,3, 0,0, 0,128 };   /* 4 pairs, 1 here */
+            static uint8_t fork[4096];
+            const MockRes res[] = { { 0x424E444Cu, 128, bad, sizeof bad } };
+            MacSink sk2; UncEntryInfo info;
+            char dir[600];
+            unsigned flen = build_fork(fork, res, 1);
+            snprintf(dir, sizeof dir, "%s/badbndl", base);
+            mkdir(dir, 0755);
+            snprintf(gOutDir, sizeof gOutDir, "%s", dir);
+            snprintf(gDirs[0], sizeof gDirs[0], "%s", gOutDir);
+            gNumDirs = 1;
+            memset(gCat, 0, sizeof gCat);
+            RepReset();
+            memset(&sk2, 0, sizeof sk2); sk2.vRefNum = 1; sk2.rootDirID = 0;
+            memset(&info, 0, sizeof info);
+            memcpy(info.name, "App", 3); info.name_len = 3;
+            info.type = 0x4150504Cu; info.creator = 0x4D457874u;
+            info.finder_flags = 0x2100;
+            info.rsrc_size = flen;
+            gDTRegN = 0;
+            if (sink_begin(&sk2, &info) == 0) {
+                sink_write(&sk2, UNC_FORK_RSRC, fork, flen);
+                sink_end(&sk2, UNC_OK);
+            }
+            /* the application, and the empty type list: no icon */
+            if (gDTRegN != 2 || gDTReg[0].icon || !gDTReg[1].icon ||
+                gDTReg[1].itype != 0xFF || gRes || gCurRes != 1) {
+                fprintf(stderr, "meta [BNDL past its handle]: %d "
+                        "registration(s)\n", gDTRegN);
+                ok = 0;
+            } else
+                fprintf(stderr, "meta [BNDL past its handle]: the "
+                        "application and an empty type list, nothing else\n");
+        }
         /* No Desktop Manager on the volume — a System 6 disk: the comment
          * is not written, nothing else changes, nothing is reported. */
         {

@@ -37,6 +37,7 @@
 #include <Menus.h>
 #include <OSUtils.h>
 #include <Quickdraw.h>
+#include <Resources.h>
 #include <StandardFile.h>
 #include <TextUtils.h>
 #include <ToolUtils.h>
@@ -1860,14 +1861,13 @@ static OSErr MyHUnlock(short vol, long dir, ConstStr255Param name)
  * write goes back through that name and parent, the ordinary way.
  *
  * One function for both halves: DirMd(dir, 0) reads, DirMd(dir, md) puts
- * md back. 0 is "could not read" and "nothing to put", and dir 0 — which
- * no folder has — is how a caller says "the destination": nothing then. */
+ * md back. 0 is "could not read" and "nothing to put". Dir 0 is the
+ * destination, a working directory, which ioFDirIndex = -1 resolves. */
 static unsigned long DirMd(short vol, long dir, unsigned long md)
 {
     CInfoPBRec pb;
     unsigned char nm[32];           /* a Str31: an HFS name is 31 at most */
     long z;
-    if (!dir) return 0;
     for (z = 0; z < (long)sizeof pb; z++) ((char *)&pb)[z] = 0;
     pb.dirInfo.ioNamePtr = nm;
     pb.dirInfo.ioVRefNum = vol;
@@ -2518,6 +2518,99 @@ static int sink_end(void *ctx, int status)
 #define SINK_END sink_end
 #endif
 
+/* Register an application's bundle in the volume's Desktop Database, as
+ * StuffIt Expander 4.0.2 does (its engine, `SEng` 1: PBDTAddAPPL, then
+ * per FREF the six icons of its ICN# family through PBDTAddIcon, then the
+ * list of the FREF types as icon type -1 under 'paul'), so the inited bit
+ * and the position can be kept: the Finder registers only a bundle it has
+ * not inited (DECISIONS.md 2026-10-18, *the icon Expander registers*).
+ * `d` holds PBDTGetPath's answer and the file's name, volume and parent.
+ * BNDL: owner (4), its id (2), type count - 1 (2), then per type the type
+ * (4), count - 1 (2) and (local id, resource id) pairs; FREF: file type
+ * (4), local icon id (2) (Inside Macintosh: Macintosh Toolbox Essentials,
+ * 7-56..7-58). Any failure leaves the Finder to do what it would have. */
+static unsigned short DTb16(const unsigned char *p)
+{
+    return (unsigned short)((p[0] << 8) | p[1]);
+}
+__attribute__((noinline)) static OSType DTb32(const unsigned char *p)
+{
+    return ((OSType)DTb16(p) << 16) | DTb16(p + 2);
+}
+static void DTBundle(DTPBRec *d, OSType creator, OSType self)
+{
+    static const OSType kIcon[6] =
+        { 'ICN#', 'icl4', 'icl8', 'ics#', 'ics4', 'ics8' };
+    short cur = CurResFile(), rf, i, nb, nk = 0;
+    OSType *kinds;
+    d->ioFileCreator = creator;
+    PBDTAddAPPLSync(d);
+    SetResLoad(false);
+    rf = HOpenResFile(d->ioVRefNum, d->ioDirID, d->ioNamePtr, fsRdPerm);
+    SetResLoad(true);
+    if (rf == -1) return;
+    kinds = (OSType *)NewPtrClear(256);
+    nb = Count1Resources('BNDL');
+    for (i = 1; i <= nb; i++) {
+        Handle b = Get1IndResource('BNDL', i);
+        const unsigned char *p;
+        long o = 8, icn = 0, frf = 0, sz, t, j, k;
+        if (!b) continue;
+        HLock(b);
+        p = (const unsigned char *)*b;
+        /* The archive's bytes: every read is held inside the handle. */
+        sz = GetHandleSize(b);
+        for (t = 0; o + 6 <= sz && t <= (long)DTb16(p + 6); t++) {
+            OSType ty = DTb32(p + o);
+            if (ty == 'ICN#') icn = o;
+            if (ty == 'FREF') frf = o;
+            o += 10 + 4 * (long)DTb16(p + o + 4);
+        }
+        for (j = 0; frf && frf + 10 + 4 * j <= sz &&
+                    j <= (long)DTb16(p + frf + 4); j++) {
+            Handle f = Get1Resource('FREF', (short)DTb16(p + frf + 8 + 4 * j));
+            OSType ft;
+            short local;
+            if (!f) continue;
+            if (GetHandleSize(f) < 6) { ReleaseResource(f); continue; }
+            ft = DTb32((const unsigned char *)*f);
+            local = (short)DTb16((const unsigned char *)*f + 4);
+            ReleaseResource(f);
+            for (k = 0; icn && icn + 10 + 4 * k <= sz &&
+                        k <= (long)DTb16(p + icn + 4); k++)
+                if ((short)DTb16(p + icn + 6 + 4 * k) == local) {
+                    short id = (short)DTb16(p + icn + 8 + 4 * k), n;
+                    for (n = 0; n < 6; n++) {    /* none without its ICN# */
+                        Handle h = Get1Resource(kIcon[n], id);
+                        if (!h) { if (!n) break; continue; }
+                        HLock(h);
+                        d->ioTagInfo = 0;
+                        d->ioDTBuffer = *h;
+                        d->ioDTReqCount = GetHandleSize(h);
+                        d->ioIconType = (SignedByte)(n + 1);
+                        d->ioFileType = ft;
+                        PBDTAddIconSync(d);
+                        ReleaseResource(h);
+                    }
+                    break;
+                }
+            if (kinds && ft != self && nk < 64) kinds[nk++] = ft;
+        }
+        ReleaseResource(b);
+    }
+    if (kinds) {
+        d->ioTagInfo = 0;
+        d->ioDTBuffer = (Ptr)kinds;
+        d->ioDTReqCount = 256;
+        d->ioIconType = -1;
+        d->ioFileType = 'paul';
+        PBDTAddIconSync(d);
+        DisposePtr((Ptr)kinds);
+    }
+    CloseResFile(rf);
+    UseResFile(cur);
+}
+
 /* Set type/creator, Finder flags and dates on s->curName in s->curDirID,
  * a file or a FOLDER: Inside Macintosh: Files lays HFileInfo and DirInfo
  * out so that ioFlFndrInfo.fdFlags and ioDrUsrWds.frFlags, the three
@@ -2539,6 +2632,12 @@ static int sink_end(void *ctx, int status)
  * and nothing says so: a line only some Systems print is behaviour that
  * differs by machine.
  *
+ * On the same volumes, before the comment, an application's bundle is
+ * registered (DTBundle). Where there is no Desktop Manager it is not: a
+ * System 6 Finder registers a kept-inited bundle from its Desktop file on
+ * its own, and on a System 7 floppy neither it nor Expander's result is
+ * registered until the desktop is rebuilt (DECISIONS.md 2026-10-18).
+ *
  * Then, last, the lock: a locked file refuses every write above. Files
  * only — HFS has no locked folder, and the run writes inside a folder
  * after its entry. */
@@ -2552,6 +2651,7 @@ static void StampCat(MacSink *s)
 #define pb u.c
     Str63 name;
     long z, par = s->curDirID;
+    OSType bndl = 0, self = 0;
     BlockMoveData(s->curName, name, s->curName[0] + 1);
     pb.hFileInfo.ioNamePtr = name;
     pb.hFileInfo.ioVRefNum = s->vRefNum;
@@ -2586,14 +2686,11 @@ static void StampCat(MacSink *s)
         if (s->cur.creator) pb.hFileInfo.ioFlFndrInfo.fdCreator = s->cur.creator;
         /* Inited (0x0100) is the Finder's "this icon has its position":
          * cleared, the Finder places the icon itself and the stored one is
-         * lost, on System 6.0.8 and 7.0.1 alike. But it is also what makes
-         * the Finder register a BUNDLE (0x2000): kept on an application,
-         * System 7.0.1 never puts it in a Desktop DB the volume already
-         * had, and draws a generic icon for it. Both measured with
-         * tools/vmac/finderpos.py (DECISIONS.md 2026-10-17, *the bit that
-         * kept the position*). So the archive's bit is kept where it stated
-         * the Finder info whole and the file has no bundle, and cleared
-         * otherwise: an application gets its icon and the Finder's place. */
+         * lost. It is kept wherever the archive stated the Finder info
+         * whole, an application's too, as StuffIt Expander keeps it; the
+         * Finder then never registers that bundle itself, so DTBundle,
+         * below, does, as Expander does (DECISIONS.md 2026-10-18, *the
+         * icon Expander registers*). */
         /* Where the Finder info is stated, ITS flags are the ones to
          * write (include/macextract.h): a reader may have masked them as
          * its format's own expander does, and finder_flags is then the
@@ -2604,13 +2701,8 @@ static void StampCat(MacSink *s)
                 ? (unsigned short)((s->cur.finder_info[8] << 8) |
                                    s->cur.finder_info[9])
                 : s->cur.finder_flags;
-            /* The bundle exception is a FILE's: a folder's 0x2000 means
-             * nothing, and garbage there must not lose its position
-             * (at the merge of meta-sitclassic). */
             pb.hFileInfo.ioFlFndrInfo.fdFlags =
-                ((s->cur.meta & UNC_META_FINFO) &&
-                 (s->cur.is_dir || !(fl & 0x2000)))
-                ? fl : fl & ~0x0100;
+                (s->cur.meta & UNC_META_FINFO) ? fl : fl & ~0x0100;
         }
         if (s->cur.create_date) pb.hFileInfo.ioFlCrDat = s->cur.create_date;
         if (s->cur.mod_date)    pb.hFileInfo.ioFlMdDat = s->cur.mod_date;
@@ -2622,9 +2714,16 @@ static void StampCat(MacSink *s)
             pb.hFileInfo.ioDirID == s->heldDir)
             s->heldMd = s->cur.mod_date;
         pb.hFileInfo.ioDirID = s->curDirID;  /* PBGetCatInfo clobbers it */
-        PBSetCatInfoSync(&pb);
+        if (PBSetCatInfoSync(&pb) == noErr && !s->cur.is_dir &&
+            (pb.hFileInfo.ioFlFndrInfo.fdFlags & 0x2000)) {
+            bndl = pb.hFileInfo.ioFlFndrInfo.fdCreator;
+            self = pb.hFileInfo.ioFlFndrInfo.fdType;
+        }
     }
-    if (s->cur.comment_len) {
+#ifdef UNC_AT_NODTREG
+    bndl = 0;
+#endif
+    if (bndl || s->cur.comment_len) {
         for (z = 0; z < (long)sizeof u; z++) ((char *)&u)[z] = 0;
         u.d.ioVRefNum = s->vRefNum;
         if (PBDTGetPath(&u.d) == noErr) {
@@ -2636,10 +2735,13 @@ static void StampCat(MacSink *s)
              * volume's root (DECISIONS.md 2026-10-18, *the comment the
              * root kept*). */
             u.d.ioDirID = par;
-            u.d.ioDTBuffer = (Ptr)s->cur.comment;
-            u.d.ioDTReqCount = s->cur.comment_len;
-            if (PBDTSetCommentSync(&u.d) == noErr)
-                PBDTFlushSync(&u.d);
+            if (bndl) DTBundle(&u.d, bndl, self);
+            if (s->cur.comment_len) {
+                u.d.ioDTBuffer = (Ptr)s->cur.comment;
+                u.d.ioDTReqCount = s->cur.comment_len;
+                PBDTSetCommentSync(&u.d);
+            }
+            PBDTFlushSync(&u.d);
         }
     }
     if (s->cur.locked == UNC_LOCK_YES && !s->cur.is_dir) {
@@ -4595,6 +4697,11 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
     }
     gPeakUsage = ma.initial - ma.lowmark;   /* engine heap high-water mark */
     DirFlush(&sink);           /* the held folder's date, before anything else */
+    /* The destination's date, now, once the last item is written: a
+     * Finder window over it may hold a folder drawn before its custom
+     * icon was set (hypothesis, from Mac OS 9.2.2; DECISIONS.md
+     * 2026-10-19, *the icon that came late*). */
+    DirMd(sink.vRefNum, sink.rootDirID, LMGetTime());
 
 #ifdef UNC_MAC_SLURP_ARCHIVE
     if (archiveBuf) DisposePtr(archiveBuf);

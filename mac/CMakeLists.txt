@@ -446,6 +446,12 @@ target_compile_options(MacExtract PRIVATE -mcpu=68000 -Os -Wno-multichar
                        # host tool can read off a System 7 disk
                        # (tools/vmac/hfscat.py, DECISIONS.md 2026-10-17).
                        $<$<BOOL:$ENV{UNC_AT_DTCOMMENT}>:-DUNC_AT_DTCOMMENT>
+                       # UNC_AT_NODTREG: the control for an application's
+                       # bundle registration (StampCat's DTBundle): skip it,
+                       # and tools/vmac/finderpos.py must see a generic icon
+                       # (DECISIONS.md 2026-10-18, *the icon Expander
+                       # registers*).
+                       $<$<BOOL:$ENV{UNC_AT_NODTREG}>:-DUNC_AT_NODTREG>
                        # UNC_AT_SEPARATE_BLOCKS: force the two-separate-NewPtr
                        # staging path (re-tests the old "3 blocks bomb" claim).
                        $<$<BOOL:$ENV{UNC_AT_SEPARATE_BLOCKS}>:-DUNC_AT_SEPARATE_BLOCKS>

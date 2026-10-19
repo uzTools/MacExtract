@@ -19,8 +19,11 @@ tools/synth_sqp.py's writer, generated per run and not a corpus fixture:
   Kept App   THIS repository's own application (dist/MacExtract.bin's
              resource fork, type APPL, creator MExt, hasBundle 0x2000 |
              inited 0x0100), placed at (v 30, h 300) in the volume window
-             — the case the bit was being cleared FOR: a Finder registers
-             a bundle it has not inited.
+             — the case the bit was once cleared for: a Finder registers
+             only a bundle it has not inited. `--creator` renames its
+             signature through the whole fork, so that no desktop on any
+             volume here has seen it (a creator the boot volume knows is
+             drawn from there, whatever this volume registered).
 
 After the windows it chooses Special > Shut Down, so whatever the Finder
 wrote back (a new position, the inited bit) reaches the image, and reads
@@ -31,11 +34,20 @@ the catalog again with tools/vmac/hfscat.py, before and after.
     fp-3-special.png  the Shut Down pick
     fp-4-volume-app.png  System 7: the volume window again, Spread closed —
                       Kept App's icon, its own or a generic one
+    fp-5-launched.png, fp-6-after-launch.png   --launch: Kept App opened
+                      from the Finder, then quit, and the window again
+    fp-7-rebuild-N.png, fp-8-volume-rebuilt.png   --rebuild N: a second
+                      boot with Command-Option held, each alert answered
+
+`-D UNC_AT_NODTREG` builds the shell without its bundle registration, the
+control (DECISIONS.md 2026-10-18, *the icon Expander registers*);
+`--out-kb 1440` extracts to a floppy, which on System 7 has no Desktop
+Manager.
 
 **What it cannot see.** Any Finder but this System's; how the Finder
 places an icon it relocates (only that it did, from the catalog and the
-frame); whether an application whose bundle was not registered is fixed
-by a later rebuild of the desktop.
+frame); after --rebuild, the icon itself — the volume window opens behind
+the folder's, so that run reads the creator's count in `Desktop DB` only.
 """
 import argparse
 import os
@@ -63,11 +75,16 @@ SHUT_DOWN = {"Sys7.img": (225, 139), "System6.hfv": (175, 123)}
 PLACED = (("Far Right", 20, 300), ("Low Left", 160, 10), ("Middle", 90, 150))
 
 
-def subject():
+def subject(creator=b"MExt"):
     mb = open(os.path.join(REPO, "dist", "MacExtract.bin"), "rb").read()
     dl, rl = struct.unpack(">II", mb[83:91])
     rsrc = mb[128 + (dl + 127) // 128 * 128:][:rl]
-    items = [S.item("Kept App", b"", rsrc, type=b"APPL", creator=b"MExt",
+    # --creator: the application under a signature no Desktop DB or Desktop
+    # file on any volume here has seen. Every `MExt` in the resource fork
+    # goes: the BNDL's owner, the signature resource's type, and the code's
+    # own constants, which the Finder never reads.
+    rsrc = rsrc.replace(b"MExt", creator)
+    items = [S.item("Kept App", b"", rsrc, type=b"APPL", creator=creator,
                     finder=0x2100, rest=struct.pack(">hhH", 30, 300, 0)),
              S.item("Spread", folder=True, finder=0x0100,
                     ctime=0xA0000001, mtime=0xA0000002,
@@ -138,6 +155,19 @@ def finder_session(a, work, disk, shots):
             mac.command_key("w")
             time.sleep(3.0)
             shot("fp-4-volume-app.png")
+            if a.launch and shots != os.path.join(work, "seed-shots"):
+                # Open the application from the Finder, quit it, and look
+                # again: does a launch register a bundle the Finder skipped?
+                mac._xdo("type", "--delay", "150", "Kept App")
+                time.sleep(1.5)
+                mac.command_key("o")
+                time.sleep(25.0)
+                shot("fp-5-launched.png")
+                mac.command_key("period")
+                time.sleep(4.0)
+                mac.command_key("q")
+                time.sleep(8.0)
+                shot("fp-6-after-launch.png")
         sx, sy = SHUT_DOWN[a.system]
         ox, oy = mac.origin()
         mac._xdo("mousemove", str(ox + sx), str(oy + 8))
@@ -161,7 +191,56 @@ def finder_session(a, work, disk, shots):
     return 0
 
 
-def registered(img):
+def rebuild_session(a, work, disk, shots):
+    """Boot the Finder with Command-Option held, the user's "rebuild the
+    desktop", answer each volume's alert with Return, open Out, photograph
+    and Shut Down."""
+    mac = I.Mac(os.path.join(R.VMAC_HOME, a.system), a.emu, work,
+                extra=(disk,))
+    shot = lambda n: mac.shot(os.path.join(shots, n), scale="200%")
+    try:
+        for _ in range(200):
+            if mac.dpy.window():
+                break
+            time.sleep(0.1)
+        mac.origin(cached=False)
+        # Mini vMac: host Alt is Command, Super Option (OSGLUXWN.c).
+        mac._xdo("keydown", "alt")
+        mac._xdo("keydown", "super")
+        try:
+            if mac.settle(os.path.join(work, ".settle.png"), interval=5.0,
+                          timeout=300) is None:
+                raise SystemExit("finderpos: never reached the Finder")
+        finally:
+            mac._xdo("keyup", "super")
+            mac._xdo("keyup", "alt")
+        for i in range(a.rebuild):
+            shot("fp-7-rebuild-%d.png" % i)
+            mac.key("Return")
+            time.sleep(1.0)
+            mac.settle(os.path.join(work, ".settle.png"), interval=5.0,
+                       timeout=300)
+        shot("fp-7-rebuilt.png")
+        mac._xdo("type", "--delay", "150", "Out")
+        time.sleep(1.5)
+        mac.command_key("o")
+        time.sleep(6.0)
+        shot("fp-8-volume-rebuilt.png")
+        sx, sy = SHUT_DOWN[a.system]
+        ox, oy = mac.origin()
+        mac._xdo("mousemove", str(ox + sx), str(oy + 8))
+        time.sleep(0.4)
+        mac._xdo("mousedown", "1")
+        time.sleep(1.2)
+        mac._xdo("mousemove", str(ox + sx + 25), str(oy + sy))
+        time.sleep(1.0)
+        mac._xdo("mouseup", "1")
+        time.sleep(30.0)
+    finally:
+        mac.close()
+
+
+def registered(img, creator=b"MExt"):
     """What the Finder registered for creator MExt: System 6's `Desktop`
     resources holding it (APPL, BNDL, FREF, ICN#, the signature), or the
     count of the four bytes in System 7's `Desktop DB` — a B-tree nothing
@@ -180,8 +259,9 @@ def registered(img):
             data = d[128:128 + dl]
             rs = d[128 + (dl + 127) // 128 * 128:][:rl]
             if name == "Desktop DB":
-                print("finderpos: Desktop DB: %d B, `MExt` %d time(s)"
-                      % (len(data), data.count(b"MExt")))
+                print("finderpos: Desktop DB: %d B, `%s` %d time(s)"
+                      % (len(data), creator.decode("mac-roman"),
+                         data.count(creator)))
                 continue
             doff, moff = struct.unpack(">II", rs[:8])
             m = rs[moff:]
@@ -196,10 +276,11 @@ def registered(img):
                     off = int.from_bytes(r[5:8], "big")
                     ln = struct.unpack(">I", rs[doff + off:doff + off + 4])[0]
                     body = rs[doff + off + 4:doff + off + 4 + ln]
-                    if t == b"MExt" or b"MExt" in body:
+                    if t == creator or creator in body:
                         hits.append(t.decode("mac-roman"))
-            print("finderpos: Desktop: resources naming MExt: %s"
-                  % (", ".join(sorted(set(hits))) or "none"))
+            print("finderpos: Desktop: resources naming %s: %s"
+                  % (creator.decode("mac-roman"),
+                     ", ".join(sorted(set(hits))) or "none"))
     finally:
         subprocess.run(["humount"], env=env, capture_output=True)
         shutil.rmtree(home, ignore_errors=True)
@@ -218,12 +299,30 @@ def main():
     ap.add_argument("--out-at", help="System 6: the Out volume's desktop "
                     "icon, Mac x,y — type-select is System 7 only. Without "
                     "it a System 6 run photographs the desktop and stops")
+    ap.add_argument("--out-kb", type=int, default=8192,
+                    help="the Out volume's size: 1440 is a floppy, which on "
+                         "System 7 has no Desktop Manager")
+    ap.add_argument("--creator", default="MExt",
+                    help="the application's signature, rewritten through "
+                         "its resource fork: one no desktop here has seen")
+    ap.add_argument("--launch", action="store_true",
+                    help="System 7: also open the application from the "
+                         "Finder, quit it, and photograph the volume again")
+    ap.add_argument("--rebuild", type=int, default=0, metavar="N",
+                    help="System 7: then boot again with Command-Option "
+                         "held and answer N rebuild alerts with Return")
+    ap.add_argument("-D", dest="defines", action="append", default=[],
+                    help="a build switch for the autotest application, "
+                         "passed to run.py (UNC_AT_NODTREG: the control)")
     a = ap.parse_args()
+    creator = a.creator.encode("mac-roman")
+    if len(creator) != 4:
+        ap.error("--creator takes four characters")
     os.makedirs(a.outdir, exist_ok=True)
     work = tempfile.mkdtemp(prefix="finderpos-",
                             dir=os.path.join(REPO, ".tmp"))
     subj = os.path.join(work, "finderpos.pkg")
-    open(subj, "wb").write(subject())
+    open(subj, "wb").write(subject(creator))
 
     # Extracted onto an 8 MB volume (a System 7 floppy has no Desktop DB),
     # the disks kept.
@@ -233,15 +332,16 @@ def main():
             print("finderpos: --seeded on System 6 needs --out-at")
             return 2
         blank = os.path.join(work, "seed.dsk")
-        R.make_floppy(blank, "Out", size_kb=8192)
+        R.make_floppy(blank, "Out", size_kb=a.out_kb)
         I.calibrate(a.system)
         finder_session(a, work, blank, None)
         print("finderpos: seeded — the blank Out after one Finder session:")
-        registered(blank)
+        registered(blank, creator)
         seed = ["--out-from", blank]
     r = subprocess.run([sys.executable, os.path.join(HERE, "run.py"),
                         "--system", a.system, "--keep-disks", "--expect",
-                        "--out-kb", "8192"] + seed + [subj],
+                        "--out-kb", str(a.out_kb)] + seed +
+                       ["-D" + d for d in a.defines] + [subj],
                        capture_output=True, text=True)
     sys.stdout.write(r.stdout)
     kept = [l.split("disks kept in ")[1].strip()
@@ -261,8 +361,13 @@ def main():
     moved = [r["rel"] for r in after if b.get(r["rel"]) != r["finfo"]]
     print("finderpos: the Finder rewrote the Finder info of %d item(s): %s"
           % (len(moved), ", ".join(moved) or "none"))
-    registered(out)
+    registered(out, creator)
     shutil.copy(out, os.path.join(a.outdir, "finder-after.dsk"))
+    if a.rebuild:
+        rebuild_session(a, work, out, a.outdir)
+        catalog(out, "rebuilt")
+        registered(out, creator)
+        shutil.copy(out, os.path.join(a.outdir, "finder-rebuilt.dsk"))
     shutil.rmtree(work, ignore_errors=True)
     return 0
 

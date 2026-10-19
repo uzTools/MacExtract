@@ -146,10 +146,12 @@ REPO = os.path.dirname(HERE)
 # with the comment at the top of the output (below).
 # **And by 64 B more the same day, DERIVED**: "Unknown format." and
 # "Archive damaged." (below).
+# **Lowered by 752 B more the same day, DERIVED**: TIERS_CONTROL rose by
+# that much with an application's bundle registered (below).
 TIERS = {
-    "sys3-512K": (189268, "System 3.0, Macintosh 512Ke (225,956 B free)"),
-    "sys6-512K": (93868, "System 6.0.8, Macintosh 512Ke (130,556 B free)"),
-    "floor-1M":  (618156, "System 6.0.8, 1 MB Mac Plus — the floor target"),
+    "sys3-512K": (188516, "System 3.0, Macintosh 512Ke (225,956 B free)"),
+    "sys6-512K": (93116, "System 6.0.8, Macintosh 512Ke (130,556 B free)"),
+    "floor-1M":  (617404, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
 
 # RE-TAKEN on all three machines 2026-10-09 (`-D UNC_OVL_RESIDENT -D
@@ -299,7 +301,12 @@ TIERS = {
 # **+64 2026-10-18, and TIERS -64, DERIVED**: "Unknown format." and
 # "Archive damaged." (DECISIONS.md 2026-10-18, *the format nobody reads*): the control's CODE +36 and A5 +28
 # against the shipped pair's CODE +32, so OVL_SAVED +32.
-TIERS_CONTROL = 224224     # build/mac-resident, CODE + A5, 2026-10-18
+# **+752 2026-10-18, and TIERS -752, DERIVED**: an application's bundle
+# registered in the Desktop Database as StuffIt Expander registers it
+# (DECISIONS.md 2026-10-18, *the icon Expander registers*): the control's
+# CODE +764 and A5 -12 against the shipped pair's +800 (CODE +760, A5 +40),
+# so OVL_SAVED -48 and every grant falls 800 B on the machine.
+TIERS_CONTROL = 224976     # build/mac-resident, CODE + A5, 2026-10-18
 # **What this control cannot see: the autotest harness.** TIERS was read
 # on the machine from an autotest build (`UNC_MAC_AUTOTEST`), and
 # build/mac-resident has no harness in it, so harness growth lowers what a
@@ -643,7 +650,10 @@ EXPECT = {
 # **+32 2026-10-18, -> 149,552**: "Unknown format." and "Archive
 # damaged.", the control's +64 against the shipped pair's +32
 # (DECISIONS.md 2026-10-18, *the format nobody reads*).
-OVL_SAVED = 149552
+# **-48 2026-10-18, -> 149,504**: the bundle registered, the control +752
+# against the shipped pair's +800 (DECISIONS.md 2026-10-18, *the icon
+# Expander registers*).
+OVL_SAVED = 149504
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
 # every kept image is one — as is the bundle an envelope holds on to.
