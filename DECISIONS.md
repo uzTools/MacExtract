@@ -441,7 +441,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-18 (the comment the root kept) — a Get Info comment reached the disk only at a volume's root; Find… opens where the parts are; the progress line no longer flickers
 - 2026-10-18 (the format nobody reads) — "Unknown format." and "Archive damaged." replace "This file could not be extracted."; what the iMac pass measured
 - 2026-10-18 (the icon Expander registers) — an application keeps its inited bit and its position, as StuffIt Expander keeps them, and the shell registers its bundle in the Desktop Database as Expander does
-- 2026-10-19 (the icon that came late) — setting the destination's date when the run ends did not make the Finder show a folder's custom icon; taken out
+- 2026-10-19 (the icon that came late) — a top folder's custom-icon bit is set when the run ends, so the Desktop shows its icon; the destination's date, tried first, did nothing
 - 2026-10-19 (the place outside the archive) — an item at the top of the output is given the location (−1, −1), and the Finder the next free place; everything under it keeps the archive's
 
 ---
@@ -28652,7 +28652,7 @@ CODE +48 and A5 +16 of that. Stack (`-Os -fstack-usage`): `StampCat` 200 → 272
 `sink_begin` (420) as before for a folder, so that chain is 72 B deeper;
 the Resource Manager's own calls are on it too and are not measured.
 
-## 2026-10-19 (the icon that came late) — setting the destination's date when the run ends did not make the Finder show a folder's custom icon; taken out
+## 2026-10-19 (the icon that came late) — a top folder's custom-icon bit is set when the run ends, so the Desktop shows its icon; the destination's date, tried first, did nothing
 
 **Seen by the maintainer** on Mac OS 9.2.2: `NorbikNudleys_Icons.sit`
 extracted into `Out` showed its top folder plain until `Out`'s window was
@@ -28678,6 +28678,21 @@ the control unchanged, nothing derived moves.
 **Withdrawn the same day, on the iMac**: with the date set, `Norbik Nudley's
 Icons` still showed plain until `Out` was reopened. The call is taken out,
 and the cause is left open: a delay, not a wrong result.
+
+**What does work, emulated.** The maintainer's reading: Expander shows the
+folder only at 100 %, and moving the folder brings the icon. The symptom
+reproduced on emulated Mac OS 9.2 only on the **Desktop** (a folder window
+already caught up): the shipped build left `Norbik Nudley's Icons`
+generic, also after quitting. With the folder made without its 0x0400 and
+the bit set last, the Desktop drew the custom icon by *"Extraction
+complete."*, with no action: set once its `Icon\r` was written, 2 runs of 2;
+set when the run ends, 2 of 2, the second with the shipped build. The second ships, needing no name test: the
+first top-level folder carrying 0x0400 is held (`iconDir`) and `IconFlush`
+sets the bit after `DirFlush`, outside the sink's call chain; a second such
+folder keeps its bit at once. The sink test fails without the flush
+(`meta [drop none]`, 0x01). Why the Finder ignores the bit only on the
+Desktop is still a hypothesis. Shipped CODE +72 and A5 +24: 96 B off every
+budget; the control +64, `OVL_SAVED` −32, `TIERS` −64, derived.
 
 ## 2026-10-19 (the place outside the archive) — an item at the top of the output is given the location (−1, −1), and the Finder the next free place; everything under it keeps the archive's
 

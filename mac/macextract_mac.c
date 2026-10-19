@@ -1132,6 +1132,9 @@ typedef struct {
      * date: a ONE-entry cache (DirHold, DirFlush). 0 holds nothing. */
     long          heldDir;
     unsigned long heldMd;
+    /* A folder at the top of the output whose custom-icon bit (0x0400) is
+     * held back until the run ends (IconFlush). 0 holds none. */
+    long          iconDir;
 #ifndef UNC_MAC_STAGE_WRITES
     /* Streaming write path: each chunk goes straight to disk as the engine
      * delivers it, so the shell never holds a whole fork in RAM. Exactly one
@@ -1693,7 +1696,8 @@ static OSErr MyDirCreate(short vRefNum, long parent, StringPtr name,
  * there too, and a second extraction of one archive put `name~1` files
  * through the first one's tree (DECISIONS.md 2026-10-11, *the folder
  * that is already there*). */
-static unsigned long DirMd(short vol, long dir, unsigned long md);
+static unsigned long DirMd(short vol, long dir, unsigned long md,
+                           unsigned short fl);
 static void DirHold(MacSink *s, long dir);
 
 /* Looked up FIRST, and created only when the name is free: the parent's
@@ -1863,7 +1867,8 @@ static OSErr MyHUnlock(short vol, long dir, ConstStr255Param name)
  * One function for both halves: DirMd(dir, 0) reads, DirMd(dir, md) puts
  * md back. 0 is "could not read" and "nothing to put", and dir 0 — which
  * no folder has — is how a caller says "the destination": nothing then. */
-static unsigned long DirMd(short vol, long dir, unsigned long md)
+static unsigned long DirMd(short vol, long dir, unsigned long md,
+                           unsigned short fl)
 {
     CInfoPBRec pb;
     unsigned char nm[32];           /* a Str31: an HFS name is 31 at most */
@@ -1875,8 +1880,9 @@ static unsigned long DirMd(short vol, long dir, unsigned long md)
     pb.dirInfo.ioFDirIndex = -1;
     pb.dirInfo.ioDrDirID = dir;
     if (PBGetCatInfoSync(&pb) != noErr) return 0;
-    if (md) {
-        pb.dirInfo.ioDrMdDat = md;
+    if (md || fl) {
+        if (md) pb.dirInfo.ioDrMdDat = md;
+        pb.dirInfo.ioDrUsrWds.frFlags |= fl;
         pb.dirInfo.ioFDirIndex = 0;
         pb.dirInfo.ioDrDirID = pb.dirInfo.ioDrParID;
         PBSetCatInfoSync(&pb);
@@ -1897,15 +1903,26 @@ static unsigned long DirMd(short vol, long dir, unsigned long md)
  * *the date held once per folder*). */
 static void DirFlush(MacSink *s)
 {
-    if (s->heldDir) DirMd(s->vRefNum, s->heldDir, s->heldMd);
+    if (s->heldDir) DirMd(s->vRefNum, s->heldDir, s->heldMd, 0);
     s->heldDir = 0;
+}
+
+/* The held-back custom-icon bit, set: RunExtract calls it once the engine
+ * returns, after DirFlush. Set as the folder was made, the Mac OS 9.2
+ * Finder drew it generic on the Desktop before its "Icon\r" existed and
+ * never looked again; set last, it drew the icon (emulated, DECISIONS.md
+ * 2026-10-19, *the icon that came late*). */
+static void IconFlush(MacSink *s)
+{
+    if (s->iconDir) DirMd(s->vRefNum, s->iconDir, 0, 0x0400);
+    s->iconDir = 0;
 }
 
 static void DirHold(MacSink *s, long dir)
 {
     if (dir == s->rootDirID || dir == s->heldDir) return;
     DirFlush(s);
-    s->heldMd = DirMd(s->vRefNum, dir, 0);
+    s->heldMd = DirMd(s->vRefNum, dir, 0, 0);
     if (s->heldMd) s->heldDir = dir;
 }
 
@@ -2711,9 +2728,18 @@ static void StampCat(MacSink *s)
          * the next free one. Not inited cleared: a folder then lost its
          * window's scroll too (System 7.6.1). DECISIONS.md 2026-10-19,
          * *the place outside the archive*. */
-        if (s->curDirID == s->rootDirID)
+        if (s->curDirID == s->rootDirID) {
             pb.hFileInfo.ioFlFndrInfo.fdLocation.h =
                 pb.hFileInfo.ioFlFndrInfo.fdLocation.v = -1;
+            /* A folder's custom-icon bit, held to the end of the run
+             * (IconFlush): the first such folder only, so nothing more
+             * runs under the sink's call chain. */
+            if (s->cur.is_dir && !s->iconDir &&
+                (pb.hFileInfo.ioFlFndrInfo.fdFlags & 0x0400)) {
+                pb.hFileInfo.ioFlFndrInfo.fdFlags &= ~0x0400;
+                s->iconDir = pb.hFileInfo.ioDirID;
+            }
+        }
         if (s->cur.create_date) pb.hFileInfo.ioFlCrDat = s->cur.create_date;
         if (s->cur.mod_date)    pb.hFileInfo.ioFlMdDat = s->cur.mod_date;
         /* A folder's own entry, for the folder whose date is held — in a
@@ -4554,6 +4580,7 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
     sink.lastType = 0;
     sink.lastDir = 0;
     sink.heldDir = 0;
+    sink.iconDir = 0;
     sink.pr = NULL;
     sink.wrOSErr = noErr;
     /* gLastWriteErr, gShortBy and gShortPiece are NOT reset here. They
@@ -4707,6 +4734,7 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
     }
     gPeakUsage = ma.initial - ma.lowmark;   /* engine heap high-water mark */
     DirFlush(&sink);           /* the held folder's date, before anything else */
+    IconFlush(&sink);          /* the top folder's custom-icon bit, last */
 
 #ifdef UNC_MAC_SLURP_ARCHIVE
     if (archiveBuf) DisposePtr(archiveBuf);

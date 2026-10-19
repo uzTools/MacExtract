@@ -837,6 +837,7 @@ int main(int argc, char **argv)
             info.data_size = 0; info.rsrc_size = 0;
             if (sink_begin(&sk2, &info) == 0) sink_end(&sk2, UNC_OK);
             DirFlush(&sk2);                  /* as RunExtract does */
+            IconFlush(&sk2);   /* as RunExtract does */
 
             snprintf(path, sizeof path, "%s/Fold", dir);
             rd = cat_rec(path, 0);
@@ -1128,6 +1129,7 @@ int main(int argc, char **argv)
             info.data_size = 0; info.rsrc_size = 0;
             if (sink_begin(&sk2, &info) == 0) sink_end(&sk2, UNC_OK);
             DirFlush(&sk2);
+            IconFlush(&sk2);   /* as RunExtract does */
 
             snprintf(path, sizeof path, "%s/Fold", dir);
             rd = cat_rec(path, 0);
@@ -1207,6 +1209,7 @@ int main(int argc, char **argv)
                 sink_end(&sk2, seq[k].fail ? UNC_ERR_CRC : UNC_OK);
         }
         DirFlush(&sk2);                      /* as RunExtract does */
+        IconFlush(&sk2);   /* as RunExtract does */
         for (k = 0; k < sizeof want / sizeof want[0]; k++) {
             CatRec *r;
             snprintf(path, sizeof path, "%s/%s", dir, want[k].path);
@@ -1461,6 +1464,7 @@ int main(int argc, char **argv)
 
     ret = unc_extract(&io, &sk, &al, NULL, &opt);
     DirFlush(&sink);                     /* as RunExtract does */
+    IconFlush(&sink);   /* as RunExtract does */
     fprintf(stderr, "unc_extract -> %d, entries=%d errors=%d\n",
             ret, sink.entries, sink.errors);
     /* The run report, exactly as the Macintosh box would list it: what

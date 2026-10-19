@@ -577,7 +577,9 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # (DECISIONS.md 2026-10-18, *the icon Expander registers*): the control.
 # +20 code and +12 A5 on 2026-10-19: the location (-1, -1) at the top of
 # the output (DECISIONS.md 2026-10-19, *the place outside the archive*): the control.
-UNC_MAC_CODE_DEFAULT=188100
+# +76 code and -12 A5 on 2026-10-19: the top folder's custom-icon bit set
+# when the run ends (DECISIONS.md 2026-10-19, *the icon that came late*): the control.
+UNC_MAC_CODE_DEFAULT=188176
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -1136,8 +1138,10 @@ UNC_MAC_A5_DEFAULT=36908
 # registers*): 800 B off every budget.
 # +24 code and -24 A5 on 2026-10-19: the location (-1, -1) at the top of
 # the output (DECISIONS.md 2026-10-19, *the place outside the archive*): 0 B of budget.
-UNC_MAC_CODE_EAGER=57580
-UNC_MAC_A5_EAGER=17892
+# +72 code and +24 A5 on 2026-10-19: the top folder's custom-icon bit set
+# when the run ends (DECISIONS.md 2026-10-19, *the icon that came late*): 96 B off every budget.
+UNC_MAC_CODE_EAGER=57652
+UNC_MAC_A5_EAGER=17916
 # +8 on 2026-10-02 for the same reason as the eager pair above: the
 # overlay call that now says WHICH of StuffIt 2.x's ciphers an entry
 # wants. A5 fell to 19,096 and its ceiling is left where it was.
@@ -1209,7 +1213,8 @@ UNC_MAC_A5_EAGER=17892
 # +764 code on 2026-10-18, the bundle registered (the eager pair above);
 # A5 17,984, under its ceiling.
 # +20 code on 2026-10-19, the same.
-UNC_MAC_CODE_LAZY=56000
+# +76 code on 2026-10-19, the same.
+UNC_MAC_CODE_LAZY=56076
 UNC_MAC_A5_LAZY=19200
 if [ -n "$UNC_OVL_RESIDENT" ]; then
     UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-$UNC_MAC_CODE_DEFAULT}
