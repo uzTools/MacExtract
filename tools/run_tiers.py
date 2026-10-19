@@ -148,10 +148,12 @@ REPO = os.path.dirname(HERE)
 # "Archive damaged." (below).
 # **Lowered by 752 B more the same day, DERIVED**: TIERS_CONTROL rose by
 # that much with an application's bundle registered (below).
+# **And by 32 B more 2026-10-19, DERIVED**: the location (-1, -1) at the
+# top of the output (below).
 TIERS = {
-    "sys3-512K": (188516, "System 3.0, Macintosh 512Ke (225,956 B free)"),
-    "sys6-512K": (93116, "System 6.0.8, Macintosh 512Ke (130,556 B free)"),
-    "floor-1M":  (617404, "System 6.0.8, 1 MB Mac Plus — the floor target"),
+    "sys3-512K": (188484, "System 3.0, Macintosh 512Ke (225,956 B free)"),
+    "sys6-512K": (93084, "System 6.0.8, Macintosh 512Ke (130,556 B free)"),
+    "floor-1M":  (617372, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
 
 # RE-TAKEN on all three machines 2026-10-09 (`-D UNC_OVL_RESIDENT -D
@@ -306,7 +308,11 @@ TIERS = {
 # (DECISIONS.md 2026-10-18, *the icon Expander registers*): the control's
 # CODE +764 and A5 -12 against the shipped pair's +800 (CODE +760, A5 +40),
 # so OVL_SAVED -48 and every grant falls 800 B on the machine.
-TIERS_CONTROL = 224976     # build/mac-resident, CODE + A5, 2026-10-18
+# **+32 2026-10-19, and TIERS -32, DERIVED**: the location (-1, -1) at the
+# top of the output (DECISIONS.md 2026-10-19, *the place outside the
+# archive*): the control's CODE +20 and A5 +12 against the shipped pair's 0
+# (CODE +24, A5 -24), so OVL_SAVED +32.
+TIERS_CONTROL = 225008     # build/mac-resident, CODE + A5, 2026-10-18
 # **What this control cannot see: the autotest harness.** TIERS was read
 # on the machine from an autotest build (`UNC_MAC_AUTOTEST`), and
 # build/mac-resident has no harness in it, so harness growth lowers what a
@@ -653,7 +659,10 @@ EXPECT = {
 # **-48 2026-10-18, -> 149,504**: the bundle registered, the control +752
 # against the shipped pair's +800 (DECISIONS.md 2026-10-18, *the icon
 # Expander registers*).
-OVL_SAVED = 149504
+# **+32 2026-10-19, -> 149,536**: the location (-1, -1) at the top of
+# the output, the control's +32 against the shipped pair's 0
+# (DECISIONS.md 2026-10-19, *the place outside the archive*).
+OVL_SAVED = 149536
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
 # every kept image is one — as is the bundle an envelope holds on to.

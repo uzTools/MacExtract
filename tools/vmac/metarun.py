@@ -324,13 +324,20 @@ def sit_cases():
     return out
 
 
-def shell_rec(kind, rec):
+def shell_rec(kind, rec, top):
     """Expander's record as the shell is meant to write it: FXInfo's
     source-volume ids cleared (0 in all Expander wrote, so this changes
     nothing; it is stated so a change would show). The Finder flags are
     Expander's, inited on a bundle included (DECISIONS.md 2026-10-18, *the
-    icon Expander registers*)."""
+    icon Expander registers*). At the top of the output the location is
+    (-1, -1), no place (DECISIONS.md 2026-10-19, *the place outside the
+    archive*): every top-level folder Expander 4.0.2 wrote here is there
+    already, and its top-level files, at (0, 0), are none of them inited
+    (measured 2026-10-19: 28 top-level entries)."""
     b = bytearray(rec)
+    if top:
+        lo = 14 if kind == "file" else 32
+        b[lo:lo + 4] = b"\xff" * 4
     xo = 56 if kind == "file" else 38
     b[xo + 10:xo + 16] = bytes(6)
     if kind == "dir":
@@ -361,7 +368,7 @@ def check_expander(rundir, cases, control=False):
         for r in hfscat.records(open(img, "rb").read()):
             got[(r["path"][1:], r["kind"])] = r["rec"]
         for path, kind, rec in ents:
-            want = rec if control else shell_rec(kind, rec)
+            want = rec if control else shell_rec(kind, rec, len(path) == 1)
             if control:
                 want = want[:5] + bytes([want[5] ^ 1]) + want[6:]
             g = got.get((path, hfscat.FILE if kind == "file"

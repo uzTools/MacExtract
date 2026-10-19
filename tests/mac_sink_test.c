@@ -750,6 +750,11 @@ int main(int argc, char **argv)
             info.create_date = 0xA0000001u; info.mod_date = 0xA0000002u;
             info.backup_date = 0xA0000003u;
             memcpy(info.finder_info, dinfo, 16);
+            /* Stated inited (0x0100) on the top of the output: kept, and
+             * the location made (-1, -1), so the Finder gives it the next
+             * free place (DECISIONS.md 2026-10-19, *the place outside the
+             * archive*). */
+            info.finder_info[8] = 0x05;
             memcpy(info.finder_info + 16, dxinfo, 16);
             info.meta = UNC_META_FINFO | UNC_META_FXINFO | UNC_META_BACKUP;
             info.comment = (const uint8_t *)fcmt;
@@ -847,8 +852,15 @@ int main(int argc, char **argv)
             }
             memcpy(&fi, rf->finfo, 16);
             /* Each check is one bit of `bad`. */
-            if (memcmp(rd->finfo, dinfo, 8) || memcmp(rd->finfo + 10, dinfo + 10, 6))
-                bad |= DROP_FINFO;
+            {
+                uint16_t ff;
+                memcpy(&ff, rd->finfo + 8, 2);   /* host order, as below */
+                static const uint8_t noplace[4] = { 0xff,0xff,0xff,0xff };
+                if (memcmp(rd->finfo, dinfo, 8) ||
+                    memcmp(rd->finfo + 10, noplace, 4) ||
+                    memcmp(rd->finfo + 14, dinfo + 14, 2) || ff != 0x0500)
+                    bad |= DROP_FINFO;
+            }
             if (memcmp(rf->finfo + 10, finfo + 10, 6) ||
                 fi.fdType != 0x54455854u || fi.fdCreator != 0x74747874u ||
                 fi.fdFlags != 0x0100)

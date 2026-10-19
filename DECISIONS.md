@@ -441,7 +441,8 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-18 (the comment the root kept) — a Get Info comment reached the disk only at a volume's root; Find… opens where the parts are; the progress line no longer flickers
 - 2026-10-18 (the format nobody reads) — "Unknown format." and "Archive damaged." replace "This file could not be extracted."; what the iMac pass measured
 - 2026-10-18 (the icon Expander registers) — an application keeps its inited bit and its position, as StuffIt Expander keeps them, and the shell registers its bundle in the Desktop Database as Expander does
-- 2026-10-19 (the icon that came late) — the destination's date is set when the run ends, for a folder the Finder drew before its custom icon was set
+- 2026-10-19 (the icon that came late) — setting the destination's date when the run ends did not make the Finder show a folder's custom icon; taken out
+- 2026-10-19 (the place outside the archive) — an item at the top of the output is given the location (−1, −1), and the Finder the next free place; everything under it keeps the archive's
 
 ---
 
@@ -28651,7 +28652,7 @@ CODE +48 and A5 +16 of that. Stack (`-Os -fstack-usage`): `StampCat` 200 → 272
 `sink_begin` (420) as before for a folder, so that chain is 72 B deeper;
 the Resource Manager's own calls are on it too and are not measured.
 
-## 2026-10-19 (the icon that came late) — the destination's date is set when the run ends, for a folder the Finder drew before its custom icon was set
+## 2026-10-19 (the icon that came late) — setting the destination's date when the run ends did not make the Finder show a folder's custom icon; taken out
 
 **Seen by the maintainer** on Mac OS 9.2.2: `NorbikNudleys_Icons.sit`
 extracted into `Out` showed its top folder plain until `Out`'s window was
@@ -28672,5 +28673,50 @@ its working directory). It is also simply right: the folder did change, and
 the hold kept its date only for the folders the archive made. Measured
 emulated: the date moves; the icon behaves the same either way there.
 Shipped CODE −4, A5 +4 (`DirMd` no longer inlined): 0 B of budget;
-the control unchanged, nothing derived moves. Whether it cures the iMac is
-the maintainer's test.
+the control unchanged, nothing derived moves.
+
+**Withdrawn the same day, on the iMac**: with the date set, `Norbik Nudley's
+Icons` still showed plain until `Out` was reopened. The call is taken out,
+and the cause is left open: a delay, not a wrong result.
+
+## 2026-10-19 (the place outside the archive) — an item at the top of the output is given the location (−1, −1), and the Finder the next free place; everything under it keeps the archive's
+
+**Seen by the maintainer** on Mac OS 9.2.2, extracting to the Desktop:
+`Norbik Nudley's Icons` and `Spotlight.zip`'s `Spot` landed at scattered
+places, `Ascii Converter 1.0` did not. The archives say why
+(`macextract l --meta`): the first two store real locations, (257, 270)
+and (90, 120), from a window that is not restored; `Ascii Converter 1.0`
+stores (−1, −1), no place. StuffIt Expander puts such an item at the next
+free spot (the maintainer, on the same machines).
+
+**Decision**, the maintainer's: at the top of the output the item's
+location is written (−1, −1), the value `Ascii Converter 1.0` already
+stores, with the archive's flags kept; below it, *the icon Expander
+registers* stands. One rule for every destination, not the Desktop alone.
+
+**Clearing inited instead was tried first and withdrawn the same day.** It
+placed both items on the iMac's Desktop, but on the LC 475 (7.6.1) the
+icons inside `Norbik Nudley's Icons` came out shifted down and right
+against the day before, and `Ascii Converter 1.0`'s window lost its
+position and size while the icons inside kept theirs: a folder the Finder
+takes as new gets its window state back to defaults, frRect and frScroll
+(50, 49 for Norbik) included (hypothesis: both fit it; the bytes were not
+read back). Its one
+gain, a top-level application registered by a System 7 floppy's Finder,
+is Expander's gap too.
+
+**Graded.** `metarun.py --expander` now expects (−1, −1) at the top:
+every top-level folder Expander 4.0.2 wrote is there already, and its
+top-level files, at (0, 0), move. The sink test states a place and inited on
+its top folder, and fails without the rule (`meta [drop none]`, 0x01).
+Shipped CODE +24 and A5 −24: 0 B of budget; the control +32,
+`OVL_SAVED` +32, `TIERS` −32, derived.
+
+**Checked emulated**, System 7.0.1 and Mac OS 9.2, both archives, into a
+folder and onto the Desktop (8 runs, the shipped build): inited kept,
+(−1, −1) written, frRect, frView and frScroll the archive's; every Finder put
+the folder at a free spot, opened its window at the stored rectangle
+(off a 512×342 screen, moved but sized), and drew Norbik's contents
+unshifted with frScroll (50, 49) applied; `Ascii Converter FAT` its own
+icon. On the OS 9 Desktop Norbik's custom icon stayed generic: *the icon
+that came late* again, not this change.

@@ -1861,13 +1861,14 @@ static OSErr MyHUnlock(short vol, long dir, ConstStr255Param name)
  * write goes back through that name and parent, the ordinary way.
  *
  * One function for both halves: DirMd(dir, 0) reads, DirMd(dir, md) puts
- * md back. 0 is "could not read" and "nothing to put". Dir 0 is the
- * destination, a working directory, which ioFDirIndex = -1 resolves. */
+ * md back. 0 is "could not read" and "nothing to put", and dir 0 — which
+ * no folder has — is how a caller says "the destination": nothing then. */
 static unsigned long DirMd(short vol, long dir, unsigned long md)
 {
     CInfoPBRec pb;
     unsigned char nm[32];           /* a Str31: an HFS name is 31 at most */
     long z;
+    if (!dir) return 0;
     for (z = 0; z < (long)sizeof pb; z++) ((char *)&pb)[z] = 0;
     pb.dirInfo.ioNamePtr = nm;
     pb.dirInfo.ioVRefNum = vol;
@@ -2704,6 +2705,15 @@ static void StampCat(MacSink *s)
             pb.hFileInfo.ioFlFndrInfo.fdFlags =
                 (s->cur.meta & UNC_META_FINFO) ? fl : fl & ~0x0100;
         }
+        /* At the top of the output an item's place was in a window this
+         * run does not restore, and kept on the desktop it landed anywhere
+         * (Mac OS 9.2.2): (-1, -1), no place, which the Finder fills with
+         * the next free one. Not inited cleared: a folder then lost its
+         * window's scroll too (System 7.6.1). DECISIONS.md 2026-10-19,
+         * *the place outside the archive*. */
+        if (s->curDirID == s->rootDirID)
+            pb.hFileInfo.ioFlFndrInfo.fdLocation.h =
+                pb.hFileInfo.ioFlFndrInfo.fdLocation.v = -1;
         if (s->cur.create_date) pb.hFileInfo.ioFlCrDat = s->cur.create_date;
         if (s->cur.mod_date)    pb.hFileInfo.ioFlMdDat = s->cur.mod_date;
         /* A folder's own entry, for the folder whose date is held — in a
@@ -4697,11 +4707,6 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
     }
     gPeakUsage = ma.initial - ma.lowmark;   /* engine heap high-water mark */
     DirFlush(&sink);           /* the held folder's date, before anything else */
-    /* The destination's date, now, once the last item is written: a
-     * Finder window over it may hold a folder drawn before its custom
-     * icon was set (hypothesis, from Mac OS 9.2.2; DECISIONS.md
-     * 2026-10-19, *the icon that came late*). */
-    DirMd(sink.vRefNum, sink.rootDirID, LMGetTime());
 
 #ifdef UNC_MAC_SLURP_ARCHIVE
     if (archiveBuf) DisposePtr(archiveBuf);
