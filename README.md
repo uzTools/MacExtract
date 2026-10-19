@@ -10,30 +10,18 @@ Linux command-line version too, built from the same engine.
 
 ## What it looks like
 
-One 230K application on an 800K floppy, an open carton lettered EXTRACT, drawn
+One 245K application on an 800K floppy, an open carton lettered EXTRACT, drawn
 for 1-bit, 16-colour and 256-colour screens:
 
 ![The floppy image open on a System 6 desktop, holding one item: MacExtract](docs/screens/0-icon.png)
 
-Pick an archive, then say where the files go — the archive's own folder is
-the default, so Return means "next to it", and any other disk is a Drive click
-away. On System 7 and later you can skip the first step and **drop the archive
-on the application's icon** — any file, whatever type it claims to be:
-
-![Standard File dialog listing archive.sit](docs/screens/1-open.png)
-
-![Standard File save dialog headed Extract into this folder:](docs/screens/1b-destination.png)
-
-Watch it work — with a real estimate, because on a Mac Plus some archives take
-twenty minutes. Change your mind at any point; anything half-written is
-cleaned up. On System 7 you can switch to another program and leave it
-working behind:
+Pick an archive, then say where the files go; Return puts them next to the
+archive. On System 7 and later you can also **drop the archive on the
+application's icon**, whatever type the file claims to be. Watch it work,
+with a real estimate, because on a Mac Plus some archives take twenty
+minutes. Cancel at any point and anything half-written is cleaned up:
 
 ![Progress window titled MacExtract: Extracting archive.sit, 30%, about 39 seconds left](docs/screens/2-extracting.png)
-
-![Alert reading Extraction cancelled.](docs/screens/3-cancelled.png)
-
-![Alert reading Extraction complete.](docs/screens/4-complete.png)
 
 If anything had to change on the way — a name HFS cannot keep (31 characters
 max), two files or two folders whose names are the same for those 31
