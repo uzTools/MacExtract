@@ -28755,3 +28755,7 @@ derived. Every ceiling is re-taken; `tools/build_mac.sh` names the
 toolchain, since an older one builds larger and fails them. #323 changes
 nothing here: `DropNext` reads `AppParmHandle` itself, 216 B smaller than
 the glue.
+
+**`_MaxMem` is no longer inline asm**: `GrowApplZone` calls `MaxMem(&grow)`,
+which the same pull request generates inline, as *the purge MaxApplZone
+never did* foresaw: shipped CODE and A5 unchanged, 57,580 and 17,892 B.

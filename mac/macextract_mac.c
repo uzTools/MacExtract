@@ -277,16 +277,11 @@ static int HasPartition(void)
  * purgeable blocks, which MaxApplZone does not (II-30). */
 static void GrowApplZone(void)
 {
-    /* _MaxMem inline: its two results are D0 and A0 (II-38), and Multiverse
-     * can only declare that as Pascal glue, which costs 44 B of CODE here
-     * against this. */
-    register Size largest __asm__("d0");
-    register Size grow __asm__("a0");
+    /* Its two results are D0 and A0 (II-38); multiversal 057c802 makes the
+     * call inline (pull request 20), where it was 44 B of Pascal glue. */
+    Size grow;
+    Size largest = MaxMem(&grow);
     Ptr p;
-    __asm__ volatile (".short 0xA11D"           /* _MaxMem */
-                      : "=r" (largest), "=r" (grow)
-                      :
-                      : "d1", "d2", "a1", "cc", "memory");
     p = NewPtr(largest + grow);
     if (p != NULL)
         DisposePtr(p);
