@@ -87,6 +87,8 @@ PowerPC only.
 | Anything StuffIt Deluxe 2.0 itself wrote — its five Optimizers, all five of its ciphers | 🔴 one of the ten ** | 🔴 two of the ten | 🔴 none | ✅** |
 | Encrypted Compact Pro archives | 🔴 | 🔴 | 🔴 | ✅ |
 | The note somebody typed into an archive | ✅ | ✅ | ✅ | ✅ |
+| Icon positions, folder windows, Get Info comments, the Locked box | ✅ for StuffIt | partial: windows ✅, some icons one folder down misplaced | partial: comments and custom icons ✅, icon positions and StuffIt windows lost | ✅ |
+| A zip made by the Mac OS X Finder (`__MACOSX`) | 🔴 | 🔴 refused | 🔴 forks, types and creators lost, `__MACOSX` left behind | ✅ |
 | What you install | an application and an extension | an installer, seven applications, the StuffIt Engine, Magic Menu and seventeen translators | an installer, twelve applications, CarbonLib and twenty-three format plug-ins | one application |
 | Source | free, closed | paid, closed | paid, closed | free, open (LGPL) |
 

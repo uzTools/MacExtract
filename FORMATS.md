@@ -8956,6 +8956,31 @@ sentence is the only evidence for that generation, and it is a claim.
 Only method 5 was run: no wild method 2–4 entry was in the cache that
 day (there are 1,401 in 210 files since, *Reduce*).
 
+### Finder metadata and Mac OS X zips in the three boxes (2026-10-19)
+
+Measured: each Deluxe through its own Expander on emulated Mac OS 9.2
+(`sitzip.py`/`compat9.py`'s guest), every result read off the volume
+(`hfscat.py`), comments searched for in `Desktop DB` (a hand-typed Get Info
+comment found there first, the control). Archives from the maintainer's
+hardware pass: `Ascii Converter.sit`, `NorbikNudleys_Icons.sit`, `Comment.as`,
+`Locked.pit`, `synth-U1.sit`, `Aqua_Candy_Two.zip`, `Spotlight.zip`.
+Expander 4.0.2's StuffIt column is *Finder info in the archive*'s.
+
+| | Deluxe 5.5.1 | Deluxe 7.0.3 Classic |
+|---|---|---|
+| folder windows | classic SIT exact; StuffIt 5 162/162 | classic SIT all 0; StuffIt 5 view zeroed on 151/162 |
+| file icon positions | classic SIT 4/7 (the 3 one folder down misplaced, inited lost); StuffIt 5 153/153 | classic SIT 0/7; StuffIt 5 2/153; AppleSingle 0/1 |
+| custom folder icons | ✅ (`Icon\r` typed `TEXT/ttxt`) | ✅ |
+| lock | classic SIT 2/2 | classic SIT 2/2; AppleSingle dropped |
+| AppleSingle comment | format not read, silently | ✅ |
+| Mac OS X Finder zip | refused, "Unknown zip header format encountered" | extracts; forks, types, creators and comments lost; `__MACOSX` left |
+
+**PackIt and AppleSingle in 5.5.1's Expander wrote nothing, silently**, from a
+real `PMag` archive typed either way. The README's PackIt ✅ for 5.5.1 rests
+on its `UnPack` translator's resources (*The last 68k box*) and is kept;
+that a default preference disables the translator is a hypothesis, not
+tested (its Preferences item has no Command key).
+
 ### Timed on the same Mac Plus (2026-08-29; two rows re-run 2026-09-20)
 
 Both applications booted on Mini vMac `mv-4M-1x` — authentic 7 MHz, 4 MB,
