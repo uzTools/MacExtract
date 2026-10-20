@@ -2444,3 +2444,13 @@ a harness can click is not the same list.
   artefact it describes** — and the mechanism is worth the line: a
   ceiling's comment is prose beside a number nothing derives, so the
   number is checked on every run and the sentence beside it is not.
+- **"Every figure is a lower bound with a ±3 s poll error"** — the
+  Expander yardstick's own description, FORMATS.md *Timed on the same Mac
+  Plus*, 2026-08-29 to 2026-10-19. **They were upper bounds**: the
+  screenshot loop stamped the first poll AFTER the last change. Re-timed on
+  the Mac's own `Ticks` (`tools/vmac/macclock.py`), Expander's unchanged
+  code reads 0.6–2.3 s below every published cell. **Cost: the StuffIt row
+  stood as "level, 1.00x" for seven weeks** on an instrument that could not
+  resolve the 2 s it now shows (52.4 against 54.4 s), and nobody had derived
+  the bound's direction from the sampling loop (DECISIONS.md 2026-10-19,
+  *the clock inside the Mac*).

@@ -203,6 +203,7 @@ read.
 | `sitzip.py` | the same question put to the two LATER boxes — **StuffIt Deluxe 5.5 and 7.0.3 Classic, on Mac OS 9, with no installer driven**: the engine, the translators and the application are placed into a plain-HFS System Folder from Linux. `--carbonlib` installs the one thing that cannot be placed — see below |
 | `sitcomment.py` | **StuffIt 5's archive flag byte, bit 5** — measured 2026-10-06. `--read` and `--aete` ask both later boxes what they offer for a comment and print their scripting dictionaries, no emulator; `--specimen` boots Mac OS 9 and has `tools/aesit/` drive StuffIt Deluxe 7.0.3 by Apple event into writing an archive that is encrypted AND commented; `--probe` launches 5.5; `--macos86` replays the Mac OS 8.6 boot that is not the route |
 | `expander.py` | **the yardstick**: StuffIt Expander 4.0.2 and this application on one Mac Plus, over one archive, timed by one instrument. `--fetch` downloads Aladdin's distribution and unpacks the application out of it; `--sizes` reads both memory partitions without booting anything |
+| `macclock.py` | **the stopwatch** `expander.py` times with: the emulated `Ticks` and screen buffer, read out of Mini vMac's memory at 50 Hz; `clockcal/` is its known duration (`expander.py --calibrate`) |
 | `sitmeta.py` | **which header bytes become a file's or folder's Finder info**: StuffIt Expander 4.0.2 over the classic corpus and over sentinel archives, read back with `hfscat.py`; `--writer201` has StuffIt Deluxe 2.0.1 stuff a folder of sentinel catalog records; `--sit5` puts StuffIt 5 to Expander 5.5 on Mac OS 9. `ddmeta.py`, `nowmeta.py` and `sdmeta.py` ask DiskDoubler 3.7, Now QuickFiler 5.0.1 and SuperDisk!'s self-extractor the same question — see *Finder info, read back* |
 | `hfscat.py` | every catalog record on an HFS image, whole: FInfo/FXInfo, DInfo/DXInfo, dates, the lock bit, and `patch()` to plant values before a boot; `--json`, `--fcmt` for a System 6 Desktop file's comments. `--check` holds it against `hls` |
 | `macmime.py` | **a MIME message written BY a Macintosh**, with mpack's own Macintosh port: `tools/macmime/` compiles `encode_applefile()` and `encode()` out of `reference/mpack` unmodified, and this boots System 6.0.8 into them. `--make` writes the specimen, `--check` grades it (18/18) — see below before changing it, because two of its three failure modes were in the HARNESS |
@@ -1808,7 +1809,7 @@ archive on the same volume.
     tools/vmac/expander.py --sizes          # both SIZE resources; no emulator
     tools/vmac/expander.py --quiet 60 --json y.json fixtures/derived-Export.sit
 
-Results and the ratio: FORMATS.md, *Timed against StuffIt Expander 4.0.2*.
+Results and the ratio: FORMATS.md, *Timed on the same Mac Plus*.
 **One emulator at a time, and nothing else on the box** — the 1x rule above.
 
 `--fetch` takes Macintosh Garden's `stuffit_expander_4.0.2.sea_.bin`, checks
@@ -1825,15 +1826,49 @@ our own CLI, and copies the application off that image. Two things about that:
   refusal was the whole of "an HFS reader this machine does not have"
   (BLOCKERS.md, withdrawn claims).
 
-**The instrument.** Both applications are driven to a Standard File dialog
-with the archive selected, then timed from the keystroke or click that starts
-the work to the last screenshot that differed from the one before it. Expander
-cannot be asked what it took, so the only clock that is fair to both is one
-outside them; ours would flatter us by exactly the interference the other one
-pays. Each figure is therefore a lower bound with a one-poll error, both sides
-pay the same quantisation and the same ~50 ms per poll of stolen CPU, and
-**the ratio is the durable part of the result**. Do not quote the seconds as
-Mac Plus times — `run.py --emu mv-4M-1x` is what those come from.
+**The instrument is `macclock.py`, since 2026-10-19.** Both applications are
+driven to a Standard File dialog with the archive selected, then timed from
+the keystroke or click that starts the work to the last change of the Mac's
+screen buffer before it holds still for `--quiet` seconds. Expander cannot be
+asked what it took, so the clock has to be outside both applications — but it
+need not be outside the Mac: the host reads the emulated `Ticks` and the
+21,888-byte screen buffer straight out of Mini vMac's memory at 50 Hz
+(`/proc/<pid>/mem`, read-only, no file written), and a duration is
+**emulated ticks ÷ 60.15**, with host seconds beside it as a check. Until
+then it was screenshots every 3 s, a ±3 s floor and ~50 ms of stolen CPU per
+poll; the 50 Hz read costs ~0.1 ms.
+
+    tools/vmac/expander.py --calibrate jkjk6                 # a known wait, ~3 min
+    tools/vmac/expander.py --ours dist/MacExtract.bin --repeat 2 \
+        --json t.json fixtures/derived-Export.sit            # the shipped app
+    tools/vmac/expander.py --only ours --emu mv-1M-1x --quiet 30 ...
+
+**Calibrated against `clockcal/`**, a 60-line application that busy-waits a
+number of ticks fixed by the key pressed and draws a mark at each end
+(`--calibrate`; boot shell, built by the script). 2026-10-19 on `mv-4M-1x`:
+600 ticks asked read 602 and 603, 660 read 662 twice, 3,600 read 3,602 —
+**+2 to +3 ticks of keystroke latency, constant**, and the 60-tick shift of
+the end mark read as +59 and +60 ticks. Host seconds ÷ Mac seconds was
+0.9986–1.0001 on all five, with other sessions' emulators on the box. The
+first attempt read **2 ticks** for a 600-tick wait: its `--quiet` was 3 s,
+shorter than the silent wait, so the stopwatch stopped at the start mark —
+the blind spot below, met on purpose. DECISIONS.md 2026-10-19, *the clock
+inside the Mac*.
+
+**Why ticks rather than the host clock:** at 1x Mini vMac drops emulated time
+it is more than 8 ticks behind (`RunEmulatedTicksToTrueTime`), so a loaded
+host stretches host seconds and not ticks. Every row in the JSON carries
+`ratio` (host ÷ Mac); far from 1.00, the host was the bottleneck and the
+tick figure is the one to keep.
+
+**What `macclock.py` cannot see:** whether a Mini vMac tick holds as many
+instructions as a real Mac Plus's (fidelity; MANUAL_TESTS.md); disk time,
+which the emulator's driver makes free; a tick lost while interrupts are
+masked (clockcal reads the same `Ticks`); work that draws nothing for longer
+than `--quiet` — our own progress bar sits still for over 30 s at 0 % on an
+Arsenic archive at 1 MB, which `--quiet 30` read as a 0.5 s run, so use
+300 there and check the run wrote its files; and that a Mac Plus draws its own pointer into the screen
+buffer, so the harness moves the pointer BEFORE the mark, never after.
 
 **Four things cost a run each, and not one of them failed loudly:**
 
