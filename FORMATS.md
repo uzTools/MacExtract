@@ -7254,6 +7254,42 @@ few kilobytes is instant, a quarter of a megabyte is about a minute.
 minutes, the last 205 KB in a hundred seconds), which is what made the
 timeouts chosen for it mislead three times. BLOCKERS.md.
 
+### The shipped application on a 1 MB Mac Plus (2026-10-19)
+
+What README's per-archive table quotes: `dist/MacExtract.bin` (v0.41.0) on
+`mv-1M-1x`, System 6.0.8, from the Return that accepts the destination to
+"Extraction complete." drawn, timed on the Mac's own `Ticks`
+(`tools/vmac/macclock.py`; `expander.py --only ours --emu mv-1M-1x
+--quiet 30 --repeat 2`). No read-back, so these are below the autotest
+columns above; Mini vMac's disk costs nothing, so a real floppy adds its
+own time. Two runs each, spread in ticks.
+
+| Fixture | Format | In | 1 MB, shipped app | spread |
+|---|---|---|---|---|
+| `kermitut9test.bin` | MacBinary | 304 KB | 1.2 s | 1 tick |
+| `derived-Export.sit` | StuffIt | 1.6 KB | 1.9 s | 0 |
+| `derived-PackIt.pit` | PackIt | 62 KB | 5.4 s | 2 |
+| `derived-PCCTS.tar` | Tar | 287 KB | 7.2 s | 1 |
+| `derived-Expand_Now_1.0.1.sea` | Now Compress | 62 KB | 13.9 s | 1 |
+| `derived-KeyGraphics.sit` | StuffIt 5 | 4.6 KB | 15.7 s | 0 |
+| `popper-1.7.tar.Z` | compress | 59 KB | 17.2 s | 1 |
+| `PCCTS.tar.gz` | gzip | 64 KB | 24.6 s | 0 |
+| `derived-MUSFMT10.ZIP` | Zip | 172 KB | 33.7 s | 0 |
+| `derived-EmpireBuilderDemo.sit` | StuffIt | 278 KB | 52.4 s | 1 |
+| `derived-MacPass390.sea` | DiskDoubler | 156 KB | 53.6 s | 1 |
+| `derived-XferIt_1.5b4.sea` | Compact Pro | 285 KB | 103.0 s | 1 |
+| `macburger-helper.hqx` | BinHex → StuffIt | 307 KB | 245.9 s | 1 |
+| `derived-a2basic.dmg.sit` | StuffIt 5 (Arsenic) | 153 KB | 341.6 s | 3 |
+| `derived-Library_ISBN_Barcoder.sit` | StuffIt 5 (Arsenic) | 202 KB | 749.3 s | 5 |
+
+Host ÷ Mac seconds 0.998–1.003 on every run. The two Arsenic rows were
+taken at `--quiet 300`: at 30 the 0 % bar held still long enough to be read
+as the end (DECISIONS.md 2026-10-19, *the clock inside the Mac*); they sit
+within 1 % of the autotest's 1 MB column above. `macburger-helper.hqx` is the
+BinHex AND the 312-file StuffIt archive inside it, where the autotest row
+above is the BinHex layer alone; EmpireBuilder and macburger read the same
+ticks at 1 MB as at 4 MB (*Timed on the same Mac Plus*), within 1.
+
 ## How long a click waits (Mac Plus, 1x)
 
 The shell pumps events only from the engine's progress callback, so the
@@ -8981,60 +9017,46 @@ on its `UnPack` translator's resources (*The last 68k box*) and is kept;
 that a default preference disables the translator is a hypothesis, not
 tested (its Preferences item has no Command key).
 
-### Timed on the same Mac Plus (2026-08-29; two rows re-run 2026-09-20)
+### Timed on the same Mac Plus (re-measured 2026-10-19)
 
 Both applications booted on Mini vMac `mv-4M-1x` — authentic 7 MHz, 4 MB,
 System 6.0.8 — over the same archive on the same volume, driven to a Standard
-File dialog and timed from the action that starts the work to the last frame
-that changed. `tools/vmac/expander.py --quiet 60`; the instrument and what it
+File dialog and timed from the action that starts the work to the last change
+of the Mac's screen buffer. The clock is the emulated Mac's own `Ticks`, read
+from the host at 50 Hz (`tools/vmac/macclock.py`); ours is the shipped
+`dist/MacExtract.bin`, v0.41.0. `tools/vmac/expander.py --ours
+dist/MacExtract.bin --repeat 2`; the instrument, its calibration and what it
 cannot see are in `tools/vmac/README.md`.
 
 | Fixture | Format | In | MacExtract | Expander 4.0.2 | Expander ÷ ours |
 |---|---|---|---|---|---|
-| `derived-Export.sit` | StuffIt | 1.6 KB | 3 s | 3 s | both at the poll floor |
-| `derived-EmpireBuilderDemo.sit` | StuffIt | 278 KB | 56 s | 56 s | **1.00x** |
-| `derived-FirstClass_Demo.cpt` | Compact Pro | 249 KB | **80 s** | 156 s | **1.95x** |
-| `macburger-helper.hqx` | BinHex → StuffIt | 307 KB | **250 s** | 426 s | **1.70x** |
+| `derived-Export.sit` | StuffIt | 1.6 KB | **1.9 s** | 2.4–2.5 s | 1.26x |
+| `derived-EmpireBuilderDemo.sit` | StuffIt | 278 KB | **52.4 s** | 54.4 s | **1.04x** |
+| `derived-FirstClass_Demo.cpt` | Compact Pro | 249 KB | **79.5 s** | 155.2 s | **1.95x** |
+| `macburger-helper.hqx` | BinHex → StuffIt | 307 KB | **245.9 s** | 423.7 s | **1.72x** |
 
-**Neither is faster, and on two formats we now are.** The two are level on
-StuffIt — 56 s each, which at a ±3 s poll means indistinguishable — and
-since the 2026-09-19/20 decoder work we expand a Compact Pro archive in
-half Expander's time and a BinHex envelope with an archive inside it in
-under three fifths. On the StuffIt evidence a user choosing between them
-on speed alone has nothing to choose by; on the other two there is now
-something to choose.
+**Two runs of each, and they agree to two ticks** (0.03 s): 117/117,
+146/148, 3,150/3,150, 3,274/3,274, 4,781/4,781, 9,333/9,334,
+14,788/14,789 and 25,483/25,483 ticks. Host seconds ÷ Mac seconds was
+0.994–1.001 on all sixteen, so Mini vMac kept real time throughout. **Ours
+is faster on all four**; on StuffIt by 2 s in 54, on Compact Pro and on a
+BinHex envelope with an archive inside it by half and by two fifths.
 
-**That row was 76 s against 56 s on 2026-08-29**, and 73 s after the LZW
-change; what closed it was `UNC_HOT`, below.
+**Corrected 2026-10-19: these figures were "lower bounds with a ±3 s poll
+error", and they were upper bounds.** The screenshot instrument stamped the
+first poll AFTER the last change, so it read late by up to one poll: every
+Expander cell — unchanged code — came out 0.6–2.3 s above this table
+(3, 56, 156, 426 s). The StuffIt row's "level, 56 s each, 1.00x" is
+therefore withdrawn as a measurement — the 2 s it hid is smaller than the
+poll, and ours has changed since 2026-08-30 (BLOCKERS.md, *Corrected
+figures*; DECISIONS.md 2026-10-19, *the clock inside the Mac*).
 
-**Our two other columns were re-measured 2026-09-20 and both fell**, which
-is why the ratios above are not the ones this section was written with:
-Compact Pro 133 → **80 s** (the LZH and RLE stages fused, 2026-09-19,
-−31.7 % on the tick probe — the same change, through a different
-instrument) and the BinHex chain 269 → **250 s**, where the 19 s is the
-BinHex layer alone getting faster (*Decode cost*, 2026-09-20). Expander's
-column is unchanged code and was not re-run. `derived-Export.sit` and
-`derived-EmpireBuilderDemo.sit` were not re-run either and still carry
-2026-08-29/30.
-
-**Those two re-runs needed the harness repaired first**, and what was
-wrong with it is the point: `expander.py` clicked the FIRST ROW of
-Standard File, and since 2026-08-30 the Finder's invisible `Desktop` file
-has been left on the volume for another harness's sake — so a fixture
-whose name sorts after it had `Desktop` extracted instead, reported
-*"This file could not be extracted"* in three seconds, and printed a
-number in the seconds column. The two rows above happen to sort before
-`Desktop` and were taken cleanly. The file is selected by name now
-(`tools/vmac/README.md`, the yardstick's fourth trap; DECISIONS.md
-2026-09-20, *the row that was not the archive*).
-
-**Every figure is a lower bound with a ±3 s poll error, and the RATIO is what
-transfers**: both sides pay the same quantisation and the same stolen CPU, and
-neither absolute column belongs beside *Measured on a 7 MHz Mac Plus* above —
-that table is the autotest build, which calls `RunExtract` once and CRC-reads
-both forks back off the volume, so it measures neither the same layers nor the
-same work. `macburger-helper.hqx` is the clearest case: 83 s there is the
-BinHex decode alone, 269 s here is that plus the 312-file archive inside it.
+**Neither absolute column belongs beside *Measured on a 7 MHz Mac Plus*
+above** — that table is the autotest build, which calls `RunExtract` once
+and CRC-reads both forks back off the volume, so it measures neither the
+same layers nor the same work. `macburger-helper.hqx` is the clearest
+case: 46 s there is the BinHex decode alone, 246 s here is that plus the
+312-file archive inside it.
 
 **They wrote the same names.** On every fixture the two output sets are
 identical, which is what makes the times comparable at all — two applications
@@ -9050,22 +9072,15 @@ once the next layer is out.
 none.** That is not an instrument artefact, it is the two designs. Both halves
 were measured on 2026-08-30 by reading the image the emulator is writing,
 rather than inferred from an empty volume after a kill: when the screen stops
-changing our three files are on the volume and Expander's are **not there at
-all**, and its four appear when it is sent Command-Q — which commits them
-**within a second**, without repainting anything.
+changing our files are on the volume and Expander's are **not there at
+all**, and they appear when it is sent Command-Q — which commits them
+**within a second**, without repainting anything. Its quit read 1.5–1.6 s
+on the screen clock in every 2026-10-19 run.
 
-**So the asymmetry is real and it is not the explanation.** Under a second of
-415 KB does not close a 16 s gap. Read it as a fact about this emulator, whose
-disk is a host file with no seek time; a real Mac Plus committing that much to
-a floppy or a SCSI disk would not be free, and nothing here can measure that
-(MANUAL_TESTS.md).
-
-**The StuffIt row was re-run on 2026-08-30** and moved 76 s → 73 s, with
-Expander's 56 s → 57 s and the ratio 0.74x → 0.77x. Our column is consistent
-with the LZW change landed that day (−5.3 % on this archive, *Decode cost*
-above) but 3 s is one poll interval, so it is consistent-with and not measured.
-The other three rows are unaffected by that change — 0.00 % on Compact Pro and
-on `macburger-helper.hqx` — and stand as taken.
+**So the asymmetry is real and it is not the explanation.** Read it as a fact
+about this emulator, whose disk is a host file with no seek time; a real Mac
+Plus committing that much to a floppy or a SCSI disk would not be free, and
+nothing here can measure that (MANUAL_TESTS.md).
 
 ### Sources
 

@@ -444,6 +444,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-19 (the icon that came late) — a top folder's custom-icon bit is set when the run ends, so the Desktop shows its icon; the destination's date, tried first, did nothing
 - 2026-10-19 (the place outside the archive) — an item at the top of the output is given the location (−1, −1), and the Finder the next free place; everything under it keeps the archive's
 - 2026-10-19 (the toolchain that inlined PurgeSpace) — Retro68 afedcdc with multiversal 057c802 is the toolchain the figures are measured with; its inlined PurgeSpace gives 96 B back to every extraction
+- 2026-10-19 (the clock inside the Mac) — the Mac Plus timings are read off the emulated Ticks from the host at 50 Hz, calibrated against a known wait; the four-archive comparison and the 1 MB table re-measured on it
 
 ---
 
@@ -28763,3 +28764,72 @@ stay (OPEN_ITEMS.md, *The shell's own File Manager blocks*).
 **`_MaxMem` is no longer inline asm**: `GrowApplZone` calls `MaxMem(&grow)`,
 which the same pull request generates inline, as *the purge MaxApplZone
 never did* foresaw: shipped CODE and A5 unchanged, 57,580 and 17,892 B.
+
+## 2026-10-19 (the clock inside the Mac) — the Mac Plus timings are read off the emulated Ticks from the host at 50 Hz, calibrated against a known wait; the four-archive comparison and the 1 MB table re-measured on it
+
+**The question.** The maintainer asked for ±1 s on README's two speed
+tables. The screenshot loop could not give it: a 3 s poll, ~50 ms of
+stolen CPU per `import`, and a figure stamped at the first poll AFTER the
+last change.
+
+**Candidates.** (a) the X framebuffer polled faster; (b) a tick count
+recorded inside the Mac. (b) cannot time Expander, which has no hook, and
+the comparison must use one instrument for both; (a) still times on the
+host clock, which a loaded host stretches. **Taken: both halves of each.**
+Mini vMac keeps emulated RAM in its own address space in Mac byte order,
+and a harness that started it is its ancestor, which is what Yama's
+`ptrace_scope` 1 asks of a `/proc/<pid>/mem` reader. So the host reads
+`Ticks` ($16A) and the 21,888-byte screen buffer at `ScrnBase` ($824) at
+50 Hz, ~0.1 ms a poll, no file written, the emulator never stopped
+(`tools/vmac/macclock.py`; addresses from multiversal's `Multiverse.h`).
+Start = Ticks read immediately before the key or click is sent; end = the
+last sample at which the buffer changed before `--quiet` s of stillness;
+duration = ticks ÷ 60.15. Host seconds ride along: Mini vMac drops
+emulated time it is more than 8 ticks behind (`PROGMAIN.c`,
+`RunEmulatedTicksToTrueTime`), so a ratio far from 1.00 says the host was
+the bottleneck and the tick figure is the one that holds.
+
+**Calibration** (`tools/vmac/clockcal/`, `expander.py --calibrate`,
+`mv-4M-1x`, other sessions' emulators running): a key starts a busy wait
+of a fixed number of ticks with a mark drawn at each end. 600 asked → 602,
+603; 660 → 662, 662; 3,600 → 3,602. **A constant +2–3 ticks of keystroke
+latency, and the 60-tick shift of the end mark read as +59 and +60.**
+Host ÷ Mac 0.9986–1.0001. **The instrument was seen to fail first**: with
+`--quiet` 3 s, shorter than the silent wait, it read 2 ticks — the start
+mark. **And it failed the same way on a real run**: `--quiet 30` read
+`derived-a2basic.dmg.sit` at 1 MB as 0.5 s, twice. The progress dialog sat
+at "0%" for over 30 s — the bar redraws when the PERCENTAGE moves, and
+the 0.6 s callback gap (FORMATS.md *How long a click waits*) is not a
+repaint gap — so the harness took the still screen for the end, pressed
+Return into Cancel, and the volume held nothing; the empty output list
+is what flagged it. The two Arsenic fixtures were re-run at `--quiet
+300`; the rest end at "Extraction complete.", photographed, with every
+file written, at `--quiet 30` (ours) and 60 (against Expander).
+
+**The comparison** (`--ours dist/MacExtract.bin`, v0.41.0, `--repeat 2`,
+`mv-4M-1x`), ours / Expander in ticks, both runs:
+Export 117,117 / 148,146; EmpireBuilder 3,150,3,150 / 3,274,3,274;
+FirstClass 4,781,4,781 / 9,333,9,334; macburger 14,788,14,789 /
+25,483,25,483. Host ÷ Mac 0.994–1.001 on all sixteen. In seconds 1.9/2.4,
+52.4/54.4, 79.5/155.2, 245.9/423.7 — ratios 1.26x, 1.04x, 1.95x, 1.72x.
+**Expander's code is the one that did not change, and every one of its
+cells reads 0.6–2.3 s under the screenshot figure (3, 56, 156, 426 s)** —
+the old instrument's bias, now measured, and the reason "a lower bound"
+is withdrawn (BLOCKERS.md, *Corrected figures*). Ours moved by the same
+bias plus whatever the code has gained since 2026-09-20; the two cannot be
+separated after the fact, so nothing here attributes ours' 56 → 52 s.
+
+**The 1 MB table is now the shipped application**, `--only ours --emu
+mv-1M-1x --quiet 30`, every `timing.txt` fixture twice, archive selected
+to "Extraction complete." photographed. It used to be the autotest build
+at 4 MB for all but the two Arsenic rows, read-back included. The runs
+agree to 2 ticks on every fixture but the two Arsenic ones, 3 and 5 ticks
+in 20,550 and 45,066 (FORMATS.md, *The shipped application on a 1 MB Mac
+Plus*). README's rows move little: a few KB is 1.9 s, or 15.7 s for
+StuffIt 5's overlay; a few hundred KB is 1–103 s (the BinHex chain 246 s);
+a2basic 341.6 s (was 341 s), the Barcoder 749.3 s (was 742 s). What a user waits is the README's question, and the
+autotest's CRC read-back is not part of it.
+
+**What this cannot see**, stated with the tool: emulator fidelity to a
+real 68000, disk time (Mini vMac's driver is free), ticks lost to masked
+interrupts, and work that draws nothing for longer than `--quiet`.

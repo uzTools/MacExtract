@@ -103,10 +103,10 @@ ciphers, each checked against an archive 2.0.1 made.
 
 | Archive | MacExtract | Expander 4.0.2 |
 |---|---|---|
-| A few KB of StuffIt | 3 s | 3 s |
-| 280 KB StuffIt | 56 s | 56 s |
-| 250 KB Compact Pro | **80 s** | 156 s |
-| 300 KB BinHex with a StuffIt archive inside | **250 s** | 426 s |
+| A few KB of StuffIt | 2 s | 2 s |
+| 280 KB StuffIt | **52 s** | 54 s |
+| 250 KB Compact Pro | **79 s** | 155 s |
+| 300 KB BinHex with a StuffIt archive inside | **246 s** | 424 s |
 
 The Deluxes do not run on a Mac Plus. Details in [FORMATS.md](FORMATS.md).
 
@@ -128,8 +128,8 @@ On a 1 MB Mac Plus, the slowest machine supported:
 
 | Archive | Time |
 |---|---|
-| A few KB, any format | seconds |
-| A few hundred KB, most formats | 1–2 minutes |
+| A few KB, any format | 2–16 seconds |
+| A few hundred KB, most formats | up to 2 minutes |
 | 150 KB StuffIt 5 | 6 minutes |
 | 200 KB StuffIt 5 unpacking to 640 KB, worst case measured | 12 minutes |
 

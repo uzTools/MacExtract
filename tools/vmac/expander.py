@@ -24,18 +24,17 @@ number being measured (tools/vmac/README.md).
 The instrument
 --------------
 Both applications are driven to the same point — a Standard File dialog with
-the archive selected — and then timed from **the Return that starts the work**
-to **the last screenshot that differed from the one before it**. Expander has
-no way to be asked what it took, so the only clock that is fair to both is one
-outside them; using ours would flatter it by exactly the interference the
-other one pays.
+the archive selected — and then timed from **the Return or click that starts
+the work** to **the last change of the Mac's screen buffer** before it holds
+still for `--quiet` seconds. Expander has no way to be asked what it took, so
+the clock is outside both applications: macclock.py reads the emulated
+`Ticks` and screen buffer from Mini vMac's memory at 50 Hz, and the figure is
+emulated ticks / 60.15 — Mac Plus seconds, to about two ticks — with host
+seconds and their ratio beside it. `--calibrate` times clockcal's known
+waits through the same code (tools/vmac/README.md has the readings).
 
-The number is therefore a LOWER bound whose error is one poll interval: the
-work stopped somewhere between the last changed frame and the next one. Both
-sides pay the same quantisation and the same ~50 ms per poll of stolen CPU, so
-the RATIO is the durable part of the result and the absolute seconds are not.
-Quoting a figure from here as a Mac Plus time is a mistake — FORMATS.md,
-*Measured on a 7 MHz Mac Plus*, is where those come from.
+Until 2026-10-19 this was screenshots every `--poll` seconds, a one-poll
+(±3 s) error and ~50 ms of stolen CPU a poll.
 
 What it cannot see
 ------------------
@@ -50,11 +49,14 @@ What it cannot see
   `--quiet` seconds". Both progress indicators repaint far more often than
   that, but neither guarantees it — the output check is what catches a stop
   called too early, by finding the extraction incomplete.
+- Everything macclock.py cannot see: emulator fidelity, disk time, ticks
+  lost to masked interrupts, the pointer in the screen buffer.
 """
 import argparse
 import hashlib
 import json
 import os
+import re
 import shutil
 import struct
 import subprocess
@@ -66,6 +68,8 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(HERE)), "tools"))
 import run as R                                              # noqa: E402
+import guard                                                 # noqa: E402
+import macclock as MC                                        # noqa: E402
 import checkdisk as CD                                       # noqa: E402
 from interactive import Mac, build_interactive_app           # noqa: E402
 from arcmac import macbinary                                 # noqa: E402
@@ -257,7 +261,7 @@ def sizes(ours):
 # One timed run
 # ------------------------------------------------------------------
 
-def typed_copy(fixture, workdir):
+def typed_copy(fixture, workdir, expander=True):
     """The fixture as MacBinary carrying the type/creator a real one has.
 
     Both volumes are built from this one file, so the two applications are
@@ -265,12 +269,14 @@ def typed_copy(fixture, workdir):
     which application is on it.
     """
     fmt = sniff(fixture)
-    if fmt not in TYPES:
+    if fmt not in TYPES and expander:
         raise SystemExit(
             f"expander: {os.path.basename(fixture)} is {fmt}, which "
             f"Expander 4.0.2 cannot open without DropStuff with Expander "
             f"Enhancer (System 7, not free) — there is no fair run to make")
-    ftype, creator = TYPES[fmt]
+    # Our dialog lists every file and the engine sniffs content, so a
+    # format Expander cannot open still gets a run of ours alone.
+    ftype, creator = TYPES.get(fmt, ("????", "????"))
     name = os.path.basename(fixture)[:31]
     out = os.path.join(workdir, "typed.bin")
     with open(out, "wb") as f:
@@ -278,28 +284,33 @@ def typed_copy(fixture, workdir):
     return out, name, fmt
 
 
-def last_change(mac, scratch, interval, quiet, timeout, first=None):
-    """Seconds until the screen last changed, having then held still.
+def ram_size(emu):
+    """The emulated machine's RAM in bytes, from the build's own config."""
+    cfg = open(os.path.join(R.VMAC_HOME, emu, "cfg", "EMCONFIG.h")).read()
+    return sum(int(m, 16) for m in
+               re.findall(r"#define kRAM[ab]_Size (0x[0-9A-Fa-f]+)", cfg))
 
-    Not `Mac.settle`, which returns the whole wait including the quiet
-    period. What is wanted here is when the work STOPPED, and the quiet
-    period is only how the harness convinces itself of that — so the
-    timestamp of the last differing frame is what comes back, and the
-    minutes spent proving it are discarded.
-    """
-    t0 = time.time()
-    prev, changed = None, t0
-    while time.time() - t0 < timeout:
-        time.sleep(interval)
-        mac.shot(scratch)
-        cur = open(scratch, "rb").read()
-        if first and prev is None:
-            shutil.copyfile(scratch, first)     # evidence that work started
-        if cur != prev:
-            prev, changed = cur, time.time()
-        elif time.time() - changed >= quiet:
-            return changed - t0
-    return None
+
+def stopwatch(mac, emu):
+    """A macclock.Watch on this Mac's emulated RAM (tools/vmac/macclock.py)."""
+    pid = MC.emulator_pid(mac.proc)
+    return MC.Watch(MC.MacMemory(pid, ram_size(emu)), hz=50.0)
+
+
+def timed(watch, act, quiet, timeout, snap=None):
+    """Do `act`, then time to the last screen change before `quiet` s still.
+
+    The mark is taken immediately before the action is delivered, in both
+    clocks; the end is the last sample at which the Mac's screen buffer
+    differed from the one before it. Returns macclock.reading() plus
+    `timed_out`, or None if nothing ever changed."""
+    t0 = watch.mark()
+    act()
+    changes, out = watch.until_quiet(quiet, timeout, snap=snap)
+    r = MC.reading(t0, changes)
+    if r is not None:
+        r["timed_out"] = out
+    return r
 
 
 def names_on(img):
@@ -332,7 +343,8 @@ def live_names(workdir, before):
 
 def run_one(which, appbin, fixture, args, workdir, shots):
     """Boot one application on one archive and time the extraction."""
-    typed, macname, fmt = typed_copy(fixture, workdir)
+    typed, macname, fmt = typed_copy(fixture, workdir,
+                                     expander=(which == "expander"))
     stock = os.path.join(R.VMAC_HOME, args.system)
     boot = os.path.join(workdir, f"boot-{which}.hfv")
     argv = [sys.executable, os.path.join(HERE, "mkboot.py"), stock, appbin,
@@ -351,6 +363,7 @@ def run_one(which, appbin, fixture, args, workdir, shots):
     elapsed = quitsecs = None
     mid = post = None
     quitdrew = flush = None
+    watch = timing = None
     try:
         if mac.settle(scratch, interval=5.0, timeout=args.boot_timeout) is None:
             raise SystemExit(f"expander: the {which} machine never booted")
@@ -374,7 +387,15 @@ def run_one(which, appbin, fixture, args, workdir, shots):
             # last item. Clicking there picked `System Folder` and Return
             # opened it, photographed. The first row is preselected and
             # mkboot leaves exactly one expandable file on the volume.
-            mac.click(*EXPAND_BUTTON)    # Expand -> straight to work
+            # Pointer onto the button first, THEN the mark, then the press:
+            # a Mac Plus draws its own pointer into the screen buffer, so
+            # the move is a screen change the stopwatch would otherwise
+            # count as the application's first response.
+            ox, oy = mac.origin()
+            mac._xdo("mousemove", str(ox + EXPAND_BUTTON[0]),
+                     str(oy + EXPAND_BUTTON[1]))
+            time.sleep(0.6)
+            act = lambda: mac._xdo("click", "1")       # noqa: E731
         else:
             # NOT a click on the first row, which is what this did until
             # 2026-09-20: Standard File sorts by name and our dialog shows
@@ -391,10 +412,13 @@ def run_one(which, appbin, fixture, args, workdir, shots):
             mac.key("Return")            # Open -> destination dialog
             time.sleep(3.0)
             shot("2-destination")
-            mac.key("Return")            # Save -> "beside the archive"
-        elapsed = last_change(mac, scratch, args.poll, args.quiet,
-                              args.timeout,
-                              first=os.path.join(shots, f"{which}-2b-started.png"))
+            act = lambda: mac._xdo("key", "Return")    # Save -> beside it
+        watch = stopwatch(mac, args.emu)
+        started = os.path.join(shots, f"{which}-2b-started.png")
+        timing = timed(watch, act, args.quiet, args.timeout,
+                       snap=(2.0, lambda: mac.shot(started)))
+        elapsed = None if timing is None or timing["timed_out"] \
+            else timing["mac_s"]
         shot("3-finished")
         # Is the output on the host image BEFORE the application is told to
         # quit? Nothing had ever asked: the volume was only ever read after
@@ -423,10 +447,12 @@ def run_one(which, appbin, fixture, args, workdir, shots):
         # comparison a user cares about — archive in, files on disk — is
         # the sum.
         if which == "expander":
+            qmark = watch.mark()
             mac.command_key("q")
         else:
             mac.key("Return")            # dismiss the alert or the report
             time.sleep(2.0)
+            qmark = watch.mark()
             mac.command_key(".")         # Cancel the next SFGetFile -> quit
         # How long the commit itself takes, watched on the host rather than
         # on the screen: Expander's writes land at the quit and the screen
@@ -442,8 +468,10 @@ def run_one(which, appbin, fixture, args, workdir, shots):
                 time.sleep(2.0)
         else:
             flush = 0.0
-        quitsecs = last_change(mac, scratch, args.poll, args.quiet,
-                               min(args.timeout, 600.0))
+        qch, _ = watch.until_quiet(min(args.quiet, 30.0),
+                                   min(args.timeout, 600.0))
+        q = MC.reading(qmark, qch)
+        quitsecs = q["mac_s"] if q else 0.0
         shot("4-quit")
         post = live_names(workdir, before)
         # Whether the quit key did anything at all. An application that is
@@ -452,6 +480,8 @@ def run_one(which, appbin, fixture, args, workdir, shots):
         quitdrew = open(os.path.join(shots, f"{which}-3-finished.png"), "rb").read() \
             != open(os.path.join(shots, f"{which}-4-quit.png"), "rb").read()
     finally:
+        if watch is not None:
+            watch.mem.close()
         mac.close()
         if os.path.exists(scratch):
             os.remove(scratch)
@@ -467,6 +497,7 @@ def run_one(which, appbin, fixture, args, workdir, shots):
             "on_disk_after_quit": post,
             "quit_redrew": quitdrew,
             "flush_seconds": flush,
+            "timing": timing,
             "output": produced}
 
 
@@ -506,6 +537,70 @@ def select_by_name(mac, macname):
     time.sleep(1.0)
 
 
+# ------------------------------------------------------------------
+# Calibration: a known duration, through the same instrument
+# ------------------------------------------------------------------
+
+def build_clockcal():
+    """tools/vmac/clockcal, built the way interactive.py builds ours."""
+    bdir = os.path.join(R.REPO, "build", "clockcal")
+    toolchain = os.environ.get("RETRO68", "/opt/Retro68-build/toolchain")
+    subprocess.run(["cmake", "-B", bdir, "-S", os.path.join(HERE, "clockcal"),
+                    "-DCMAKE_TOOLCHAIN_FILE=" + os.path.join(
+                        toolchain, "m68k-apple-macos", "cmake",
+                        "retro68.toolchain.cmake")],
+                   check=True, capture_output=True)
+    subprocess.run(["cmake", "--build", bdir], check=True, capture_output=True)
+    return os.path.join(bdir, "ClockCal.bin")
+
+
+def calibrate(args, keys):
+    """Time clockcal's fixed busy waits with the stopwatch the runs use.
+
+    Each key asks for a known number of ticks (clockcal/main.c); the reading
+    should be that many plus the keystroke's latency, in ticks, and that
+    many sixtieths of a second in host time if Mini vMac keeps real time.
+    'j' and 'k' are 600 and 660 ticks: the end moved by exactly one second,
+    which the instrument must see."""
+    want = {c: (ord(c) - 96) * 60 for c in "abcdefghijklmnopqrstuvwxyz"}
+    want.update({c: int(c) * 600 for c in "123456789"})
+    workdir = tempfile.mkdtemp(prefix="clockcal-")
+    boot = os.path.join(workdir, "cal.hfv")
+    R.sh(sys.executable, os.path.join(HERE, "mkboot.py"),
+         os.path.join(R.VMAC_HOME, args.system), build_clockcal(), boot,
+         "--app-name", "ClockCal")
+    mac = Mac(boot, args.emu, workdir)
+    rows, watch = [], None
+    try:
+        scratch = os.path.join(workdir, "s.png")
+        if mac.settle(scratch, interval=5.0, timeout=args.boot_timeout) is None:
+            raise SystemExit("expander: clockcal never booted")
+        mac.origin(cached=False)
+        watch = stopwatch(mac, args.emu)
+        for c in keys:
+            # The wait draws nothing, so `quiet` must outlast it: a quiet
+            # shorter than the silence ends the reading at the START mark
+            # (2 ticks, the first time this ran) — the instrument's own
+            # blind spot, met on purpose.
+            r = timed(watch, lambda: mac._xdo("key", c),
+                      want[c] / MC.TICK_HZ + 5.0, 900.0)
+            r = dict(r or {}, key=c, asked=want[c])
+            rows.append(r)
+            print("clockcal %s: asked %5d ticks  read %5s ticks (%+d)  "
+                  "%7.3f s Mac  %7.3f s host  ratio %s  first %.3f s"
+                  % (c, want[c], r.get("ticks"),
+                     (r.get("ticks") or 0) - want[c], r.get("mac_s", 0),
+                     r.get("host_s", 0), r.get("ratio"), r.get("first_s", 0)),
+                  flush=True)
+        mac.shot(os.path.join(args.outdir, "clockcal.png"))
+    finally:
+        if watch is not None:
+            watch.mem.close()
+        mac.close()
+        shutil.rmtree(workdir, ignore_errors=True)
+    return rows
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__,
                                 formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -519,90 +614,111 @@ def main():
     p.add_argument("--emu", default="mv-4M-1x",
                    help="emulator build; only the 1x ones may be quoted")
     p.add_argument("--system", default="System6.hfv")
-    p.add_argument("--poll", type=float, default=3.0,
-                   help="seconds between screenshots — the measurement's "
-                        "quantisation, and ~2%% of the core it steals")
+    p.add_argument("--ours", help="MacBinary of the application to time "
+                                  "(e.g. dist/MacExtract.bin); default: "
+                                  "build it from source")
+    p.add_argument("--repeat", type=int, default=1,
+                   help="time each fixture and application this many times")
+    p.add_argument("--calibrate", metavar="KEYS",
+                   help="time clockcal's known waits instead, e.g. jkjk6")
     p.add_argument("--quiet", type=float, default=60.0,
                    help="seconds the screen must hold still before the work "
                         "is called finished")
     p.add_argument("--timeout", type=float, default=2400.0)
     p.add_argument("--boot-timeout", type=float, default=300.0)
-    p.add_argument("-o", "--outdir", default="/tmp/expander-shots")
+    p.add_argument("-o", "--outdir",
+                   help="screenshots; default a run directory under .tmp/")
     p.add_argument("--json")
     p.add_argument("--keep", help="build the disks in this directory and "
                                   "leave them there, to be looked at by hand")
     args = p.parse_args()
 
+    if not args.outdir:
+        args.outdir = guard.run_dir("expander")
+    os.makedirs(args.outdir, exist_ok=True)
+    if args.calibrate:
+        rows = calibrate(args, args.calibrate)
+        if args.json:
+            json.dump(rows, open(args.json, "w"), indent=1)
+        return 0
     if args.fetch:
         fetch()
         if not args.fixtures:
             return 0
     if not os.path.exists(APPBIN):
         raise SystemExit("expander: no Expander.bin — run --fetch first")
-    ours = build_interactive_app()
+    ours = args.ours or build_interactive_app()
     if args.sizes:
         sizes(ours)
         return 0
     if not args.fixtures:
         p.error("nothing to time")
 
-    os.makedirs(args.outdir, exist_ok=True)
     rows = []
     for fixture in args.fixtures:
-        for which, app in (("ours", ours), ("expander", APPBIN)):
-            if args.only and args.only != which:
-                continue
-            workdir = args.keep or tempfile.mkdtemp(prefix="expander-")
-            os.makedirs(workdir, exist_ok=True)
-            shots = os.path.join(args.outdir,
-                                 os.path.basename(fixture).replace(".", "_"))
-            os.makedirs(shots, exist_ok=True)
-            try:
-                row = run_one(which, app, fixture, args, workdir, shots)
-            finally:
-                if not args.keep:
-                    shutil.rmtree(workdir, ignore_errors=True)
-            rows.append(row)
-            secs = "never settled" if row["seconds"] is None \
-                else "%.0f s" % row["seconds"]
-            # The names are the evidence that both applications did the
-            # same work, and one fixture here writes 312 of them — so the
-            # line says how many and shows the first few; --json keeps
-            # every one.
-            out = row["output"]
-            shown = ", ".join(out[:3]) + (" ..." if len(out) > 3 else "")
-            q = "" if row["quit"] is None else " (+%.0f s to quit)" % row["quit"]
-            print("expander: %-9s %-34s %-12s %8s%s   wrote %d: %s"
-                  % (which, row["fixture"], row["format"], secs, q,
-                     len(out), shown or "NOTHING"))
+        for n in range(args.repeat):
+            for which, app in (("ours", ours), ("expander", APPBIN)):
+                if args.only and args.only != which:
+                    continue
+                workdir = args.keep or tempfile.mkdtemp(prefix="expander-")
+                os.makedirs(workdir, exist_ok=True)
+                shots = os.path.join(args.outdir, "%s-%d" % (
+                    os.path.basename(fixture).replace(".", "_"), n + 1))
+                os.makedirs(shots, exist_ok=True)
+                try:
+                    row = run_one(which, app, fixture, args, workdir, shots)
+                finally:
+                    if not args.keep:
+                        shutil.rmtree(workdir, ignore_errors=True)
+                row["run"] = n + 1
+                rows.append(row)
+                if args.json:            # after every run: a crash keeps data
+                    json.dump(rows, open(args.json, "w"), indent=1)
+                t = row["timing"] or {}
+                secs = "never settled" if row["seconds"] is None \
+                    else "%.2f s" % row["seconds"]
+                # The names are the evidence that both applications did the
+                # same work, and one fixture here writes 312 of them — so
+                # the line says how many and shows the first few; --json
+                # keeps every one.
+                out = row["output"]
+                shown = ", ".join(out[:3]) + (" ..." if len(out) > 3 else "")
+                print("expander: %-8s #%d %-32s %-11s %10s  host %s s  "
+                      "ratio %s  (+%.1f s to quit)  wrote %d: %s"
+                      % (which, n + 1, row["fixture"], row["format"], secs,
+                         t.get("host_s"), t.get("ratio"), row["quit"] or 0,
+                         len(out), shown or "NOTHING"), flush=True)
 
     print()
-    hdr = ("Fixture", "Format", "MacExtract", "Expander", "ratio",
-           "+disk us", "+disk them", "ratio")
-    print("%-30s %-11s %9s %9s %6s %9s %10s %6s" % hdr)
+    print("%-30s %-11s %17s %17s %6s" % ("Fixture", "Format", "MacExtract",
+                                          "Expander", "ratio"))
     ok = True
+
+    def span(v):
+        if not v:
+            return "-"
+        v = sorted(v)
+        med = v[len(v) // 2] if len(v) % 2 else (v[len(v) // 2 - 1]
+                                                   + v[len(v) // 2]) / 2
+        return "%.1f s [%.1f-%.1f]" % (med, v[0], v[-1]), med
+
     for fixture in args.fixtures:
         base = os.path.basename(fixture)
-        got = {r["app"]: r for r in rows if r["fixture"] == base}
-        a = got.get("ours", {}).get("seconds")
-        b = got.get("expander", {}).get("seconds")
-        c = got.get("ours", {}).get("to_disk")
-        d = got.get("expander", {}).get("to_disk")
-        for r in got.values():
+        got = [r for r in rows if r["fixture"] == base]
+        for r in got:
             if r["seconds"] is None or not r["output"]:
                 ok = False
-        f = lambda v: "%.0f s" % v if v else "-"           # noqa: E731
-        print("%-30s %-11s %9s %9s %6s %9s %10s %6s"
-              % (base[:30], got.get("ours", got.get("expander"))["format"],
-                 f(a), f(b), "%.2fx" % (b / a) if a and b else "-",
-                 f(c), f(d), "%.2fx" % (d / c) if c and d else "-"))
-    print("\nratio > 1 means Expander took longer. Both figures are lower "
-          "bounds, accurate to the %.0f s poll." % args.poll)
-    print("The first ratio is to the last frame that changed; the second is "
-          "to the output being on the volume, which for Expander is after "
-          "its quit.")
-    if args.json:
-        json.dump(rows, open(args.json, "w"), indent=1)
+        a = span([r["seconds"] for r in got
+                  if r["app"] == "ours" and r["seconds"]])
+        b = span([r["seconds"] for r in got
+                  if r["app"] == "expander" and r["seconds"]])
+        print("%-30s %-11s %17s %17s %6s"
+              % (base[:30], got[0]["format"] if got else "?",
+                 a[0] if a != "-" else "-", b[0] if b != "-" else "-",
+                 "%.2fx" % (b[1] / a[1]) if a != "-" and b != "-" else "-"))
+    print("\nratio > 1 means Expander took longer. Seconds are Mac Plus "
+          "seconds: emulated Ticks / 60.15, median [min-max] over the runs, "
+          "from the action to the last change of the Mac's screen buffer.")
     return 0 if ok else 1
 
 
