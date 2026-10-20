@@ -16,6 +16,7 @@ undated figure here is one nobody can tell is stale.
 |---|---|---|
 | `eta-backstep` | the progress dialog's time left from the byte counts, so it no longer climbs within a percent; timed per layer | **merged into `main` 2026-10-16** (DECISIONS.md 2026-10-16, *the estimate that went back up*) |
 | `rom64k` | `GrowApplZone()` in place of `MaxApplZone`, so the application starts on a 64K-ROM Macintosh | **merged into `main` 2026-10-16**, after the LC 475 ran it; kept for its `BRANCH_NOTES.md` (DECISIONS.md 2026-10-15, *the purge MaxApplZone never did*) |
+| `probes-one-place` | every probe in its reader's `_probe.c`, the shared header parse with it; one rule where there were three histories | **measured 2026-10-20, against `main` at 7bacda9**: the move alone costs the shipped build +212 B of `CODE` and +12 of A5, a copy of `unc_get_u32be` per new translation unit; parked until it is zero (its `BRANCH_NOTES.md`; DECISIONS.md on the branch, *one place for every probe*) |
 
 **`selective-extract` is PARKED BY DECISION, 2026-09-26.** Choosing which
 entries come out is out of scope for the Macintosh application, and the
