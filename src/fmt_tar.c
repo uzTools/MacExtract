@@ -20,7 +20,7 @@
  * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
  */
 #include "unc_internal.h"
-#include "fmt_exo_priv.h"
+#include "fmt_tar_priv.h"
 #include "unc_date.h"
 
 /* Twice UNC_IOBUF, as fmt_exo.c's readers: member data is copied

@@ -54,10 +54,11 @@ CARRIES = {
     "fmt_arc.c":        "Crunch 5/6/7 and Crush, and the method numbers",
     "unc_crypt.c":      "StuffItDES, StuffIt 5's hash, ARC's garble",
     "unc_lzah.c":       "the -lh1-/method-5 window preload (resetLZSSHandle)",
-    "fmt_macbinary.c":  "the CRC-16/0xA001 fallback and the nonzero-date test",
+    "fmt_macbinary_probe.c": "the CRC-16/0xA001 fallback and the nonzero-date test",
     "fmt_applesingle.c": "the byte-swapped header",
     "fmt_sitseg.c":     "the whole StuffIt split header",
-    "fmt_stubs.c":      "DiskDoubler's two older headers (macutils dd.h)",
+    "fmt_sitseg_probe.c": "the StuffIt split header's offsets",
+    "fmt_dd_probe.c":   "DiskDoubler's two older headers (macutils dd.h)",
     "unc_internal.h":   "the LZAH preload",
     "fmt_hecx.c":       "BinHex before 4.0, the whole decoder (hexbin's hecx.c)",
     "fmt_binhex_probe.c": "the .hex/.hcx header-line rule (hexbin's hecx.c)",
@@ -67,7 +68,8 @@ CARRIES = {
 # Mentions a reference only to say what it no longer owes, or to
 # compare against it. Nothing here is borrowed.
 HISTORICAL = {
-    "fmt_exo.c", "fmt_exo_probe.c", "fmt_superdisk.c",
+    "fmt_exo.c", "fmt_tar_probe.c", "fmt_now_probe.c", "fmt_macbinary.c",
+    "fmt_superdisk.c",
     "fmt_uu.c", "fmt_binhex.c",
     "sit_arsenic.c", "unc_encinfo.c", "unc_huffman.c", "crypt_tables.h",
     "fmt_cpt.c", "fmt_cptseg.c", "fmt_now.c", "unc_util.c",

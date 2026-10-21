@@ -37,9 +37,8 @@ both directions now, extraction and naming.
 
 Nothing was deleted or rewritten, so it is a move rather than a port:
 
-1. `fmt_diskimage.c` → `src/`, or paste its two functions back into
-   `src/fmt_stubs.c`. It already `#include "unc_internal.h"` and needs
-   nothing else.
+1. `fmt_diskimage.c` → `src/`. It already `#include "unc_internal.h"`
+   and needs nothing else.
 2. Declare both probes in `src/unc_internal.h` and call them from
    `unc_sniff` in `src/unc_engine.c`, in this order and immediately after
    `unc_arc_probe`: Disk Copy first, then the volume probe. Both belong

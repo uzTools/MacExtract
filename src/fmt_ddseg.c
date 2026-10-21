@@ -59,86 +59,11 @@
  *
  * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
  */
-#include "unc_internal.h"
-
-#define DS_ID        4          /* start of the 26 fingerprint bytes:
-                                 * split time, both fork lengths, type,
-                                 * creator, flags and the two dates */
-#define DS_DATALEN   8
-#define DS_RSRCLEN  12
-#define DS_TYPE     16
-#define DS_CREATOR  20
-#define DS_FFLAGS   24
-#define DS_MTIME    32
-#define DS_CTIME    36
-#define DS_NPARTS   40
-#define DS_INDEX    42
-#define DS_PAYLEN   44
-#define DS_CRC      48
-#define DS_MAGIC2   90
-
-static int ddseg_magic(const uint8_t *h)
-{
-    return h[0] == 'S' && h[1] == 'P' && h[2] == 'L' && h[3] == 'T';
-}
-
-/* Parse and validate a header. `desc` may be NULL to validate only. */
-static int ddseg_parse(const uint8_t *h, int32_t len, UncSegmentDesc *desc)
-{
-    uint32_t data, rsrc, paylen;
-    uint32_t nparts, index;
-    int32_t i;
-
-    if (len < UNC_DDSEG_HEAD) return UNC_ERR_FORMAT;
-    /* Both marks, because 'SPLT' alone at offset 0 is four bytes that
-     * any file could open with; the second one sits where this header
-     * ends and is what makes the pair a shape rather than a word. */
-    if (!ddseg_magic(h) || !ddseg_magic(h + DS_MAGIC2)) return UNC_ERR_FORMAT;
-
-    nparts = unc_get_u16be(h + DS_NPARTS);
-    index  = unc_get_u16be(h + DS_INDEX);
-    if (nparts < 1 || nparts > UNC_SEG_MAX_PARTS) return UNC_ERR_FORMAT;
-    if (index >= nparts) return UNC_ERR_FORMAT;
-
-    data   = unc_get_u32be(h + DS_DATALEN);
-    rsrc   = unc_get_u32be(h + DS_RSRCLEN);
-    paylen = unc_get_u32be(h + DS_PAYLEN);
-    /* HFS caps a fork at 2 GB and the engine is 32-bit throughout. */
-    if (data > UNC_MAC_MAX || rsrc > UNC_MAC_MAX) return UNC_ERR_FORMAT;
-    /* One part cannot hold more than the whole file. */
-    if (paylen > data + rsrc) return UNC_ERR_FORMAT;
-
-    if (desc) {
-        desc->scheme   = UNC_FORMAT_DDSEG;
-        desc->part     = (uint16_t)(index + 1u);
-        desc->head_len = UNC_DDSEG_HEAD;
-        desc->nparts   = (uint16_t)nparts;
-        desc->name[0]  = 0;
-        desc->name_len = 0;
-        for (i = 0; i < UNC_SEG_FP_LEN; i++) desc->fp[i] = h[DS_ID + i];
-
-        desc->data_size    = data;
-        desc->rsrc_size    = rsrc;
-        desc->total        = data + rsrc;
-        desc->type         = unc_get_u32be(h + DS_TYPE);
-        desc->creator      = unc_get_u32be(h + DS_CREATOR);
-        desc->finder_flags = unc_get_u16be(h + DS_FFLAGS);
-        desc->mod_date     = unc_get_u32be(h + DS_MTIME);
-        desc->create_date  = unc_get_u32be(h + DS_CTIME);
-    }
-    return UNC_OK;
-}
+#include "fmt_ddseg_priv.h"
 
 uint16_t unc_ddseg_stored_crc(const uint8_t *head)
 {
     return unc_get_u16be(head + DS_CRC);
-}
-
-UncFormat unc_ddseg_probe(const uint8_t *head, int32_t len, UncIO *io)
-{
-    (void)io;
-    return (ddseg_parse(head, len, NULL) == UNC_OK)
-           ? UNC_FORMAT_DDSEG : UNC_FORMAT_UNKNOWN;
 }
 
 int unc_ddseg_describe(UncIO *io, UncSegmentDesc *desc)
@@ -149,7 +74,7 @@ int unc_ddseg_describe(UncIO *io, UncSegmentDesc *desc)
     if (!io || !desc) return UNC_ERR_FORMAT;
     err = unc_read_at(io, 0, head, UNC_DDSEG_HEAD);
     if (err != UNC_OK) return UNC_ERR_FORMAT;   /* too short to be one */
-    return ddseg_parse(head, UNC_DDSEG_HEAD, desc);
+    return ddseg_parse(head, UNC_DDSEG_HEAD, desc, NULL);
 }
 
 /* Does this header belong to `desc`'s set, and as which part?
@@ -162,7 +87,7 @@ int unc_ddseg_match(const UncSegmentDesc *desc, const uint8_t *head,
     UncSegmentDesc cand;
     int32_t i;
 
-    if (ddseg_parse(head, len, &cand) != UNC_OK) return 0;
+    if (ddseg_parse(head, len, &cand, NULL) != UNC_OK) return 0;
     if (cand.nparts != desc->nparts) return 0;
     for (i = 0; i < UNC_SEG_FP_LEN; i++)
         if (cand.fp[i] != desc->fp[i]) return 0;
@@ -182,9 +107,8 @@ int unc_ddseg_payload(const UncSegmentDesc *desc, const uint8_t *head,
     UncSegmentDesc cand;
     uint32_t paylen;
 
-    if (ddseg_parse(head, len, &cand) != UNC_OK) return UNC_ERR_CORRUPT;
+    if (ddseg_parse(head, len, &cand, &paylen) != UNC_OK) return UNC_ERR_CORRUPT;
     if (unc_ddseg_match(desc, head, len) != part) return UNC_ERR_CORRUPT;
-    paylen = unc_get_u32be(head + DS_PAYLEN);
     if (size < UNC_DDSEG_HEAD || size - UNC_DDSEG_HEAD < paylen)
         return UNC_ERR_TRUNCATED;
     *payload = paylen;

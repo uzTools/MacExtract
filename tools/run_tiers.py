@@ -155,9 +155,9 @@ REPO = os.path.dirname(HERE)
 # **RAISED by 64 B 2026-10-19, DERIVED**: TIERS_CONTROL fell by that much
 # with the toolchain update (below).
 TIERS = {
-    "sys3-512K": (188484, "System 3.0, Macintosh 512Ke (225,956 B free)"),
-    "sys6-512K": (93084, "System 6.0.8, Macintosh 512Ke (130,556 B free)"),
-    "floor-1M":  (617372, "System 6.0.8, 1 MB Mac Plus — the floor target"),
+    "sys3-512K": (188516, "System 3.0, Macintosh 512Ke (225,956 B free)"),
+    "sys6-512K": (93116, "System 6.0.8, Macintosh 512Ke (130,556 B free)"),
+    "floor-1M":  (617404, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
 
 # RE-TAKEN on all three machines 2026-10-09 (`-D UNC_OVL_RESIDENT -D
@@ -324,7 +324,11 @@ TIERS = {
 # multiversal 057c802 inlines PurgeSpace (DECISIONS.md 2026-10-19, *the toolchain that inlined PurgeSpace*): the
 # control's CODE -72 and A5 +8 against the shipped pair's -96 (CODE -72,
 # A5 -24), so OVL_SAVED +32.
-TIERS_CONTROL = 225008     # build/mac-resident, CODE + A5, 2026-10-18
+# **-32 2026-10-20, and TIERS +32, DERIVED**: every probe in its reader's
+# `_probe.c`, and StuffIt classic's probe comparing bytes (DECISIONS.md
+# 2026-10-20, *one place for every probe*): the control's CODE -32 and A5 0
+# against the shipped pair's -32 (CODE -32, A5 0), so OVL_SAVED unchanged.
+TIERS_CONTROL = 224976     # build/mac-resident, CODE + A5, 2026-10-20
 # **What this control cannot see: the autotest harness.** TIERS was read
 # on the machine from an autotest build (`UNC_MAC_AUTOTEST`), and
 # build/mac-resident has no harness in it, so harness growth lowers what a
@@ -816,7 +820,7 @@ IMAGES = {
     "OVL_ID_NOW":         5164,
     "OVL_ID_PACKIT":      2656,
     "OVL_ID_SPACESAVER":  16722,
-    "OVL_ID_STUFFIT":     29874,
+    "OVL_ID_STUFFIT":     29842,
     "OVL_ID_SQP":         2040,
     "OVL_ID_SUPERDISK":   7142,
     "OVL_ID_TEXT":        12162,
@@ -833,7 +837,10 @@ IMAGES = {
 # **ZIPOLD +1,324 B, the bundle +1,324 B, 2026-10-18**: the Spotlight
 # comment, read in src/unc_sidecar.c; ZIPOLD is 21,160 B under its 32 KB
 # (DECISIONS.md 2026-10-18, *the comment Spotlight kept*).
-BUNDLE = 178924
+# **STUFFIT -32 B, the bundle -32 B, 2026-10-20**: StuffIt classic's probe
+# compares bytes, and the image carries that probe (DECISIONS.md
+# 2026-10-20, *one place for every probe*).
+BUNDLE = 178892
 
 # What the SHIPPED lane asserts, and it is the refused fixtures BY NAME
 # rather than a tally: a tier that refuses two different fixtures and still

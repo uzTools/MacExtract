@@ -112,9 +112,15 @@ import sys
 # file 69,120 -> 66,944; the other 1,664 is what M70 left inside the
 # tolerance. `run_tiers.py --check` moves no tally in either lane
 # (DECISIONS.md 2026-10-18, *the formats it only named*).
-EXPECT = 66944
+# RE-TAKEN 2026-10-20, 66,944 -> 68,096: every probe in its reader's
+# `_probe.c` and StuffIt classic's probe comparing bytes, resident `CODE`
+# -32 in all three configurations; the other 1,184 is what 2026-10-19's
+# four changes left inside the tolerance (tools/build_mac.sh's eager pair
+# has them by entry). `run_tiers.py --check` moves no tally in either lane
+# (DECISIONS.md 2026-10-20, *one place for every probe*).
+EXPECT = 68096
 TOLERANCE = 2048
-TAKEN = "2026-10-18"
+TAKEN = "2026-10-20"
 
 # And the BUNDLE, watched from 2026-09-26 for one reason: FORMATS.md quotes it
 # in three places and nothing measured it, so it was wrong by 544 B — the
@@ -230,9 +236,11 @@ TAKEN = "2026-10-18"
 # -> 178,924 2026-10-18: the Spotlight comment, `ovl_zipold` +1,324, and
 # the dates in the Macintosh's own zone before it (+692, inside the
 # tolerance) (DECISIONS.md 2026-10-18, *the comment Spotlight kept*).
-EXPECT_BUNDLE = 178924
+# -> 178,892 2026-10-20: `ovl_stuffit` -32, StuffIt classic's probe
+# compares bytes (DECISIONS.md 2026-10-20, *one place for every probe*).
+EXPECT_BUNDLE = 178892
 TOLERANCE_BUNDLE = 2048
-TAKEN_BUNDLE = "2026-10-18"
+TAKEN_BUNDLE = "2026-10-20"
 
 
 def main():

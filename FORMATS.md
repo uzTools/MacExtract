@@ -5365,12 +5365,27 @@ on 2026-10-11 (*Reduce*), and sixteen since.
 
 | build | switch | resident `CODE` | A5 | `MacExtract.code.bin` | `MacExtract.bin` |
 |---|---|---|---|---|---|
-| **eager — SHIPPED** | (default) | **56,464 B** | 17,856 B | **66,944 B** | **249,856 B** |
-| lazy | `UNC_OVL_LAZY=1` | 54,884 B | 17,964 B | 65,408 B | 248,320 B |
-| resident — the control | `UNC_OVL_RESIDENT=1` | **186,980 B** | **36,892 B** | 218,624 B | 222,464 B |
+| **eager — SHIPPED** | (default) | **57,548 B** | 17,892 B | **68,096 B** | **250,880 B** |
+| lazy | `UNC_OVL_LAZY=1` | 55,968 B | 18,000 B | 66,432 B | 249,344 B |
+| resident — the control | `UNC_OVL_RESIDENT=1` | **188,068 B** | **36,908 B** | 219,776 B | 223,616 B |
 
-CORRECTED 2026-10-18: the rows were 2026-10-14's until then, and are
-read off the three builds of the paragraph below.
+CORRECTED 2026-10-20: the rows were 2026-10-18's until then and had not
+followed 2026-10-19's four changes, which `tools/build_mac.sh`'s ratchet
+records carry by entry; re-read off the three builds of the paragraph
+below. (CORRECTED 2026-10-18 before that, from 2026-10-14's.)
+
+**Re-measured 2026-10-20, for one place for every probe** (DECISIONS.md
+2026-10-20, *one place for every probe*), against `origin/main` (299ed24)
+built the same way: eager **−32 B of `CODE` and 0 of A5**, lazy −36 and
++4, the control −32 and 0 against the 225,008 B of `CODE` + A5 it was
+measured at; `ovl_stuffit` −32 to 29,842 B and the bundle
+−32 to 178,892 B, both for StuffIt classic's probe comparing bytes, which
+that image carries; `OVL_SAVED` unchanged at 149,536, `TIERS_CONTROL`
+225,008 → 224,976 and every TIERS budget +32 (derived). The move of nine
+probes into their readers' `_probe.c` files is itself **0 and 0** in all
+three configurations, after the five files it had made larger were
+brought back by byte compares; the first cut cost +212 and +12.
+`run_tiers.py --check` moves no tally in either lane.
 
 **Re-measured 2026-10-18, for the formats it only named, gone**
 (DECISIONS.md 2026-10-18, *the formats it only named*), against
@@ -5670,8 +5685,9 @@ eject before a split set's next part, 136,464 B after that day's MIME progress, 
 DiskDoubler buffer reuse) (*Three configurations, one tree*); the probe pair has not been re-measured,
 so the 320 B is that day's difference and not today's.
 
-The bundle is **178,924 B** — the sixteen images sum to 178,714 B, so its
-index costs **210 B** (177,600 and 177,390 until 2026-10-18's Spotlight
+The bundle is **178,892 B** — the sixteen images sum to 178,682 B, so its
+index costs **210 B** (178,924 and 178,714 until 2026-10-20's StuffIt probe
+comparing bytes, `ovl_stuffit` −32, *one place for every probe*; 177,600 and 177,390 until 2026-10-18's Spotlight
 comment, `ovl_zipold` +1,324, *the comment Spotlight kept*; 177,312 and 177,102 until 2026-10-17's dates in the Macintosh's own zone, Implode moved into `ovl_zipold`; 172,968 and 172,756 until 2026-10-17's Mac OS X sidecars, *the sidecars Mac OS X left beside the file*; 168,020 and 167,810 until 2026-10-17's archives' Finder info, *the archives' own Finder info*; 167,612 and 167,402 until 2026-10-17's `ovl_stuffit`
 +380 and `ovl_cptdd` +28, *the window Expander puts back*; CORRECTED 2026-10-17:
 167,256 and 212 B until `ovl_lzh` went 9,586 → 9,576, 2 → 0 mod 4) (+14 B on 2026-10-11 with the sixteenth image,
@@ -5979,7 +5995,7 @@ rose, because the control took 2,148 B for the same format.
 **The last row is the one no tally had shown**: a `.hqx`, a `.gz`, a `.Z` or
 a MacBinary wrapper does not know what is under it, so the bundle stays and
 that layer runs with **less** memory than a resident build would have given
-it — 178,924 B held against 149,536 B saved. It costs nothing on the tiers
+it — 178,892 B held against 149,536 B saved. It costs nothing on the tiers
 because the layer under the envelope gets its own budget a moment later
 (*What an archive keeps*), and the envelope's own decode is small: the
 heaviest in the Mac sample is `popper-1.7.tar.Z`'s LZW at 147,764 B, which
@@ -6037,9 +6053,9 @@ figure is `tools/code_map.py`'s, below.
 The application ships as **249,856 B** of MacBinary (`dist/MacExtract.bin`,
 re-read 2026-10-18 off the build `tools/make_dist.sh` copies), and since
 2026-09-25 that is no longer all resident:
-**66,944 B** is
+**68,096 B** is
 `MacExtract.code.bin`, which the Segment Loader reads at launch and never
-purges, and **178,924 B** is the `'OVLY'` bundle, which is read at launch and
+purges, and **178,892 B** is the `'OVLY'` bundle, which is read at launch and
 mostly given back before the engine takes its budget (*Overlays*). What stays
 costs the heap one for one: the link line produces a single
 `MacExtract.code.bin`, and `Elf2Mac/LdScript.cc` emits `*(.rodata*)` inside

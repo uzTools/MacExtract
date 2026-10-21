@@ -79,11 +79,11 @@ hand.
                        wrote (tools/derive_sit5crypt.py).
   src/fmt_dd.c         the `DDAR` 0x20 raw-fork shape, four offsets
                        nothing reachable sets.
-  src/fmt_macbinary.c, four things no specification supports: the
-  src/fmt_applesingle.c  MacBinary CRC-16/0xA001 fallback and its
-  src/fmt_sitseg.c     nonzero-date test, the byte-swapped AppleSingle
-  src/fmt_stubs.c      header, and the whole StuffIt split header —
-                       plus DiskDoubler's two older headers, which are
+  src/fmt_macbinary_probe.c,  four things no specification supports:
+  src/fmt_applesingle.c  the MacBinary CRC-16/0xA001 fallback and its
+  src/fmt_sitseg.c,    nonzero-date test, the byte-swapped AppleSingle
+  src/fmt_sitseg_probe.c  header, and the whole StuffIt split header —
+  src/fmt_dd_probe.c   plus DiskDoubler's two older headers, which are
                        macutils' dd.h. Checked against deark on
                        2026-09-27: it states none of them.
   src/fmt_hecx.c,      BinHex before 4.0, `.hex` and `.hcx`: the
@@ -148,12 +148,13 @@ This project's decoders are transcriptions/ports of algorithms from:
     written with the wrong table, the nonzero-date test that stands in
     for a MacBinary I header's missing checksum, the byte-swapped
     AppleSingle header, and the whole StuffIt split header in
-    `src/fmt_sitseg.c`, which Aladdin never published and which nothing
-    else in `reference/` reads (deark and macutils were both looked
-    at). The engine has no detect-only signature at all since
-    2026-10-18, when every format it named without extracting went
-    (DECISIONS.md 2026-10-18, *the formats it only named*). Of the two
-    probes left in `src/fmt_stubs.c`, neither is XADMaster's:
+    `src/fmt_sitseg.c` and `src/fmt_sitseg_probe.c`, which Aladdin never
+    published and which nothing else in `reference/` reads (deark and
+    macutils were both looked at). The engine has no detect-only
+    signature at all since 2026-10-18, when every format it named
+    without extracting went (DECISIONS.md 2026-10-18, *the formats it
+    only named*). Neither `src/fmt_dd_probe.c` nor `src/fmt_now_probe.c`
+    is XADMaster's:
     DiskDoubler's two older headers are in macutils' `macunpack/dd.h`
     — magic, offsets, CRC position and all — and since 2026-09-21 the
     Now Compress probe cites `docs/formats/now-compress.md`, where the

@@ -1524,8 +1524,8 @@ int unc_arc_extract(UncCtx *c);
 UncFormat unc_lzh_probe(const uint8_t *head, int32_t len, UncIO *io);
 int unc_lzh_extract(UncCtx *c);
 
-/* Probes kept resident, apart from their readers (fmt_stubs.c,
- * fmt_superdisk_probe.c, fmt_spacesaver_probe.c). */
+/* Every probe is in its reader's `_probe.c`, resident, so the reader can
+ * be an overlay (DECISIONS.md 2026-10-20, *one place for every probe*). */
 UncFormat unc_nowcompress_probe(const uint8_t *head, int32_t len, UncIO *io);
 UncFormat unc_superdisk_probe(const uint8_t *head, int32_t len, UncIO *io);
 UncFormat unc_spacesaver_probe(const uint8_t *head, int32_t len, UncIO *io);

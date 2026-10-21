@@ -35,35 +35,12 @@
  *
  * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
  */
-#include "unc_internal.h"
-
-#define AS_MAGIC_SINGLE     0x00051600u
-#define AS_MAGIC_DOUBLE     0x00051607u
-#define AS_MAGIC_SINGLE_LE  0x00160500u
-#define AS_MAGIC_DOUBLE_LE  0x07160500u
-#define AS_VERSION          0x00020000u
-#define AS_VERSION_LE       0x00000200u
+#include "fmt_applesingle_priv.h"
 
 /* Seconds between the Mac epoch (1904-01-01) and the AppleSingle
  * dates epoch (2000-01-01): 96 years of 365 days + 24 leap days =
  * 35064 days = 3029529600 s = 0xB492F400 (naive time, no leap secs). */
 #define AS_EPOCH_2000_AS_MAC 0xB492F400u
-
-UncFormat unc_applesingle_probe(const uint8_t *head, int32_t len, UncIO *io)
-{
-    uint32_t magic, version;
-    (void)io;
-    if (len < 8) return UNC_FORMAT_UNKNOWN;
-    magic = unc_get_u32be(head);
-    version = unc_get_u32be(head + 4);
-    if (magic != AS_MAGIC_SINGLE && magic != AS_MAGIC_DOUBLE &&
-        magic != AS_MAGIC_SINGLE_LE && magic != AS_MAGIC_DOUBLE_LE)
-        return UNC_FORMAT_UNKNOWN;
-    if (version != AS_VERSION && version != AS_VERSION_LE)
-        return UNC_FORMAT_UNKNOWN;
-    return (magic == AS_MAGIC_SINGLE || magic == AS_MAGIC_SINGLE_LE)
-         ? UNC_FORMAT_APPLESINGLE : UNC_FORMAT_APPLEDOUBLE;
-}
 
 /* Cap on the entry table: real files have <10 entries; 64 is generous
  * and keeps the on-stack table small (64 * 12 = 768 bytes). */

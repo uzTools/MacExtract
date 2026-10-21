@@ -445,6 +445,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-19 (the place outside the archive) — an item at the top of the output is given the location (−1, −1), and the Finder the next free place; everything under it keeps the archive's
 - 2026-10-19 (the toolchain that inlined PurgeSpace) — Retro68 afedcdc with multiversal 057c802 is the toolchain the figures are measured with; its inlined PurgeSpace gives 96 B back to every extraction
 - 2026-10-19 (the clock inside the Mac) — the Mac Plus timings are read off the emulated Ticks from the host at 50 Hz, calibrated against a known wait; the four-archive comparison and the 1 MB table re-measured on it
+- 2026-10-20 (one place for every probe) — every probe is in its reader's `_probe.c`; the move cost 212 B of resident CODE until its five grown files compared bytes, and lands at −32
 
 ---
 
@@ -28833,3 +28834,64 @@ autotest's CRC read-back is not part of it.
 **What this cannot see**, stated with the tool: emulator fidelity to a
 real 68000, disk time (Mini vMac's driver is free), ticks lost to masked
 interrupts, and work that draws nothing for longer than `--quiet`.
+
+## 2026-10-20 (one place for every probe) — every probe is in its reader's `_probe.c`; the move cost 212 B of resident CODE until its five grown files compared bytes, and lands at −32
+
+**Claim.** Where a probe lived was history, not a rule. A `_probe.c` file
+existed exactly where a reader had left the resident link (2026-09-02
+onwards) and held whatever that link still needed; the nine probes whose
+readers never left — MacBinary, AppleSingle, the five segment joiners —
+sat in the reader's file, Now Compress's and DiskDoubler's in
+`fmt_stubs.c` because they were already there, and tar's in
+`fmt_exo_probe.c` from before `fmt_tar.c` existed. Now there is one rule:
+the probe of `fmt_X.c` is in `fmt_X_probe.c`, and what the two share is
+defined once, in the probe file, declared in `fmt_X_priv.h` — the shape
+SpaceSaver set. `fmt_stubs.c` and `fmt_exo_priv.h` are gone.
+
+**Measured, the move alone**, against `main` at 7bacda9 built the same
+way: eager **+212 B of `CODE` and +12 of A5**, lazy +208 and +16, the
+control +208 and +12, with no function body changed. Per object:
+AppleSingle +48, MacBinary +58, the two probes that were `fmt_stubs.c`
++48, spanned zip +36, DiskDoubler split +20; Compact Pro split, StuffIt
+split, `message/partial` and tar 0. The symbol listings said what:
+`unc_get_u32be` is `static inline` in `unc_internal.h`, and at `-Os`
+every translation unit that calls it more than once gets a 42-byte copy
+of its own, or an inline expansion where it calls it once
+(`unc_applesingle_probe` 0x7e → 0xae, `unc_nowcompress_probe` 0x8e →
+0xbe). A probe file that read a header word paid for a copy the reader's
+file already had. That is 224 B off every extraction's budget for a
+move, more than the Private File probe cost for a format, so it went to
+a branch (`probes-one-place`) rather than to `main`.
+
+**What brought it to zero** is 2026-10-09's lesson, *the probe was the
+outlier*: a probe that compares fields with small constants should
+compare bytes. AppleSingle's four magics and two versions, MacBinary's
+'mBIN', fork-size and date tests, DiskDoubler's four magics and Now
+Compress's count are bytes now; Now's checksum is a word, because 106
+bytes cannot sum past 27,030; the DiskDoubler-split parse hands the
+payload length back so the reader reads no long of its own; the spanned
+zip's one-line scan wrapper is `static inline` in the private header, as
+it effectively was inside one file. Each pair of files, reader + probe,
+against the one file it was: AppleSingle +22, MacBinary +6, spanned zip
++4, DiskDoubler split +2, Now + DiskDoubler −34 — **0 in all, and 0 and
+0 in every configuration's link.** Then StuffIt classic's probe, the one
+remaining long compare on `head`, went to bytes as well: −34 B in its
+object, −32 in every configuration, and the StuffIt image carries that
+probe, so `ovl_stuffit` 29,874 → 29,842 B and the bundle 178,924 →
+178,892. `OVL_SAVED` is unchanged; every TIERS budget +32, derived.
+
+**Two refinements the measurement forced on the lesson.** It applies to a
+pointer whose alignment the compiler cannot know, which `head` is; on a
+LOCAL buffer it does not: Private File's footer compare and AppleLink's
+two word tests were tried as bytes and grew their objects by 28 and 8,
+because GCC already loads a long or a word from a buffer it aligned
+itself, and byte compares replaced one instruction with four. They were
+put back. And **a file split is not free on this compiler**: each new
+translation unit re-pays the header's inline helpers, so a refactor that
+only moves code between files is priced like any other change — the six
+numbers, before the commit.
+
+The three untouched remaining helper calls in probes — Compact Pro's,
+SuperDisk's and SpaceSaver's — read values the probe does arithmetic on
+or copies into a struct, not constants; a shared copy is already their
+compact form, and they were left alone.

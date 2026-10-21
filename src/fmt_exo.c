@@ -26,7 +26,6 @@
  * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
  */
 #include "unc_internal.h"
-#include "fmt_exo_priv.h"
 #include "unc_date.h"
 
 /* Twice UNC_IOBUF. These readers move whole runs rather than bytes:

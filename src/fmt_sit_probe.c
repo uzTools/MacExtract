@@ -27,8 +27,10 @@ UncFormat unc_sit_probe(const uint8_t *head, int32_t len, UncIO *io)
      * corpus with 'rLau' at 10 carry 'SIT!' at 0, at either offset a
      * MacBinary header can put them (measured 2026-09-27). */
     if (len < 14) return UNC_FORMAT_UNKNOWN;
-    if (unc_get_u32be(head + 10) != 0x724c6175u) return UNC_FORMAT_UNKNOWN;   /* 'rLau' */
-    if (unc_get_u32be(head) == 0x53495421u) return UNC_FORMAT_SIT;        /* 'SIT!' */
+    if (head[10] != 'r' || head[11] != 'L' || head[12] != 'a' || head[13] != 'u')
+        return UNC_FORMAT_UNKNOWN;                           /* 'rLau' */
+    if (head[0] == 'S' && head[1] == 'I' && head[2] == 'T' && head[3] == '!')
+        return UNC_FORMAT_SIT;                               /* 'SIT!' */
     if (head[0] == 'S' && head[1] == 'T') {                  /* installers */
         if (head[2] == 'i' &&
             (head[3] == 'n' || (head[3] >= '0' && head[3] <= '9'))) return UNC_FORMAT_SIT;

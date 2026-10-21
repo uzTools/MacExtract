@@ -647,7 +647,6 @@ add_custom_command(
             ${ENGINE_DIR}/tools/overlay/ovl_exo.c
             ${CMAKE_CURRENT_BINARY_DIR}/ovl_forwards_gen.c
             ${ENGINE_DIR}/src/fmt_exo.c
-            ${ENGINE_DIR}/src/fmt_exo_probe.c
             ${ENGINE_DIR}/src/unc_inflate.c
             ${ENGINE_DIR}/third_party/zlib/inflate.c
             ${ENGINE_DIR}/third_party/zlib/inftrees.c
@@ -658,7 +657,6 @@ add_custom_command(
     DEPENDS ${ENGINE_DIR}/tools/overlay/ovl_exo.c
             ${CMAKE_CURRENT_BINARY_DIR}/ovl_forwards_gen.c
             ${ENGINE_DIR}/src/fmt_exo.c
-            ${ENGINE_DIR}/src/fmt_exo_probe.c
             ${ENGINE_DIR}/src/unc_inflate.c
             ${OVL_DEPS})
 
@@ -695,7 +693,7 @@ add_custom_command(
             ${ENGINE_DIR}/src/unc_reduce.c
             ${ENGINE_DIR}/src/unc_implode.c
             ${ENGINE_DIR}/src/fmt_tar.c
-            ${ENGINE_DIR}/src/fmt_exo_probe.c
+            ${ENGINE_DIR}/src/fmt_tar_probe.c
             ${ENGINE_DIR}/src/unc_sidecar.c
     DEPENDS ${ENGINE_DIR}/tools/overlay/ovl_zipold.c
             ${CMAKE_CURRENT_BINARY_DIR}/ovl_forwards_zipold_gen.c
@@ -704,7 +702,7 @@ add_custom_command(
             ${ENGINE_DIR}/src/unc_reduce.c
             ${ENGINE_DIR}/src/unc_implode.c
             ${ENGINE_DIR}/src/fmt_tar.c
-            ${ENGINE_DIR}/src/fmt_exo_probe.c
+            ${ENGINE_DIR}/src/fmt_tar_probe.c
             ${ENGINE_DIR}/src/unc_sidecar.c
             ${OVL_DEPS})
 
