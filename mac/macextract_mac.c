@@ -2556,12 +2556,31 @@ static void DTBundle(DTPBRec *d, OSType creator, OSType self)
         { 'ICN#', 'icl4', 'icl8', 'ics#', 'ics4', 'ics8' };
     short cur = CurResFile(), rf, i, nb, nk = 0;
     OSType *kinds;
+    WDPBRec w;
     d->ioFileCreator = creator;
     PBDTAddAPPLSync(d);
+    /* The resource fork by name in a directory, on a System that has a
+     * Desktop Manager but not HOpenResFile: AppleShare's Desktop Mgr INIT
+     * of 1988 gives System 6.0.8 the former, and _HOpenResFile (0xA81A)
+     * is System 7's — called on 6.0.8 it is "unimplemented trap", the
+     * bomb of uzTools/MacExtract issue #1, reproduced 2026-10-21 on the
+     * stock System 6 image, which carries that INIT. So a working
+     * directory on the folder (PBOpenWD, _HFSDispatch 1, the 128K ROM)
+     * and OpenRFPerm against it (0xA9C4, the 128K ROM), closed again
+     * once the fork is. Source: Inside Macintosh IV, The File Manager,
+     * PBOpenWD and PBCloseWD (ioVRefNum in, the working directory
+     * reference number out; ioWDProcID marks whose it is), and The
+     * Resource Manager, OpenRFPerm (IV-17). Every field zeroed first, as
+     * every other block here. */
+    for (i = 0; i < (short)sizeof w; i++) ((char *)&w)[i] = 0;
+    w.ioVRefNum = d->ioVRefNum;
+    w.ioWDProcID = 'MExt';
+    w.ioWDDirID = d->ioDirID;
+    if (PBOpenWDSync(&w) != noErr) return;
     SetResLoad(false);
-    rf = HOpenResFile(d->ioVRefNum, d->ioDirID, d->ioNamePtr, fsRdPerm);
+    rf = OpenRFPerm(d->ioNamePtr, w.ioVRefNum, fsRdPerm);
     SetResLoad(true);
-    if (rf == -1) return;
+    if (rf == -1) { PBCloseWDSync(&w); return; }
     kinds = (OSType *)NewPtrClear(256);
     nb = Count1Resources('BNDL');
     for (i = 1; i <= nb; i++) {
@@ -2622,6 +2641,7 @@ static void DTBundle(DTPBRec *d, OSType creator, OSType self)
     }
     CloseResFile(rf);
     UseResFile(cur);
+    PBCloseWDSync(&w);
 }
 
 /* Set type/creator, Finder flags and dates on s->curName in s->curDirID,
@@ -2638,12 +2658,15 @@ static void DTBundle(DTPBRec *d, OSType creator, OSType self)
  * System 3.0 and 6.0.8, where PBHGetVolParms is -50 too, and -123 on a
  * System 7.0.1 floppy, whose vMAttrib is 0xE0. The same calls on every
  * System; what differs is the VOLUME.
- * A System 6 or System 3.0 volume has no Desktop Manager: its Finder keeps
- * comments as `FCMT` resources in its own Desktop file, keyed by the id in
- * FXInfo (measured, DECISIONS.md 2026-10-17), a file that Finder holds
- * open and that System 7 does not read. There the comment is not written,
- * and nothing says so: a line only some Systems print is behaviour that
- * differs by machine.
+ * A System 6 or System 3.0 volume has no Desktop Manager of its own: its
+ * Finder keeps comments as `FCMT` resources in its own Desktop file, keyed
+ * by the id in FXInfo (measured, DECISIONS.md 2026-10-17), a file that
+ * Finder holds open and that System 7 does not read. There the comment is
+ * not written, and nothing says so: a line only some Systems print is
+ * behaviour that differs by machine. AppleShare's 1988 "Desktop Mgr" INIT
+ * gives System 6 one, and PBDTGetPath then answers noErr there: so every
+ * call under it must be one System 6 has (DECISIONS.md 2026-10-21, *the
+ * Desktop Manager System 6 can have*).
  *
  * On the same volumes, before the comment, an application's bundle is
  * registered (DTBundle). Where there is no Desktop Manager it is not: a

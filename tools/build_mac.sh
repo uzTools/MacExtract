@@ -591,7 +591,10 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # -72 code and +8 A5 on 2026-10-21: the sniffer in a file of its own,
 # unc_sniff.c, which this build links as before (DECISIONS.md 2026-10-21,
 # *the probes that left with the bundle*): the control.
-UNC_MAC_CODE_DEFAULT=188028
+# +52 code on 2026-10-21 for the same working directory as the eager pair
+# (DECISIONS.md 2026-10-21, *the Desktop Manager System 6 can have*); A5
+# 36,896, down 20 of `.data` alignment, and the ceiling comes down with it.
+UNC_MAC_CODE_DEFAULT=188080
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -770,7 +773,7 @@ UNC_MAC_CODE_DEFAULT=188028
 # +8 on 2026-10-21 to 36,916 with the code ceiling's -72: the sniffer's table
 # in a file of its own, unc_sniff.c, and its alignment (DECISIONS.md
 # 2026-10-21, *the probes that left with the bundle*).
-UNC_MAC_A5_DEFAULT=36916
+UNC_MAC_A5_DEFAULT=36896
 # A CEILING PER CONFIGURATION, because one ceiling measured on another build
 # cannot fire. The figures above are the RESIDENT control build, which carries
 # every decoder; the shipped build's resident code is a third of that, so
@@ -1164,8 +1167,13 @@ UNC_MAC_A5_DEFAULT=36916
 # 'OVLY' image of their own, run from the bundle before the release
 # (DECISIONS.md 2026-10-21, *the probes that left with the bundle*): 9,648 B
 # back on every budget but an envelope layer's, which keeps the bundle.
-UNC_MAC_CODE_EAGER=48264
-UNC_MAC_A5_EAGER=17528
+# +52 code and +12 A5 on 2026-10-21: the bundle's resource fork opened
+# through a working directory and OpenRFPerm, where HOpenResFile bombed
+# System 6.0.8 under AppleShare's Desktop Mgr INIT (DECISIONS.md
+# 2026-10-21, *the Desktop Manager System 6 can have*): 64 B off every
+# budget; the A5 is `.data` alignment, nothing new is in it.
+UNC_MAC_CODE_EAGER=48316
+UNC_MAC_A5_EAGER=17540
 # +8 on 2026-10-02 for the same reason as the eager pair above: the
 # overlay call that now says WHICH of StuffIt 2.x's ciphers an entry
 # wants. A5 fell to 19,096 and its ceiling is left where it was.
@@ -1243,7 +1251,9 @@ UNC_MAC_A5_EAGER=17528
 # above); A5 18,000, under its ceiling.
 # -9,280 code on 2026-10-21, the probes that left with the bundle (the eager
 # pair above); A5 17,632, under its ceiling.
-UNC_MAC_CODE_LAZY=46688
+# +52 code on 2026-10-21 for the same working directory as the eager pair;
+# A5 17,644, under its ceiling.
+UNC_MAC_CODE_LAZY=46740
 UNC_MAC_A5_LAZY=19200
 if [ -n "$UNC_OVL_RESIDENT" ]; then
     UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-$UNC_MAC_CODE_DEFAULT}

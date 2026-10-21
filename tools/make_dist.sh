@@ -119,7 +119,14 @@ are the same story for the same reason: that method looks back over as much as
 and the rest of the archive still comes out. Every other format fits in
 512 KB, and with 1 MB the question does not arise.
 
-v$VERSION puts files and folders back exactly as they were before they
+v$VERSION fixes one crash, the first reported from outside: on System 6
+with AppleShare's "Desktop Mgr" file in the System Folder -- which the
+System 6.0.8 disk image most Mini vMac users start from has -- any
+archive holding an application, a control panel or anything else with
+its own icon bombed with "unimplemented trap" as that file came out.
+Nothing else changed.
+
+v0.41.0 puts files and folders back exactly as they were before they
 were archived, wherever the archive kept it: each icon's place in its
 window, each folder's window -- where it opens, its size, its view and
 scroll -- the Get Info comment, all three dates, the Locked box, custom

@@ -156,6 +156,25 @@ typedef struct DTPBRec {
     OSType     ioFileCreator;
     OSType     ioFileType;
 } DTPBRec;
+
+/* A working directory's block, Multiverse.h's layout, for the three
+ * fields DTBundle sets and the one PBOpenWD answers in. */
+typedef struct WDPBRec {
+    Ptr        qLink;
+    short      qType;
+    short      ioTrap;
+    Ptr        ioCmdAddr;
+    Ptr        ioCompletion;
+    OSErr      ioResult;
+    StringPtr  ioNamePtr;
+    short      ioVRefNum;
+    short      filler1;
+    short      ioWDIndex;
+    int32_t    ioWDProcID;
+    short      ioWDVRefNum;
+    short      filler2[7];
+    int32_t    ioWDDirID;
+} WDPBRec;
 #pragma pack(pop)
 
 /* Toolbox calls, implemented in tests/mac_sink_test.c. */
@@ -197,7 +216,9 @@ OSErr PBDTAddIconSync(DTPBRec *pb);
 short  CurResFile(void);
 void   UseResFile(short ref);
 void   SetResLoad(Boolean load);
-short  HOpenResFile(short vref, long dir, ConstStr255Param name, SignedByte perm);
+OSErr  PBOpenWDSync(WDPBRec *pb);
+OSErr  PBCloseWDSync(WDPBRec *pb);
+short  OpenRFPerm(ConstStr255Param name, short vref, SignedByte perm);
 void   CloseResFile(short ref);
 short  Count1Resources(OSType type);
 Handle Get1IndResource(OSType type, short index);

@@ -32,9 +32,9 @@ BLOCKERS.md's (*Status*). The interactive UI is driven end to end on System
 | `tools/vmac/README.md` | how to run the emulator harnesses and probes | before booting anything |
 | `MANUAL_TESTS.md` | what only somebody outside this machine can do — hardware, a copy of the software, an account to post from | when something needs one of those |
 
-That session-start reading is **~13.7k tokens** (PROGRESS 4.9k,
-OPEN_ITEMS 5.9k, BLOCKERS' first two sections 2.8k); BLOCKERS'
-withdrawn-claims archive is another **~76.2k** and is reference, not
+That session-start reading is **~13.8k tokens** (PROGRESS 4.9k,
+OPEN_ITEMS 5.9k, BLOCKERS' first two sections 2.9k); BLOCKERS'
+withdrawn-claims archive is another **~76.7k** and is reference, not
 orientation. All five are ESTIMATES (bytes ÷ 3.93, ±5 %, 2026-10-21; no
 tokenizer is installed). `tools/check_docs.py` only fails at 25 % drift, and
 every one of them has gone stale before, so **re-measure them whenever you

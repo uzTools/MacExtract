@@ -155,10 +155,13 @@ REPO = os.path.dirname(HERE)
 # **RAISED by 64 B 2026-10-19, DERIVED**: TIERS_CONTROL fell by that much
 # with the toolchain update (below).
 TIERS = {
-    "sys3-512K": (188548, "System 3.0, Macintosh 512Ke (225,956 B free)"),
-    "sys6-512K": (93148, "System 6.0.8, Macintosh 512Ke (130,556 B free)"),
-    "floor-1M":  (617436, "System 6.0.8, 1 MB Mac Plus — the floor target"),
+    "sys3-512K": (188516, "System 3.0, Macintosh 512Ke (225,956 B free)"),
+    "sys6-512K": (93116, "System 6.0.8, Macintosh 512Ke (130,556 B free)"),
+    "floor-1M":  (617404, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
+# -32 on all three 2026-10-21, DERIVED from TIERS_CONTROL +32 (the bundle's
+# working directory, DECISIONS.md 2026-10-21, *the Desktop Manager System 6
+# can have*); they were 188,548 / 93,148 / 617,436 since that day's sniffer image.
 
 # RE-TAKEN on all three machines 2026-10-09 (`-D UNC_OVL_RESIDENT -D
 # UNC_AT_BUDGET`, derived-PCCTS.tar), and all three had fallen by the
@@ -332,7 +335,11 @@ TIERS = {
 # own, unc_sniff.c (DECISIONS.md 2026-10-21, *the probes that left with the
 # bundle*): the control's CODE -72 and A5 +8 against the shipped pair's
 # -9,648 (CODE -9,284, A5 -364), so OVL_SAVED +9,616.
-TIERS_CONTROL = 224944     # build/mac-resident, CODE + A5, 2026-10-21
+# **+32 2026-10-21, and OVL_SAVED -32, DERIVED**: the bundle's resource fork
+# through a working directory (DECISIONS.md 2026-10-21, *the Desktop
+# Manager System 6 can have*): the control's CODE +52 and A5 -20 against
+# the shipped pair's +64 (CODE +52, A5 +12), so OVL_SAVED -32.
+TIERS_CONTROL = 224976     # build/mac-resident, CODE + A5, 2026-10-21
 # **What this control cannot see: the autotest harness.** TIERS was read
 # on the machine from an autotest build (`UNC_MAC_AUTOTEST`), and
 # build/mac-resident has no harness in it, so harness growth lowers what a
@@ -692,7 +699,10 @@ EXPECT = {
 # (DECISIONS.md 2026-10-21, *the probes that left with the bundle*). The
 # residue is NOT re-taken: every byte of this is bytes the shipped build no
 # longer carries, which is the quantity the residue was measured beside.
-OVL_SAVED = 159152
+# **-32 2026-10-21, -> 159,120**: the bundle's resource fork through a
+# working directory, the control's +32 against the shipped pair's +64
+# (DECISIONS.md 2026-10-21, *the Desktop Manager System 6 can have*).
+OVL_SAVED = 159120
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
 # every kept image is one — as is the bundle an envelope holds on to.

@@ -155,11 +155,13 @@ def build_autotest_app(defines=()):
     return os.path.join(bdir, "MacExtract.bin")
 
 
-def build_boot_image(appbin, dest, system="System6.hfv"):
+def build_boot_image(appbin, dest, system="System6.hfv", keep_inits=False):
     stock = os.path.join(VMAC_HOME, system)
     if not os.path.exists(stock):
         raise SystemExit(f"run: no {system} — run tools/vmac/setup.sh first")
-    sh(sys.executable, os.path.join(HERE, "mkboot.py"), stock, appbin, dest)
+    extra = ["--keep-inits"] if keep_inits else []
+    sh(sys.executable, os.path.join(HERE, "mkboot.py"), stock, appbin, dest,
+       *extra)
 
 
 class Display:
@@ -551,6 +553,12 @@ def main():
                          "System 7.0.1 tier, where Standard File returns a "
                          "working-directory refNum and the Process Manager "
                          "honours the 'SIZE' partition")
+    ap.add_argument("--keep-inits", action="store_true",
+                    help="boot the stock System Folder as it is -- every INIT "
+                         "and cdev loaded -- instead of System + Finder alone. "
+                         "The System 6.0.8 image carries AppleShare's Desktop "
+                         "Mgr INIT, which is the one environment that bombed "
+                         "v0.41.0 (uzTools/MacExtract issue #1)")
     ap.add_argument("--timeout", type=float, default=300.0,
                     help="host seconds to wait for a result grid (not Mac time)")
     ap.add_argument("--poll", type=float, default=5.0,
@@ -660,7 +668,7 @@ def main():
 
 def sweep(args, fixtures, extras, appbin, rundir):
     bootimg = os.path.join(rundir, "boot-autotest.hfv")
-    build_boot_image(appbin, bootimg, args.system)
+    build_boot_image(appbin, bootimg, args.system, keep_inits=args.keep_inits)
     if args.pngdir:
         os.makedirs(args.pngdir, exist_ok=True)
     manifest_dir = os.path.join(REPO, "fixtures", "manifests")

@@ -327,14 +327,41 @@ void UseResFile(short ref) { gCurRes = ref; }
  * opened, so these are never reached, and the bundle is not registered. */
 void SetResLoad(Boolean load) { (void)load; }
 #endif
-short HOpenResFile(short vref, long dir, ConstStr255Param name, SignedByte perm)
+/* Working directories, as the shell opens one to reach a fork by name in a
+ * folder on a System without HOpenResFile (uzTools/MacExtract issue #1):
+ * four slots, a refNum each, the directory behind it; gWDOpen counts what
+ * is still open, and the registration checks fail on one left open. */
+#define MAX_WD 4
+static long gWDDir[MAX_WD]; static int gWDUsed[MAX_WD]; static int gWDOpen;
+OSErr PBOpenWDSync(WDPBRec *pb)
 {
-    char path[800]; FILE *f;
-    (void)vref; (void)perm;
+    int i;
+    for (i = 0; i < MAX_WD; i++)
+        if (!gWDUsed[i]) {
+            gWDUsed[i] = 1; gWDDir[i] = pb->ioWDDirID; gWDOpen++;
+            pb->ioVRefNum = (short)(-32000 - i);
+            return noErr;
+        }
+    return paramErr;
+}
+OSErr PBCloseWDSync(WDPBRec *pb)
+{
+    int i = -32000 - pb->ioVRefNum;
+    if (i < 0 || i >= MAX_WD || !gWDUsed[i]) return paramErr;
+    gWDUsed[i] = 0; gWDOpen--;
+    return noErr;
+}
+short OpenRFPerm(ConstStr255Param name, short vref, SignedByte perm)
+{
+    char path[800]; FILE *f; long dir;
+    int i = -32000 - vref;
+    (void)perm;
 #ifdef UNC_AT_OVERLAY
-    (void)dir; (void)name; (void)path; (void)f;
+    (void)name; (void)path; (void)f; (void)dir; (void)i;
     return -1;
 #endif
+    if (i < 0 || i >= MAX_WD || !gWDUsed[i]) return -1;   /* no such WD */
+    dir = gWDDir[i];
     if (gRes) return -1;
     full_path(dir, name, 1, path, sizeof path);
     if (!(f = fopen(path, "rb"))) return -1;
@@ -897,7 +924,7 @@ int main(int argc, char **argv)
                     { 1, 0xFF, 0x7061756Cu, 256, 'T' } };
                 size_t w;
                 if (gDTRegN != (int)(sizeof want / sizeof want[0]) || gRes ||
-                    gCurRes != 1)
+                    gCurRes != 1 || gWDOpen)
                     bad |= DROP_DTREG;
                 else for (w = 0; w < sizeof want / sizeof want[0]; w++)
                     if (gDTReg[w].icon != want[w].icon ||
@@ -978,7 +1005,7 @@ int main(int argc, char **argv)
             }
             /* the application, and the empty type list: no icon */
             if (gDTRegN != 2 || gDTReg[0].icon || !gDTReg[1].icon ||
-                gDTReg[1].itype != 0xFF || gRes || gCurRes != 1) {
+                gDTReg[1].itype != 0xFF || gRes || gCurRes != 1 || gWDOpen) {
                 fprintf(stderr, "meta [BNDL past its handle]: %d "
                         "registration(s)\n", gDTRegN);
                 ok = 0;

@@ -447,6 +447,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-19 (the clock inside the Mac) — the Mac Plus timings are read off the emulated Ticks from the host at 50 Hz, calibrated against a known wait; the four-archive comparison and the 1 MB table re-measured on it
 - 2026-10-20 (one place for every probe) — every probe is in its reader's `_probe.c`; the move cost 212 B of resident CODE until its five grown files compared bytes, and lands at −32
 - 2026-10-21 (the probes that left with the bundle) — the sniffer and all twenty-six probes are a seventeenth `'OVLY'` image, run from the bundle before the release and given back with it; 9,284 B of resident CODE and 364 of A5 go, +9,616 B on every budget that keeps images
+- 2026-10-21 (the Desktop Manager System 6 can have) — v0.41.0 bombed "unimplemented trap" under AppleShare's `Desktop Mgr` INIT on System 6.0.8; the bundle's resource fork is opened through a working directory now, and a tier boots the stock System Folder
 
 ---
 
@@ -28964,3 +28965,85 @@ the 666 B residue cannot resolve.
 Resource Manager (TESTING.md, *The overlay loader, off the Macintosh*);
 the emulated tiers have no cache either, and the only instrument for the
 image running on silicon is the LC 475 (MANUAL_TESTS.md).
+
+## 2026-10-21 (the Desktop Manager System 6 can have) — v0.41.0 bombed "unimplemented trap" under AppleShare's `Desktop Mgr` INIT on System 6.0.8; the bundle's resource fork is opened through a working directory now, and a tier boots the stock System Folder
+
+**The report.** uzTools/MacExtract issue #1, 2026-10-21, two days after
+the first public release: Mini vMac's standard Macintosh Plus, System
+6.0.8, v0.41.0 copied in, a StuffIt archive brought over with ImportFl
+(Cap'n Magneto from Macintosh Garden, and a "Legacy SIT" StuffIt Deluxe
+wrote of the same files) — the extraction starts and the machine bombs
+with *unimplemented trap*. Both archives on that page that fit the
+description are StuffIt 5 (`OriginalCM.sit`, `CM93.sit`), and both pass
+the System 6.0.8 / 4 MB tier byte-exact (`run.py --expect`), so the
+engine and the sink were not it. The release asset is byte-identical to
+`dist/MacExtract.bin` at the tag (SHA-256 compared), so the build was
+not it either.
+
+**What differed was the System Folder.** Every harness here boots
+System + Finder alone (`mkboot.py`, *The System Folder is stripped*),
+written as a RAM measure for the 1 MB floor. The stock `System6.hfv`
+carries twenty-odd INITs and cdevs, MultiFinder on — and among them
+`Desktop Mgr`, INIT/MACS, 15,886 B, 11 July 1988: the Desktop Manager
+AppleShare shipped for System 6. ImportFl types what it brings `BINA`
+with creator `SITx` (its own page says so), which no harness here had
+written either.
+
+**Reproduced and bisected**, 2026-10-21, with the release binary, the
+Finder kept and the archive typed as ImportFl types it (`tools/vmac/
+drive.py`, each screen read before the next click): the stock System
+Folder bombs seconds after the destination dialog, exactly the
+reporter's frame. System + Finder + `Desktop Mgr` alone: the same bomb.
+The stock folder with that one file deleted, MultiFinder and the rest
+in: *Extraction complete.*, the folder in the Finder's window.
+
+**The trap.** `DTBundle` (2026-10-18, *the icon Expander registers*)
+runs where `PBDTGetPath` answers noErr, and opened the application's
+fork with `HOpenResFile` — `_HOpenResFile`, 0xA81A, which System 7
+added. On a stripped 6.0.8 `PBDTGetPath` is −50 and the call is never
+reached, which is the measurement "a System 6 volume has no Desktop
+Manager" rested on (BLOCKERS.md, *Withdrawn claims*). Under the INIT it
+is reached, on a System whose Resource Manager has no such trap. The
+fork is opened through a working directory now — `PBOpenWD` on the
+folder, `OpenRFPerm` against it, `PBCloseWD` once the fork is closed —
+three calls the 128K ROM has (Inside Macintosh IV), the same on every
+System. **+52 B of resident CODE and +12 of A5** in the shipped build
+(`tools/build_mac.sh`, the A5 being `.data` alignment), +52 of CODE in
+the lazy and resident builds; `StampCat`'s frame, which inlines
+`DTBundle`, is 272 → 320 B for the block (FORMATS.md, *Stack*); the
+host-side sink test mocks the three and fails a working directory left
+open, as it fails a fork left open.
+
+**Verified.** `run.py --keep-inits --expect OriginalCM.sit`, the new
+lane that boots the System Folder as it is: NOGRID on the shell before
+the change, PASS after it. The interactive story on the INIT-only disk
+with the fixed build: *Extraction complete.*, the output in the Finder.
+`./ci.sh` green.
+
+**What this cannot see.** Whether the INIT's desktop database took the
+bundle, the icons and the comment — nothing read it back; the files are
+on the volume and the Finder shows the folder, no more is claimed.
+Whether the reporter's System Folder carries that INIT: asked in the
+reply. The other calls under `PBDTGetPath` — `PBDTAddAPPL`,
+`PBDTAddIcon`, `PBDTSetComment`, `PBDTFlush` — are `_HFSDispatch`
+selectors the INIT either serves or refuses with an error; the run
+above completed through all of them on one application and one
+archive. The whole sample under `--keep-inits`, 74/74 at 4 MB on System
+6.0.8 the same day, says the INIT breaks nothing else (BLOCKERS.md,
+*Status*). System 7.0.1's tier passes both archives too, onto a floppy
+that has no Desktop Manager; the same application extracted onto the
+System 7 boot volume — `interactive.py --e2e --system Sys7.img`, the
+volume with the Desktop Database — ends in *Extraction complete.* with
+the folder in the Finder's window, and `os9.py --hfsplus --launch` on
+`derived-XferIt_1.5b4.sea` (an application and an INIT, both bundled)
+writes all ten files byte-exact onto Mac OS 9.2's HFS+ boot volume. So
+the working directory serves the Systems that have `HOpenResFile` as
+well as the one that has not.
+
+**The lesson is the strip.** A harness simplification written down as a
+cost measure is also a blind spot, and the second half was never
+written: "stripped so the 1 MB floor is measurable" should have read
+"and so nothing an INIT adds is ever exercised". Every "cannot see"
+sentence in `tools/vmac/README.md` is one of these; this one was
+missing (CLAUDE.md, *When adding a harness, write down what it CANNOT
+see*).

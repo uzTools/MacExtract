@@ -5369,11 +5369,11 @@ the bundle*), and seventeen since.
 
 | build | switch | resident `CODE` | A5 | `MacExtract.code.bin` | `MacExtract.bin` |
 |---|---|---|---|---|---|
-| **eager — SHIPPED** | (default) | **48,264 B** | 17,528 B | **57,984 B** | **254,208 B** |
-| lazy | `UNC_OVL_LAZY=1` | 46,688 B | 17,632 B | 56,448 B | 252,800 B |
-| resident — the control | `UNC_OVL_RESIDENT=1` | **188,028 B** | **36,916 B** | 219,648 B | 223,488 B |
+| **eager — SHIPPED** | (default) | **48,316 B** | 17,540 B | **58,112 B** | **254,336 B** |
+| lazy | `UNC_OVL_LAZY=1` | 46,740 B | 17,644 B | 56,448 B | 252,800 B |
+| resident — the control | `UNC_OVL_RESIDENT=1` | **188,080 B** | **36,896 B** | 219,776 B | 223,616 B |
 
-Read off the three builds of 2026-10-21's paragraph below. (CORRECTED
+Read off the three builds of 2026-10-21's paragraph below, then +52 B of CODE in each for the bundle's working directory the same day (DECISIONS.md 2026-10-21, *the Desktop Manager System 6 can have*). (CORRECTED
 2026-10-20 before that: the rows were 2026-10-18's and had not followed
 2026-10-19's four changes, which `tools/build_mac.sh`'s ratchet records
 carry by entry; CORRECTED 2026-10-18 before that, from 2026-10-14's.)
@@ -5386,7 +5386,7 @@ a file of its own, `src/unc_sniff.c`, which the control links as before);
 a seventeenth image, `ovl_sniff`, **13,384 B** — the sniffer and all
 twenty-six probes — and the bundle +13,396 to 192,288 B; `OVL_SAVED`
 149,536 → **159,152**, `TIERS_CONTROL` 224,976 → 224,944 and every TIERS
-budget +32 (derived). What a format's layer is granted moves by **+9,616
+budget +32 (derived); then **159,120** the same day for the bundle's working directory, `TIERS_CONTROL` 224,976 and every TIERS budget −32 (derived, DECISIONS.md 2026-10-21, *the Desktop Manager System 6 can have*). What a format's layer is granted moves by **+9,616
 B** where the release keeps images, and by **−3,780 B** where it keeps the
 bundle whole — an envelope or a split set's first layer, whose next layer
 is sniffed from that bundle — because the sniffer's image is in it and the
@@ -5703,7 +5703,7 @@ quoted beside. It cancels in a DIFFERENCE taken from one probe pair, which is
 why the overlay gains are measured that way (*What it buys, against the
 control*), and 320 B of the residue there is exactly this: **117,040 B saved
 between the shipped pair against 116,720 B between the probe pair**, both
-measured 2026-09-27. The shipped pair is **159,152 B** since 2026-10-21's sniffer image, *the probes that left with the bundle*, 149,536 B after 2026-10-19's toolchain update,
+measured 2026-09-27. The shipped pair is **159,120 B** since 2026-10-21's working directory for the bundle, *the Desktop Manager System 6 can have*, 159,152 B after that day's sniffer image, *the probes that left with the bundle*, 149,536 B after 2026-10-19's toolchain update,
 149,504 B after that day's custom-icon bit set last, 149,536 B after that day's top-level placement, 149,504 B after 2026-10-18's bundle registration, 149,552 B after that day's two failure messages, 149,520 B after that day's Spotlight comment, 148,240 B after 2026-10-17's
 dates in the Macintosh's own zone, 147,936 B after that day's Mac OS X sidecars, 143,872 B after that day's merge of the archives' Finder info (every reader in an image or the control, none in the shipped build), 139,280 B after that day's merge of StuffIt classic's and DiskDoubler's Finder info, 138,896 B after that day's merge of the envelopes' Finder info, 138,864 B after that branch alone, 138,608 B after that day's review of the Finder metadata, 138,576 B after that day's metadata, 138,544 B after 2026-10-16's
 time left from the byte counts, 138,576 B after that day's
@@ -5851,7 +5851,7 @@ been chosen is a read at the moment the application's own floppy may be out.
 The budget a tier gives the engine is therefore not one number any more. It
 is the resident build's budget for that tier — the figures under *512 KB
 machines* and *Floor target verification* — plus what the release leaves,
-which is the 159,152 B of `CODE` and A5 the shipped build does not carry
+which is the 159,120 B of `CODE` and A5 the shipped build does not carry
 (*Three configurations, one tree*), less the images this format keeps and 8 B
 of block header each, less a **666 B residue**: 320 B of that is the probe
 build's own weight and **346 B is unattributed — the same 346 B either side of
@@ -6027,7 +6027,7 @@ rose, because the control took 2,148 B for the same format.
 **The last row is the one no tally had shown**: a `.hqx`, a `.gz`, a `.Z` or
 a MacBinary wrapper does not know what is under it, so the bundle stays and
 that layer runs with **less** memory than a resident build would have given
-it — 192,288 B held against 159,152 B saved. It costs nothing on the tiers
+it — 192,288 B held against 159,120 B saved. It costs nothing on the tiers
 because the layer under the envelope gets its own budget a moment later
 (*What an archive keeps*), and the envelope's own decode is small: the
 heaviest in the Mac sample is `popper-1.7.tar.Z`'s LZW at 147,764 B, which
@@ -6695,7 +6695,7 @@ and the call graph comes from the relocations in the linked objects
 | deepest chain in the engine | 6,664 B (`unc_dd_extract` → `dd_fork` → `dd_ddn`) | **3,350 B**, derived 2026-10-17: 3,310 B since 2026-10-07 (corrected here, where it still read 3,386), plus the 44 B every reader's frame gained with `UncEntryInfo` (`unc_dd_extract` 952 → 996, `-fstack-usage`), less 4 the same day for DiskDoubler's FInfo (996 → 992; `unc_sit_extract` 934 → 938, and `sit_finder` 42, a leaf off the walk) |
 | Now Compress chain | 5,632 B | ~1,400 B, and **616 B less since 2026-09-21** — a shape-3 block's 346-byte table staging moved into the per-archive allocation its code tables already live in, measured `-Os -fstack-usage` as 2,264 → 1,648 B over this file's own deepest chain (OPEN_ITEMS.md, *What is still XADMaster's*) |
 | largest single frame | 3,740 B (`dd_fork`) | **2,352 B** (`ars_index_build`) |
-| largest frame in the SHELL | — | **1,544 B** (`ExtractOne`, whose `MacSink` holds an entry), measured 2026-10-17; it was 1,500 B on `main` that day, where this row read 1,480 |
+| largest frame in the SHELL | — | **1,544 B** (`ExtractOne`, whose `MacSink` holds an entry), measured 2026-10-17; it was 1,500 B on `main` that day, where this row read 1,480. `StampCat`, under `sink_end` (34) below it, 272 → **320 B** on 2026-10-21 for the working-directory block its inlined `DTBundle` opens (DECISIONS.md 2026-10-21, *the Desktop Manager System 6 can have*) |
 
 Zip's own chain, re-measured **2026-10-08** for PKZIP 1.01/1.02's
 minimum match length (*Implode*), and it is the first change to this

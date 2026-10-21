@@ -182,7 +182,8 @@ read.
 | `segcheck.py` | **replay every segmented-archive scenario in one command** — the six joining schemes, parts inside envelopes, and a chained file, across both harnesses |
 | `setup.sh` | fetch + build the emulator, the ROM and the System 3.0, 6.0.8 and 7.0.1 images into `$UNC_VMAC_HOME` (default `~/.cache/macextract/vmac/`) |
 | `sys30.py` | the **System 3.0 / Finder 5.1** tier: same disks, same grid, same grader as `run.py`, but launched by double-click because that system reads no shell name — see above |
-| `mkboot.py` | strip that image to System + Finder and make it boot straight into the application |
+| `mkboot.py` | strip that image to System + Finder and make it boot straight into the application; `--keep-inits` leaves the System Folder as it is |
+| `drive.py` | boot a Mac and take clicks, keys and screenshots from a command file, one step at a time — the issue #1 reproduction |
 | `run.py` | build the disks, boot, screenshot, decode, check. `--out-kb` sizes the DESTINATION volume, which is how the full-disk path is reached at all — see below. **It cannot grade more than 128 files**: the autotest keeps that many records (`AT_MAXREC`) and an archive with more fails by count, as a 153-file icon set did on 2026-10-16 with every file on the disk |
 | `interactive.py` | drive the real UI (SFGetFile, progress dialog, Cancel, Cmd-., the password dialog) and photograph each step |
 | `os9.py` | boot Mac OS 9 on emulated PowerPC, launch the application from the keyboard, and check both forks of what it wrote — see below |
@@ -284,7 +285,28 @@ uses it.
 **The System Folder is stripped to System + Finder.** The stock image ships
 with a dozen INITs and cdevs; on the 1 MB floor-target machine that is the
 difference between a result and a dead machine, and it would make peak-heap
-figures incomparable between runs.
+figures incomparable between runs. **What every stripped tier cannot see:
+what an INIT adds to the System.** The stock `System6.hfv` carries
+AppleShare's 1988 `Desktop Mgr` INIT, which gives System 6 a Desktop
+Manager, and v0.41.0 bombed under it on a System 7 trap no stripped boot
+ever reached (uzTools/MacExtract issue #1; DECISIONS.md 2026-10-21, *the
+Desktop Manager System 6 can have*). `run.py --keep-inits` boots the
+System Folder as it is, every INIT loaded, MultiFinder included where the
+Finder is kept — the lane that fails on the old shell and passes on the
+fixed one, and **74/74** over the sample at 4 MB on 2026-10-21:
+
+    tools/vmac/run.py --keep-inits --expect ARCHIVE.sit     # NOGRID before 2026-10-21
+    tools/vmac/run.py --keep-inits --list tools/vmac/sample.txt
+
+The reporter's whole story — the Finder, MultiFinder, the release binary,
+the archive typed `BINA`/`SITx` as Mini vMac's ImportFl types it — is
+`drive.py`: a booted Mac that takes clicks and keys from a file, so each
+screen can be looked at before the next step is chosen:
+
+    mkboot.py $V/System6.hfv dist/MacExtract.bin boot.hfv --finder --keep-inits \
+              --data ARCHIVE.sit:ARCHIVE.sit
+    hmount boot.hfv; hattrib -t BINA -c SITx ARCHIVE.sit; humount
+    drive.py boot.hfv mv-4M shots/ &        # then: echo 'dclick 472 45' >> shots/cmd
 
 **The application always says whether it is alive.** Before doing any work it
 paints a grid with `ret = -1000` ("running"); a missing `In`/`Out` volume paints

@@ -17,6 +17,7 @@ Takes the stock image fetched by setup.sh and produces a boot volume that
 Usage:
     mkboot.py <stock.hfv> <app.bin> <out.hfv> [--data FILE:MACNAME]...
               [--macbin FILE:MACNAME]... [--app-name NAME] [--finder]
+              [--keep-inits]
 
 <app.bin> is the MacBinary produced by a Retro68 build (tools/vmac/run.py
 builds macextract's); its resource fork is what makes it an application, so it
@@ -284,6 +285,13 @@ def main():
     if "--finder" in argv:
         finder = True
         argv.remove("--finder")
+    keep_inits = False
+    if "--keep-inits" in argv:
+        # The stock System Folder as it is: every INIT, cdev and MultiFinder
+        # left in, which is what a person's own install has and what no
+        # strip run can see (uzTools/MacExtract issue #1, 2026-10-21).
+        keep_inits = True
+        argv.remove("--keep-inits")
     if len(argv) != 3:
         raise SystemExit(__doc__)
     stock, appbin, out = argv
@@ -291,15 +299,18 @@ def main():
     hfs = HFS(out)
     try:
         # Only a run that KEEPS the Finder wants its icon cache dropped.
-        strip_system_folder(hfs, drop_desktop=finder)
+        if not keep_inits:
+            strip_system_folder(hfs, drop_desktop=finder)
         if finder:
             # At the ROOT, where the Finder's volume window shows it.
             hfs.run("hcopy", "-m", appbin, hfs.path(app_name))
-            verify_stripped(hfs, KEEP)
+            if not keep_inits:
+                verify_stripped(hfs, KEEP)
         else:
             # The shell application is looked up in the blessed (System) folder.
             hfs.run("hcopy", "-m", appbin, hfs.path(SYS_FOLDER, app_name))
-            verify_stripped(hfs, KEEP | {app_name})
+            if not keep_inits:
+                verify_stripped(hfs, KEEP | {app_name})
         for host, macname, mode in extras:
             # MACNAME may name subfolders, "Archives:archive.sit". Create them:
             # putting the archive somewhere OTHER than the volume root is the

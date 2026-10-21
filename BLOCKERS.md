@@ -33,6 +33,13 @@ error, late image or failed keep on any of the 238 runs.
 The heaviest 4 MB allocation is the same to the byte on all three 4 MB
 tiers, 44 B under the Linux engine (FORMATS.md, *System 7 tier*).
 
+**Every tier above boots System + Finder alone.** With the stock System
+Folder — every INIT loaded, MultiFinder on — v0.41.0 bombed on System
+6.0.8 under AppleShare's `Desktop Mgr` INIT (issue #1, *Withdrawn claims*);
+fixed 2026-10-21: `run.py --keep-inits --expect` on `OriginalCM.sit` is
+NOGRID on the old shell and PASS on the new, and the whole sample under
+`--keep-inits` is **74/74** at 4 MB on System 6.0.8 the same day.
+
 **Run off the sample**, none of it committable, each graded against this
 engine's Linux output (`run.py --expect`):
 
@@ -2019,6 +2026,27 @@ a harness can click is not the same list.
   survived:** XADMaster and deark disagree on the sign, and that was read
   as the question being moot rather than as a question with a document
   (DECISIONS.md 2026-10-17, *dates in the Macintosh's own zone*).
+- **"A System 6 or System 3.0 volume has no Desktop Manager"** — the
+  shell's own comment over `StampCat`, DECISIONS.md 2026-10-17 and
+  2026-10-18 (*the icon Expander registers*), and behind it "every
+  emulated tier passes on System 6.0.8". **Withdrawn 2026-10-21**:
+  AppleShare's 1988 `Desktop Mgr` INIT gives System 6 one, the stock
+  `System6.hfv` carries it, and under it `PBDTGetPath` answers noErr and
+  `DTBundle` reaches `HOpenResFile` — a System 7 trap. Every tier here
+  strips the System Folder to System + Finder (`mkboot.py`), so no sweep
+  ever loaded the INIT. **Cost: the first bug report on the public
+  repository, two days after v0.41.0** — uzTools/MacExtract issue #1, a
+  Mac Plus under Mini vMac bombing "unimplemented trap" on two StuffIt 5
+  archives, both of which the stripped 6.0.8 tier extracts byte-exact.
+  Reproduced on the stock System Folder with the release binary,
+  bisected to that one INIT (System + Finder + the INIT bombs; the stock
+  folder without it completes), fixed with a working directory and
+  `OpenRFPerm`, both in the 128K ROM. **Why it survived:** the tiers'
+  stripping was written down as a cost measure (RAM on the 1 MB floor)
+  and never as a blind spot, and "no Desktop Manager on System 6" was
+  measured on exactly the volume the strip had produced (DECISIONS.md
+  2026-10-21, *the Desktop Manager System 6 can have*; `run.py
+  --keep-inits` is the lane that sees it now).
 
 ### Corrected figures and superseded write-ups
 
