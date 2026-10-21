@@ -135,9 +135,11 @@ git push origin v0.12
 - **`dist/` must be current**; the workflow publishes what is committed.
 - **The release notes are `dist/README.txt`, verbatim** — a download page, not
   a changelog. Re-read it before tagging.
-- **This machine cannot see the release page.** Confirm the tag with
-  `git ls-remote --tags origin` and report a tag pushed, never a release
-  published.
+- **This machine cannot see the release page, but it can ask the API.**
+  Confirm the tag with `git ls-remote --tags origin`, then
+  `curl -sS https://api.github.com/repos/uzTools/MacExtract/releases/tags/vX.Y.Z`
+  — it lists the assets once the workflow has run (v0.42.0 took about a
+  minute). Report a release published only once that answers.
 - **If the page does not show the new version, re-push the same tag**:
   `git push origin :refs/tags/vX.Y.Z && git push origin vX.Y.Z` (DECISIONS.md
   2026-08-26, *the tag that did not fire*).
