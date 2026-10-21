@@ -146,6 +146,7 @@ measured on a different list:
 | tier | command | cost |
 |---|---|---|
 | System 6.0.8, 1 MB, 55 fixtures | `run.py --mem 1M --list sample.txt` | ~5.1 s per fixture, one boot each |
+| System 6.0.8, 4 MB, the stock System Folder, 74 fixtures | `run.py --keep-inits --list sample.txt` | the same per fixture; a tier of its own since 2026-10-21, run beside the stripped one. **Not at 1 MB**: with twenty INITs and cdevs loaded the machine shows the System's own stop-sign alert with its text undrawn before the application paints anything (NOGRID, 300 s each; measured on two fixtures 2026-10-21), which is what the strip was written for |
 | System 7.0.1, 4 MB, 55 fixtures | `run.py --system Sys7.img --list sample.txt` | ~5.1 s per fixture, one boot each |
 | Mac OS 9.2, 22 fixtures | `os9.py --list os9sample.txt --launch` | tens of minutes — one full PowerPC boot per fixture |
 

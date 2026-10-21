@@ -21,6 +21,7 @@ error, late image or failed keep on any of the 238 runs.
 | System 3.0 / Finder 5.1, **1 MB** — the oldest system, at the RAM floor | **74/74**: the 72 on 2026-10-09, `4alnch11.zip` 2026-10-10, `synth-sqp-clear.pkg` 2026-10-11 |
 | System 3.0, **512 KB** Macintosh 512Ke | **72/74**, re-measured whole on 2026-10-21 after the sniffer's image (`sys30.py --emu mv-512Ke`, one `NOGRID` re-run), the same two refused by name, and on 2026-10-18 after M70 (`c0be3ab`), the same two; before it the 72 on 2026-10-09, `4alnch11.zip` 2026-10-10, `synth-sqp-clear.pkg` 2026-10-11 — two per-entry memory refusals, not failures, the two `run_tiers.py --shipped` named. With every decoder resident it is 68/72, the four the resident lane names (2026-10-09; the resident build has run neither of the two): the overlays are what recovered the other two (FORMATS.md, *Overlays*) |
 | System 6.0.8, 4 MB Mac Plus | **74/74**, 2026-10-10, `synth-sqp-clear.pkg` 2026-10-11 |
+| System 6.0.8, 4 MB, **the stock System Folder** — every INIT and cdev loaded, AppleShare's `Desktop Mgr` among them (`run.py --keep-inits`); a tier of its own since 2026-10-21, beside the stripped one and not instead of it, the maintainer's call | **74/74**, 2026-10-21, on v0.42.0; v0.41.0 bombed its first application (*Withdrawn claims*). **At 1 MB the machine does not get as far as the application**: the System's own stop-sign alert, its text undrawn, before any grid, on the first two fixtures tried (2026-10-21) — the strip exists for that machine, and the 1 MB tier stays stripped |
 | System 6.0.8, **1 MB** — the RAM floor | **74/74**, re-measured whole on 2026-10-21 after the sniffer's image (`run.py --mem 1M`, one `EMUDIED` re-run; DECISIONS.md, *the probes that left with the bundle*); before it the 72 on 2026-10-09 (one fixture re-run after an `EMUDIED`, a host-side exit before any grid), `4alnch11.zip` 2026-10-10, `synth-sqp-clear.pkg` 2026-10-11; no memory-budget refusals remain |
 | System 6.0.8, **512 KB** Macintosh 512Ke | **68/74**, re-measured whole on 2026-10-21 after the sniffer's image (`run.py --emu mv-512Ke --system System6.hfv`, one `EMUDIED` re-run), the same six refused by name, and on 2026-10-18 after M70 (`c0be3ab`), the same six, as `run_tiers.py --check` predicted; before it the 72 on 2026-10-09, `4alnch11.zip` 2026-10-10, `synth-sqp-clear.pkg` 2026-10-11 — six per-entry refusals. **The model said 67/72**: `a2ps.V4.3.tar.Z`, which passed here on 2026-09-27, is refused 4,142 B short, and the model passed it on budgets 16,888 B stale (*Withdrawn claims*). With every decoder resident, 63/72, the nine the resident lane names (2026-10-09; not run on the two newest) — ten since 2026-10-11, DERIVED: `derived-DD_Expand.sea` is 436 B short after `JPEG Lossy`'s +704 B to the control; eleven since 2026-10-17, DERIVED: `derived-PuzzleGetter_0.8.sit`, after the sidecars' +4,080 B to the control |
 | System 7.0.1, 4 MB | **74/74**, 2026-10-10, `synth-sqp-clear.pkg` 2026-10-11 — the only tier with a code-cache flush route: `_HWPriv` called on all 72 of the `UNC_AT_BUDGET` sweep, once per kept image plus the bundle fixup |
@@ -33,12 +34,9 @@ error, late image or failed keep on any of the 238 runs.
 The heaviest 4 MB allocation is the same to the byte on all three 4 MB
 tiers, 44 B under the Linux engine (FORMATS.md, *System 7 tier*).
 
-**Every tier above boots System + Finder alone.** With the stock System
-Folder — every INIT loaded, MultiFinder on — v0.41.0 bombed on System
-6.0.8 under AppleShare's `Desktop Mgr` INIT (issue #1, *Withdrawn claims*);
-fixed 2026-10-21: `run.py --keep-inits --expect` on `OriginalCM.sit` is
-NOGRID on the old shell and PASS on the new, and the whole sample under
-`--keep-inits` is **74/74** at 4 MB on System 6.0.8 the same day.
+**Every other tier above boots System + Finder alone.** The stock-folder
+row is what caught issue #1: `run.py --keep-inits --expect` on
+`OriginalCM.sit` is NOGRID on the v0.41.0 shell and PASS on v0.42.0.
 
 **Run off the sample**, none of it committable, each graded against this
 engine's Linux output (`run.py --expect`):

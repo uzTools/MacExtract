@@ -29040,6 +29040,17 @@ writes all ten files byte-exact onto Mac OS 9.2's HFS+ boot volume. So
 the working directory serves the Systems that have `HOpenResFile` as
 well as the one that has not.
 
+**A tier of its own, beside the stripped one.** The maintainer's call,
+2026-10-21: System 6.0.8 with the stock System Folder is an ADDITIONAL
+tier in BLOCKERS.md's table, not a replacement for System + Finder
+alone — the strip still answers what the 1 MB floor can hold and keeps
+the peak-heap figures comparable, and the stock folder answers what an
+INIT adds. Both run with every sweep — at 4 MB. At 1 MB the stock
+folder is a dead machine before the application: the System's own
+stop-sign alert, text undrawn (no font fits), NOGRID on the two fixtures
+tried the same day, so the lane is 4 MB only and the strip keeps its
+original job.
+
 **The lesson is the strip.** A harness simplification written down as a
 cost measure is also a blind spot, and the second half was never
 written: "stripped so the 1 MB floor is measurable" should have read
