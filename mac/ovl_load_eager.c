@@ -1,4 +1,4 @@
-/* ovl_load_eager.c — all sixteen images as ONE resource, read at launch, and
+/* ovl_load_eager.c — all seventeen images as ONE resource, read at launch, and
  * most of it thrown away as soon as the archive says what it is.
  *
  * The lifetime this file implements is the shipped one. `mac/ovl_load_lazy.c`
@@ -154,6 +154,11 @@ void ovl_release_if_unwanted(UncFormat fmt, UncIO *io)
 
     if (gBundle == NULL) return;
 
+    /* The sniffer's image (OVL_ID_SNIFF) is in no keep set, on purpose: it
+     * has answered by the time this runs, and every later sniff — a layer
+     * under an envelope, the next archive after the reload — finds the
+     * bundle whole (DECISIONS.md 2026-10-21, *the probes that left with the
+     * bundle*). */
     switch (fmt) {
     /* Decoder, and whether an entry might be encrypted. The second column is
      * the eligibility rule the mechanism has always had: a format that MAY

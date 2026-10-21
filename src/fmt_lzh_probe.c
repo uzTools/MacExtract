@@ -1,10 +1,9 @@
-/* fmt_lzh_probe.c — LZH's probe, kept resident.
+/* fmt_lzh_probe.c — LZH's probe, in the sniffer's image.
  *
- * Split out on 2026-09-02 so the decoder can live in an overlay. `unc_sniff`
- * calls this for every file it is handed: a probe inside a blob would mean
- * loading the whole decoder in order to decide the file is not one of these.
- * Separating what DECIDES from what DECODES is what makes on-demand loading
- * pay at all (BRANCH_NOTES.md).
+ * Split out so the decoder can live in an overlay, and since 2026-10-21 in
+ * the sniffer's own image with every other probe, run before the release
+ * and given back with it (DECISIONS.md 2026-10-21, *the probes that left
+ * with the bundle*).
  *
  * Source: unchanged from fmt_lzh.c, whose provenance comments stand.
  *

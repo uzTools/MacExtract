@@ -66,7 +66,7 @@ typedef int32_t (*OverlayEntry)(const OverlayHost *host, int32_t which,
  * proof that a decoder can be one at all. It is 'OVLY' 129: a separate
  * resource from the ciphers, because an encrypted zip has no reason to load
  * a SpaceSaver decoder or the other way round. */
-/* In the EAGER lifetime, which is what ships, all sixteen images live in ONE
+/* In the EAGER lifetime, which is what ships, all seventeen images live in ONE
  * resource, 'OVLY' 128, read once at launch (tools/overlay/mkbundle.py). The
  * per-image ids below are then indexes INTO that bundle rather than resource
  * numbers; under UNC_OVL_LAZY=1 they are the resource numbers themselves. */
@@ -117,6 +117,11 @@ typedef int32_t (*OverlayEntry)(const OverlayHost *host, int32_t which,
  * to overflow when an id is added above. Ids run from OVL_ID_BUNDLE and are
  * dense; this is the count with room to spare, and ovlid.py is what keeps the
  * numbers themselves in one place. */
+#define OVL_ID_SNIFF         144   /* the sniffer and every probe. Run from
+                                    * the bundle before the release and in
+                                    * no keep set: a probe decides which
+                                    * image is kept, and is not that image
+                                    * (DECISIONS.md 2026-10-21) */
 #define OVL_IMAGE_MAX         20
 
 #define OVL_SPACESAVER_EXTRACT 30
@@ -141,6 +146,7 @@ typedef int32_t (*OverlayEntry)(const OverlayHost *host, int32_t which,
 #define OVL_CODEC_EXPORTS      49
 #define OVL_SQP_EXTRACT        50
 #define OVL_PF_EXTRACT         51
+#define OVL_SNIFF              52  /* unc_sniff: a = UncIO*; returns the UncFormat */
 
 /* One struct for every entry, because the entry signature is fixed. Fields
  * are named for their role rather than their type so a reader can follow a

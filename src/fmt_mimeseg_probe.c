@@ -2,10 +2,12 @@
  * set, and the header scan it shares with the reader (mseg_scan, mseg_ok).
  * What is transcribed, and from where, is fmt_mimeseg.c's file comment.
  *
- * Every probe is in its reader's `_probe.c`, resident, so the reader can
- * be an overlay: unc_sniff calls every probe for every file it is handed,
- * before any image is chosen (DECISIONS.md 2026-10-20, *one place for
- * every probe*). What a probe and its reader share is defined once, here.
+ * Every probe is in its reader's `_probe.c` (DECISIONS.md 2026-10-20, *one
+ * place for every probe*), and the Macintosh application carries them all,
+ * with the sniffer, in one `'OVLY'` image run before the release and given
+ * back with it (DECISIONS.md 2026-10-21, *the probes that left with the
+ * bundle*). What a probe and its reader share is defined once, here, and
+ * stays resident for the reader.
  *
  * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
  */

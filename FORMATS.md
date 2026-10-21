@@ -5350,29 +5350,57 @@ Info-ZIP writes, which the first draft of this function did.
 
 ## Overlays: what the application ships, and what it costs
 
-**Since 2026-09-25 the decoders and ciphers are not resident.** They are
-sixteen flat, position-independent images in `'OVLY'` resources; the shipped
-build reads all sixteen as ONE bundle at launch and releases everything the
-sniffed format cannot want before the engine takes its budget. The mechanism
+**Since 2026-09-25 the decoders and ciphers are not resident, and since
+2026-10-21 neither are the sniffer and its probes.** They are seventeen
+flat, position-independent images in `'OVLY'` resources; the shipped
+build reads all seventeen as ONE bundle at launch, sniffs from it, and
+releases everything the sniffed format cannot want — the sniffer's image
+first of all — before the engine takes its budget. The mechanism
 is `mac/ovl_load_eager.c`, the images are built by `tools/overlay/`, and why
 it is the build rather than a branch is DECISIONS.md 2026-09-25, *two
 branches that were one file apart*. There were fifteen until DART left the
 engine later the same day, fourteen until AppleLink packages arrived on
 2026-10-05, fifteen until zip's Shrink and Reduce got an image of their own
-on 2026-10-11 (*Reduce*), and sixteen since.
+on 2026-10-11 (*Reduce*), sixteen until the sniffer and every probe got an
+image of their own on 2026-10-21 (DECISIONS.md, *the probes that left with
+the bundle*), and seventeen since.
 
 ### Three configurations, one tree
 
 | build | switch | resident `CODE` | A5 | `MacExtract.code.bin` | `MacExtract.bin` |
 |---|---|---|---|---|---|
-| **eager — SHIPPED** | (default) | **57,548 B** | 17,892 B | **68,096 B** | **250,880 B** |
-| lazy | `UNC_OVL_LAZY=1` | 55,968 B | 18,000 B | 66,432 B | 249,344 B |
-| resident — the control | `UNC_OVL_RESIDENT=1` | **188,068 B** | **36,908 B** | 219,776 B | 223,616 B |
+| **eager — SHIPPED** | (default) | **48,264 B** | 17,528 B | **57,984 B** | **254,208 B** |
+| lazy | `UNC_OVL_LAZY=1` | 46,688 B | 17,632 B | 56,448 B | 252,800 B |
+| resident — the control | `UNC_OVL_RESIDENT=1` | **188,028 B** | **36,916 B** | 219,648 B | 223,488 B |
 
-CORRECTED 2026-10-20: the rows were 2026-10-18's until then and had not
-followed 2026-10-19's four changes, which `tools/build_mac.sh`'s ratchet
-records carry by entry; re-read off the three builds of the paragraph
-below. (CORRECTED 2026-10-18 before that, from 2026-10-14's.)
+Read off the three builds of 2026-10-21's paragraph below. (CORRECTED
+2026-10-20 before that: the rows were 2026-10-18's and had not followed
+2026-10-19's four changes, which `tools/build_mac.sh`'s ratchet records
+carry by entry; CORRECTED 2026-10-18 before that, from 2026-10-14's.)
+
+**Re-measured 2026-10-21, for the probes that left with the bundle**
+(DECISIONS.md 2026-10-21, *the probes that left with the bundle*), against
+`origin/main` (9be493e) built the same way: eager **−9,284 B of `CODE` and
+−364 of A5**, lazy −9,280 and −364, the control −72 and +8 (the sniffer in
+a file of its own, `src/unc_sniff.c`, which the control links as before);
+a seventeenth image, `ovl_sniff`, **13,384 B** — the sniffer and all
+twenty-six probes — and the bundle +13,396 to 192,288 B; `OVL_SAVED`
+149,536 → **159,152**, `TIERS_CONTROL` 224,976 → 224,944 and every TIERS
+budget +32 (derived). What a format's layer is granted moves by **+9,616
+B** where the release keeps images, and by **−3,780 B** where it keeps the
+bundle whole — an envelope or a split set's first layer, whose next layer
+is sniffed from that bundle — because the sniffer's image is in it and the
+resident build is that much smaller. `run_tiers.py --check` moves no tally
+in either lane: 74/74, 72/74, 68/74 shipped and 74/74, 70/74, 63/74
+resident, the same fixtures by name. **On the machine the same day, the
+same**: 74/74 at 1 MB on System 6.0.8 (`run.py --mem 1M`, one `EMUDIED`
+re-run), 72/74 on System 3.0 / 512Ke (`sys30.py --emu mv-512Ke`, one
+`NOGRID` under a second emulator re-run; the same two refused by name) and
+68/74 on System 6.0.8 / 512Ke (`run.py --emu mv-512Ke --system
+System6.hfv`, one `EMUDIED` re-run; the same six by name). One figure in
+the model moved from far to near: `synth-dd-m5.dd` is **98 B short** at
+System 6.0.8 / 512Ke, 9,714 B short before this (DERIVED; the machine
+refused it, as the model said it would).
 
 **Re-measured 2026-10-20, for one place for every probe** (DECISIONS.md
 2026-10-20, *one place for every probe*), against `origin/main` (299ed24)
@@ -5675,7 +5703,7 @@ quoted beside. It cancels in a DIFFERENCE taken from one probe pair, which is
 why the overlay gains are measured that way (*What it buys, against the
 control*), and 320 B of the residue there is exactly this: **117,040 B saved
 between the shipped pair against 116,720 B between the probe pair**, both
-measured 2026-09-27. The shipped pair is **149,536 B** since 2026-10-19's toolchain update,
+measured 2026-09-27. The shipped pair is **159,152 B** since 2026-10-21's sniffer image, *the probes that left with the bundle*, 149,536 B after 2026-10-19's toolchain update,
 149,504 B after that day's custom-icon bit set last, 149,536 B after that day's top-level placement, 149,504 B after 2026-10-18's bundle registration, 149,552 B after that day's two failure messages, 149,520 B after that day's Spotlight comment, 148,240 B after 2026-10-17's
 dates in the Macintosh's own zone, 147,936 B after that day's Mac OS X sidecars, 143,872 B after that day's merge of the archives' Finder info (every reader in an image or the control, none in the shipped build), 139,280 B after that day's merge of StuffIt classic's and DiskDoubler's Finder info, 138,896 B after that day's merge of the envelopes' Finder info, 138,864 B after that branch alone, 138,608 B after that day's review of the Finder metadata, 138,576 B after that day's metadata, 138,544 B after 2026-10-16's
 time left from the byte counts, 138,576 B after that day's
@@ -5685,8 +5713,10 @@ eject before a split set's next part, 136,464 B after that day's MIME progress, 
 DiskDoubler buffer reuse) (*Three configurations, one tree*); the probe pair has not been re-measured,
 so the 320 B is that day's difference and not today's.
 
-The bundle is **178,892 B** — the sixteen images sum to 178,682 B, so its
-index costs **210 B** (178,924 and 178,714 until 2026-10-20's StuffIt probe
+The bundle is **192,288 B** — the seventeen images sum to 192,066 B, so its
+index costs **222 B** (178,892 and 178,682, 210 B, until 2026-10-21's
+sniffer image, `ovl_sniff` 13,384 B, *the probes that left with the bundle*;
+178,924 and 178,714 until 2026-10-20's StuffIt probe
 comparing bytes, `ovl_stuffit` −32, *one place for every probe*; 177,600 and 177,390 until 2026-10-18's Spotlight
 comment, `ovl_zipold` +1,324, *the comment Spotlight kept*; 177,312 and 177,102 until 2026-10-17's dates in the Macintosh's own zone, Implode moved into `ovl_zipold`; 172,968 and 172,756 until 2026-10-17's Mac OS X sidecars, *the sidecars Mac OS X left beside the file*; 168,020 and 167,810 until 2026-10-17's archives' Finder info, *the archives' own Finder info*; 167,612 and 167,402 until 2026-10-17's `ovl_stuffit`
 +380 and `ovl_cptdd` +28, *the window Expander puts back*; CORRECTED 2026-10-17:
@@ -5821,7 +5851,7 @@ been chosen is a read at the moment the application's own floppy may be out.
 The budget a tier gives the engine is therefore not one number any more. It
 is the resident build's budget for that tier — the figures under *512 KB
 machines* and *Floor target verification* — plus what the release leaves,
-which is the 149,536 B of `CODE` and A5 the shipped build does not carry
+which is the 159,152 B of `CODE` and A5 the shipped build does not carry
 (*Three configurations, one tree*), less the images this format keeps and 8 B
 of block header each, less a **666 B residue**: 320 B of that is the probe
 build's own weight and **346 B is unattributed — the same 346 B either side of
@@ -5869,19 +5899,21 @@ budget per format, and one per layer*).
 
 | sniffed format | images kept | granted, against the control |
 |---|---|---|
-| **AppleLink package** | **sqp, codecs** | **+140,410 B** (arithmetic: no `.pkg` is in the Mac sample) — the largest grant any format gets, because `ovl_sqp` is the smallest of the sixteen images at 2,040 B |
-| Now Compress | now, codecs | **+137,286 B** (measured) |
-| SuperDisk! | superdisk, codecs | +135,308 B (arithmetic: no SuperDisk! fixture is in the Mac sample) |
-| LZH | lzh, codecs | **+131,208 B** (measured) |
-| PackIt | packit, ciphers, codecs | **+129,542 B** (measured) |
-| DiskDoubler | cptdd, codecs | **+126,514 B** (measured) |
-| StuffIt SpaceSaver | spacesaver, codecs | +125,728 B (arithmetic: no SpaceSaver fixture is in the Mac sample) |
-| ARC | arc, ciphers, codecs | **+123,712 B** (measured) |
-| Compact Pro, Compact Pro segment | cptdd, ciphers, codecs | +116,262 B (arithmetic), and **+126,514 B** where the directory says no entry is encrypted (measured) |
-| Tar | zipold, codecs | **+130,842 B** (measured) |
-| StuffIt, StuffIt 5 | stuffit, ciphers, codecs | **+102,324 B** (measured; the −24 B of 2026-10-10, the +28 of 2026-10-11 and the +12 of 2026-10-15 with `ovl_stuffit` are arithmetic, no tier re-run) |
-| Zip, spanned zip | exo, zipold, ciphers, codecs | +89,298 B (arithmetic), **+99,550 B** unencrypted (measured) |
-| every envelope, and every segment scheme that joins to a file | the whole bundle, kept | **−30,062 B** (measured; the −24 B of 2026-10-10, the +28 of 2026-10-11 and the +12 of 2026-10-15 with the bundle are arithmetic, no tier re-run) |
+| **AppleLink package** | **sqp, codecs** | **+150,026 B** (arithmetic: no `.pkg` is in the Mac sample) — the largest grant any format gets, because `ovl_sqp` is the smallest of the seventeen images at 2,040 B |
+| Now Compress | now, codecs | **+146,902 B** (measured) |
+| SuperDisk! | superdisk, codecs | +144,924 B (arithmetic: no SuperDisk! fixture is in the Mac sample) |
+| LZH | lzh, codecs | **+140,824 B** (measured) |
+| PackIt | packit, ciphers, codecs | **+139,158 B** (measured) |
+| DiskDoubler | cptdd, codecs | **+136,130 B** (measured) |
+| StuffIt SpaceSaver | spacesaver, codecs | +135,344 B (arithmetic: no SpaceSaver fixture is in the Mac sample) |
+| ARC | arc, ciphers, codecs | **+133,328 B** (measured) |
+| Compact Pro, Compact Pro segment | cptdd, ciphers, codecs | +125,878 B (arithmetic), and **+136,130 B** where the directory says no entry is encrypted (measured) |
+| Tar | zipold, codecs | **+140,458 B** (measured) |
+| StuffIt, StuffIt 5 | stuffit, ciphers, codecs | **+111,972 B** (measured; the −24 B of 2026-10-10, the +28 of 2026-10-11 and the +12 of 2026-10-15 with `ovl_stuffit` are arithmetic, no tier re-run) |
+| Zip, spanned zip | exo, zipold, ciphers, codecs | +98,914 B (arithmetic), **+109,166 B** unencrypted (measured) |
+| every envelope, and every segment scheme that joins to a file | the whole bundle, kept | **−33,810 B** (measured; the −24 B of 2026-10-10, the +28 of 2026-10-11 and the +12 of 2026-10-15 with the bundle are arithmetic, no tier re-run) |
+
+**The sniffer's image moved every row on 2026-10-21, re-taken from `run_tiers.gain()`**: `OVL_SAVED` +9,616 (the control CODE −72 and A5 +8, the shipped build CODE −9,284 and A5 −364), a seventeenth image `ovl_sniff` 13,384 B that no format keeps, and the bundle +13,396 — so every row that keeps images **+9,616 B**, and the envelope row, which keeps the bundle with that image in it, **−3,780 B** by the arithmetic and −3,748 against what it read: it had stood at −30,062 B since 2026-10-15 and `gain()` had been 32 B above that since 2026-10-19's toolchain update, which re-took the other rows and not this one. TIERS +32 (derived). No tier re-run: `run_tiers.py --check` moves no tally in either lane (DECISIONS.md 2026-10-21, *the probes that left with the bundle*).
 
 **The toolchain update moved every row +32 on 2026-10-19**: `OVL_SAVED` +32, the control's CODE −72 and A5 +8 against the shipped pair's CODE −72 and A5 −24; on the machine each row +96, TIERS +64 (DECISIONS.md 2026-10-19, *the toolchain that inlined PurgeSpace*). Arithmetic.
 
@@ -5995,7 +6027,7 @@ rose, because the control took 2,148 B for the same format.
 **The last row is the one no tally had shown**: a `.hqx`, a `.gz`, a `.Z` or
 a MacBinary wrapper does not know what is under it, so the bundle stays and
 that layer runs with **less** memory than a resident build would have given
-it — 178,892 B held against 149,536 B saved. It costs nothing on the tiers
+it — 192,288 B held against 159,152 B saved. It costs nothing on the tiers
 because the layer under the envelope gets its own budget a moment later
 (*What an archive keeps*), and the envelope's own decode is small: the
 heaviest in the Mac sample is `popper-1.7.tar.Z`'s LZW at 147,764 B, which
@@ -6053,9 +6085,9 @@ figure is `tools/code_map.py`'s, below.
 The application ships as **249,856 B** of MacBinary (`dist/MacExtract.bin`,
 re-read 2026-10-18 off the build `tools/make_dist.sh` copies), and since
 2026-09-25 that is no longer all resident:
-**68,096 B** is
+**57,984 B** is
 `MacExtract.code.bin`, which the Segment Loader reads at launch and never
-purges, and **178,892 B** is the `'OVLY'` bundle, which is read at launch and
+purges, and **192,288 B** is the `'OVLY'` bundle, which is read at launch and
 mostly given back before the engine takes its budget (*Overlays*). What stays
 costs the heap one for one: the link line produces a single
 `MacExtract.code.bin`, and `Elf2Mac/LdScript.cc` emits `*(.rodata*)` inside

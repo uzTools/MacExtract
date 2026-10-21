@@ -33,6 +33,13 @@
 #include "ovlbox.h"
 extern void ovl_preload(void);
 extern void ovl_release_if_unwanted(UncFormat fmt, UncIO *io);
+/* What the one sniff answered. The shell dispatches on it (unc_extract_as)
+ * rather than calling unc_extract, which would sniff AGAIN — and since
+ * 2026-10-21 the sniffer's image is released with the rest, so a second
+ * sniff after the release answers UNKNOWN and raises the loader's alarm
+ * (DECISIONS.md 2026-10-21, *the probes that left with the bundle*). This
+ * harness does the same, for the same reason. */
+static UncFormat gSniffed;
 #endif
 
 /* ------------------------------------------------------------------ */
@@ -1457,12 +1464,14 @@ int main(int argc, char **argv)
      * skipped the release would pass every byte-exactness test and lose the
      * whole mechanism, which is what happened on the branch for a week
      * (DECISIONS.md 2026-09-25, *the flush nobody wrote*). */
-    ovl_release_if_unwanted(unc_sniff(&io), &io);
+    gSniffed = unc_sniff(&io);
+    ovl_release_if_unwanted(gSniffed, &io);
     fprintf(stderr, "overlay: %ld read(s), %ld flush(es) so far\n",
             ovlbox_reads, ovlbox_flushes);
-#endif
-
+    ret = unc_extract_as(gSniffed, &io, &sk, &al, NULL, &opt);
+#else
     ret = unc_extract(&io, &sk, &al, NULL, &opt);
+#endif
     DirFlush(&sink);                     /* as RunExtract does */
     IconFlush(&sink);   /* as RunExtract does */
     fprintf(stderr, "unc_extract -> %d, entries=%d errors=%d\n",

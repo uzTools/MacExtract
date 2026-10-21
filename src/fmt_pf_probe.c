@@ -1,10 +1,11 @@
-/* fmt_pf_probe.c — Private File's probe, kept resident.
+/* fmt_pf_probe.c — Private File's probe, in the sniffer's image.
  *
- * Split from fmt_pf.c so the reader can live in the StuffIt 'OVLY' image:
- * `unc_sniff` calls a probe for every file it is handed, and one inside a
- * blob would load the reader to decide a file is not one (FORMATS.md,
- * *Overlays*). The format, and where every rule here comes from, is in
- * fmt_pf.c's header comment.
+ * Split from fmt_pf.c so the reader can live in the StuffIt image, and since 2026-10-21 in
+ * the sniffer's own image with every other probe, run before the release
+ * and given back with it (DECISIONS.md 2026-10-21, *the probes that left
+ * with the bundle*).
+ * The format, and where every rule here comes from, is in fmt_pf.c's
+ * header comment.
  *
  * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
  */

@@ -1,8 +1,9 @@
-/* fmt_sqp_probe.c — the AppleLink package probe, kept resident.
+/* fmt_sqp_probe.c — the AppleLink package probe, in the sniffer's image.
  *
- * Split out so the decoder can live in an overlay: `unc_sniff` calls a probe
- * for every file it is handed, and a probe inside a blob would mean loading
- * the decoder to decide the file is not one (FORMATS.md, *Overlays*).
+ * Split out so the decoder can live in an overlay, and since 2026-10-21 in
+ * the sniffer's own image with every other probe, run before the release
+ * and given back with it (DECISIONS.md 2026-10-21, *the probes that left
+ * with the bundle*).
  *
  * A package has NO MAGIC NUMBER, and the probe this format had between
  * 2026-08-23 and 2026-09-27 was not a file test at all — it tokenized a

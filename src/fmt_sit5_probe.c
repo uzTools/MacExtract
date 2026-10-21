@@ -1,8 +1,9 @@
-/* fmt_sit5_probe.c — StuffIt 5's probe(s), kept resident.
+/* fmt_sit5_probe.c — StuffIt 5's probe(s), in the sniffer's image.
  *
- * Split out so the decoder can live in an overlay: `unc_sniff` calls a probe
- * for every file it is handed, and a probe inside a blob would mean loading
- * the decoder to decide the file is not one (BRANCH_NOTES.md).
+ * Split out so the decoder can live in an overlay, and since 2026-10-21 in
+ * the sniffer's own image with every other probe, run before the release
+ * and given back with it (DECISIONS.md 2026-10-21, *the probes that left
+ * with the bundle*).
  *
  * Source: unchanged from fmt_sit5.c, whose provenance comments stand.
  *

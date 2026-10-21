@@ -54,6 +54,11 @@ unc_side_zip_open unc_side_zip_pair unc_copy_fork
 """.split()
 
 HEADERS = ("src/unc_internal.h", "include/macextract.h")
+# The sniffer's image (tools/overlay/ovl_sniff.c) defines the MacBinary probe
+# itself — the one probe two decoders reach through the vector, for the
+# self-extractor stubs LZH and zip look inside — so its forwards file must
+# leave that one out, or the linker sees it twice.
+SNIFF = ["unc_macbinary_probe"]
 
 # The shared codec machinery — the bit reader, the Huffman and canonical
 # coders, LZW and LZAH — which several decoders call and which therefore had
@@ -265,11 +270,12 @@ def main():
                 f.write("    (t)->%s = %s; \\\n" % (s[4:], s))
         f.write("} while (0)\n")
 
-    # Three forwards files. The codecs and zipold overlays must not forward
+    # Four forwards files. The codecs, zipold and sniff overlays must not forward
     # what they DEFINE, or the linker sees two definitions of one symbol.
     for fname, skip in (("ovl_forwards_gen.c", ()),
                         ("ovl_forwards_codecs_gen.c", CODECS),
-                        ("ovl_forwards_zipold_gen.c", ZIPOLD)):
+                        ("ovl_forwards_zipold_gen.c", ZIPOLD),
+                        ("ovl_forwards_sniff_gen.c", SNIFF)):
         write_forwards(os.path.join(outdir, fname), decls, sig, skip)
     print("mkforwards: %d symbol(s), %d of them in the codecs overlay and "
           "%d in the zipold one" % (len(SYMBOLS), len(CODECS), len(ZIPOLD)))

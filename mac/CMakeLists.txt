@@ -22,14 +22,14 @@ file(GLOB ZLIB_SRC ${ENGINE_DIR}/third_party/zlib/*.c)
 #
 # UNC_OVL_RESIDENT — the old monolithic application, every decoder linked in.
 # NOT shipped and not the default, kept because it is the CONTROL every budget
-# figure rests on: with all sixteen images resident the engine is granted the
+# figure rests on: with all seventeen images resident the engine is granted the
 # same heap whatever it decodes, and that is what says the 84-103 KB the
 # overlay build gains belongs to the mechanism rather than to a month of other
 # work (FORMATS.md, *Overlays*). An instrument, not a fallback.
 #
 # UNC_OVL_LAZY — WHEN an image is read, which is a whole loader:
 #
-#   unset (default)  EAGER: all sixteen in ONE resource, read at launch while
+#   unset (default)  EAGER: all seventeen in ONE resource, read at launch while
 #                    the boot disk is certainly in, and everything the sniffed
 #                    format cannot want released before the engine takes its
 #                    budget. mac/ovl_load_eager.c, bundle by mkbundle.py.
@@ -72,7 +72,7 @@ else()
     endif()
     # Printed because the two differ by a disk access per format and by
     # nothing a build output would otherwise show.
-    message(STATUS "overlay: sixteen images, ${OVL_LIFETIME}")
+    message(STATUS "overlay: seventeen images, ${OVL_LIFETIME}")
     # The dispatch, the relocation trailer and the cache flush are shared; the
     # loader is the lifetime.
     set(OVERLAY_SHIM ovl_shim.c ovl_reloc.c)
@@ -84,11 +84,16 @@ else()
     else()
         list(APPEND OVERLAY_SHIM ovl_load_lazy.c)
         foreach(img crypt spacesaver cptdd lzh arc now superdisk packit text
-                    stuffit exo codecs binhex btoa sqp zipold)
+                    stuffit exo codecs binhex btoa sqp zipold sniff)
             list(APPEND OVERLAY_R ${CMAKE_CURRENT_BINARY_DIR}/ovl_${img}.r)
         endforeach()
     endif()
-    # The DECODERS leave the resident link; every probe stays in it.
+    # The DECODERS and the SNIFFER leave the resident link. The probe files
+    # stay in it for what their readers share (mb_version, ddseg_parse, the
+    # MIME header walk...); the probes themselves go with -gc-sections, since
+    # nothing resident calls one once unc_sniff.c has left — except
+    # unc_macbinary_probe, which two images reach through the host vector
+    # (DECISIONS.md 2026-10-21, *the probes that left with the bundle*).
     list(FILTER ENGINE_SRC EXCLUDE REGEX "unc_crypt\\.c$")
     list(FILTER ENGINE_SRC EXCLUDE REGEX "fmt_spacesaver\\.c$")
     list(FILTER ENGINE_SRC EXCLUDE REGEX "fmt_cpt\\.c$")
@@ -113,6 +118,7 @@ else()
     list(FILTER ENGINE_SRC EXCLUDE REGEX "sit_ccube\\.c$")
     list(FILTER ENGINE_SRC EXCLUDE REGEX "fmt_exo\\.c$")
     list(FILTER ENGINE_SRC EXCLUDE REGEX "fmt_tar\\.c$")
+    list(FILTER ENGINE_SRC EXCLUDE REGEX "unc_sniff\\.c$")
     # The Mac OS X sidecars zip and tar share are ovl_zipold's too.
     list(FILTER ENGINE_SRC EXCLUDE REGEX "unc_sidecar\\.c$")
     # zlib and the inflate wrapper go with them: fmt_exo is their only caller,
@@ -204,6 +210,7 @@ add_custom_command(
            ${CMAKE_CURRENT_BINARY_DIR}/ovl_codec_exports_gen.h
            ${CMAKE_CURRENT_BINARY_DIR}/ovl_forwards_zipold_gen.c
            ${CMAKE_CURRENT_BINARY_DIR}/ovl_zipold_exports_gen.h
+           ${CMAKE_CURRENT_BINARY_DIR}/ovl_forwards_sniff_gen.c
     COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_BINARY_DIR}
     COMMAND python3 ${ENGINE_DIR}/tools/overlay/mkforwards.py
             ${CMAKE_CURRENT_BINARY_DIR}
@@ -759,6 +766,78 @@ add_custom_command(
             ${CMAKE_CURRENT_BINARY_DIR}/ovl_host_gen.h
             ${ENGINE_DIR}/src/fmt_sqp.c
             ${OVL_DEPS})
+# The sniffer and every probe, in one image run from the bundle before the
+# release and in no keep set (DECISIONS.md 2026-10-21, *the probes that left
+# with the bundle*). Listed by file, not by glob: tools/overlay/images.py
+# reads THIS rule to build the same image for the host lane. Its forwards
+# file leaves out the one probe the image defines and two decoders reach
+# through the vector, unc_macbinary_probe.
+add_custom_command(
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/ovl_sniff.r
+    COMMAND ${CMAKE_COMMAND} -E env OVL_ID=OVL_ID_SNIFF
+            OVL_INC=${CMAKE_CURRENT_BINARY_DIR}
+            sh ${ENGINE_DIR}/tools/overlay/mkoverlay.sh
+            ${CMAKE_CURRENT_BINARY_DIR}/ovl_sniff.r
+            ${ENGINE_DIR}/tools/overlay/ovl_sniff.c
+            ${CMAKE_CURRENT_BINARY_DIR}/ovl_forwards_sniff_gen.c
+            ${ENGINE_DIR}/src/unc_sniff.c
+            ${ENGINE_DIR}/src/fmt_applesingle_probe.c
+            ${ENGINE_DIR}/src/fmt_arc_probe.c
+            ${ENGINE_DIR}/src/fmt_b64_probe.c
+            ${ENGINE_DIR}/src/fmt_binhex_probe.c
+            ${ENGINE_DIR}/src/fmt_btoa_probe.c
+            ${ENGINE_DIR}/src/fmt_cpt_probe.c
+            ${ENGINE_DIR}/src/fmt_cptseg_probe.c
+            ${ENGINE_DIR}/src/fmt_dd_probe.c
+            ${ENGINE_DIR}/src/fmt_ddseg_probe.c
+            ${ENGINE_DIR}/src/fmt_exo_probe.c
+            ${ENGINE_DIR}/src/fmt_lzh_probe.c
+            ${ENGINE_DIR}/src/fmt_macbinary_probe.c
+            ${ENGINE_DIR}/src/fmt_mime_probe.c
+            ${ENGINE_DIR}/src/fmt_mimeseg_probe.c
+            ${ENGINE_DIR}/src/fmt_now_probe.c
+            ${ENGINE_DIR}/src/fmt_packit_probe.c
+            ${ENGINE_DIR}/src/fmt_pf_probe.c
+            ${ENGINE_DIR}/src/fmt_sit5_probe.c
+            ${ENGINE_DIR}/src/fmt_sit_probe.c
+            ${ENGINE_DIR}/src/fmt_sitseg_probe.c
+            ${ENGINE_DIR}/src/fmt_spacesaver_probe.c
+            ${ENGINE_DIR}/src/fmt_sqp_probe.c
+            ${ENGINE_DIR}/src/fmt_superdisk_probe.c
+            ${ENGINE_DIR}/src/fmt_tar_probe.c
+            ${ENGINE_DIR}/src/fmt_uu_probe.c
+            ${ENGINE_DIR}/src/fmt_zipseg_probe.c
+    DEPENDS ${ENGINE_DIR}/tools/overlay/ovl_sniff.c
+            ${CMAKE_CURRENT_BINARY_DIR}/ovl_forwards_sniff_gen.c
+            ${CMAKE_CURRENT_BINARY_DIR}/ovl_host_gen.h
+            ${ENGINE_DIR}/src/unc_sniff.c
+            ${ENGINE_DIR}/src/fmt_applesingle_probe.c
+            ${ENGINE_DIR}/src/fmt_arc_probe.c
+            ${ENGINE_DIR}/src/fmt_b64_probe.c
+            ${ENGINE_DIR}/src/fmt_binhex_probe.c
+            ${ENGINE_DIR}/src/fmt_btoa_probe.c
+            ${ENGINE_DIR}/src/fmt_cpt_probe.c
+            ${ENGINE_DIR}/src/fmt_cptseg_probe.c
+            ${ENGINE_DIR}/src/fmt_dd_probe.c
+            ${ENGINE_DIR}/src/fmt_ddseg_probe.c
+            ${ENGINE_DIR}/src/fmt_exo_probe.c
+            ${ENGINE_DIR}/src/fmt_lzh_probe.c
+            ${ENGINE_DIR}/src/fmt_macbinary_probe.c
+            ${ENGINE_DIR}/src/fmt_mime_probe.c
+            ${ENGINE_DIR}/src/fmt_mimeseg_probe.c
+            ${ENGINE_DIR}/src/fmt_now_probe.c
+            ${ENGINE_DIR}/src/fmt_packit_probe.c
+            ${ENGINE_DIR}/src/fmt_pf_probe.c
+            ${ENGINE_DIR}/src/fmt_sit5_probe.c
+            ${ENGINE_DIR}/src/fmt_sit_probe.c
+            ${ENGINE_DIR}/src/fmt_sitseg_probe.c
+            ${ENGINE_DIR}/src/fmt_spacesaver_probe.c
+            ${ENGINE_DIR}/src/fmt_sqp_probe.c
+            ${ENGINE_DIR}/src/fmt_superdisk_probe.c
+            ${ENGINE_DIR}/src/fmt_tar_probe.c
+            ${ENGINE_DIR}/src/fmt_uu_probe.c
+            ${ENGINE_DIR}/src/fmt_zipseg_probe.c
+            ${OVL_DEPS})
 # The bundle. Depends on the per-format .r rules only so that their .bin
 # side-products exist; mkoverlay.sh writes <out>.bin beside <out>.r.
 #
@@ -788,6 +867,7 @@ add_custom_command(
             OVL_ID_BTOA:${CMAKE_CURRENT_BINARY_DIR}/ovl_btoa.bin
             OVL_ID_SQP:${CMAKE_CURRENT_BINARY_DIR}/ovl_sqp.bin
             OVL_ID_ZIPOLD:${CMAKE_CURRENT_BINARY_DIR}/ovl_zipold.bin
+            OVL_ID_SNIFF:${CMAKE_CURRENT_BINARY_DIR}/ovl_sniff.bin
     DEPENDS
             ${CMAKE_CURRENT_BINARY_DIR}/ovl_crypt.r
             ${CMAKE_CURRENT_BINARY_DIR}/ovl_spacesaver.r
@@ -805,6 +885,7 @@ add_custom_command(
             ${CMAKE_CURRENT_BINARY_DIR}/ovl_btoa.r
             ${CMAKE_CURRENT_BINARY_DIR}/ovl_sqp.r
             ${CMAKE_CURRENT_BINARY_DIR}/ovl_zipold.r
+            ${CMAKE_CURRENT_BINARY_DIR}/ovl_sniff.r
             ${ENGINE_DIR}/tools/overlay/mkbundle.py
             ${ENGINE_DIR}/tools/overlay/ovlid.py
             ${ENGINE_DIR}/tools/overlay/overlay.h)

@@ -66,7 +66,7 @@ static const short kIds[] = {
     OVL_ID_CRYPT, OVL_ID_SPACESAVER, OVL_ID_CPTDD, OVL_ID_LZH, OVL_ID_ARC,
     OVL_ID_NOW, OVL_ID_SUPERDISK, OVL_ID_PACKIT, OVL_ID_TEXT, OVL_ID_STUFFIT,
     OVL_ID_EXO, OVL_ID_CODECS, OVL_ID_BINHEX, OVL_ID_BTOA, OVL_ID_SQP,
-    OVL_ID_ZIPOLD
+    OVL_ID_ZIPOLD, OVL_ID_SNIFF
 };
 #define NIDS ((int)(sizeof kIds / sizeof kIds[0]))
 
@@ -334,6 +334,10 @@ int main(int argc, char **argv)
      * is not zip gives them back (FORMATS.md, *Reduce*). */
     CHECK(ovl_image_q(OVL_ID_ZIPOLD, 1) == NULL,
           "zip's Shrink and Reduce survived a StuffIt release");
+    /* The sniffer's image has answered by now and is in no keep set
+     * (DECISIONS.md 2026-10-21, *the probes that left with the bundle*). */
+    CHECK(ovl_image_q(OVL_ID_SNIFF, 1) == NULL,
+          "the sniffer's image survived the release");
     CHECK(gWantedAfterRelease == 0,
           "the quiet form of the ask still raised the alarm (wa=%d)",
           (int)gWantedAfterRelease);

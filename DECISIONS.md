@@ -446,6 +446,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-19 (the toolchain that inlined PurgeSpace) — Retro68 afedcdc with multiversal 057c802 is the toolchain the figures are measured with; its inlined PurgeSpace gives 96 B back to every extraction
 - 2026-10-19 (the clock inside the Mac) — the Mac Plus timings are read off the emulated Ticks from the host at 50 Hz, calibrated against a known wait; the four-archive comparison and the 1 MB table re-measured on it
 - 2026-10-20 (one place for every probe) — every probe is in its reader's `_probe.c`; the move cost 212 B of resident CODE until its five grown files compared bytes, and lands at −32
+- 2026-10-21 (the probes that left with the bundle) — the sniffer and all twenty-six probes are a seventeenth `'OVLY'` image, run from the bundle before the release and given back with it; 9,284 B of resident CODE and 364 of A5 go, +9,616 B on every budget that keeps images
 
 ---
 
@@ -28895,3 +28896,71 @@ The three untouched remaining helper calls in probes — Compact Pro's,
 SuperDisk's and SpaceSaver's — read values the probe does arithmetic on
 or copies into a struct, not constants; a shared copy is already their
 compact form, and they were left alone.
+
+## 2026-10-21 (the probes that left with the bundle) — the sniffer and all twenty-six probes are a seventeenth `'OVLY'` image, run from the bundle before the release and given back with it; 9,284 B of resident CODE and 364 of A5 go, +9,616 B on every budget that keeps images
+
+**Claim.** A probe was resident because the sniff runs before any image is
+chosen, and that was read as "so it cannot be in an image". For the eager
+lifetime it does not follow: when the sniff runs the whole bundle is in
+memory, and the release that its answer decides comes immediately after.
+So `unc_sniff` and its table are a file of their own, `src/unc_sniff.c`,
+and the shipped build carries it with every `fmt_*_probe.c` in
+`ovl_sniff`, 'OVLY' 144, entered through a one-line shim in
+`mac/ovl_shim.c` and in no keep set. The probe files stay in the resident
+link for what their readers share — `mb_version`, `ddseg_parse`, the MIME
+header walk — and `-gc-sections` drops the probes themselves, since
+nothing resident calls one any more; the exception is
+`unc_macbinary_probe`, which LZH's and zip's self-extractor paths reach
+through the host vector, so the sniffer's forwards file leaves that one
+out and the image defines it itself (`tools/overlay/mkforwards.py`,
+`SNIFF`).
+
+**Measured**, against `main` at 9be493e built the same way: eager
+**−9,284 B of `CODE` and −364 of A5**, lazy −9,280 and −364, the control
+−72 and +8. The image is 13,384 B with 30 relocations — the table of
+twenty-six probe pointers, which is exactly what the relocation trailer
+exists for — and the bundle grows by it. `OVL_SAVED` 149,536 → 159,152.
+The host lane finds, relocates and releases it in both lifetimes and
+extracts its twenty fixtures byte-exact through it; `run_tiers.py --check`
+moves no tally in either lane (FORMATS.md, *Three configurations, one
+tree*).
+
+**What it costs, and where.** Every layer whose release keeps images gains
+9,616 B of budget. A layer whose release keeps the bundle WHOLE — an
+envelope, or a split set that joins to a file, because the layer under it
+is sniffed from that bundle — pays 3,780 B: the bundle it holds is 13,396
+B larger and the resident build 9,616 B smaller. No tier tally moves for
+it, and an envelope layer was never the one short of memory; the archive
+under it is, and that one gets the gain.
+
+**Why every later sniff still has its probes.** The sites were read before
+the image was built: the open-time sniff and the extraction sniff come
+before the release; the layer loop under an envelope or a split set
+sniffs while the release has kept the bundle whole for exactly that
+reason; the next archive in the Finder's list is sniffed after
+`ovl_reload` has read the bundle again. A sniff with the bundle gone
+answers UNKNOWN and raises the loader's loud alarm (`gWantedAfterRelease`
+= 144 on the budget screen), which is the right failure: nothing could
+have been extracted either.
+
+**The one that the host lane caught.** `tests/mac_sink_test.c` sniffed,
+released, and then called `unc_extract`, which sniffs AGAIN inside the
+engine — and its first fixture failed. The shell never did that: it
+dispatches on what it sniffed (`unc_extract_as`), and the harness now does
+the same. A harness that mirrors the shell's calls has to mirror their
+NUMBER too.
+
+**On the machine**, the three tiers that decide anything, run whole the
+same day: 74/74 at 1 MB on System 6.0.8, 72/74 on System 3.0 / 512Ke and
+68/74 on System 6.0.8 / 512Ke, the same two and the same six refused by
+name as before and as `run_tiers.py --check` predicted (BLOCKERS.md,
+*Status*). Three host-side emulator exits across the 222 boots, each
+re-run clean. What the model now shows that it did not: `synth-dd-m5.dd`
+is 98 B short at System 6.0.8 / 512Ke where it was 9,714 B short — a
+hypothesis about the next lever, not a result, and 98 B is inside what
+the 666 B residue cannot resolve.
+
+**What this cannot see.** The host lane has no instruction cache and no
+Resource Manager (TESTING.md, *The overlay loader, off the Macintosh*);
+the emulated tiers have no cache either, and the only instrument for the
+image running on silicon is the LC 475 (MANUAL_TESTS.md).

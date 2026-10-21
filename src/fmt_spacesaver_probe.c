@@ -1,10 +1,11 @@
-/* fmt_spacesaver_probe.c — SpaceSaver's probe, kept resident.
+/* fmt_spacesaver_probe.c — SpaceSaver's probe, in the sniffer's image.
  *
- * Split out of fmt_spacesaver.c on 2026-09-02 so the decoder can be an
- * overlay. `unc_sniff` calls this for every file it is given; if it lived in
- * the overlay, sniffing anything at all would load 16 KB of decoder and the
- * on-demand loading would buy nothing. The rest of the format —
- * unc_spacesaver_extract and everything under it — is what moves.
+ * Split out of fmt_spacesaver.c on 2026-09-02 so the decoder can be one, and since 2026-10-21 in
+ * the sniffer's own image with every other probe, run before the release
+ * and given back with it (DECISIONS.md 2026-10-21, *the probes that left
+ * with the bundle*).
+ * The rest of the format — unc_spacesaver_extract and everything under it
+ * — is that image's.
  *
  * Source: unchanged from fmt_spacesaver.c, whose provenance comment stands.
  *

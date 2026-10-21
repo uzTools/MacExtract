@@ -8,7 +8,7 @@ one for one, and a tier's budget is FreeMem() minus it
 (tools/run_tiers.py).
 
 "Every byte of this application is resident" was true until 2026-09-25
-and is not any more: the decoders ship as sixteen 'OVLY' images, read at
+and is not any more: the decoders ship as seventeen 'OVLY' images, read at
 launch as one bundle and mostly released as soon as the sniff says what
 the archive is (mac/ovl_load_eager.c). The bundle is EXPECT_BUNDLE below
 and none of it is resident while an archive is being extracted — which
@@ -118,9 +118,14 @@ import sys
 # four changes left inside the tolerance (tools/build_mac.sh's eager pair
 # has them by entry). `run_tiers.py --check` moves no tally in either lane
 # (DECISIONS.md 2026-10-20, *one place for every probe*).
-EXPECT = 68096
+# RE-TAKEN 2026-10-21, 68,096 -> 57,984: the sniffer and every probe in an
+# 'OVLY' image of their own, resident CODE -9,284 and A5 -364 in the
+# shipped build (tools/build_mac.sh's eager pair). `run_tiers.py --check`
+# moves no tally in either lane (DECISIONS.md 2026-10-21, *the probes that
+# left with the bundle*).
+EXPECT = 57984
 TOLERANCE = 2048
-TAKEN = "2026-10-20"
+TAKEN = "2026-10-21"
 
 # And the BUNDLE, watched from 2026-09-26 for one reason: FORMATS.md quotes it
 # in three places and nothing measured it, so it was wrong by 544 B — the
@@ -238,9 +243,12 @@ TAKEN = "2026-10-20"
 # tolerance) (DECISIONS.md 2026-10-18, *the comment Spotlight kept*).
 # -> 178,892 2026-10-20: `ovl_stuffit` -32, StuffIt classic's probe
 # compares bytes (DECISIONS.md 2026-10-20, *one place for every probe*).
-EXPECT_BUNDLE = 178892
+# -> 192,288 2026-10-21: a seventeenth image, `ovl_sniff`, 13,384 B and its
+# directory entry — the sniffer and every probe, no longer resident
+# (DECISIONS.md 2026-10-21, *the probes that left with the bundle*).
+EXPECT_BUNDLE = 192288
 TOLERANCE_BUNDLE = 2048
-TAKEN_BUNDLE = "2026-10-20"
+TAKEN_BUNDLE = "2026-10-21"
 
 
 def main():

@@ -20,7 +20,7 @@ TWO LANES, and they grade different things
   decoder that starts asking for more memory moves a tally here whatever
   the Macintosh shell does with its resources.
 - **shipped** (`--shipped`) — one budget per tier PER FORMAT, which is
-  what the `'OVLY'` build has: the decoders are sixteen images read as
+  what the `'OVLY'` build has: the decoders and the sniffer are seventeen images read as
   one bundle at launch, and everything the sniffed format cannot want is
   released before the engine takes its budget (FORMATS.md, *Overlays*).
   This is the lane that predicts what a user's Macintosh refuses.
@@ -155,9 +155,9 @@ REPO = os.path.dirname(HERE)
 # **RAISED by 64 B 2026-10-19, DERIVED**: TIERS_CONTROL fell by that much
 # with the toolchain update (below).
 TIERS = {
-    "sys3-512K": (188516, "System 3.0, Macintosh 512Ke (225,956 B free)"),
-    "sys6-512K": (93116, "System 6.0.8, Macintosh 512Ke (130,556 B free)"),
-    "floor-1M":  (617404, "System 6.0.8, 1 MB Mac Plus — the floor target"),
+    "sys3-512K": (188548, "System 3.0, Macintosh 512Ke (225,956 B free)"),
+    "sys6-512K": (93148, "System 6.0.8, Macintosh 512Ke (130,556 B free)"),
+    "floor-1M":  (617436, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
 
 # RE-TAKEN on all three machines 2026-10-09 (`-D UNC_OVL_RESIDENT -D
@@ -328,7 +328,11 @@ TIERS = {
 # `_probe.c`, and StuffIt classic's probe comparing bytes (DECISIONS.md
 # 2026-10-20, *one place for every probe*): the control's CODE -32 and A5 0
 # against the shipped pair's -32 (CODE -32, A5 0), so OVL_SAVED unchanged.
-TIERS_CONTROL = 224976     # build/mac-resident, CODE + A5, 2026-10-20
+# **-32 2026-10-21, and TIERS +32, DERIVED**: the sniffer in a file of its
+# own, unc_sniff.c (DECISIONS.md 2026-10-21, *the probes that left with the
+# bundle*): the control's CODE -72 and A5 +8 against the shipped pair's
+# -9,648 (CODE -9,284, A5 -364), so OVL_SAVED +9,616.
+TIERS_CONTROL = 224944     # build/mac-resident, CODE + A5, 2026-10-21
 # **What this control cannot see: the autotest harness.** TIERS was read
 # on the machine from an autotest build (`UNC_MAC_AUTOTEST`), and
 # build/mac-resident has no harness in it, so harness growth lowers what a
@@ -683,7 +687,12 @@ EXPECT = {
 # (DECISIONS.md 2026-10-19, *the icon that came late*).
 # **+32 2026-10-19, -> 149,536**: the toolchain update, the control's -64
 # against the shipped pair's -96 (DECISIONS.md 2026-10-19, *the toolchain that inlined PurgeSpace*).
-OVL_SAVED = 149536
+# **+9,616 2026-10-21, -> 159,152**: the sniffer and every probe in an image
+# of their own, the control's -64 against the shipped pair's -9,648
+# (DECISIONS.md 2026-10-21, *the probes that left with the bundle*). The
+# residue is NOT re-taken: every byte of this is bytes the shipped build no
+# longer carries, which is the quantity the residue was measured beside.
+OVL_SAVED = 159152
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
 # every kept image is one — as is the bundle an envelope holds on to.
@@ -719,7 +728,7 @@ OVL_HANDLE = 8
 # (DECISIONS.md 2026-09-26, *a budget per format, and one per layer*.)
 OVL_RESIDUE = -666
 
-# The sixteen images and the bundle they are read as, in bytes, measured
+# The seventeen images and the bundle they are read as, in bytes, measured
 # 2026-09-26 off `build/mac/` and STUFFIT re-taken 2026-09-28, +208 B for the
 # add-on module fields (FORMATS.md, *Where an archive names the module*) —
 # which is where that change lands in the shipped build: resident code took
@@ -825,6 +834,7 @@ IMAGES = {
     "OVL_ID_SUPERDISK":   7142,
     "OVL_ID_TEXT":        12162,
     "OVL_ID_ZIPOLD":      11608,
+    "OVL_ID_SNIFF":       13384,
 }
 # **ZIPOLD +3,374 B and EXO +972 B, the bundle +4,344 B, 2026-10-17**:
 # Mac OS X's sidecars, the shared code in ZIPOLD and zip's half in EXO,
@@ -840,7 +850,11 @@ IMAGES = {
 # **STUFFIT -32 B, the bundle -32 B, 2026-10-20**: StuffIt classic's probe
 # compares bytes, and the image carries that probe (DECISIONS.md
 # 2026-10-20, *one place for every probe*).
-BUNDLE = 178892
+# **SNIFF, the seventeenth image, 13,384 B, the bundle +13,396 B, 2026-10-21**:
+# the sniffer and every probe, run from the bundle before the release and
+# in no keep set (DECISIONS.md 2026-10-21, *the probes that left with the
+# bundle*). What it takes off the resident build is OVL_SAVED's +9,616.
+BUNDLE = 192288
 
 # What the SHIPPED lane asserts, and it is the refused fixtures BY NAME
 # rather than a tally: a tier that refuses two different fixtures and still

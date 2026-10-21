@@ -80,11 +80,26 @@ static OverlayEntry ovl_entry(void)
     return ovl_image(OVL_ID_CRYPT);
 }
 
+/* The sniffer and every probe, 'OVLY' 144, since 2026-10-21. Run from the
+ * bundle BEFORE the release, which is what its answer decides, and given
+ * back with everything else: a later layer under an envelope is sniffed
+ * with the bundle still whole, and the next archive in the Finder's list
+ * after the reload. No image means no answer, and UNKNOWN is the honest
+ * one — with the bundle missing, nothing could be extracted anyway. The
+ * codecs are not needed: a probe reads bytes, CRCs and the file's size
+ * through resident slots of the vector (DECISIONS.md 2026-10-21, *the
+ * probes that left with the bundle*). */
+UncFormat unc_sniff(UncIO *io)
+{
+    OverlayEntry e = ovl_image(OVL_ID_SNIFF);
+    if (!e) return UNC_FORMAT_UNKNOWN;
+    return (UncFormat)e(&gOvlHost, OVL_SNIFF, io, NULL);
+}
 
-/* The SpaceSaver decoder, 'OVLY' 129. Its resident half is the PROBE, which
- * lives in src/fmt_spacesaver_probe.c and is never in the blob: the sniffer
- * calls it for every file, and an overlay loaded by sniffing would be an
- * overlay always loaded.
+
+/* The SpaceSaver decoder, 'OVLY' 129. Its probe is in the sniffer's image
+ * (src/fmt_spacesaver_probe.c, 'OVLY' 144); only the header parse the two
+ * share is resident as well.
  *
  * Failure to load is a per-entry error like any other allocation failure —
  * UNC_ERR_MEM, and the rest of the archive still comes out. */
@@ -234,7 +249,7 @@ int unc_resfork_find(const uint8_t *fork, uint32_t forklen, uint32_t type,
     return (int)OVL_CALL(OVL_RESFORK_FIND, &g);
 }
 
-/* Compact Pro. The probe stays resident (src/fmt_cpt_probe.c); this is the decoder,
+/* Compact Pro. The probe is in the sniffer's image; this is the decoder,
  * loaded when an archive actually turns out to be one. A load failure is a
  * per-entry error like any other allocation failure. */
 int unc_cpt_extract(UncCtx *c)
@@ -245,7 +260,7 @@ int unc_cpt_extract(UncCtx *c)
     return (int)e(&gOvlHost, OVL_CPT_EXTRACT, c, NULL);
 }
 
-/* DiskDoubler. The probe stays resident (src/fmt_stubs.c); this is the decoder,
+/* DiskDoubler. The probe is in the sniffer's image; this is the decoder,
  * loaded when an archive actually turns out to be one. A load failure is a
  * per-entry error like any other allocation failure. */
 int unc_dd_extract(UncCtx *c)
@@ -256,7 +271,7 @@ int unc_dd_extract(UncCtx *c)
     return (int)e(&gOvlHost, OVL_DD_EXTRACT, c, NULL);
 }
 
-/* LZH. The probe stays resident (src/fmt_lzh_probe.c); this is the decoder,
+/* LZH. The probe is in the sniffer's image; this is the decoder,
  * loaded when an archive actually turns out to be one. A load failure is a
  * per-entry error like any other allocation failure. */
 int unc_lzh_extract(UncCtx *c)
@@ -267,7 +282,7 @@ int unc_lzh_extract(UncCtx *c)
     return (int)e(&gOvlHost, OVL_LZH_EXTRACT, c, NULL);
 }
 
-/* ARC. The probe stays resident (src/fmt_arc_probe.c); this is the decoder,
+/* ARC. The probe is in the sniffer's image; this is the decoder,
  * loaded when an archive actually turns out to be one. A load failure is a
  * per-entry error like any other allocation failure. */
 int unc_arc_extract(UncCtx *c)
@@ -278,7 +293,7 @@ int unc_arc_extract(UncCtx *c)
     return (int)e(&gOvlHost, OVL_ARC_EXTRACT, c, NULL);
 }
 
-/* Now Compress. The probe stays resident (src/fmt_stubs.c); this is the decoder,
+/* Now Compress. The probe is in the sniffer's image; this is the decoder,
  * loaded when an archive actually turns out to be one. A load failure is a
  * per-entry error like any other allocation failure. */
 int unc_now_extract(UncCtx *c)
@@ -289,7 +304,7 @@ int unc_now_extract(UncCtx *c)
     return (int)e(&gOvlHost, OVL_NOW_EXTRACT, c, NULL);
 }
 
-/* SuperDisk!. Probe resident; decoder from the bundle. */
+/* SuperDisk!. Decoder from the bundle; the probe is in the sniffer's image. */
 int unc_superdisk_extract(UncCtx *c)
 {
     OverlayEntry e;
@@ -299,7 +314,7 @@ int unc_superdisk_extract(UncCtx *c)
     return (int)e(&gOvlHost, OVL_SUPERDISK_EXTRACT, c, NULL);
 }
 
-/* PackIt. Probe resident; decoder from the bundle. */
+/* PackIt. Decoder from the bundle; the probe is in the sniffer's image. */
 int unc_packit_extract(UncCtx *c)
 {
     OverlayEntry e;
@@ -309,7 +324,7 @@ int unc_packit_extract(UncCtx *c)
     return (int)e(&gOvlHost, OVL_PACKIT_EXTRACT, c, NULL);
 }
 
-/* AppleLink packages. Probe resident; decoder from the bundle. */
+/* AppleLink packages. Decoder from the bundle; the probe is in the sniffer's image. */
 int unc_sqp_extract(UncCtx *c)
 {
     OverlayEntry e;
@@ -319,7 +334,7 @@ int unc_sqp_extract(UncCtx *c)
     return (int)e(&gOvlHost, OVL_SQP_EXTRACT, c, NULL);
 }
 
-/* MIME. Probe resident; decoder from the bundle. */
+/* MIME. Decoder from the bundle; the probe is in the sniffer's image. */
 int unc_mime_extract(UncCtx *c)
 {
     OverlayEntry e;
@@ -329,7 +344,7 @@ int unc_mime_extract(UncCtx *c)
     return (int)e(&gOvlHost, OVL_MIME_EXTRACT, c, NULL);
 }
 
-/* uuencode. Probe resident; decoder from the bundle. */
+/* uuencode. Decoder from the bundle; the probe is in the sniffer's image. */
 int unc_uu_extract(UncCtx *c)
 {
     OverlayEntry e;
@@ -339,7 +354,7 @@ int unc_uu_extract(UncCtx *c)
     return (int)e(&gOvlHost, OVL_UU_EXTRACT, c, NULL);
 }
 
-/* btoa. Probe resident; decoder from the bundle. */
+/* btoa. Decoder from the bundle; the probe is in the sniffer's image. */
 int unc_btoa_extract(UncCtx *c)
 {
     OverlayEntry e;
@@ -349,7 +364,7 @@ int unc_btoa_extract(UncCtx *c)
     return (int)e(&gOvlHost, OVL_BTOA_EXTRACT, c, NULL);
 }
 
-/* base64. Probe resident; decoder from the bundle. */
+/* base64. Decoder from the bundle; the probe is in the sniffer's image. */
 int unc_b64_extract(UncCtx *c)
 {
     OverlayEntry e;
@@ -359,7 +374,7 @@ int unc_b64_extract(UncCtx *c)
     return (int)e(&gOvlHost, OVL_B64_EXTRACT, c, NULL);
 }
 
-/* BinHex. Probe resident; decoder from the bundle. */
+/* BinHex. Decoder from the bundle; the probe is in the sniffer's image. */
 int unc_binhex_extract(UncCtx *c)
 {
     OverlayEntry e;
@@ -369,7 +384,7 @@ int unc_binhex_extract(UncCtx *c)
     return (int)e(&gOvlHost, OVL_BINHEX_EXTRACT, c, NULL);
 }
 
-/* StuffIt classic. Probe resident; decoder from the bundle. */
+/* StuffIt classic. Decoder from the bundle; the probe is in the sniffer's image. */
 int unc_sit_extract(UncCtx *c)
 {
     OverlayEntry e;
@@ -379,7 +394,7 @@ int unc_sit_extract(UncCtx *c)
     return (int)e(&gOvlHost, OVL_SIT_EXTRACT, c, NULL);
 }
 
-/* StuffIt 5. Probe resident; decoder from the bundle. */
+/* StuffIt 5. Decoder from the bundle; the probe is in the sniffer's image. */
 int unc_sit5_extract(UncCtx *c)
 {
     OverlayEntry e;
@@ -399,7 +414,7 @@ int unc_pf_extract(UncCtx *c)
     return (int)e(&gOvlHost, OVL_PF_EXTRACT, c, NULL);
 }
 
-/* Zip. Probe resident; decoder from the bundle. */
+/* Zip. Decoder from the bundle; the probe is in the sniffer's image. */
 int unc_zip_extract(UncCtx *c)
 {
     OverlayEntry e;
@@ -412,7 +427,7 @@ int unc_zip_extract(UncCtx *c)
 }
 
 
-/* Gzip. Probe resident; decoder from the bundle. */
+/* Gzip. Decoder from the bundle; the probe is in the sniffer's image. */
 int unc_gzip_extract(UncCtx *c)
 {
     OverlayEntry e;
@@ -422,7 +437,7 @@ int unc_gzip_extract(UncCtx *c)
     return (int)e(&gOvlHost, OVL_GZIP_EXTRACT, c, NULL);
 }
 
-/* Unix compress. Probe resident; decoder from the bundle. */
+/* Unix compress. Decoder from the bundle; the probe is in the sniffer's image. */
 int unc_compressz_extract(UncCtx *c)
 {
     OverlayEntry e;
@@ -432,7 +447,7 @@ int unc_compressz_extract(UncCtx *c)
     return (int)e(&gOvlHost, OVL_COMPRESSZ_EXTRACT, c, NULL);
 }
 
-/* Tar. Probe resident; decoder from the bundle. */
+/* Tar. Decoder from the bundle; the probe is in the sniffer's image. */
 int unc_tar_extract(UncCtx *c)
 {
     OverlayEntry e;

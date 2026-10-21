@@ -1,9 +1,12 @@
 /* fmt_mime_probe.c — MIME's two probes and the header parse behind them.
  *
- * Split out so the decoder can live in an overlay: unc_sniff calls a probe
- * for every file it is handed. The header parse comes along because the
- * decoder uses it too, so this file is compiled into the MIME overlay as
- * well — one definition, two places.
+ * Split out so the decoder can live in an overlay, and since 2026-10-21 in
+ * the sniffer's own image with every other probe, run before the release
+ * and given back with it (DECISIONS.md 2026-10-21, *the probes that left
+ * with the bundle*).
+ * The header parse comes along because the decoder uses it too, so this
+ * file is compiled into the MIME overlay as well — one definition, two
+ * places — and stays resident for the message/partial joiner.
  *
  * Source: unchanged from fmt_mime.c, whose provenance comments stand.
  *
