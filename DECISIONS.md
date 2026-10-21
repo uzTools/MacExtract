@@ -448,6 +448,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-20 (one place for every probe) — every probe is in its reader's `_probe.c`; the move cost 212 B of resident CODE until its five grown files compared bytes, and lands at −32
 - 2026-10-21 (the probes that left with the bundle) — the sniffer and all twenty-six probes are a seventeenth `'OVLY'` image, run from the bundle before the release and given back with it; 9,284 B of resident CODE and 364 of A5 go, +9,616 B on every budget that keeps images
 - 2026-10-21 (the Desktop Manager System 6 can have) — v0.41.0 bombed "unimplemented trap" under AppleShare's `Desktop Mgr` INIT on System 6.0.8; the bundle's resource fork is opened through a working directory now, and a tier boots the stock System Folder
+- 2026-10-21 (the guard that vetoes the Finder info) — GateKeeper 1.3 on System 6.0.8: in veto mode an extracted application loses its type, creator, flags and dates and the run still says "Extraction complete."; in both modes 30 bytes of the fork's reserved header change
 
 ---
 
@@ -29058,3 +29059,52 @@ written: "stripped so the 1 MB floor is measurable" should have read
 sentence in `tools/vmac/README.md` is one of these; this one was
 missing (CLAUDE.md, *When adding a harness, write down what it CANNOT
 see*).
+
+## 2026-10-21 (the guard that vetoes the Finder info) — GateKeeper 1.3 on System 6.0.8: in veto mode an extracted application loses its type, creator, flags and dates and the run still says "Extraction complete."; in both modes 30 bytes of the fork's reserved header change
+
+**Why it was run.** The maintainer's question after issue #1: could other
+INITs mess with the application? Too many INITs and Standard File
+extenders are the user's business (decided the same day); resource-fork
+write guards were worth a test, because one could make an extraction look
+finished when it is not. GateKeeper 1.3 (Chris Johnson, 1993; Discmaster,
+`Internet Megapac.iso`, kept in `~/.cache/macextract/gatekeeper/`) is the
+one that was run; CE Software's Vaccine did not surface in two Discmaster
+searches and was not tried.
+
+**What GateKeeper watches.** Its privilege list grants `File(Other)` to
+StuffIt, UnStuffIt, Compact Pro, DD Expand and the rest BY NAME; a program
+not on the list that "modifies, creates, installs, decodes ... applications,
+extensions or control panels" violates it (its Introduction). MacExtract
+is not on the list. Installed as it ships, with the stock System Folder:
+the INIT, Gatekeeper Aid and the control panel, no settings file.
+
+**Measured, 2026-10-21, `OriginalCM.sit` (an application among ten files),
+v0.42.0, `tools/vmac/drive.py`:**
+
+- *Notify Only* (its default): one alert — "monitored an operation by
+  MacExtract which violated the File(Other) privilege against Cap'n
+  Magneto [PBSetCatInfo(, APPL)]" — modal, the run waits for OK; then
+  *Extraction complete.* The file is `APPL`/`GWCM`, flags 0x2100, dates
+  the archive's, data fork exact.
+- *Notify & Veto* (set in its control panel): the same alert, worded
+  "vetoed", and *Extraction complete.* The file has **no type, no
+  creator, flags 0, today's dates** — `PBHCreate` makes a blank file and
+  the vetoed `PBSetCatInfo` was to give it everything else — and the
+  resource fork is on the disk whole. `StampCat` reads the call's result
+  only to decide whether to register the bundle, so nothing was said.
+  That is the finding: the one silent loss a guard can cause here, and it
+  is in the report, not the data (OPEN_ITEMS.md, *A refused PBSetCatInfo
+  is not reported*).
+- In BOTH modes the resource fork differs from the engine's bytes in 30
+  bytes at offsets 66–117: the fork header's system-reserved area, where
+  the archive carries the name, `APPL`/`GWCM` and flags twice, and the
+  disk has zeros. Every resource and the map are identical. Without
+  GateKeeper the same fork under the same System Folder is byte-exact
+  (`run.py --keep-inits`, 74/74 the same day), so GateKeeper is the
+  cause; HOW is a hypothesis — its Aid opening the fork to scan it, and
+  the Resource Manager rewriting the reserved area — not reduced.
+
+**What this cannot see.** One guard, one version, one archive, one
+System; what a guard does to a control panel or an INIT rather than an
+application; whether GateKeeper's log file names the same call. No code
+changed: the maintainer asked for a test.

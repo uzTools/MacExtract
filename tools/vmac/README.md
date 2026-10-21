@@ -309,6 +309,14 @@ screen can be looked at before the next step is chosen:
     hmount boot.hfv; hattrib -t BINA -c SITx ARCHIVE.sit; humount
     drive.py boot.hfv mv-4M shots/ &        # then: echo 'dclick 472 45' >> shots/cmd
 
+Menus want the button held: `down X Y`, `move X Y`, `up`. **GateKeeper**
+(DECISIONS.md 2026-10-21, *the guard that vetoes the Finder info*) is the
+same boot with its three files in the System Folder, `hcopy -m` from
+`~/.cache/macextract/gatekeeper/specimens/`; its mode is in the Control
+Panel (Apple menu, Gatekeeper Controls, Settings), and the output is read
+off a COPY of the run's `boot.hfv` with `hcopy -m`, because the Finder
+info a vetoed `PBSetCatInfo` loses is invisible on the screen.
+
 **The application always says whether it is alive.** Before doing any work it
 paints a grid with `ret = -1000` ("running"); a missing `In`/`Out` volume paints
 `-1001`/`-1002`. So the host can tell *never launched* from *still decoding*

@@ -20,6 +20,9 @@ the screenshot named by `shot NAME`. Commands:
     shot NAME        screenshot to OUTDIR/NAME.png (2x)
     settle NAME SECS screenshot until unchanged for SECS, then NAME.png
     sleep SECS
+    down X Y         press the button there and hold it (a menu)
+    move X Y         move the pointer, button as it is
+    up               release the button
     quit
 """
 import os, sys, time
@@ -36,7 +39,7 @@ open(cmdf, "a").close()
 def log(m):
     with open(logf, "a") as f:
         f.write(time.strftime("%H:%M:%S ") + m + "\n")
-I.Mac.limit = 3600
+I.Mac.limit = 4 * 3600      # a session driven by hand can outlast an hour
 mac = I.Mac(boot, emu, outdir, extra=tuple(extra))
 try:
     log("booted; settling")
@@ -63,6 +66,16 @@ try:
                                quiet=float(a[2]), timeout=900)
                 mac.shot(os.path.join(outdir, a[1] + ".png"), scale="200%")
                 log(f"settled {t}")
+            elif a[0] == "down":                   # press and hold: menus
+                ox, oy = mac.origin()
+                mac._xdo("mousemove", str(ox + int(a[1])), str(oy + int(a[2])))
+                time.sleep(0.4); mac._xdo("mousedown", "1"); time.sleep(0.4)
+            elif a[0] == "move":                   # with the button as it is
+                ox, oy = mac.origin()
+                mac._xdo("mousemove", str(ox + int(a[1])), str(oy + int(a[2])))
+                time.sleep(0.4)
+            elif a[0] == "up":
+                mac._xdo("mouseup", "1"); time.sleep(0.4)
             elif a[0] == "sleep": time.sleep(float(a[1]))
             elif a[0] == "quit":  break
             log("done: " + c)

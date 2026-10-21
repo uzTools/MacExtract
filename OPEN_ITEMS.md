@@ -196,6 +196,19 @@ with the zone put into PRAM by the emulator build, not by Map.
 | whether gmtDelta already includes daylight saving | **hypothesis**: three non-Apple readers say it does; dlsDelta is not added | Map's daylight-saving box toggled once on 7.0.1, and the 12 bytes read back |
 | AppleSingle/AppleDouble written by mpack, whose entry 8 is the writer's wall clock and not RFC 1740's GMT | **the maintainer's decision**: the RFC is followed, so such a file moves by the reader's offset | a rule to tell the writer apart, or a decision to treat entry 8 as wall clock |
 
+## A refused PBSetCatInfo is not reported
+
+Under GateKeeper 1.3 in its "Notify & Veto" mode, `PBSetCatInfo` on an
+extracted application is vetoed — GateKeeper's `File(Other)` privilege,
+which it grants StuffIt and Compact Pro by name and not this program — and
+the file comes out with no type, creator, flags or dates while the run
+ends in *Extraction complete.*, measured 2026-10-21 on System 6.0.8
+(DECISIONS.md 2026-10-21, *the guard that vetoes the Finder info*). Both
+forks are on the disk; GateKeeper's own alert names the veto. `StampCat`
+ignores the call's result. Closes with a report line for the entry
+(`S_REP_*`, "name: Finder info refused"), priced in resident bytes, and
+the GateKeeper run repeated (`tools/vmac/README.md`, *GateKeeper*).
+
 ## System 7.0.1 rewrites one byte of FXInfo
 
 FXInfo +9 (`fdXFlags`) reads 0x70 on a System 7.0.1 output disk where the
