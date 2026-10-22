@@ -1465,12 +1465,15 @@ int unc_sit_extract(UncCtx *c)
 
         if (sret == 0) {
             est = UNC_OK;
-            if (!c->opt.list_only) {
+            /* Forks past EOF are a truncated archive — checked in LIST
+             * mode too, so `l` reports what `x`/`t` would and cannot
+             * silently accept an entry whose extent overruns the file. */
+            if (start + rcomp < start || start + rcomp + dcomp < start ||
+                (fsize != UNC_SIZE_UNKNOWN && start + rcomp + dcomp > fsize)) {
+                est = UNC_ERR_TRUNCATED;
+            } else if (!c->opt.list_only) {
                 if (needmod) {
                     est = UNC_ERR_MODULE;
-                } else if (start + rcomp < start || start + rcomp + dcomp < start ||
-                    (fsize != UNC_SIZE_UNKNOWN && start + rcomp + dcomp > fsize)) {
-                    est = UNC_ERR_TRUNCATED;   /* forks extend past EOF */
                 } else {
                     /* Sixteen bytes of key sit at the end of an
                      * encrypted fork and are not part of its stream. */
@@ -1503,12 +1506,15 @@ int unc_sit_extract(UncCtx *c)
                      * would unprotected, and the host is told that is
                      * what happened. */
                     if (renc && rid == SIT_ENC_PASSLOCK) {
-                        rc -= 16;
-                        renc = 0;
+                        /* The sibling crypt path rejects a fork shorter
+                         * than its 16 trailing key bytes (sit_fork_crypt);
+                         * PassLock must too, or `rc -= 16` wraps to ~4 GB. */
+                        if (rc < 16) est = UNC_ERR_CORRUPT;
+                        else { rc -= 16; renc = 0; }
                     }
-                    if (denc && did == SIT_ENC_PASSLOCK) {
-                        dc -= 16;
-                        denc = 0;
+                    if (est == UNC_OK && denc && did == SIT_ENC_PASSLOCK) {
+                        if (dc < 16) est = UNC_ERR_CORRUPT;
+                        else { dc -= 16; denc = 0; }
                     }
                     if (est == UNC_OK && renc) {
                         est = sit_fork_crypt(c, cr, start, rcomp,

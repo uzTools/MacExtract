@@ -143,6 +143,44 @@ static void exo_hint_name(UncCtx *c, UncEntryInfo *e)
 /* ------------------------------------------------------------------ */
 
 
+/* Step over a gzip member's optional header fields (FEXTRA, FNAME,
+ * FCOMMENT, FHCRC, in that order), the reader positioned just past the
+ * 10-byte base header. When `cmt` is non-NULL the comment is captured into
+ * it (the first member's; later members' fields are only stepped over,
+ * since gzip takes the name and comment from the first). */
+static int gz_skip_fields(UncBufIn *in, int flg, uint8_t *cmt, uint32_t *clen)
+{
+    if (flg & 0x04) {   /* FEXTRA */
+        int lo = unc_bufin_next(in), hi = unc_bufin_next(in);
+        int32_t n;
+        if (lo < 0 || hi < 0) return UNC_ERR_TRUNCATED;
+        n = lo | (hi << 8);
+        while (n-- > 0)
+            if (unc_bufin_next(in) < 0) return UNC_ERR_TRUNCATED;
+    }
+    if (flg & 0x08) {   /* FNAME: NUL-terminated (unar ignores it too) */
+        int b;
+        do {
+            b = unc_bufin_next(in);
+            if (b < 0) return UNC_ERR_TRUNCATED;
+        } while (b != 0);
+    }
+    if (flg & 0x10) {   /* FCOMMENT: kept, up to what an entry carries */
+        int b;
+        do {
+            b = unc_bufin_next(in);
+            if (b < 0) return UNC_ERR_TRUNCATED;
+            if (b && cmt && *clen < UNC_ENTRY_COMMENT_MAX)
+                cmt[(*clen)++] = (uint8_t)b;
+        } while (b != 0);
+    }
+    if (flg & 0x02) {   /* FHCRC */
+        if (unc_bufin_next(in) < 0 || unc_bufin_next(in) < 0)
+            return UNC_ERR_TRUNCATED;
+    }
+    return UNC_OK;
+}
+
 int unc_gzip_extract(UncCtx *c)
 {
     uint8_t hdr[10], *iobuf, *obuf;
@@ -167,40 +205,11 @@ int unc_gzip_extract(UncCtx *c)
     unc_bufin_init(&in, c->io, &c->ps, iobuf, iocap);
     if (c->io->seek(c->io->ctx, 10) < 0) { err = UNC_ERR_IO; goto out; }
 
-    /* Optional header fields, in the order RFC 1952 section 2.3's
-     * member-format diagram puts them: FEXTRA, FNAME, FCOMMENT, FHCRC
-     * — the last "immediately before the compressed data". */
-    if (flg & 0x04) {   /* FEXTRA */
-        int lo = unc_bufin_next(&in), hi = unc_bufin_next(&in);
-        int32_t n;
-        if (lo < 0 || hi < 0) { err = UNC_ERR_TRUNCATED; goto out; }
-        n = lo | (hi << 8);
-        while (n-- > 0)
-            if (unc_bufin_next(&in) < 0) { err = UNC_ERR_TRUNCATED; goto out; }
-    }
-    if (flg & 0x08) {   /* FNAME: NUL-terminated (unar ignores it too) */
-        int b;
-        do {
-            b = unc_bufin_next(&in);
-            if (b < 0) { err = UNC_ERR_TRUNCATED; goto out; }
-        } while (b != 0);
-    }
-    if (flg & 0x10) {   /* FCOMMENT: kept, up to what an entry carries */
-        int b;
-        cmt = (uint8_t *)unc_alloc(c->al, UNC_ENTRY_COMMENT_MAX);
-        do {
-            b = unc_bufin_next(&in);
-            if (b < 0) { err = UNC_ERR_TRUNCATED; goto out; }
-            if (b && cmt && clen < UNC_ENTRY_COMMENT_MAX)
-                cmt[clen++] = (uint8_t)b;
-        } while (b != 0);
-    }
-    if (flg & 0x02) {   /* FHCRC */
-        if (unc_bufin_next(&in) < 0 || unc_bufin_next(&in) < 0) {
-            err = UNC_ERR_TRUNCATED;
-            goto out;
-        }
-    }
+    /* The first member's optional header fields (FEXTRA, FNAME, FCOMMENT,
+     * FHCRC), the last "immediately before the compressed data". The
+     * comment, if any, belongs to the entry this member heads. */
+    if (flg & 0x10) cmt = (uint8_t *)unc_alloc(c->al, UNC_ENTRY_COMMENT_MAX);
+    if ((err = gz_skip_fields(&in, flg, cmt, &clen)) != UNC_OK) goto out;
 
     unc_entry_clear(&e);
     exo_hint_name(c, &e);
@@ -222,23 +231,44 @@ int unc_gzip_extract(UncCtx *c)
     if (sret > 0) goto out;
 
     if (!c->opt.list_only) {
-        uint32_t produced = 0, crc = UNC_CRC32_INIT;
         exo_sink_init(&es, c);
-        est = unc_inflate_raw(&in, c->al, obuf, ocap, UNC_SIZE_UNKNOWN,
-                              &produced, &crc, exo_emit, &es);
-        if (est == UNC_OK) {
-            /* Trailer: u32le CRC-32, u32le ISIZE. */
+        /* RFC 1952: a gzip file may be several members concatenated, and
+         * the output is their concatenation. Decode each in turn, append
+         * to the one entry, and verify every member's own trailer. Stop at
+         * end of input or at the first byte that is not another member's
+         * magic (trailing non-gzip bytes are ignored, as gunzip does). */
+        for (;;) {
+            uint32_t produced = 0, crc = UNC_CRC32_INIT;
             uint8_t tr[8];
-            int i, b;
+            int i, b, m0, m1;
+            est = unc_inflate_raw(&in, c->al, obuf, ocap, UNC_SIZE_UNKNOWN,
+                                  &produced, &crc, exo_emit, &es);
+            if (est != UNC_OK) break;
+            /* Trailer: u32le CRC-32, u32le ISIZE. */
             for (i = 0; i < 8; i++) {
                 b = unc_bufin_next(&in);
                 if (b < 0) { est = UNC_ERR_TRUNCATED; break; }
                 tr[i] = (uint8_t)b;
             }
-            if (est == UNC_OK) {
-                if (unc_get_u32le(tr) != ~crc) est = UNC_ERR_CRC;
-                else if (unc_get_u32le(tr + 4) != produced) est = UNC_ERR_CRC;
+            if (est != UNC_OK) break;
+            if (unc_get_u32le(tr) != ~crc || unc_get_u32le(tr + 4) != produced) {
+                est = UNC_ERR_CRC;
+                break;
             }
+            m0 = unc_bufin_next(&in);
+            if (m0 < 0) break;                 /* clean end after a member */
+            m1 = unc_bufin_next(&in);
+            if (m0 != 0x1F || m1 != 0x8B) break;   /* trailing bytes, ignored */
+            /* Another member: its 10-byte base header, then its fields. */
+            hdr[0] = 0x1F; hdr[1] = 0x8B;
+            for (i = 2; i < 10; i++) {
+                b = unc_bufin_next(&in);
+                if (b < 0) { est = UNC_ERR_TRUNCATED; break; }
+                hdr[i] = (uint8_t)b;
+            }
+            if (est != UNC_OK) break;
+            if (hdr[2] != 8) { est = UNC_ERR_UNSUPPORTED; break; }
+            if ((est = gz_skip_fields(&in, hdr[3], NULL, NULL)) != UNC_OK) break;
         }
     }
     if (c->sink->end_entry(c->sink->ctx, est) < 0) err = UNC_ERR_SINK;

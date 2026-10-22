@@ -639,7 +639,7 @@ static int mime_read_applefile(MimeCtx *m, const MimePart *p, MimeApple *a)
             a->rsrc_off = off; a->rsrc_len = elen; a->have_rsrc = 1;
             break;
         case AF_ID_NAME:
-            if (elen > 0 && off + elen <= got) {
+            if (elen > 0 && off <= got && elen <= got - off) {
                 uint32_t k, nl = elen > UNC_NAME_MAX ? UNC_NAME_MAX : elen;
                 for (k = 0; k < nl; k++) a->name[k] = m->afbuf[off + k];
                 a->namelen = nl;

@@ -333,8 +333,10 @@ int unc_btoa_extract(UncCtx *c)
             int32_t off[12], flen[12];
             int f = btoa_fields(line, n, off, flen, 12);
             uint32_t n1, n2, oeor, osum, orot;
-            /* xbtoa End N <dec> <hex> E <hex> S <hex> R <hex> */
-            if (f < 10) { est = UNC_ERR_CORRUPT; break; }
+            /* xbtoa End N <dec> <hex> E <hex> S <hex> R <hex> — eleven
+             * fields, indices 0..10; off[10]/flen[10] below need all of
+             * them, so a line with exactly ten leaves index 10 unread. */
+            if (f < 11) { est = UNC_ERR_CORRUPT; break; }
             n1   = btoa_dec(line + off[3], flen[3]);
             n2   = btoa_hex(line + off[4], flen[4]);
             oeor = btoa_hex(line + off[6], flen[6]);

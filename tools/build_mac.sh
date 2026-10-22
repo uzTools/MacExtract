@@ -604,7 +604,13 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # +28 on 2026-10-22, 175,396 -> 175,424, with data + bss -28 below: no
 # working directory at the top of the output (DECISIONS.md 2026-10-22,
 # *the working directory the bundle closed*): the control, its sum unmoved.
-UNC_MAC_CODE_DEFAULT=175424
+# +352 on 2026-10-22, 175,424 -> 175,776: the eleven malformed-input fixes
+# (four out-of-bounds reads, two StuffIt 5 guards, the gzip multi-member
+# loop, and four more). This is the RESIDENT control, where every decoder
+# is linked in; the shipped overlay build is unmoved (its decoders are in
+# the 'OVLY' bundle, its code ceiling held at 41,380), so the Mac Plus
+# floor budget does not change — only this measurement baseline does.
+UNC_MAC_CODE_DEFAULT=175776
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the

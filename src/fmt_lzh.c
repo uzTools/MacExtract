@@ -940,6 +940,10 @@ static int lzh_header(UncCtx *c, uint32_t pos, LzhEnt *e, UncEntryInfo *info,
     }
 
     e->dataoff = headerend;
+    /* `compsize` is attacker-controlled; a sum past 2^32 wraps to a small
+     * offset that can still be > the current `pos`, so the caller's
+     * `next <= pos` progress check would not catch it. */
+    if (e->compsize > 0xFFFFFFFFu - headerend) return UNC_ERR_CORRUPT;
     *next = headerend + e->compsize;
 
     /* What the extended headers said wins over the base header: a Unix

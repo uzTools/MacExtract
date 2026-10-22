@@ -866,7 +866,13 @@ int unc_now_extract(UncCtx *c)
         int flags, sret;
 
         if (c->io->seek(c->io->ctx, at) < 0) { err = UNC_ERR_IO; break; }
-        if (unc_read_full(c->io, hdr, NOW_ENTRY) != UNC_OK) break;
+        /* A short read here means the archive declares more entries than
+         * it holds: truncation, not a clean end. Leaving `err` at UNC_OK
+         * would report the partial walk as a success. */
+        if (unc_read_full(c->io, hdr, NOW_ENTRY) != UNC_OK) {
+            err = UNC_ERR_TRUNCATED;
+            break;
+        }
         at += NOW_ENTRY;
         seen++;
 

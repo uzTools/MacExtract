@@ -165,10 +165,17 @@ REPO = os.path.dirname(HERE)
 # three 1,288 B BELOW the derived figures above, so the shipped lane had been
 # that much too generous since some derivation after 2026-10-09 — and the
 # new build 201,590 / 106,208 / 630,496, +4,186 / +4,204 / +4,204 (DECISIONS.md 2026-10-22, *the runtime the application did not need*).
+# **-352 each 2026-10-22, DERIVED**: the eleven malformed-input fixes added
+# 352 B of decoder CODE to the resident control, which is INSIDE the CODE +
+# A5 unit, so TIERS_MACHINE (physical RAM) does not move and the split does:
+# the control takes 352 more and each resident heap budget 352 less. The
+# SHIPPED lane is unaffected — that material is all in the overlay bundle,
+# released after use (OVL_SAVED +352 below offsets the TIERS -352). No tally
+# moves: the narrowest margin is ~29,600 B. Arithmetic, no emulator booted.
 TIERS = {
-    "sys3-512K": (201590, "System 3.0, Macintosh 512Ke (222,070 B free)"),
-    "sys6-512K": (106208, "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
-    "floor-1M":  (630496, "System 6.0.8, 1 MB Mac Plus — the floor target"),
+    "sys3-512K": (201238, "System 3.0, Macintosh 512Ke (222,070 B free)"),
+    "sys6-512K": (105856, "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
+    "floor-1M":  (630144, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
 # -32 on all three 2026-10-21, DERIVED from TIERS_CONTROL +32 (the bundle's
 # working directory, DECISIONS.md 2026-10-21, *the Desktop Manager System 6
@@ -360,7 +367,9 @@ TIERS = {
 # data + bss -680. The machine gave +4,204, because the jump table, the
 # stub segments and the relocations trimmed at launch are resident bytes
 # this unit never counted — which is why TIERS was measured, not moved.
-TIERS_CONTROL = 211616     # build/mac-resident, CODE + A5, 2026-10-22
+TIERS_CONTROL = 211968     # build/mac-resident, CODE + A5, 2026-10-22
+# +352 on 2026-10-22: the eleven malformed-input fixes, every decoder linked
+# in; TIERS above drops 352 to match (TIERS_MACHINE, physical RAM, unmoved).
 # **What this control cannot see: the autotest harness.** TIERS was read
 # on the machine from an autotest build (`UNC_MAC_AUTOTEST`), and
 # build/mac-resident has no harness in it, so harness growth lowers what a
@@ -744,7 +753,12 @@ EXPECT = {
 # output, the control's 0 (CODE +28, data + bss -28) against the shipped
 # pair's +32 (DECISIONS.md 2026-10-22, *the working directory the bundle
 # closed*). TIERS_CONTROL and TIERS do not move.
-OVL_SAVED = 154000
+# +352 on 2026-10-22: the eleven malformed-input fixes grow the resident
+# control's CODE + A5 by 352 and the shipped build not at all (the decoders
+# are overlaid), so the difference the overlay scheme saves rises 352. The
+# per-format gains below rise 352 less the images each keeps; TIERS -352
+# offsets it so the shipped budgets move only by the image growth.
+OVL_SAVED = 154352
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
 # every kept image is one — as is the bundle an envelope holds on to.
@@ -882,17 +896,17 @@ IMAGES = {
     "OVL_ID_BINHEX":      4606,
     "OVL_ID_BTOA":        2496,
     "OVL_ID_CODECS":      6016,
-    "OVL_ID_CPTDD":       14812,
-    "OVL_ID_CRYPT":       9572,
-    "OVL_ID_EXO":         29952,
-    "OVL_ID_LZH":         10446,
-    "OVL_ID_NOW":         4770,
+    "OVL_ID_CPTDD":       14820,
+    "OVL_ID_CRYPT":       9604,
+    "OVL_ID_EXO":         30168,
+    "OVL_ID_LZH":         10458,
+    "OVL_ID_NOW":         4768,
     "OVL_ID_PACKIT":      2180,
     "OVL_ID_SPACESAVER":  16168,
-    "OVL_ID_STUFFIT":     28122,
+    "OVL_ID_STUFFIT":     28194,
     "OVL_ID_SQP":         1736,
     "OVL_ID_SUPERDISK":   6634,
-    "OVL_ID_TEXT":        11342,
+    "OVL_ID_TEXT":        11346,
     "OVL_ID_ZIPOLD":      10832,
     "OVL_ID_SNIFF":       11896,
 }
@@ -917,7 +931,14 @@ IMAGES = {
 # **Every image smaller and the bundle -12,792 B, 2026-10-22**: the MacsBug
 # names discarded by tools/overlay/overlay.ld (DECISIONS.md 2026-10-22,
 # *the names in the code*); STUFFIT -1,720, EXO -1,332, SNIFF -1,488.
-BUNDLE = 179496
+# **EXO +216 B, STUFFIT +72, CRYPT +32, LZH +12, CPTDD +8, TEXT +4,
+# NOW -2, the bundle +340 B, 2026-10-22**: eleven malformed-input fixes —
+# four out-of-bounds reads (MIME NAME entry, CPT index, resfork map,
+# btoa End line), two StuffIt 5 guards (the entry-count overflow and the
+# zero-size marker loop), the gzip multi-member loop, and four more; all
+# in the overlaid decoders, none resident. These are build sizes, re-taken
+# from build/mac on Linux, not the emulator-measured TIERS below.
+BUNDLE = 179836
 
 # What the SHIPPED lane asserts, and it is the refused fixtures BY NAME
 # rather than a tally: a tier that refuses two different fixtures and still

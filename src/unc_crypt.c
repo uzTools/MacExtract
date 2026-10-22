@@ -1128,36 +1128,56 @@ int unc_resfork_find(const uint8_t *fork, uint32_t forklen,
                      uint32_t type, int16_t id,
                      uint32_t *off, uint32_t *len)
 {
-    uint32_t dataoff, mapoff, datalen, maplen, typelistoff, ntypes, i;
+    uint32_t dataoff, mapoff, datalen, maplen, typelistoff, ntypes, i, te;
+    uint16_t tlrel;
 
     if (!fork || forklen < 16 + 30) return UNC_ERR_FORMAT;
     dataoff = unc_get_u32be(fork + 0);
     mapoff  = unc_get_u32be(fork + 4);
     datalen = unc_get_u32be(fork + 8);
     maplen  = unc_get_u32be(fork + 12);
-    if (mapoff + maplen > forklen || dataoff + datalen > forklen) return UNC_ERR_FORMAT;
+    /* Every range is validated by subtraction after bounding its start.
+     * The offsets and lengths are attacker-controlled, and an
+     * `a + b > forklen` test wraps the moment `a + b` passes 2^32 — which
+     * let a wild `mapoff` reach the `fork + mapoff + 24` read below. */
+    if (mapoff > forklen || maplen > forklen - mapoff) return UNC_ERR_FORMAT;
+    if (dataoff > forklen || datalen > forklen - dataoff) return UNC_ERR_FORMAT;
     if (maplen < 30) return UNC_ERR_FORMAT;
 
-    typelistoff = mapoff + unc_get_u16be(fork + mapoff + 24);
-    if (typelistoff + 2 > forklen) return UNC_ERR_FORMAT;
+    /* mapoff+24..25 (the type-list offset, relative to the map) is inside
+     * the map: maplen >= 30 and mapoff+maplen <= forklen put it at or
+     * before forklen-6. */
+    tlrel = unc_get_u16be(fork + mapoff + 24);
+    if (tlrel > forklen - mapoff) return UNC_ERR_FORMAT;
+    typelistoff = mapoff + tlrel;
+    if (forklen - typelistoff < 2u) return UNC_ERR_FORMAT;
     ntypes = (uint32_t)unc_get_u16be(fork + typelistoff) + 1u;
     if (ntypes > 4096) return UNC_ERR_FORMAT;
 
-    for (i = 0; i < ntypes; i++) {
-        uint32_t te = typelistoff + 2 + i * 8, nrefs, reflist, j;
-        if (te + 8 > forklen) return UNC_ERR_FORMAT;
+    /* te starts <= forklen, and each `forklen - te >= 8` gate keeps the
+     * `te += 8` within range, so the stride never wraps. */
+    te = typelistoff + 2u;
+    for (i = 0; i < ntypes; i++, te += 8u) {
+        uint32_t nrefs, reflist, j, re;
+        uint16_t rlrel;
+        if (te > forklen || forklen - te < 8u) return UNC_ERR_FORMAT;
         if (unc_get_u32be(fork + te) != type) continue;
         nrefs = (uint32_t)unc_get_u16be(fork + te + 4) + 1u;
-        reflist = typelistoff + unc_get_u16be(fork + te + 6);
-        for (j = 0; j < nrefs; j++) {
-            uint32_t re = reflist + j * 12, dat;
-            if (re + 12 > forklen) return UNC_ERR_FORMAT;
+        rlrel = unc_get_u16be(fork + te + 6);
+        if (rlrel > forklen - typelistoff) return UNC_ERR_FORMAT;
+        reflist = typelistoff + rlrel;
+        re = reflist;
+        for (j = 0; j < nrefs; j++, re += 12u) {
+            uint32_t dat, dlo;
+            if (re > forklen || forklen - re < 12u) return UNC_ERR_FORMAT;
             if ((int16_t)unc_get_u16be(fork + re) != id) continue;
-            dat = dataoff + (unc_get_u32be(fork + re + 4) & 0x00FFFFFFu);
-            if (dat + 4 > forklen) return UNC_ERR_FORMAT;
+            dlo = unc_get_u32be(fork + re + 4) & 0x00FFFFFFu;
+            if (dlo > forklen - dataoff) return UNC_ERR_FORMAT;
+            dat = dataoff + dlo;
+            if (forklen - dat < 4u) return UNC_ERR_FORMAT;
             *len = unc_get_u32be(fork + dat);
-            *off = dat + 4;
-            if (*off + *len > forklen) return UNC_ERR_FORMAT;
+            *off = dat + 4u;
+            if (*len > forklen - *off) return UNC_ERR_FORMAT;
             return UNC_OK;
         }
         return UNC_ERR_FORMAT;      /* the type is there, the id is not */

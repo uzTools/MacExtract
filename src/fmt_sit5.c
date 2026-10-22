@@ -310,6 +310,11 @@ int unc_sit5_extract(UncCtx *c)
                  * a folder entry, this entry is a special marker
                  * whose meaning is unknown. It should be ignored when
                  * reading" (sit5_specs_theunarchiver.md). */
+                /* The marker must advance the walk: a zero (or backward)
+                 * header size leaves `pos` where it is, and the loop then
+                 * re-reads this entry forever while `numentries++` keeps
+                 * `i < numentries` true. */
+                if (headerend <= pos) { err = UNC_ERR_CORRUPT; goto out; }
                 numentries++;
                 pos = headerend;
                 continue;
@@ -482,6 +487,13 @@ int unc_sit5_extract(UncCtx *c)
                 goto out;
             }
             sit5_dir_add(dirs, pos, e.name, e.name_len);
+            /* `numentries` is signed; a directory's declared child count is
+             * attacker-controlled, so a sum past INT32_MAX is undefined and
+             * can wrap negative, ending the walk early with success. */
+            if ((uint32_t)numentries + dirfiles > 0x7FFFFFFFu) {
+                err = UNC_ERR_CORRUPT;
+                goto out;
+            }
             numentries += (int32_t)dirfiles;
             pos = datastart;
             continue;

@@ -488,6 +488,7 @@ static int cpt_index_read(UncCtx *c, const CptIndex *ix, uint32_t off,
                           void *buf, int32_t len)
 {
     if (ix->buf && off >= ix->base && len >= 0 &&
+        off - ix->base <= ix->len &&
         (uint32_t)len <= ix->len - (off - ix->base)) {
         uint8_t *d = (uint8_t *)buf;
         const uint8_t *sp = ix->buf + (off - ix->base);

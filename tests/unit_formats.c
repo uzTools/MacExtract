@@ -1184,6 +1184,22 @@ static void test_gzip(void)
     CHECK(unc_extract_as(UNC_FORMAT_GZIP, &io, &sk, &al, NULL, NULL) == UNC_OK);
     CHECK(cap.count == 1 && cap.status[0] == UNC_ERR_CRC);
     arc[16] ^= 1;
+
+    /* Concatenated members (RFC 1952): one entry whose data is the
+     * concatenation of every member, each member's own trailer verified. */
+    {
+        uint8_t two[256];
+        memcpy(two, arc, len);              /* member 1 */
+        memcpy(two + len, arc, len);        /* member 2, identical */
+        test_make_memio(&io, &m, two, len * 2u);
+        cap_make(&sk, &cap);
+        CHECK(unc_extract_as(UNC_FORMAT_GZIP, &io, &sk, &al, NULL, NULL)
+              == UNC_OK);
+        CHECK(cap.count == 1 && cap.status[0] == UNC_OK);
+        CHECK(cap.dlen[0] == 2u * n &&
+              memcmp(cap.data[0], payload, n) == 0 &&
+              memcmp(cap.data[0] + n, payload, n) == 0);
+    }
 }
 
 static void test_tar(void)
@@ -5033,6 +5049,22 @@ static void test_btoa(void)
                         (uint32_t)sizeof prose - 1);
         CHECK(unc_sniff(&io) != UNC_FORMAT_BTOA);
     }
+
+    /* A ten-field End line (one short of eleven) must be refused, not
+     * read its eleventh field (the rot checksum) from off[10]/flen[10],
+     * which `btoa_fields` leaves uninitialised. */
+    {
+        static const char short_end[] =
+            "xbtoa Begin\n"
+            "9jqN=\n"
+            "xbtoa End N 4 4 E 45 S 11f R\n";
+        test_make_memio(&io, &m, (const uint8_t *)short_end,
+                        (uint32_t)sizeof short_end - 1);
+        cap_make(&sk, &cap);
+        CHECK(unc_extract_as(UNC_FORMAT_BTOA, &io, &sk, &al, NULL, NULL)
+              == UNC_OK);
+        CHECK(cap.count == 1 && cap.status[0] == UNC_ERR_CORRUPT);
+    }
 }
 
 /* base64 and MIME. tools/run_mime.py grades both against munpack and
@@ -5150,6 +5182,16 @@ static void test_resfork_find(void)
     /* Truncation must be refused, not read past. */
     CHECK(unc_resfork_find(fork, 20, 0x4D4B6579u, 0, &off, &len)
           == UNC_ERR_FORMAT);
+    /* An offset+length pair that wraps 32-bit must be refused, not let a
+     * wild `mapoff` through to the `fork + mapoff + 24` read. */
+    {
+        uint8_t w[64];
+        memset(w, 0, sizeof w);
+        unc_put_u32be(w + 4, 0xFFFFFFF0u);      /* mapoff */
+        unc_put_u32be(w + 12, 0x20u);           /* maplen: mapoff+maplen wraps */
+        CHECK(unc_resfork_find(w, (uint32_t)sizeof w, 0x4D4B6579u, 0,
+                               &off, &len) == UNC_ERR_FORMAT);
+    }
 }
 
 /* ------------------------------------------------------------------ */
@@ -5254,8 +5296,95 @@ static void test_path_depth(void)
     CHECK(p.truncdepth == 0);                     /* and the cut came back */
 }
 
+/* ------------------------------------------------------------------ */
+/* Crafted-malformed regressions: each input tripped a memory error or  */
+/* an infinite loop before the fix beside it (verified under ASan/UBSan */
+/* by ci's sanitizer build).                                            */
+/* ------------------------------------------------------------------ */
+static void test_malformed_regressions(void)
+{
+    MemIO m;
+    UncIO io;
+    UncAlloc al;
+    UncSink sk;
+    CapSink cap;
+
+    test_make_alloc(&al);
+
+    /* MIME multipart/appledouble: an applefile NAME entry whose offset
+     * (0xFFFFFFF0) wrapped the `off + elen <= got` bounds check and was
+     * read far past the decoded prefix. It must be ignored, not chased.
+     * The assertion that matters is that extraction RETURNS — ASan would
+     * trap the out-of-bounds read otherwise. */
+    {
+        static const char msg[] =
+            "MIME-Version: 1.0\r\n"
+            "Content-Type: multipart/appledouble; boundary=\"=b=\"\r\n"
+            "\r\n"
+            "--=b=\r\n"
+            "Content-Type: application/applefile\r\n"
+            "Content-Transfer-Encoding: base64\r\n"
+            "\r\n"
+            "AAUWBwACAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAD////8AAAACA=\r\n"
+            "--=b=\r\n"
+            "Content-Type: application/octet-stream\r\n"
+            "Content-Transfer-Encoding: base64\r\n"
+            "\r\n"
+            "TWFjCg==\r\n"
+            "--=b=--\r\n";
+        test_make_memio(&io, &m, (const uint8_t *)msg, (uint32_t)sizeof msg - 1);
+        cap_make(&sk, &cap);
+        CHECK(unc_extract_as(UNC_FORMAT_MIME, &io, &sk, &al, NULL, NULL)
+              == UNC_OK);
+        CHECK(cap.count == 1);
+    }
+
+    /* Compact Pro: a large commentlen with a host that sets no comment
+     * callback advanced the index cursor past the cached index, and the
+     * wrapped bounds check in cpt_index_read then read off its end. */
+    {
+        uint8_t cpt[108];
+        memset(cpt, 0, sizeof cpt);
+        cpt[0] = 1;
+        unc_put_u32be(cpt + 4, 8);           /* index offset */
+        cpt[13] = 1;                         /* nentries (u16be) */
+        cpt[14] = 255;                       /* commentlen */
+        test_make_memio(&io, &m, cpt, (uint32_t)sizeof cpt);
+        cap_make(&sk, &cap);
+        sk.comment = NULL;                   /* the documented no-comment host */
+        CHECK(unc_extract_as(UNC_FORMAT_COMPACTPRO, &io, &sk, &al, NULL, NULL)
+              != UNC_OK);                    /* an error, not an OOB read */
+    }
+
+    /* StuffIt 5: a directory marker with a zero header size left `pos`
+     * unchanged, so the walk looped forever while numentries grew. (The
+     * forced extractor still runs the probe, so the banner is genuine;
+     * the four year digits are wildcards.) */
+    {
+        static const unsigned char banner[] =
+            "StuffIt (c)1997-2000 Aladdin Systems, Inc., "
+            "http://www.aladdinsys.com/StuffIt/\r\n";
+        uint8_t s[184];
+        memset(s, 0, sizeof s);
+        memcpy(s, banner, 80);
+        s[82] = 5;                           /* archive version */
+        s[93] = 1;                           /* numfiles (u16be) */
+        unc_put_u32be(s + 94, 100);          /* first entry offset */
+        unc_put_u32be(s + 100, 0xA5A5A5A5u); /* SIT5_ID */
+        s[104] = 1;                          /* entry version */
+        /* header size (s+106..107) stays 0 -> marker makes no progress */
+        s[109] = 0x40;                       /* SIT5_DIRECTORY */
+        unc_put_u32be(s + 134, 0xFFFFFFFFu); /* datalen = marker */
+        test_make_memio(&io, &m, s, (uint32_t)sizeof s);
+        cap_make(&sk, &cap);
+        CHECK(unc_extract_as(UNC_FORMAT_SIT5, &io, &sk, &al, NULL, NULL)
+              == UNC_ERR_CORRUPT);
+    }
+}
+
 void run_format_tests(void)
 {
+    test_malformed_regressions();
     test_macbinary();
     test_macbinary_meta();
     test_applesingle();
