@@ -146,6 +146,7 @@ endif()
 add_application(MacExtract
     CREATOR "MExt"
     macextract_mac.c
+    mac_start.c
     ${ENGINE_SRC}
     ${ZLIB_SRC}
     macextract.r
@@ -546,7 +547,15 @@ target_compile_options(MacExtract PRIVATE -mcpu=68000 -Os -Wno-multichar
 # real hardware would show (DECISIONS.md 2026-10-22, *the names in the
 # code*). tools/overlay/overlay.ld discards the same sections from the
 # images.
-target_link_options(MacExtract PRIVATE -Wl,-gc-sections -Wl,--mac-strip-macsbug)
+# --mac-single: one CODE resource, code, data and relocations together, and
+# globals in a heap block rather than the A5 world. Retro68's multi-segment
+# machinery — a LoadSeg patch, its own jump table, five trap patches, a
+# DATA and a RELA resource per segment — served an application with ONE
+# real segment (DECISIONS.md 2026-10-22, *the runtime the application did
+# not need*). -e names mac/mac_start.c's entry, which skips newlib's exit
+# chain and gives the relocations back once they are applied.
+target_link_options(MacExtract PRIVATE -Wl,-gc-sections -Wl,--mac-strip-macsbug
+                    -Wl,--mac-single -Wl,-e,unc_mac_start)
 
 # The Finder ignores a 'BNDL' unless the file's hasBundle flag is set, and
 # nothing in the Retro68 chain sets it — Rez takes -t and -c and has no

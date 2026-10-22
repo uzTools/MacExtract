@@ -126,7 +126,11 @@ import sys
 # RE-TAKEN 2026-10-22, 57,984 -> 53,632: the MacsBug names stripped from
 # the CODE resources, 4,414 B of resident text (DECISIONS.md 2026-10-22,
 # *the names in the code*).
-EXPECT = 53632
+# RE-TAKEN 2026-10-22, 53,632 -> 48,896: Elf2Mac's --mac-single — one CODE
+# resource holding code, data and relocations, no CODE 0 jump table, no
+# DATA, no RELA — and mac/mac_start.c in place of Retro68's _start
+# (DECISIONS.md 2026-10-22, *the runtime the application did not need*).
+EXPECT = 48896
 TOLERANCE = 2048
 TAKEN = "2026-10-22"
 

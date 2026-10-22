@@ -598,7 +598,10 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # and the figure no longer counts them — 10,176 B of this build's text was
 # names (DECISIONS.md 2026-10-22, *the names in the code*). A5 36,900, +4
 # of `.data` alignment with the names gone, and the ceiling follows.
-UNC_MAC_CODE_DEFAULT=177900
+# -2,504 on 2026-10-22, 177,900 -> 175,396: Elf2Mac's --mac-single and
+# mac/mac_start.c — Retro68's multi-segment loader and newlib's exit chain
+# gone (DECISIONS.md 2026-10-22, *the runtime the application did not need*): the control.
+UNC_MAC_CODE_DEFAULT=175396
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -777,7 +780,11 @@ UNC_MAC_CODE_DEFAULT=177900
 # +8 on 2026-10-21 to 36,916 with the code ceiling's -72: the sniffer's table
 # in a file of its own, unc_sniff.c, and its alignment (DECISIONS.md
 # 2026-10-21, *the probes that left with the bundle*).
-UNC_MAC_A5_DEFAULT=36900
+# -680 on 2026-10-22 to 36,220 with the code ceiling's -2,504: newlib's
+# stdio and atexit state and the multi-segment loader's globals (DECISIONS.md 2026-10-22, *the runtime the application did not need*).
+# Since --mac-single this figure is data + bss in the HEAP, not an A5 world:
+# data rides in CODE 1 and bss is a block Retro68Relocate allocates.
+UNC_MAC_A5_DEFAULT=36220
 # A CEILING PER CONFIGURATION, because one ceiling measured on another build
 # cannot fire. The figures above are the RESIDENT control build, which carries
 # every decoder; the shipped build's resident code is a third of that, so
@@ -1178,8 +1185,12 @@ UNC_MAC_A5_DEFAULT=36900
 # budget; the A5 is `.data` alignment, nothing new is in it.
 # RE-BASED 2026-10-22, 48,316 -> 43,900: the MacsBug names stripped, 4,414 B
 # of this build's text (DECISIONS.md 2026-10-22, *the names in the code*).
-UNC_MAC_CODE_EAGER=43900
-UNC_MAC_A5_EAGER=17540
+# -2,552 code and -1,304 data + bss on 2026-10-22: Elf2Mac's --mac-single
+# and mac/mac_start.c (DECISIONS.md 2026-10-22, *the runtime the application did not need*). The machine gave every shipped budget
+# +4,980 B, more than these 3,856: the jump table, six stub segments and the
+# relocations trimmed at launch were resident and never counted here.
+UNC_MAC_CODE_EAGER=41348
+UNC_MAC_A5_EAGER=16236
 # +8 on 2026-10-02 for the same reason as the eager pair above: the
 # overlay call that now says WHICH of StuffIt 2.x's ciphers an entry
 # wants. A5 fell to 19,096 and its ceiling is left where it was.
@@ -1261,7 +1272,9 @@ UNC_MAC_A5_EAGER=17540
 # A5 17,644, under its ceiling.
 # RE-BASED 2026-10-22, 46,740 -> 42,428: the MacsBug names stripped, 4,308 B
 # of this build's text (the eager pair above).
-UNC_MAC_CODE_LAZY=42428
+# -2,552 code on 2026-10-22, the runtime the eager pair above lost; data +
+# bss 16,332, under its ceiling.
+UNC_MAC_CODE_LAZY=39876
 UNC_MAC_A5_LAZY=19200
 if [ -n "$UNC_OVL_RESIDENT" ]; then
     UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-$UNC_MAC_CODE_DEFAULT}
@@ -1295,13 +1308,41 @@ if [ -x "$SIZE" ] && [ -f "$GDB" ]; then
     echo "mac:      costs the engine one for one, same as code" 
     if [ "$a5" -gt "$UNC_MAC_MAX_A5" ]; then
         over=$((a5 - UNC_MAC_MAX_A5))
-        echo "mac: FAIL — the A5 world is $over B over its ceiling." >&2
+        echo "mac: FAIL — data + bss is $over B over its ceiling." >&2
         echo "mac: that is $over B off every extraction's budget, exactly as" >&2
-        echo "mac: code would be: the A5 world sits above ApplLimit, so it" >&2
-        echo "mac: lowers the heap's ceiling by its own size. Put the table" >&2
-        echo "mac: in a RESOURCE, which is free until it is loaded." >&2
-        echo "mac: FORMATS.md, *What the application costs the engine*." >&2
+        echo "mac: code would be: data rides in CODE 1 and bss is a heap block" >&2
+        echo "mac: (--mac-single), so both come out of the heap the engine is" >&2
+        echo "mac: then given. Put the table in a RESOURCE, which is free until" >&2
+        echo "mac: it is loaded. FORMATS.md, *What the application costs the engine*." >&2
         exit 1
+    fi
+    # mac/mac_start.c is the entry point and, unlike Retro68's _start, runs
+    # no constructor and no destructor: the application has none. One added
+    # anywhere — a C++ object, __attribute__((constructor)), a library that
+    # registers one — would be linked and silently never run, so its list
+    # being non-empty fails here (DECISIONS.md 2026-10-22, *the runtime the
+    # application did not need*).
+    NM="$TOOLCHAIN/bin/m68k-apple-macos-nm"
+    if [ -x "$NM" ]; then
+        bad=$("$NM" "$GDB" | awk '
+            { a[$3] = $1 }
+            END {
+                n = split("__CTOR_LIST__:__CTOR_END__ __DTOR_LIST__:__DTOR_END__ __init_section:__init_section_end __fini_section:__fini_section_end", p, " ")
+                for (i = 1; i <= n; i++) {
+                    split(p[i], q, ":")
+                    if (!(q[1] in a) || !(q[2] in a)) { print q[1] " (absent)"; continue }
+                    if (a[q[1]] != a[q[2]]) print q[1]
+                }
+            }')
+        if [ -n "$bad" ]; then
+            echo "mac: FAIL — not empty, and mac/mac_start.c would never run it: $bad" >&2
+            echo "mac: either remove the constructor or make mac_start.c call" >&2
+            echo "mac: Retro68CallConstructors / Retro68CallDestructors." >&2
+            exit 1
+        fi
+        echo "mac: constructors, destructors, .init, .fini: none (mac_start.c runs none)"
+    else
+        echo "mac: no m68k nm — the constructor guard NOT checked"
     fi
     if [ "$code" -gt "$UNC_MAC_MAX_CODE" ]; then
         over=$((code - UNC_MAC_MAX_CODE))

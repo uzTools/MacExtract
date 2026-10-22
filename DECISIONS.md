@@ -450,6 +450,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-21 (the Desktop Manager System 6 can have) — v0.41.0 bombed "unimplemented trap" under AppleShare's `Desktop Mgr` INIT on System 6.0.8; the bundle's resource fork is opened through a working directory now, and a tier boots the stock System Folder
 - 2026-10-21 (the guard that vetoes the Finder info) — GateKeeper 1.3 on System 6.0.8: in veto mode an extracted application loses its type, creator, flags and dates and the run still says "Extraction complete."; in both modes 30 bytes of the fork's reserved header change
 - 2026-10-22 (the names in the code) — Retro68 ships every function's MacsBug name inside the `CODE` resources and the images; stripped, 4,416 B of resident heap and 12,792 B of bundle go, and the ratchets had never counted them
+- 2026-10-22 (the runtime the application did not need) — Elf2Mac's --mac-single and an entry point of our own drop Retro68's multi-segment loader and newlib's exit chain: +4,980 B on every shipped budget, measured on all three tiers
 
 ---
 
@@ -29178,3 +29179,71 @@ nothing calls while the engine holds its budget — startup, Standard File,
 the About box — a few kilobytes, hypothesis; the dialogs that look
 one-shot run mid-extraction, and a segment reloaded then fails as a system
 bomb rather than a per-entry refusal. Not started.
+
+## 2026-10-22 (the runtime the application did not need) — Elf2Mac's --mac-single and an entry point of our own drop Retro68's multi-segment loader and newlib's exit chain: +4,980 B on every shipped budget, measured on all three tiers
+
+**Claim.** The application had one real code segment and was linked as a
+multi-segment one: Retro68's `MultiSegApp.c` patched `_LoadSeg`,
+`_UnLoadSeg`, `_ExitToShell`, `_Launch` and `_Chain`, kept a 816-byte jump
+table in the A5 world and six 80-byte stub segments, and copied a `DATA`
+resource into the A5 world at launch. Retro68's `_start` then left through
+newlib's `exit`, which linked `exit`, `__call_exitprocs`, the `atexit`
+table, the stdio file array and `_impure_data` into an application with
+no stdio stream and no constructor. Elf2Mac's `--mac-single` links one
+`CODE` 1 holding code, data and relocations, with globals in a heap block
+Retro68's relocator allocates; `mac/mac_start.c` is the entry
+(`-Wl,-e,unc_mac_start`), relocates, gives the relocations back
+(`SetHandleSize` on `CODE` 1, only when `RecoverHandle` of the image's
+start names the handle `GetResource` returns), calls `main` and leaves
+through `ExitToShell`, which is where Retro68's own `_exit` ends.
+`tools/build_mac.sh` fails the build if a constructor, destructor, `.init`
+or `.fini` appears, since this entry runs none; it was shown to fail on
+one, and an EMPTY static constructor did not test it — GCC deletes one at
+`-Os`, so the first probe proved nothing.
+
+**Measured.** Against `main` at ce79615 built the same way: eager
+**−2,552 B of `CODE` and −1,304 of data + bss**, lazy the same, the control
+−2,504 and −680; `MacExtract.bin` 237,056 → 232,320 B. On the machine the
+gain is larger than that unit shows: the budget probe (`-D UNC_AT_BUDGET`,
+`derived-PCCTS.tar`), booted on both builds back to back, gives **every
+shipped budget +4,980 B** on System 6.0.8 at 1 MB, System 3.0 / 512Ke and
+System 6.0.8 / 512Ke, and the control +4,204 / +4,186 / +4,204. The
+difference is the jump table, the stubs and the 1,368 B of relocations,
+which were resident and never in `code + data + bss`.
+
+**What that measurement also found.** Main's own probe read its TIERS
+1,288 B below the derived figures on all three tiers, and the residue
+−426 B rather than −666: the shipped lane had been about 1 KB generous.
+Both are re-taken from this build's boots, not derived (TIERS 201,590 /
+106,208 / 630,496, `OVL_RESIDUE` −322), and `run_tiers.py --check` moves
+no tally in either lane with them. So is `TIERS_MACHINE`, the budget plus
+the control it was read against, which `--check-saved` held constant on
+the grounds that no change to the application can move it: that is true
+of a change inside the CODE + A5 unit and false of this one, and the sums
+came out about 270 B lower (413,206 / 317,824 / 842,112). The first CI run
+said so before the table did.
+
+**On the machine**, the branch's full sample: 74/74 at 1 MB on System
+6.0.8, 72/74 on System 3.0 / 512Ke and 68/74 on System 6.0.8 / 512Ke, the
+same fixtures refused by name, 74/74 on System 7.0.1 and 74/74 on System
+6.0.8 at 4 MB with the stock System Folder's INITs — first pass, no
+emulator exit. The autotest never returns from `main`, so the quit was
+graded by `relaunch.py` with the shipped binary, a `.cpt` and a `.sit`
+opened from the Finder: both extracted and back to the Finder on System
+6.0.8, under MultiFinder and on System 3.0 / 512Ke. On System 7.0.1 the
+second archive is refused — on `main` too, the same frame, so it predates
+this and is filed (OPEN_ITEMS.md, *System 7.0.1: the second archive of a
+Finder list is refused*). The 64K-ROM Macintosh 512K, booting the
+application as the shell of an MFS System 3.0 disk, reaches Standard File
+listing that disk on both builds, which is all it was recorded doing.
+Mac OS 9.2 under QEMU, where the application runs 32-bit in the 68LC040
+emulator, launched, extracted byte-exact and quit to the Finder on 20 of
+`os9sample.txt`'s 22; the other two were not graded, the sweep stopping
+when `./ci.sh` deleted the reference build it grades against.
+
+**The lesson that transfers: price a link-model change on the machine.**
+The ratchets' unit is the ELF's sections, and a change to how the
+application is LAID OUT moves resident bytes that no section holds — here
+1.1 KB of 4.98 KB. `TIERS_CONTROL` moved by −3,184 in that unit; deriving
+TIERS from it would have under-credited every budget by about a kilobyte,
+while the derivations already in it had over-credited by 1,288 B.

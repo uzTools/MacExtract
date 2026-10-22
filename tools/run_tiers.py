@@ -158,10 +158,17 @@ REPO = os.path.dirname(HERE)
 # by that much when the MacsBug names were stripped from the control's
 # CODE — bytes the Segment Loader no longer places (DECISIONS.md
 # 2026-10-22, *the names in the code*).
+# **RE-TAKEN on all three machines 2026-10-22** (`-D UNC_OVL_RESIDENT -D
+# UNC_AT_BUDGET`, derived-PCCTS.tar), on main at ce79615 and on the build
+# that dropped Retro68's multi-segment machinery and newlib's exit chain,
+# one boot each, back to back: main read 197,404 / 102,004 / 626,292 — all
+# three 1,288 B BELOW the derived figures above, so the shipped lane had been
+# that much too generous since some derivation after 2026-10-09 — and the
+# new build 201,590 / 106,208 / 630,496, +4,186 / +4,204 / +4,204 (DECISIONS.md 2026-10-22, *the runtime the application did not need*).
 TIERS = {
-    "sys3-512K": (198692, "System 3.0, Macintosh 512Ke (225,956 B free)"),
-    "sys6-512K": (103292, "System 6.0.8, Macintosh 512Ke (130,556 B free)"),
-    "floor-1M":  (627580, "System 6.0.8, 1 MB Mac Plus — the floor target"),
+    "sys3-512K": (201590, "System 3.0, Macintosh 512Ke (222,070 B free)"),
+    "sys6-512K": (106208, "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
+    "floor-1M":  (630496, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
 # -32 on all three 2026-10-21, DERIVED from TIERS_CONTROL +32 (the bundle's
 # working directory, DECISIONS.md 2026-10-21, *the Desktop Manager System 6
@@ -348,7 +355,12 @@ TIERS = {
 # in the code*): the control's CODE -10,176 and A5 +4 (alignment) against
 # the shipped pair's -4,416 and 0, so OVL_SAVED -5,760. Both builds are
 # now read without the names, which `size` still counts (code_and_a5).
-TIERS_CONTROL = 214800     # build/mac-resident, CODE + A5, 2026-10-22
+# **-3,184 2026-10-22, and TIERS RE-TAKEN on the machine, not derived**:
+# --mac-single and mac/mac_start.c (DECISIONS.md 2026-10-22, *the runtime the application did not need*): the control's CODE -2,504 and
+# data + bss -680. The machine gave +4,204, because the jump table, the
+# stub segments and the relocations trimmed at launch are resident bytes
+# this unit never counted — which is why TIERS was measured, not moved.
+TIERS_CONTROL = 211616     # build/mac-resident, CODE + A5, 2026-10-22
 # **What this control cannot see: the autotest harness.** TIERS was read
 # on the machine from an autotest build (`UNC_MAC_AUTOTEST`), and
 # build/mac-resident has no harness in it, so harness growth lowers what a
@@ -363,10 +375,18 @@ TIERS_CONTROL = 214800     # build/mac-resident, CODE + A5, 2026-10-22
 # --check-saved, which it did not until 2026-10-09 (the message below told
 # a reader to move TIERS_CONTROL and nothing tied the two together). Only
 # a re-take on the machine changes these.
+#
+# **RE-TAKEN 2026-10-22, all three about 270 B lower**: 201,590 / 106,208 /
+# 630,496 measured against a control of 211,616. A change INSIDE the CODE +
+# A5 unit cannot move these sums; one that moves resident bytes OUTSIDE it
+# can, and --mac-single did — the control's jump table, stub segments and
+# trimmed relocations (DECISIONS.md 2026-10-22, *the runtime the application
+# did not need*). Main's own probe the same morning summed 1,288 B below
+# the 2026-10-09 values on all three, so they had already stopped holding.
 TIERS_MACHINE = {
-    "sys3-512K": 413492,   # 205,476 + 208,016, measured 2026-10-09 (and
-    "sys6-512K": 318092,   # 110,076 + 208,016   205,732 + 207,760 that
-    "floor-1M":  842380,   # 634,364 + 208,016   morning: the same sums)
+    "sys3-512K": 413206,   # 201,590 + 211,616, measured 2026-10-22 (was
+    "sys6-512K": 317824,   # 106,208 + 211,616   413,492 / 318,092 / 842,380
+    "floor-1M":  842112,   # 630,496 + 211,616   from 2026-10-09)
 }
 
 # DERIVED, not re-measured, 2026-10-01: all three fell by 2,024 B — the
@@ -717,7 +737,10 @@ EXPECT = {
 # control's -10,176 against the shipped pair's -4,416 (DECISIONS.md
 # 2026-10-22, *the names in the code*). The residue is NOT re-taken: every
 # byte of this is bytes the Segment Loader no longer places on either side.
-OVL_SAVED = 153360
+# **+672 2026-10-22, -> 154,032**: --mac-single and mac/mac_start.c, the
+# control's -3,184 against the shipped pair's -3,856 (CODE -2,552, data +
+# bss -1,304) (DECISIONS.md 2026-10-22, *the runtime the application did not need*).
+OVL_SAVED = 154032
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
 # every kept image is one — as is the bundle an envelope holds on to.
@@ -751,7 +774,15 @@ OVL_HANDLE = 8
 # short at System 3.0 / 512 KB (1,130 until `ovl_cptdd` grew 144 B the same
 # day, DERIVED: its demand did not move) and a2ps 4,070 B short at System 6.0.8.
 # (DECISIONS.md 2026-09-26, *a budget per format, and one per layer*.)
-OVL_RESIDUE = -666
+# **RE-TAKEN 2026-10-22, -666 -> -322**, from the shipped and the resident
+# budget probes booted back to back on all three tiers (derived-PCCTS.tar,
+# a tar, which keeps zipold and codecs): measured shipped budget less TIERS
+# + OVL_SAVED - the two images and their headers is -322 / -304 / -322 B on
+# the new build, and -426 on all three on main at ce79615 against main's
+# own measured TIERS. The -666 was 2026-09-27's, two builds' worth of
+# instruments ago; -322 is the more pessimistic of this build's two values
+# (DECISIONS.md 2026-10-22, *the runtime the application did not need*).
+OVL_RESIDUE = -322
 
 # The seventeen images and the bundle they are read as, in bytes, measured
 # 2026-09-26 off `build/mac/` and STUFFIT re-taken 2026-09-28, +208 B for the
