@@ -4,6 +4,11 @@
 ENTRY(ovl_main)
 SECTIONS
 {
+    /* GCC's MacsBug names, one per function, before anything can claim them:
+     * ld gives an input section to the FIRST rule that matches, and .text*
+     * below would. 11,652 B across the seventeen images on 2026-10-22, each
+     * byte heap for the format that keeps the image. */
+    /DISCARD/ : { *(.text.*.macsbug) }
     . = 0;
     .text : { *(.text.ovl_main) *(.text*) *(.rodata*) }
     .data : { *(.data*) }

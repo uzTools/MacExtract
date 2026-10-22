@@ -537,7 +537,16 @@ target_compile_options(MacExtract PRIVATE -mcpu=68000 -Os -Wno-multichar
                        # archive's size in budget; this keeps the older path
                        # buildable for comparison.
                        $<$<BOOL:$ENV{UNC_MAC_SLURP_ARCHIVE}>:-DUNC_MAC_SLURP_ARCHIVE>)
-target_link_options(MacExtract PRIVATE -Wl,-gc-sections)
+# Retro68's GCC writes every function's name after its code, for MacsBug,
+# and Elf2Mac ships them inside the CODE resources unless told to strip:
+# 4,416 B of resident heap on every tier, measured 2026-10-22 off the
+# resource map (49,664 -> 45,248 B across the nine CODE resources). The
+# ELF beside the build keeps its symbols either way, so the listings and
+# the stack-depth walk read the same; what goes is the name a bomb box on
+# real hardware would show (DECISIONS.md 2026-10-22, *the names in the
+# code*). tools/overlay/overlay.ld discards the same sections from the
+# images.
+target_link_options(MacExtract PRIVATE -Wl,-gc-sections -Wl,--mac-strip-macsbug)
 
 # The Finder ignores a 'BNDL' unless the file's hasBundle flag is set, and
 # nothing in the Retro68 chain sets it — Rez takes -t and -c and has no

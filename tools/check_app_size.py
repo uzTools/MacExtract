@@ -123,9 +123,12 @@ import sys
 # shipped build (tools/build_mac.sh's eager pair). `run_tiers.py --check`
 # moves no tally in either lane (DECISIONS.md 2026-10-21, *the probes that
 # left with the bundle*).
-EXPECT = 57984
+# RE-TAKEN 2026-10-22, 57,984 -> 53,632: the MacsBug names stripped from
+# the CODE resources, 4,414 B of resident text (DECISIONS.md 2026-10-22,
+# *the names in the code*).
+EXPECT = 53632
 TOLERANCE = 2048
-TAKEN = "2026-10-21"
+TAKEN = "2026-10-22"
 
 # And the BUNDLE, watched from 2026-09-26 for one reason: FORMATS.md quotes it
 # in three places and nothing measured it, so it was wrong by 544 B — the
@@ -246,9 +249,11 @@ TAKEN = "2026-10-21"
 # -> 192,288 2026-10-21: a seventeenth image, `ovl_sniff`, 13,384 B and its
 # directory entry — the sniffer and every probe, no longer resident
 # (DECISIONS.md 2026-10-21, *the probes that left with the bundle*).
-EXPECT_BUNDLE = 192288
+# RE-TAKEN 2026-10-22, 192,288 -> 179,496: the MacsBug names discarded
+# from every image (DECISIONS.md 2026-10-22, *the names in the code*).
+EXPECT_BUNDLE = 179496
 TOLERANCE_BUNDLE = 2048
-TAKEN_BUNDLE = "2026-10-21"
+TAKEN_BUNDLE = "2026-10-22"
 
 
 def main():

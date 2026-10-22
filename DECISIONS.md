@@ -449,6 +449,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-21 (the probes that left with the bundle) — the sniffer and all twenty-six probes are a seventeenth `'OVLY'` image, run from the bundle before the release and given back with it; 9,284 B of resident CODE and 364 of A5 go, +9,616 B on every budget that keeps images
 - 2026-10-21 (the Desktop Manager System 6 can have) — v0.41.0 bombed "unimplemented trap" under AppleShare's `Desktop Mgr` INIT on System 6.0.8; the bundle's resource fork is opened through a working directory now, and a tier boots the stock System Folder
 - 2026-10-21 (the guard that vetoes the Finder info) — GateKeeper 1.3 on System 6.0.8: in veto mode an extracted application loses its type, creator, flags and dates and the run still says "Extraction complete."; in both modes 30 bytes of the fork's reserved header change
+- 2026-10-22 (the names in the code) — Retro68 ships every function's MacsBug name inside the `CODE` resources and the images; stripped, 4,416 B of resident heap and 12,792 B of bundle go, and the ratchets had never counted them
 
 ---
 
@@ -29108,3 +29109,72 @@ v0.42.0, `tools/vmac/drive.py`:**
 System; what a guard does to a control panel or an INIT rather than an
 application; whether GateKeeper's log file names the same call. No code
 changed: the maintainer asked for a test.
+
+## 2026-10-22 (the names in the code) — Retro68 ships every function's MacsBug name inside the `CODE` resources and the images; stripped, 4,416 B of resident heap and 12,792 B of bundle go, and the ratchets had never counted them
+
+**Claim.** Retro68's GCC writes each function's name after its `rts`, for
+MacsBug, and Elf2Mac puts them in the `CODE` resources unless linked with
+`--mac-strip-macsbug`; `tools/overlay/overlay.ld` kept them in every image
+the same way. MEASURED 2026-10-22 off the resource maps: the nine `CODE`
+resources 49,664 → **45,248 B**, the seventeen images 192,066 → 179,276 B,
+the bundle 192,288 → **179,496 B**, the download 254,336 → 237,056 B. Every
+one of those bytes was heap on every tier — the resident ones for every
+archive, an image's for the format that keeps it.
+
+**How it was found.** A reader of FORMATS.md asked why the application
+"allocates CODE resources a bit over 100 kB" (it did until 2026-09-25; the
+section still quoted that day's figure in a table row, corrected the same
+morning, a2decc4) and what a call-tree analysis could take out of what is
+left. Answering that meant a linker map of today's build, and the map's
+`.text.*.macsbug` input sections summed to 4,414 B inside `.code00002`.
+Nothing in this repository had priced them: `tools/code_map.py` groups by
+object file and the names sit in the function's own object.
+
+**What the instrument could not see, and still cannot without help.** The
+stripped names do not leave the ELF: Elf2Mac parks them in a `NOLOAD`
+section that keeps its `ALLOC` flag, and `m68k-apple-macos-size` counts it
+as text. So the first stripped build read 48,314 B against a 48,316 B
+ceiling and every ratchet passed, while the `CODE` resources had lost
+4,416 B. `tools/build_mac.sh` and `run_tiers.code_and_a5()` now subtract
+that section by name, and every ceiling, `TIERS_CONTROL`, `OVL_SAVED`,
+`IMAGES`, `BUNDLE` and `check_app_size.py`'s two figures were re-based in
+that unit, which is what the Segment Loader places. **A figure the tool
+reports is not the figure the machine pays unless somebody has checked
+which sections the tool adds up** — 2026-10-06's rule (*the wall the
+overlays had already moved*) at the next layer down: there the summed
+figure hid the largest block, here it hid a section that ships nowhere.
+
+**What it costs.** The name a bomb box or MacsBug shows on real hardware,
+which the maintainer has. The ELF beside each build keeps its symbols, so
+the listings, `code_map.py` and the stack walk read the same. Not tested:
+a bomb on hardware with the stripped build, to see what the box says
+instead of a name.
+
+**What the model says, and the lesson in one of its figures.** `OVL_SAVED`
+159,120 → 153,360 (the control lost 10,176, the shipped build 4,416),
+every TIERS budget +10,176 (derived), a format's grant on the machine
++5,076 to +7,552 B and an envelope's +17,176. The shipped lane moves no
+tally; the resident lane recovers `derived-PuzzleGetter_0.8.sit` at
+System 6.0.8 / 512Ke, 63 → 64/74 (the lane's arithmetic; the control was
+not booted). **On the machine the same day, the shipped build: 74/74 at
+1 MB on System 6.0.8, 72/74 on System 3.0 / 512Ke and 68/74 on System
+6.0.8 / 512Ke, the same fixtures by name; two host-side emulator exits,
+each re-run clean alone.** And one figure quoted since 2026-10-21
+was a lower bound read as a distance: `synth-dd-m5.dd` "98 B short" was
+the engine's message for the FIRST allocation refused, and at a budget
+5,928 B larger the same fixture reads 378 B short; its peak is 401,408 B
+against a 235,142 B grant (FORMATS.md, *Overlays*, corrected in place).
+
+**What is left in the resident 43,900 B, since that was the question.**
+From the same map, the Macintosh shell is 21,192 B with the names and 143
+functions: 12.5 KB is the extraction driver and the sink callbacks — file
+creation, fork writes, the Finder stamp and Desktop comment, progress,
+name folding and renaming — 4.0 KB is segmented sets (scanning a disk for
+parts and asking for the next one), 2.2 KB the report list and bar, 0.7 KB
+the password dialog, 0.6 KB envelope layering, 0.4 KB startup and 0.8 KB
+helpers. It is the File Manager side of the product, which the engine
+has no libc to carry. A Retro68 `CODE` segment can take out only what
+nothing calls while the engine holds its budget — startup, Standard File,
+the About box — a few kilobytes, hypothesis; the dialogs that look
+one-shot run mid-extraction, and a segment reloaded then fails as a system
+bomb rather than a per-entry refusal. Not started.

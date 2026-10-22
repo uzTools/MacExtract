@@ -154,10 +154,14 @@ REPO = os.path.dirname(HERE)
 # bit set when the run ends (below).
 # **RAISED by 64 B 2026-10-19, DERIVED**: TIERS_CONTROL fell by that much
 # with the toolchain update (below).
+# **All three RAISED by 10,176 B 2026-10-22, DERIVED**: TIERS_CONTROL fell
+# by that much when the MacsBug names were stripped from the control's
+# CODE — bytes the Segment Loader no longer places (DECISIONS.md
+# 2026-10-22, *the names in the code*).
 TIERS = {
-    "sys3-512K": (188516, "System 3.0, Macintosh 512Ke (225,956 B free)"),
-    "sys6-512K": (93116, "System 6.0.8, Macintosh 512Ke (130,556 B free)"),
-    "floor-1M":  (617404, "System 6.0.8, 1 MB Mac Plus — the floor target"),
+    "sys3-512K": (198692, "System 3.0, Macintosh 512Ke (225,956 B free)"),
+    "sys6-512K": (103292, "System 6.0.8, Macintosh 512Ke (130,556 B free)"),
+    "floor-1M":  (627580, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
 # -32 on all three 2026-10-21, DERIVED from TIERS_CONTROL +32 (the bundle's
 # working directory, DECISIONS.md 2026-10-21, *the Desktop Manager System 6
@@ -339,7 +343,12 @@ TIERS = {
 # through a working directory (DECISIONS.md 2026-10-21, *the Desktop
 # Manager System 6 can have*): the control's CODE +52 and A5 -20 against
 # the shipped pair's +64 (CODE +52, A5 +12), so OVL_SAVED -32.
-TIERS_CONTROL = 224976     # build/mac-resident, CODE + A5, 2026-10-21
+# **-10,176 2026-10-22, and TIERS +10,176, DERIVED**: the MacsBug names
+# stripped from every CODE resource (DECISIONS.md 2026-10-22, *the names
+# in the code*): the control's CODE -10,176 and A5 +4 (alignment) against
+# the shipped pair's -4,416 and 0, so OVL_SAVED -5,760. Both builds are
+# now read without the names, which `size` still counts (code_and_a5).
+TIERS_CONTROL = 214800     # build/mac-resident, CODE + A5, 2026-10-22
 # **What this control cannot see: the autotest harness.** TIERS was read
 # on the machine from an autotest build (`UNC_MAC_AUTOTEST`), and
 # build/mac-resident has no harness in it, so harness growth lowers what a
@@ -448,7 +457,9 @@ EXPECT = {
                   # this one needs between 98,780 and 103,372 B. The
                   # shipped lane does not move (DECISIONS.md 2026-10-17,
                   # *the archives' own Finder info*).
-                  "derived-PuzzleGetter_0.8.sit",
+                  # Left 2026-10-22: the MacsBug names stripped give the
+                  # control 10,176 B back, and this one needed less than
+                  # that (DECISIONS.md 2026-10-22, *the names in the code*).
                   "derived-a2basic.dmg.sit", "popper-1.7.tar.Z",
                   "synth-dd-m5.dd"),
 }
@@ -702,7 +713,11 @@ EXPECT = {
 # **-32 2026-10-21, -> 159,120**: the bundle's resource fork through a
 # working directory, the control's +32 against the shipped pair's +64
 # (DECISIONS.md 2026-10-21, *the Desktop Manager System 6 can have*).
-OVL_SAVED = 159120
+# **-5,760 2026-10-22, -> 153,360**: the MacsBug names stripped, the
+# control's -10,176 against the shipped pair's -4,416 (DECISIONS.md
+# 2026-10-22, *the names in the code*). The residue is NOT re-taken: every
+# byte of this is bytes the Segment Loader no longer places on either side.
+OVL_SAVED = 153360
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
 # every kept image is one — as is the bundle an envelope holds on to.
@@ -828,23 +843,23 @@ OVL_RESIDUE = -666
 # a tar keeps ZIPOLD now, not EXO (DECISIONS.md 2026-10-17, *the archives'
 # own Finder info*).
 IMAGES = {
-    "OVL_ID_ARC":         8486,
-    "OVL_ID_BINHEX":      4994,
-    "OVL_ID_BTOA":        2756,
-    "OVL_ID_CODECS":      6404,
-    "OVL_ID_CPTDD":       15936,
-    "OVL_ID_CRYPT":       10244,
-    "OVL_ID_EXO":         31284,
-    "OVL_ID_LZH":         11242,
-    "OVL_ID_NOW":         5164,
-    "OVL_ID_PACKIT":      2656,
-    "OVL_ID_SPACESAVER":  16722,
-    "OVL_ID_STUFFIT":     29842,
-    "OVL_ID_SQP":         2040,
-    "OVL_ID_SUPERDISK":   7142,
-    "OVL_ID_TEXT":        12162,
-    "OVL_ID_ZIPOLD":      11608,
-    "OVL_ID_SNIFF":       13384,
+    "OVL_ID_ARC":         7696,
+    "OVL_ID_BINHEX":      4606,
+    "OVL_ID_BTOA":        2496,
+    "OVL_ID_CODECS":      6016,
+    "OVL_ID_CPTDD":       14812,
+    "OVL_ID_CRYPT":       9572,
+    "OVL_ID_EXO":         29952,
+    "OVL_ID_LZH":         10446,
+    "OVL_ID_NOW":         4770,
+    "OVL_ID_PACKIT":      2180,
+    "OVL_ID_SPACESAVER":  16168,
+    "OVL_ID_STUFFIT":     28122,
+    "OVL_ID_SQP":         1736,
+    "OVL_ID_SUPERDISK":   6634,
+    "OVL_ID_TEXT":        11342,
+    "OVL_ID_ZIPOLD":      10832,
+    "OVL_ID_SNIFF":       11896,
 }
 # **ZIPOLD +3,374 B and EXO +972 B, the bundle +4,344 B, 2026-10-17**:
 # Mac OS X's sidecars, the shared code in ZIPOLD and zip's half in EXO,
@@ -864,7 +879,10 @@ IMAGES = {
 # the sniffer and every probe, run from the bundle before the release and
 # in no keep set (DECISIONS.md 2026-10-21, *the probes that left with the
 # bundle*). What it takes off the resident build is OVL_SAVED's +9,616.
-BUNDLE = 192288
+# **Every image smaller and the bundle -12,792 B, 2026-10-22**: the MacsBug
+# names discarded by tools/overlay/overlay.ld (DECISIONS.md 2026-10-22,
+# *the names in the code*); STUFFIT -1,720, EXO -1,332, SNIFF -1,488.
+BUNDLE = 179496
 
 # What the SHIPPED lane asserts, and it is the refused fixtures BY NAME
 # rather than a tally: a tier that refuses two different fixtures and still
@@ -1048,7 +1066,17 @@ def code_and_a5(builddir):
         return None
     out = subprocess.run([size, gdb], capture_output=True, text=True)
     row = out.stdout.splitlines()[1].split()          # text data bss ...
-    return int(row[0]) + int(row[1]) + int(row[2])
+    # The stripped MacsBug names stay in the ELF as a NOLOAD section that
+    # `size` still counts as text; no byte of it is resident. Same
+    # subtraction as tools/build_mac.sh (DECISIONS.md 2026-10-22, *the
+    # names in the code*).
+    names = 0
+    full = subprocess.run([size, "-A", gdb], capture_output=True, text=True)
+    for line in full.stdout.splitlines():
+        cols = line.split()
+        if cols and cols[0] == ".strippedmacsbugnames":
+            names = int(cols[1])
+    return int(row[0]) + int(row[1]) + int(row[2]) - names
 
 
 def check_saved(ship=os.path.join(REPO, "build", "mac"),
