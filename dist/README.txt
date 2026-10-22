@@ -1,4 +1,4 @@
-MacExtract v0.42.0 — bootstrap distribution
+MacExtract v0.43.0 — bootstrap distribution
 ==========================================
 
 A bare Classic Mac has no way to open a .sit/.cpt/.hqx until it HAS an
@@ -46,6 +46,15 @@ are the same story for the same reason: that method looks back over as much as
 256 KB, and the room has to be there. Those entries are skipped with a message
 and the rest of the archive still comes out. Every other format fits in
 512 KB, and with 1 MB the question does not arise.
+
+v0.43.0 fixes what v0.42.0 broke. On System 7.0.1, and on System 6
+with AppleShare's "Desktop Mgr" file in the System Folder, once an
+application or anything else with its own icon had come out at the top
+of a folder, nothing after it could be created there, and of several
+archives opened together from the Finder only the first was extracted
+-- the next one stopped at "Could not open the archive." Both are fixed;
+later systems than 7.0.1 were not tried with v0.42.0. MacExtract itself
+also takes about 9 KB less memory, which every archive gets instead.
 
 v0.42.0 fixes one crash, the first reported from outside: on System 6
 with AppleShare's "Desktop Mgr" file in the System Folder -- which the

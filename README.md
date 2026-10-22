@@ -21,7 +21,7 @@ A Linux command-line version is built from the same engine.
 ## Download
 
 **[Latest release](https://github.com/uzTools/MacExtract/releases/latest)**,
-currently **v0.42.0**, or from the tree:
+currently **v0.43.0**, or from the tree:
 
 | | |
 |---|---|
