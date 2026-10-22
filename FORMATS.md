@@ -8333,31 +8333,34 @@ as the boot shell so nothing else is resident:
 | `CurStackBase` | 106,728 | 499,944 |
 | `FreeMem` | 4,846 | 4,846 |
 | **largest single `NewPtr`** | **63,744** | **424,960** |
-| a 142,152 B block — `CODE` 2 as it was that day | **refused** | granted |
+| a 142,152 B block — `CODE` 2 on 2026-09-01, before the overlays; it is 42,944 B since (below) | **refused** | granted |
 
 **The segment was the reason until the overlays landed on 2026-09-25; the heap
 total is the reason now.** `CODE` 2 was 142,152 B when the row above was
-measured and every decoder was resident. In the shipped v0.37.0 binary it is
-**48,888 B**, and the nine `CODE` resources total **55,888 B** — read off
-`dist/MacExtract.bin`'s own resource map, CORRECTED 2026-10-06 — so the
+measured and every decoder was resident. In the shipped v0.42.0 binary it is
+**42,944 B**, and the nine `CODE` resources total **49,664 B** — read off
+`dist/MacExtract.bin`'s own resource map, CORRECTED 2026-10-22 (48,888 and
+55,888 B in v0.37.0, the figures this read from 2026-10-06 until then) — so the
 segment the Segment Loader could not place now fits inside that machine's
-largest block with room to spare. **55,888 B is not the 54,340 B this
+largest block with room to spare. **49,664 B is not the 48,316 B this
 document calls `CODE` elsewhere, and the difference is not drift:** that
 one is `build/mac/MacExtract.code.bin`, the image Retro68 links and
 `tools/check_app_size.py` ratchets (*Three configurations, one tree*), while
 this one is the sum of what the resource fork actually carries, which
-includes `CODE` 0's 1,024-byte jump table and six 80-byte segment stubs
-that the image does not. The two differ by 1,548 B, and the heap sum below
+includes `CODE` 0's 824-byte jump table and six 80-byte segment stubs
+that the image does not. The two differ by 1,348 B, and the heap sum below
 uses the resource figure because resources are what the Segment Loader
 places. *Derived, not measured:* 63,744 B was
 measured against the build of the day, and only a boot settles what this one
 is granted.
 
-**What does not fit is the sum.** The heap holds those 55,888 B of `CODE`
-resources plus the 19,052 B A5 world — **74,940 B** against an application
-heap that cannot exceed `ApplLimit − ApplZone` = **78,568 B**, leaving 3,628 B
-for every buffer an extraction needs; and the shipped eager loader then asks
-for the `'OVLY'` bundle as ONE **164,264 B** block (*Overlays*). That bound is
+**What does not fit is the sum.** The heap holds those 49,664 B of `CODE`
+resources plus the 17,540 B A5 world — **67,204 B** against an application
+heap that cannot exceed `ApplLimit − ApplZone` = **78,568 B**, leaving 11,364 B
+for every buffer an extraction needs (CORRECTED 2026-10-22: 74,940 B and
+3,628 B from 2026-10-06, before the formats it only named and the sniffer
+left the resident build); and the shipped eager loader then asks
+for the `'OVLY'` bundle as ONE **192,288 B** block (*Overlays*). That bound is
 set by the RAM under the screen buffer, not by the System, so no smaller
 System moves it — and CODE is the one thing that costs a Macintosh anything
 here (*What the application costs the engine*). The verdict is unchanged; the
@@ -8378,8 +8381,8 @@ build. Static sizes from `m68k-apple-macos-size`, MEASURED 2026-09-01:
 | **MacBinary + BinHex** | **34,452** | **23,724** | **58,176** |
 
 The shipping row is that day's and is not today's — the shipped pair is
-54,340 B of `CODE` and 19,052 B of A5 since the overlays (*Three
-configurations, one tree*). **The subset rows are unaffected by them**: a
+48,316 B of `CODE` and 17,540 B of A5 since the overlays (*Three
+configurations, one tree*; 2026-10-22's figures). **The subset rows are unaffected by them**: a
 build with one format has nothing to overlay, so these are the numbers a
 per-format application would still be measured against (*derived*).
 
