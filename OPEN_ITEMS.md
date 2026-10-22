@@ -260,6 +260,29 @@ each, and sixteen suggestions not yet estimated — are FORMATS.md's
 | **a `qemu-m68k` lane in `ci.sh`**: the m68k-linux CLI (TESTING.md, *The 68000 profile*, has the build line) running `run_crypt.py`, `run_privatefile.py`, the differential suite (every CRC row) and a `UNC_ARS_FORCE_SAMPLED` build (the scan) | `ci.sh` runs x86, which compiles the C path, so without this lane an assembly path is graded by nothing |
 | **a timing build that can open an encrypted archive**: the autotest app with a compile-time password beside `UNC_AT_TIMING` | the tick probe (tools/vmac/README.md) is what prices a change here, and today it cannot reach any cipher |
 
+## Resident bytes that could leave before extraction
+
+**Not started; each is its own change.** Every resident byte comes off
+every extraction's budget (FORMATS.md, *What the application costs the
+engine*); these are what is still resident and runs before the release,
+or only for some archives. Sizes MEASURED 2026-10-22 on `main` at
+17a025b, `nm -S` of `build/mac/MacExtract.code.bin.gdb`; every saving is
+a HYPOTHESIS until built and read off the budget probe on the machine,
+which is how the sniffer's image (2026-10-21) and the runtime trim
+(2026-10-22) were priced. On a 128K Macintosh only the last three rows
+would count, since a subset build there has no bundle (FORMATS.md, *A
+Macintosh 128K*).
+
+| what | resident | what would close it |
+|---|---|---|
+| the encryption check before the release, `unc_archive_encrypted` | 618 B of code | it runs only inside the release, with the bundle whole, so it can join `ovl_sniff`; move it and measure |
+| the MacBinary and AppleDouble readers, `unc_macbinary_extract` and `unc_appledouble_extract` | 1,880 B of code | an image of their own: an envelope keeps the whole bundle, so it costs envelopes nothing. `unc_macbinary_meta` and `unc_as_record` stay resident, because the LZH and zip images reach them through the host vector. Every call site must run with the bundle whole, the envelope peek in `SegScanWrapped` among them |
+| segment joining in the engine: `unc_segment.c`, the five `fmt_*seg.c` and the parsers their probe files share | 6,498 B of code | an image kept by the release for every set scheme. Part of it is reached by images through the host vector (`unc_zip_scan_eocd`) and stays; how much can move is not measured |
+| the shell's set code, `SegAskUser`, `SegScanWrapped`, `SegPartOf` and the rest | 3,166 B of code | it calls the Toolbox, and an image reaches nothing outside itself but the host vector; needs Toolbox entries in the vector first. Not priced |
+| the report window's buffers, `gRepBuf` and the row arrays | 8,730 B of bss, and 1,568 B of code | the bss is resident for the whole run whatever the archive. A handle grown as lines arrive would cost most runs a few hundred bytes; `interactive.py` reads the box, so it must still show the same |
+| the overlay shims, `mac/ovl_shim.c` | 2,462 B of code | about twenty-five dispatchers of one shape; a table-driven dispatch might be a third of that |
+| the relocator, `Retro68Relocate` and `Retro68ApplyRelocations` | 1,656 B of code | runs once at launch and stays in `CODE` 1. Elf2Mac's linker script places it at the START of `.text`, so it cannot be trimmed off the end as the relocations are; needs a layout Elf2Mac does not offer (`--mac-keep-ldscript` shows the script) |
+
 ## Formats classic Mac programs wrote that nothing here opens — leads, not findings
 
 From the 190 entries of Macintosh Repository's *Compression & Archiving*
