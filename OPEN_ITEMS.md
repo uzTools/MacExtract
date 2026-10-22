@@ -283,6 +283,22 @@ Macintosh 128K*).
 | the overlay shims, `mac/ovl_shim.c` | 2,462 B of code | about twenty-five dispatchers of one shape; a table-driven dispatch might be a third of that |
 | the relocator, `Retro68Relocate` and `Retro68ApplyRelocations` | 1,656 B of code | runs once at launch and stays in `CODE` 1. Elf2Mac's linker script places it at the START of `.text`, so it cannot be trimmed off the end as the relocations are; needs a layout Elf2Mac does not offer (`--mac-keep-ldscript` shows the script) |
 
+## MIME multipart nested past the depth cap is dropped silently
+
+A `multipart/*` more than `MIME_MAX_DEPTH` (4) levels deep is not pushed
+onto the boundary stack; its subtree is walked as one opaque leaf, emitted
+by nothing, and lost without a per-entry error. Measured 2026-10-22 with
+the Linux CLI, no emulator: a five-level nest whose only attachment sits at
+the bottom lists nothing and exits *not a recognized archive*; four levels
+extract it. The walk is iterative, so the cap is the fixed `MimeCtx` arrays,
+not the 68000 no-recursion rule; mpack (the oracle where `unar` fails, and
+`unar` rejects these outright) recurses unbounded and would keep it. Real
+mail nests two or three deep, so the ceiling is sound — the silent loss is
+the defect. Closes by making the cap loud: a report line when depth is
+exceeded (`S_REP_*`) rather than a dropped subtree, priced in resident
+bytes; the number may be raised (~340 B a level) or the stack grown, but
+neither is required to close it.
+
 ## Formats classic Mac programs wrote that nothing here opens — leads, not findings
 
 From the 190 entries of Macintosh Repository's *Compression & Archiving*
