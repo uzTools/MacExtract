@@ -29237,9 +29237,10 @@ Finder list is refused*). The 64K-ROM Macintosh 512K, booting the
 application as the shell of an MFS System 3.0 disk, reaches Standard File
 listing that disk on both builds, which is all it was recorded doing.
 Mac OS 9.2 under QEMU, where the application runs 32-bit in the 68LC040
-emulator, launched, extracted byte-exact and quit to the Finder on 20 of
-`os9sample.txt`'s 22; the other two were not graded, the sweep stopping
-when `./ci.sh` deleted the reference build it grades against.
+emulator, launched, extracted and quit to the Finder on all 22 of
+`os9sample.txt`: 20 in the sweep and the last two on re-run, the sweep
+having stopped when `./ci.sh` deleted the reference build it grades
+against.
 
 **The lesson that transfers: price a link-model change on the machine.**
 The ratchets' unit is the ELF's sections, and a change to how the
