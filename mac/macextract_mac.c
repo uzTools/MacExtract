@@ -2550,11 +2550,11 @@ __attribute__((noinline)) static OSType DTb32(const unsigned char *p)
 {
     return ((OSType)DTb16(p) << 16) | DTb16(p + 2);
 }
-static void DTBundle(DTPBRec *d, OSType creator, OSType self)
+static void DTBundle(DTPBRec *d, OSType creator, OSType self, long dir)
 {
     static const OSType kIcon[6] =
         { 'ICN#', 'icl4', 'icl8', 'ics#', 'ics4', 'ics8' };
-    short cur = CurResFile(), rf, i, nb, nk = 0;
+    short cur = CurResFile(), rf, i, nb, nk = 0, v = d->ioVRefNum;
     OSType *kinds;
     WDPBRec w;
     d->ioFileCreator = creator;
@@ -2571,16 +2571,25 @@ static void DTBundle(DTPBRec *d, OSType creator, OSType self)
      * PBOpenWD and PBCloseWD (ioVRefNum in, the working directory
      * reference number out; ioWDProcID marks whose it is), and The
      * Resource Manager, OpenRFPerm (IV-17). Every field zeroed first, as
-     * every other block here. */
-    for (i = 0; i < (short)sizeof w; i++) ((char *)&w)[i] = 0;
-    w.ioVRefNum = d->ioVRefNum;
-    w.ioWDProcID = 'MExt';
-    w.ioWDDirID = d->ioDirID;
-    if (PBOpenWDSync(&w) != noErr) return;
+     * every other block here.
+     * Only below the top of the output, though. At the top (dir 0) the
+     * file is in the directory v already names, and on System 7 PBOpenWD
+     * on it handed back the working directory the Finder had given the
+     * documents, which PBCloseWD then closed under the rest of the run and
+     * the rest of the list (DECISIONS.md 2026-10-22, *the working
+     * directory the bundle closed*). */
+    if (dir) {
+        for (i = 0; i < (short)sizeof w; i++) ((char *)&w)[i] = 0;
+        w.ioVRefNum = v;
+        w.ioWDProcID = 'MExt';
+        w.ioWDDirID = d->ioDirID;
+        if (PBOpenWDSync(&w) != noErr) return;
+        v = w.ioVRefNum;
+    }
     SetResLoad(false);
-    rf = OpenRFPerm(d->ioNamePtr, w.ioVRefNum, fsRdPerm);
+    rf = OpenRFPerm(d->ioNamePtr, v, fsRdPerm);
     SetResLoad(true);
-    if (rf == -1) { PBCloseWDSync(&w); return; }
+    if (rf == -1) { if (dir) PBCloseWDSync(&w); return; }
     kinds = (OSType *)NewPtrClear(256);
     nb = Count1Resources('BNDL');
     for (i = 1; i <= nb; i++) {
@@ -2641,7 +2650,7 @@ static void DTBundle(DTPBRec *d, OSType creator, OSType self)
     }
     CloseResFile(rf);
     UseResFile(cur);
-    PBCloseWDSync(&w);
+    if (dir) PBCloseWDSync(&w);
 }
 
 /* Set type/creator, Finder flags and dates on s->curName in s->curDirID,
@@ -2789,7 +2798,7 @@ static void StampCat(MacSink *s)
              * volume's root (DECISIONS.md 2026-10-18, *the comment the
              * root kept*). */
             u.d.ioDirID = par;
-            if (bndl) DTBundle(&u.d, bndl, self);
+            if (bndl) DTBundle(&u.d, bndl, self, s->curDirID);
             if (s->cur.comment_len) {
                 u.d.ioDTBuffer = (Ptr)s->cur.comment;
                 u.d.ioDTReqCount = s->cur.comment_len;

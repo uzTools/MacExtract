@@ -601,7 +601,10 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # -2,504 on 2026-10-22, 177,900 -> 175,396: Elf2Mac's --mac-single and
 # mac/mac_start.c — Retro68's multi-segment loader and newlib's exit chain
 # gone (DECISIONS.md 2026-10-22, *the runtime the application did not need*): the control.
-UNC_MAC_CODE_DEFAULT=175396
+# +28 on 2026-10-22, 175,396 -> 175,424, with data + bss -28 below: no
+# working directory at the top of the output (DECISIONS.md 2026-10-22,
+# *the working directory the bundle closed*): the control, its sum unmoved.
+UNC_MAC_CODE_DEFAULT=175424
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -784,7 +787,10 @@ UNC_MAC_CODE_DEFAULT=175396
 # stdio and atexit state and the multi-segment loader's globals (DECISIONS.md 2026-10-22, *the runtime the application did not need*).
 # Since --mac-single this figure is data + bss in the HEAP, not an A5 world:
 # data rides in CODE 1 and bss is a block Retro68Relocate allocates.
-UNC_MAC_A5_DEFAULT=36220
+# -28 on 2026-10-22 to 36,192, with the code ceiling's +28: the working
+# directory left the top of the output (DECISIONS.md 2026-10-22, *the
+# working directory the bundle closed*); not looked into further.
+UNC_MAC_A5_DEFAULT=36192
 # A CEILING PER CONFIGURATION, because one ceiling measured on another build
 # cannot fire. The figures above are the RESIDENT control build, which carries
 # every decoder; the shipped build's resident code is a third of that, so
@@ -1189,7 +1195,11 @@ UNC_MAC_A5_DEFAULT=36220
 # and mac/mac_start.c (DECISIONS.md 2026-10-22, *the runtime the application did not need*). The machine gave every shipped budget
 # +4,980 B, more than these 3,856: the jump table, six stub segments and the
 # relocations trimmed at launch were resident and never counted here.
-UNC_MAC_CODE_EAGER=41348
+# +32 code on 2026-10-22, data + bss unchanged: no working directory for a
+# bundle at the top of the output, where System 7 and the Desktop Mgr INIT
+# handed back the Finder's own and it was closed (DECISIONS.md 2026-10-22,
+# *the working directory the bundle closed*): 32 B off every budget.
+UNC_MAC_CODE_EAGER=41380
 UNC_MAC_A5_EAGER=16236
 # +8 on 2026-10-02 for the same reason as the eager pair above: the
 # overlay call that now says WHICH of StuffIt 2.x's ciphers an entry
@@ -1274,7 +1284,9 @@ UNC_MAC_A5_EAGER=16236
 # of this build's text (the eager pair above).
 # -2,552 code on 2026-10-22, the runtime the eager pair above lost; data +
 # bss 16,332, under its ceiling.
-UNC_MAC_CODE_LAZY=39876
+# +32 code on 2026-10-22, no working directory at the top of the output (the
+# eager pair above); data + bss 16,332, under its ceiling.
+UNC_MAC_CODE_LAZY=39908
 UNC_MAC_A5_LAZY=19200
 if [ -n "$UNC_OVL_RESIDENT" ]; then
     UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-$UNC_MAC_CODE_DEFAULT}

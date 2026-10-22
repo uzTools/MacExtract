@@ -16,6 +16,7 @@ the LC 475 — and grades both.
     relaunch.py ... --system Sys30.img --emu mv-512Ke --folder-at 174,95
     relaunch.py ... --system Sys7.img --folder-at In    # type-selected
     relaunch.py ... --multifinder
+    relaunch.py ... --keep-inits --folder-at 115,107   # the stock folder
     relaunch.py ... --in-disk 1440 --disk-at 472,107 \
                 --first derived-keyAhead.cpt --second derived-a2basic.dmg.sit
 
@@ -80,6 +81,10 @@ def main():
                          "of this size, so their output has room; open it at "
                          "--disk-at instead of the In folder")
     ap.add_argument("--disk-at", help="that disk's icon on the desktop, x,y")
+    ap.add_argument("--keep-inits", action="store_true",
+                    help="the stock System Folder as it is (run.py "
+                         "--keep-inits): System 6.0.8's carries AppleShare's "
+                         "Desktop Mgr INIT, and MultiFinder")
     ap.add_argument("--multifinder", action="store_true",
                     help="System 6 under MultiFinder")
     ap.add_argument("--launch-wait", type=float, default=25.0)
@@ -107,9 +112,11 @@ def main():
         boot = os.path.join(work, "boot-relaunch.hfv")
         fx = lambda n: os.path.join(R.REPO, "fixtures", n)
         extra = ()
+        keep = ("--keep-inits",) if a.keep_inits else ()
         if a.in_disk:
             R.sh(sys.executable, os.path.join(HERE, "mkboot.py"),
-                 os.path.join(R.VMAC_HOME, a.system), a.app, boot, "--finder")
+                 os.path.join(R.VMAC_HOME, a.system), a.app, boot, "--finder",
+                 *keep)
             disk = os.path.join(work, "archives.dsk")
             R.make_floppy(disk, "Archives", size_kb=a.in_disk,
                           extras=[(fx(first[0]), first[1]),
@@ -124,7 +131,7 @@ def main():
         else:
             R.sh(sys.executable, os.path.join(HERE, "mkboot.py"),
                  os.path.join(R.VMAC_HOME, a.system), a.app, boot, "--finder",
-                 "--data", f"{fx(first[0])}:In:{first[1]}",
+                 *keep, "--data", f"{fx(first[0])}:In:{first[1]}",
                  "--data", f"{fx(second[0])}:In:{second[1]}")
         if a.multifinder:
             # As deskclaim.py --multifinder: the stock boot blocks already

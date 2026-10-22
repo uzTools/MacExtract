@@ -740,7 +740,11 @@ EXPECT = {
 # **+672 2026-10-22, -> 154,032**: --mac-single and mac/mac_start.c, the
 # control's -3,184 against the shipped pair's -3,856 (CODE -2,552, data +
 # bss -1,304) (DECISIONS.md 2026-10-22, *the runtime the application did not need*).
-OVL_SAVED = 154032
+# **-32 2026-10-22, -> 154,000**: no working directory at the top of the
+# output, the control's 0 (CODE +28, data + bss -28) against the shipped
+# pair's +32 (DECISIONS.md 2026-10-22, *the working directory the bundle
+# closed*). TIERS_CONTROL and TIERS do not move.
+OVL_SAVED = 154000
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
 # every kept image is one — as is the bundle an envelope holds on to.

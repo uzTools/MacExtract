@@ -3616,6 +3616,7 @@ an archive beyond the frame that shows its window.
     relaunch.py ... --system Sys30.img --emu mv-512Ke --folder-at 174,95
     relaunch.py ... --system Sys7.img --folder-at In          # type-selected
     relaunch.py ... --multifinder
+    relaunch.py ... --keep-inits --folder-at 115,107      # the stock System Folder
     relaunch.py ... --system Sys30.img --emu mv-512Ke --in-disk 1440 --disk-at 472,107 \
                     --first derived-Cool_Tools__.sit --second derived-a2basic.dmg.sit
 
@@ -3625,9 +3626,16 @@ the volume. `--expect first` is the control, for a build before the reload.
 `--in-disk` puts the pair on a second disk with room for its output, which
 System 3.0's boot disk does not have for `a2basic`; a `-D UNC_AT_HEAPLOG`
 build's `Heap Log` is printed at the end. Results are DECISIONS.md
-2026-10-12, *the reload that the list needs*. **What it cannot see:** an
-entry refused for memory and one refused for a full disk look the same to
-the volume check — read `r-6-second-done.png`.
+2026-10-12, *the reload that the list needs*. `--keep-inits` boots the
+stock System Folder, AppleShare's `Desktop Mgr` INIT and MultiFinder in,
+where the volume has a Desktop Manager as System 7's does; the default
+pair then puts an application with a bundle at the top of an output that
+is a folder, which is the one place v0.42.0 closed the Finder's working
+directory (DECISIONS.md 2026-10-22, *the working directory the bundle
+closed*). `run.py` cannot see that: it extracts into a volume's root by
+dirID, the application into a working directory with dirID 0. **What it
+cannot see:** an entry refused for memory and one refused for a full disk
+look the same to the volume check — read `r-6-second-done.png`.
 
 ### Making a segmented Compact Pro archive — `cptsegment.py`
 

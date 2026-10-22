@@ -451,6 +451,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-21 (the guard that vetoes the Finder info) — GateKeeper 1.3 on System 6.0.8: in veto mode an extracted application loses its type, creator, flags and dates and the run still says "Extraction complete."; in both modes 30 bytes of the fork's reserved header change
 - 2026-10-22 (the names in the code) — Retro68 ships every function's MacsBug name inside the `CODE` resources and the images; stripped, 4,416 B of resident heap and 12,792 B of bundle go, and the ratchets had never counted them
 - 2026-10-22 (the runtime the application did not need) — Elf2Mac's --mac-single and an entry point of our own drop Retro68's multi-segment loader and newlib's exit chain: +4,980 B on every shipped budget, measured on all three tiers
+- 2026-10-22 (the working directory the bundle closed) — v0.42.0's `PBOpenWD` handed back the Finder's own working directory at the top of the output, and its `PBCloseWD` closed it under the rest of the run; no working directory is opened there now
 
 ---
 
@@ -29248,3 +29249,55 @@ application is LAID OUT moves resident bytes that no section holds — here
 1.1 KB of 4.98 KB. `TIERS_CONTROL` moved by −3,184 in that unit; deriving
 TIERS from it would have under-credited every budget by about a kilobyte,
 while the derivations already in it had over-credited by 1,288 B.
+
+## 2026-10-22 (the working directory the bundle closed) — v0.42.0's `PBOpenWD` handed back the Finder's own working directory at the top of the output, and its `PBCloseWD` closed it under the rest of the run; no working directory is opened there now
+
+**The symptom.** On System 7.0.1, a `.cpt` and a `.sit` opened together
+from the Finder: the first extracts, the second ends at *"Could not open
+the archive."* (`relaunch.py --system Sys7.img --folder-at In`).
+
+**The commit.** ba8f2d2 (v0.42.0, *the Desktop Manager System 6 can
+have*), measured: `relaunch.py` on System 7.0.1 PASSES with the shell
+built at ba8f2d2^ and FAILS at ba8f2d2, the same frame as on ce79615.
+
+**What it is, measured.** A `-D UNC_AT_HEAPLOG` build logging the
+refNums inside `DTBundle`, after `keyAhead` (an INIT with a bundle, at
+the top of the output): the Finder handed the document over as working
+directory −32701 on `In` (dirID 75), the destination was the same −32701,
+and `PBOpenWD` on (−32701, dirID 75, `'MExt'`) returned **−32701** — the
+Finder's, not a new one. `PBCloseWD` then closed it, and every later use
+of that refNum failed: the second document, and within one archive every
+entry after the application. Reversed, `ScrollbarPattern.sit` first,
+*"About Scroll Bar Pattern Editor: could not be created"* follows its
+application in the first archive's own report. Characterised on System
+7.0.1, ce79615: a pair whose first archive holds no bundled file PASSES
+(`Mac_to_VGA_Adapters_1.0.sit` then `keyAhead.cpt`); one archive opened
+from the Finder at the volume's root PASSES (`deskclaim.py`); the formats
+and the reload between them are not involved. **The stock System 6.0.8
+folder fails the same way** — the unfixed build, `relaunch.py
+--keep-inits`, the same frame — so the regression reached issue #1's own
+environment with the fix for it. Why `PBOpenWD` returns a working
+directory opened under another process ID is not established; the
+refNum it returned is (System 7.0.1 only; on 6.0.8 the frame alone).
+
+**The fix.** At the top of the output (`curDirID` 0) the file is in the
+directory the destination's refNum already names, so `OpenRFPerm` is
+given that refNum and no working directory is opened or closed. Below
+it, the working directory is opened on a folder this run created, and
+closed as before. +32 B of resident CODE in the shipped build, data +
+bss unchanged (`tools/build_mac.sh`).
+
+**Graded.** `relaunch.py`, both archives, PASS on System 7.0.1 (both
+orders, and `Newer1.1.1.cpt` first, whose application sits in a folder
+with the bundle bit set and its five later entries landed — the folder
+branch), System 6.0.8, MultiFinder, System 3.0 / 512Ke, and the stock
+6.0.8 folder (`--keep-inits`, new) where the unfixed build fails.
+`run.py --keep-inits --list sample.txt`: 74/74 (one `EMUDIED` re-run).
+The host-side sink test counts working directories opened and fails one
+at the top of the output: it fails on ce79615's shell and passes on this.
+
+**The lesson.** Every `run.py` tier extracts into (a volume, `fsRtDirID`)
+and the application into (a working directory, dirID 0): the 74/74 that
+graded v0.42.0 never ran the code path its users run. A harness that
+reaches the code by another door grades the door. Not measured: Mac OS 9,
+where v0.42.0 is presumably affected the same way (hypothesis).

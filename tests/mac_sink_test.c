@@ -330,15 +330,19 @@ void SetResLoad(Boolean load) { (void)load; }
 /* Working directories, as the shell opens one to reach a fork by name in a
  * folder on a System without HOpenResFile (uzTools/MacExtract issue #1):
  * four slots, a refNum each, the directory behind it; gWDOpen counts what
- * is still open, and the registration checks fail on one left open. */
+ * is still open, and the registration checks fail on one left open.
+ * gWDMade counts every one opened: the top of the output opens none, since
+ * on System 7 the one it got was the Finder's own (DECISIONS.md
+ * 2026-10-22, *the working directory the bundle closed*). */
 #define MAX_WD 4
 static long gWDDir[MAX_WD]; static int gWDUsed[MAX_WD]; static int gWDOpen;
+static int gWDMade;
 OSErr PBOpenWDSync(WDPBRec *pb)
 {
     int i;
     for (i = 0; i < MAX_WD; i++)
         if (!gWDUsed[i]) {
-            gWDUsed[i] = 1; gWDDir[i] = pb->ioWDDirID; gWDOpen++;
+            gWDUsed[i] = 1; gWDDir[i] = pb->ioWDDirID; gWDOpen++; gWDMade++;
             pb->ioVRefNum = (short)(-32000 - i);
             return noErr;
         }
@@ -360,8 +364,9 @@ short OpenRFPerm(ConstStr255Param name, short vref, SignedByte perm)
     (void)name; (void)path; (void)f; (void)dir; (void)i;
     return -1;
 #endif
-    if (i < 0 || i >= MAX_WD || !gWDUsed[i]) return -1;   /* no such WD */
-    dir = gWDDir[i];
+    if (vref == 1) dir = 0;     /* the sink's own refNum: the directory it names */
+    else if (i < 0 || i >= MAX_WD || !gWDUsed[i]) return -1;   /* no such WD */
+    else dir = gWDDir[i];
     if (gRes) return -1;
     full_path(dir, name, 1, path, sizeof path);
     if (!(f = fopen(path, "rb"))) return -1;
@@ -999,19 +1004,23 @@ int main(int argc, char **argv)
             info.finder_flags = 0x2100;
             info.rsrc_size = flen;
             gDTRegN = 0;
+            gWDMade = 0;
             if (sink_begin(&sk2, &info) == 0) {
                 sink_write(&sk2, UNC_FORK_RSRC, fork, flen);
                 sink_end(&sk2, UNC_OK);
             }
-            /* the application, and the empty type list: no icon */
+            /* the application, and the empty type list: no icon; and at
+             * the top of the output, through no working directory */
             if (gDTRegN != 2 || gDTReg[0].icon || !gDTReg[1].icon ||
-                gDTReg[1].itype != 0xFF || gRes || gCurRes != 1 || gWDOpen) {
+                gDTReg[1].itype != 0xFF || gRes || gCurRes != 1 || gWDOpen ||
+                gWDMade) {
                 fprintf(stderr, "meta [BNDL past its handle]: %d "
                         "registration(s)\n", gDTRegN);
                 ok = 0;
             } else
                 fprintf(stderr, "meta [BNDL past its handle]: the "
-                        "application and an empty type list, nothing else\n");
+                        "application and an empty type list, nothing else, "
+                        "no working directory\n");
         }
         /* No Desktop Manager on the volume — a System 6 disk: the comment
          * is not written, nothing else changes, nothing is reported. */

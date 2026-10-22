@@ -196,21 +196,6 @@ with the zone put into PRAM by the emulator build, not by Map.
 | whether gmtDelta already includes daylight saving | **hypothesis**: three non-Apple readers say it does; dlsDelta is not added | Map's daylight-saving box toggled once on 7.0.1, and the 12 bytes read back |
 | AppleSingle/AppleDouble written by mpack, whose entry 8 is the writer's wall clock and not RFC 1740's GMT | **the maintainer's decision**: the RFC is followed, so such a file moves by the reader's offset | a rule to tell the writer apart, or a decision to treat entry 8 as wall clock |
 
-## System 7.0.1: the second archive of a Finder list is refused
-
-Opened together from the Finder on System 7.0.1, a `.cpt` and a `.sit`
-come out as the first only: the second ends at *"Could not open the
-archive."* — `ret == UNC_ERR_IO` with no entry written — and the
-application then quits to the Finder. Measured 2026-10-22 with
-`tools/vmac/relaunch.py --system Sys7.img --folder-at In`, on `main` at
-ce79615 and on the build after it, the same frame on both. The same pair
-passes on System 6.0.8 under the Finder and under MultiFinder and on
-System 3.0 / 512Ke, and passed on all of them and System 7.0.1 on
-2026-10-12 (DECISIONS.md, *the reload that the list needs*), so this
-regressed in between; which commit is not measured. Closes with that
-bisection, one `relaunch.py` boot per step, and a fix graded by the same
-run.
-
 ## A refused PBSetCatInfo is not reported
 
 Under GateKeeper 1.3 in its "Notify & Veto" mode, `PBSetCatInfo` on an

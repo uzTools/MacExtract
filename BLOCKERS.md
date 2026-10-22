@@ -2045,6 +2045,20 @@ a harness can click is not the same list.
   measured on exactly the volume the strip had produced (DECISIONS.md
   2026-10-21, *the Desktop Manager System 6 can have*; `run.py
   --keep-inits` is the lane that sees it now).
+- **"The whole sample under `--keep-inits`, 74/74, says the INIT breaks
+  nothing else"** — v0.42.0's fix for the row above, DECISIONS.md
+  2026-10-21. **Withdrawn 2026-10-22**: its `PBOpenWD` at the top of the
+  output returned the working directory the Finder had handed over, and
+  its `PBCloseWD` closed it. **Cost: v0.42.0, the current download, on
+  System 7.0.1 and on the stock System 6.0.8 folder** — the second
+  archive of a Finder list refused (*"Could not open the archive."*), and
+  every entry after an application with a bundle at the top of an output
+  that is not a volume's root (*"could not be created"*); measured with
+  `relaunch.py`, bisected to ba8f2d2, fixed by opening no working
+  directory there. **Why it survived:** `run.py` extracts into a volume's
+  root by dirID and the application into a working directory with dirID
+  0, so no sweep took the application's branch (DECISIONS.md 2026-10-22,
+  *the working directory the bundle closed*).
 
 ### Corrected figures and superseded write-ups
 
