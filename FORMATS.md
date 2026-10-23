@@ -9254,6 +9254,22 @@ StuffIt Deluxe's documents too. `TEXT` is claimed because BinHex is
 `TEXT`; the price is that an ownerless text file's dialog offers
 MacExtract beside the editors.
 
+**Four more types, and the icon they never had (same day, re-read off
+MacStamp at its `6a4e650`).** MacStamp now offers MacExtract for
+MacCompress, AppleLink packages, Private File and SpaceSaver, so the bundle
+claims `ZIVM`, `HBSF`, `CSIT` and `SPSV` too: twenty-one types, +108 B of
+resource fork (232,130 → 232,238), no code. **And every type claim had
+pointed at an icon the bundle does not map**: the seventeen `FREF`s named
+icon local IDs 2 to 18, the `BNDL` maps only 0 and 1, and a document
+carrying MacExtract's creator drew a blank page. All twenty-one now name
+local ID 1, the application's icon, as the wildcard claim always did.
+Measured (`as703.py --set icons`, one boot each way): `Single.as` typed
+`ApSi/MExt` draws MacExtract's icon with the new build and a blank
+document with the committed one; and MacCompress's own `ZIVM/LZIV` file
+offers MacExtract alone in the alternate-program dialog, which extracts
+it with both forks byte-exact (renamed `Alpha~1`, since the container
+carries no name and its source is beside it).
+
 ### Timed on the same Mac Plus (re-measured 2026-10-19)
 
 Both applications booted on Mini vMac `mv-4M-1x` — authentic 7 MHz, 4 MB,

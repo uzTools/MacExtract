@@ -29392,6 +29392,16 @@ post-processor at all, where 9.2's names the Expander. Reaching Deluxe's
 keyless menu item withdrew a harness claim (BLOCKERS.md, *Withdrawn
 claims*).
 
+**Updated the same evening**, MacStamp having added four formats it
+offers MacExtract for: `ZIVM`, `HBSF`, `CSIT` and `SPSV` join the
+seventeen. Adding them exposed an error in the seventeen: each `FREF`
+named an icon local ID from 2 up, which the `BNDL` maps to nothing, so a
+document with MacExtract's creator drew a blank page while the comment
+above them said they used the application's icon. All twenty-one now
+name local ID 1, measured both ways on Mac OS 9.2 (FORMATS.md, *AppleSingle
+and AppleDouble in 7.0.3*). The dialog listing never depended on the icon
+and was right throughout.
+
 ## 2026-10-23 (the probes next door) — MacStamp's identifier held against this sniffer over 994 fixtures: no format it names that this engine refuses; MacCompress 3.2's own format is the 1990 DiskDoubler container, and a file it wrote extracts byte-exact
 
 **Claim.** Asked whether MacStamp's probes (`/home/claude/macstamp`,

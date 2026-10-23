@@ -30,6 +30,7 @@ signature, so the Finder's Cmd-Down hands the file over as an `odoc`
     as703.py --assemble --set tigr -o <dir>   # one BINA/TIGR copy, for the Finder
     as703.py --assemble --set claims --app build/mac/MacExtract.bin -o <dir>
     as703.py --assemble --set boxes -o <dir>   # + StuffIt Deluxe and Tiger
+    as703.py --assemble --set icons --app build/mac/MacExtract.bin -o <dir>
     as703.py --boot -o <dir>      # compat9.boot
     as703.py --stop -o <dir>
     as703.py --read -o <dir>      # compat9.read: every file, both forks
@@ -96,6 +97,17 @@ def subjects(which="pairs"):
                 ("", "Drop.as", q, q, single),
                 ("", "._Dropd", "BINA", q, header),
                 ("", "Dropd", q, q, data)]
+    if which == "icons":
+        # The bundle's FREFs point at icon local ID 1 since 2026-10-23
+        # (they pointed at 2..18, which the BNDL maps to nothing): a
+        # document typed ApSi with MacExtract's creator should draw its
+        # icon. And one of the four types added that day, ZIVM, on the
+        # file MacCompress 3.2 itself wrote (maccompress.py), whose
+        # creator LZIV is on no volume here.
+        mcz = os.path.join(os.path.dirname(sitzip.CACHE), "vmac",
+                           "specimens", "maccompress", "Alpha.mcz")
+        return [("", "Single.as", "ApSi", "MExt", single),
+                ("z1", "Alpha", "ZIVM", "LZIV", open(mcz, "rb").read())]
     if which == "claims":
         # The bundle's exact-type claims (mac/macextract_icons.r): the
         # Finder's alternate-program dialog should offer MacExtract for a
@@ -165,7 +177,7 @@ def assemble(outdir, which="pairs", app=None):
 def main():
     p = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     p.add_argument("--assemble", action="store_true")
-    p.add_argument("--set", choices=("pairs", "tigr", "claims", "boxes"), default="pairs")
+    p.add_argument("--set", choices=("pairs", "tigr", "claims", "boxes", "icons"), default="pairs")
     p.add_argument("--app", help="a MacBinary MacExtract to put beside the Expander")
     p.add_argument("--boot", action="store_true")
     p.add_argument("--stop", action="store_true")
