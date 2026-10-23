@@ -452,6 +452,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-22 (the names in the code) — Retro68 ships every function's MacsBug name inside the `CODE` resources and the images; stripped, 4,416 B of resident heap and 12,792 B of bundle go, and the ratchets had never counted them
 - 2026-10-22 (the runtime the application did not need) — Elf2Mac's --mac-single and an entry point of our own drop Retro68's multi-segment loader and newlib's exit chain: +4,980 B on every shipped budget, measured on all three tiers
 - 2026-10-22 (the working directory the bundle closed) — v0.42.0's `PBOpenWD` handed back the Finder's own working directory at the top of the output, and its `PBCloseWD` closed it under the rest of the run; no working directory is opened there now
+- 2026-10-23 (the format 7.0.3 sniffs) — StuffIt 7.0.3's Expander opens AppleSingle under any type, creator or name, and has no AppleDouble reader: nine subjects on Mac OS 9.2, asked for by MacStamp
 
 ---
 
@@ -29301,3 +29302,32 @@ and the application into (a working directory, dirID 0): the 74/74 that
 graded v0.42.0 never ran the code path its users run. A harness that
 reaches the code by another door grades the door. Not measured: Mac OS 9,
 where v0.42.0 is presumably affected the same way (hypothesis).
+
+## 2026-10-23 (the format 7.0.3 sniffs) — StuffIt 7.0.3's Expander opens AppleSingle under any type, creator or name, and has no AppleDouble reader: nine subjects on Mac OS 9.2, asked for by MacStamp
+
+**Claim.** StuffIt Expander 7.0.3 Classic recognises an AppleSingle file by
+its magic and needs no type, creator or `.as` from the stamper; it does
+not read AppleDouble in any of the three shapes tried. Measured.
+
+**Evidence.** MacStamp (a sibling project, `/home/claude/macstamp`) was
+choosing the pair to stamp on an AppleSingle file and asked whether
+7.0.3 opens one and what it expects. `tools/vmac/as703.py` put
+`fixtures/synth-as-meta.as` — the same bytes as the maintainer's
+`Comment.as` — on `compat9.py`'s transfer volume nine times (FORMATS.md,
+*AppleSingle and AppleDouble in 7.0.3*): six AppleSingle copies under
+`BINA`, `????` and `TEXT`, with and without `.as`, five with creator
+`SITx` and one with none, and three AppleDouble shapes (`._name`,
+`%name`, header alone). All six AppleSingle copies came out byte-exact,
+both forks, the ownerless one through File ▸ Expand. All three
+AppleDouble headers were refused with Error #17999 and left a 367-byte
+stub named by bytes `16 07 00 02 00`: the header less its first 128
+bytes, under the name a MacBinary reader finds at offset 1. The
+Expander's own resources name *"AppleSingle (.as)"* and nothing
+AppleDouble.
+
+**Consequence.** README.md's 7.0.3 cell says AppleSingle only. For
+MacStamp the creator is the Finder's business, not the Expander's: `SITx`
+makes a double-click reach it, and any type will do. That the AppleDouble
+header was read as MacBinary is a hypothesis from the stub's shape; the
+plug-in's code was not read. Not tested: a drop on the Expander, the
+Deluxe application. The answer went to the MacStamp session the same day.

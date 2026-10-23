@@ -8837,7 +8837,7 @@ with this archive."*
 | `.lzh` / `.lha` (LZH / LHA) | not named anywhere in its documentation, and no translator for it ships in `Extensions:Aladdin:Translators` — a Macintosh user reached for a separate application, and the corpus holds one (`LHA Expander 1.0.3`) | **yes since 2026-08-23**, every method, all four header levels, and MacLHA's MacBinary payload split back into two forks (*LZH / LHA*, above) |
 | `.arc` (ARC / ArcMac) | with the add-on | **yes since 2026-08-15**, methods 1-9; ArcMac's two-fork payload since 2026-08-16 (★★★ above) |
 | uuencode (`.uu`) | with the add-on | **yes since 2026-08-15**, plain and UUTool's two-fork shape |
-| AppleSingle / AppleDouble | with the add-on: an `AppleSingle` translator ships in `Extensions:Aladdin:Translators`; **not run on 4.0.2 alone**. Deluxe 5.5.1's Expander and 7.0.3's are measured (*Finder metadata and Mac OS X zips in the three boxes*, below) | yes, both forks and every field RFC 1740 holds (*Finder info in the archive*, above) |
+| AppleSingle / AppleDouble | with the add-on: an `AppleSingle` translator ships in `Extensions:Aladdin:Translators`; **not run on 4.0.2 alone**. Deluxe 5.5.1's Expander and 7.0.3's are measured (*Finder metadata and Mac OS X zips in the three boxes* and *AppleSingle and AppleDouble in 7.0.3*, below) | yes, both forks and every field RFC 1740 holds (*Finder info in the archive*, above) |
 | base64 and MIME (`.b64`, `.mim`) | no translator for either ships in `Extensions:Aladdin:Translators`, and neither is named in its documentation — the thirteen are listed under *The paid box*, below. Measured 2026-10-11, 4.0.2 alone: an mpack message and an mpack `message/partial` set each produce nothing and no alert | **yes since 2026-08-26**, including multipart/appledouble, which is the only one of these formats that carries a resource fork (*base64 and MIME*, above) |
 | AppleLink `.pkg` | with the add-on, and the add-on recognises one by its EXTENSION: its translator's Standard File dialog lists only directories and its `STR# 129` carries `.pkg` for stripping, not for matching | **extracted since 2026-10-05**, and recognised by the file rather than by its name — which is the one thing Aladdin's own reader never did (*AppleLink packages*, above). Named from 2026-08-23 to 2026-09-27 on a routine that was the translator API's command parser, shared verbatim with five of its siblings, and not recognised at all for the eight days between |
 | StuffIt SpaceSaver | with the add-on | **yes since 2026-08-22**, and since 2026-08-25 **every method the format has** — 0, 1, 2, 3 and 4 — with SpaceSaver's own dictionary built in so nothing else is needed (*StuffIt SpaceSaver*, above) |
@@ -9143,6 +9143,38 @@ real `PMag` archive typed either way. The README's PackIt ✅ for 5.5.1 rests
 on its `UnPack` translator's resources (*The last 68k box*) and is kept;
 that a default preference disables the translator is a hypothesis, not
 tested (its Preferences item has no Command key).
+
+### AppleSingle and AppleDouble in 7.0.3, by type, creator and name (2026-10-23)
+
+Asked by MacStamp, which stamps a pair onto files and needed to know what
+an AppleSingle file must carry for 7.0.3 to open it. Measured on the same
+guest with `tools/vmac/as703.py`: `fixtures/synth-as-meta.as` (the
+maintainer's `Comment.as`, byte for byte — "Kept Whole", data 416 B,
+resource 286 B, comment, lock) placed nine times, each in its own folder,
+every result read off the volume. "Extracted" is `Kept Whole` `TEXT/ttxt`
+with both forks byte-exact, in a `Comment Folder` beside the source.
+
+| | name | type/creator | handed over by | 7.0.3 Expander |
+|---|---|---|---|---|
+| a1 | `Comment.as` | `BINA/SITx` | Finder, Cmd-Down | extracted |
+| a2 | `Comment.as` | `????/SITx` | Finder | extracted |
+| a3 | `Comment` | `BINA/SITx` | Finder | extracted |
+| a4 | `Comment` | `????/SITx` | Finder | extracted |
+| a5 | `Comment.as` | `TEXT/SITx` | Finder | extracted |
+| a6 | `Comment.as` | `????/????` | File ▸ Expand (Navigation Services lists it) | extracted |
+| d1 | `._Comment` + data file | header `BINA/SITx` | Finder | refused, *"Unspecified StuffIt Engine internal error"*, Error #17999 |
+| d2 | `%Comment` + data file | header `BINA/SITx` | Finder | refused, same |
+| d3 | `._Comment` alone | `BINA/SITx` | Finder | refused, same |
+
+**AppleSingle is recognised by its magic; no type, creator or `.as` is
+needed.** The creator decides only what the Finder does with a double-click.
+**AppleDouble is not a format 7.0.3 has**: its resources name
+*"AppleSingle (.as)"* and *"AppleSingle Encoded File"* and no AppleDouble,
+and each refused run left a 367-byte stub named by the bytes
+`16 07 00 02 00` — the header less its first 128 bytes, under the name a
+MacBinary reader finds at offset 1. That it took the header for MacBinary
+is a hypothesis from the stub's shape, not from its code. Not tested: a
+drop on the Expander, and the Deluxe application itself.
 
 ### Timed on the same Mac Plus (re-measured 2026-10-19)
 

@@ -80,7 +80,7 @@ PowerPC only.
 | Private File (`.pf`) | 🔴 | ✅ | ✅ | ✅ |
 | Self-mounting disk images | 🔴 | ✅ | ✅ | 🔴 |
 | A Mac file mailed as a MIME attachment | 🔴 | ✅ | ✅ | ✅ |
-| AppleSingle / AppleDouble (`.as`) | 🔴 | 🔴 ships a translator, writes nothing | ✅ lock and icon position lost | ✅ |
+| AppleSingle / AppleDouble (`.as`) | 🔴 | 🔴 ships a translator, writes nothing | ✅ AppleSingle only, whatever it is typed or named; lock and icon position lost | ✅ |
 | StuffIt sets split across floppies | 🔴 | ✅ | ✅ | ✅ |
 | Compact Pro, zip or `.001` sets split across floppies | 🔴 | 🔴 | 🔴 | ✅ |
 | An archive that arrived as several mail messages | BinHex postings only, not MIME | BinHex postings only, not MIME | 🔴 | ✅ |

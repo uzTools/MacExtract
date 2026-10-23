@@ -609,6 +609,30 @@ this installation, *What `--probe` measured* below, and 7.0.3's was not
 driven); why a reader refused, beyond its own words; and more than one
 subject per question.
 
+### AppleSingle under 7.0.3, by pair and name — `as703.py`
+
+    as703.py --assemble -o <dir>          # 7.0.3, sitzip's installation, nine subjects
+    as703.py --boot -o <dir>              # compat9.boot; drive with os9mouse.Mac(attach=True)
+    as703.py --stop -o <dir>
+    as703.py --read -o <dir>              # compat9.read
+
+The results are FORMATS.md's, *AppleSingle and AppleDouble in 7.0.3*. The
+subjects are one AppleSingle file under six pairs and names and three
+AppleDouble shapes, each in a folder of its own; the ownerless one
+(`????/????`) goes through File ▸ Expand, whose Navigation Services
+dialog lists it and takes it with `Choose` at `sitzip.DIST["703"]["choose"]`,
+still (668, 510) on 2026-10-23. Driven by hand, like `compat9.py`.
+
+- **Type-to-select needs the letters within the Finder's delay.** Sent
+  0.6 s apart, `s`, `i`, `t` selected `SitZip`, then nothing, then
+  `Trash`, and Cmd-Down opened the Trash; 0.3 s apart they select the
+  volume. One letter is enough where it is unique.
+- **A refused subject still gets a folder and a stub**, as under
+  `compat9.py`; the verdict is `--read`'s bytes.
+- **The Expander quits after an `odoc` and stays after File ▸ Expand**, so
+  the Cmd-W that closes a folder window must wait for the alert's OK to
+  take it away.
+
 ## The archive comment, and bit 5 — `sitcomment.py`
 
     tools/vmac/sitcomment.py --read              no emulator
