@@ -9176,6 +9176,24 @@ MacBinary reader finds at offset 1. That it took the header for MacBinary
 is a hypothesis from the stub's shape, not from its code. Not tested: a
 drop on the Expander, and the Deluxe application itself.
 
+**`BINA/TIGR`, Apple's own pair for one (same day, `--set tigr`).** Mac OS
+9.2's Internet Config table (`System Folder:Preferences:Internet
+Preferences`, read off the boot volume: 74 entries) maps
+`application/applefile` — *"AppleSingle file"*, no extension — to
+`BINA/TIGR`, creator application *"Tiger"*, flags `0x0D`, **post-processed
+by `SITx`, "StuffIt Expander™"**, as its `.sit`, `.zip`, `.tar`, `.Z` and
+`.uu` rows are. Nothing in 5.5.1's or 7.0.3's payload carries or names
+`TIGR`; the Expander's own bundle claims `BINA` (`FREF` 135). Double-clicked
+on the 7.0.3 guest, the Finder put up *"Could not find the application
+program that created the document named "Comment.as". To open the
+document, select an alternate program, with or without translation:"* with
+**StuffIt Expander as the one recommended choice**; Open extracted `Kept
+Whole` byte-exact, and a second double-click asked again with the Expander
+preselected. So `TIGR` is hijacked by nothing: the Expander reaches a
+`BINA/TIGR` file through the Finder's alternate-program dialog, because it
+claims the type, and through a browser's download, because Internet Config
+names it the post-processor.
+
 ### Timed on the same Mac Plus (re-measured 2026-10-19)
 
 Both applications booted on Mini vMac `mv-4M-1x` — authentic 7 MHz, 4 MB,

@@ -612,6 +612,7 @@ subject per question.
 ### AppleSingle under 7.0.3, by pair and name — `as703.py`
 
     as703.py --assemble -o <dir>          # 7.0.3, sitzip's installation, nine subjects
+    as703.py --assemble --set tigr -o <dir>   # one BINA/TIGR copy, for the Finder's dialog
     as703.py --boot -o <dir>              # compat9.boot; drive with os9mouse.Mac(attach=True)
     as703.py --stop -o <dir>
     as703.py --read -o <dir>              # compat9.read

@@ -27,6 +27,7 @@ signature, so the Finder's Cmd-Down hands the file over as an `odoc`
 (compat9.py). Driven by hand, frame by frame, with os9mouse.Mac(attach=True).
 
     as703.py --assemble -o <dir>
+    as703.py --assemble --set tigr -o <dir>   # one BINA/TIGR copy, for the Finder
     as703.py --boot -o <dir>      # compat9.boot
     as703.py --stop -o <dir>
     as703.py --read -o <dir>      # compat9.read: every file, both forks
@@ -70,10 +71,16 @@ def appledouble(blob):
     return head + table + body, data
 
 
-def subjects():
+def subjects(which="pairs"):
     single = open(AS, "rb").read()
     header, data = appledouble(single)
     q = "????"
+    if which == "tigr":
+        # Mac OS 9's own Internet Config table maps application/applefile
+        # to BINA/TIGR, creator application "Tiger", post-processed by
+        # StuffIt Expander; nothing in either box carries TIGR. What a
+        # double-click does with that pair is the question.
+        return [("t1", "Comment.as", "BINA", "TIGR", single)]
     s = [("a1", "Comment.as", "BINA", "SITx", single),
          ("a2", "Comment.as", q, "SITx", single),
          ("a3", "Comment", "BINA", "SITx", single),
@@ -88,12 +95,12 @@ def subjects():
     return s
 
 
-def assemble(outdir):
+def assemble(outdir, which="pairs"):
     boot, xfer = sitzip.assemble("703", outdir)
     v = sitzip.Vol(xfer, partition=1)
     done = set()
     try:
-        for folder, name, t, c, blob in subjects():
+        for folder, name, t, c, blob in subjects(which):
             if folder not in done:
                 v.mkdir(folder)
                 done.add(folder)
@@ -101,12 +108,13 @@ def assemble(outdir):
     finally:
         v.close()
     print("as703: %d files in %d folders on %s"
-          % (len(subjects()), len(done), xfer))
+          % (len(subjects(which)), len(done), xfer))
 
 
 def main():
     p = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     p.add_argument("--assemble", action="store_true")
+    p.add_argument("--set", choices=("pairs", "tigr"), default="pairs")
     p.add_argument("--boot", action="store_true")
     p.add_argument("--stop", action="store_true")
     p.add_argument("--read", action="store_true")
@@ -114,7 +122,7 @@ def main():
     p.add_argument("--limit", type=int, default=3 * 3600)
     a = p.parse_args()
     if a.assemble:
-        assemble(a.out)
+        assemble(a.out, a.set)
     elif a.boot:
         compat9.boot(a.out, a.limit)
     elif a.stop:

@@ -29331,3 +29331,14 @@ makes a double-click reach it, and any type will do. That the AppleDouble
 header was read as MacBinary is a hypothesis from the stub's shape; the
 plug-in's code was not read. Not tested: a drop on the Expander, the
 Deluxe application. The answer went to the MacStamp session the same day.
+
+**The same day, `BINA/TIGR`** — asked next, since Mac OS 9's Internet
+Config table gives an AppleSingle file that pair and MacStamp wondered
+whether StuffIt ships a stub under `TIGR`. It does not: neither payload
+carries or names the signature. The table's entry names *"Tiger"* as the
+creator application and the Expander as post-processor, and the Expander
+claims `BINA` in its bundle, so a double-click reaches it through the
+Finder's *"Could not find the application program"* dialog, where it is
+the one recommended choice, and extracts; the dialog returns on the next
+double-click with the Expander preselected (FORMATS.md, *AppleSingle and
+AppleDouble in 7.0.3*).
