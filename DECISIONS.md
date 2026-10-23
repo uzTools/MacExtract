@@ -29379,6 +29379,19 @@ writes (it opens only what it creates for writing) — the Translation
 Manager remembering the choice is the hypothesis, and `Comment.as` on the
 earlier run got none.
 
+**The last three questions, the same evening, on the maintainer's
+"do them all".** One boot (`as703.py --set boxes`, FORMATS.md, *AppleSingle
+and AppleDouble in 7.0.3*): a DROP on the Expander behaves as the
+double-click did, AppleSingle extracted whatever its pair and AppleDouble
+refused; the Deluxe APPLICATION's `Translate ▸ Expand…` does exactly the
+same, so the box has one AppleSingle reader and no AppleDouble one; and
+with Tiger 1.1 itself on the volume, the Finder hands `BINA/TIGR` to Tiger,
+which runs on Mac OS 9.2 and decodes it, keeping less Finder metadata than
+StuffIt does. Mac OS 8.1's Internet Config row for the format has no
+post-processor at all, where 9.2's names the Expander. Reaching Deluxe's
+keyless menu item withdrew a harness claim (BLOCKERS.md, *Withdrawn
+claims*).
+
 ## 2026-10-23 (the probes next door) — MacStamp's identifier held against this sniffer over 994 fixtures: no format it names that this engine refuses; MacCompress 3.2's own format is the 1990 DiskDoubler container, and a file it wrote extracts byte-exact
 
 **Claim.** Asked whether MacStamp's probes (`/home/claude/macstamp`,

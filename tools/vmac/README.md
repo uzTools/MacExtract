@@ -606,15 +606,16 @@ necessary:
   reports, never the icon in the frame.
 
 **What it cannot see.** The Deluxe APPLICATIONS (5.5's will not start on
-this installation, *What `--probe` measured* below, and 7.0.3's was not
-driven); why a reader refused, beyond its own words; and more than one
-subject per question.
+this installation, *What `--probe` measured* below; 7.0.3's is driven by
+`as703.py --set boxes`, below); why a reader refused, beyond its own
+words; and more than one subject per question.
 
 ### AppleSingle under 7.0.3, by pair and name — `as703.py`
 
     as703.py --assemble -o <dir>          # 7.0.3, sitzip's installation, nine subjects
     as703.py --assemble --set tigr -o <dir>   # one BINA/TIGR copy, for the Finder's dialog
     as703.py --assemble --set claims --app dist/MacExtract.bin -o <dir>   # + a .sit typed SIT!
+    as703.py --assemble --set boxes -o <dir>  # + StuffIt Deluxe 7.0.3 and Tiger 1.1
     as703.py --boot -o <dir>              # compat9.boot; drive with os9mouse.Mac(attach=True)
     as703.py --stop -o <dir>
     as703.py --read -o <dir>              # compat9.read
@@ -642,6 +643,13 @@ still (668, 510) on 2026-10-23. Driven by hand, like `compat9.py`.
   Expander from `transfer.img` — both before `--boot`.
 - **Escape does not cancel the alternate-program dialog**, and a letter
   typed into it selects a row; Cancel is a click at (612, 363).
+- **`--set boxes` puts Deluxe and Tiger on the volume**, Tiger from
+  `~/.cache/macextract/compat/tiger/Tiger.bin` (Info-Mac II's, through
+  Discmaster, SHA-1 `878a0f50…`). Deluxe's `Open…` (⌘O) lists archive kinds
+  only; its decoders are `Translate ▸ Expand…`, keyless, reached by a held
+  press. That dialog reopens in the LAST folder it showed, so a walk typed
+  from the volume's top lands somewhere else: a second Expand of the
+  previous subject wrote `Comment Folder.1`. ⌘↑ first.
 
 ## The archive comment, and bit 5 — `sitcomment.py`
 
@@ -676,9 +684,11 @@ four-character code. What they say:
 | Deluxe 5.5 | `MENU` 131 *Archive* ▸ `Edit Comment...`, **no Command key**; `STR# 30000` #13, a clickable comments AREA in the archive window | `Arc ` has `comment` (`comm`) and `password` (`pass`), both settable; `SIT!`/`STUF` takes `encrypting`; the Standard Suite has `get` and `set` |
 | Deluxe 7.0.3 Classic | `MENU` 132 *Archive* ▸ `Edit Comment…`, **no Command key** | `ARCH` has `comment` (`COMM`) and `password` (`PASS`), both settable; `STFF`/`stff` takes a `password` directly; `core/setd` is in its `aedt` and **not** in its `aete` |
 
-**The menu is dead on both and the dictionary is not** — a keyless menu
-item is not selectable on either guest (*What the pointer cannot select*,
-below), which is why this is driven by Apple event.
+**The menu was believed dead on both and the dictionary is not** — a
+keyless menu item was recorded as not selectable on either guest, which is
+why this is driven by Apple event. On Mac OS 9 that was withdrawn on
+2026-10-23 (*What the pointer cannot select*, below); the Apple-event
+route stands on its own, since it reads the archive's byte back.
 
 **`--specimen` sends the events.** `tools/aesit/` is the sender, a
 Retro68 application in aetran.c's shape: the harness drives only the
@@ -2730,11 +2740,19 @@ hierarchical tracking. Driving DropStuff's `File` menu:
   highlights**, and the release selects nothing. Same signature as the
   submenu case.
 
-So on either guest, reach a menu item by its **Command key** or not at all.
+So on Mini vMac, reach a menu item by its **Command key** or not at all.
 DropStuff's `Stuff…` (⌘S) and `Quit` (⌘Q) are drivable; its `Preferences…`,
-which has no Command key, is not. *Hypothesis*, unreduced and now with two
-guests' worth of evidence: the Menu Manager wants mouse movement neither
-emulator's pointer injection produces.
+which has no Command key, was not.
+
+**On Mac OS 9 the held press DOES select, sometimes — corrected
+2026-10-23** (BLOCKERS.md, *Withdrawn claims*). StuffIt Deluxe 7.0.3's
+`Translate ▸ Expand…`, which has no Command key, was selected twice the
+same way: `goto` the title, `mouse_button 1` and a 1.2 s wait, ONE
+`step(10, 24)` packet, 1.2 s, release (`as703.py --set boxes`,
+`37-translate-held.png`, the item highlighted). DropStuff's did not, and
+the difference is not reduced: a single short packet against several, the
+wait, or the application. So: a Command key where there is one, and one
+attempt at a held press where there is not.
 
 **But DRAGGING works, and that is the useful half of the same experiment.**
 Holding the button down across relative `mouse_move` packets is exactly what
@@ -2743,7 +2761,13 @@ a Finder drag needs, and it tracks: pressing on an application icon, stepping
 all (`shots/h_drag_over.png`, `shots/h_dropped.png`, 2026-09-27). So the limit
 is the Menu Manager specifically, not held-button interaction in general —
 file copies, window drags and anything else that is press-move-release are
-available. There is no `drag()` helper yet; it is four lines:
+available. **Held moves are not 1:1**, measured 2026-10-23 in the Finder: a
+requested 60, 60 travelled about 47, 50, and five 25 px packets about 83,
+so a drag aimed open-loop at an icon 125 px away dropped short, onto the
+folder between. Step, photograph, correct, then release. And a press
+where two icons overlap takes the one drawn on top; press on the wanted
+icon's NAME, which only it owns. There is no `drag()` helper yet; it is
+four lines:
 
     m.goto(sx, sy)
     m.burst(["mouse_button 1"], wait=0.6)

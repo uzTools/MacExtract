@@ -29,6 +29,7 @@ signature, so the Finder's Cmd-Down hands the file over as an `odoc`
     as703.py --assemble -o <dir>
     as703.py --assemble --set tigr -o <dir>   # one BINA/TIGR copy, for the Finder
     as703.py --assemble --set claims --app build/mac/MacExtract.bin -o <dir>
+    as703.py --assemble --set boxes -o <dir>   # + StuffIt Deluxe and Tiger
     as703.py --boot -o <dir>      # compat9.boot
     as703.py --stop -o <dir>
     as703.py --read -o <dir>      # compat9.read: every file, both forks
@@ -82,6 +83,19 @@ def subjects(which="pairs"):
         # StuffIt Expander; nothing in either box carries TIGR. What a
         # double-click does with that pair is the question.
         return [("t1", "Comment.as", "BINA", "TIGR", single)]
+    if which == "boxes":
+        # The three things the first runs could not ask (DECISIONS.md
+        # 2026-10-23, *the format 7.0.3 sniffs*): a BINA/TIGR file with
+        # Tiger itself on the volume; AppleSingle and AppleDouble through
+        # the Deluxe APPLICATION's own Open, not the Expander; and the
+        # same two DROPPED on the Expander, from the volume's root.
+        return [("t1", "Comment.as", "BINA", "TIGR", single),
+                ("p1", "Comment.as", q, q, single),
+                ("p2", "._Comment", "BINA", q, header),
+                ("p2", "Comment", q, q, data),
+                ("", "Drop.as", q, q, single),
+                ("", "._Dropd", "BINA", q, header),
+                ("", "Dropd", q, q, data)]
     if which == "claims":
         # The bundle's exact-type claims (mac/macextract_icons.r): the
         # Finder's alternate-program dialog should offer MacExtract for a
@@ -105,18 +119,43 @@ def subjects(which="pairs"):
     return s
 
 
+def deluxe_bin(outdir):
+    """StuffIt Deluxe 7.0.3, the application, out of sitzip's payload."""
+    data, idx = sitzip.payload("703")
+    name = "StuffIt Deluxe"
+    t, c, flags = idx[name]
+    df, rf = sitzip.forks(data, name)
+    out = os.path.join(outdir, "deluxe.bin")
+    open(out, "wb").write(macbinary(name, t, c, df, rf, flags))
+    return out
+
+
+# Tiger 1.1 (Robert Lenoil, 1992), APPL/TIGR: Discmaster's copy of
+# Info-Mac II's `Utility:Tiger 1.1:Tiger`, MacBinary, SHA-1 878a0f50...
+TIGER = os.path.join(os.path.dirname(sitzip.CACHE), "compat", "tiger",
+                     "Tiger.bin")
+EXTRA_APPS = {}
+
+
 def assemble(outdir, which="pairs", app=None):
+    if which == "boxes":
+        os.makedirs(outdir, exist_ok=True)
+        EXTRA_APPS["boxes"] = [(deluxe_bin(outdir), "StuffIt Deluxe"),
+                               (TIGER, "Tiger")]
     boot, xfer = sitzip.assemble("703", outdir)
     v = sitzip.Vol(xfer, partition=1)
     done = set()
     try:
         if app:
             v.put(open(app, "rb").read(), "MacExtract")
+        for path, name in EXTRA_APPS.get(which, ()):
+            v.put(open(path, "rb").read(), name)
         for folder, name, t, c, blob in subjects(which):
-            if folder not in done:
+            if folder and folder not in done:
                 v.mkdir(folder)
                 done.add(folder)
-            v.put(macbinary(name, t, c, blob, b""), "%s:%s" % (folder, name))
+            v.put(macbinary(name, t, c, blob, b""),
+                  "%s:%s" % (folder, name) if folder else name)
     finally:
         v.close()
     print("as703: %d files in %d folders on %s"
@@ -126,7 +165,7 @@ def assemble(outdir, which="pairs", app=None):
 def main():
     p = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     p.add_argument("--assemble", action="store_true")
-    p.add_argument("--set", choices=("pairs", "tigr", "claims"), default="pairs")
+    p.add_argument("--set", choices=("pairs", "tigr", "claims", "boxes"), default="pairs")
     p.add_argument("--app", help="a MacBinary MacExtract to put beside the Expander")
     p.add_argument("--boot", action="store_true")
     p.add_argument("--stop", action="store_true")

@@ -9186,8 +9186,26 @@ needed.** The creator decides only what the Finder does with a double-click.
 and each refused run left a 367-byte stub named by the bytes
 `16 07 00 02 00` — the header less its first 128 bytes, under the name a
 MacBinary reader finds at offset 1. That it took the header for MacBinary
-is a hypothesis from the stub's shape, not from its code. Not tested: a
-drop on the Expander, and the Deluxe application itself.
+is a hypothesis from the stub's shape, not from its code. **A drop on the
+Expander, the Deluxe application, and Tiger, measured the same day**
+(`as703.py --set boxes`, one boot; *What the pointer cannot select* in
+tools/vmac/README.md for how Deluxe's keyless menu item was reached):
+
+| program, route | AppleSingle | AppleDouble header |
+|---|---|---|
+| Expander 7.0.3, dropped on its icon | extracted, from `????/????` | refused, Error #17999, the same 367-byte stub |
+| Deluxe 7.0.3, `Translate ▸ Expand…` | extracted, from `????/????` | refused, *"An error occurred while decoding"*, Error 17999, the same stub |
+| Deluxe 7.0.3, `File ▸ Open…` | not listed: its kinds are StuffIt, self-extracting, zip and tar | — |
+| Tiger 1.1 (1992), Finder double-click on `BINA/TIGR` | extracted | not asked |
+
+Every extraction is `Kept Whole` with both forks byte-exact. Read off the
+catalog (`hfscat.py`), Deluxe and the dropped Expander keep the type,
+creator, flags, the three dates and the extended info's script, comment
+ID and put-away folder, and lose the icon position, the icon ID and the
+lock, as the double-clicked Expander did. Tiger keeps type, creator,
+flags and the folder word and nothing else: its dates are the moment it
+wrote, the lock and the extended info gone. The Get Info comments were
+not read.
 
 **`BINA/TIGR`, Apple's own pair for one (same day, `--set tigr`).** Mac OS
 9.2's Internet Config table (`System Folder:Preferences:Internet
@@ -9195,7 +9213,11 @@ Preferences`, read off the boot volume: 74 entries) maps
 `application/applefile` — *"AppleSingle file"*, no extension — to
 `BINA/TIGR`, creator application *"Tiger"*, flags `0x0D`, **post-processed
 by `SITx`, "StuffIt Expander™"**, as its `.sit`, `.zip`, `.tar`, `.Z` and
-`.uu` rows are. Nothing in 5.5.1's or 7.0.3's payload carries or names
+`.uu` rows are. **Mac OS 8.1's table differs on exactly that** (MacStamp's
+copy, `fixtures/databases/ICMapping.bin`, 278 entries): the same
+`BINA/TIGR`, *"Tiger"* and `application/applefile`, flags `0x05` and no
+post-processor, so a browser on 8.1 saves an AppleSingle download and hands
+it to nothing; its `.sit`, `.hqx` and `.bin` rows do name the Expander. Nothing in 5.5.1's or 7.0.3's payload carries or names
 `TIGR`; the Expander's own bundle claims `BINA` (`FREF` 135). Double-clicked
 on the 7.0.3 guest, the Finder put up *"Could not find the application
 program that created the document named "Comment.as". To open the
