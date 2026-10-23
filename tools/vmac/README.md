@@ -613,6 +613,7 @@ subject per question.
 
     as703.py --assemble -o <dir>          # 7.0.3, sitzip's installation, nine subjects
     as703.py --assemble --set tigr -o <dir>   # one BINA/TIGR copy, for the Finder's dialog
+    as703.py --assemble --set claims --app dist/MacExtract.bin -o <dir>   # + a .sit typed SIT!
     as703.py --boot -o <dir>              # compat9.boot; drive with os9mouse.Mac(attach=True)
     as703.py --stop -o <dir>
     as703.py --read -o <dir>              # compat9.read
@@ -633,6 +634,13 @@ still (668, 510) on 2026-10-23. Driven by hand, like `compat9.py`.
 - **The Expander quits after an `odoc` and stays after File ▸ Expand**, so
   the Cmd-W that closes a folder window must wait for the alert's OK to
   take it away.
+- **The boot volume has StuffIt Browser™ in it** (`Extensions:Aladdin:TFI
+  Extensions`, from the 5.5 era), and it opens a `.sit` inside the Finder
+  before any owner is looked for. For the alternate-program dialog on an
+  archive, `hdel` it from the run's `boot.img` first, and `hdel` the
+  Expander from `transfer.img` — both before `--boot`.
+- **Escape does not cancel the alternate-program dialog**, and a letter
+  typed into it selects a row; Cancel is a click at (612, 363).
 
 ## The archive comment, and bit 5 — `sitcomment.py`
 

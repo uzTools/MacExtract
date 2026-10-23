@@ -28,6 +28,7 @@ signature, so the Finder's Cmd-Down hands the file over as an `odoc`
 
     as703.py --assemble -o <dir>
     as703.py --assemble --set tigr -o <dir>   # one BINA/TIGR copy, for the Finder
+    as703.py --assemble --set claims --app build/mac/MacExtract.bin -o <dir>
     as703.py --boot -o <dir>      # compat9.boot
     as703.py --stop -o <dir>
     as703.py --read -o <dir>      # compat9.read: every file, both forks
@@ -81,6 +82,15 @@ def subjects(which="pairs"):
         # StuffIt Expander; nothing in either box carries TIGR. What a
         # double-click does with that pair is the question.
         return [("t1", "Comment.as", "BINA", "TIGR", single)]
+    if which == "claims":
+        # The bundle's exact-type claims (mac/macextract_icons.r): the
+        # Finder's alternate-program dialog should offer MacExtract for a
+        # BINA file with no TIGR anywhere, and for a StuffIt archive whose
+        # creator SIT! (StuffIt Deluxe) is absent. `--app` puts the build
+        # under test on the volume.
+        sit = open(os.path.join(REPO, "fixtures", "derived-Export.sit"), "rb").read()
+        return [("t1", "Comment.as", "BINA", "TIGR", single),
+                ("s1", "Export.sit", "SITD", "SIT!", sit)]
     s = [("a1", "Comment.as", "BINA", "SITx", single),
          ("a2", "Comment.as", q, "SITx", single),
          ("a3", "Comment", "BINA", "SITx", single),
@@ -95,11 +105,13 @@ def subjects(which="pairs"):
     return s
 
 
-def assemble(outdir, which="pairs"):
+def assemble(outdir, which="pairs", app=None):
     boot, xfer = sitzip.assemble("703", outdir)
     v = sitzip.Vol(xfer, partition=1)
     done = set()
     try:
+        if app:
+            v.put(open(app, "rb").read(), "MacExtract")
         for folder, name, t, c, blob in subjects(which):
             if folder not in done:
                 v.mkdir(folder)
@@ -114,7 +126,8 @@ def assemble(outdir, which="pairs"):
 def main():
     p = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     p.add_argument("--assemble", action="store_true")
-    p.add_argument("--set", choices=("pairs", "tigr"), default="pairs")
+    p.add_argument("--set", choices=("pairs", "tigr", "claims"), default="pairs")
+    p.add_argument("--app", help="a MacBinary MacExtract to put beside the Expander")
     p.add_argument("--boot", action="store_true")
     p.add_argument("--stop", action="store_true")
     p.add_argument("--read", action="store_true")
@@ -122,7 +135,7 @@ def main():
     p.add_argument("--limit", type=int, default=3 * 3600)
     a = p.parse_args()
     if a.assemble:
-        assemble(a.out, a.set)
+        assemble(a.out, a.set, a.app)
     elif a.boot:
         compat9.boot(a.out, a.limit)
     elif a.stop:

@@ -43,6 +43,8 @@ base64 and MIME attachments, AppleSingle/AppleDouble, zip, gzip, tar and
 - **Everything comes back as it was:** both forks, type and creator, dates,
   icon positions, folder windows, Get Info comments, the Locked box and
   custom icons, so an extracted application simply runs.
+- **No StuffIt on the machine?** On Mac OS 9, double-clicking an archive
+  whose program is missing asks which to use, and MacExtract is on the list.
 - **Nested files** (`.sit.hqx`, `.tar.Z`) are unwrapped by looking inside,
   not by trusting the name. **Self-extracting archives** open as archives.
 - **Passwords:** StuffIt, StuffIt 5, Compact Pro, PackIt, Private File, zip

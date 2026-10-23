@@ -29352,3 +29352,24 @@ through the dialog; the source change was built in a scratch directory,
 measured, and reverted, since which types to claim is a shipping decision
 the maintainer has not made. The wildcard covers the drop and the claim
 covers the dialog; they are not the same mechanism.
+
+**Shipped, the same day, on the maintainer's instruction**: the types
+MacStamp offers MacExtract for, seventeen `FREF`s (FORMATS.md, *AppleSingle
+and AppleDouble in 7.0.3*), +459 B of resource fork and nothing else;
+`./ci.sh` green, `dist/` rebuilt in the same commit. Two more boots
+measured the shipped binary: listed above the Expander for `BINA/TIGR`,
+and alone for a `.sit` typed `SITD/SIT!` with no StuffIt application
+present, which it then extracted to the manifest's bytes. **Two traps
+cost a boot each.** The assembled Mac OS 9.2 boot volume still carries
+StuffIt 5.5's *StuffIt Browser™* (`Extensions:Aladdin:TFI Extensions`,
+True Finder Integration), which takes a double-click on any StuffIt
+archive INSIDE the Finder — *"Export.sit is in an older StuffIt format
+… Open Browse Only"* with the Finder still frontmost — so no owner is
+ever looked for; deleted from that run's copy of the volume, the dialog
+appears. And `sitzip.payload` needs `build/rel/macextract`, which a
+`ci.sh` in progress has deleted: assemble first, then start CI. Observed
+and not explained: after the dialog's choice, `Export.sit` carried a
+318-byte resource fork holding one `IOAh` resource that the shell never
+writes (it opens only what it creates for writing) — the Translation
+Manager remembering the choice is the hypothesis, and `Comment.as` on the
+earlier run got none.

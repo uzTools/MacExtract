@@ -217,10 +217,41 @@ resource 'FREF' (128) { 'APPL', 0, "" };
    the Finder draws icons by CREATOR, and nothing anywhere carries ours. */
 resource 'FREF' (129) { '****', 1, "" };
 
+/* The exact types as well, one FREF each, because the wildcard is not a
+   CLAIM. Mac OS 9's Finder, finding no application for a document's
+   creator, offers "an alternate program" from the Desktop database's
+   per-type entries, which the bundle's exact FREF types make and '****'
+   does not: measured 2026-10-23 on Mac OS 9.2 with a BINA file — absent
+   with the wildcard alone, listed above StuffIt Expander with 'BINA'
+   (DECISIONS.md 2026-10-23, *the format 7.0.3 sniffs*). The list is the
+   one MacStamp offers MacExtract for (its data/choices.tsv and
+   formats.tsv, 2026-10-23): the type each of those formats carries, and the
+   `also` types beside it. Each maps to icon local ID 1, the application's,
+   for the reason above. The resource fork grows by about 12 bytes a type
+   and no code changes. */
+resource 'FREF' (130) { 'BINA', 2, "" };   /* MacBinary, AppleSingle (Apple's table) */
+resource 'FREF' (131) { 'ApSi', 3, "" };   /* AppleSingle (StuffIt Expander's own) */
+resource 'FREF' (132) { 'TEXT', 4, "" };   /* BinHex */
+resource 'FREF' (133) { 'TARF', 5, "" };   /* tar */
+resource 'FREF' (134) { 'PIT ', 6, "" };   /* PackIt */
+resource 'FREF' (135) { 'SITD', 7, "" };   /* StuffIt */
+resource 'FREF' (136) { 'SIT!', 8, "" };   /* StuffIt */
+resource 'FREF' (137) { 'SIT5', 9, "" };   /* StuffIt 5 */
+resource 'FREF' (138) { 'PACT', 10, "" };   /* Compact Pro */
+resource 'FREF' (139) { 'DDA2', 11, "" };   /* DiskDoubler */
+resource 'FREF' (140) { 'DDAR', 12, "" };   /* DiskDoubler */
+resource 'FREF' (141) { 'Gzip', 13, "" };   /* gzip */
+resource 'FREF' (142) { 'ZIP ', 14, "" };   /* zip */
+resource 'FREF' (143) { 'ZIVU', 15, "" };   /* Unix compress */
+resource 'FREF' (144) { 'LHA ', 16, "" };   /* LZH */
+resource 'FREF' (145) { 'NCar', 17, "" };   /* Now Compress */
+resource 'FREF' (146) { 'mArc', 18, "" };   /* ARC / ArcMac */
+
 resource 'BNDL' (128) {
     'MExt', 0,
     { 'ICN#', { 0, 128, 1, 128 },
-       'FREF', { 0, 128, 1, 129 } }
+       'FREF', { 0, 128, 1, 129,
+                2, 130, 3, 131, 4, 132, 5, 133, 6, 134, 7, 135, 8, 136, 9, 137, 10, 138, 11, 139, 12, 140, 13, 141, 14, 142, 15, 143, 16, 144, 17, 145, 18, 146 } }
 };
 
 /* The SIGNATURE resource: type = the creator code, ID 0. The Finder wants

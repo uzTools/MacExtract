@@ -8822,7 +8822,7 @@ with this archive."*
 |---|---|---|
 | Floor system | System 6.0.5 (its Read Me) | System 3.0 on a 68000 with 512 KB, measured on a Macintosh 512Ke; 1 MB for every archive (BLOCKERS.md, *Status*) |
 | Everything beyond `.sit`/`.cpt`/`.hqx`/`.bin` | needs DropStuff with Expander Enhancer, *"a **System 7-only** shareware product"* | in the same free application, on System 6 |
-| Installed pieces | application + StuffIt Engine extension + the add-on | one 226 KB application (231,611 B, the resource fork of `dist/MacExtract.bin`), no extension, no installer |
+| Installed pieces | application + StuffIt Engine extension + the add-on | one 228 KB application (232,972 B, the resource fork of `dist/MacExtract.bin`; 231,611 B when this cell was written), no extension, no installer |
 | StuffIt segmented sets | with the add-on, so System 7 only | yes, System 6 and up |
 | Compact Pro segmented sets | *"StuffIt Expander cannot expand encrypted or segmented Zip or Compact Pro files"* | yes |
 | Spanned zip sets | same sentence — no | yes |
@@ -9203,9 +9203,21 @@ Desktop database's exact-type entries, which the wildcard does not make;
 build with one more line of Rez — `resource 'FREF' (130) { 'BINA', 1, "" }`
 and its `BNDL` entry, 27 B of resource fork, no code — is listed first,
 above the Expander; opened with it, the application put up its
-destination dialog and wrote `Kept Whole` byte-exact. Not shipped: which
-types to claim is the maintainer's call (`BINA` alone, or every archive
-type too, so a `.sit` whose StuffIt is missing offers MacExtract as well).
+destination dialog and wrote `Kept Whole` byte-exact. **Shipped the same
+day, v0.43.0 → the next release**: seventeen `FREF`s, the types MacStamp
+offers MacExtract for (its `data/choices.tsv` and `formats.tsv`) — `BINA`,
+`ApSi`, `TEXT`, `TARF`, `PIT `, `SITD`, `SIT!`, `SIT5`, `PACT`, `DDA2`,
+`DDAR`, `Gzip`, `ZIP `, `ZIVU`, `LHA `, `NCar`, `mArc` — 459 B of resource
+fork (232,513 → 232,972), no code. Measured with the shipped binary
+(`as703.py --set claims`): the `BINA/TIGR` file lists MacExtract above
+the Expander; `derived-Export.sit` typed `SITD/SIT!` on a volume with no
+StuffIt application lists MacExtract alone, and opening with it wrote
+`Export` (`STAK/WILD`, 6,944 B, the manifest's SHA-256). With the
+Expander present, a `.sit` never reaches the dialog: the Expander's second
+`BNDL` (129) carries signature `SIT!`, so the Desktop database hands it
+StuffIt Deluxe's documents too. `TEXT` is claimed because BinHex is
+`TEXT`; the price is that an ownerless text file's dialog offers
+MacExtract beside the editors.
 
 ### Timed on the same Mac Plus (re-measured 2026-10-19)
 
