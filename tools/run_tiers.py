@@ -172,10 +172,11 @@ REPO = os.path.dirname(HERE)
 # SHIPPED lane is unaffected — that material is all in the overlay bundle,
 # released after use (OVL_SAVED +352 below offsets the TIERS -352). No tally
 # moves: the narrowest margin is ~29,600 B. Arithmetic, no emulator booted.
+# **-32 more each 2026-10-23**: Compact Pro's fork-extent check, same reason.
 TIERS = {
-    "sys3-512K": (201238, "System 3.0, Macintosh 512Ke (222,070 B free)"),
-    "sys6-512K": (105856, "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
-    "floor-1M":  (630144, "System 6.0.8, 1 MB Mac Plus — the floor target"),
+    "sys3-512K": (201206, "System 3.0, Macintosh 512Ke (222,070 B free)"),
+    "sys6-512K": (105824, "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
+    "floor-1M":  (630112, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
 # -32 on all three 2026-10-21, DERIVED from TIERS_CONTROL +32 (the bundle's
 # working directory, DECISIONS.md 2026-10-21, *the Desktop Manager System 6
@@ -367,9 +368,10 @@ TIERS = {
 # data + bss -680. The machine gave +4,204, because the jump table, the
 # stub segments and the relocations trimmed at launch are resident bytes
 # this unit never counted — which is why TIERS was measured, not moved.
-TIERS_CONTROL = 211968     # build/mac-resident, CODE + A5, 2026-10-22
+TIERS_CONTROL = 212000     # build/mac-resident, CODE + A5, 2026-10-22
 # +352 on 2026-10-22: the eleven malformed-input fixes, every decoder linked
 # in; TIERS above drops 352 to match (TIERS_MACHINE, physical RAM, unmoved).
+# +32 more on 2026-10-23 with Compact Pro's fork-extent check; TIERS -32.
 # **What this control cannot see: the autotest harness.** TIERS was read
 # on the machine from an autotest build (`UNC_MAC_AUTOTEST`), and
 # build/mac-resident has no harness in it, so harness growth lowers what a
@@ -758,7 +760,9 @@ EXPECT = {
 # are overlaid), so the difference the overlay scheme saves rises 352. The
 # per-format gains below rise 352 less the images each keeps; TIERS -352
 # offsets it so the shipped budgets move only by the image growth.
-OVL_SAVED = 154352
+# +32 more on 2026-10-23: Compact Pro's fork-extent check hoisted ahead of
+# the encrypted path, resident control CODE +8 and A5 +24 (shipped unmoved).
+OVL_SAVED = 154384
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
 # every kept image is one — as is the bundle an envelope holds on to.
@@ -896,7 +900,7 @@ IMAGES = {
     "OVL_ID_BINHEX":      4606,
     "OVL_ID_BTOA":        2496,
     "OVL_ID_CODECS":      6016,
-    "OVL_ID_CPTDD":       14820,
+    "OVL_ID_CPTDD":       14832,
     "OVL_ID_CRYPT":       9604,
     "OVL_ID_EXO":         30168,
     "OVL_ID_LZH":         10458,
@@ -938,7 +942,9 @@ IMAGES = {
 # zero-size marker loop), the gzip multi-member loop, and four more; all
 # in the overlaid decoders, none resident. These are build sizes, re-taken
 # from build/mac on Linux, not the emulator-measured TIERS below.
-BUNDLE = 179836
+# **CPTDD +12 and the bundle +12, 2026-10-23**: Compact Pro's fork-extent
+# check hoisted ahead of the encrypted path (an overlaid decoder).
+BUNDLE = 179848
 
 # What the SHIPPED lane asserts, and it is the refused fixtures BY NAME
 # rather than a tally: a tier that refuses two different fixtures and still

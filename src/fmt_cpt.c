@@ -847,14 +847,7 @@ int unc_cpt_extract(UncCtx *c)
             if (sret > 0) continue;               /* skipped: no decode */
 
             est = UNC_OK;
-            if (c->opt.list_only && (flags & 1)) {
-                est = UNC_OK;                     /* metadata only */
-            } else if (flags & 1) {
-                est = cpt_encrypted_entry(c, filevol, fileoffs,
-                                          rcomp, dcomp, rsrclen, datalen,
-                                          flags, filecrc, iobuf, iocap,
-                                          obuf, ocap, hz, window, cr);
-            } else if (c->opt.list_only) {
+            if (c->opt.list_only) {
                 est = UNC_OK;                     /* metadata only */
             } else if (fileoffs + rcomp < fileoffs ||
                        fileoffs + rcomp + dcomp < fileoffs ||
@@ -864,8 +857,16 @@ int unc_cpt_extract(UncCtx *c)
                  * anything: across a set the forks legitimately run off
                  * the end of the segment they start in, and the reader
                  * rolls into the next one. A short set is caught by the
-                 * read, which cannot roll past the last part. */
+                 * read, which cannot roll past the last part. Checked
+                 * ahead of BOTH paths: the encrypted one used to reach the
+                 * cipher and the password prompt on forks that, by offset
+                 * and length, cannot be in the file. */
                 est = UNC_ERR_CORRUPT;            /* forks outside file */
+            } else if (flags & 1) {
+                est = cpt_encrypted_entry(c, filevol, fileoffs,
+                                          rcomp, dcomp, rsrclen, datalen,
+                                          flags, filecrc, iobuf, iocap,
+                                          obuf, ocap, hz, window, cr);
             } else {
                 crc = UNC_CRC32_INIT;
                 est = cpt_entry_forks(c, filevol, fileoffs, rcomp, dcomp,

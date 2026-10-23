@@ -610,7 +610,9 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # is linked in; the shipped overlay build is unmoved (its decoders are in
 # the 'OVLY' bundle, its code ceiling held at 41,380), so the Mac Plus
 # floor budget does not change — only this measurement baseline does.
-UNC_MAC_CODE_DEFAULT=175776
+# +8 on 2026-10-23, 175,776 -> 175,784: Compact Pro's fork-extent check
+# hoisted ahead of the encrypted path (the control; shipped unmoved).
+UNC_MAC_CODE_DEFAULT=175784
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -796,7 +798,10 @@ UNC_MAC_CODE_DEFAULT=175776
 # -28 on 2026-10-22 to 36,192, with the code ceiling's +28: the working
 # directory left the top of the output (DECISIONS.md 2026-10-22, *the
 # working directory the bundle closed*); not looked into further.
-UNC_MAC_A5_DEFAULT=36192
+# +24 on 2026-10-23, 36,192 -> 36,216: data + bss alignment shifting under
+# Compact Pro's hoisted fork-extent check (the RESIDENT control only; the
+# shipped build's A5 is unmoved, so the floor budget does not change).
+UNC_MAC_A5_DEFAULT=36216
 # A CEILING PER CONFIGURATION, because one ceiling measured on another build
 # cannot fire. The figures above are the RESIDENT control build, which carries
 # every decoder; the shipped build's resident code is a third of that, so

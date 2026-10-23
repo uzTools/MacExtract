@@ -5356,6 +5356,31 @@ static void test_malformed_regressions(void)
               != UNC_OK);                    /* an error, not an OOB read */
     }
 
+    /* Compact Pro: an ENCRYPTED entry whose forks fall past EOF must be
+     * rejected as corrupt — before, only the plain path checked the extent,
+     * so the encrypted one reached the cipher and the password prompt on
+     * forks that cannot be in the file. */
+    {
+        uint8_t cpt[62];
+        memset(cpt, 0, sizeof cpt);
+        cpt[0] = 1;
+        unc_put_u32be(cpt + 4, 8);           /* index offset */
+        cpt[13] = 1;                         /* nentries (u16be) */
+        /* cpt[14] commentlen = 0 */
+        cpt[15] = 0x01;                      /* entry: name length 1, a file */
+        cpt[16] = 'A';                       /* name */
+        cpt[17] = 1;                         /* meta[0]  filevol */
+        /* meta: fileoffs 0, flags bit0 = encrypted, rcomp/dcomp past EOF */
+        cpt[17 + 28] = 0x01;                 /* meta[27..28] flags = 1 */
+        unc_put_u32be(cpt + 17 + 37, 0x10000000u);  /* meta[37] rcomp */
+        unc_put_u32be(cpt + 17 + 41, 0x10000000u);  /* meta[41] dcomp */
+        test_make_memio(&io, &m, cpt, (uint32_t)sizeof cpt);
+        cap_make(&sk, &cap);
+        CHECK(unc_extract_as(UNC_FORMAT_COMPACTPRO, &io, &sk, &al, NULL, NULL)
+              == UNC_OK);
+        CHECK(cap.count == 1 && cap.status[0] == UNC_ERR_CORRUPT);
+    }
+
     /* StuffIt 5: a directory marker with a zero header size left `pos`
      * unchanged, so the walk looped forever while numentries grew. (The
      * forced extractor still runs the probe, so the banner is genuine;
