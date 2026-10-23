@@ -211,6 +211,7 @@ read.
 | `macmime.py` | **a MIME message written BY a Macintosh**, with mpack's own Macintosh port: `tools/macmime/` compiles `encode_applefile()` and `encode()` out of `reference/mpack` unmodified, and this boots System 6.0.8 into them. `--make` writes the specimen, `--check` grades it (18/18) — see below before changing it, because two of its three failure modes were in the HARNESS |
 | `mkcollide.py` | build an archive whose names collide on HFS, and verify what `BumpName` did with them — nothing in the corpus collides |
 | `privatefile.py` | **Aladdin Private File 2.0 encrypts known files**: `--fetch` takes the application out of its installer with no installer run, `--make NAME` boots System 7.0.1 with it in `Startup Items` and writes the three specimens `tools/run_privatefile.py` grades — see below |
+| `maccompress.py` | **MacCompress 3.2 writes its own format**: `--fetch` takes the application off Discmaster (SHA-1 checked), `--make` compresses a two-fork subject on System 6, `--check` extracts it with our CLI. The subject is named `Alpha` and so takes the volume window's FIRST icon slot; the application is the second, at (172, 105) |
 
 `tools/quickdraw-repro/` is a sibling that reuses `mkboot.py` and this
 directory's `Display`/emulator plumbing to answer one narrow question about

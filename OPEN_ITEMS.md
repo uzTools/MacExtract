@@ -165,7 +165,6 @@ info*), less what this table still names. The leads —
 | tar | a pax `g` (global) header, stepped over | — |
 | DiskDoubler `DDAR`/`DDA2` records | bytes no reference assigns (DDAR +100..117; DDA2 folder +46..53, +62 on); only the 84-byte single-file header is measured (DECISIONS.md 2026-10-17, *the window Expander puts back*) | DiskDoubler's own expander, under emulation |
 | AppleSingle entry 11 | ProDOS's access word (no write-enable is a lock) | none; RFC 1740 gives its size and not its bits, and no reference here does |
-| MacCompress 3.2's own format (`ZIVM`/`LZIV`) | **hypothesis**: it is the 1990 DiskDoubler container this engine already reads — MacStamp's 48-byte header of one (`ab cd 00 30`, `info1` `0x1f`, method 1, stamped `ZIVM`/`LZIV`) is field for field what DiskDoubler ß05 writes (DECISIONS.md 2026-10-23, *the probes next door*) | a file MacCompress 3.2 wrote (Macintosh Repository, SHA-1 as MacStamp's DECISIONS.md 2026-10-14 cites), decoded here against its source |
 
 Closing a row: the reader delivers the field with a `Source:` and a grade,
 and `tools/run_meta.py` holds it.

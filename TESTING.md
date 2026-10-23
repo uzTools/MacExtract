@@ -1348,17 +1348,20 @@ and found a short header read that the fixtures structurally could not
 
 **Nor can any fixture have the 1990 header**, added 2026-09-22: the low
 word of the magic is the header's own SIZE, 48 rather than 84, and the
-only specimen in existence here is the one `diskdoubler.py --beta` made
-under Mini vMac — fixture archives are not committed, and `unar` cannot
-open one to write a manifest from. So the differential suite does not
+two specimens here are made under Mini vMac — `diskdoubler.py --beta`'s
+and, since 2026-10-23, `maccompress.py --make`'s, written by MacCompress
+3.2 (1989), which uses the same header — fixture archives are not
+committed, and `unar` cannot open one to write a manifest from. So the differential suite does not
 cover it at all. `ci.sh` carries the CONTAINER, in `test_diskdoubler`:
 a 48-byte header over stored forks, so no codec is involved, plus two
 negative controls — size 47, below the floor DiskDoubler ß05's own
 validator enforces, and size 60, a size it WOULD accept and for which
 nothing here knows the layout. Both must sniff UNKNOWN. What grades the
 BYTES is `diskdoubler.py --beta-verify`, against what DiskDoubler was
-given. **Established that it can fail**: those checks fail 7 ways
-against the engine of the day before.
+given, and `maccompress.py --check` against what MacCompress was given
+(one file, a copied data fork and a compressed resource fork). **Established
+that it can fail**: those checks fail 7 ways against the engine of the day
+before.
 
 ### Methods 1 and 7 are graded outside `ci.sh` (2026-08-20)
 

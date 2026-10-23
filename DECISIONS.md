@@ -453,7 +453,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-22 (the runtime the application did not need) — Elf2Mac's --mac-single and an entry point of our own drop Retro68's multi-segment loader and newlib's exit chain: +4,980 B on every shipped budget, measured on all three tiers
 - 2026-10-22 (the working directory the bundle closed) — v0.42.0's `PBOpenWD` handed back the Finder's own working directory at the top of the output, and its `PBCloseWD` closed it under the rest of the run; no working directory is opened there now
 - 2026-10-23 (the format 7.0.3 sniffs) — StuffIt 7.0.3's Expander opens AppleSingle under any type, creator or name, and has no AppleDouble reader: nine subjects on Mac OS 9.2, asked for by MacStamp
-- 2026-10-23 (the probes next door) — MacStamp's identifier held against this sniffer over 994 fixtures: no format it names that this engine refuses, and MacCompress 3.2's own format is the 1990 DiskDoubler container
+- 2026-10-23 (the probes next door) — MacStamp's identifier held against this sniffer over 994 fixtures: no format it names that this engine refuses; MacCompress 3.2's own format is the 1990 DiskDoubler container, and a file it wrote extracts byte-exact
 - 2026-10-23 (the shims that were one function) — the 21 decoder shims become one routine and an 18-byte call each, the release's `switch` a two-byte row per format: 800 B back on every shipped budget, and a format costs the resident build its row and nothing more
 
 ---
@@ -29379,7 +29379,7 @@ writes (it opens only what it creates for writing) — the Translation
 Manager remembering the choice is the hypothesis, and `Comment.as` on the
 earlier run got none.
 
-## 2026-10-23 (the probes next door) — MacStamp's identifier held against this sniffer over 994 fixtures: no format it names that this engine refuses, and MacCompress 3.2's own format is the 1990 DiskDoubler container
+## 2026-10-23 (the probes next door) — MacStamp's identifier held against this sniffer over 994 fixtures: no format it names that this engine refuses; MacCompress 3.2's own format is the 1990 DiskDoubler container, and a file it wrote extracts byte-exact
 
 **Claim.** Asked whether MacStamp's probes (`/home/claude/macstamp`,
 `src/mst_identify.c`, 47 probes, identify-only) could benefit this
@@ -29422,9 +29422,20 @@ DiskDoubler ß05 writes, with `info1` `0x1f` and the stream in clear, and
 STAMPED `ZIVM`/`LZIV` (DECISIONS.md 2026-09-22) — which `src/fmt_dd.c`
 reads. Lloyd Chambers wrote both programs. So MacCompress's "own format"
 is this container with method 1, and this engine most likely extracts
-a MacCompress file already; OPEN_ITEMS.md holds it as a hypothesis until
-one is decoded, because the file itself was not kept and the 48 bytes
-cannot be.
+a MacCompress file already — written here as a hypothesis, and measured
+the same day: `tools/vmac/maccompress.py` fetched MacCompress 3.2
+(`maccompress-32.hqx`, Discmaster's copy of an FTP mirror, SHA-1
+`782eeb92…`; the posting's header is Lloyd Chambers's, 6 May 1989) and
+ran it on System 6.0.8 over a two-fork subject. It wrote `ZIVM`/`LZIV`,
+`ab cd 00 30`, `info1` `0x1f`, the data fork copied (method 0, 3,000 B
+of incompressible bytes) and the resource fork compressed (method 1,
+339 → 95 B, `1f 9d 90` in clear), 48 + 3,000 + 95 = the 3,143-byte
+file. `sniff` says DiskDoubler and `x` writes both forks byte-exact.
+The program's own help had said it first (TEXT 310, *MacCompress
+Format*): "the file can grow by 48 bytes; forks are copied if they
+cannot be compressed, but the header is always used". So MacCompress's
+format is read, and has been since the 1990 header was (2026-09-22);
+README.md names it.
 
 **Consequence.** Nothing in `src/` changes. MacStamp is told the five
 things above that are its to act on; the one that is this project's is
