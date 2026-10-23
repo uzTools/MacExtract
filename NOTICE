@@ -79,13 +79,19 @@ hand.
                        wrote (tools/derive_sit5crypt.py).
   src/fmt_dd.c         the `DDAR` 0x20 raw-fork shape, four offsets
                        nothing reachable sets.
-  src/fmt_macbinary_probe.c,  four things no specification supports:
+  src/fmt_macbinary_probe.c,  five things no specification supports:
   src/fmt_applesingle.c  the MacBinary CRC-16/0xA001 fallback and its
   src/fmt_sitseg.c,    nonzero-date test, the byte-swapped AppleSingle
-  src/fmt_sitseg_probe.c  header, and the whole StuffIt split header —
-  src/fmt_dd_probe.c   plus DiskDoubler's two older headers, which are
-                       macutils' dd.h. Checked against deark on
-                       2026-09-27: it states none of them.
+  src/fmt_sitseg_probe.c  header, the whole StuffIt split header, and
+  src/fmt_dd_probe.c   DiskDoubler's stored header CRC of zero, which
+                       XADDiskDoublerParser.m accepts for "really old
+                       files" and none of the 91 headers here has.
+                       Checked against deark on 2026-09-27 for the
+                       first four: it states none of them. Kept, the
+                       maintainer's decision 2026-10-23. DiskDoubler's
+                       84- and 78-byte headers are no longer macutils'
+                       since 2026-10-23: every field the probe tests is
+                       measured in docs/formats/diskdoubler-container.md.
   src/fmt_hecx.c,      BinHex before 4.0, `.hex` and `.hcx`: the
   src/fmt_binhex_probe.c  layout, both line codings and both sums, from
                        macutils' hexbin/hecx.c, and the header-line
@@ -142,24 +148,25 @@ This project's decoders are transcriptions/ports of algorithms from:
     NOT BinHex, MacBinary, AppleSingle/AppleDouble, zip, tar or gzip:
     since 2026-09-19 each of those container parsers cites the public
     document its facts are written in instead (the "CONTAINER FORMAT
-    SPECIFICATIONS" section below). Four things that no public
+    SPECIFICATIONS" section below). Five things that no public
     document supports are marked as XADMaster's at the line that makes
     them, and stay — the MacBinary CRC-16/0xA001 fallback for files
     written with the wrong table, the nonzero-date test that stands in
     for a MacBinary I header's missing checksum, the byte-swapped
-    AppleSingle header, and the whole StuffIt split header in
+    AppleSingle header, DiskDoubler's stored header CRC of zero
+    (`src/fmt_dd_probe.c`), and the whole StuffIt split header in
     `src/fmt_sitseg.c` and `src/fmt_sitseg_probe.c`, which Aladdin never
     published and which nothing else in `reference/` reads (deark and
     macutils were both looked at). The engine has no detect-only
     signature at all since 2026-10-18, when every format it named
     without extracting went (DECISIONS.md 2026-10-18, *the formats it
-    only named*). Neither `src/fmt_dd_probe.c` nor `src/fmt_now_probe.c`
-    is XADMaster's:
-    DiskDoubler's two older headers are in macutils' `macunpack/dd.h`
-    — magic, offsets, CRC position and all — and since 2026-09-21 the
-    Now Compress probe cites `docs/formats/now-compress.md`, where the
-    file header, the entry record and the byte-sum checksum it tests
-    are measured off nine archives.
+    only named*). The DiskDoubler probe's headers are not XADMaster's
+    or macutils' since 2026-10-23 — magic, sizes and every CRC
+    position are measured in `docs/formats/diskdoubler-container.md`,
+    and only the zero-CRC rule above is borrowed — and since 2026-09-21
+    the Now Compress probe cites `docs/formats/now-compress.md`, where
+    the file header, the entry record and the byte-sum checksum it
+    tests are measured off nine archives.
     Arsenic (StuffIt method 15) no longer: since 2026-09-19
     `src/sit_arsenic.c` is written from Matthew T. Russotto's public
     description of the format (reference/notes/arsenic_russotto.md),

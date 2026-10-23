@@ -11,37 +11,35 @@
  */
 #include "unc_internal.h"
 
-/* DiskDoubler: 0xABCD0054 magic + XMODEM CRC of the 82-byte header
- * (or 0 in very old files), 0xABCD0030 for the 1990 shape, or the
- * 'DDAR' archive variant.
+/* DiskDoubler: 0xABCD0054 and a CRC-16/XMODEM of the 82-byte header
+ * at +82, 0xABCD0030 for the 1990 header, which has no CRC, or the
+ * 'DDAR' and 'DDA2' archives, each with a CRC of its own header.
  *
- * **That long is a word and a length**, measured 2026-09-22 by running
- * DiskDoubler ß05 (1990), which writes 48 where every one of the 195
- * headers in the corpus writes 84 (docs/formats/diskdoubler-container.md,
- * "The header size, and the 1990 header"). A short header ends before
- * `C_HDRCRC 82`, so there is no header CRC to check — and none of its
- * fill is one either: 0x00 through all six bytes at +42, where the two
- * forks' own sums are 0xd766 and 0x116a. So the second shape is matched
- * as a whole 32-bit constant exactly as the first is, and the size makes
- * the magic MORE specific rather than less. Only two values have a
- * specimen; that version's validator accepts any size from 48 up, which
- * is why the field is read as a size at all, but nothing here guesses
- * what a third would put where. Both references know only the 84-byte
- * shape — macutils states `MAGIC2 "\253\315\000\124"` as four bytes
- * and XADMaster compares `0xabcd0054` as a long — so the first path
- * below is byte-for-byte what it was and no corpus file reaches the new
- * one.
+ * Source: docs/formats/diskdoubler-container.md, where every one of
+ * those facts is measured rather than read: the magic word and the
+ * header's own size at +2 (84 in every corpus header, 48 in the 1990
+ * one, *The header size, and the 1990 header*); the CRC at +82, which
+ * holds on all 91 84-byte headers in the fixtures and the specimens
+ * (2026-10-23) and which DiskDoubler 3.7 itself refuses a header for
+ * failing; the `DDAR` archive header's 78 bytes and its CRC at +76,
+ * which hold on all 7 `DDAR` archives here (2026-10-23); and `DDA2`'s
+ * CRC at +60, read off the CC0 specimens NOTICE credits. The 1990
+ * header is matched as a whole 32-bit constant like the first: it ends
+ * before any CRC, and its +42 fill is zero where the forks' own sums are
+ * not, so the size makes the magic MORE specific. Two programs write it,
+ * DiskDoubler ß05 and MacCompress 3.2 (`tools/vmac/maccompress.py`).
+ * Only two sizes have a specimen; ß05's validator accepts any from 48
+ * up, but nothing here guesses what a third would put where.
+ * macutils' `dd.h` and XADMaster's XADDiskDoublerParser.m state the
+ * 84- and 78-byte shapes too and agree with all of this.
  *
- * Source: reference/macutils/macunpack/dd.h, for the first two, which
- * states both magics and both header shapes — MAGIC2 "\253\315\000\124"
- * is the same four bytes, C_HDRCRC 82 in an 84-byte compressed-file
- * header, ARCHHDRCRC 76 in a 78-byte archive header. XADMaster's
- * XADDiskDoublerParser.m agrees and is where the CRC came from; its
- * reversed-table formulation equals plain CRC-16/XMODEM, see
- * DECISIONS.md M0.
- *
- * 'DDA2' is in neither: it is DiskDoubler Pro's, read off the CC0
- * specimens NOTICE credits, as the SPLT container in fmt_ddseg.c was. */
+ * One rule is NOT measured, and is XADMaster's alone: a stored CRC of
+ * zero on the 84-byte header is accepted ("Really old files have 0000
+ * instead of a CRC"). None of the 91 headers here has one; kept, the
+ * maintainer's decision 2026-10-23 (DECISIONS.md, *the probes next
+ * door*).
+ * Source: reference/XADMaster/XADDiskDoublerParser.m, recognizeFile
+ * (LGPL, see NOTICE). */
 UncFormat unc_diskdoubler_probe(const uint8_t *head, int32_t len, UncIO *io)
 {
     (void)io;

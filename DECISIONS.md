@@ -29454,6 +29454,19 @@ guard a checksum-less MacBinary I header has instead, and removing it
 would widen the sniffer. Shedding them would take two lines off NOTICE
 and change no licence, which the decoders set.
 
+**The DiskDoubler probe re-cited, the same day, on the maintainer's
+instruction.** Its NOTICE row said the 84- and 78-byte headers were
+macutils' `dd.h`. Every field it tests is now measured in
+docs/formats/diskdoubler-container.md — the +82 CRC on 91 headers of 91
+over the fixtures and specimens, the `DDAR` archive header's +76 CRC on
+7 archives of 7 (pinned there today), `DDA2`'s +60 off the CC0
+specimens, the 1990 header off ß05 and MacCompress — so macutils leaves
+the probe. Reading it for that found a FIFTH tolerance NOTICE had not
+listed: a stored header CRC of zero, accepted for "really old files"
+(XADDiskDoublerParser.m) and held by none of the 91. It is now named in
+NOTICE and kept with the other four. Comments only; the probe's code is
+unchanged.
+
 ## 2026-10-23 (the shims that were one function) — the 21 decoder shims become one routine and an 18-byte call each, the release's `switch` a two-byte row per format: 800 B back on every shipped budget, and a format costs the resident build its row and nothing more
 
 **Claim.** Every decoder shim in `mac/ovl_shim.c` did the same four things

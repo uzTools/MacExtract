@@ -58,7 +58,7 @@ CARRIES = {
     "fmt_applesingle.c": "the byte-swapped header",
     "fmt_sitseg.c":     "the whole StuffIt split header",
     "fmt_sitseg_probe.c": "the StuffIt split header's offsets",
-    "fmt_dd_probe.c":   "DiskDoubler's two older headers (macutils dd.h)",
+    "fmt_dd_probe.c":   "the zero header CRC old files carry (XADDiskDoublerParser.m)",
     "unc_internal.h":   "the LZAH preload",
     "fmt_hecx.c":       "BinHex before 4.0, the whole decoder (hexbin's hecx.c)",
     "fmt_binhex_probe.c": "the .hex/.hcx header-line rule (hexbin's hecx.c)",

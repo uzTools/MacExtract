@@ -70,7 +70,7 @@ DiskDoubler ß05 wrote states 48 and stops after +47.
 | 52 | 1 | `info2` | the XOR garbling, below |
 | 54 | 2 | data fork delta distance | **held against the coder**, below |
 | 56 | 2 | resource fork delta distance | as +54 |
-| 82 | 2 | **CRC-16/XMODEM of bytes 0..81** | **measured 2026-10-17**: 70 headers of 70; 3.7 refuses one that disagrees (`ddmeta.py --reader`) |
+| 82 | 2 | **CRC-16/XMODEM of bytes 0..81** | **measured 2026-10-17**: 70 headers of 70; 3.7 refuses one that disagrees (`ddmeta.py --reader`). 91 of 91 on 2026-10-23, over the fixtures and every specimen, and none stores the zero XADMaster accepts |
 | 84 | | the data fork's bytes, then the resource fork's | |
 | 84 + both | 84 | a byte-identical COPY of the header above | **63 of the corpus's 66 compressed files**, and the three without it are this project's own (below) |
 
@@ -221,7 +221,9 @@ interpret, then one **124-byte record per entry**, each with its own
 `DDAR` magic.
 
 **The body begins at 78.** Pinned: in all 7 archives the first `DDAR`
-past byte 4 is at exactly that offset.
+past byte 4 is at exactly that offset. **The archive header's last two
+bytes, +76, are a CRC-16/XMODEM of its first 76**, measured 2026-10-23:
+7 archives of 7, which is what the sniffer tests.
 
 | offset | size | field | how it is pinned |
 |---|---|---|---|
