@@ -29432,6 +29432,17 @@ the specimen to fetch and decode. The comparison was a twenty-line
 script over the two CLIs and is not kept: its numbers are here, and the
 probes it compared are both repositories' to read.
 
+**The XADMaster tolerances in the probes stay, the maintainer's
+decision.** Asked whether the MacBinary CRC-16/0xA001 fallback and the
+byte-swapped AppleSingle header could go, since nothing here exercises
+either: no. XADMaster's own comment at the fallback is *"we have files
+that will fail unless we calculated this in this way"*, and without it
+such a file is refused outright, since its version bytes keep it from
+the MacBinary I path. The nonzero-date test is not a tolerance but the
+guard a checksum-less MacBinary I header has instead, and removing it
+would widen the sniffer. Shedding them would take two lines off NOTICE
+and change no licence, which the decoders set.
+
 ## 2026-10-23 (the shims that were one function) — the 21 decoder shims become one routine and an 18-byte call each, the release's `switch` a two-byte row per format: 800 B back on every shipped budget, and a format costs the resident build its row and nothing more
 
 **Claim.** Every decoder shim in `mac/ovl_shim.c` did the same four things
