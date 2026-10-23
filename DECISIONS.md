@@ -454,6 +454,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-22 (the working directory the bundle closed) — v0.42.0's `PBOpenWD` handed back the Finder's own working directory at the top of the output, and its `PBCloseWD` closed it under the rest of the run; no working directory is opened there now
 - 2026-10-23 (the format 7.0.3 sniffs) — StuffIt 7.0.3's Expander opens AppleSingle under any type, creator or name, and has no AppleDouble reader: nine subjects on Mac OS 9.2, asked for by MacStamp
 - 2026-10-23 (the probes next door) — MacStamp's identifier held against this sniffer over 994 fixtures: no format it names that this engine refuses, and MacCompress 3.2's own format is the 1990 DiskDoubler container
+- 2026-10-23 (the shims that were one function) — the 21 decoder shims become one routine and an 18-byte call each, the release's `switch` a two-byte row per format: 800 B back on every shipped budget, and a format costs the resident build its row and nothing more
 
 ---
 
@@ -29430,3 +29431,42 @@ things above that are its to act on; the one that is this project's is
 the specimen to fetch and decode. The comparison was a twenty-line
 script over the two CLIs and is not kept: its numbers are here, and the
 probes it compared are both repositories' to read.
+
+## 2026-10-23 (the shims that were one function) — the 21 decoder shims become one routine and an 18-byte call each, the release's `switch` a two-byte row per format: 800 B back on every shipped budget, and a format costs the resident build its row and nothing more
+
+**Claim.** Every decoder shim in `mac/ovl_shim.c` did the same four things
+— plant the codec vector, find the image, `UNC_ERR_MEM` if either failed,
+call the image at its entry point — with two constants of its own, and
+the release in `mac/ovl_load_eager.c` repeated the image per format in a
+`switch`. Both are now data: `ovl_run` does the four things once, each
+engine entry point is `pea` of one constant (image − 128 in five bits,
+entry point in six, the codec and zip-old prerequisites in two flags)
+and a call, and the release looks its format up in `gKeepSet`, two
+bytes a row. Measured.
+
+**Evidence.** `m68k-apple-macos-nm` on the linked application: the 21
+shims were 1,242 B (56 each, zip 76, Private File 46), now 21 × 18 B and
+a 124-byte `ovl_run`; `ovl_release_if_unwanted` 354 → 224 B for a 30-byte
+table. Eager **−832 B of `CODE` and +32 of data + bss**, lazy −704 and 0,
+the control 0 and 0; `OVL_SAVED` +800, measured by `--check-saved` against
+the two builds (FORMATS.md, *Three configurations, one tree*). The 21
+stubs' constants, decoded out of the new binary's disassembly, name the
+same image, entry point and prerequisites as the old shims' (all 21,
+compared mechanically). `run.py --mem 1M --list sample.txt`: 74/74,
+which reaches 15 of the 21 entry points; SpaceSaver, SuperDisk!, MIME and
+btoa at 1 MB with `--expect`: 4/4; base64 and Private File rest on the
+disassembly alone. **The sweep can fail on this**: the same tree with
+btoa pointed at the MIME image extracts 0 files where the engine writes
+504 B (`run.py --expect`, FAIL). The two 512 KB machines, first pass: 68/74 on
+System 6.0.8 and 72/74 on System 3.0, the same fixtures by name as
+before and as `run_tiers.py --check` names them.
+
+**Consequence.** A new decoder costs the resident build an 18-byte stub
+and, if it releases, a two-byte row — down from 56 B and a hand-edited
+case — which is what makes a format that only some users want cheap to
+carry inside the one application. `tools/run_tiers.py` reads the keep
+sets out of the table now, and still refuses a keep it cannot attribute.
+The estimate before the work was −0.9 to −1.1 KB, then −0.6 to −0.8 KB
+once a stub was priced at the 68000's stack-passed arguments rather than
+assumed; the measured −800 B sits at the top of the second.
+

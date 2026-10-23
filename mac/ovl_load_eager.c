@@ -143,14 +143,56 @@ static void ovl_keep(short id, int slot)
     gKeptId[slot] = id;
 }
 
+/* What each format keeps (DECISIONS.md 2026-10-23, *the shims that were
+ * one function*): the format, then its decoder's image as an offset from 128
+ * with KEEP_CRYPT set if an entry might be encrypted. That second column is
+ * the eligibility rule the mechanism has always had: a format that MAY carry
+ * an encrypted entry keeps the ciphers, because encryption is discovered per
+ * entry and the release must decide before it knows. Two bytes a format, in
+ * place of a `switch` that was 354 B of code with the rest of this function.
+ *
+ * A format that is NOT here keeps the whole bundle, which costs memory and
+ * loses nothing. That is every ENVELOPE — BinHex, MacBinary, AppleSingle and
+ * AppleDouble, gzip, .Z, MIME, uu, btoa, base64 — because what is under one
+ * is unknown until it has been unwrapped; the segment schemes that join to a
+ * FILE (StuffIt's, DiskDoubler's, plain NAME.001, MIME's partial) for the
+ * same reason; Private File, whose reader is in the StuffIt image and its key
+ * setup in the ciphers', and which always decrypts to a StuffIt archive
+ * unwrapped next; and any format nobody has added here yet, which is the
+ * answer that cannot be wrong. */
+#define KEEP_CRYPT 0x80
+#define KEEP(id, crypt) ((unsigned char)(((id) - OVL_ID_CRYPT) | (crypt)))
+static const unsigned char gKeepSet[][2] = {
+    { UNC_FORMAT_SPACESAVER,  KEEP(OVL_ID_SPACESAVER, 0) },
+    { UNC_FORMAT_COMPACTPRO,  KEEP(OVL_ID_CPTDD,      KEEP_CRYPT) },
+    { UNC_FORMAT_DISKDOUBLER, KEEP(OVL_ID_CPTDD,      0) },
+    { UNC_FORMAT_LZH,         KEEP(OVL_ID_LZH,        0) },
+    { UNC_FORMAT_ARC,         KEEP(OVL_ID_ARC,        KEEP_CRYPT) },
+    { UNC_FORMAT_NOWCOMPRESS, KEEP(OVL_ID_NOW,        0) },
+    { UNC_FORMAT_SUPERDISK,   KEEP(OVL_ID_SUPERDISK,  0) },
+    { UNC_FORMAT_PACKIT,      KEEP(OVL_ID_PACKIT,     KEEP_CRYPT) },
+    /* An AppleLink package cannot be encrypted: the format has no password
+     * anywhere in it, and its own expander never asks for one. */
+    { UNC_FORMAT_SQP,         KEEP(OVL_ID_SQP,        0) },
+    { UNC_FORMAT_SIT,         KEEP(OVL_ID_STUFFIT,    KEEP_CRYPT) },
+    { UNC_FORMAT_SIT5,        KEEP(OVL_ID_STUFFIT,    KEEP_CRYPT) },
+    { UNC_FORMAT_ZIP,         KEEP(OVL_ID_EXO,        KEEP_CRYPT) },
+    { UNC_FORMAT_TAR,         KEEP(OVL_ID_ZIPOLD,     0) },
+    /* Segment SCHEMES, from the other release site: a Compact Pro or spanned
+     * zip set is read by that format's own reader over the joined parts. */
+    { UNC_FORMAT_CPTSEG,      KEEP(OVL_ID_CPTDD,      KEEP_CRYPT) },
+    { UNC_FORMAT_ZIPSEG,      KEEP(OVL_ID_EXO,        KEEP_CRYPT) },
+};
+
 /* Runs immediately after the sniff and therefore BEFORE the engine's first
  * allocation, which is where the budget is taken. So what it frees is heap
  * the engine is simply measured against a moment later — there is nothing to
  * credit back, and no ordering to get wrong. */
 void ovl_release_if_unwanted(UncFormat fmt, UncIO *io)
 {
-    short want = 0;
-    int crypt = 1;
+    short want;
+    int crypt;
+    unsigned i;
 
     if (gBundle == NULL) return;
 
@@ -159,57 +201,11 @@ void ovl_release_if_unwanted(UncFormat fmt, UncIO *io)
      * under an envelope, the next archive after the reload — finds the
      * bundle whole (DECISIONS.md 2026-10-21, *the probes that left with the
      * bundle*). */
-    switch (fmt) {
-    /* Decoder, and whether an entry might be encrypted. The second column is
-     * the eligibility rule the mechanism has always had: a format that MAY
-     * carry an encrypted entry keeps the ciphers, because encryption is
-     * discovered per entry and the release must decide before it knows. */
-    case UNC_FORMAT_SPACESAVER:  want = OVL_ID_SPACESAVER; crypt = 0; break;
-    case UNC_FORMAT_COMPACTPRO:  want = OVL_ID_CPTDD;      break;
-    case UNC_FORMAT_DISKDOUBLER: want = OVL_ID_CPTDD;      crypt = 0; break;
-    case UNC_FORMAT_LZH:         want = OVL_ID_LZH;        crypt = 0; break;
-    case UNC_FORMAT_ARC:         want = OVL_ID_ARC;        break;
-    case UNC_FORMAT_NOWCOMPRESS: want = OVL_ID_NOW;        crypt = 0; break;
-    case UNC_FORMAT_SUPERDISK:   want = OVL_ID_SUPERDISK;  crypt = 0; break;
-    case UNC_FORMAT_PACKIT:      want = OVL_ID_PACKIT;     break;
-    /* An AppleLink package cannot be encrypted: the format has no password
-     * anywhere in it, and its own expander never asks for one. */
-    case UNC_FORMAT_SQP:         want = OVL_ID_SQP;        crypt = 0; break;
-    case UNC_FORMAT_SIT:         case UNC_FORMAT_SIT5:
-        want = OVL_ID_STUFFIT;   break;
-    case UNC_FORMAT_ZIP:         want = OVL_ID_EXO;        break;
-    case UNC_FORMAT_TAR:         want = OVL_ID_ZIPOLD;     crypt = 0; break;
-    /* Segment SCHEMES, from the other release site: a Compact Pro or spanned
-     * zip set is read by that format's own reader over the joined parts. */
-    case UNC_FORMAT_CPTSEG:      want = OVL_ID_CPTDD;      break;
-    case UNC_FORMAT_ZIPSEG:      want = OVL_ID_EXO;        break;
-    /* An ENVELOPE does not yet know what is under it, and the schemes that
-     * join to a FILE do not either. Both keep the whole bundle, which costs
-     * memory and loses nothing. */
-    /* BinHex has its own image now, but it is still an ENVELOPE: what is
-     * under a .hqx is unknown until it has been unwrapped, so this lifetime
-     * keeps the whole bundle for it exactly as before. The split buys the
-     * LAZY lifetime a smaller load; here it buys nothing, and pretending
-     * otherwise would strand the archive inside. */
-    case UNC_FORMAT_BINHEX:      case UNC_FORMAT_BINHEX_OLD:
-    case UNC_FORMAT_MACBINARY:
-    case UNC_FORMAT_APPLESINGLE: case UNC_FORMAT_APPLEDOUBLE:
-    case UNC_FORMAT_GZIP:        case UNC_FORMAT_COMPRESS_Z:
-    case UNC_FORMAT_MIME:        case UNC_FORMAT_UU:
-    case UNC_FORMAT_BTOA:        case UNC_FORMAT_BASE64:
-    case UNC_FORMAT_SITSEG:      case UNC_FORMAT_DDSEG:
-    case UNC_FORMAT_SPLIT:       case UNC_FORMAT_MIMESEG:
-    /* Private File too: its reader is in the StuffIt image and its key
-     * setup in the ciphers', and what it decrypts is a StuffIt archive,
-     * unwrapped next — so nothing in the bundle can be released yet. */
-    case UNC_FORMAT_PRIVATEFILE:
-        return;
-    default:
-        /* A format with no overlay of its own — or one this table has not
-         * been taught. Keeping the whole bundle is the answer that cannot be
-         * wrong, and it is what a new format gets until someone adds it. */
-        return;
-    }
+    for (i = 0; i < sizeof gKeepSet / sizeof gKeepSet[0]; i++)
+        if (gKeepSet[i][0] == (unsigned char)fmt) break;
+    if (i == sizeof gKeepSet / sizeof gKeepSet[0]) return;
+    want = (short)(OVL_ID_CRYPT + (gKeepSet[i][1] & 0x1f));
+    crypt = gKeepSet[i][1] & KEEP_CRYPT;
 
     /* Compact Pro and zip keep a per-entry encryption flag in a directory
      * that can be walked before anything is decoded, so for those two the
@@ -227,7 +223,7 @@ void ovl_release_if_unwanted(UncFormat fmt, UncIO *io)
         crypt = 0;
 
     OVL_DIAG(gRelFmt = (short)fmt);
-    if (want) ovl_keep(want, 0);
+    ovl_keep(want, 0);
     /* Zip, and a spanned zip, also keep Shrink and Reduce, which nothing
      * else calls. */
     if (fmt == UNC_FORMAT_ZIP || fmt == UNC_FORMAT_ZIPSEG)

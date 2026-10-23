@@ -97,20 +97,6 @@ UncFormat unc_sniff(UncIO *io)
 }
 
 
-/* The SpaceSaver decoder, 'OVLY' 129. Its probe is in the sniffer's image
- * (src/fmt_spacesaver_probe.c, 'OVLY' 144); only the header parse the two
- * share is resident as well.
- *
- * Failure to load is a per-entry error like any other allocation failure —
- * UNC_ERR_MEM, and the rest of the archive still comes out. */
-int unc_spacesaver_extract(UncCtx *c)
-{
-    if (!ovl_codecs_ready()) return UNC_ERR_MEM;
-    OverlayEntry e = ovl_image(OVL_ID_SPACESAVER);
-    if (!e) return UNC_ERR_MEM;
-    return (int)e(&gOvlHost, OVL_SPACESAVER_EXTRACT, c, NULL);
-}
-
 #define OVL_CALL(which, gp) (e(&gOvlHost, (which), (gp), NULL))
 
 void unc_crypt_apply(UncCrypt *cr, uint8_t *buf, uint32_t len, uint32_t pos)
@@ -249,210 +235,63 @@ int unc_resfork_find(const uint8_t *fork, uint32_t forklen, uint32_t type,
     return (int)OVL_CALL(OVL_RESFORK_FIND, &g);
 }
 
-/* Compact Pro. The probe is in the sniffer's image; this is the decoder,
- * loaded when an archive actually turns out to be one. A load failure is a
- * per-entry error like any other allocation failure. */
-int unc_cpt_extract(UncCtx *c)
-{
-    if (!ovl_codecs_ready()) return UNC_ERR_MEM;
-    OverlayEntry e = ovl_image(OVL_ID_CPTDD);
-    if (!e) return UNC_ERR_MEM;
-    return (int)e(&gOvlHost, OVL_CPT_EXTRACT, c, NULL);
-}
+/* Every decoder, by table rather than by function (DECISIONS.md 2026-10-23,
+ * *the shims that were one function*).
+ *
+ * The engine calls each format's entry point by name, as it does on Linux,
+ * and on this build every one of those names did the same four things with
+ * two different constants: plant the codec vector, find the image, return
+ * UNC_ERR_MEM if either failed, and call the image at its entry point. That
+ * was 56 B a format, 22 times. Now the four things are ovl_run, once, and a
+ * format's entry point is one call carrying a constant small enough for a
+ * 16-bit `pea`: the image (as an offset from 128, five bits), the entry
+ * point (six), and what has to be planted first.
+ *
+ * Failure to load is a per-entry error like any other allocation failure —
+ * UNC_ERR_MEM, and the rest of the archive still comes out. */
+#define RUN_CODECS 0x2000   /* the shared codecs, which every decoder calls
+                             * into through the vector — all but Private File */
+#define RUN_ZIPOLD 0x4000   /* zip's Shrink, Reduce and Implode, which only
+                             * zip calls */
+#define RUN(id, which, flags) ((((id) - OVL_ID_CRYPT) << 8) | (which) | (flags))
 
-/* DiskDoubler. The probe is in the sniffer's image; this is the decoder,
- * loaded when an archive actually turns out to be one. A load failure is a
- * per-entry error like any other allocation failure. */
-int unc_dd_extract(UncCtx *c)
-{
-    if (!ovl_codecs_ready()) return UNC_ERR_MEM;
-    OverlayEntry e = ovl_image(OVL_ID_CPTDD);
-    if (!e) return UNC_ERR_MEM;
-    return (int)e(&gOvlHost, OVL_DD_EXTRACT, c, NULL);
-}
-
-/* LZH. The probe is in the sniffer's image; this is the decoder,
- * loaded when an archive actually turns out to be one. A load failure is a
- * per-entry error like any other allocation failure. */
-int unc_lzh_extract(UncCtx *c)
-{
-    if (!ovl_codecs_ready()) return UNC_ERR_MEM;
-    OverlayEntry e = ovl_image(OVL_ID_LZH);
-    if (!e) return UNC_ERR_MEM;
-    return (int)e(&gOvlHost, OVL_LZH_EXTRACT, c, NULL);
-}
-
-/* ARC. The probe is in the sniffer's image; this is the decoder,
- * loaded when an archive actually turns out to be one. A load failure is a
- * per-entry error like any other allocation failure. */
-int unc_arc_extract(UncCtx *c)
-{
-    if (!ovl_codecs_ready()) return UNC_ERR_MEM;
-    OverlayEntry e = ovl_image(OVL_ID_ARC);
-    if (!e) return UNC_ERR_MEM;
-    return (int)e(&gOvlHost, OVL_ARC_EXTRACT, c, NULL);
-}
-
-/* Now Compress. The probe is in the sniffer's image; this is the decoder,
- * loaded when an archive actually turns out to be one. A load failure is a
- * per-entry error like any other allocation failure. */
-int unc_now_extract(UncCtx *c)
-{
-    if (!ovl_codecs_ready()) return UNC_ERR_MEM;
-    OverlayEntry e = ovl_image(OVL_ID_NOW);
-    if (!e) return UNC_ERR_MEM;
-    return (int)e(&gOvlHost, OVL_NOW_EXTRACT, c, NULL);
-}
-
-/* SuperDisk!. Decoder from the bundle; the probe is in the sniffer's image. */
-int unc_superdisk_extract(UncCtx *c)
+static int ovl_run(UncCtx *c, int how) __attribute__((noinline));
+static int ovl_run(UncCtx *c, int how)
 {
     OverlayEntry e;
-    if (!ovl_codecs_ready()) return UNC_ERR_MEM;
-    e = ovl_image(OVL_ID_SUPERDISK);
+    if ((how & RUN_CODECS) && !ovl_codecs_ready()) return UNC_ERR_MEM;
+    if ((how & RUN_ZIPOLD) && !ovl_patched(OVL_ID_ZIPOLD, 2))
+        return UNC_ERR_MEM;
+    e = ovl_image((short)(OVL_ID_CRYPT + ((how >> 8) & 0x1f)));
     if (!e) return UNC_ERR_MEM;
-    return (int)e(&gOvlHost, OVL_SUPERDISK_EXTRACT, c, NULL);
+    return (int)e(&gOvlHost, how & 0xff, c, NULL);
 }
 
-/* PackIt. Decoder from the bundle; the probe is in the sniffer's image. */
-int unc_packit_extract(UncCtx *c)
-{
-    OverlayEntry e;
-    if (!ovl_codecs_ready()) return UNC_ERR_MEM;
-    e = ovl_image(OVL_ID_PACKIT);
-    if (!e) return UNC_ERR_MEM;
-    return (int)e(&gOvlHost, OVL_PACKIT_EXTRACT, c, NULL);
-}
+#define DECODER(fn, id, which, flags) \
+int fn(UncCtx *c) { return ovl_run(c, RUN(id, which, flags)); }
 
-/* AppleLink packages. Decoder from the bundle; the probe is in the sniffer's image. */
-int unc_sqp_extract(UncCtx *c)
-{
-    OverlayEntry e;
-    if (!ovl_codecs_ready()) return UNC_ERR_MEM;
-    e = ovl_image(OVL_ID_SQP);
-    if (!e) return UNC_ERR_MEM;
-    return (int)e(&gOvlHost, OVL_SQP_EXTRACT, c, NULL);
-}
-
-/* MIME. Decoder from the bundle; the probe is in the sniffer's image. */
-int unc_mime_extract(UncCtx *c)
-{
-    OverlayEntry e;
-    if (!ovl_codecs_ready()) return UNC_ERR_MEM;
-    e = ovl_image(OVL_ID_TEXT);
-    if (!e) return UNC_ERR_MEM;
-    return (int)e(&gOvlHost, OVL_MIME_EXTRACT, c, NULL);
-}
-
-/* uuencode. Decoder from the bundle; the probe is in the sniffer's image. */
-int unc_uu_extract(UncCtx *c)
-{
-    OverlayEntry e;
-    if (!ovl_codecs_ready()) return UNC_ERR_MEM;
-    e = ovl_image(OVL_ID_TEXT);
-    if (!e) return UNC_ERR_MEM;
-    return (int)e(&gOvlHost, OVL_UU_EXTRACT, c, NULL);
-}
-
-/* btoa. Decoder from the bundle; the probe is in the sniffer's image. */
-int unc_btoa_extract(UncCtx *c)
-{
-    OverlayEntry e;
-    if (!ovl_codecs_ready()) return UNC_ERR_MEM;
-    e = ovl_image(OVL_ID_BTOA);
-    if (!e) return UNC_ERR_MEM;
-    return (int)e(&gOvlHost, OVL_BTOA_EXTRACT, c, NULL);
-}
-
-/* base64. Decoder from the bundle; the probe is in the sniffer's image. */
-int unc_b64_extract(UncCtx *c)
-{
-    OverlayEntry e;
-    if (!ovl_codecs_ready()) return UNC_ERR_MEM;
-    e = ovl_image(OVL_ID_TEXT);
-    if (!e) return UNC_ERR_MEM;
-    return (int)e(&gOvlHost, OVL_B64_EXTRACT, c, NULL);
-}
-
-/* BinHex. Decoder from the bundle; the probe is in the sniffer's image. */
-int unc_binhex_extract(UncCtx *c)
-{
-    OverlayEntry e;
-    if (!ovl_codecs_ready()) return UNC_ERR_MEM;
-    e = ovl_image(OVL_ID_BINHEX);
-    if (!e) return UNC_ERR_MEM;
-    return (int)e(&gOvlHost, OVL_BINHEX_EXTRACT, c, NULL);
-}
-
-/* StuffIt classic. Decoder from the bundle; the probe is in the sniffer's image. */
-int unc_sit_extract(UncCtx *c)
-{
-    OverlayEntry e;
-    if (!ovl_codecs_ready()) return UNC_ERR_MEM;
-    e = ovl_image(OVL_ID_STUFFIT);
-    if (!e) return UNC_ERR_MEM;
-    return (int)e(&gOvlHost, OVL_SIT_EXTRACT, c, NULL);
-}
-
-/* StuffIt 5. Decoder from the bundle; the probe is in the sniffer's image. */
-int unc_sit5_extract(UncCtx *c)
-{
-    OverlayEntry e;
-    if (!ovl_codecs_ready()) return UNC_ERR_MEM;
-    e = ovl_image(OVL_ID_STUFFIT);
-    if (!e) return UNC_ERR_MEM;
-    return (int)e(&gOvlHost, OVL_SIT5_EXTRACT, c, NULL);
-}
-
+DECODER(unc_spacesaver_extract, OVL_ID_SPACESAVER, OVL_SPACESAVER_EXTRACT, RUN_CODECS)
+DECODER(unc_cpt_extract,        OVL_ID_CPTDD,      OVL_CPT_EXTRACT,        RUN_CODECS)
+DECODER(unc_dd_extract,         OVL_ID_CPTDD,      OVL_DD_EXTRACT,         RUN_CODECS)
+DECODER(unc_lzh_extract,        OVL_ID_LZH,        OVL_LZH_EXTRACT,        RUN_CODECS)
+DECODER(unc_arc_extract,        OVL_ID_ARC,        OVL_ARC_EXTRACT,        RUN_CODECS)
+DECODER(unc_now_extract,        OVL_ID_NOW,        OVL_NOW_EXTRACT,        RUN_CODECS)
+DECODER(unc_superdisk_extract,  OVL_ID_SUPERDISK,  OVL_SUPERDISK_EXTRACT,  RUN_CODECS)
+DECODER(unc_packit_extract,     OVL_ID_PACKIT,     OVL_PACKIT_EXTRACT,     RUN_CODECS)
+DECODER(unc_sqp_extract,        OVL_ID_SQP,        OVL_SQP_EXTRACT,        RUN_CODECS)
+DECODER(unc_mime_extract,       OVL_ID_TEXT,       OVL_MIME_EXTRACT,       RUN_CODECS)
+DECODER(unc_uu_extract,         OVL_ID_TEXT,       OVL_UU_EXTRACT,         RUN_CODECS)
+DECODER(unc_btoa_extract,       OVL_ID_BTOA,       OVL_BTOA_EXTRACT,       RUN_CODECS)
+DECODER(unc_b64_extract,        OVL_ID_TEXT,       OVL_B64_EXTRACT,        RUN_CODECS)
+DECODER(unc_binhex_extract,     OVL_ID_BINHEX,     OVL_BINHEX_EXTRACT,     RUN_CODECS)
+DECODER(unc_sit_extract,        OVL_ID_STUFFIT,    OVL_SIT_EXTRACT,        RUN_CODECS)
+DECODER(unc_sit5_extract,       OVL_ID_STUFFIT,    OVL_SIT5_EXTRACT,       RUN_CODECS)
 /* Private File: a reader with no codecs, in the StuffIt image beside the
  * archive it always decrypts to. Its cipher calls cross to the crypt image
  * through the resident shims above, as StuffIt 5's do. */
-int unc_pf_extract(UncCtx *c)
-{
-    OverlayEntry e = ovl_image(OVL_ID_STUFFIT);
-    if (!e) return UNC_ERR_MEM;
-    return (int)e(&gOvlHost, OVL_PF_EXTRACT, c, NULL);
-}
-
-/* Zip. Decoder from the bundle; the probe is in the sniffer's image. */
-int unc_zip_extract(UncCtx *c)
-{
-    OverlayEntry e;
-    /* Zip's Shrink, Reduce and Implode too, which only zip keeps. */
-    if (!ovl_codecs_ready() || !ovl_patched(OVL_ID_ZIPOLD, 2))
-        return UNC_ERR_MEM;
-    e = ovl_image(OVL_ID_EXO);
-    if (!e) return UNC_ERR_MEM;
-    return (int)e(&gOvlHost, OVL_ZIP_EXTRACT, c, NULL);
-}
-
-
-/* Gzip. Decoder from the bundle; the probe is in the sniffer's image. */
-int unc_gzip_extract(UncCtx *c)
-{
-    OverlayEntry e;
-    if (!ovl_codecs_ready()) return UNC_ERR_MEM;
-    e = ovl_image(OVL_ID_EXO);
-    if (!e) return UNC_ERR_MEM;
-    return (int)e(&gOvlHost, OVL_GZIP_EXTRACT, c, NULL);
-}
-
-/* Unix compress. Decoder from the bundle; the probe is in the sniffer's image. */
-int unc_compressz_extract(UncCtx *c)
-{
-    OverlayEntry e;
-    if (!ovl_codecs_ready()) return UNC_ERR_MEM;
-    e = ovl_image(OVL_ID_EXO);
-    if (!e) return UNC_ERR_MEM;
-    return (int)e(&gOvlHost, OVL_COMPRESSZ_EXTRACT, c, NULL);
-}
-
-/* Tar. Decoder from the bundle; the probe is in the sniffer's image. */
-int unc_tar_extract(UncCtx *c)
-{
-    OverlayEntry e;
-    if (!ovl_codecs_ready()) return UNC_ERR_MEM;
-    e = ovl_image(OVL_ID_ZIPOLD);   /* src/fmt_tar.c says why */
-    if (!e) return UNC_ERR_MEM;
-    return (int)e(&gOvlHost, OVL_TAR_EXTRACT, c, NULL);
-}
+DECODER(unc_pf_extract,         OVL_ID_STUFFIT,    OVL_PF_EXTRACT,         0)
+DECODER(unc_zip_extract,        OVL_ID_EXO,        OVL_ZIP_EXTRACT,   RUN_CODECS | RUN_ZIPOLD)
+DECODER(unc_gzip_extract,       OVL_ID_EXO,        OVL_GZIP_EXTRACT,       RUN_CODECS)
+DECODER(unc_compressz_extract,  OVL_ID_EXO,        OVL_COMPRESSZ_EXTRACT,  RUN_CODECS)
+/* Tar is in zip's old-methods image; src/fmt_tar.c says why. */
+DECODER(unc_tar_extract,        OVL_ID_ZIPOLD,     OVL_TAR_EXTRACT,        RUN_CODECS)

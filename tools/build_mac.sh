@@ -1210,8 +1210,12 @@ UNC_MAC_A5_DEFAULT=36216
 # bundle at the top of the output, where System 7 and the Desktop Mgr INIT
 # handed back the Finder's own and it was closed (DECISIONS.md 2026-10-22,
 # *the working directory the bundle closed*): 32 B off every budget.
-UNC_MAC_CODE_EAGER=41380
-UNC_MAC_A5_EAGER=16236
+# -832 code and +32 data on 2026-10-23: the 21 decoder shims one routine
+# and a table, the release's `switch` a two-byte row per format
+# (DECISIONS.md 2026-10-23, *the shims that were one function*): 800 B back
+# on every budget. The +32 is that table, `gKeepSet`.
+UNC_MAC_CODE_EAGER=40548
+UNC_MAC_A5_EAGER=16268
 # +8 on 2026-10-02 for the same reason as the eager pair above: the
 # overlay call that now says WHICH of StuffIt 2.x's ciphers an entry
 # wants. A5 fell to 19,096 and its ceiling is left where it was.
@@ -1297,7 +1301,10 @@ UNC_MAC_A5_EAGER=16236
 # bss 16,332, under its ceiling.
 # +32 code on 2026-10-22, no working directory at the top of the output (the
 # eager pair above); data + bss 16,332, under its ceiling.
-UNC_MAC_CODE_LAZY=39908
+# -704 code on 2026-10-23, the decoder shims one routine (the eager pair
+# above; the release table is the eager loader's alone); data + bss 16,332,
+# under its ceiling.
+UNC_MAC_CODE_LAZY=39204
 UNC_MAC_A5_LAZY=19200
 if [ -n "$UNC_OVL_RESIDENT" ]; then
     UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-$UNC_MAC_CODE_DEFAULT}

@@ -48,7 +48,7 @@ machines*).
 How the shipped lane gets a budget per format
 ---------------------------------------------
 Everything below is derived rather than restated: the keep set comes out
-of `mac/ovl_load_eager.c`'s own switch, the format names out of the
+of `mac/ovl_load_eager.c`'s own table, the format names out of the
 engine's table, the image sizes out of the build. A second copy of any
 of them would grade something other than what the Macintosh runs.
 
@@ -762,7 +762,11 @@ EXPECT = {
 # offsets it so the shipped budgets move only by the image growth.
 # +32 more on 2026-10-23: Compact Pro's fork-extent check hoisted ahead of
 # the encrypted path, resident control CODE +8 and A5 +24 (shipped unmoved).
-OVL_SAVED = 154384
+# **+800 2026-10-23, -> 155,184**: the decoder shims one routine and the
+# release's `switch` a table, the shipped pair's CODE -832 and data + bss +32
+# against the control's 0 (DECISIONS.md 2026-10-23, *the shims that were one
+# function*). TIERS_CONTROL and TIERS do not move.
+OVL_SAVED = 155184
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
 # every kept image is one — as is the bundle an envelope holds on to.
@@ -1001,7 +1005,7 @@ def keep_sets(path=os.path.join(REPO, "mac", "ovl_load_eager.c")):
     """Which images each format keeps, read out of the loader that does it.
 
     Returns {UNC_FORMAT_*: frozenset(OVL_ID_*)} plus the key "default" for
-    everything the switch does not name. An empty set means the BUNDLE is
+    everything the table does not name. An empty set means the BUNDLE is
     kept whole, which is what an envelope does.
     """
     text = CCOMMENT.sub(" ", open(path, encoding="utf-8").read())
@@ -1010,51 +1014,39 @@ def keep_sets(path=os.path.join(REPO, "mac", "ovl_load_eager.c")):
                          "codecs image — this model says it does")
     if "if (crypt) ovl_keep(OVL_ID_CRYPT" not in text:
         raise SystemExit("run_tiers: the loader's cipher keep changed shape")
-    body = text.split("switch (fmt) {", 1)
+    # The keep table, one row a format since 2026-10-23 (DECISIONS.md
+    # 2026-10-23, *the shims that were one function*):
+    # `{ UNC_FORMAT_X, KEEP(OVL_ID_Y, KEEP_CRYPT) }`, or 0 for no ciphers. A
+    # format that is not a row keeps the whole bundle — every envelope, and
+    # anything not taught to the table yet.
+    body = text.split("gKeepSet[][2] = {", 1)
     if len(body) != 2:
-        raise SystemExit("run_tiers: cannot find the release switch in %s"
+        raise SystemExit("run_tiers: cannot find the release table in %s"
                          % path)
-    body = body[1]
-
-    out, pend, want, crypt = {}, [], set(), True
-    for m in re.finditer(r"case\s+(UNC_FORMAT_\w+)\s*:|(default)\s*:|"
-                         r"want\s*=\s*(OVL_ID_\w+)|crypt\s*=\s*0|"
-                         r"(break)\s*;|(return)\s*;|(\n\s*\})", body):
-        case, dflt, image, brk, ret, end = m.groups()
-        if case or dflt:
-            pend.append(case or "default")
-        elif image:
-            want.add(image)
-        elif m.group(0).startswith("crypt"):
-            crypt = False
-        elif brk or ret:
-            keep = set()
-            if ret:                      # an envelope: nothing is released
-                keep = None
-            else:
-                keep |= want
-                if crypt:
-                    keep.add("OVL_ID_CRYPT")
-                keep.add("OVL_ID_CODECS")
-            for name in pend:
-                out[name] = frozenset(keep) if keep is not None else frozenset()
-            pend, want, crypt = [], set(), True
-            if ret and "default" in out:
-                break                    # past the default: the switch is done
-        elif end:
-            break
-    if "default" not in out or out["default"]:
-        raise SystemExit("run_tiers: the release switch's default no longer "
-                         "keeps the whole bundle")
+    body = body[1].split("};", 1)[0]
+    if "for (i = 0; i < sizeof gKeepSet" not in text:
+        raise SystemExit("run_tiers: the release no longer looks its format "
+                         "up in gKeepSet")
+    out = {"default": frozenset()}
+    rows = re.findall(r"\{\s*(UNC_FORMAT_\w+)\s*,\s*KEEP\(\s*(OVL_ID_\w+)"
+                      r"\s*,\s*(KEEP_CRYPT|0)\s*\)\s*\}", body)
+    if body.count("{") != len(rows):
+        raise SystemExit("run_tiers: a release-table row this model cannot "
+                         "read")
+    for fmt, image, crypt in rows:
+        keep = {image, "OVL_ID_CODECS"}
+        if crypt == "KEEP_CRYPT":
+            keep.add("OVL_ID_CRYPT")
+        out[fmt] = frozenset(keep)
     if len(out) < 15:
-        raise SystemExit("run_tiers: parsed %d release cases, expected 15+"
+        raise SystemExit("run_tiers: parsed %d release rows, expected 15+"
                          % len(out))
-    # And the keeps AFTER the switch that only some formats get, written
+    # And the keeps AFTER the table that only some formats get, written
     # `if (fmt == A || fmt == B) ovl_keep(ID, n);` — zip's Shrink and
     # Reduce (tools/overlay/ovl_zipold.c). A keep of that shape this does
     # not read would be a format the model under-charges, so an
     # `ovl_keep(` it cannot attribute is refused rather than skipped.
-    tail = text.split("switch (fmt) {", 1)[1]
+    tail = text.split("void ovl_release_if_unwanted(", 1)[1]
     extra = 0
     for m in re.finditer(r"if\s*\(([^;{}]*?)\)\s*ovl_keep\((OVL_ID_\w+)\s*,",
                          tail):
@@ -1063,7 +1055,7 @@ def keep_sets(path=os.path.join(REPO, "mac", "ovl_load_eager.c")):
             continue                     # `if (want)`, `if (crypt)`
         for f in fmts:
             if f not in out or not out[f]:
-                raise SystemExit("run_tiers: %s keeps %s after the switch "
+                raise SystemExit("run_tiers: %s keeps %s after the table "
                                  "and is not a releasing case" % (f, m.group(2)))
             out[f] = out[f] | {m.group(2)}
         extra += 1
