@@ -453,6 +453,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-22 (the runtime the application did not need) — Elf2Mac's --mac-single and an entry point of our own drop Retro68's multi-segment loader and newlib's exit chain: +4,980 B on every shipped budget, measured on all three tiers
 - 2026-10-22 (the working directory the bundle closed) — v0.42.0's `PBOpenWD` handed back the Finder's own working directory at the top of the output, and its `PBCloseWD` closed it under the rest of the run; no working directory is opened there now
 - 2026-10-23 (the format 7.0.3 sniffs) — StuffIt 7.0.3's Expander opens AppleSingle under any type, creator or name, and has no AppleDouble reader: nine subjects on Mac OS 9.2, asked for by MacStamp
+- 2026-10-23 (the probes next door) — MacStamp's identifier held against this sniffer over 994 fixtures: no format it names that this engine refuses, and MacCompress 3.2's own format is the 1990 DiskDoubler container
 
 ---
 
@@ -29373,3 +29374,56 @@ and not explained: after the dialog's choice, `Export.sit` carried a
 writes (it opens only what it creates for writing) — the Translation
 Manager remembering the choice is the hypothesis, and `Comment.as` on the
 earlier run got none.
+
+## 2026-10-23 (the probes next door) — MacStamp's identifier held against this sniffer over 994 fixtures: no format it names that this engine refuses, and MacCompress 3.2's own format is the 1990 DiskDoubler container
+
+**Claim.** Asked whether MacStamp's probes (`/home/claude/macstamp`,
+`src/mst_identify.c`, 47 probes, identify-only) could benefit this
+engine: within this engine's scope they find nothing it misses, and the
+one thing they carry that this repository did not know is a specimen's
+header. Measured.
+
+**Evidence.** MacStamp's current source built out of tree and run with
+`mst_cli` beside `macextract sniff` over every file in `fixtures/`
+(994): the two agree on 894; the 100 disagreements are 79 real MacBinary
+files MacStamp leaves unknown (its probe wants the file at least as long
+as the 128-byte-padded forks imply, and these end at the last fork's
+last byte — all 79 have differential manifests and extract here), seven
+AppleLink packages, the seven `.hex`/`.hcx` documents (named BinHex 4 or
+text), `pkz101.exe` (a zip behind code, which only an end-of-directory
+scan finds), `synth-now-mixed.now` (window 0 at +4, where MacStamp wants
+65,536), and `synth-os9-rar.rar`, which is RAR and out of scope. The one
+direction that would have mattered — a file MacStamp names as a format
+this engine reads and `sniff` refuses — has no member.
+
+**What its probes check that this sniffer does not**, read side by side:
+gzip's reserved flag bits and OS byte, compress's code width 9..16, zip's
+version-needed word, MacBinary's size arithmetic, AppleSingle's entry
+table inside the file. None is adopted: this sniffer's job is to pick a
+READER, and each reader then fails an impostor on its own structure; the
+nearest cost is an "Unknown format" that reads as a decode error instead,
+and MacBinary's arithmetic, the strongest of them, refuses a third of the
+real files above. What MacStamp does better is the question it answers:
+a one-byte-magic format gets a structure walk there too (ARC 6/7's
+informational items, tar's checksum), and both are already here.
+
+**The header it carries.** MacStamp asked MacCompress 3.2 on System 6
+(its DECISIONS.md 2026-10-14) and kept the 48-byte head of what it wrote,
+typed `ZIVM`/`LZIV`, as a unit test that it is "not DiskDoubler": `ab cd
+00 30`, no data fork, a 15,253-byte resource fork compressed to 11,686,
+methods 0/1, `info1` `0x1f`, `APPL`/`ttxt`, flags `0x2140`; 48 + 11,686
+is the 11,734-byte file it measured. That is docs/formats/
+diskdoubler-container.md's 1990 header field for field — the one
+DiskDoubler ß05 writes, with `info1` `0x1f` and the stream in clear, and
+STAMPED `ZIVM`/`LZIV` (DECISIONS.md 2026-09-22) — which `src/fmt_dd.c`
+reads. Lloyd Chambers wrote both programs. So MacCompress's "own format"
+is this container with method 1, and this engine most likely extracts
+a MacCompress file already; OPEN_ITEMS.md holds it as a hypothesis until
+one is decoded, because the file itself was not kept and the 48 bytes
+cannot be.
+
+**Consequence.** Nothing in `src/` changes. MacStamp is told the five
+things above that are its to act on; the one that is this project's is
+the specimen to fetch and decode. The comparison was a twenty-line
+script over the two CLIs and is not kept: its numbers are here, and the
+probes it compared are both repositories' to read.
