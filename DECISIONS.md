@@ -29357,8 +29357,11 @@ covers the dialog; they are not the same mechanism.
 **Shipped, the same day, on the maintainer's instruction**: the types
 MacStamp offers MacExtract for, seventeen `FREF`s (FORMATS.md, *AppleSingle
 and AppleDouble in 7.0.3*), +459 B of resource fork and nothing else;
-`./ci.sh` green, `dist/` rebuilt in the same commit. Two more boots
-measured the shipped binary: listed above the Expander for `BINA/TIGR`,
+`./ci.sh` green, `dist/` rebuilt in the same commit. **`TEXT` stays, the
+maintainer's decision**: a real text file carries a creator that opens
+it, and an archive is either sniffed or carries its own, so the
+alternate-program dialog never puts MacExtract in front of a text file
+that has an owner. Two more boots measured the shipped binary: listed above the Expander for `BINA/TIGR`,
 and alone for a `.sit` typed `SITD/SIT!` with no StuffIt application
 present, which it then extracted to the manifest's bytes. **Two traps
 cost a boot each.** The assembled Mac OS 9.2 boot volume still carries
