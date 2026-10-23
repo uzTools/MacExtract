@@ -29342,3 +29342,13 @@ Finder's *"Could not find the application program"* dialog, where it is
 the one recommended choice, and extracts; the dialog returns on the next
 double-click with the Expander preselected (FORMATS.md, *AppleSingle and
 AppleDouble in 7.0.3*).
+
+**And MacExtract in that dialog** — asked last. The shipped application,
+on the same volume, is not offered: the list is the Desktop database's
+exact-type claims, and `'****'` (DECISIONS.md 2026-08-31, which measured
+it for the DROP) registers none. A build whose `BNDL` adds `FREF 'BINA'`
+is listed first, above the Expander, and extracts `Kept Whole` byte-exact
+through the dialog; the source change was built in a scratch directory,
+measured, and reverted, since which types to claim is a shipping decision
+the maintainer has not made. The wildcard covers the drop and the claim
+covers the dialog; they are not the same mechanism.

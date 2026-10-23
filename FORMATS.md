@@ -9194,6 +9194,19 @@ preselected. So `TIGR` is hijacked by nothing: the Expander reaches a
 claims the type, and through a browser's download, because Internet Config
 names it the post-processor.
 
+**MacExtract is in that dialog only if its bundle claims the type (same
+day, two more boots).** The shipped `dist/MacExtract.bin` (v0.43.0),
+placed beside the Expander, is NOT listed: its `BNDL` claims `APPL` and
+the wildcard `'****'`, and the Finder's recommended list is built from the
+Desktop database's exact-type entries, which the wildcard does not make;
+*"Show only recommended choices"* is greyed and cannot be unticked. A
+build with one more line of Rez — `resource 'FREF' (130) { 'BINA', 1, "" }`
+and its `BNDL` entry, 27 B of resource fork, no code — is listed first,
+above the Expander; opened with it, the application put up its
+destination dialog and wrote `Kept Whole` byte-exact. Not shipped: which
+types to claim is the maintainer's call (`BINA` alone, or every archive
+type too, so a `.sit` whose StuffIt is missing offers MacExtract as well).
+
 ### Timed on the same Mac Plus (re-measured 2026-10-19)
 
 Both applications booted on Mini vMac `mv-4M-1x` — authentic 7 MHz, 4 MB,
