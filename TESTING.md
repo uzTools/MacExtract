@@ -5225,7 +5225,11 @@ SHA-256 of what it must join to — the original for four, otherwise
 the archive whose CRC the last part stores, which then tests clean — and
 by that running CRC-16/ARC. **Shown to fail**: the binary before the fix
 refuses the seven and joins the eighth wrong, and a set with a `.rsrc`
-beside a part is run again without it, and must then fail.
+beside a part is run again without it, and must then fail. The eighth
+is also run with its part 1 and that fork inside one envelope, MacBinary
+then BinHex, beside part 2 and opened through part 2: the CLI's peel
+wrote the data fork alone until 2026-10-24 and joined it wrong with
+exit 0 (DECISIONS.md, *the fork the peel dropped*).
 The Mac application's reading of `'endD'` is `segcheck.py --case sit-fat`'s,
 on an emulator (`tools/vmac/README.md`). **What they cannot see**: any
 writer other than these. Plus behaviours:

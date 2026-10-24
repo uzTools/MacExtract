@@ -458,6 +458,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-24 (the magic StuffIt never wrote) — StuffIt segments begin with a per-set value, not XADMaster's B0 56; every set StuffIt cut was refused, and six now join to what was cut
 - 2026-10-24 (the length part 1 kept in its resource fork) — a fat installer's part 1 states where its segment ends in an 'endD' resource; both hosts read it, and Now Utilities 6.0 joins byte for byte
 - 2026-10-24 (the header left alone) — a loose AppleDouble header is not joined to the file beside it: built, measured and declined; compress on the modern Mac instead
+- 2026-10-24 (the fork the peel dropped) — the CLI's peel of a wrapped part keeps its resource fork as a sidecar, so a fat installer's part 1 found in an envelope beside Disk 2 joins right
 
 ---
 
@@ -29677,3 +29678,31 @@ not touched. README tells the user to compress on the modern Mac before
 moving files across. MacStamp leaves AppleDouble unstamped, and nothing
 is claimed in the bundle.
 
+## 2026-10-24 (the fork the peel dropped) — the CLI's peel of a wrapped part keeps its resource fork as a sidecar, so a fat installer's part 1 found in an envelope beside Disk 2 joins right
+
+**Claim.** When the CLI is short of a part and takes an envelope off a
+file beside the one it opened (`seg_wrapped_part_of`, `cli/main.c`), the
+peel now writes the payload's resource fork to a `.rsrc` sidecar beside
+the decoded part, where `seg_file_len` reads it under either spelling.
+Until then the peel wrote the data fork alone, under a comment that
+called any meaning for that fork invented — written before the same
+day's measurement gave it one (*the length part 1 kept in its resource
+fork*). CLI only: the Macintosh application reads the fork from the
+file itself, and no Mac byte moves.
+
+**Evidence.** Now Utilities 6.0's Disk 1, with its resource fork, inside
+a MacBinary or a BinHex envelope named `Disk1.bin` or `Disk1.hqx` beside
+Disk 2, opened through Disk 2: before, both joined to 1,322,545 bytes
+and exited 0, the 56,206 B of PowerPC code taken for payload and nothing
+said; after, both join to the file the CRC at 98 confirms, the same
+bytes Disk 1 opened directly gives. `run_segments.py`'s `fat` case runs
+both envelopes and fails both without the fix. Opened directly,
+`Disk1.bin` already joined right: that path extracts the envelope into
+the output directory, sidecar and all, and opens the part from there.
+
+**Consequence.** The sidecar is opened on the fork's first byte, so a
+part with none leaves no empty file, and the peel directory is removed
+after the join as before, whatever it holds. The join still reads data
+forks only (`unc_extract_segments`); the fork is read for one number,
+and by the host. A part 1 whose resource fork did not survive its
+transfer still joins wrong (OPEN_ITEMS.md, *StuffIt segments*).

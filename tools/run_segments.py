@@ -841,6 +841,39 @@ def real_sitseg_run(macextract, case, workroot, fails):
         fails.check(hashlib.sha256(bgot).hexdigest() != want,
                     "%s: joins right without %s, so the grade does not "
                     "test it" % (case, ", ".join(sidecars)))
+        # The fork must also survive the CLI's own peel: part 1 and its
+        # fork inside one envelope beside a later part, which is what a
+        # download of the set looks like, opened through that later
+        # part. Both envelopes carry a resource fork, and the peel used
+        # to write only the data fork (DECISIONS.md, *the fork the peel
+        # dropped*).
+        others = [p for p in parts if p != first]
+        for env in ("bin", "hqx"):
+            wd = os.path.join(d, "_wrapped_" + env)
+            os.makedirs(wd)
+            for p in others:
+                shutil.copy(os.path.join(src, p), wd)
+            data = open(os.path.join(src, first), "rb").read()
+            rsrc = open(os.path.join(src, first + ".rsrc"), "rb").read()
+            fn, ext = wsynth.ENVELOPES[env]
+            with open(os.path.join(wd, "Disk1" + ext), "wb") as f:
+                f.write(fn(first, data, rsrc))
+            wout = os.path.join(d, "_wrapped_out_" + env)
+            wrc, wtxt = ours_extract(macextract, os.path.join(wd, others[0]),
+                                     wout)
+            fails.check(wrc == 0, "%s: part 1 wrapped in %s beside part 2 "
+                        "failed: %s" % (case, ext, wtxt.strip()))
+            wouts = [f for f in os.listdir(wout)
+                     if not f.startswith("._") and
+                     f != ".macextract-parts"] if os.path.isdir(wout) else []
+            wgot = open(os.path.join(wout, wouts[0]), "rb").read() if wouts \
+                else b""
+            fails.check(hashlib.sha256(wgot).hexdigest() == want,
+                        "%s: part 1 unwrapped from %s joins to %d bytes, "
+                        "not the file StuffIt cut" % (case, ext, len(wgot)))
+            fails.check(not os.path.exists(os.path.join(wout,
+                                                        ".macextract-parts")),
+                        "%s: the peel left its decoded part 1 behind" % case)
     return rc == 0
 
 

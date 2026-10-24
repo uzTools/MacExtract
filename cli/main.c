@@ -1183,16 +1183,21 @@ static int prog_tick(void *ctx, uint32_t done, uint32_t total)
  * PEEK (head != NULL) collects the first `cap` bytes of the data fork
  * and then asks to stop, which is what makes it affordable to look
  * inside every envelope in a directory. PEEL (out != NULL) streams the
- * whole data fork to a file.
+ * whole data fork to a file, and the resource fork, if the envelope
+ * carries one, to the `.rsrc` sidecar beside it (rsrc_path).
  *
- * The resource fork is ignored in both: a part of a segmented set is a
- * run of bytes that happens to have travelled inside a Macintosh file,
- * and every scheme here concatenates data forks (unc_extract_segments).
- * An envelope holding a part with a resource fork would be a file this
- * program has never seen, and inventing a meaning for it here is the
- * one thing rule #1 forbids. */
+ * The join itself concatenates data forks (unc_extract_segments), so
+ * the resource fork is nothing the joiner reads. It is kept because of
+ * what seg_file_len reads from it: a fat installer's part 1 says where
+ * its segment ends in its own resource fork ('endD'; fmt_sitseg_end.c),
+ * and a peel that wrote the data fork alone joined Now Utilities 6.0
+ * wrong with that fork right there in the envelope (DECISIONS.md,
+ * *the fork the peel dropped*). PEEK ignores it: a hundred bytes of
+ * data fork is what decides. */
 typedef struct {
     FILE    *out;           /* PEEL: where the data fork goes          */
+    const char *rsrc_dest;  /* PEEL: the sidecar, opened on first byte */
+    FILE    *rout;
     uint8_t *head;          /* PEEK: where the first bytes go          */
     int32_t  cap, len;
     int      entries;       /* how many entries the envelope yielded   */
@@ -1210,7 +1215,22 @@ static int env_write(void *ctx, UncFork fork, const void *buf, int32_t len)
 {
     EnvSink *e = (EnvSink *)ctx;
 
-    if (fork != UNC_FORK_DATA || len <= 0) return 0;
+    if (len <= 0) return 0;
+    if (fork == UNC_FORK_RSRC) {
+        /* Opened on the first byte, so a part with no resource fork
+         * leaves no empty sidecar; an empty fork says nothing either. */
+        if (!e->out || !e->rsrc_dest) return 0;
+        if (!e->rout) {
+            e->rout = fopen(e->rsrc_dest, "wb");
+            if (!e->rout) { e->err = 1; return -1; }
+        }
+        if (fwrite(buf, 1, (size_t)len, e->rout) != (size_t)len) {
+            e->err = 1;
+            return -1;
+        }
+        return 0;
+    }
+    if (fork != UNC_FORK_DATA) return 0;
     if (e->out) {
         if (fwrite(buf, 1, (size_t)len, e->out) != (size_t)len) {
             e->err = 1;
@@ -1297,18 +1317,23 @@ static int32_t env_peek(const char *path, uint8_t *head, int32_t cap)
     return es.len;
 }
 
-/* Take one envelope off `path`, writing the payload to `dest`.
+/* Take one envelope off `path`, writing the payload's data fork to
+ * `dest` and its resource fork, if any, to the sidecar `dest.rsrc`.
  * Returns 1 on success. */
 static int env_peel(const char *path, const char *dest)
 {
     EnvSink es;
+    char rp[1300];
     int ok;
 
     memset(&es, 0, sizeof es);
+    rsrc_path(dest, 0, rp, sizeof rp);
+    es.rsrc_dest = rp;
     es.out = fopen(dest, "wb");
     if (!es.out) return 0;
     ok = env_run(path, &es);
     if (fclose(es.out) != 0) es.err = 1;
+    if (es.rout && fclose(es.rout) != 0) es.err = 1;
     return ok && !es.err;
 }
 
@@ -1585,7 +1610,13 @@ static int seg_wrapped_part_of(SegHost *h, const char *path)
     if ((size_t)snprintf(dest, sizeof dest, "%s/part-%03d", h->peeldir, part)
         >= sizeof dest)
         return 0;
-    if (!env_peel(path, dest)) { remove(dest); return 0; }
+    if (!env_peel(path, dest)) {
+        char rp[1300];
+        rsrc_path(dest, 0, rp, sizeof rp);
+        remove(dest);
+        remove(rp);
+        return 0;
+    }
 
     if (h->verbose)
         fprintf(stderr, "unwrapping part %d: %s\n", part, path);
