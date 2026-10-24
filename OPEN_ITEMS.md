@@ -290,10 +290,10 @@ Measured 2026-10-24 (DECISIONS.md, *the magic StuffIt never wrote*).
 
 | what | state | closes by |
 |---|---|---|
-| a fat self-extracting set's part 1 without its resource fork | **joins wrong**: Now Utilities 6.0's Disk 1 carries 56,206 B of PowerPC code after its segment, and where the fork survives its `'endD'` says where the segment stops (DECISIONS.md, *the length part 1 kept in its resource fork*); a data fork alone extracts as *"archive structure is corrupt"* | sizing part 1 as the total less the later parts, where the host's `size` callback answers for every one of them for free |
-| the running CRC-16/ARC at 98 | not checked; every set `tools/synth_sitsplit.py` writes, `Palette.sit` on the share among them, stores zero there | checking it per part; the generator writing real ones first |
+| a fat self-extracting set's part 1 without its resource fork | **joins wrong**: Now Utilities 6.0's Disk 1 carries 56,206 B of PowerPC code after its segment, and where the fork survives its `'endD'` says where the segment stops (DECISIONS.md, *the length part 1 kept in its resource fork*); a data fork alone extracts as *"archive structure is corrupt"*. **Measured the same day**: the CLI drops the fork of a part 1 it unwraps from an envelope beside another part, so `Disk1.bin` opened through Disk 2 joins wrong with the fork right there | not the format's limit: the total less the later parts is exact wherever their sizes are free (the CLI's `stat`); part 1's own CRC at 98 fits 28 cut points in that fork and one of them is followed by the code's `Joy!peff`; and the CLI's peel keeping the resource fork |
+| the running CRC-16/ARC at 98 | not checked; `tools/synth_sitsplit.py` writes it as StuffIt does since 2026-10-24, and `Palette.sit.1` on the share was re-cut that day | checking it per part |
 | bytes 0-1 | a per-set value, **hypothesis** QuickDraw `Random` (41 A7 = 16,807, its first value, written three times on fresh boots); nothing reads it | a writer's code: Deluxe 2.0.1's `CODE` is unpacked |
-| the header CRC at 94, over bytes 0..93 | measured on 40 parts of 40, not checked: the generator, and so `Palette.sit` on the share, writes zero there | the probe requiring it, which would stand in for B0 56 at 1 in 65,536 — once the generator writes real ones and the share's test sets are regenerated |
+| the header CRC at 94, over bytes 0..93 | measured on 40 parts of 40, not checked; the generator and `Palette.sit.1` on the share carry it since 2026-10-24 | the probe requiring it, which would stand in for B0 56 at 1 in 65,536 |
 | `SegM` and `Part` | types in MacStamp's census (12 files), no writer found | a set carrying them |
 
 ## Formats classic Mac programs wrote that nothing here opens — leads, not findings

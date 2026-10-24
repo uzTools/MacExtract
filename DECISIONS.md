@@ -29595,6 +29595,9 @@ identified: a CRC-16/ARC of the header's own bytes 0..93, on every one.
 That would make the probe nearly certain, and it is not adopted yet,
 because our generator writes zero there and so would every synthetic set
 fail, `Palette.sit` on the maintainer's share among them (OPEN_ITEMS.md).
+The generator writes both CRCs since later that evening, and
+`Palette.sit.1` was re-cut with it: bytes 94-95 and 98-99 changed, nothing
+else.
 And `Part`, claimed in the bundle that afternoon as a segment type, is
 dropped: the eight `Part` files on Info-Mac IV are finished programs
 whose expansion stopped before retyping them, and no StuffIt writes a

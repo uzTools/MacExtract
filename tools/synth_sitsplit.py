@@ -17,13 +17,17 @@ Header layout comes from that parser and nowhere else:
        rsrclen(4) datalen(4)          <- the 26 fingerprint bytes
   100  payload
 
-Bytes 5+namelen..67 and 94..99 are written as zero here. **This is not
-what StuffIt writes**, measured 2026-10-24 on four sets StuffIt itself
-cut (src/fmt_sitseg.c's file comment): bytes 0-1 are a per-set value,
-most likely a random identifier, of which B0 56 is one, and 98-99 a CRC-16/ARC running across the set. The
-B0 56 and the zero CRC stay here because `unar`, this suite's oracle,
-requires the first and does not read the second; the sets StuffIt wrote
-are graded separately (run_segments.py, REAL_SITSEG). A consequence worth stating — the total part COUNT is
+   94  CRC-16/ARC of bytes 0..93, big-endian
+   96  0x0000
+   98  CRC-16/ARC of the payloads of parts 1..n, running, big-endian
+
+The two CRCs are what StuffIt writes, measured 2026-10-24 on 40 parts of
+seven sets StuffIt itself cut (src/fmt_sitseg.c's file comment); this
+wrote zero in both until that day. Bytes 0-1 are NOT: StuffIt writes a
+per-set value, most likely a random identifier, and B0 56 is one such
+value that `unar`, this suite's oracle, requires. Bytes 5+namelen..67
+are zero here and whatever was in StuffIt's buffer there. The sets
+StuffIt wrote are graded separately (run_segments.py, REAL_SITSEG). A consequence worth stating — the total part COUNT is
 not stored anywhere, so a reader knows the set is complete only by
 summing payloads to rsrclen + datalen, which is what our joiner and
 XADMaster both do.
@@ -46,8 +50,20 @@ FFLAGS = 0x0000
 CREATED, MODIFIED = 0xA8B4C1E0, 0xA8B4C2F0
 
 
+def crc16_arc(data, crc=0):
+    """CRC-16/ARC (reflected 0x8005, init 0), as both header CRCs use."""
+    for b in data:
+        crc ^= b
+        for _ in range(8):
+            crc = (crc >> 1) ^ 0xA001 if crc & 1 else crc >> 1
+    return crc
+
+
 def header(part, name, rsrclen, datalen, ftype=TYPE, creator=CREATOR,
-           created=CREATED, modified=MODIFIED, flags=FFLAGS):
+           created=CREATED, modified=MODIFIED, flags=FFLAGS, running=0):
+    """One part's header. `running` is the CRC-16/ARC of the payloads of
+    parts 1..`part`, this one's included: crc16_arc over everything cut
+    so far."""
     if not 1 <= len(name) <= 63:
         raise ValueError("name length must be 1..63")
     if b"\0" in name:
@@ -59,6 +75,8 @@ def header(part, name, rsrclen, datalen, ftype=TYPE, creator=CREATOR,
     h[5:5 + len(name)] = name
     struct.pack_into(">4s4sHIIII", h, 68, ftype, creator, flags,
                      created, modified, rsrclen, datalen)
+    struct.pack_into(">H", h, 94, crc16_arc(h[:94]))
+    struct.pack_into(">H", h, 98, running)
     return bytes(h)
 
 
@@ -84,7 +102,9 @@ def write_set(outdir, names, payload, rsrclen, datalen, cuts, name=b"Test.sit",
         chunk = payload[bounds[i]:bounds[i + 1]]
         p = os.path.join(outdir, names[i])
         with open(p, "wb") as f:
-            f.write(header(i + 1, name, rsrclen, datalen, **hdrkw))
+            f.write(header(i + 1, name, rsrclen, datalen,
+                           running=crc16_arc(payload[:bounds[i + 1]]),
+                           **hdrkw))
             f.write(chunk)
         paths.append(p)
     return paths

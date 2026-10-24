@@ -46,12 +46,13 @@
  *          thing done on a freshly booted emulator
  *    94-95 a CRC-16/ARC of this header's bytes 0..93: 40 parts of 40,
  *          seven writers, StuffIt Deluxe 2.0.1 (1991) to 5.0. Not
- *          checked: the generator writes zero there (OPEN_ITEMS.md)
+ *          checked (OPEN_ITEMS.md)
  *    96-97 zero in every part
  *    98-99 a CRC-16/ARC RUNNING across the set: over the payloads of
  *          parts 1..n, so the last part's is the whole file's. Not
- *          checked here (OPEN_ITEMS.md); every set our generator writes
- *          stores zero there.
+ *          checked here (OPEN_ITEMS.md).
+ * tools/synth_sitsplit.py writes both CRCs as StuffIt does, since the
+ * evening of 2026-10-24; zero before.
  * And part 1 of a self-extracting set is an application's DATA fork,
  * which in a fat installer goes on past the segment: Now Utilities'
  * Disk 1 carries 56,206 bytes of PowerPC code after it. Its resource

@@ -1315,7 +1315,7 @@ def cut_into_parts(fixture, workdir, n=3):
     [paths]) — the same split --segments uses, so both phases agree on what
     a part is."""
     sys.path.insert(0, os.path.join(R.REPO, "tools"))
-    from synth_sitsplit import header                            # noqa: E402
+    from synth_sitsplit import header, crc16_arc                 # noqa: E402
 
     original = open(fixture, "rb").read()
     name = os.path.basename(fixture).encode("mac_roman")[:31] or b"Joined"
@@ -1324,7 +1324,8 @@ def cut_into_parts(fixture, workdir, n=3):
     for i in range(n):
         p = os.path.join(workdir, "part%d" % (i + 1))
         with open(p, "wb") as f:
-            f.write(header(i + 1, name, 0, len(original)))
+            f.write(header(i + 1, name, 0, len(original),
+                           running=crc16_arc(original[:cuts[i + 1]])))
             f.write(original[cuts[i]:cuts[i + 1]])
         parts.append(p)
     return original, name, parts
@@ -1710,7 +1711,7 @@ def phase_wrapped(args, appbin, workdir, shot):
     """
     sys.path.insert(0, os.path.join(R.REPO, "tools"))
     import synth_wrapped as W                                # noqa: E402
-    from synth_sitsplit import header                        # noqa: E402
+    from synth_sitsplit import header, crc16_arc             # noqa: E402
 
     original = open(args.fixture, "rb").read()
     inner = os.path.basename(args.fixture).encode("mac_roman")[:31]
@@ -1721,7 +1722,8 @@ def phase_wrapped(args, appbin, workdir, shot):
     for i in range(3):
         p = os.path.join(d, "raw%d" % (i + 1))
         with open(p, "wb") as f:
-            f.write(header(i + 1, inner, 0, len(original)))
+            f.write(header(i + 1, inner, 0, len(original),
+                           running=crc16_arc(original[:cuts[i + 1]])))
             f.write(original[cuts[i]:cuts[i + 1]])
         raw.append(p)
     # Part 1 in BinHex and named to sort first; the others in different
@@ -1948,7 +1950,7 @@ def phase_segments(args, appbin, workdir, shot):
     """
     import struct
     sys.path.insert(0, os.path.join(R.REPO, "tools"))
-    from synth_sitsplit import header, HEAD                  # noqa: E402
+    from synth_sitsplit import header, HEAD, crc16_arc       # noqa: E402
 
     original = open(args.fixture, "rb").read()
     name = os.path.basename(args.fixture).encode("mac_roman")[:31] or b"Joined"
@@ -1957,7 +1959,8 @@ def phase_segments(args, appbin, workdir, shot):
     for i in range(3):
         p = os.path.join(workdir, "part%d" % (i + 1))
         with open(p, "wb") as f:
-            f.write(header(i + 1, name, 0, len(original)))
+            f.write(header(i + 1, name, 0, len(original),
+                           running=crc16_arc(original[:cuts[i + 1]])))
             f.write(original[cuts[i]:cuts[i + 1]])
         parts.append(p)
 

@@ -87,7 +87,7 @@ def cut_sit(fixture, workdir, anchor_name):
     """Three StuffIt segments; the anchor keeps the fixture's own name so
     run.py finds its manifest, the others are named nothing alike."""
     sys.path.insert(0, os.path.join(REPO, "tools"))
-    from synth_sitsplit import header                     # noqa: E402
+    from synth_sitsplit import header, crc16_arc          # noqa: E402
     blob = open(fixture, "rb").read()
     name = os.path.basename(fixture).encode("mac_roman")[:31]
     cut = (len(blob) + 2) // 3
@@ -95,7 +95,8 @@ def cut_sit(fixture, workdir, anchor_name):
     for i, nm in enumerate([anchor_name, "middle-bit", "zz-tail"]):
         p = os.path.join(workdir, nm)
         with open(p, "wb") as f:
-            f.write(header(i + 1, name, 0, len(blob)))
+            f.write(header(i + 1, name, 0, len(blob),
+                           running=crc16_arc(blob[:(i + 1) * cut])))
             f.write(blob[i * cut:(i + 1) * cut])
         out.append(p)
     return out
