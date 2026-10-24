@@ -457,6 +457,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-23 (the shims that were one function) — the 21 decoder shims become one routine and an 18-byte call each, the release's `switch` a two-byte row per format: 800 B back on every shipped budget, and a format costs the resident build its row and nothing more
 - 2026-10-24 (the magic StuffIt never wrote) — StuffIt segments begin with a per-set value, not XADMaster's B0 56; every set StuffIt cut was refused, and six now join to what was cut
 - 2026-10-24 (the length part 1 kept in its resource fork) — a fat installer's part 1 states where its segment ends in an 'endD' resource; both hosts read it, and Now Utilities 6.0 joins byte for byte
+- 2026-10-24 (the header left alone) — a loose AppleDouble header is not joined to the file beside it: built, measured and declined; compress on the modern Mac instead
 
 ---
 
@@ -29651,4 +29652,28 @@ and the lookup's frame is 64 B (`-Os -fstack-usage`), under the joiner's
 part open, which a StuffIt set reaches from a fork copy, never from a
 decoder. A layer that keeps the
 whole bundle keeps the image's 408 B more.
+
+## 2026-10-24 (the header left alone) — a loose AppleDouble header is not joined to the file beside it: built, measured and declined; compress on the modern Mac instead
+
+**Claim.** MacExtract does not treat a loose AppleDouble header (`._NAME`,
+`%NAME`, `NAME.ad`) as half of a file. Opened, it extracts as it always
+has, measured on Mac OS 9.2 the same day: its resource fork and Finder
+info, with an empty data fork, and the data file beside it is not read.
+Inside a zip or a tar, the `._NAME` sidecars Mac OS X writes are still
+put back on their file (*the sidecars Mac OS X left beside the file*).
+
+**Evidence.** The join was built for MacStamp, which would stamp
+AppleDouble with a type opened by MacExtract only if a double-click
+restored the whole file. On Mac OS 9.2 it did so in all six shapes tried,
+inputs untouched. It cost 448 B off every budget (shipped CODE +452, A5
+−4): the reader is resident in every build, so no overlay could carry it.
+That price is paid on every archive and every machine, for a file that
+exists only because it was copied from a modern Mac onto a disk without
+forks. Compressing it first (the Finder's Compress, or StuffIt) keeps the
+file whole and costs nothing here.
+
+**Consequence.** The maintainer's decision: bare AppleDouble files are
+not touched. README tells the user to compress on the modern Mac before
+moving files across. MacStamp leaves AppleDouble unstamped, and nothing
+is claimed in the bundle.
 

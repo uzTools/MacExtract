@@ -53,6 +53,10 @@ base64 and MIME attachments, AppleSingle/AppleDouble, zip, gzip, tar and
 - **Split archives:** StuffIt, Compact Pro, DiskDoubler, spanned zip, `.001`
   splits and multi-part mail. Open the first part; you are asked for any
   that are elsewhere. Extract to a different disk from the parts.
+- **From a modern Mac, compress first** (the Finder's Compress, or StuffIt).
+  Copied straight onto a USB stick or card, each file splits into `NAME`
+  and `._NAME`, and the two are not put back together. A Finder zip comes
+  out whole.
 - **Not opened:** StuffIt X, RAR, 7-Zip, bzip2, xz and other PC or modern
   formats. The Mac says *"Unknown format."*
 
