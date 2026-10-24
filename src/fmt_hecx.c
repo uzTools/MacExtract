@@ -1,7 +1,8 @@
 /*
- * fmt_hecx.c — the two BinHex encodings before 4.0: `.hex` and `.hcx`.
+ * fmt_hecx.c — the two BinHex encodings before 4.0, `.hex` and `.hcx`, and
+ * SUMacC's `.dl` before them.
  *
- * Both are line-oriented text with no file name in them:
+ * The BinHex ones are line-oriented text with no file name in them:
  *
  *   (This file must be converted with BinHex.Hex)    optional banner
  *   #TYPECREA$FFFF                                   type, creator, flags
@@ -52,6 +53,27 @@
  *
  * The fork sizes are not in the header, so the document is read twice:
  * once to count, and once to write — the shape fmt_uu.c already has.
+ *
+ * `.dl` is older and smaller: a resource fork alone, no name, type or
+ * creator, four bits a character — '@'..'O' are 0..15, high nibble first,
+ * and every other character is skipped — ended by '|' and eight more
+ * characters whose low four bits are a sum, high nibble first: the byte
+ * count plus every byte. Its first line is the first one longer than 40,
+ * of even length, made of nothing but '@'..'O' and '|'; and here, not in
+ * hexbin, one that opens "@@". That is the high byte of the first long of
+ * a resource fork, the offset of its data, which is under 16 MB in any
+ * fork (Inside Macintosh: More Macintosh Toolbox, "Resource File Format",
+ * as unc_crypt.c reads it); without it base64 of a run of zeros, a line of
+ * 'A', is a `.dl` (DECISIONS.md 2026-10-24, *the format before BinHex*).
+ * Source: reference/macutils/hexbin/dl.c (dl, dl_fork) and hexbin.c
+ * (find_header); macutils/README has the format as SUMacC's, the first
+ * hexified one, and dl.c as based on its original distribution. The type
+ * and creator are dl.c's, APPL and ????. The sum is compared on its low 16
+ * bits, as dl.c's verify_crc does, though eight characters hold 32: the
+ * one file found (mactosh/lang/xlispold.dl) agrees on all 32, and a sum of
+ * bytes mod 65,536 already catches any change of fewer than 257 bytes
+ * (DECISIONS.md 2026-10-24, *the format before BinHex*). It goes through
+ * the same driver below: one document, counted, then written.
  *
  * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
  */
@@ -227,6 +249,62 @@ static int hx_walk(UncCtx *c, UncBufIn *in, uint8_t *line, uint8_t *obuf,
     }
 }
 
+/* `.dl` from its first line: count the fork and check the sum, and when
+ * `write` is set hand the bytes to the sink. hexbin reads line by line and
+ * so never sees a line end; here they are skipped like any other character
+ * in the body, and in the sum, where a mailer may have broken the line.
+ * The seven-bit mask is dl.c's (nchar). */
+static int dl_walk(UncCtx *c, UncBufIn *in, uint8_t *obuf, uint32_t ocap,
+                   HxDoc *doc, int write)
+{
+    uint32_t v = 0, n = 0, sum = 0, want = 0, have = 0;
+    int ch, k = -1;
+
+    while (k < 8) {
+        ch = unc_bufin_next(in);
+        if (ch < 0) return in->err;
+        ch &= 0x7F;
+        if (k >= 0) {
+            if (ch == '\r' || ch == '\n' || ch == 0) continue;
+            want = (want << 4) | (uint32_t)(ch & 0xF);
+            k++;
+            continue;
+        }
+        if (ch == '|') { k = 0; continue; }
+        if (ch < '@' || ch > 'O') continue;
+        v = (v << 4) | (uint32_t)(ch & 0xF);
+        if (++n & 1) continue;
+        sum += v;
+        if (write) {
+            obuf[have++] = (uint8_t)v;
+            if (have == ocap) {
+                if (c->sink->write(c->sink->ctx, UNC_FORK_RSRC, obuf,
+                                   (int32_t)have) < 0)
+                    return UNC_ERR_SINK;
+                have = 0;
+            }
+        }
+        v = 0;
+    }
+    if (have > 0 &&
+        c->sink->write(c->sink->ctx, UNC_FORK_RSRC, obuf, (int32_t)have) < 0)
+        return UNC_ERR_SINK;
+    doc->size[1] = n >> 1;
+    return ((want ^ (doc->size[1] + sum)) & 0xFFFFu) ? UNC_ERR_CRC : UNC_OK;
+}
+
+/* hexbin.c's find_header test for a `.dl` document's first line: 1 if
+ * the line passes it. A line of 1,023 or more is cut there and here, and
+ * is odd once cut. The "@@" it does not ask for is the caller's. */
+static int dl_is_start(const uint8_t *l, int32_t n)
+{
+    int32_t i;
+    if (n <= 40 || (n & 1)) return 0;
+    for (i = 0; i < n; i++)
+        if ((l[i] < '@' || l[i] > 'O') && l[i] != '|') return 0;
+    return 1;
+}
+
 int unc_hecx_extract(UncCtx *c)
 {
     UncBufIn in;
@@ -234,8 +312,10 @@ int unc_hecx_extract(UncCtx *c)
     HxDoc doc;
     uint8_t *iobuf, *line, *obuf;
     uint32_t base = c->ps.done;
+    uint32_t at;
     int32_t n;
-    int eof = 0, err, sret;
+    int eof = 0, err, sret, pass;
+    int dl = c->fmt == UNC_FORMAT_DL;
 
     iobuf = (uint8_t *)unc_alloc(c->al, UNC_IOBUF + HX_LINE + UNC_IOBUF);
     if (!iobuf) return UNC_ERR_MEM;
@@ -244,45 +324,63 @@ int unc_hecx_extract(UncCtx *c)
 
     unc_bufin_init(&in, c->io, &c->ps, iobuf, UNC_IOBUF);
     for (;;) {
+        at = unc_bufin_tell(&in);
         if (unc_readline(&in, line, HX_LINE, &n, &eof) != UNC_OK || eof) {
             err = (in.err == UNC_ERR_IO || in.err == UNC_ERR_ABORTED)
                   ? in.err : UNC_ERR_FORMAT;
             goto out;
         }
-        if (unc_hecx_is_header(line, n)) break;
+        if (dl ? dl_is_start(line, n) : unc_hecx_is_header(line, n)) break;
     }
-    doc.type = doc.creator = 0;
-    doc.size[0] = doc.size[1] = 0;
-    if (n >= 10) doc.type = unc_get_u32be(line + 1);
-    if (n >= 14) doc.creator = unc_get_u32be(line + 5);
-    doc.flags = (uint16_t)hx_value(line + n - 4, 4);
-    doc.start = unc_bufin_tell(&in);
-
-    /* Counting pass. Its status is the entry's when nothing is written. */
-    err = hx_walk(c, &in, line, obuf, UNC_IOBUF, &doc, 0);
-    if (err == UNC_ERR_SINK || err == UNC_ERR_IO || err == UNC_ERR_ABORTED)
+    /* The first line hexbin would decode from, and it must open "@@". */
+    if (dl && (line[0] != '@' || line[1] != '@')) {
+        err = UNC_ERR_FORMAT;
         goto out;
+    }
+    doc.size[0] = doc.size[1] = 0;
+    if (dl) {
+        doc.type = 0x4150504CUL;        /* 'APPL' and '????', dl.c's */
+        doc.creator = 0x3F3F3F3FUL;
+        doc.flags = 0;
+        doc.start = at;                 /* the first line is data */
+    } else {
+        doc.type = doc.creator = 0;
+        if (n >= 10) doc.type = unc_get_u32be(line + 1);
+        if (n >= 14) doc.creator = unc_get_u32be(line + 5);
+        doc.flags = (uint16_t)hx_value(line + n - 4, 4);
+        doc.start = unc_bufin_tell(&in);
+    }
 
-    unc_entry_clear(&e);
-    if (c->opt.name_hint && c->opt.name_hint_len)
-        unc_entry_set_name(&e, c->opt.name_hint, c->opt.name_hint_len);
-    e.type = doc.type;
-    e.creator = doc.creator;
-    e.finder_flags = doc.flags;
-    e.data_size = doc.size[0];
-    e.rsrc_size = doc.size[1];
+    /* Counting pass, then the writing one. The first one's status is the
+     * entry's when nothing is written. */
+    for (pass = 0; pass < 2; pass++) {
+        if (pass) {
+            if (err == UNC_ERR_SINK || err == UNC_ERR_IO ||
+                err == UNC_ERR_ABORTED)
+                goto out;
+            unc_entry_clear(&e);
+            if (c->opt.name_hint && c->opt.name_hint_len)
+                unc_entry_set_name(&e, c->opt.name_hint, c->opt.name_hint_len);
+            e.type = doc.type;
+            e.creator = doc.creator;
+            e.finder_flags = doc.flags;
+            e.data_size = doc.size[0];
+            e.rsrc_size = doc.size[1];
 
-    sret = c->sink->begin_entry(c->sink->ctx, &e);
-    if (sret < 0) { err = UNC_ERR_SINK; goto out; }
-    if (sret > 0) { err = UNC_OK; goto out; }
-    if (!c->opt.list_only && !c->opt.test_only) {
+            sret = c->sink->begin_entry(c->sink->ctx, &e);
+            if (sret < 0) { err = UNC_ERR_SINK; goto out; }
+            if (sret > 0) { err = UNC_OK; goto out; }
+            if (c->opt.list_only || c->opt.test_only) break;
+        }
         c->ps.done = base + doc.start;
         if (c->io->seek(c->io->ctx, doc.start) < 0) {
             err = UNC_ERR_IO;
-        } else {
-            unc_bufin_init(&in, c->io, &c->ps, iobuf, UNC_IOBUF);
-            err = hx_walk(c, &in, line, obuf, UNC_IOBUF, &doc, 1);
+            if (pass) break;
+            goto out;
         }
+        unc_bufin_init(&in, c->io, &c->ps, iobuf, UNC_IOBUF);
+        err = dl ? dl_walk(c, &in, obuf, UNC_IOBUF, &doc, pass)
+                 : hx_walk(c, &in, line, obuf, UNC_IOBUF, &doc, pass);
     }
     if (c->sink->end_entry(c->sink->ctx, err) < 0) { err = UNC_ERR_SINK; goto out; }
     if (err != UNC_ERR_SINK && err != UNC_ERR_ABORTED && err != UNC_ERR_IO)

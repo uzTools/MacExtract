@@ -34,7 +34,7 @@ has the transfer notes.
 
 ## What it opens
 
-StuffIt (classic and 5.x), Compact Pro, BinHex (and the older `.hex`/`.hcx`),
+StuffIt (classic and 5.x), Compact Pro, BinHex (and the older `.hex`/`.hcx` and `.dl`),
 MacBinary, PackIt, AppleLink packages, DiskDoubler and MacCompress, Now Compress, StuffIt
 SpaceSaver, Alysis SuperDisk!, Private File, ARC, LZH/LHA, uuencode, btoa,
 base64 and MIME attachments, AppleSingle/AppleDouble, zip, gzip, tar and

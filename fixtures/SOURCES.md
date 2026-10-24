@@ -1019,6 +1019,7 @@ a comment was found.
 | hcx-wild-simpleto.hcx | f491262d12cf554fa1fbabcc1e687117be00a2a047b75c5e6ce7754ce6b63b56 | 16069 | https://discmaster.textfiles.com/file/6950/carousel.iso/mactosh/lang/simpleto.hcx |
 | hcx-wild-xlisp.hcx | 46550f25de037d9b21ed0f71e6123acb23e1fd32cd0202ef1730a2302a71187f | 72559 | https://discmaster.textfiles.com/file/6950/carousel.iso/mactosh/lang/xlisp.hcx |
 | hcx-wild-xlisptin.hcx | 666eb3812f7f0d18831b534218d9f6e12850183c952e54ac0cd7f6eb2bf7bc91 | 66399 | https://discmaster.textfiles.com/file/6950/carousel.iso/mactosh/lang/xlisptin.hcx |
+| dl-wild-xlispold.dl | 25f11681885e6e89888c97998950669bbb39607abfe38c9e2bd87c9d21b51070 | 75641 | https://discmaster.textfiles.com/file/6950/carousel.iso/mactosh/lang/xlispold.dl |
 | derived-bh2-XF.hcx | 79ca8ae6458dcd1b3d0089c495d8096dd46ac51e9f6afa7caac208348ddc3a03 | 3680 | derived:hfsvol:specimens/binhex2/volume.img:r:Hex:XF.hcx |
 | derived-bh2-XF.hex | ec6d579a3d1fd1fdb8313acc3cd6ebeebfdf8ab14e3789293d027e02a9f5256f | 5237 | derived:hfsvol:specimens/binhex2/volume.img:r:Hex:XF.hex |
 | derived-bh2-XFlf.hex | 799cc4f55bb463afa6772dc4e5ecf5e5c5adf350046d90c6618f6558936e7455 | 5323 | derived:hfsvol:specimens/binhex2/volume.img:r:Hex:XFlf.hex |

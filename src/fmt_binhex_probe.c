@@ -47,13 +47,23 @@ UncFormat unc_binhex_probe(const uint8_t *head, int32_t len, UncIO *io)
      * none at all, so what tells them apart is the document: a header
      * line (unc_hecx_is_header) whose next non-empty line is a "***"
      * marker. After a banner, the first line that is not such a header
-     * settles it as BinHex 4. */
+     * settles it as BinHex 4.
+     *
+     * And SUMacC's `.dl`, which has no marker at all: before any banner,
+     * a line of 41 to 1,022 characters, even in length, every one of them
+     * '@'..'O' or '|', is one, as hexbin.c's find_header has it (its line
+     * buffer cuts at 1,023, which is odd) — and, which hexbin does not
+     * ask, opening "@@", the zero high byte of the resource fork's data
+     * offset (fmt_hecx.c). Without that, base64 of a run of zeros is a
+     * line of 'A' and was claimed. Only the FIRST such line is looked at,
+     * since hexbin decodes from there: one that does not open "@@" ends
+     * the question rather than passing it to a later line. */
     uint8_t window[40];
     uint8_t chunk[256];
     uint8_t ln[HX_PROBE_LINE];
     int32_t have = 0, w = 0, scanned = 0, pos = 0, clen = 0, cpos = 0;
     int32_t ll = 0;
-    int banner = 0, in_banner = 0, hdr = 0;
+    int banner = 0, in_banner = 0, hdr = 0, dl = 1, dlseen = 0;
 
     /* Earlier probes may have moved the position; continue after head. */
     if (io->seek(io->ctx, (uint32_t)len) < 0) return UNC_FORMAT_UNKNOWN;
@@ -73,6 +83,11 @@ UncFormat unc_binhex_probe(const uint8_t *head, int32_t len, UncIO *io)
         }
         scanned++;
         if (ch == '\r' || ch == '\n') {
+            if (!banner && !dlseen && dl && ll > 40 && ll < 1023 &&
+                !(ll & 1)) {
+                if (ln[0] == '@' && ln[1] == '@') return UNC_FORMAT_DL;
+                dlseen = 1;
+            }
             if (ll > 0 && !in_banner) {
                 int is = ll <= HX_PROBE_LINE && unc_hecx_is_header(ln, ll);
                 if (hdr && ll >= 3 && ln[0] == '*' && ln[1] == '*' &&
@@ -83,7 +98,9 @@ UncFormat unc_binhex_probe(const uint8_t *head, int32_t len, UncIO *io)
             }
             if (ll > 0) in_banner = 0;
             ll = 0;
+            dl = 1;
         } else {
+            if ((ch < '@' || ch > 'O') && ch != '|') dl = 0;
             if (ll < HX_PROBE_LINE) ln[ll] = (uint8_t)ch;
             if (ll < 0x7FFF) ll++;
         }

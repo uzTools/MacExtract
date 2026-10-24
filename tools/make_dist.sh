@@ -343,7 +343,8 @@ v0.32.0 had. On a 512 KB machine two more of the test archives come out
 whole; on larger machines it changes nothing you can see.
 
 What it opens: StuffIt (.sit, classic and 5.x), Compact Pro (.cpt), BinHex
-(.hqx), MacBinary, PackIt (.pit), AppleLink packages (.pkg),
+(.hqx, and the older .hex and .hcx), SUMacC's .dl before them, MacBinary,
+PackIt (.pit), AppleLink packages (.pkg),
 Private File (.pf), DiskDoubler (.dd, DDAR, DDA2), Now Compress,
 StuffIt SpaceSaver, Alysis SuperDisk! (.X), ARC (.arc), LZH/LHA (.lzh, .lha,
 MacLHA's included), uuencoded files (.uu), btoa (.ascii), base64 and files

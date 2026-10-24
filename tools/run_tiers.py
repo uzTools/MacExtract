@@ -183,10 +183,14 @@ REPO = os.path.dirname(HERE)
 # control's CODE +80 and A5 +32 (DECISIONS.md 2026-10-24, *the sum each part carries*);
 # OVL_SAVED +16 below offsets all but the shipped pair's 96.
 TIERS = {
-    "sys3-512K": (200390, "System 3.0, Macintosh 512Ke (222,070 B free)"),
-    "sys6-512K": (105008, "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
-    "floor-1M":  (629296, "System 6.0.8, 1 MB Mac Plus — the floor target"),
+    "sys3-512K": (199798, "System 3.0, Macintosh 512Ke (222,070 B free)"),
+    "sys6-512K": (104416, "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
+    "floor-1M":  (628704, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
+# **-592 more each 2026-10-24, DERIVED**: SUMacC's `.dl`, the control's
+# CODE +584 and A5 +8 (DECISIONS.md 2026-10-24, *the format before
+# BinHex*); they were 200,390 / 105,008 / 629,296 since that day's
+# per-fork segment CRCs.
 # **-96 more each 2026-10-24, DERIVED**: a StuffIt segment's running CRCs
 # held one per fork, the control's CODE +68 and A5 +28 (alignment)
 # (DECISIONS.md 2026-10-24, *the two bytes the writer drew*); they were 200,486 /
@@ -385,7 +389,7 @@ TIERS = {
 # data + bss -680. The machine gave +4,204, because the jump table, the
 # stub segments and the relocations trimmed at launch are resident bytes
 # this unit never counted — which is why TIERS was measured, not moved.
-TIERS_CONTROL = 212816     # build/mac-resident, CODE + A5, 2026-10-24
+TIERS_CONTROL = 213408     # build/mac-resident, CODE + A5, 2026-10-24
 # +352 on 2026-10-22: the eleven malformed-input fixes, every decoder linked
 # in; TIERS above drops 352 to match (TIERS_MACHINE, physical RAM, unmoved).
 # +32 more on 2026-10-23 with Compact Pro's fork-extent check; TIERS -32.
@@ -394,6 +398,7 @@ TIERS_CONTROL = 212816     # build/mac-resident, CODE + A5, 2026-10-24
 # +112 more on 2026-10-24 with the StuffIt segment CRC check; TIERS -112.
 # +96 more on 2026-10-24 with the segment CRCs one per fork; TIERS -96.
 # +32 more on 2026-10-24 with the segment header CRC required; TIERS -32.
+# +592 more on 2026-10-24 with SUMacC's `.dl`; TIERS -592.
 # **What this control cannot see: the autotest harness.** TIERS was read
 # on the machine from an autotest build (`UNC_MAC_AUTOTEST`), and
 # build/mac-resident has no harness in it, so harness growth lowers what a
@@ -806,7 +811,12 @@ EXPECT = {
 # (CODE +68, A5 -4): the same code in both, and the difference is where
 # each build's `.data` alignment falls
 # (DECISIONS.md 2026-10-24, *the two bytes the writer drew*). TIERS -96.
-OVL_SAVED = 155616
+# **+560 2026-10-24, -> 156,176**: SUMacC's `.dl`, the control's +592 (CODE
+# +584, A5 +8) against the shipped pair's +32 (CODE +0, A5 +32): the
+# reader is in `ovl_binhex` and the probe in the sniffer's image, and the
+# table row is resident in both (DECISIONS.md 2026-10-24, *the format
+# before BinHex*). TIERS -592.
+OVL_SAVED = 156176
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
 # every kept image is one — as is the bundle an envelope holds on to.
@@ -941,7 +951,7 @@ OVL_RESIDUE = -322
 # own Finder info*).
 IMAGES = {
     "OVL_ID_ARC":         7696,
-    "OVL_ID_BINHEX":      4606,
+    "OVL_ID_BINHEX":      5082,
     "OVL_ID_BTOA":        2496,
     "OVL_ID_CODECS":      6016,
     "OVL_ID_CPTDD":       14832,
@@ -956,7 +966,7 @@ IMAGES = {
     "OVL_ID_SUPERDISK":   6634,
     "OVL_ID_TEXT":        11346,
     "OVL_ID_ZIPOLD":      10832,
-    "OVL_ID_SNIFF":       12436,
+    "OVL_ID_SNIFF":       12556,
 }
 # **ZIPOLD +3,374 B and EXO +972 B, the bundle +4,344 B, 2026-10-17**:
 # Mac OS X's sidecars, the shared code in ZIPOLD and zip's half in EXO,
@@ -1006,7 +1016,10 @@ IMAGES = {
 # be zero only where the header states no resource fork, in the image's
 # copy of sitseg_parse (DECISIONS.md 2026-10-24, *the two bytes the writer
 # drew*). Released the same way; only a layer that keeps the bundle pays.
-BUNDLE = 180388
+# **BINHEX +476, SNIFF +120 and the bundle +596, 2026-10-24**: SUMacC's
+# `.dl`, its reader in the `.hex`/`.hcx` driver and its first-line test in
+# the BinHex probe (DECISIONS.md 2026-10-24, *the format before BinHex*).
+BUNDLE = 180984
 
 # What the SHIPPED lane asserts, and it is the refused fixtures BY NAME
 # rather than a tally: a tier that refuses two different fixtures and still

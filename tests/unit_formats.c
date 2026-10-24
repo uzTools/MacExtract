@@ -4295,6 +4295,7 @@ static void test_foreign(void)
     CHECK(UNC_FORMAT_MIME == 29);
     CHECK(UNC_FORMAT_MIMESEG == 45);
     CHECK(UNC_FORMAT_BINHEX_OLD == 48);
+    CHECK(UNC_FORMAT_DL == 49);
     CHECK(!unc_format_extractable(UNC_FORMAT_SITX_RETIRED));
     for (i = 30; i <= 44; i++)
         CHECK(!unc_format_extractable((UncFormat)i));

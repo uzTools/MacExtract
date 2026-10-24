@@ -50,6 +50,9 @@ static const UncFormatDesc unc_formats[] = {
      * envelope on the same terms as BinHex 4: it carries its own forks.
      * Reached through unc_binhex_extract, which looks at UncCtx.fmt. */
     { UNC_FORMAT_BINHEX_OLD,  "BinHex hex/hcx",      1, unc_binhex_extract },
+    /* .dl, SUMacC's, older than both: a resource fork alone. The same
+     * decoder, entered the same way. */
+    { UNC_FORMAT_DL,          "SUMacC dl",           1, unc_binhex_extract },
     { UNC_FORMAT_PACKIT,      "PackIt",              0, unc_packit_extract },
     { UNC_FORMAT_COMPACTPRO,  "Compact Pro",         0, unc_cpt_extract },
     { UNC_FORMAT_SIT,         "StuffIt",             0, unc_sit_extract },

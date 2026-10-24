@@ -99,7 +99,10 @@ hand.
                        either encoding is in reference/; what grades
                        the transcription is BinHex 2.0's own output
                        from known input (tools/vmac/binhex2.py) and
-                       three 1985 files whose sums verify.
+                       three 1985 files whose sums verify. SUMacC's
+                       `.dl` in the same file: its coding, sum and
+                       first-line rule from macutils' hexbin/dl.c and
+                       hexbin.c.
   src/unc_sidecar.c    Mac OS X's AppleDouble sidecars: which names are
                        sidecars (a leaf starting "._", an optional first
                        component "__MACOSX"), that folders under

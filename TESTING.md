@@ -1970,7 +1970,7 @@ that date; re-running it needs the hand edit above, and what matters is that it
 fails at all, not the count. The LZW-path figure is from the same day.
 
 
-## BinHex before 4.0 (`tools/run_hecx.py`, in `ci.sh`)
+## BinHex before 4.0 and `.dl` (`tools/run_hecx.py`, in `ci.sh`)
 
 `unar` reads neither `.hex` nor `.hcx`, so the seven manifests are
 macutils' `hexbin`, and four of the seven fixtures were written by BinHex
@@ -1987,9 +1987,15 @@ Shown to fail: a build that ignores the sum fails six checks, and one
 that does not put back the space a one-character `.hcx` line lost fails
 the stripped-spaces variant.
 
+`.dl`: the one wild file against hexbin, then 23 cases on forks the
+script encodes by `dl.c`'s rules and on that file (endings, mail in front,
+rewrapped, a line break in the sum, the sum's high half, a character or
+the sum changed, cut, a first byte that is not 0, base64 of zeros), each
+read by hexbin too. Shown to fail: HEAD's build fails 15 checks here.
+
 **What it cannot see.** Only BinHex 2.0 has written anything here; a
 `.hex` from BinHex 1.0 or the BASIC BinHexes would be graded by hexbin
-alone. It runs the CLI only; the Mac application's three runs (System
+alone, and no `.dl` writer has been run at all. It runs the CLI only; the Mac application's three runs (System
 6.0.8 and System 3.0, 1 MB) are `tools/vmac/run.py` and `sys30.py`, not
 `ci.sh`.
 
@@ -5734,7 +5740,7 @@ not who spent it.
   through the File Manager, and nothing here buffers the way the Mac
   shell does.
 - **Any file it is not handed.** It is a sweep, so what it measures is
-  the population you give it: the corpus is 994 files, and the
+  the population you give it: the corpus is 995 files, and the
   interesting population for a REJECTION cost is files that are not
   archives at all — `reference/`, this repository's own trees, the
   specimen cache. 8,364 of those were swept on 2026-10-05, which is

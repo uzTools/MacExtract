@@ -463,6 +463,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-24 (the sum each part carries) — a StuffIt segment's running CRC-16/ARC at 98 is held part by part in the joiner; a flipped byte is a checksum mismatch before the next disk is asked for
 - 2026-10-24 (the check the header carries) — the CRC-16/ARC a StuffIt segment stores at 94 is required by the parse the probe and the reader share; it stands where XADMaster's two magic bytes stood
 - 2026-10-24 (the two bytes the writer drew) — bytes 0-1 of a StuffIt segment are QuickDraw's _Random, drawn once per set and never seeded; and 96-97, which the probe required to be zero, are the resource fork's running CRC, so every set of a file with one was refused
+- 2026-10-24 (the format before BinHex) — SUMacC's `.dl` extracts through the `.hex`/`.hcx` driver; hexbin's first-line test alone took base64 of zeros, so the first line must also open "@@"; shipped CODE +0, A5 +32
 
 ---
 
@@ -29974,3 +29975,62 @@ fixtures by name. The download 233,472 → 233,600 B, block rounding.
 Stack: `seg_read` 132 B and `sitseg_parse` 34 B, unchanged (`-Os
 -fstack-usage`). Heap: none. Time: the same bytes folded as before, plus
 a compare and a conditional clear per read of a joined set.
+
+## 2026-10-24 (the format before BinHex) — SUMacC's `.dl` extracts through the `.hex`/`.hcx` driver; hexbin's first-line test alone took base64 of zeros, so the first line must also open "@@"; shipped CODE +0, A5 +32
+
+**Claim (measured).** `.dl`, the first hexified Macintosh format
+(macutils/README: SUMacC's, a resource fork alone, four bits a
+character), extracts. The one file found, `mactosh/lang/xlispold.dl` on
+Discmaster's carousel disc, comes out byte-exact against hexbin, whose
+`dl.c` the reader transcribes, with its stored sum verifying; and through
+the Macintosh application on System 6.0.8 at 1 MB and 512 KB and on
+System 3.0 at 1 MB and 4 MB, byte-exact with bytes 16..127 masked as
+`vmac_check.py` masks every resource fork.
+
+**One driver, not two.** `unc_hecx_extract` reads both, chosen by
+`UncCtx.fmt`: find the first line, count the fork and check the sum, open
+the entry, rewind, write. A separate `.dl` reader built first cost
+`ovl_binhex` +936 B; merged, +476. The count pass now also seeks to the
+document's start, which `.dl` needs (its first line is data) and `.hex`
+pays one seek for.
+
+**A departure from hexbin, each way it was found.** hexbin's test for a
+`.dl` is a line longer than 40, even, of nothing but '@'..'O' and '|'.
+Base64 of a run of zeros is a line of 'A', so with that test alone a
+base64 file of 4,000 zero bytes sniffed as `.dl` (the base64 and MIME
+probes run after BinHex's). The first line must also open "@@": the high
+byte of a resource fork's data offset (Inside Macintosh: More Macintosh
+Toolbox, "Resource File Format"), zero in any fork under 16 MB. The first
+version then skipped a line that failed "@@" and took a later one, which
+hexbin never would; only the first line passing hexbin's test is looked
+at now. A `.dl` of a fork whose first byte is not zero is no longer this
+format, and hexbin reads it; `tools/run_hecx.py` asserts both halves.
+
+**The sum is compared on 16 bits**, as `dl.c`'s `verify_crc` does,
+though the eight characters hold 32. All 32 agree on the one file; a sum
+of bytes mod 65,536 still catches every change of fewer than 257 bytes,
+and comparing 32 would refuse a file hexbin reads for a damaged sum
+character that guards nothing.
+
+**Evidence the tests can fail.** `run_hecx.py`'s 23 new `.dl` cases fail
+15 times against HEAD's build. The base64 case failed on the first
+version of the probe and the "@@"-on-a-later-line case on the second.
+Sniff over 2,012 fixtures and specimens differs from HEAD only on
+`xlispold.dl`; over 9,251 files that are not archives (`reference/`,
+this tree, the emulator's specimens), none sniffs as `.dl`.
+
+**What it cost.** Shipped CODE +0, A5 +32: the table row (16 B) and its
+name (10 B), `.data` +28 and `.bss` +4 by alignment — **32 B off every
+budget**. `ovl_binhex` 4,606 → 5,082 B, `ovl_sniff` 12,436 → 12,556 B,
+the bundle 180,388 → 180,984. The control +584 (`unc_hecx_extract` +462,
+now inlining `hx_walk`, 848 + 776 → 2,086; `unc_binhex_probe` +122, per
+`nm -S` against HEAD's objects) and A5 +8, so `TIERS_CONTROL` +592, each
+tier base −592 (derived) and `OVL_SAVED` +560 → 156,176 B; every row of
+*What each format is granted* +560, the envelope's −36. `run_tiers.py
+--check` moves no tally: 74/74, 72/74 and 68/74 shipped. Heap 9,232 B on
+the Macintosh, the `.hcx` allocation. Stack: the `.dl` path is
+`unc_hecx_extract` and its walk, under the `.hcx` chain (`-Os
+-fstack-usage`: 484 + 48 against 524 + 76 + 32 before the merge).
+
+**What it does not see.** No writer: SUMacC's `dl` tools have not been
+found, and one file is all the format's output there is here.

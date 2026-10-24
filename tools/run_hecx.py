@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""run_hecx.py — BinHex before 4.0 (`.hex`, `.hcx`), adjudicated by hexbin.
+"""run_hecx.py — BinHex before 4.0 (`.hex`, `.hcx`) and SUMacC's `.dl`,
+adjudicated by hexbin.
 
 `unar` cannot read either encoding, so the reader graded against is
 macutils' `hexbin` (hecx.c), which is also what src/fmt_hecx.c is
@@ -11,7 +12,7 @@ forks are also checked against that subject — the writer, not a reader,
 is the ground truth for them.
 
     run_hecx.py [--macextract BIN]     grade, and the variants below
-    run_hecx.py --manifests            (re)write the seven manifests
+    run_hecx.py --manifests            (re)write the eight manifests
 
 Graded per fixture: both forks, type and creator, against hexbin. Two of
 the three 1985 files have no banner and hexbin will not read them as they
@@ -38,7 +39,25 @@ on purpose, the departure is asserted rather than hidden:
                                                         and its CRC refuses
   a '#..$hhhh' line + prose  not recognised as this format
 
-What it cannot see: only BinHex 2.0 has been run as a writer. BinHex 1.0
+`.dl` (src/fmt_hecx.c, dl_walk) is graded on its one wild file, and on
+files this script encodes with dl.c's rules, each read by hexbin too:
+
+  synthetic forks            same fork as encoded       hexbin agrees
+  lf / crlf / cr endings     same fork                  hexbin agrees
+  mail headers in front      same fork                  hexbin agrees
+  rewrapped at 64            same fork                  hexbin agrees
+  a line break in the sum    same fork                  hexbin agrees
+  the sum's high 16 bits     same fork (both compare 16 bits of the 32)
+  a body character changed   refused                    hexbin refuses
+  the sum changed            refused                    hexbin refuses
+  no '|', or cut in the sum  refused                    hexbin refuses
+  cut inside the fork        refused, never exit 0
+  a first byte that is not 0 not this format            hexbin reads it
+  base64 of a run of zeros   base64, not `.dl`
+
+What it cannot see: only BinHex 2.0 has been run as a writer, and for
+`.dl` no writer at all — SUMacC's tools have not been found, and the one
+file is the only output of theirs there is. BinHex 1.0
 and the BASIC BinHexes before it wrote `.hex` too (reference/notes/
 BinHex.md), and none of their output has been found to grade against.
 """
@@ -60,7 +79,7 @@ SUBJECT = os.path.expanduser(os.path.join(
 FIXTURES = ["hcx-wild-simpleto.hcx", "hcx-wild-xlisp.hcx",
             "hcx-wild-xlisptin.hcx", "derived-bh2-XF.hcx",
             "derived-bh2-XF.hex", "derived-bh2-XFlf.hex",
-            "derived-bh2-YN.hex"]
+            "derived-bh2-YN.hex", "dl-wild-xlispold.dl"]
 BANNER = b"(This file must be converted with BinHex.Hex)\r"
 
 
@@ -70,7 +89,8 @@ def read(p):
 
 def hexbin(blob, add_banner=False):
     """(exit, data, rsrc, type, creator) as hexbin reads `blob`."""
-    if add_banner and not blob.startswith(b"(This file"):
+    if add_banner and not blob.startswith(b"(This file") \
+            and not blob.startswith(b"@"):
         blob = BANNER + blob
     w = tempfile.mkdtemp()
     try:
@@ -266,6 +286,98 @@ def variants(cli, base, problems):
     return ran
 
 
+def dl_encode(fork, width=64, eol=b"\n", sum_add=0):
+    """A `.dl` as dl.c reads one: '@'+nibble, high first, '|', and eight
+    nibbles of the byte count plus every byte."""
+    body = bytes(0x40 | (b >> s & 0xF) for b in fork for s in (4, 0))
+    total = (len(fork) + sum(fork) + sum_add) & 0xFFFFFFFF
+    tail = b"|" + bytes(0x40 | (total >> s & 0xF)
+                        for s in range(28, -4, -4))
+    text = body + tail
+    return eol.join(text[i:i + width]
+                    for i in range(0, len(text), width)) + eol
+
+
+def dl_variants(cli, problems):
+    """`.dl` cases, on encoded forks and on the wild file."""
+    ran = 0
+
+    def check(label, blob, fork, hb_reads=True):
+        got = ours(cli, blob, "t.dl")
+        if fork is None:
+            if got[0] == 0:
+                problems.append("dl %s: exit 0 — should be refused" % label)
+        elif got[0] != 0 or got[2] != fork or got[1] not in (b"", None):
+            problems.append("dl %s: exit %d, fork %s" % (
+                label, got[0], "same" if got[2] == fork else "differs"))
+        if hb_reads is not None:
+            hb = hexbin(blob)
+            if (hb[0] == 0) != hb_reads:
+                problems.append("dl %s: hexbin %s it" % (
+                    label, "reads" if hb[0] == 0 else "refuses"))
+            elif hb_reads and fork is not None and hb[2] != fork:
+                problems.append("dl %s: hexbin's fork differs" % label)
+
+    import random
+    rnd = random.Random(1985)
+    # From 32 B: a fork whose text fits on one line, '|' and sum and all,
+    # is an odd line and no `.dl` to hexbin or here.
+    for size in (31, 32, 4095, 4096, 4097, 70000):
+        fork = bytes([0]) + bytes(rnd.randrange(256) for _ in range(size))
+        check("encoded, %d B" % len(fork), dl_encode(fork), fork); ran += 1
+    zeros = bytes(3000)
+    check("encoded, zeros", dl_encode(zeros), zeros); ran += 1
+
+    wild = read(os.path.join(FIXDIR, "dl-wild-xlispold.dl"))
+    fork = hexbin(wild)[2] if wild is not None else bytes(
+        [0, 0, 1, 0]) + bytes(rnd.randrange(256) for _ in range(5000))
+    base = wild if wild is not None else dl_encode(fork)
+    for eol in (b"\n", b"\r\n", b"\r"):
+        check("endings %r" % eol, relines(base, eol), fork); ran += 1
+    check("mail in front",
+          b"From: someone\nSubject: a file\n\n" + base, fork); ran += 1
+    check("rewrapped at 64", dl_encode(fork, 64), fork); ran += 1
+    enc = dl_encode(fork)
+    bar = enc.index(b"|")
+    check("a line break in the sum", enc[:bar + 4] + b"\n" + enc[bar + 4:],
+          fork); ran += 1
+    check("the sum's high 16 bits changed", dl_encode(fork, sum_add=1 << 16),
+          fork); ran += 1
+
+    i = base.index(b"@", 200)
+    flip = bytearray(base)
+    flip[i] = ord("A")
+    check("a body character changed", bytes(flip), None, False); ran += 1
+    check("the sum changed", dl_encode(fork, sum_add=1), None, False)
+    ran += 1
+    cut = base[:base.index(b"|")]
+    check("no '|'", cut, None, False); ran += 1
+    check("cut in the sum", base[:base.index(b"|") + 5], None, False)
+    ran += 1
+    for frac in (0.3, 0.6, 0.9):
+        check("cut at %d%%" % int(frac * 100), cut[:int(len(cut) * frac)],
+              None, hb_reads=None)
+        ran += 1
+
+    # The departure: a first byte that is not 0 cannot be a resource fork's
+    # data offset, and the line it opens is not taken for a `.dl` here.
+    odd = bytes([0x10]) + fork[1:]
+    blob = dl_encode(odd)
+    if sniff(cli, blob) != "unknown":
+        problems.append("dl a first byte of 0x10: sniffed %r" % sniff(cli, blob))
+    if hexbin(blob)[0] != 0:
+        problems.append("dl a first byte of 0x10: hexbin refuses it — the "
+                        "departure in fmt_hecx.c is not one")
+    ran += 1
+    # Why: base64 of zeros is a line of 'A', which hexbin's test alone takes.
+    import base64
+    b64 = base64.encodebytes(bytes(4000))
+    if sniff(cli, b64) != "base64":
+        problems.append("dl base64 of zeros: sniffed %r" % sniff(cli, b64))
+    ran += 1
+    return ran
+
+
 def manifests(cli):
     for name in FIXTURES:
         p = os.path.join(FIXDIR, name)
@@ -291,7 +403,11 @@ def manifests(cli):
             oracle += ", handed a copy with the banner it requires"
         if name.startswith("derived-bh2-"):
             oracle += "; written by BinHex 2.0 itself (tools/vmac/binhex2.py)"
-        man = {"entries": [e], "fixture": name, "format": "BinHex hex/hcx",
+        if name.endswith(".dl"):
+            oracle = "macutils' hexbin (tools/run_hecx.py), its sum verifying"
+        man = {"entries": [e], "fixture": name,
+               "format": "SUMacC dl" if name.endswith(".dl")
+               else "BinHex hex/hcx",
                "oracle": oracle,
                "sha256": hashlib.sha256(blob).hexdigest(),
                "size": len(blob)}
@@ -332,6 +448,7 @@ def main():
         ran += n
         for p in problems[before:]:
             problems[problems.index(p)] = "%s, %s" % (name, p)
+    ran += dl_variants(cli, problems)
     for p in problems:
         print("HECX FAIL " + p)
     print("run_hecx: %d fixtures graded against hexbin, %d variants, %d "

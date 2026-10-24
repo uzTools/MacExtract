@@ -60,8 +60,8 @@ CARRIES = {
     "fmt_sitseg_probe.c": "the StuffIt split header's offsets",
     "fmt_dd_probe.c":   "the zero header CRC old files carry (XADDiskDoublerParser.m)",
     "unc_internal.h":   "the LZAH preload",
-    "fmt_hecx.c":       "BinHex before 4.0, the whole decoder (hexbin's hecx.c)",
-    "fmt_binhex_probe.c": "the .hex/.hcx header-line rule (hexbin's hecx.c)",
+    "fmt_hecx.c":       "BinHex before 4.0 and .dl, the whole decoder (hexbin's hecx.c, dl.c)",
+    "fmt_binhex_probe.c": "the .hex/.hcx header-line rule and the .dl first line (hexbin's hecx.c, hexbin.c)",
     "unc_sidecar.c":    "which names are Mac OS X sidecars, and the pairing rule",
 }
 

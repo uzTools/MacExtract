@@ -60,6 +60,8 @@ IMPLEMENTED = {
     # hexbin's reading, and four of them were written by BinHex 2.0 from
     # a subject whose bytes are known (tools/run_hecx.py).
     "BinHex hex/hcx": "BinHex hex/hcx",
+    # Nor SUMacC's `.dl`: hexbin's reading, its sum verifying.
+    "SUMacC dl": "SUMacC dl",
 }
 
 # A fixture whose oracle names a format this engine does not have. Until

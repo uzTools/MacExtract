@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "????",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "dl-wild-xlispold",
+   "rsrc_sha256": "8b09da3a6d2911e4bf08a37849c0710c3db14b90009239488f83bf0c0a07091f",
+   "rsrc_size": 37250,
+   "type": "APPL"
+  }
+ ],
+ "fixture": "dl-wild-xlispold.dl",
+ "format": "SUMacC dl",
+ "oracle": "macutils' hexbin (tools/run_hecx.py), its sum verifying",
+ "sha256": "25f11681885e6e89888c97998950669bbb39607abfe38c9e2bd87c9d21b51070",
+ "size": 75641
+}
