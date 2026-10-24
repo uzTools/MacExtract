@@ -108,6 +108,13 @@ def subjects(which="pairs"):
                            "specimens", "maccompress", "Alpha.mcz")
         return [("", "Single.as", "ApSi", "MExt", single),
                 ("z1", "Alpha", "ZIVM", "LZIV", open(mcz, "rb").read())]
+    if which == "sdar":
+        # A SuperDisk! archive's data fork alone, stamped SDar/MExt — the
+        # pair the maintainer chose on 2026-10-24 — double-clicked: the
+        # Finder should launch MacExtract, the creator, and it should
+        # extract. `derived-SD__Utilities.x`, 3 files.
+        sd = os.path.join(REPO, "fixtures", "derived-SD__Utilities.x")
+        return [("s1", "Utilities.x", "SDar", "MExt", open(sd, "rb").read())]
     if which == "claims":
         # The bundle's exact-type claims (mac/macextract_icons.r): the
         # Finder's alternate-program dialog should offer MacExtract for a
@@ -177,7 +184,7 @@ def assemble(outdir, which="pairs", app=None):
 def main():
     p = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     p.add_argument("--assemble", action="store_true")
-    p.add_argument("--set", choices=("pairs", "tigr", "claims", "boxes", "icons"), default="pairs")
+    p.add_argument("--set", choices=("pairs", "tigr", "claims", "boxes", "icons", "sdar"), default="pairs")
     p.add_argument("--app", help="a MacBinary MacExtract to put beside the Expander")
     p.add_argument("--boot", action="store_true")
     p.add_argument("--stop", action="store_true")

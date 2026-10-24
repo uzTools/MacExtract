@@ -9270,6 +9270,18 @@ offers MacExtract alone in the alternate-program dialog, which extracts
 it with both forks byte-exact (renamed `Alpha~1`, since the container
 carries no name and its source is beside it).
 
+**Eight more, 2026-10-24: twenty-nine types.** `SDar`, the pair the
+maintainer chose for an Alysis SuperDisk! archive with or without its
+resource fork, which no file in MacStamp's 104,437-file census, TCDB or
+either Internet Config table carries; and seven MacStamp added for split
+sets, re-read at its `5b76852`: `Seg1`, `Seg2`, `Seg3`, `SegN`, `SegM` and
+`Part` for StuffIt segments, `DDSP` for DiskDoubler's split parts. +216 B
+of resource fork (232,238 → 232,454), no code. Measured (`as703.py --set
+sdar`): `derived-SD__Utilities.x`'s data fork alone, typed `SDar/MExt`,
+draws MacExtract's icon, and a double-click launches MacExtract on it with
+no dialog between; its three files come out identical in both forks to
+the Linux CLI's.
+
 ### Timed on the same Mac Plus (re-measured 2026-10-19)
 
 Both applications booted on Mini vMac `mv-4M-1x` — authentic 7 MHz, 4 MB,

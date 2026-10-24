@@ -29402,6 +29402,12 @@ name local ID 1, measured both ways on Mac OS 9.2 (FORMATS.md, *AppleSingle
 and AppleDouble in 7.0.3*). The dialog listing never depended on the icon
 and was right throughout.
 
+**And on 2026-10-24**: `SDar`, the maintainer's pair for a SuperDisk!
+archive, claimed ahead of MacStamp's tables (it was in none yet, and no
+census or table here uses the type), plus seven split-set types MacStamp
+had added since, `Seg1` to `Part` and `DDSP`. Twenty-nine in all; an
+`SDar/MExt` archive opens in MacExtract on a double-click, measured.
+
 ## 2026-10-23 (the probes next door) — MacStamp's identifier held against this sniffer over 994 fixtures: no format it names that this engine refuses; MacCompress 3.2's own format is the 1990 DiskDoubler container, and a file it wrote extracts byte-exact
 
 **Claim.** Asked whether MacStamp's probes (`/home/claude/macstamp`,

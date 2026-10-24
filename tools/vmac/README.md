@@ -617,6 +617,7 @@ words; and more than one subject per question.
     as703.py --assemble --set claims --app dist/MacExtract.bin -o <dir>   # + a .sit typed SIT!
     as703.py --assemble --set boxes -o <dir>  # + StuffIt Deluxe 7.0.3 and Tiger 1.1
     as703.py --assemble --set icons --app build/mac/MacExtract.bin -o <dir>   # the bundle's icon, and ZIVM
+    as703.py --assemble --set sdar --app dist/MacExtract.bin -o <dir>   # a SuperDisk! archive typed SDar/MExt
     as703.py --boot -o <dir>              # compat9.boot; drive with os9mouse.Mac(attach=True)
     as703.py --stop -o <dir>
     as703.py --read -o <dir>              # compat9.read
