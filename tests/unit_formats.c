@@ -423,6 +423,64 @@ static void test_applesingle(void)
     }
 }
 
+/* A loose AppleDouble header and its data file, joined: the data fork
+ * comes from `opt.data_fork`, start to end, when the header has none of
+ * its own; an AppleSingle file, which has one by definition, never reads
+ * it. And the three names a header goes by (unc_appledouble_data_name). */
+static void test_appledouble_join(void)
+{
+    uint8_t arc[256];
+    static const uint8_t data[] = "the data fork, from the file beside";
+    MemIO m, dm;
+    UncIO io, dio;
+    UncAlloc al;
+    UncSink sk;
+    CapSink cap;
+    UncOptions opt;
+    uint16_t o;
+    uint32_t off = 26 + 12;
+
+    memset(arc, 0, sizeof arc);
+    put32(arc, 0x00051607u);                    /* AppleDouble */
+    put32(arc + 4, 0x00020000u);
+    arc[24] = 0; arc[25] = 1;
+    put32(arc + 26, 2); put32(arc + 30, off); put32(arc + 34, 6);
+    memcpy(arc + off, "RSRC!!", 6); off += 6;
+
+    memset(&opt, 0, sizeof opt);
+    test_make_alloc(&al);
+    test_make_memio(&io, &m, arc, off);
+    test_make_memio(&dio, &dm, data, sizeof data - 1);
+    opt.data_fork = &dio;
+    cap_make(&sk, &cap);
+    CHECK(unc_extract_as(UNC_FORMAT_APPLEDOUBLE, &io, &sk, &al, NULL,
+                         &opt) == UNC_OK);
+    CHECK(cap.count == 1 && cap.status[0] == UNC_OK);
+    CHECK(cap.info[0].data_size == sizeof data - 1);
+    CHECK(cap.dlen[0] == sizeof data - 1 &&
+          memcmp(cap.data[0], data, sizeof data - 1) == 0);
+    CHECK(cap.rlen[0] == 6 && memcmp(cap.rsrc[0], "RSRC!!", 6) == 0);
+
+    /* The same bytes as AppleSingle: its data fork is its own entry 1,
+     * and here it has none, so it stays empty whatever the host offers. */
+    put32(arc, 0x00051600u);
+    test_make_memio(&io, &m, arc, off);
+    test_make_memio(&dio, &dm, data, sizeof data - 1);
+    cap_make(&sk, &cap);
+    CHECK(unc_extract_as(UNC_FORMAT_APPLESINGLE, &io, &sk, &al, NULL,
+                         &opt) == UNC_OK);
+    CHECK(cap.count == 1 && cap.dlen[0] == 0);
+
+    CHECK(unc_appledouble_data_name((const uint8_t *)"._Note", 6, &o) == 4 && o == 2);
+    CHECK(unc_appledouble_data_name((const uint8_t *)"%Note", 5, &o) == 4 && o == 1);
+    CHECK(unc_appledouble_data_name((const uint8_t *)"Note.ad", 7, &o) == 4 && o == 0);
+    CHECK(unc_appledouble_data_name((const uint8_t *)"._", 2, &o) == 0);
+    CHECK(unc_appledouble_data_name((const uint8_t *)"%", 1, &o) == 0);
+    CHECK(unc_appledouble_data_name((const uint8_t *)".ad", 3, &o) == 0);
+    CHECK(unc_appledouble_data_name((const uint8_t *)"Note.AD", 7, &o) == 0);
+    CHECK(unc_appledouble_data_name((const uint8_t *)"Note", 4, &o) == 0);
+}
+
 /* An AppleDouble sidecar with NO "real name" entry — the shape Netatalk
  * writes, and the shape every `._X` beside an `X` on a Mac volume has.
  * The name is then the host's, as it is for every other name-less
@@ -5520,6 +5578,7 @@ void run_format_tests(void)
     test_applesingle();
     test_sidecar();
     test_appledouble_noname();
+    test_appledouble_join();
     test_bitin();
     test_huffman_tree();
     test_packit();

@@ -610,7 +610,23 @@ typedef struct UncOptions {
      * fork; a Mac may as well ask the Resource Manager). NULL if the
      * host has no resource fork for the archive. */
     const uint8_t *mkey;
+    /* An AppleDouble header carries a file's Finder info, resource fork
+     * and the rest, and leaves its DATA fork in a separate file beside it
+     * (RFC 1740). A host that has found that file passes it here, and the
+     * reader takes the data fork from it, start to end, when the header
+     * holds no data fork of its own; unc_appledouble_data_name says which
+     * name to look for. NULL for none, which is a header extracted alone:
+     * its resource fork and Finder info and an empty data fork. Read by
+     * AppleDouble only. */
+    UncIO *data_fork;
 } UncOptions;
+
+/* The name of the data file an AppleDouble header's own filename points
+ * at, as a slice of `name`: "._NAME" (Mac OS X, Netatalk), "%NAME"
+ * (HFV Explorer, A/UX) and "NAME.ad" all give NAME. Returns its length
+ * and sets *off, or returns 0 when the name follows none of the three. */
+uint16_t unc_appledouble_data_name(const uint8_t *name, uint16_t len,
+                                   uint16_t *off);
 
 /* Locate one resource in a raw resource fork. Returns UNC_OK and sets
  * `off` and `len` to the resource's data within `fork`, or returns

@@ -621,7 +621,10 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # part 1 cut short by its 'endD' (DECISIONS.md 2026-10-24, *the length part 1 kept in its resource fork*):
 # unc_segment_first_end resident here (332 B) and the shell's read of
 # part 1's resource fork.
-UNC_MAC_CODE_DEFAULT=176364
+# +440 on 2026-10-24, 176,364 -> 176,804, A5 +8 below: a loose AppleDouble
+# header joined to its data file (DECISIONS.md 2026-10-24, *the header and the file beside it*), the
+# reader's second input and the shell's lookup, resident in every build.
+UNC_MAC_CODE_DEFAULT=176804
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -813,7 +816,9 @@ UNC_MAC_CODE_DEFAULT=176364
 # -16 on 2026-10-24, 36,216 -> 36,200, with the segment probe (above).
 # +12 on 2026-10-24, 36,200 -> 36,212, `.data` alignment under the 'endD'
 # read (above).
-UNC_MAC_A5_DEFAULT=36212
+# +8 on 2026-10-24, 36,212 -> 36,220, `.data` alignment under the
+# AppleDouble join (above).
+UNC_MAC_A5_DEFAULT=36220
 # A CEILING PER CONFIGURATION, because one ceiling measured on another build
 # cannot fire. The figures above are the RESIDENT control build, which carries
 # every decoder; the shipped build's resident code is a third of that, so
@@ -1235,8 +1240,13 @@ UNC_MAC_A5_DEFAULT=36212
 # itself is in that image, not here (DECISIONS.md 2026-10-24, *the length part 1 kept in its resource fork*).
 # The 24 B is `*fill*` under `. = ALIGN (0x20)`: CODE + A5 +224 either way
 # the shell's code was arranged.
-UNC_MAC_CODE_EAGER=40744
-UNC_MAC_A5_EAGER=16264
+# +452 and -4 on 2026-10-24, 40,744 -> 41,196 and 16,264 -> 16,260: a loose
+# AppleDouble header joined to its data file (DECISIONS.md 2026-10-24,
+# *the header and the file beside it*): the shell's lookup and second open, the
+# reader's second input, unc_appledouble_data_name (104 B). 448 B off every
+# budget.
+UNC_MAC_CODE_EAGER=41196
+UNC_MAC_A5_EAGER=16260
 # +8 on 2026-10-02 for the same reason as the eager pair above: the
 # overlay call that now says WHICH of StuffIt 2.x's ciphers an entry
 # wants. A5 fell to 19,096 and its ceiling is left where it was.
@@ -1327,7 +1337,9 @@ UNC_MAC_A5_EAGER=16264
 # under its ceiling.
 # +200 code on 2026-10-24, the 'endD' read (the eager pair above); data +
 # bss 16,324, under its ceiling.
-UNC_MAC_CODE_LAZY=39404
+# +452 code on 2026-10-24, the AppleDouble join (the eager pair above);
+# data + bss 16,320, under its ceiling.
+UNC_MAC_CODE_LAZY=39856
 UNC_MAC_A5_LAZY=19200
 if [ -n "$UNC_OVL_RESIDENT" ]; then
     UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-$UNC_MAC_CODE_DEFAULT}

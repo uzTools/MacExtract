@@ -802,6 +802,42 @@ static int load_mkey(const char *path, int hidden, uint8_t out[8])
     return 0;
 }
 
+/* A loose AppleDouble header keeps its data fork in the file its name
+ * points at, in the same folder (unc_appledouble_data_name): open that,
+ * hand it to the engine, and name the entry after it, which is what a
+ * header without a real-name entry would otherwise lack. Nothing found
+ * leaves `opt` as it was, and the header extracts alone. */
+static void ad_data_open(const char *file, FileIO *f, UncIO *io,
+                         UncOptions *opt)
+{
+    const char *base = strrchr(file, '/');
+    char path[1100];
+    struct stat st;
+    uint16_t off, n;
+    size_t dirlen;
+
+    base = base ? base + 1 : file;
+    n = unc_appledouble_data_name((const uint8_t *)base,
+                                  (uint16_t)strlen(base), &off);
+    dirlen = (size_t)(base - file);
+    if (!n || dirlen + n >= sizeof path) return;
+    memcpy(path, file, dirlen);
+    memcpy(path + dirlen, base + off, n);
+    path[dirlen + n] = 0;
+    if (stat(path, &st) != 0 || !S_ISREG(st.st_mode)) return;
+    f->f = fopen(path, "rb");
+    if (!f->f) return;
+    f->size = file_size_off(&st, path);
+    io->ctx = f;
+    io->read = fio_read;
+    io->seek = fio_seek;
+    io->tell = fio_tell;
+    io->size = fio_size;
+    opt->data_fork = io;
+    opt->name_hint = (const uint8_t *)base + off;
+    opt->name_hint_len = n;
+}
+
 /* --ask: prompt for a password on the terminal, and again when the
  * archive rejects the one given. Returning 0 (an empty line, or EOF)
  * is how the user says "skip it", and the entry then fails cleanly. */
@@ -2800,7 +2836,13 @@ nextlayer:
         seg_peel_clean(&seg);
         for (i = 1; i <= UNC_SEG_MAX_PARTS; i++) free(seg.path[i]);
     } else {
+        FileIO dfio;
+        UncIO dio;
+        dfio.f = NULL;
+        if (fmt == UNC_FORMAT_APPLEDOUBLE) ad_data_open(file, &dfio, &dio, &opt);
         ret = unc_extract_as(fmt, &io, &sk, &al, &prog, &opt);
+        if (dfio.f) fclose(dfio.f);
+        opt.data_fork = NULL;
     }
     fclose(fio.f);
 

@@ -126,6 +126,27 @@ static int as_stream_fork(UncCtx *c, UncFork fork, uint32_t offs,
     return unc_copy_fork(c, fork, size, buf, bufsz);
 }
 
+/* Which file beside a loose AppleDouble header holds its data fork.
+ * Source: reference/XADMaster/XADMacArchiveParser.m,
+ * -parseAppleDoubleWithDictionary: ("Ditto forks are always prefixed
+ * with "._""), and reference/XADMaster/XADUnarchiver.m, the HFV
+ * Explorer fork style, which writes a header as "%" + the name and
+ * recovers the name by dropping that one character. RFC 1740 names no
+ * convention. "NAME.ad" is no reference's: it is how the two headers in
+ * this corpus that came with their data file are named
+ * (fixtures/SOURCES.md, `ddtf-ddpro411ad1.dd.ad`). */
+uint16_t unc_appledouble_data_name(const uint8_t *name, uint16_t len,
+                                   uint16_t *off)
+{
+    *off = 0;
+    if (len > 2 && name[0] == '.' && name[1] == '_') { *off = 2; return len - 2; }
+    if (len > 1 && name[0] == '%') { *off = 1; return len - 1; }
+    if (len > 3 && name[len - 3] == '.' && name[len - 2] == 'a' &&
+        name[len - 1] == 'd')
+        return len - 3;
+    return 0;
+}
+
 int unc_appledouble_extract(UncCtx *c)
 {
     uint8_t hdr[26];
@@ -253,6 +274,18 @@ int unc_appledouble_extract(UncCtx *c)
         }
     }
 
+    /* A header with no data fork of its own takes it from the file the
+     * host found beside it, whole. Both forks are then this entry's, and
+     * the progress total grows by the second file. */
+    if (!have_data && magic != AS_MAGIC_SINGLE && magic != AS_MAGIC_SINGLE_LE
+        && c->opt.data_fork) {
+        datalen = unc_io_size32(c->opt.data_fork);
+        if (datalen != UNC_SIZE_UNKNOWN) {
+            have_data = 2;
+            c->ps.total += datalen;
+        }
+    }
+
     e.data_size = have_data ? datalen : 0;
     e.rsrc_size = have_rsrc ? rsrclen : 0;
     e.comp_data_size = e.data_size;
@@ -268,9 +301,13 @@ int unc_appledouble_extract(UncCtx *c)
         uint8_t *buf = (uint8_t *)unc_alloc(c->al, bufsz);
         if (!buf) err = UNC_ERR_MEM;
         if (err == UNC_OK) {
-            if (have_data && datalen > 0)
+            if (have_data && datalen > 0) {
+                UncIO *own = c->io;
+                if (have_data == 2) c->io = c->opt.data_fork;
                 err = as_stream_fork(c, UNC_FORK_DATA, dataoffs, datalen,
                                      buf, bufsz);
+                c->io = own;
+            }
             if (err == UNC_OK && have_rsrc && rsrclen > 0)
                 err = as_stream_fork(c, UNC_FORK_RSRC, rsrcoffs, rsrclen,
                                      buf, bufsz);

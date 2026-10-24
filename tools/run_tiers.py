@@ -179,10 +179,14 @@ REPO = os.path.dirname(HERE)
 # **-512 more each 2026-10-24, DERIVED**: a fat installer's 'endD', the
 # control's CODE +500 and A5 +12 (DECISIONS.md 2026-10-24, *the length part 1 kept in its resource fork*);
 # OVL_SAVED +288 below offsets all but the shipped pair's 224.
+# **-448 more each 2026-10-24, DERIVED**: a loose AppleDouble header joined
+# to its data file, the control's CODE +440 and A5 +8 (DECISIONS.md
+# 2026-10-24, *the header and the file beside it*); resident in every build, so OVL_SAVED
+# does not move and the shipped lane loses the same 448.
 TIERS = {
-    "sys3-512K": (200630, "System 3.0, Macintosh 512Ke (222,070 B free)"),
-    "sys6-512K": (105248, "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
-    "floor-1M":  (629536, "System 6.0.8, 1 MB Mac Plus — the floor target"),
+    "sys3-512K": (200182, "System 3.0, Macintosh 512Ke (222,070 B free)"),
+    "sys6-512K": (104800, "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
+    "floor-1M":  (629088, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
 # -32 on all three 2026-10-21, DERIVED from TIERS_CONTROL +32 (the bundle's
 # working directory, DECISIONS.md 2026-10-21, *the Desktop Manager System 6
@@ -374,12 +378,13 @@ TIERS = {
 # data + bss -680. The machine gave +4,204, because the jump table, the
 # stub segments and the relocations trimmed at launch are resident bytes
 # this unit never counted — which is why TIERS was measured, not moved.
-TIERS_CONTROL = 212576     # build/mac-resident, CODE + A5, 2026-10-24
+TIERS_CONTROL = 213024     # build/mac-resident, CODE + A5, 2026-10-24
 # +352 on 2026-10-22: the eleven malformed-input fixes, every decoder linked
 # in; TIERS above drops 352 to match (TIERS_MACHINE, physical RAM, unmoved).
 # +32 more on 2026-10-23 with Compact Pro's fork-extent check; TIERS -32.
 # +64 more on 2026-10-24 with the StuffIt segment probe; TIERS -64.
 # +512 more on 2026-10-24 with a fat installer's 'endD'; TIERS -512.
+# +448 more on 2026-10-24 with the AppleDouble join; TIERS -448.
 # **What this control cannot see: the autotest harness.** TIERS was read
 # on the machine from an autotest build (`UNC_MAC_AUTOTEST`), and
 # build/mac-resident has no harness in it, so harness growth lowers what a

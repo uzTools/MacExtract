@@ -2884,6 +2884,19 @@ that container to grade a generated one (OPEN_ITEMS.md). The Mac
 application consumes none of it and says nothing on screen; what it does
 instead is graded in the next section.
 
+## A loose AppleDouble header and its data file (`tools/run_appledouble.py`, in `ci.sh`)
+
+Added 2026-10-24 (DECISIONS.md, *the header and the file beside it*). Eight cases, the headers
+generated from RFC 1740's layout and graded by the bytes put in: each of
+the three names beside its data file (one entry, both forks, named after
+the data file), a real-name entry outranking that name, a header alone, a
+FOLDER of the data file's name, an AppleSingle file whose own data fork
+wins, and an extraction into the header's own folder, which the CLI
+refuses rather than overwrite. Every input is hashed before and after.
+**Shown to fail**: the CLI before the join fails five of the eight.
+**What it cannot see**: the Mac application's half, which is its own
+shell code (`tools/vmac/as703.py --set adext`, on Mac OS 9.2 by hand).
+
 ## The tiers a budget predicts (`tools/run_tiers.py`, in `ci.sh`)
 
 **A small Macintosh's memory result, measured on Linux in five seconds.**

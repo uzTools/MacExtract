@@ -56,7 +56,7 @@ under *Table notes*.
 | Format | Status | Methods | Oracle coverage | Peak RAM | 400 KB budget |
 |---|---|---|---|---|---|
 | MacBinary I/II/III | extract | — | 236 fixtures | 8 KB | full |
-| AppleSingle/Double | extract | — | (unit tests + envelopes) | 8 KB | full |
+| AppleSingle/Double | extract; a loose AppleDouble header joined to the data file its name points at (`._NAME`, `%NAME`, `NAME.ad`), and alone where there is none (DECISIONS.md 2026-10-24, *the header and the file beside it*) | — | (unit tests + envelopes; `run_appledouble.py`) | 8 KB | full |
 | BinHex 4 (.hqx) | extract | RLE90; several documents in one file, and one document posted in several parts, cut at DeHQX's separator or not†† | 179 fixtures | 8 KB | full |
 | BinHex before 4.0 (.hex, .hcx) | extract | `.hex`: 4 bits a character, an 8-bit sum; `.hcx`: 6 bits, stripped trailing spaces put back, a 16-bit add-and-rotate; the banner optional | 7 fixtures: 4 written by BinHex 2.0 itself from known forks, 3 from the 1985 *mactosh* archive (DECISIONS.md 2026-10-14, *the BinHex before 4.0*) | 9 KB | full |
 | PackIt (.pit) | extract | store, Huffman; **PMa5 and PMa6 decrypted** (an XOR keyed by DES's PC-1, and DES) | 4 fixtures (1 real + 3 synthetic PMa4) | 9 KB | full |
@@ -5369,11 +5369,14 @@ the bundle*), and seventeen since.
 
 | build | switch | resident `CODE` | A5 | `MacExtract.code.bin` | `MacExtract.bin` |
 |---|---|---|---|---|---|
-| **eager — SHIPPED** | (default) | **40,744 B** | 16,264 B | **48,384 B** | **233,344 B** |
-| lazy | `UNC_OVL_LAZY=1` | 39,404 B | 16,324 B | 46,848 B | 232,064 B |
-| resident — the control | `UNC_OVL_RESIDENT=1` | **176,364 B** | **36,212 B** | 206,336 B | 210,944 B |
+| **eager — SHIPPED** | (default) | **41,196 B** | 16,260 B | **48,768 B** | **233,728 B** |
+| lazy | `UNC_OVL_LAZY=1` | 39,856 B | 16,320 B | 47,360 B | 232,576 B |
+| resident — the control | `UNC_OVL_RESIDENT=1` | **176,804 B** | **36,220 B** | 206,720 B | 211,456 B |
 
-Re-taken 2026-10-24 for a fat installer's `'endD'` (DECISIONS.md
+Re-taken 2026-10-24 for the AppleDouble join (DECISIONS.md 2026-10-24,
+*the header and the file beside it*): CODE +452 and A5 −4 shipped and
+lazy, +440 and +8 the control, resident in all three, so `OVL_SAVED` and
+the grants below are unmoved. Before it, that day's fat installer's `'endD'` (DECISIONS.md
 2026-10-24, *the length part 1 kept in its resource fork*): the control's
 CODE +500 and A5 +12, the shipped pair's +200 and +24 (`.data` alignment),
 the lazy build's +200 and −8, the bundle +408 with the lookup in the

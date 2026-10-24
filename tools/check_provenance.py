@@ -55,7 +55,7 @@ CARRIES = {
     "unc_crypt.c":      "StuffItDES, StuffIt 5's hash, ARC's garble",
     "unc_lzah.c":       "the -lh1-/method-5 window preload (resetLZSSHandle)",
     "fmt_macbinary_probe.c": "the CRC-16/0xA001 fallback and the nonzero-date test",
-    "fmt_applesingle.c": "the byte-swapped header",
+    "fmt_applesingle.c": "the byte-swapped header, and a header's \"._\" and \"%\" names",
     "fmt_sitseg.c":     "the whole StuffIt split header",
     "fmt_sitseg_probe.c": "the StuffIt split header's offsets",
     "fmt_dd_probe.c":   "the zero header CRC old files carry (XADDiskDoublerParser.m)",

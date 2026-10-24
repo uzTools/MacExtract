@@ -457,6 +457,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-23 (the shims that were one function) — the 21 decoder shims become one routine and an 18-byte call each, the release's `switch` a two-byte row per format: 800 B back on every shipped budget, and a format costs the resident build its row and nothing more
 - 2026-10-24 (the magic StuffIt never wrote) — StuffIt segments begin with a per-set value, not XADMaster's B0 56; every set StuffIt cut was refused, and six now join to what was cut
 - 2026-10-24 (the length part 1 kept in its resource fork) — a fat installer's part 1 states where its segment ends in an 'endD' resource; both hosts read it, and Now Utilities 6.0 joins byte for byte
+- 2026-10-24 (the header and the file beside it) — a loose AppleDouble header is joined to the data file its name points at, on the CLI and on the Mac, for MacStamp's type
 
 ---
 
@@ -29648,4 +29649,52 @@ and the lookup's frame is 64 B (`-Os -fstack-usage`), under the joiner's
 part open, which a StuffIt set reaches from a fork copy, never from a
 decoder. A layer that keeps the
 whole bundle keeps the image's 408 B more.
+
+## 2026-10-24 (the header and the file beside it) — a loose AppleDouble header is joined to the data file its name points at, on the CLI and on the Mac, for MacStamp's type
+
+**Claim.** A loose AppleDouble header now comes out as the whole file
+whenever its data file is beside it: one Macintosh file, with the data
+file's bytes as its data fork and everything the header holds (resource
+fork, Finder info, comment, dates, lock). `._NAME` (Mac OS X, Netatalk),
+`%NAME` (HFV Explorer, A/UX) and `NAME.ad` all point at `NAME` in the same
+folder. The file is named from entry 3 where the header has one, and
+otherwise after the data file. With no data file beside it, the header
+extracts alone, as before. The inputs are only read.
+
+**Why.** Asked by MacStamp for the maintainer, who will give AppleDouble a
+type of its own, opened by MacExtract, only if double-clicking one does
+something useful. Measured earlier the same day on Mac OS 9.2: every
+header came out as a resource fork with an empty data fork, and the data
+file beside it was left out.
+
+**How.** `UncOptions.data_fork` is a second input: the reader takes the
+data fork from it, start to end, when the header has none of its own. An
+AppleSingle file never does. `unc_appledouble_data_name` is the naming
+rule, and both hosts call it so that it lives in one place. The `._` and
+`%` names are XADMaster's, recorded in NOTICE. RFC 1740 names no
+convention. `NAME.ad` is how the corpus's two headers that came with their
+data file are named. A name that would land on an existing file is the
+host's business: the Mac numbers it ("Note renamed to Note~1", in the
+report), and the CLI refuses rather than overwrite.
+
+**Measured.** On Mac OS 9.2, by Finder open (`as703.py --set adext`), six
+folders, all as specified:
+- The three names beside a data file, and a Mac OS X header without
+  entry 3 beside `Note`: the 416-byte data fork and the 286-byte resource
+  fork each byte-identical to their source, typed from entry 9.
+- Two headers alone: unchanged.
+- Every input: unchanged.
+
+On the CLI, `tools/run_appledouble.py`, eight cases in `ci.sh`; the
+binary from before the join fails five of them. Two `unit_formats.c`
+checks fail with the join switched off.
+
+**What it cost.** CODE +452 and A5 −4 in the shipped and lazy builds,
++440 and +8 in the control. That is 448 B off every budget, because the
+reader is resident in all three builds. `OVL_SAVED` and every grant are
+unmoved, and `TIERS` falls 448. Sharing the shell's four-callback `UncIO`
+setup through a helper was tried and measured +32 B worse: four arguments
+pushed on a 68000 cost what the stores they replace did. Not checked on
+the Mac: the comment, the dates and the lock, which `compat9.read` does
+not show. The CLI carries all three through the same engine path.
 

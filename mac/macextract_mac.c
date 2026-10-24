@@ -4773,7 +4773,43 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
          * first, which is why this is here rather than beside the strip. */
         if (extractedAs == UNC_FORMAT_SPACESAVER)
             opt.name_hint_len = name[0];
-        ret = unc_extract_as(extractedAs, &io, &sk, &al, prog, &opt);
+        /* A loose AppleDouble header keeps its data fork in the file its
+         * name points at, in the same folder (unc_appledouble_data_name):
+         * opened here, handed to the engine, and the entry named after
+         * it. None found, and the header extracts alone, as it always
+         * has. The inputs are only read. */
+        {
+            FileIO dfio;
+            UncIO dio;
+            Str63 dn;
+            uint16_t off, n = 0;
+            long eof = 0;
+            short dref = 0, i;
+
+            if (extractedAs == UNC_FORMAT_APPLEDOUBLE)
+                n = unc_appledouble_data_name(name + 1, name[0], &off);
+            if (n && n <= 63) {
+                dn[0] = (unsigned char)n;
+                for (i = 0; i < (short)n; i++) dn[i + 1] = name[1 + off + i];
+                if (MyOpenFork(inVol, inDir, dn, fsRdPerm, 0, &dref) == noErr) {
+                    GetEOF(dref, &eof);
+                    dfio.refNum = dref;
+                    dfio.size = eof > 0 ? (uint32_t)eof : 0;
+                    dfio.pos = 0;
+                    dio.ctx = &dfio;
+                    dio.read = fio_read;
+                    dio.seek = fio_seek;
+                    dio.tell = fio_tell;
+                    dio.size = fio_size;
+                    opt.data_fork = &dio;
+                    opt.name_hint = name + 1 + off;
+                    opt.name_hint_len = n;
+                }
+            }
+            ret = unc_extract_as(extractedAs, &io, &sk, &al, prog, &opt);
+            opt.data_fork = NULL;
+            if (dref) FSClose(dref);
+        }
     }
     gPeakUsage = ma.initial - ma.lowmark;   /* engine heap high-water mark */
     DirFlush(&sink);           /* the held folder's date, before anything else */

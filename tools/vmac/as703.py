@@ -55,8 +55,9 @@ AS = os.path.join(REPO, "fixtures", "synth-as-meta.as")
 AS_MAGIC, AD_MAGIC = 0x00051600, 0x00051607   # RFC 1740, sections 2 and 3
 
 
-def appledouble(blob):
-    """(header file, data file) for one AppleSingle file."""
+def appledouble(blob, drop=()):
+    """(header file, data file) for one AppleSingle file, leaving out the
+    entries in `drop` as well as the data fork."""
     magic, ver, filler, n = struct.unpack(">II16sH", blob[:26])
     assert magic == AS_MAGIC
     ents, data = [], b""
@@ -64,7 +65,7 @@ def appledouble(blob):
         eid, off, ln = struct.unpack(">III", blob[26 + 12 * i:38 + 12 * i])
         if eid == 1:
             data = blob[off:off + ln]
-        else:
+        elif eid not in drop:
             ents.append((eid, blob[off:off + ln]))
     head = struct.pack(">II16sH", AD_MAGIC, ver, filler, len(ents))
     off = len(head) + 12 * len(ents)
@@ -119,15 +120,21 @@ def subjects(which="pairs"):
     if which == "adext":
         # MacStamp (2026-10-24): what MacExtract itself does with a loose
         # AppleDouble header, double-clicked. Creator MExt, so the Finder
-        # hands each header to MacExtract; the three header names, beside
-        # their data file, and Mac OS X's alone.
+        # hands each header to MacExtract; the three header names beside
+        # their data file, and alone.
+        # x5 and x6 are the shape Mac OS X writes: no real-name entry,
+        # so the name can only come from the data file's.
+        bare, _ = appledouble(single, drop=(3,))
         return [("x1", "._Comment", q, "MExt", header),
                 ("x1", "Comment", q, q, data),
                 ("x2", "._Comment", q, "MExt", header),
                 ("x3", "%Comment", q, "MExt", header),
                 ("x3", "Comment", q, q, data),
                 ("x4", "Comment.ad", q, "MExt", header),
-                ("x4", "Comment", q, q, data)]
+                ("x4", "Comment", q, q, data),
+                ("x5", "._Note", q, "MExt", bare),
+                ("x5", "Note", q, q, data),
+                ("x6", "._Note", q, "MExt", bare)]
     if which == "claims":
         # The bundle's exact-type claims (mac/macextract_icons.r): the
         # Finder's alternate-program dialog should offer MacExtract for a

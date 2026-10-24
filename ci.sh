@@ -117,6 +117,10 @@ python3 tools/run_sizelimits.py --macextract build/san/macextract \
 # bytes.
 python3 tools/run_names.py --macextract build/san/macextract \
     || fail "over-long name tests"
+# A loose AppleDouble header joined to the data file its name points at
+# (._NAME, %NAME, NAME.ad), the inputs untouched. Generated headers.
+python3 tools/run_appledouble.py --macextract build/san/macextract \
+    || fail "AppleDouble join tests"
 # What a small Macintosh refuses, decided on Linux. The Mac shell's
 # allocator is a running total against a cap, and `--budget` is the same
 # rule, so a tier's memory result can be swept here in seconds instead of

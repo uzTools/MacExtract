@@ -88,7 +88,12 @@ hand.
                        files" and none of the 91 headers here has.
                        Checked against deark on 2026-09-27 for the
                        first four: it states none of them. Kept, the
-                       maintainer's decision 2026-10-23. DiskDoubler's
+                       maintainer's decision 2026-10-23. And, in
+                       src/fmt_applesingle.c since 2026-10-24, the two
+                       names a loose AppleDouble header goes by, "._"
+                       + the name (XADMacArchiveParser.m) and "%" +
+                       the name (XADUnarchiver.m), which RFC 1740
+                       does not give. DiskDoubler's
                        84- and 78-byte headers are no longer macutils'
                        since 2026-10-23: every field the probe tests is
                        measured in docs/formats/diskdoubler-container.md.
