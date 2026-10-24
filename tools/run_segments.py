@@ -1702,8 +1702,43 @@ def main():
                 fails.check("2 part opens" in out,
                             "basic3: wrong %s was not caught as part 2 "
                             "ended: %r" % (what, out.strip()))
+            # The header's own CRC-16/ARC at 94, over bytes 0..93, which
+            # the probe requires since the evening of 2026-10-24: part 2
+            # with one bit of it flipped, then with one byte it covers
+            # that nothing else reads flipped (40, the name buffer past
+            # the name), is not a part of the set, so the join stops at
+            # part 1 with a missing segment and never opens it. The
+            # binary before the check joined both, exit 0, three opens
+            # (DECISIONS.md, *the check the header carries*). And part 1
+            # with the same bit flipped sniffs as nothing.
+            for tag, what, off in (("hcrc", "header CRC", 95),
+                                   ("hpad", "name-buffer byte", 40)):
+                with open(second, "wb") as f:
+                    f.write(body[:off] + bytes([body[off] ^ 0x01]) +
+                            body[off + 1:])
+                rc, out = ours_extract(macextract, first,
+                                       os.path.join(d, "_" + tag),
+                                       extra=["--stats"])
+                fails.check(rc != 0, "basic3: part 2 with a wrong %s was "
+                            "accepted as a part" % what)
+                fails.check("missing" in out.lower(),
+                            "basic3: part 2 with a wrong %s reported as %r"
+                            % (what, out.strip()))
+                fails.check("1 part opens" in out,
+                            "basic3: part 2 with a wrong %s was opened: %r"
+                            % (what, out.strip()))
             with open(second, "wb") as f:
                 f.write(body)
+            head1 = open(first, "rb").read()
+            with open(first, "wb") as f:
+                f.write(head1[:95] + bytes([head1[95] ^ 0x01]) + head1[96:])
+            r = run([macextract, "sniff", first])
+            fails.check(r.stdout.decode("utf-8", "replace").strip()
+                        == "unknown",
+                        "basic3: part 1 with a wrong header CRC sniffed as %r"
+                        % r.stdout.decode("utf-8", "replace").strip())
+            with open(first, "wb") as f:
+                f.write(head1)
             rc, out = ours_extract(macextract, first, os.path.join(d, "_again"))
             fails.check(rc == 0 and
                         read_tree(os.path.join(d, "_again")) == want,

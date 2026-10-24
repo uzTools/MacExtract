@@ -2061,6 +2061,14 @@ static void test_lzh_extract(void)
 /* StuffIt segments (multi-part sets)                                 */
 /* ------------------------------------------------------------------ */
 
+/* The CRC-16/ARC every part stores at 94 over its header's bytes 0..93,
+ * which the probe requires (src/fmt_sitseg_probe.c). */
+static void seg_head_crc(uint8_t *h)
+{
+    uint16_t c = unc_crc16_arc(0, h, 94);
+    h[94] = (uint8_t)(c >> 8); h[95] = (uint8_t)c;
+}
+
 /* One part: 100-byte header + payload slice. See src/fmt_sitseg.c for
  * the layout and its source. */
 static void seg_head(uint8_t *h, int part, const char *name,
@@ -2078,6 +2086,7 @@ static void seg_head(uint8_t *h, int part, const char *name,
     h[88] = (uint8_t)(rsrclen >> 8);  h[89] = (uint8_t)rsrclen;
     h[90] = (uint8_t)(datalen >> 24); h[91] = (uint8_t)(datalen >> 16);
     h[92] = (uint8_t)(datalen >> 8);  h[93] = (uint8_t)datalen;
+    seg_head_crc(h);
 }
 
 /* A volume source over in-memory parts, with a hole the test can open
@@ -2160,16 +2169,30 @@ static void test_sitseg(void)
 
         /* What StuffIt itself writes (2026-10-24): the first two bytes
          * a per-set value, not XADMaster's B0 56 — 41 A7 is what StuffIt
-         * Lite 3.0.5 and InstallerMaker 2.0 wrote — and the running CRC
-         * at 98.
+         * Lite 3.0.5 and InstallerMaker 2.0 wrote — the header's own CRC
+         * at 94 and the running CRC at 98.
          * Refused until then; every B0 56 part here was our own. */
         seg_head(other, 2, "Thing.sit", 100, 200, 0x11223344u);
         other[0] = 0x41; other[1] = 0xA7;
-        other[94] = 0x03; other[95] = 0x62;     /* varies by part */
+        seg_head_crc(other);                    /* over the new bytes 0-1 */
         other[98] = 0x19; other[99] = 0x40;     /* the running CRC */
         CHECK(unc_sitseg_probe(other, UNC_SEG_HEAD, NULL) == UNC_FORMAT_SITSEG);
         CHECK(unc_segment_match(&desc, other, UNC_SEG_HEAD) == 2);
-        /* ...and what stands in for the two bytes: 96 and 97 zero, ... */
+        /* ...and what stands in for the two bytes: the header CRC at 94,
+         * required since the evening of 2026-10-24 — one flipped bit of
+         * it, and then one flipped byte it covers that nothing else reads
+         * (the name buffer past the name), each refuse the part, as a
+         * probe and as a match; the probe before it accepted both ... */
+        other[95] ^= 0x01;
+        CHECK(unc_sitseg_probe(other, UNC_SEG_HEAD, NULL) == 0);
+        CHECK(unc_segment_match(&desc, other, UNC_SEG_HEAD) == 0);
+        other[95] ^= 0x01;
+        other[40] ^= 0x01;
+        CHECK(unc_sitseg_probe(other, UNC_SEG_HEAD, NULL) == 0);
+        CHECK(unc_segment_match(&desc, other, UNC_SEG_HEAD) == 0);
+        other[40] ^= 0x01;
+        CHECK(unc_sitseg_probe(other, UNC_SEG_HEAD, NULL) == UNC_FORMAT_SITSEG);
+        /* ...96 and 97 zero, ... */
         other[96] = 0x01;
         CHECK(unc_sitseg_probe(other, UNC_SEG_HEAD, NULL) == 0);
         other[96] = 0x00; other[97] = 0x01;

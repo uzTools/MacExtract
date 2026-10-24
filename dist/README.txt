@@ -383,7 +383,8 @@ somewhere else you are asked for it. Putting the disk in is the whole answer
 — the part is picked up as soon as the disk appears, with nothing to click —
 and the question tells you how much of the archive is still to read. Each
 part is checked against the checksum StuffIt wrote into it as soon as it has
-been read, so a damaged disk is reported before the next one is asked for.
+been read, so a damaged disk is reported before the next one is asked for,
+and a part whose own header is damaged is reported as missing, not joined.
 The parts are recognised by what is inside them, so it does not matter what they
 are called or whether they are all in one folder. Send the output to a
 different disk from the parts; the disk holding the output is otherwise the

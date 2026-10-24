@@ -461,6 +461,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-24 (the fork the peel dropped) — the CLI's peel of a wrapped part keeps its resource fork as a sidecar, so a fat installer's part 1 found in an envelope beside Disk 2 joins right
 - 2026-10-24 (the fork that was never downloaded) — a fat part 1 without its resource fork is not re-cut: two routes built and priced, 128 B and 304 B resident, and declined because no download produces that file
 - 2026-10-24 (the sum each part carries) — a StuffIt segment's running CRC-16/ARC at 98 is held part by part in the joiner; a flipped byte is a checksum mismatch before the next disk is asked for
+- 2026-10-24 (the check the header carries) — the CRC-16/ARC a StuffIt segment stores at 94 is required by the parse the probe and the reader share; it stands where XADMaster's two magic bytes stood
 
 ---
 
@@ -29814,3 +29815,58 @@ from the instruction timings, not a tick-probe measurement**. A `SPLT`
 set has paid the same since its check. Route B of *the fork that was
 never downloaded*, which watched this CRC byte by byte for a cut, was
 304 B; this is the per-part check that entry left unpriced.
+
+## 2026-10-24 (the check the header carries) — the CRC-16/ARC a StuffIt segment stores at 94 is required by the parse the probe and the reader share; it stands where XADMaster's two magic bytes stood
+
+**Claim.** Every part StuffIt wrote stores, at 94, a CRC-16/ARC of its
+header's bytes 0..93 (*the magic StuffIt never wrote*). `sitseg_parse`,
+which `unc_sitseg_probe` and the reader share, now refuses a header whose
+stored value is not that sum, as MacStamp's `probe_sitseg` has since its
+6c9bc7b. On bytes that are not a part's it passes 1 in 65,536, which is
+what `B0 56` was worth before it turned out to be the generator's and
+nothing StuffIt writes. Measured.
+
+**Evidence.** Both preconditions held before the change: 42 parts of 42
+in the eight real sets under `specimens/sitseg-real/` carry it (counted
+by file: 28 in the three plain sets, three each in the self-extracting
+and InstallerMaker sets, four Deluxe 2.0.1, two Save As, two Now
+Utilities — the entries before this one say 40), and `Palette.sit.1` on
+the maintainer's share, re-cut by the generator at 1c32c80, stores 5B64
+and sums to 5B64. **No verdict moves**: `sniff` over the 996 files of
+`fixtures/` with the binary before and after is identical line for line,
+all 42 real parts and `Palette.sit.1` are *StuffIt segment* under both,
+and `run_segments.py`'s eight real sets join to what was cut as before.
+**Shown to fail**: `basic3`'s part 2 with one bit of its stored header CRC
+flipped, and then with one byte the CRC covers that nothing else reads
+flipped (40, the name buffer past the name), is joined by the binary
+before — exit 0, three part opens, the same file — and refused by the new
+one as a missing segment after one open; part 1 with the same bit flipped
+sniffs *unknown* where it sniffed *StuffIt segment*. Seven suite checks
+and four unit checks, all of which the old probe fails (`unit_tests` with
+HEAD's `fmt_sitseg_probe.c` linked in: 4 of 1,434).
+
+**What it does not see.** A header forged with its CRC — nothing in the
+format can; past it the fingerprint match and the running CRC at 98
+adjudicate. Bytes 0-1 stay untested. A writer that left 94-95 zero would
+now be refused: none of the seven writers measured does, and the
+generator has written it since 1c32c80 the same day; before that every
+synthetic part on this machine would have been.
+
+**What it cost.** Against the control built from the same tree, three
+configurations each: `sitseg_parse` 288 → 326 B (+38), resident in all
+three, and `_sdata` alignment −4 (eager, control) and −8 (lazy), so the
+shipped pair CODE +36 and A5 −4, the lazy build +40 and −8, the control
++36 and −4; `TIERS_CONTROL` +32, each tier base −32, `OVL_SAVED` unmoved
+at 155,584 B (both sides +32). The sniffer's image carries its own copy of
+the parse and reaches `unc_crc16_arc` through the host vector: `ovl_sniff`
+12,380 → 12,424 B (+44), the bundle 180,332 → 180,376, so the envelope row
+of *What each format is granted* −44 B and no other row (no format keeps
+that image). `run_tiers.py --check` moves no tally: 74/74, 72/74 and 68/74
+shipped, the same fixtures by name. The download is 233,472 B as before;
+`MacExtract.code.bin` 48,384 → 48,512 B (block rounding). Stack:
+`sitseg_parse` 28 → 34 B (`-Os -fstack-usage`, m68k), nothing on the
+engine's deepest chain. Heap: none. Time: one `unc_crc16_arc` over 94
+bytes per candidate that passes the byte checks before it, in the sniffer
+and in every part match — **about 7,500 cycles on a 68000 from the
+shipped build's loop, an estimate from the instruction timings, not a
+tick-probe measurement**.

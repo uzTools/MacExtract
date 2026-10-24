@@ -5369,11 +5369,15 @@ the bundle*), and seventeen since.
 
 | build | switch | resident `CODE` | A5 | `MacExtract.code.bin` | `MacExtract.bin` |
 |---|---|---|---|---|---|
-| **eager — SHIPPED** | (default) | **40,824 B** | 16,280 B | **48,384 B** | **233,472 B** |
-| lazy | `UNC_OVL_LAZY=1` | 39,480 B | 16,344 B | 46,976 B | 232,192 B |
-| resident — the control | `UNC_OVL_RESIDENT=1` | **176,444 B** | **36,244 B** | 206,464 B | 211,072 B |
+| **eager — SHIPPED** | (default) | **40,860 B** | 16,276 B | **48,512 B** | **233,472 B** |
+| lazy | `UNC_OVL_LAZY=1` | 39,520 B | 16,336 B | 46,976 B | 232,192 B |
+| resident — the control | `UNC_OVL_RESIDENT=1` | **176,480 B** | **36,240 B** | 206,464 B | 211,072 B |
 
-Re-taken 2026-10-24 for the StuffIt segment CRC check (DECISIONS.md
+Re-taken 2026-10-24 for the StuffIt segment header CRC (DECISIONS.md
+2026-10-24, *the check the header carries*): the control's CODE +36 and A5
+−4, the shipped pair's +36 and −4, the lazy build's +40 and −8 — the parse
+is resident in all three — and the sniffer's image +44, the bundle +44.
+Before it, that evening's StuffIt segment CRC check (DECISIONS.md
 2026-10-24, *the sum each part carries*): the control's CODE +80 and A5 +32,
 the shipped pair's +80 and +16, the lazy build's +76 and +20; no image
 moved. Before it, that day's fat installer's `'endD'` (DECISIONS.md
@@ -5786,8 +5790,8 @@ eject before a split set's next part, 136,464 B after that day's MIME progress, 
 DiskDoubler buffer reuse) (*Three configurations, one tree*); the probe pair has not been re-measured,
 so the 320 B is that day's difference and not today's.
 
-The bundle is **180,332 B** — the seventeen images sum to 180,114 B, so its
-index costs **218 B** (179,924 and 179,706 until that day's 'endD' lookup joined the sniffer's image, *the length part 1 kept in its resource fork*; 179,848 and 179,630 until 2026-10-24's StuffIt segment probe; 179,836 and 179,618, until 2026-10-23's Compact Pro fork-extent check; 179,496 and 179,276, 220 B, until 2026-10-22's eleven
+The bundle is **180,376 B** — the seventeen images sum to 180,158 B, so its
+index costs **218 B** (180,332 and 180,114 until that evening's segment header CRC joined the sniffer's image, *the check the header carries*; 179,924 and 179,706 until that day's 'endD' lookup joined the sniffer's image, *the length part 1 kept in its resource fork*; 179,848 and 179,630 until 2026-10-24's StuffIt segment probe; 179,836 and 179,618, until 2026-10-23's Compact Pro fork-extent check; 179,496 and 179,276, 220 B, until 2026-10-22's eleven
 malformed-input fixes grew seven decoder images, *the names in the code* is
 the preceding re-take; 192,288 and 192,066, 222 B, until 2026-10-22's MacsBug
 names left every image, *the names in the code*; 178,892 and 178,682, 210 B, until 2026-10-21's
@@ -5989,7 +5993,15 @@ budget per format, and one per layer*).
 | Tar | zipold, codecs | **+138,398 B** (measured) |
 | StuffIt, StuffIt 5 | stuffit, ciphers, codecs | **+111,424 B** (measured; the −24 B of 2026-10-10, the +28 of 2026-10-11 and the +12 of 2026-10-15 with `ovl_stuffit` are arithmetic, no tier re-run) |
 | Zip, spanned zip | exo, zipold, ciphers, codecs | +98,610 B (arithmetic), **+108,222 B** unencrypted (measured) |
-| every envelope, and every segment scheme that joins to a file | the whole bundle, kept | **−25,078 B** (measured; the −24 B of 2026-10-10, the +28 of 2026-10-11 and the +12 of 2026-10-15 with the bundle are arithmetic, no tier re-run) |
+| every envelope, and every segment scheme that joins to a file | the whole bundle, kept | **−25,122 B** (measured; the −24 B of 2026-10-10, the +28 of 2026-10-11 and the +12 of 2026-10-15 with the bundle are arithmetic, no tier re-run) |
+
+**−44 B on the envelope row, no other, last on 2026-10-24**: the bundle
++44 with the sniffer image's segment header CRC (`ovl_sniff` 12,380 →
+12,424 B), `OVL_SAVED` unmoved — the control and the shipped pair both +32
+— and no format keeps that image (DECISIONS.md 2026-10-24, *the check the
+header carries*). Arithmetic from `run_tiers.gain()`, no tier re-run;
+`run_tiers.py --check` moves no tally (74/74, 72/74 and 68/74 shipped, the
+same fixtures by name).
 
 **+16 B on every row, the envelope's too, later on 2026-10-24**:
 `OVL_SAVED` +16 with the StuffIt segment CRC check, the control's +112
@@ -6130,7 +6142,7 @@ rose, because the control took 2,148 B for the same format.
 **The last row is the one no tally had shown**: a `.hqx`, a `.gz`, a `.Z` or
 a MacBinary wrapper does not know what is under it, so the bundle stays and
 that layer runs with **less** memory than a resident build would have given
-it — 180,332 B held against 155,584 B saved. It costs nothing on the tiers
+it — 180,376 B held against 155,584 B saved. It costs nothing on the tiers
 because the layer under the envelope gets its own budget a moment later
 (*What an archive keeps*), and the envelope's own decode is small: the
 heaviest in the Mac sample is `popper-1.7.tar.Z`'s LZW at 147,764 B, which
@@ -6191,7 +6203,7 @@ re-read 2026-10-22 off the build `tools/make_dist.sh` copies), and since
 2026-09-25 that is no longer all resident:
 **48,896 B** is
 `MacExtract.code.bin`, which the Segment Loader reads at launch and never
-purges, and **180,332 B** is the `'OVLY'` bundle, which is read at launch and
+purges, and **180,376 B** is the `'OVLY'` bundle, which is read at launch and
 mostly given back before the engine takes its budget (*Overlays*). What stays
 costs the heap one for one: the link line produces a single
 `MacExtract.code.bin`, and `Elf2Mac/LdScript.cc` emits `*(.rodata*)` inside
@@ -8474,7 +8486,7 @@ before the runtime was trimmed, *the runtime the application did not need*; 74,9
 and 3,628 B from 2026-10-06, before the formats it only named and the sniffer
 left the resident build; 67,204 and 11,364 B that morning, before the MacsBug
 names were stripped); and the shipped eager loader then asks
-for the `'OVLY'` bundle as ONE **180,332 B** block (*Overlays*). That bound is
+for the `'OVLY'` bundle as ONE **180,376 B** block (*Overlays*). That bound is
 set by the RAM under the screen buffer, not by the System, so no smaller
 System moves it — and CODE is the one thing that costs a Macintosh anything
 here (*What the application costs the engine*). The verdict is unchanged; the

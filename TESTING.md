@@ -5235,7 +5235,12 @@ is run with one payload byte flipped, then with one byte of its stored CRC
 flipped, and each must fail as a *checksum mismatch* after two part opens,
 part 3 untouched; the binary before the check joined both with exit 0
 (DECISIONS.md, *the sum each part carries*). The fat set without its `.rsrc`
-fails the same way now, at the end of part 1.
+fails the same way now, at the end of part 1. And since later that evening
+the header's own CRC at 94 is required: `basic3`'s part 2 with one bit of
+it flipped, then with one byte it covers that nothing else reads flipped,
+must each be refused as a missing segment after one part open, and part 1
+with the bit flipped must sniff as *unknown*; the binary before it joined
+both and named part 1 (DECISIONS.md, *the check the header carries*).
 The Mac application's reading of `'endD'` is `segcheck.py --case sit-fat`'s,
 on an emulator (`tools/vmac/README.md`). **What they cannot see**: any
 writer other than these, and a part read under `--no-parts`, which no

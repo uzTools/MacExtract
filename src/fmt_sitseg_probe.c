@@ -30,6 +30,7 @@
 #define SS_MTIME    82
 #define SS_RSRCLEN  86
 #define SS_DATALEN  90
+#define SS_CRC      94          /* CRC-16/ARC of bytes 0..93, big-endian */
 
 /* Parse and validate a header. Returns UNC_OK or UNC_ERR_FORMAT.
  * `desc` may be NULL to validate only. */
@@ -50,12 +51,17 @@ int sitseg_parse(const uint8_t *h, int32_t len, UncSegmentDesc *desc)
      * freshly booted emulators (a hypothesis; fmt_sitseg.c).
      * Every B0 56 part on this machine was written by
      * tools/synth_sitsplit.py (BLOCKERS.md, *Withdrawn claims*). What
-     * stands in for them is measured on those 32 real parts: byte 2 is
-     * zero and so are bytes 96 and 97 (94-95 vary; 98-99 are the running
-     * CRC fmt_sitseg.c describes). */
+     * stands in for them is measured on the 42 real parts of eight sets:
+     * byte 2 is zero and so are bytes 96 and 97, and 94-95 are a
+     * CRC-16/ARC of bytes 0..93 (98-99 are the running CRC fmt_sitseg.c
+     * describes). The header CRC is required since the evening of
+     * 2026-10-24, and is the 1-in-65,536 the two magic bytes were
+     * (DECISIONS.md 2026-10-24, *the check the header carries*). */
     if (h[2] != 0x00) return UNC_ERR_FORMAT;
     if (h[96] != 0x00 || h[97] != 0x00) return UNC_ERR_FORMAT;
     if (h[SS_PART] == 0) return UNC_ERR_FORMAT;
+    if (unc_get_u16be(h + SS_CRC) != unc_crc16_arc(0, h, SS_CRC))
+        return UNC_ERR_FORMAT;
     nl = h[SS_NAMELEN];
     if (nl == 0 || nl > 63) return UNC_ERR_FORMAT;
     for (i = 0; i < (int32_t)nl; i++)

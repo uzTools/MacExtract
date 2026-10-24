@@ -183,10 +183,14 @@ REPO = os.path.dirname(HERE)
 # control's CODE +80 and A5 +32 (DECISIONS.md 2026-10-24, *the sum each part carries*);
 # OVL_SAVED +16 below offsets all but the shipped pair's 96.
 TIERS = {
-    "sys3-512K": (200518, "System 3.0, Macintosh 512Ke (222,070 B free)"),
-    "sys6-512K": (105136, "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
-    "floor-1M":  (629424, "System 6.0.8, 1 MB Mac Plus — the floor target"),
+    "sys3-512K": (200486, "System 3.0, Macintosh 512Ke (222,070 B free)"),
+    "sys6-512K": (105104, "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
+    "floor-1M":  (629392, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
+# **-32 more each 2026-10-24, DERIVED**: the StuffIt segment header CRC
+# required by the parse, the control's CODE +36 and A5 -4 (DECISIONS.md
+# 2026-10-24, *the check the header carries*); the shipped pair moved the
+# same 32, so OVL_SAVED below does not.
 # -32 on all three 2026-10-21, DERIVED from TIERS_CONTROL +32 (the bundle's
 # working directory, DECISIONS.md 2026-10-21, *the Desktop Manager System 6
 # can have*); they were 188,548 / 93,148 / 617,436 since that day's sniffer image.
@@ -377,13 +381,14 @@ TIERS = {
 # data + bss -680. The machine gave +4,204, because the jump table, the
 # stub segments and the relocations trimmed at launch are resident bytes
 # this unit never counted — which is why TIERS was measured, not moved.
-TIERS_CONTROL = 212688     # build/mac-resident, CODE + A5, 2026-10-24
+TIERS_CONTROL = 212720     # build/mac-resident, CODE + A5, 2026-10-24
 # +352 on 2026-10-22: the eleven malformed-input fixes, every decoder linked
 # in; TIERS above drops 352 to match (TIERS_MACHINE, physical RAM, unmoved).
 # +32 more on 2026-10-23 with Compact Pro's fork-extent check; TIERS -32.
 # +64 more on 2026-10-24 with the StuffIt segment probe; TIERS -64.
 # +512 more on 2026-10-24 with a fat installer's 'endD'; TIERS -512.
 # +112 more on 2026-10-24 with the StuffIt segment CRC check; TIERS -112.
+# +32 more on 2026-10-24 with the segment header CRC required; TIERS -32.
 # **What this control cannot see: the autotest harness.** TIERS was read
 # on the machine from an autotest build (`UNC_MAC_AUTOTEST`), and
 # build/mac-resident has no harness in it, so harness growth lowers what a
@@ -787,6 +792,10 @@ EXPECT = {
 # **+16 2026-10-24, -> 155,584**: the StuffIt segment CRC check, the
 # control's +112 (CODE +80, A5 +32) against the shipped pair's +96 (CODE
 # +80, A5 +16) (DECISIONS.md 2026-10-24, *the sum each part carries*). TIERS -112.
+# **Unmoved 2026-10-24 by the segment header CRC**: the control's +32 (CODE
+# +36, A5 -4) against the shipped pair's +32 (CODE +36, A5 -4) — the parse
+# is resident in both (DECISIONS.md 2026-10-24, *the check the header
+# carries*). TIERS -32.
 OVL_SAVED = 155584
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
@@ -937,7 +946,7 @@ IMAGES = {
     "OVL_ID_SUPERDISK":   6634,
     "OVL_ID_TEXT":        11346,
     "OVL_ID_ZIPOLD":      10832,
-    "OVL_ID_SNIFF":       12380,
+    "OVL_ID_SNIFF":       12424,
 }
 # **ZIPOLD +3,374 B and EXO +972 B, the bundle +4,344 B, 2026-10-17**:
 # Mac OS X's sidecars, the shared code in ZIPOLD and zip's half in EXO,
@@ -978,7 +987,12 @@ IMAGES = {
 # where a fat installer's part 1 ends, in the sniffer's image rather than
 # resident (DECISIONS.md 2026-10-24, *the length part 1 kept in its resource fork*). A layer that keeps the
 # whole bundle — a segmented set, an envelope — keeps these 408 B too.
-BUNDLE = 180332
+# **SNIFF +44 and the bundle +44, 2026-10-24**: the header CRC a StuffIt
+# segment stores at 94 is required by sitseg_parse, which the image carries
+# its own copy of; the CRC routine comes through the host vector
+# (DECISIONS.md 2026-10-24, *the check the header carries*). Released
+# before extraction, so only a layer that keeps the whole bundle pays it.
+BUNDLE = 180376
 
 # What the SHIPPED lane asserts, and it is the refused fixtures BY NAME
 # rather than a tally: a tier that refuses two different fixtures and still

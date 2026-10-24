@@ -44,9 +44,11 @@
  *          Random — 0x41A7 is 16,807, its first value from the seed
  *          InitGraf sets, and the two 41 A7 sets were each the first
  *          thing done on a freshly booted emulator
- *    94-95 a CRC-16/ARC of this header's bytes 0..93: 40 parts of 40,
- *          seven writers, StuffIt Deluxe 2.0.1 (1991) to 5.0. Not
- *          checked (OPEN_ITEMS.md)
+ *    94-95 a CRC-16/ARC of this header's bytes 0..93: 42 parts of 42,
+ *          seven writers, StuffIt Deluxe 2.0.1 (1991) to 5.0. Required
+ *          by sitseg_parse since the evening of 2026-10-24; it stands
+ *          where the two magic bytes stood (DECISIONS.md 2026-10-24,
+ *          *the check the header carries*)
  *    96-97 zero in every part
  *    98-99 a CRC-16/ARC RUNNING across the set: over the payloads of
  *          parts 1..n, so the last part's is the whole file's. The
