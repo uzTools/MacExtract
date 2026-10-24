@@ -31,6 +31,7 @@ signature, so the Finder's Cmd-Down hands the file over as an `odoc`
     as703.py --assemble --set claims --app build/mac/MacExtract.bin -o <dir>
     as703.py --assemble --set boxes -o <dir>   # + StuffIt Deluxe and Tiger
     as703.py --assemble --set icons --app build/mac/MacExtract.bin -o <dir>
+    as703.py --assemble --set adext --app dist/MacExtract.bin -o <dir>
     as703.py --boot -o <dir>      # compat9.boot
     as703.py --stop -o <dir>
     as703.py --read -o <dir>      # compat9.read: every file, both forks
@@ -115,6 +116,18 @@ def subjects(which="pairs"):
         # extract. `derived-SD__Utilities.x`, 3 files.
         sd = os.path.join(REPO, "fixtures", "derived-SD__Utilities.x")
         return [("s1", "Utilities.x", "SDar", "MExt", open(sd, "rb").read())]
+    if which == "adext":
+        # MacStamp (2026-10-24): what MacExtract itself does with a loose
+        # AppleDouble header, double-clicked. Creator MExt, so the Finder
+        # hands each header to MacExtract; the three header names, beside
+        # their data file, and Mac OS X's alone.
+        return [("x1", "._Comment", q, "MExt", header),
+                ("x1", "Comment", q, q, data),
+                ("x2", "._Comment", q, "MExt", header),
+                ("x3", "%Comment", q, "MExt", header),
+                ("x3", "Comment", q, q, data),
+                ("x4", "Comment.ad", q, "MExt", header),
+                ("x4", "Comment", q, q, data)]
     if which == "claims":
         # The bundle's exact-type claims (mac/macextract_icons.r): the
         # Finder's alternate-program dialog should offer MacExtract for a
@@ -184,7 +197,7 @@ def assemble(outdir, which="pairs", app=None):
 def main():
     p = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     p.add_argument("--assemble", action="store_true")
-    p.add_argument("--set", choices=("pairs", "tigr", "claims", "boxes", "icons", "sdar"), default="pairs")
+    p.add_argument("--set", choices=("pairs", "tigr", "claims", "boxes", "icons", "sdar", "adext"), default="pairs")
     p.add_argument("--app", help="a MacBinary MacExtract to put beside the Expander")
     p.add_argument("--boot", action="store_true")
     p.add_argument("--stop", action="store_true")
