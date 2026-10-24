@@ -621,7 +621,12 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # part 1 cut short by its 'endD' (DECISIONS.md 2026-10-24, *the length part 1 kept in its resource fork*):
 # unc_segment_first_end resident here (332 B) and the shell's read of
 # part 1's resource fork.
-UNC_MAC_CODE_DEFAULT=176364
+# +80 on 2026-10-24, 176,364 -> 176,444, A5 +32 below: the running CRC a
+# StuffIt segment stores at 98 is held part by part in the joiner
+# (DECISIONS.md 2026-10-24, *the sum each part carries*): the control, and the
+# shipped pair +80 and +16 — the joiner and the scheme are resident in
+# every build.
+UNC_MAC_CODE_DEFAULT=176444
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -813,7 +818,9 @@ UNC_MAC_CODE_DEFAULT=176364
 # -16 on 2026-10-24, 36,216 -> 36,200, with the segment probe (above).
 # +12 on 2026-10-24, 36,200 -> 36,212, `.data` alignment under the 'endD'
 # read (above).
-UNC_MAC_A5_DEFAULT=36212
+# +32 on 2026-10-24, 36,212 -> 36,244: the scheme table's two new columns,
+# a CRC routine and a flag per row, with the segment CRC check (above).
+UNC_MAC_A5_DEFAULT=36244
 # A CEILING PER CONFIGURATION, because one ceiling measured on another build
 # cannot fire. The figures above are the RESIDENT control build, which carries
 # every decoder; the shipped build's resident code is a third of that, so
@@ -1235,8 +1242,13 @@ UNC_MAC_A5_DEFAULT=36212
 # itself is in that image, not here (DECISIONS.md 2026-10-24, *the length part 1 kept in its resource fork*).
 # The 24 B is `*fill*` under `. = ALIGN (0x20)`: CODE + A5 +224 either way
 # the shell's code was arranged.
-UNC_MAC_CODE_EAGER=40744
-UNC_MAC_A5_EAGER=16264
+# +80 and +16 on 2026-10-24, 40,744 -> 40,824 and 16,264 -> 16,280: the
+# running CRC-16/ARC a StuffIt segment stores at 98, held part by part as
+# the set is joined (DECISIONS.md 2026-10-24, *the sum each part carries*). All
+# of it resident: the joiner and the StuffIt scheme are the shell's, not an
+# image's, and the CRC routine was already here for the forks.
+UNC_MAC_CODE_EAGER=40824
+UNC_MAC_A5_EAGER=16280
 # +8 on 2026-10-02 for the same reason as the eager pair above: the
 # overlay call that now says WHICH of StuffIt 2.x's ciphers an entry
 # wants. A5 fell to 19,096 and its ceiling is left where it was.
@@ -1327,7 +1339,9 @@ UNC_MAC_A5_EAGER=16264
 # under its ceiling.
 # +200 code on 2026-10-24, the 'endD' read (the eager pair above); data +
 # bss 16,324, under its ceiling.
-UNC_MAC_CODE_LAZY=39404
+# +76 code on 2026-10-24, the segment CRC check (the eager pair above);
+# data + bss 16,344, under its ceiling.
+UNC_MAC_CODE_LAZY=39480
 UNC_MAC_A5_LAZY=19200
 if [ -n "$UNC_OVL_RESIDENT" ]; then
     UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-$UNC_MAC_CODE_DEFAULT}

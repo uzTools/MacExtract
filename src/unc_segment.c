@@ -51,7 +51,7 @@
 /* that were left).                                                 */
 /* ------------------------------------------------------------------ */
 
-#define SEG_HEAD_MAX UNC_DDSEG_HEAD   /* the longest header a hook reads */
+#define SEG_HEAD_MAX UNC_SEG_HEAD     /* the longest header a hook reads */
 
 typedef struct SegScheme {
     UncFormat scheme;
@@ -78,9 +78,15 @@ typedef struct SegScheme {
     int      (*payload)(const UncSegmentDesc *d, const uint8_t *head,
                         int32_t len, int part, uint32_t size,
                         uint32_t *out);
-    /* The CRC a part stores over its own payload, checked for free when
-     * the part is read straight through. NULL for none. */
+    /* The CRC a part stores, checked for free when the stream is read
+     * straight through. NULL for none. `crc_fold` is which CRC it is -
+     * the two schemes that store one differ - and `crc_runs` is what it
+     * covers: 0, the part's own payload (`SPLT`); 1, the payloads of
+     * parts 1..this one (StuffIt), so the sum is carried from part to
+     * part and the last part's is the whole file's. */
     uint16_t (*stored_crc)(const uint8_t *head);
+    uint16_t (*crc_fold)(uint16_t crc, const uint8_t *buf, int32_t len);
+    uint8_t   crc_runs;
     /* How many bytes this part spends on its header, when that is not
      * the same for every part of the set. NULL means desc->head_len,
      * which is every scheme but message/partial: mail headers differ
@@ -98,33 +104,37 @@ static const SegScheme seg_schemes[] = {
     /* StuffIt first: it decides on 100 bytes at offset 0, where the zip
      * scheme has to hunt backwards from the end of the file. */
     { UNC_FORMAT_SITSEG, 0, 0, 0, unc_sitseg_describe, unc_sitseg_match,
-      NULL, NULL, NULL, 0, NULL },
+      NULL, unc_sitseg_stored_crc, unc_crc16_arc, 1, NULL, UNC_SEG_HEAD,
+      NULL },
     /* Compact Pro next: like StuffIt it decides on a header at offset 0,
      * where the zip scheme has to hunt backwards from the end. Unlike
      * StuffIt, a part that is not the LAST one answers with nparts == 0
      * - it knows the set it belongs to but not how big the set is, and
      * the host is expected to go and find the final segment. */
     { UNC_FORMAT_CPTSEG, 1, 0, 0, unc_cptseg_describe, unc_cptseg_match,
-      NULL, NULL, NULL, 0, unc_cpt_extract },
+      NULL, NULL, NULL, 0, NULL, 0, unc_cpt_extract },
     /* DiskDoubler's `SPLT`, also decided on a header at offset 0 - and
      * on a second copy of its magic at offset 90, so it is the cheapest
      * of the four to refuse. It is also the only scheme whose parts
-     * state their own payload length and check their own CRC. */
+     * state their own payload length; its CRC is each part's own, where
+     * StuffIt's runs across the set. */
     { UNC_FORMAT_DDSEG, 0, 1, 0, unc_ddseg_describe, unc_ddseg_match,
-      unc_ddseg_payload, unc_ddseg_stored_crc, NULL, UNC_DDSEG_HEAD, NULL },
+      unc_ddseg_payload, unc_ddseg_stored_crc, unc_crc16_xmodem, 0, NULL,
+      UNC_DDSEG_HEAD, NULL },
     { UNC_FORMAT_ZIPSEG, 1, 0, 0, unc_zipseg_describe, NULL,
-      NULL, NULL, NULL, 0, unc_zip_extract },
+      NULL, NULL, NULL, 0, NULL, 0, unc_zip_extract },
     /* message/partial, whose describe() reads a mail header block and
      * is therefore the dearest of them: it goes after every scheme
      * that decides on a magic at offset 0. The parts join into a
      * MESSAGE, so the reader for the joined stream is the MIME walk
      * — no file is emitted in between. */
     { UNC_FORMAT_MIMESEG, 0, 0, 0, unc_mimeseg_describe, NULL,
-      NULL, NULL, unc_mimeseg_head, 0, unc_mime_extract },
+      NULL, NULL, NULL, 0, unc_mimeseg_head, 0, unc_mime_extract },
     /* SPLIT last and describe-less: a part of a plain NAME.001 split is
      * an anonymous slice of bytes, so nothing here can recognise one.
      * A host that has decided by name builds the descriptor itself. */
-    { UNC_FORMAT_SPLIT, 0, 0, 1, NULL, NULL, NULL, NULL, NULL, 0, NULL }
+    { UNC_FORMAT_SPLIT, 0, 0, 1, NULL, NULL, NULL, NULL, NULL, 0, NULL, 0,
+      NULL }
 };
 
 static const SegScheme *seg_scheme(UncFormat f)
@@ -171,12 +181,13 @@ typedef struct SegJoin {
     uint32_t off;                  /* ADDRESSED: cursor within curpart */
     uint32_t pos;                  /* FLAT: logical read cursor */
 
-    /* `SPLT` only: a CRC of the open part's payload, accumulated as the
-     * bytes go past. Valid only while the part has been read from its
-     * first payload byte with no gap — crc_ok goes to 0 the moment a
-     * read starts anywhere else, because the sum can no longer be
-     * completed without re-reading the part, which on a one-drive Mac
-     * is a disk swap. See the check in seg_read. */
+    /* Schemes with a stored CRC: the sum of the payload bytes that have
+     * gone past, over the open part (`SPLT`) or over the set so far
+     * (StuffIt, crc_runs). Valid only while the stream has been read
+     * from where the sum starts with no gap — crc_ok goes to 0 the
+     * moment a read starts anywhere else, because the sum can no longer
+     * be completed without re-reading, which on a one-drive Mac is a
+     * disk swap. See the check in seg_read. */
     uint16_t crc;
     uint32_t crc_pos;
     int      crc_ok;
@@ -306,9 +317,11 @@ static int seg_open(SegJoin *j, int part)
         if (j->total == UNC_SIZE_UNKNOWN && part == j->last)
             j->total = end;
     }
-    /* A freshly opened part starts a fresh running CRC, whether it was
-     * opened for the first time or re-opened after a backward seek. */
-    if (j->sc->stored_crc) {
+    /* A per-part CRC starts afresh with the part, whether it was opened
+     * for the first time or re-opened after a backward seek. One that
+     * runs across the set is carried over: a re-open leaves it where it
+     * was, and the first read at any other offset drops it. */
+    if (j->sc->stored_crc && !j->sc->crc_runs) {
         j->crc = 0;
         j->crc_pos = j->start[part];
         j->crc_ok = 1;
@@ -453,19 +466,23 @@ static int32_t seg_read(void *ctx, void *buf, int32_t len)
     r = j->cur.read(j->cur.ctx, buf, len);
     if (r < 0) { j->err = UNC_ERR_IO; return -1; }
 
-    /* The `SPLT` payload CRC, checked for free when a part happens to
-     * be read straight through — which is what joining a set does, and
-     * the ONLY case this can see. A read that starts anywhere but where
-     * the running sum stopped abandons it for this part: the part is
-     * then joined unchecked, exactly as every other scheme here is.
-     * The joined FILE still adjudicates the set (OPEN_ITEMS.md). */
+    /* The stored CRC, checked for free when the stream is read straight
+     * through — which is what joining a set does, and the ONLY case
+     * this can see. A read that starts anywhere but where the running
+     * sum stopped abandons it: what follows is then joined unchecked,
+     * exactly as the schemes without one are. Each part is judged as
+     * its last payload byte goes past, so a bad part is refused before
+     * the next disk is asked for; a part with no payload is never read,
+     * so never judged, and loses nothing. The last part's payload ends
+     * at `total`, whatever its file holds after that. */
     if (j->sc->stored_crc && r > 0) {
         if (j->crc_ok && j->pos == j->crc_pos) {
-            j->crc = unc_crc16_xmodem(j->crc, buf, r);
+            uint32_t end = j->start[j->curpart + 1];
+            if (end > j->total) end = j->total;
+            j->crc = j->sc->crc_fold(j->crc, buf, r);
             j->crc_pos += (uint32_t)r;
-            if (j->crc_pos == j->start[j->curpart + 1]) {
+            if (j->crc_pos == end) {
                 uint8_t h[SEG_HEAD_MAX];
-                j->crc_ok = 0;               /* checked once, at the end */
                 if (unc_read_at(&j->cur, 0, h,
                                 (int32_t)j->sc->head_len) != UNC_OK ||
                     j->sc->stored_crc(h) != j->crc) {
@@ -563,7 +580,7 @@ int unc_extract_segments(const UncSegmentDesc *desc, UncVolumeSource *vs,
     j->backward = 0;
     j->crc = 0;
     j->crc_pos = 0;
-    j->crc_ok = 0;
+    j->crc_ok = 1;                 /* nothing read yet: the sum is whole */
     j->err = UNC_OK;
     j->io.ctx = j;
     j->io.read = seg_read;
@@ -620,8 +637,10 @@ int unc_extract_segments(const UncSegmentDesc *desc, UncVolumeSource *vs,
         ret = j->sc->extract(&c);
     else
         /* SITSEG, SPLIT (the copy above) and DDSEG all join into one
-         * file; only the fork order differs. */
-        ret = unc_sitseg_emit(&c, j->desc, 0, j->sc->data_first);
+         * file; only the fork order differs. The joiner's own verdict -
+         * a CRC that did not match - reaches the entry through the last
+         * argument, since a failed read says only that it failed. */
+        ret = unc_sitseg_emit(&c, j->desc, 0, j->sc->data_first, &j->err);
     seg_release(j);
 
     /* A missing part is the archive's verdict, not the entry's: the

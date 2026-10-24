@@ -49,8 +49,10 @@
  *          checked (OPEN_ITEMS.md)
  *    96-97 zero in every part
  *    98-99 a CRC-16/ARC RUNNING across the set: over the payloads of
- *          parts 1..n, so the last part's is the whole file's. Not
- *          checked here (OPEN_ITEMS.md).
+ *          parts 1..n, so the last part's is the whole file's. The
+ *          joiner checks it as each part's last payload byte goes past
+ *          (unc_segment.c, seg_read); unc_sitseg_extract below, a lone
+ *          part read with no joiner, does not.
  * tools/synth_sitsplit.py writes both CRCs as StuffIt does, since the
  * evening of 2026-10-24; zero before.
  * And part 1 of a self-extracting set is an application's DATA fork,
@@ -109,6 +111,14 @@ int unc_sitseg_match(const UncSegmentDesc *desc,
     return (int)cand.part;
 }
 
+/* The CRC-16/ARC a part stores at 98, over the payloads of parts 1..its
+ * own. The joiner folds the same sum as the parts go past and holds
+ * each part to its stored value (unc_segment.c). */
+uint16_t unc_sitseg_stored_crc(const uint8_t *head)
+{
+    return unc_get_u16be(head + 98);
+}
+
 /* ------------------------------------------------------------------ */
 /* Extraction                                                         */
 /*                                                                    */
@@ -125,7 +135,7 @@ int unc_sitseg_match(const UncSegmentDesc *desc,
  * in front of it: one entry, one fork, sizes and name supplied rather
  * than parsed (unc_segment.c). */
 int unc_sitseg_emit(UncCtx *c, const UncSegmentDesc *desc, uint32_t base,
-                    int data_first)
+                    int data_first, const int *ioerr)
 {
     UncEntryInfo e;
     int err, sret;
@@ -166,6 +176,10 @@ int unc_sitseg_emit(UncCtx *c, const UncSegmentDesc *desc, uint32_t base,
             unc_free(c->al, buf);
         }
     }
+    /* A failed read says only that it failed. When the stream is the
+     * joiner's, its own verdict is the one the entry should carry: the
+     * part whose CRC did not match, not "I/O error". */
+    if (err == UNC_ERR_IO && ioerr && *ioerr != UNC_OK) err = *ioerr;
 
     if (c->sink->end_entry(c->sink->ctx, err) < 0) return UNC_ERR_SINK;
     if (unc_fatal(err))
@@ -191,5 +205,5 @@ int unc_sitseg_extract(UncCtx *c)
     if (desc.part != 1) return UNC_ERR_SEGMENTED;
     if (size - UNC_SEG_HEAD < desc.total) return UNC_ERR_SEGMENTED;
 
-    return unc_sitseg_emit(c, &desc, UNC_SEG_HEAD, 0);
+    return unc_sitseg_emit(c, &desc, UNC_SEG_HEAD, 0, NULL);
 }

@@ -5369,11 +5369,14 @@ the bundle*), and seventeen since.
 
 | build | switch | resident `CODE` | A5 | `MacExtract.code.bin` | `MacExtract.bin` |
 |---|---|---|---|---|---|
-| **eager — SHIPPED** | (default) | **40,744 B** | 16,264 B | **48,384 B** | **233,344 B** |
-| lazy | `UNC_OVL_LAZY=1` | 39,404 B | 16,324 B | 46,848 B | 232,064 B |
-| resident — the control | `UNC_OVL_RESIDENT=1` | **176,364 B** | **36,212 B** | 206,336 B | 210,944 B |
+| **eager — SHIPPED** | (default) | **40,824 B** | 16,280 B | **48,384 B** | **233,472 B** |
+| lazy | `UNC_OVL_LAZY=1` | 39,480 B | 16,344 B | 46,976 B | 232,192 B |
+| resident — the control | `UNC_OVL_RESIDENT=1` | **176,444 B** | **36,244 B** | 206,464 B | 211,072 B |
 
-Re-taken 2026-10-24 for a fat installer's `'endD'` (DECISIONS.md
+Re-taken 2026-10-24 for the StuffIt segment CRC check (DECISIONS.md
+2026-10-24, *the sum each part carries*): the control's CODE +80 and A5 +32,
+the shipped pair's +80 and +16, the lazy build's +76 and +20; no image
+moved. Before it, that day's fat installer's `'endD'` (DECISIONS.md
 2026-10-24, *the length part 1 kept in its resource fork*): the control's
 CODE +500 and A5 +12, the shipped pair's +200 and +24 (`.data` alignment),
 the lazy build's +200 and −8, the bundle +408 with the lookup in the
@@ -5773,7 +5776,7 @@ quoted beside. It cancels in a DIFFERENCE taken from one probe pair, which is
 why the overlay gains are measured that way (*What it buys, against the
 control*), and 320 B of the residue there is exactly this: **117,040 B saved
 between the shipped pair against 116,720 B between the probe pair**, both
-measured 2026-09-27. The shipped pair is **155,568 B** since 2026-10-24's 'endD' read, *the length part 1 kept in its resource fork*, 155,280 B since that day's StuffIt segment probe, 155,184 B since 2026-10-23's decoder shims became one routine and the release's `switch` a table, *the shims that were one function*, 154,384 B after that day's Compact Pro fork-extent check grew the resident control, 154,352 B since 2026-10-22's eleven malformed-input fixes grew it, 154,000 B since that day's working directory left the top of the output, *the working directory the bundle closed*, 154,032 B after that day's runtime trimmed, *the runtime the application did not need*, 153,360 B after that day's MacsBug names stripped, *the names in the code*, 159,120 B after 2026-10-21's working directory for the bundle, *the Desktop Manager System 6 can have*, 159,152 B after that day's sniffer image, *the probes that left with the bundle*, 149,536 B after 2026-10-19's toolchain update,
+measured 2026-09-27. The shipped pair is **155,584 B** since 2026-10-24's StuffIt segment CRC check, *the sum each part carries*, 155,568 B since that day's 'endD' read, *the length part 1 kept in its resource fork*, 155,280 B since that day's StuffIt segment probe, 155,184 B since 2026-10-23's decoder shims became one routine and the release's `switch` a table, *the shims that were one function*, 154,384 B after that day's Compact Pro fork-extent check grew the resident control, 154,352 B since 2026-10-22's eleven malformed-input fixes grew it, 154,000 B since that day's working directory left the top of the output, *the working directory the bundle closed*, 154,032 B after that day's runtime trimmed, *the runtime the application did not need*, 153,360 B after that day's MacsBug names stripped, *the names in the code*, 159,120 B after 2026-10-21's working directory for the bundle, *the Desktop Manager System 6 can have*, 159,152 B after that day's sniffer image, *the probes that left with the bundle*, 149,536 B after 2026-10-19's toolchain update,
 149,504 B after that day's custom-icon bit set last, 149,536 B after that day's top-level placement, 149,504 B after 2026-10-18's bundle registration, 149,552 B after that day's two failure messages, 149,520 B after that day's Spotlight comment, 148,240 B after 2026-10-17's
 dates in the Macintosh's own zone, 147,936 B after that day's Mac OS X sidecars, 143,872 B after that day's merge of the archives' Finder info (every reader in an image or the control, none in the shipped build), 139,280 B after that day's merge of StuffIt classic's and DiskDoubler's Finder info, 138,896 B after that day's merge of the envelopes' Finder info, 138,864 B after that branch alone, 138,608 B after that day's review of the Finder metadata, 138,576 B after that day's metadata, 138,544 B after 2026-10-16's
 time left from the byte counts, 138,576 B after that day's
@@ -5924,7 +5927,7 @@ been chosen is a read at the moment the application's own floppy may be out.
 The budget a tier gives the engine is therefore not one number any more. It
 is the resident build's budget for that tier — the figures under *512 KB
 machines* and *Floor target verification* — plus what the release leaves,
-which is the 155,568 B of `CODE` and A5 the shipped build does not carry
+which is the 155,584 B of `CODE` and A5 the shipped build does not carry
 (*Three configurations, one tree*), less the images this format keeps and 8 B
 of block header each, less a **322 B residue**, RE-TAKEN 2026-10-22 from the
 shipped and resident budget probes booted back to back on all three tiers
@@ -5974,19 +5977,26 @@ budget per format, and one per layer*).
 
 | sniffed format | images kept | granted, against the control |
 |---|---|---|
-| **AppleLink package** | **sqp, codecs** | **+147,478 B** (arithmetic: no `.pkg` is in the Mac sample) — the largest grant any format gets, because `ovl_sqp` is the smallest of the seventeen images at 1,736 B |
-| Now Compress | now, codecs | **+144,446 B** (measured) |
-| SuperDisk! | superdisk, codecs | +142,580 B (arithmetic: no SuperDisk! fixture is in the Mac sample) |
-| LZH | lzh, codecs | **+138,756 B** (measured) |
-| PackIt | packit, ciphers, codecs | **+137,422 B** (measured) |
-| DiskDoubler | cptdd, codecs | **+134,382 B** (measured) |
-| StuffIt SpaceSaver | spacesaver, codecs | +133,046 B (arithmetic: no SpaceSaver fixture is in the Mac sample) |
-| ARC | arc, ciphers, codecs | **+131,906 B** (measured) |
-| Compact Pro, Compact Pro segment | cptdd, ciphers, codecs | +124,770 B (arithmetic), and **+134,382 B** where the directory says no entry is encrypted (measured) |
-| Tar | zipold, codecs | **+138,382 B** (measured) |
-| StuffIt, StuffIt 5 | stuffit, ciphers, codecs | **+111,408 B** (measured; the −24 B of 2026-10-10, the +28 of 2026-10-11 and the +12 of 2026-10-15 with `ovl_stuffit` are arithmetic, no tier re-run) |
-| Zip, spanned zip | exo, zipold, ciphers, codecs | +98,594 B (arithmetic), **+108,206 B** unencrypted (measured) |
-| every envelope, and every segment scheme that joins to a file | the whole bundle, kept | **−25,094 B** (measured; the −24 B of 2026-10-10, the +28 of 2026-10-11 and the +12 of 2026-10-15 with the bundle are arithmetic, no tier re-run) |
+| **AppleLink package** | **sqp, codecs** | **+147,494 B** (arithmetic: no `.pkg` is in the Mac sample) — the largest grant any format gets, because `ovl_sqp` is the smallest of the seventeen images at 1,736 B |
+| Now Compress | now, codecs | **+144,462 B** (measured) |
+| SuperDisk! | superdisk, codecs | +142,596 B (arithmetic: no SuperDisk! fixture is in the Mac sample) |
+| LZH | lzh, codecs | **+138,772 B** (measured) |
+| PackIt | packit, ciphers, codecs | **+137,438 B** (measured) |
+| DiskDoubler | cptdd, codecs | **+134,398 B** (measured) |
+| StuffIt SpaceSaver | spacesaver, codecs | +133,062 B (arithmetic: no SpaceSaver fixture is in the Mac sample) |
+| ARC | arc, ciphers, codecs | **+131,922 B** (measured) |
+| Compact Pro, Compact Pro segment | cptdd, ciphers, codecs | +124,786 B (arithmetic), and **+134,398 B** where the directory says no entry is encrypted (measured) |
+| Tar | zipold, codecs | **+138,398 B** (measured) |
+| StuffIt, StuffIt 5 | stuffit, ciphers, codecs | **+111,424 B** (measured; the −24 B of 2026-10-10, the +28 of 2026-10-11 and the +12 of 2026-10-15 with `ovl_stuffit` are arithmetic, no tier re-run) |
+| Zip, spanned zip | exo, zipold, ciphers, codecs | +98,610 B (arithmetic), **+108,222 B** unencrypted (measured) |
+| every envelope, and every segment scheme that joins to a file | the whole bundle, kept | **−25,078 B** (measured; the −24 B of 2026-10-10, the +28 of 2026-10-11 and the +12 of 2026-10-15 with the bundle are arithmetic, no tier re-run) |
+
+**+16 B on every row, the envelope's too, later on 2026-10-24**:
+`OVL_SAVED` +16 with the StuffIt segment CRC check, the control's +112
+against the shipped pair's +96; no image and not the bundle moved
+(DECISIONS.md 2026-10-24, *the sum each part carries*). Arithmetic from
+`run_tiers.gain()`, no tier re-run; `run_tiers.py --check` moves no tally
+(74/74, 72/74 and 68/74 shipped, the same fixtures by name).
 
 **+96 B on every row and +20 B on the envelope row, 2026-10-24**:
 `OVL_SAVED` +96 and the bundle +76 with the StuffIt segment probe
@@ -6120,7 +6130,7 @@ rose, because the control took 2,148 B for the same format.
 **The last row is the one no tally had shown**: a `.hqx`, a `.gz`, a `.Z` or
 a MacBinary wrapper does not know what is under it, so the bundle stays and
 that layer runs with **less** memory than a resident build would have given
-it — 180,332 B held against 155,568 B saved. It costs nothing on the tiers
+it — 180,332 B held against 155,584 B saved. It costs nothing on the tiers
 because the layer under the envelope gets its own budget a moment later
 (*What an archive keeps*), and the envelope's own decode is small: the
 heaviest in the Mac sample is `popper-1.7.tar.Z`'s LZW at 147,764 B, which

@@ -1675,6 +1675,40 @@ def main():
                 fails.check("0 of them backward" in line[0],
                             "basic3: the join seeks backwards: %s" % line[0])
 
+            # The running CRC every part stores at 98: one flipped payload
+            # byte in part 2, then one flipped byte of the CRC part 2
+            # stores, must each fail the join as a checksum mismatch — as
+            # part 2 ends, before part 3 is opened — and never produce a
+            # wrong file quietly. Both halves, as for `SPLT` below: a
+            # reader that ignored the stored CRC and one that ignored the
+            # payload would each pass one of them.
+            second = os.path.join(d, "Test.sit.2")
+            body = open(second, "rb").read()
+            for tag, what, mutate in (
+                    ("pay", "payload byte", lambda b: b[:synth.HEAD + 3] +
+                     bytes([b[synth.HEAD + 3] ^ 0x01]) + b[synth.HEAD + 4:]),
+                    ("crc", "stored CRC", lambda b: b[:99] +
+                     bytes([b[99] ^ 0x80]) + b[100:])):
+                with open(second, "wb") as f:
+                    f.write(mutate(body))
+                rc, out = ours_extract(macextract, first,
+                                       os.path.join(d, "_crc-" + tag),
+                                       extra=["--stats"])
+                fails.check(rc != 0, "basic3: a wrong %s must fail the join"
+                            % what)
+                fails.check("checksum" in out.lower(),
+                            "basic3: wrong %s reported as %r"
+                            % (what, out.strip()))
+                fails.check("2 part opens" in out,
+                            "basic3: wrong %s was not caught as part 2 "
+                            "ended: %r" % (what, out.strip()))
+            with open(second, "wb") as f:
+                f.write(body)
+            rc, out = ours_extract(macextract, first, os.path.join(d, "_again"))
+            fails.check(rc == 0 and
+                        read_tree(os.path.join(d, "_again")) == want,
+                        "basic3: the set stopped joining after it was restored")
+
         if "single" in results:
             d, first, name, want = results["single"]
             # One part is a whole set: no volume source needed, so even

@@ -2129,6 +2129,7 @@ static void test_sitseg(void)
     /* --- describe ------------------------------------------------- */
     seg_head(whole, 1, "Thing.sit", 100, 200, 0x11223344u);
     memcpy(whole + UNC_SEG_HEAD, payload, 300);
+    put16be(whole + 98, unc_crc16_arc(0, payload, 300));
     test_make_memio(&io, &m, whole, sizeof whole);
     CHECK(unc_sniff(&io) == UNC_FORMAT_SITSEG);
     CHECK(unc_segment_describe(&io, &desc) == UNC_OK);
@@ -2272,6 +2273,11 @@ static void test_sitseg(void)
     memcpy(p1 + UNC_SEG_HEAD, payload, 120);
     memcpy(p2 + UNC_SEG_HEAD, payload + 120, 100);
     memcpy(p3 + UNC_SEG_HEAD, payload + 220, 80);
+    /* The running CRC-16/ARC each part stores at 98, over the payloads
+     * of parts 1..its own (src/fmt_sitseg.c). */
+    put16be(p1 + 98, unc_crc16_arc(0, payload, 120));
+    put16be(p2 + 98, unc_crc16_arc(0, payload, 220));
+    put16be(p3 + 98, unc_crc16_arc(0, payload, 300));
     {
         SegParts sp;
         UncVolumeSource vs;
@@ -2312,6 +2318,33 @@ static void test_sitseg(void)
         CHECK(cap.count == 1 && cap.status[0] == UNC_ERR_TRUNCATED);
         CHECK(cap.rlen[0] == 100);          /* what part 1 held is kept */
         CHECK(cap.dlen[0] == 20);
+
+        /* One flipped payload byte in part 2, then one flipped byte of
+         * the CRC part 2 stores: each is a checksum mismatch on the
+         * entry, found as part 2 ends and before part 3 is asked for,
+         * never a quiet wrong file. */
+        sp.missing = 0;
+        p2[UNC_SEG_HEAD + 3] ^= 0x01;
+        sp.opens = 0;
+        cap_make(&sk, &cap);
+        CHECK(unc_extract_segments(&desc, &vs, scratch, &sk, &al, NULL, NULL)
+              == UNC_ERR_CRC);
+        CHECK(cap.count == 1 && cap.status[0] == UNC_ERR_CRC);
+        CHECK(sp.opens == 2);               /* part 3 was never opened */
+        p2[UNC_SEG_HEAD + 3] ^= 0x01;
+        p2[99] ^= 0x80;
+        sp.opens = 0;
+        cap_make(&sk, &cap);
+        CHECK(unc_extract_segments(&desc, &vs, scratch, &sk, &al, NULL, NULL)
+              == UNC_ERR_CRC);
+        CHECK(cap.count == 1 && cap.status[0] == UNC_ERR_CRC);
+        CHECK(sp.opens == 2);
+        p2[99] ^= 0x80;
+        /* And whole again, so the two above tested the flip. */
+        cap_make(&sk, &cap);
+        CHECK(unc_extract_segments(&desc, &vs, scratch, &sk, &al, NULL, NULL)
+              == UNC_OK);
+        CHECK(cap.count == 1 && cap.status[0] == UNC_OK);
         free(scratch);
     }
 

@@ -5229,10 +5229,17 @@ beside a part is run again without it, and must then fail. The eighth
 is also run with its part 1 and that fork inside one envelope, MacBinary
 then BinHex, beside part 2 and opened through part 2: the CLI's peel
 wrote the data fork alone until 2026-10-24 and joined it wrong with
-exit 0 (DECISIONS.md, *the fork the peel dropped*).
+exit 0 (DECISIONS.md, *the fork the peel dropped*). Since the evening of
+2026-10-24 the running CRC is held part by part as well: `basic3`'s part 2
+is run with one payload byte flipped, then with one byte of its stored CRC
+flipped, and each must fail as a *checksum mismatch* after two part opens,
+part 3 untouched; the binary before the check joined both with exit 0
+(DECISIONS.md, *the sum each part carries*). The fat set without its `.rsrc`
+fails the same way now, at the end of part 1.
 The Mac application's reading of `'endD'` is `segcheck.py --case sit-fat`'s,
 on an emulator (`tools/vmac/README.md`). **What they cannot see**: any
-writer other than these. Plus behaviours:
+writer other than these, and a part read under `--no-parts`, which no
+joiner holds to its CRC. Plus behaviours:
 opening a part other than the first, a missing part, `--ask` accepting
 and refusing files, `--no-parts`, and the part-open counters.
 

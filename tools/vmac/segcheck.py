@@ -366,7 +366,7 @@ def run_sit_fat(case, mem, workdir):
         return False, "joined wrong with the resource fork (%s)" % got[True]
     if got[False] == FAT_SHA256:
         return False, "joined right WITHOUT the resource fork: not tested"
-    return True, ("joined byte for byte from part 1's 'endD', and wrong "
+    return True, ("joined byte for byte from part 1's 'endD', and not "
                   "without its resource fork")
 
 

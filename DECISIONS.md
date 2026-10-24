@@ -460,6 +460,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-24 (the header left alone) — a loose AppleDouble header is not joined to the file beside it: built, measured and declined; compress on the modern Mac instead
 - 2026-10-24 (the fork the peel dropped) — the CLI's peel of a wrapped part keeps its resource fork as a sidecar, so a fat installer's part 1 found in an envelope beside Disk 2 joins right
 - 2026-10-24 (the fork that was never downloaded) — a fat part 1 without its resource fork is not re-cut: two routes built and priced, 128 B and 304 B resident, and declined because no download produces that file
+- 2026-10-24 (the sum each part carries) — a StuffIt segment's running CRC-16/ARC at 98 is held part by part in the joiner; a flipped byte is a checksum mismatch before the next disk is asked for
 
 ---
 
@@ -29752,3 +29753,64 @@ OPEN_ITEMS.md's StuffIt segments table and is not priced.
 
 **What it cost.** Three builds of the Macintosh application per
 configuration, nine seconds each, and nothing resident.
+
+## 2026-10-24 (the sum each part carries) — a StuffIt segment's running CRC-16/ARC at 98 is held part by part in the joiner; a flipped byte is a checksum mismatch before the next disk is asked for
+
+**Claim.** Every part of a StuffIt segmented set stores, at 98, a
+CRC-16/ARC over the payloads of parts 1..its own (*the magic StuffIt never
+wrote*, 40 parts of 40). The joiner now folds that sum as the parts go
+past and holds each part to its stored value as its last payload byte is
+read, so a damaged part is refused — *checksum mismatch* on the entry —
+before the next part is asked for. Measured.
+
+**Evidence.** Built on the `SPLT` check already in `unc_segment.c`
+(`stored_crc`), which was per part and CRC-16/XMODEM: the scheme table
+gains which CRC a scheme's sum is (`crc_fold`) and whether it runs across
+the set (`crc_runs`); a running sum is not reset when a part opens, and a
+part is judged where its payload ends or at `total`, whichever comes
+first. The entry's status is the joiner's own verdict rather than the
+failed read's: `unc_sitseg_emit` is handed the stream's sticky error, so
+the entry line reads *Test.sit: checksum mismatch*, where a `SPLT` failure
+read *I/O error* until now with *checksum mismatch* only on the archive
+line; the Macintosh report has the same arm (`RepFailed`). **Shown to
+fail**: the binary before the check joins `basic3` with one payload byte
+of part 2 flipped, and again with one byte of part 2's stored CRC flipped,
+exit 0 and nothing said; with it each is refused after two part opens,
+part 3 untouched — `run_segments.py` (six failures on the old binary, none
+on the new) and two unit checks that count the opens. All eight real
+sets, 40 parts, join as before, the fat installer among them: its part 1
+cut at `'endD'` carries the CRC of exactly that payload. Without its
+resource fork the same set is refused at the end of part 1, before Disk
+2 is asked for, where the CLI joined it wrong with exit 0 that morning
+(*the fork that was never downloaded*).
+
+**What it does not see.** A part read with no joiner (`--no-parts`,
+`unc_extract_as`) is copied unchecked; both hosts send every StuffIt
+part through the joiner. A part with no payload (one of `many12`'s
+twelve) is never read, so never judged, and loses nothing: the parts
+either side of it are. A stream read other than straight through drops
+the sum for good; the join reads strictly forward (`back == 0`,
+asserted). A listing reads nothing and checks nothing.
+
+**What it cost.** Against a control build of the same tree, three
+configurations each. Shipped: CODE +80, A5 +16, **96 B off every
+budget**; lazy +76 and +20; the resident control +80 and +32, so
+`TIERS_CONTROL` +112, `OVL_SAVED` +16, every row of *What each format is
+granted* +16 and each tier base −112; no image and not the bundle moved
+(`--check-images`, `--check-saved`). `run_tiers.py --check` moves no
+tally: 74/74, 72/74 and 68/74 shipped, the same fixtures by name. Where
+the 80 B went (`nm --size-sort`, shipped): the joiner +32 (`seg_open` +8,
+`seg_read` +8, `unc_extract_segments` +12, `unc_segment_match` +4),
+`unc_sitseg_emit` +24, the new `unc_sitseg_stored_crc` 18,
+`unc_sitseg_extract` +2 and `fmt_ddseg.c`'s call +2; the A5 is the scheme
+table's two new columns. Stack: `seg_read` 128 → 132 B and `seg_open`
+156 → 160 (`-Os -fstack-usage`; the header buffer 94 → 100 B),
+`unc_sitseg_emit` 392 unchanged, nothing on the engine's deepest chain.
+Heap: none. Time: one table fold per payload byte of every StuffIt set,
+the `unc_crc16_arc` the StuffIt decoders already run over every byte they
+emit; from the shipped build's unrolled loop, about 80 cycles a byte on a
+68000, **about ten seconds a megabyte on a Macintosh Plus — an estimate
+from the instruction timings, not a tick-probe measurement**. A `SPLT`
+set has paid the same since its check. Route B of *the fork that was
+never downloaded*, which watched this CRC byte by byte for a cut, was
+304 B; this is the per-part check that entry left unpriced.

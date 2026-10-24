@@ -148,5 +148,5 @@ int unc_ddseg_extract(UncCtx *c)
         desc.name[n] = 0;
         desc.name_len = n;
     }
-    return unc_sitseg_emit(c, &desc, UNC_DDSEG_HEAD, 1);
+    return unc_sitseg_emit(c, &desc, UNC_DDSEG_HEAD, 1, NULL);
 }

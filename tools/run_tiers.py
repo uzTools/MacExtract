@@ -179,10 +179,13 @@ REPO = os.path.dirname(HERE)
 # **-512 more each 2026-10-24, DERIVED**: a fat installer's 'endD', the
 # control's CODE +500 and A5 +12 (DECISIONS.md 2026-10-24, *the length part 1 kept in its resource fork*);
 # OVL_SAVED +288 below offsets all but the shipped pair's 224.
+# **-112 more each 2026-10-24, DERIVED**: the StuffIt segment CRC check, the
+# control's CODE +80 and A5 +32 (DECISIONS.md 2026-10-24, *the sum each part carries*);
+# OVL_SAVED +16 below offsets all but the shipped pair's 96.
 TIERS = {
-    "sys3-512K": (200630, "System 3.0, Macintosh 512Ke (222,070 B free)"),
-    "sys6-512K": (105248, "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
-    "floor-1M":  (629536, "System 6.0.8, 1 MB Mac Plus — the floor target"),
+    "sys3-512K": (200518, "System 3.0, Macintosh 512Ke (222,070 B free)"),
+    "sys6-512K": (105136, "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
+    "floor-1M":  (629424, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
 # -32 on all three 2026-10-21, DERIVED from TIERS_CONTROL +32 (the bundle's
 # working directory, DECISIONS.md 2026-10-21, *the Desktop Manager System 6
@@ -374,12 +377,13 @@ TIERS = {
 # data + bss -680. The machine gave +4,204, because the jump table, the
 # stub segments and the relocations trimmed at launch are resident bytes
 # this unit never counted — which is why TIERS was measured, not moved.
-TIERS_CONTROL = 212576     # build/mac-resident, CODE + A5, 2026-10-24
+TIERS_CONTROL = 212688     # build/mac-resident, CODE + A5, 2026-10-24
 # +352 on 2026-10-22: the eleven malformed-input fixes, every decoder linked
 # in; TIERS above drops 352 to match (TIERS_MACHINE, physical RAM, unmoved).
 # +32 more on 2026-10-23 with Compact Pro's fork-extent check; TIERS -32.
 # +64 more on 2026-10-24 with the StuffIt segment probe; TIERS -64.
 # +512 more on 2026-10-24 with a fat installer's 'endD'; TIERS -512.
+# +112 more on 2026-10-24 with the StuffIt segment CRC check; TIERS -112.
 # **What this control cannot see: the autotest harness.** TIERS was read
 # on the machine from an autotest build (`UNC_MAC_AUTOTEST`), and
 # build/mac-resident has no harness in it, so harness growth lowers what a
@@ -780,7 +784,10 @@ EXPECT = {
 # **+288 2026-10-24, -> 155,568**: a fat installer's 'endD', the control's
 # +512 (CODE +500, A5 +12) against the shipped pair's +224 (CODE +200, A5
 # +24) (DECISIONS.md 2026-10-24, *the length part 1 kept in its resource fork*). TIERS -512.
-OVL_SAVED = 155568
+# **+16 2026-10-24, -> 155,584**: the StuffIt segment CRC check, the
+# control's +112 (CODE +80, A5 +32) against the shipped pair's +96 (CODE
+# +80, A5 +16) (DECISIONS.md 2026-10-24, *the sum each part carries*). TIERS -112.
+OVL_SAVED = 155584
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
 # every kept image is one — as is the bundle an envelope holds on to.

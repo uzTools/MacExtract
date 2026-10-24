@@ -75,9 +75,13 @@ question after the look*, *the formats it only named*).
   CRCs (measured 2026-10-13); how to implement it is left as an exercise to
   the reader.
 - **A fat self-extracting StuffIt set's part 1 that has lost its resource
-  fork joins wrong**, and is left so: where its segment ends is the fork's
+  fork is refused**, and is left so: where its segment ends is the fork's
   `'endD'` (Now Utilities 6.0's Disk 1 carries 56,206 B of PowerPC code
-  after it), and every form such a set is distributed in keeps the fork.
+  after it), so the data fork read to its end does not match the running
+  CRC its header stores, and the join stops at part 1 with *checksum
+  mismatch* before Disk 2 is asked for (DECISIONS.md 2026-10-24, *the sum
+  each part carries*; it joined wrong and said nothing before). Every
+  form such a set is distributed in keeps the fork.
   The bare data fork is the user's own copy to redo (README, *From a
   modern Mac, compress first*). Two re-cuts were built and priced, 128 B
   and 304 B resident, and declined 2026-10-24 (DECISIONS.md, *the fork
@@ -298,7 +302,6 @@ Measured 2026-10-24 (DECISIONS.md, *the magic StuffIt never wrote*).
 
 | what | state | closes by |
 |---|---|---|
-| the running CRC-16/ARC at 98 | not checked; `tools/synth_sitsplit.py` writes it as StuffIt does since 2026-10-24, and `Palette.sit.1` on the share was re-cut that day | checking it per part |
 | bytes 0-1 | a per-set value, **hypothesis** QuickDraw `Random` (41 A7 = 16,807, its first value, written three times on fresh boots); nothing reads it | a writer's code: Deluxe 2.0.1's `CODE` is unpacked |
 | the header CRC at 94, over bytes 0..93 | measured on 40 parts of 40, not checked; the generator and `Palette.sit.1` on the share carry it since 2026-10-24 | the probe requiring it, which would stand in for B0 56 at 1 in 65,536 |
 

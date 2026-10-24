@@ -1240,14 +1240,20 @@ int unc_sit_extract(UncCtx *c);
  * writes the single joined entry, reading its forks from `base`:
  * UNC_SEG_HEAD for a lone part, 0 for the stream unc_segment.c joins.
  * `data_first` says which fork the stream begins with — StuffIt puts
- * the resource fork first, DiskDoubler's `SPLT` the data fork. */
+ * the resource fork first, DiskDoubler's `SPLT` the data fork. `ioerr`,
+ * when not NULL, is the stream's own sticky error, which a read that
+ * failed because of it then reports as the entry's status; the joiner
+ * passes its own, a lone part NULL. */
 UncFormat unc_sitseg_probe(const uint8_t *head, int32_t len, UncIO *io);
 int unc_sitseg_extract(UncCtx *c);
 int unc_sitseg_emit(UncCtx *c, const UncSegmentDesc *desc, uint32_t base,
-                    int data_first);
+                    int data_first, const int *ioerr);
 int unc_sitseg_describe(UncIO *io, UncSegmentDesc *desc);
 int unc_sitseg_match(const UncSegmentDesc *desc,
                      const uint8_t *head, int32_t len);
+/* The CRC-16/ARC a part stores at 98 over the payloads of parts 1..its
+ * own; the joiner holds each part to it as it is read (unc_segment.c). */
+uint16_t unc_sitseg_stored_crc(const uint8_t *head);
 
 /* One part of a DiskDoubler `SPLT` set (fmt_ddseg.c). unc_ddseg_payload
  * is what the joiner asks a freshly opened part: how many of its bytes
