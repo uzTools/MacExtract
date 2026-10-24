@@ -67,7 +67,7 @@ under *Table notes*.
 | Gzip | extract | deflate | 3 fixtures, + 11 MacGzip 1.1.3 specimens, both forks through MacBinary (TESTING.md, *MacGzip's own output*) | 51 KB | full |
 | Unix compress (.Z) | extract | LZW ≤16 bit | 4 fixtures | 219 KB§ | full |
 | Tar (ustar/v7) | extract | — (links reported unsupported); bsdtar's `._name` sidecar put on the member after it since 2026-10-17, its Spotlight comment since 2026-10-18; a pax `comment` is marked UTF-8 | 3 fixtures (2 real 1990 v7 tars) + unit tests | 8 KB | full |
-| StuffIt segment (multi-part) | extract | — (join only; the joined file is the next layer) | 7 synthetic sets, oracle-adjudicated, + 3 with each part in its own envelope (CLI only), + **6 sets StuffIt itself cut** (Lite 3.0.5 ×2, Deluxe 5.0 ×2, DropSegment 5.0, InstallerMaker 2.0), graded by their originals and the running CRC, since 2026-10-24 — refused before it (BLOCKERS.md, *Withdrawn claims*) | 8 KB | full |
+| StuffIt segment (multi-part) | extract | — (join only; the joined file is the next layer) | 7 synthetic sets, oracle-adjudicated, + 3 with each part in its own envelope (CLI only), + **7 sets StuffIt itself cut** (Deluxe 2.0.1, Lite 3.0.5 ×2, Deluxe 5.0 ×2, DropSegment 5.0, InstallerMaker 2.0), graded by their originals and the running CRC, since 2026-10-24 — refused before it (BLOCKERS.md, *Withdrawn claims*) | 8 KB | full |
 | Zip segment (spanned, .z01…/.zip) | extract | store, deflate — the zip reader, over the joined parts | 5 generated sets, adjudicated 4 ways (source tree, `unar`, us split, us unsplit) | 12–13 KB¶ | full |
 | Compact Pro segment (multi-part) | extract | RLE / LZH+RLE — the Compact Pro reader, over the segments | 2 generated sets + 2 cut by Compact Pro 1.51 itself | 20 KB | full |
 | DiskDoubler split (`SPLT`) | extract | — (join only; the joined file is the next layer) | 6 real parts (3 sets, cut by DiskDoubler itself, in `fixtures/`) + 8 generated sets, adjudicated against the published files they were cut from — no oracle exists | 8 KB | full |
@@ -9289,7 +9289,11 @@ creator, `AlYS` or `alyS`, with `SDar`/`MExt` the alternative MacStamp
 offers (its `b0bd1ac`) — which no file in MacStamp's 104,437-file census,
 TCDB or either Internet Config table carries; and seven MacStamp added for split
 sets, re-read at its `5b76852`: `Seg1`, `Seg2`, `Seg3`, `SegN`, `SegM` and
-`Part` for StuffIt segments, `DDSP` for DiskDoubler's split parts. +216 B
+`Part` for StuffIt segments, `DDSP` for DiskDoubler's split parts. **`Part`
+was dropped the same day**, leaving twenty-eight: the eight `Part` files on
+Info-Mac IV are finished programs with empty data forks, an expansion that
+stopped before its last step (TCDB's *"Translation in Process"*), and no
+StuffIt writes a segment so; `SegM` is StuffIt Deluxe 2.0.1's, every part. +216 B
 of resource fork (232,238 → 232,454), no code. Measured (`as703.py --set
 sdar`): `derived-SD__Utilities.x`'s data fork alone, typed `SDar/MExt`,
 draws MacExtract's icon, and a double-click launches MacExtract on it with

@@ -748,7 +748,7 @@ def split_behaviours(macextract, case, d, kind, whole, parts, original,
 # Every set above is tools/synth_sitsplit.py's, and so was every set this
 # suite ever graded: a generator and an oracle (`unar`) that both require
 # XADMaster's B0 56, so neither could notice that StuffIt does not write
-# it (BLOCKERS.md, *Withdrawn claims*, 2026-10-24). These six were cut by
+# it (BLOCKERS.md, *Withdrawn claims*, 2026-10-24). These seven were cut by
 # StuffIt itself, on emulated Macs, by MacStamp's session (its DECISIONS.md,
 # *StuffIt segments named*), and `unar` refuses all of them, so they are
 # graded by what they must join to: the file they were cut from, where it
@@ -774,6 +774,10 @@ REAL_SITSEG = {
            "173ff3a490b4391f5f9fc64ce67b9f29889940481ca44dc73a8c4c794874d940",
            3, "InstallerMaker 2.0: part 1 is the data fork of the APPL/STi1 "
               "installer, parts 2-3 Seg2/STi1 and Seg3/STi1"),
+    "segm": ("segm", "Empire.sit.1",
+             "2683df40fc33603e60a0017eae5a1e981ec44db5d7c5970f335d2c9ed9add2f9",
+             4, "StuffIt Deluxe 2.0.1, 75K parts of "
+                "derived-EmpireBuilderDemo.sit, every part typed SegM/SIT!"),
     "flop": ("flop", "Archive.sit.1",
              "db89afe5c3331fa44d3a709eda9a051be86298a2575afbb0dfe2e367932ed365",
              2, "StuffIt Deluxe 5.0's Save As onto two 800K floppies, "

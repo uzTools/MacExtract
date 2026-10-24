@@ -32,8 +32,9 @@
  *   buffer; nothing here reads them.
  *
  * Measured 2026-10-24 on the first sets StuffIt itself cut to be read
- * here — StuffIt Lite 3.0.5 (two sets of one file), Deluxe 5.0 (two
- * files), DropSegment 5.0 and InstallerMaker 2.0, written on emulated Macs
+ * here — StuffIt Deluxe 2.0.1, StuffIt Lite 3.0.5 (two sets of one
+ * file), Deluxe 5.0 (two files), DropSegment 5.0 and InstallerMaker 2.0,
+ * written on emulated Macs
  * by MacStamp's session — and on Now Utilities 6.0's two installer disks
  * (1996):
  *     0-1  41 A7 (Lite, both sets, AND InstallerMaker over another file),
@@ -43,7 +44,9 @@
  *          Random — 0x41A7 is 16,807, its first value from the seed
  *          InitGraf sets, and the two 41 A7 sets were each the first
  *          thing done on a freshly booted emulator
- *    94-95 a value that differs from part to part, not identified
+ *    94-95 a CRC-16/ARC of this header's bytes 0..93: 40 parts of 40,
+ *          seven writers, StuffIt Deluxe 2.0.1 (1991) to 5.0. Not
+ *          checked: the generator writes zero there (OPEN_ITEMS.md)
  *    96-97 zero in every part
  *    98-99 a CRC-16/ARC RUNNING across the set: over the payloads of
  *          parts 1..n, so the last part's is the whole file's. Not

@@ -29585,3 +29585,17 @@ reported as a corrupt archive now; and the running CRC, which nothing
 checks. Both are OPEN_ITEMS.md's, because closing the first changes
 the order in which the Mac application asks for parts. The withdrawn
 claim, and what it cost, are BLOCKERS.md's.
+
+**The same evening, two more.** StuffIt Deluxe 2.0.1 (1991) cuts sets
+with every part typed `SegM`, the type no later version wrote, and its
+four parts join to `derived-EmpireBuilderDemo.sit` byte for byte, the
+seventh real set. With 40 parts from seven writers, bytes 94-95 are
+identified: a CRC-16/ARC of the header's own bytes 0..93, on every one.
+That would make the probe nearly certain, and it is not adopted yet,
+because our generator writes zero there and so would every synthetic set
+fail, `Palette.sit` on the maintainer's share among them (OPEN_ITEMS.md).
+And `Part`, claimed in the bundle that afternoon as a segment type, is
+dropped: the eight `Part` files on Info-Mac IV are finished programs
+whose expansion stopped before retyping them, and no StuffIt writes a
+segment so.
+

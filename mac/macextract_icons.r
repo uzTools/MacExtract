@@ -231,7 +231,11 @@ resource 'FREF' (129) { '****', 1, "" };
    self-extractor that keeps its resource fork stays `APPL` with its own
    creator (`AlYS` or `alyS`), with `SDar`/`MExt` offered beside it. No
    file in MacStamp's 104,437-file census, TCDB or Apple's Internet Config
-   tables carries the type `SDar`. Each maps to icon local ID 1, the application's,
+   tables carries the type `SDar`. NOT `Part`, though StuffIt Expander
+   claims it: TCDB's "Translation in Process", and all eight such files
+   on Info-Mac IV are finished programs with empty data forks, an
+   expansion that stopped before retyping them — claimed 2026-10-24 and
+   dropped the same day, and MacStamp's tables dropped it too. Each maps to icon local ID 1, the application's,
    for the reason above. The resource fork grows by about 12 bytes a type
    and no code changes. */
 resource 'FREF' (130) { 'BINA', 1, "" };   /* MacBinary, AppleSingle (Apple's table) */
@@ -261,7 +265,6 @@ resource 'FREF' (153) { 'Seg2', 1, "" };   /* StuffIt segment */
 resource 'FREF' (154) { 'Seg3', 1, "" };   /* StuffIt segment */
 resource 'FREF' (155) { 'SegN', 1, "" };   /* StuffIt segment */
 resource 'FREF' (156) { 'SegM', 1, "" };   /* StuffIt segment */
-resource 'FREF' (157) { 'Part', 1, "" };   /* StuffIt segment */
 resource 'FREF' (158) { 'DDSP', 1, "" };   /* DiskDoubler split part */
 
 resource 'BNDL' (128) {
@@ -270,7 +273,7 @@ resource 'BNDL' (128) {
        'FREF', { 0, 128, 1, 129,
                 2, 130, 3, 131, 4, 132, 5, 133, 6, 134, 7, 135, 8, 136, 9, 137, 10, 138, 11, 139, 12, 140, 13, 141, 14, 142, 15, 143, 16, 144, 17, 145, 18, 146,
                 19, 147, 20, 148, 21, 149, 22, 150, 23, 151,
-                24, 152, 25, 153, 26, 154, 27, 155, 28, 156, 29, 157, 30, 158 } }
+                24, 152, 25, 153, 26, 154, 27, 155, 28, 156, 29, 158 } }
 };
 
 /* The SIGNATURE resource: type = the creator code, ID 0. The Finder wants
