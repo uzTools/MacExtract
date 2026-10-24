@@ -294,7 +294,6 @@ Measured 2026-10-24 (DECISIONS.md, *the magic StuffIt never wrote*).
 | the running CRC-16/ARC at 98 | not checked; `tools/synth_sitsplit.py` writes it as StuffIt does since 2026-10-24, and `Palette.sit.1` on the share was re-cut that day | checking it per part |
 | bytes 0-1 | a per-set value, **hypothesis** QuickDraw `Random` (41 A7 = 16,807, its first value, written three times on fresh boots); nothing reads it | a writer's code: Deluxe 2.0.1's `CODE` is unpacked |
 | the header CRC at 94, over bytes 0..93 | measured on 40 parts of 40, not checked; the generator and `Palette.sit.1` on the share carry it since 2026-10-24 | the probe requiring it, which would stand in for B0 56 at 1 in 65,536 |
-| `SegM` and `Part` | types in MacStamp's census (12 files), no writer found | a set carrying them |
 
 ## Formats classic Mac programs wrote that nothing here opens — leads, not findings
 
