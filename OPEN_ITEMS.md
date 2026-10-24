@@ -296,14 +296,6 @@ exceeded (`S_REP_*`) rather than a dropped subtree, priced in resident
 bytes; the number may be raised (~340 B a level) or the stack grown, but
 neither is required to close it.
 
-## StuffIt segments: what the sets StuffIt wrote left open
-
-Measured 2026-10-24 (DECISIONS.md, *the magic StuffIt never wrote*).
-
-| what | state | closes by |
-|---|---|---|
-| bytes 0-1 | a per-set value, **hypothesis** QuickDraw `Random` (41 A7 = 16,807, its first value, written three times on fresh boots); nothing reads it | a writer's code: Deluxe 2.0.1's `CODE` is unpacked |
-
 ## Formats classic Mac programs wrote that nothing here opens — leads, not findings
 
 From the 190 entries of Macintosh Repository's *Compression & Archiving*

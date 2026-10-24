@@ -462,6 +462,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-24 (the fork that was never downloaded) — a fat part 1 without its resource fork is not re-cut: two routes built and priced, 128 B and 304 B resident, and declined because no download produces that file
 - 2026-10-24 (the sum each part carries) — a StuffIt segment's running CRC-16/ARC at 98 is held part by part in the joiner; a flipped byte is a checksum mismatch before the next disk is asked for
 - 2026-10-24 (the check the header carries) — the CRC-16/ARC a StuffIt segment stores at 94 is required by the parse the probe and the reader share; it stands where XADMaster's two magic bytes stood
+- 2026-10-24 (the two bytes the writer drew) — bytes 0-1 of a StuffIt segment are QuickDraw's _Random, drawn once per set and never seeded; and 96-97, which the probe required to be zero, are the resource fork's running CRC, so every set of a file with one was refused
 
 ---
 
@@ -29578,6 +29579,10 @@ archive to the same 300,000 bytes as the Deluxe set's. No verdict on the
 994 fixtures moved; over 14,933 cached files the rule takes the 31 real
 parts, Now Utilities 6.0's two installer disks, and one table of small
 numbers in MacStamp's scratch.
+**Corrected the same evening**: the `Random` hypothesis is measured in
+Deluxe 2.0.1's code, and bytes 96-97 were zero only because none of these
+files had a resource fork; they are that fork's running CRC, and requiring
+zero refused every set of a file with one (*the two bytes the writer drew*).
 
 **Consequence.** The probe tests byte 2, bytes 96-97 and sane fork
 sizes, and, where the length is known, that a part's payload fits the
@@ -29763,6 +29768,10 @@ wrote*, 40 parts of 40). The joiner now folds that sum as the parts go
 past and holds each part to its stored value as its last payload byte is
 read, so a damaged part is refused — *checksum mismatch* on the entry —
 before the next part is asked for. Measured.
+**Corrected the same evening**: the sum at 98 is over the DATA fork's bytes
+in those parts, and the resource fork's is at 96; one sum over both forks
+refused every set of a file with a resource fork (*the two bytes the writer
+drew*).
 
 **Evidence.** Built on the `SPLT` check already in `unc_segment.c`
 (`stored_crc`), which was per part and CRC-16/XMODEM: the scheme table
@@ -29870,3 +29879,98 @@ bytes per candidate that passes the byte checks before it, in the sniffer
 and in every part match — **about 7,500 cycles on a 68000 from the
 shipped build's loop, an estimate from the instruction timings, not a
 tick-probe measurement**.
+
+## 2026-10-24 (the two bytes the writer drew) — bytes 0-1 of a StuffIt segment are QuickDraw's _Random, drawn once per set and never seeded; and 96-97, which the probe required to be zero, are the resource fork's running CRC, so every set of a file with one was refused
+
+**Claim.** Two findings, from StuffIt Deluxe 2.0.1's own code and four sets
+it cut here. **Bytes 0-1 are `_Random`, drawn once per set**: the
+hypothesis of *the magic StuffIt never wrote* is measured. The segmenter
+stores the date in low-memory `RndSeed` first, which `_Random` does not
+read, so the k-th set of a LAUNCH of the application (not of a boot) gets
+the k-th value from the seed of 1 `InitGraf` sets: 41 A7, 3A F1, AC D9.
+Nothing in this engine reads them; Deluxe 2.0.1's own Join does. **Bytes
+96-97 are not zero**: they are a running CRC-16/ARC over the resource
+fork's bytes, and 98-99 the same over the data fork's, not one sum over
+both. The probe required 96-97 zero and the joiner held parts to one sum,
+so every set cut from a file with a resource fork was "format not
+recognized". Both now follow the writer. Measured.
+
+**Evidence.** The application's resource fork, unpacked from the download
+`sitopt.py` installs (by this engine), holds 32 `CODE` resources, read
+with Retro68's `objdump -b binary -m m68k:68000`; the jump table in
+`CODE` 0 resolves the calls.
+- `_Random` (A861) occurs once in all 32: `CODE` 5 +0x3444, in the
+  routine at +0x3204 that types each part `SegM`/`SIT!` (+0x3a64). Its
+  result goes to the header's word 0 (+0x3448), just after word 1, the
+  part number, is cleared (+0x343e); each part then increments it
+  (+0x3636) and takes the CRC of header bytes 0..93 into 94 (+0x364a).
+  The routine opens with `GetDateTime` (glue that copies `Time`, 0x20C)
+  stored to `RndSeed`, 0x156 (+0x323a). No instruction in the 32 writes
+  QuickDraw's own `randSeed`, −126 off the QuickDraw globals: every −126
+  displacement is off the frame pointer. `InitGraf` is called once (`CODE` 3).
+- Three launches, two sets each (two by the scratch harness
+  `sitopt.py --segment` was made from, one by the phase itself): the
+  first set 41 A7, the second 3A F1 every time. Those are `_Random`'s
+  first two values from 1, the low words of 16,807 and 282,475,249. The
+  date written to `RndSeed` before each set moved nothing, so on this ROM
+  `_Random` does not read it.
+- The fork sums: the copy loop (+0x3f5c..+0x40ca) folds resource-fork
+  bytes into one accumulator and data-fork bytes into another, with the
+  routine that sums the header; the segmenter copies the two to 96 and
+  98 (+0x3e32). The joining routine compares them there (+0x295c,
+  +0x2984). It also refuses a part whose bytes 0-1 differ from part 1's
+  with STR# 269's *"does NOT belong the the file being joined!"*
+  (+0x287c), and one whose number is not the next with *"out of
+  sequence"* (+0x28aa).
+- Four sets, subjects with resource forks of 323, 30,266, 900,211 and
+  100,211 bytes: every part's 96-97 and 98-99 are the two forks' running
+  sums. That includes part 1 of SubjC, which ends inside its resource fork
+  and stores 0 at 98. **All 42 earlier parts were cut from files with no
+  resource fork**, rsrclen 0 in every header. There the first sum is of
+  nothing and the second is the whole payload's, so that sample could not
+  tell the two readings apart.
+
+**Shown to fail.** HEAD refuses all four sets as "format not recognized";
+this tree joins all four to both forks byte for byte, and refuses SubjC
+with part 1's resource sum flipped as a checksum mismatch. Unit checks:
+96-97 nonzero is accepted where a resource fork is stated and refused
+where none is; a three-part set with per-fork sums joins, the old single
+sum is refused as part 1 ends, and a set cut 60/40/200, inside and on the
+fork boundary, joins and refuses a flipped sum in each part. HEAD's engine
+fails 23 of the 1,451. `run_segments.py` grades twelve real sets, the
+four new ones also on their resource fork's SHA-256 and its stored sum;
+the generator writes per-fork sums, and `unar`, which reads neither, agrees
+as before.
+
+**Consequence.** `sitseg_parse` requires 96-97 zero only where the header
+states no resource fork. The joiner holds each part to the sum its last
+payload byte falls in and restarts the sum where the resource fork ends;
+no read straddles that boundary, because `unc_sitseg_emit` reads fork by
+fork. `sitopt.py --segment small` and `big` reproduce the sets; a re-run
+gave SubjA byte for byte and SubjB different only in the name buffer
+(bytes 17, 35, 53) and the header CRC over it.
+
+**What it does not see.** The other writers' code. Lite 3.0.5's and
+InstallerMaker 2.0's 41 A7 fit the same code, unread. Deluxe 5.0's 35 63
+and 52 0C, DropSegment's 93 E1 and Now Utilities' D3 36 are not first
+values from 1; whether those writers seed `_Random` or draw it later is
+not known. A set of a file with a resource fork by any writer but Deluxe
+2.0.1: none is on hand. The Macintosh application was not run on these
+sets; its join is this engine's.
+
+**What it cost.** Against HEAD built in a worktree, all three
+configurations, per function (`nm -S`): `seg_read` 646 → 694 (+48),
+`sitseg_parse` 326 → 336 (+10), `unc_sitseg_stored_crc` 18 → 26 (+8),
+resident in all three. Shipped CODE +68 and A5 −4: **64 B off every
+budget**. The A5 is a 32-byte-aligned object after the code: the hook's
+first version, +72 of code, padded to +96 in all, and choosing the field
+by arithmetic instead of a conditional brought it to 64. Lazy +64 and 0.
+The control +68 and +28, so `TIERS_CONTROL` +96, each tier base −96
+(derived) and `OVL_SAVED` +32 → 155,616 B. `ovl_sniff` 12,424 → 12,436 B
+(its own copy of the parse), the bundle 180,376 → 180,388; every row of
+*What each format is granted* +32, the envelope's +20. `run_tiers.py
+--check` moves no tally: 74/74, 72/74 and 68/74 shipped, the same
+fixtures by name. The download 233,472 → 233,600 B, block rounding.
+Stack: `seg_read` 132 B and `sitseg_parse` 34 B, unchanged (`-Os
+-fstack-usage`). Heap: none. Time: the same bytes folded as before, plus
+a compare and a conditional clear per read of a joined set.

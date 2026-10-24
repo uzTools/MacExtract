@@ -183,10 +183,14 @@ REPO = os.path.dirname(HERE)
 # control's CODE +80 and A5 +32 (DECISIONS.md 2026-10-24, *the sum each part carries*);
 # OVL_SAVED +16 below offsets all but the shipped pair's 96.
 TIERS = {
-    "sys3-512K": (200486, "System 3.0, Macintosh 512Ke (222,070 B free)"),
-    "sys6-512K": (105104, "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
-    "floor-1M":  (629392, "System 6.0.8, 1 MB Mac Plus — the floor target"),
+    "sys3-512K": (200390, "System 3.0, Macintosh 512Ke (222,070 B free)"),
+    "sys6-512K": (105008, "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
+    "floor-1M":  (629296, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
+# **-96 more each 2026-10-24, DERIVED**: a StuffIt segment's running CRCs
+# held one per fork, the control's CODE +68 and A5 +28 (alignment)
+# (DECISIONS.md 2026-10-24, *the two bytes the writer drew*); they were 200,486 /
+# 105,104 / 629,392 since that day's header CRC.
 # **-32 more each 2026-10-24, DERIVED**: the StuffIt segment header CRC
 # required by the parse, the control's CODE +36 and A5 -4 (DECISIONS.md
 # 2026-10-24, *the check the header carries*); the shipped pair moved the
@@ -381,13 +385,14 @@ TIERS = {
 # data + bss -680. The machine gave +4,204, because the jump table, the
 # stub segments and the relocations trimmed at launch are resident bytes
 # this unit never counted — which is why TIERS was measured, not moved.
-TIERS_CONTROL = 212720     # build/mac-resident, CODE + A5, 2026-10-24
+TIERS_CONTROL = 212816     # build/mac-resident, CODE + A5, 2026-10-24
 # +352 on 2026-10-22: the eleven malformed-input fixes, every decoder linked
 # in; TIERS above drops 352 to match (TIERS_MACHINE, physical RAM, unmoved).
 # +32 more on 2026-10-23 with Compact Pro's fork-extent check; TIERS -32.
 # +64 more on 2026-10-24 with the StuffIt segment probe; TIERS -64.
 # +512 more on 2026-10-24 with a fat installer's 'endD'; TIERS -512.
 # +112 more on 2026-10-24 with the StuffIt segment CRC check; TIERS -112.
+# +96 more on 2026-10-24 with the segment CRCs one per fork; TIERS -96.
 # +32 more on 2026-10-24 with the segment header CRC required; TIERS -32.
 # **What this control cannot see: the autotest harness.** TIERS was read
 # on the machine from an autotest build (`UNC_MAC_AUTOTEST`), and
@@ -796,7 +801,12 @@ EXPECT = {
 # +36, A5 -4) against the shipped pair's +32 (CODE +36, A5 -4) — the parse
 # is resident in both (DECISIONS.md 2026-10-24, *the check the header
 # carries*). TIERS -32.
-OVL_SAVED = 155584
+# **+32 2026-10-24, -> 155,616**: a StuffIt segment's running CRCs one per
+# fork, the control's +96 (CODE +68, A5 +28) against the shipped pair's +64
+# (CODE +68, A5 -4): the same code in both, and the difference is where
+# each build's `.data` alignment falls
+# (DECISIONS.md 2026-10-24, *the two bytes the writer drew*). TIERS -96.
+OVL_SAVED = 155616
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
 # every kept image is one — as is the bundle an envelope holds on to.
@@ -946,7 +956,7 @@ IMAGES = {
     "OVL_ID_SUPERDISK":   6634,
     "OVL_ID_TEXT":        11346,
     "OVL_ID_ZIPOLD":      10832,
-    "OVL_ID_SNIFF":       12424,
+    "OVL_ID_SNIFF":       12436,
 }
 # **ZIPOLD +3,374 B and EXO +972 B, the bundle +4,344 B, 2026-10-17**:
 # Mac OS X's sidecars, the shared code in ZIPOLD and zip's half in EXO,
@@ -992,7 +1002,11 @@ IMAGES = {
 # its own copy of; the CRC routine comes through the host vector
 # (DECISIONS.md 2026-10-24, *the check the header carries*). Released
 # before extraction, so only a layer that keeps the whole bundle pays it.
-BUNDLE = 180376
+# **SNIFF +12 and the bundle +12, 2026-10-24**: bytes 96-97 required to
+# be zero only where the header states no resource fork, in the image's
+# copy of sitseg_parse (DECISIONS.md 2026-10-24, *the two bytes the writer
+# drew*). Released the same way; only a layer that keeps the bundle pays.
+BUNDLE = 180388
 
 # What the SHIPPED lane asserts, and it is the refused fixtures BY NAME
 # rather than a tally: a tier that refuses two different fixtures and still

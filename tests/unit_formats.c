@@ -2192,12 +2192,25 @@ static void test_sitseg(void)
         CHECK(unc_segment_match(&desc, other, UNC_SEG_HEAD) == 0);
         other[40] ^= 0x01;
         CHECK(unc_sitseg_probe(other, UNC_SEG_HEAD, NULL) == UNC_FORMAT_SITSEG);
-        /* ...96 and 97 zero, ... */
+        /* ...96 and 97, the resource fork's running CRC: anything on a
+         * file with a resource fork, and zero on one without — the sum
+         * of nothing. Required to be zero on every part until the
+         * evening of 2026-10-24, which refused every part cut from a
+         * file with a resource fork (DECISIONS.md 2026-10-24, *the two
+         * bytes the writer drew*)... */
+        other[96] = 0x01;
+        CHECK(unc_sitseg_probe(other, UNC_SEG_HEAD, NULL) == UNC_FORMAT_SITSEG);
+        other[96] = 0x00; other[97] = 0x01;
+        CHECK(unc_sitseg_probe(other, UNC_SEG_HEAD, NULL) == UNC_FORMAT_SITSEG);
+        other[97] = 0x00;
+        seg_head(other, 2, "Thing.sit", 0, 200, 0x11223344u);
         other[96] = 0x01;
         CHECK(unc_sitseg_probe(other, UNC_SEG_HEAD, NULL) == 0);
         other[96] = 0x00; other[97] = 0x01;
         CHECK(unc_sitseg_probe(other, UNC_SEG_HEAD, NULL) == 0);
         other[97] = 0x00;
+        CHECK(unc_sitseg_probe(other, UNC_SEG_HEAD, NULL) == UNC_FORMAT_SITSEG);
+        seg_head(other, 2, "Thing.sit", 100, 200, 0x11223344u);
         /* ...byte 2 zero, ... */
         other[2] = 0x01;
         CHECK(unc_sitseg_probe(other, UNC_SEG_HEAD, NULL) == 0);
@@ -2296,11 +2309,18 @@ static void test_sitseg(void)
     memcpy(p1 + UNC_SEG_HEAD, payload, 120);
     memcpy(p2 + UNC_SEG_HEAD, payload + 120, 100);
     memcpy(p3 + UNC_SEG_HEAD, payload + 220, 80);
-    /* The running CRC-16/ARC each part stores at 98, over the payloads
-     * of parts 1..its own (src/fmt_sitseg.c). */
-    put16be(p1 + 98, unc_crc16_arc(0, payload, 120));
-    put16be(p2 + 98, unc_crc16_arc(0, payload, 220));
-    put16be(p3 + 98, unc_crc16_arc(0, payload, 300));
+    /* The two running CRC-16/ARCs each part stores, one per FORK: at 96
+     * over the resource fork's bytes in parts 1..its own, at 98 the data
+     * fork's (src/fmt_sitseg.c; StuffIt Deluxe 2.0.1's own code and
+     * sets, DECISIONS.md 2026-10-24, *the two bytes the writer drew*).
+     * The resource fork is payload[0..100), so part 1 completes it and
+     * carries the data fork's first 20 bytes. */
+    put16be(p1 + 96, unc_crc16_arc(0, payload, 100));
+    put16be(p2 + 96, unc_crc16_arc(0, payload, 100));
+    put16be(p3 + 96, unc_crc16_arc(0, payload, 100));
+    put16be(p1 + 98, unc_crc16_arc(0, payload + 100, 20));
+    put16be(p2 + 98, unc_crc16_arc(0, payload + 100, 120));
+    put16be(p3 + 98, unc_crc16_arc(0, payload + 100, 200));
     {
         SegParts sp;
         UncVolumeSource vs;
@@ -2368,6 +2388,77 @@ static void test_sitseg(void)
         CHECK(unc_extract_segments(&desc, &vs, scratch, &sk, &al, NULL, NULL)
               == UNC_OK);
         CHECK(cap.count == 1 && cap.status[0] == UNC_OK);
+
+        /* The sum this joiner held parts to until the evening of
+         * 2026-10-24 — one CRC over resource and data bytes together —
+         * is what no StuffIt writes, and is refused as part 1 ends. */
+        put16be(p1 + 98, unc_crc16_arc(0, payload, 120));
+        sp.opens = 0;
+        cap_make(&sk, &cap);
+        CHECK(unc_extract_segments(&desc, &vs, scratch, &sk, &al, NULL, NULL)
+              == UNC_ERR_CRC);
+        CHECK(cap.count == 1 && cap.status[0] == UNC_ERR_CRC);
+        CHECK(sp.opens == 1);
+        put16be(p1 + 98, unc_crc16_arc(0, payload + 100, 20));
+
+        /* A part that ends INSIDE the resource fork is held to its
+         * resource sum and stores 0 as its data sum; one that ends
+         * exactly ON the fork boundary likewise; the data sum then
+         * starts from 0. Cut 60 / 40 / 200 over the same forks. */
+        {
+            uint8_t q1[UNC_SEG_HEAD + 60], q2[UNC_SEG_HEAD + 40],
+                    q3[UNC_SEG_HEAD + 200];
+            seg_head(q1, 1, "Thing.sit", 100, 200, 0x11223344u);
+            seg_head(q2, 2, "Thing.sit", 100, 200, 0x11223344u);
+            seg_head(q3, 3, "Thing.sit", 100, 200, 0x11223344u);
+            memcpy(q1 + UNC_SEG_HEAD, payload, 60);
+            memcpy(q2 + UNC_SEG_HEAD, payload + 60, 40);
+            memcpy(q3 + UNC_SEG_HEAD, payload + 100, 200);
+            put16be(q1 + 96, unc_crc16_arc(0, payload, 60));
+            put16be(q2 + 96, unc_crc16_arc(0, payload, 100));
+            put16be(q3 + 96, unc_crc16_arc(0, payload, 100));
+            put16be(q3 + 98, unc_crc16_arc(0, payload + 100, 200));
+            sp.part[0] = q1; sp.len[0] = sizeof q1;
+            sp.part[1] = q2; sp.len[1] = sizeof q2;
+            sp.part[2] = q3; sp.len[2] = sizeof q3;
+            sp.opens = 0;
+            cap_make(&sk, &cap);
+            CHECK(unc_extract_segments(&desc, &vs, scratch, &sk, &al,
+                                       NULL, NULL) == UNC_OK);
+            CHECK(cap.count == 1 && cap.status[0] == UNC_OK);
+            CHECK(cap.rlen[0] == 100 &&
+                  memcmp(cap.rsrc[0], payload, 100) == 0);
+            CHECK(cap.dlen[0] == 200 &&
+                  memcmp(cap.data[0], payload + 100, 200) == 0);
+            CHECK(sp.opens == 3);
+            /* Part 1's resource sum flipped: refused before part 2. */
+            q1[97] ^= 0x01;
+            sp.opens = 0;
+            cap_make(&sk, &cap);
+            CHECK(unc_extract_segments(&desc, &vs, scratch, &sk, &al,
+                                       NULL, NULL) == UNC_ERR_CRC);
+            CHECK(sp.opens == 1);
+            q1[97] ^= 0x01;
+            /* Part 2 ends ON the boundary: held to its resource sum,
+             * the whole fork's. Then part 3's data sum. */
+            q2[97] ^= 0x01;
+            sp.opens = 0;
+            cap_make(&sk, &cap);
+            CHECK(unc_extract_segments(&desc, &vs, scratch, &sk, &al,
+                                       NULL, NULL) == UNC_ERR_CRC);
+            CHECK(sp.opens == 2);
+            q2[97] ^= 0x01;
+            q3[99] ^= 0x01;
+            sp.opens = 0;
+            cap_make(&sk, &cap);
+            CHECK(unc_extract_segments(&desc, &vs, scratch, &sk, &al,
+                                       NULL, NULL) == UNC_ERR_CRC);
+            CHECK(sp.opens == 3);
+            q3[99] ^= 0x01;
+            sp.part[0] = p1; sp.len[0] = sizeof p1;
+            sp.part[1] = p2; sp.len[1] = sizeof p2;
+            sp.part[2] = p3; sp.len[2] = sizeof p3;
+        }
         free(scratch);
     }
 

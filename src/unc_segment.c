@@ -81,10 +81,13 @@ typedef struct SegScheme {
     /* The CRC a part stores, checked for free when the stream is read
      * straight through. NULL for none. `crc_fold` is which CRC it is -
      * the two schemes that store one differ - and `crc_runs` is what it
-     * covers: 0, the part's own payload (`SPLT`); 1, the payloads of
-     * parts 1..this one (StuffIt), so the sum is carried from part to
-     * part and the last part's is the whole file's. */
-    uint16_t (*stored_crc)(const uint8_t *head);
+     * covers: 0, the part's own payload (`SPLT`); 1, the bytes of ONE
+     * FORK across parts 1..this one (StuffIt), so the sum is carried
+     * from part to part and the last part's is the whole fork's. A
+     * StuffIt part stores two: the resource fork's and the data fork's,
+     * which `fork` selects (0 resource, 1 data); the joiner never reads
+     * across the fork boundary, so each read is in one sum (seg_read). */
+    uint16_t (*stored_crc)(const uint8_t *head, int fork);
     uint16_t (*crc_fold)(uint16_t crc, const uint8_t *buf, int32_t len);
     uint8_t   crc_runs;
     /* How many bytes this part spends on its header, when that is not
@@ -474,10 +477,21 @@ static int32_t seg_read(void *ctx, void *buf, int32_t len)
      * its last payload byte goes past, so a bad part is refused before
      * the next disk is asked for; a part with no payload is never read,
      * so never judged, and loses nothing. The last part's payload ends
-     * at `total`, whatever its file holds after that. */
+     * at `total`, whatever its file holds after that.
+     *
+     * A sum that runs across parts (crc_runs) is StuffIt's, and StuffIt
+     * keeps one per FORK (fmt_sitseg.c): while the sum is still inside
+     * the resource fork a part is held to its resource sum, after that
+     * to its data sum, and the data sum starts from 0 where the
+     * resource fork ends. No read straddles that boundary: the only
+     * reader of a joined StuffIt stream is unc_sitseg_emit, which reads
+     * it fork by fork (unc_copy_fork, never more than the fork has
+     * left). A reader that did straddle would be refused as a checksum
+     * mismatch, not joined wrong. */
     if (j->sc->stored_crc && r > 0) {
         if (j->crc_ok && j->pos == j->crc_pos) {
             uint32_t end = j->start[j->curpart + 1];
+            uint32_t rsrc = j->sc->crc_runs ? j->desc->rsrc_size : 0;
             if (end > j->total) end = j->total;
             j->crc = j->sc->crc_fold(j->crc, buf, r);
             j->crc_pos += (uint32_t)r;
@@ -485,11 +499,12 @@ static int32_t seg_read(void *ctx, void *buf, int32_t len)
                 uint8_t h[SEG_HEAD_MAX];
                 if (unc_read_at(&j->cur, 0, h,
                                 (int32_t)j->sc->head_len) != UNC_OK ||
-                    j->sc->stored_crc(h) != j->crc) {
+                    j->sc->stored_crc(h, j->crc_pos > rsrc) != j->crc) {
                     j->err = UNC_ERR_CRC;
                     return -1;
                 }
             }
+            if (j->crc_pos == rsrc) j->crc = 0;
         } else {
             j->crc_ok = 0;
         }

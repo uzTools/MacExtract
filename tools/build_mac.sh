@@ -630,7 +630,12 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # StuffIt segment stores at 94 is required by the parse the probe and the
 # reader share (DECISIONS.md 2026-10-24, *the check the header carries*):
 # sitseg_parse 288 -> 326 B, resident in every build; the A5 is alignment.
-UNC_MAC_CODE_DEFAULT=176480
+# +68 on 2026-10-24, 176,480 -> 176,548, A5 +28 below: a StuffIt segment's
+# running CRCs are one per fork, at 96 and 98, and 96-97 is no longer
+# required to be zero
+# (DECISIONS.md 2026-10-24, *the two bytes the writer drew*): seg_read +48,
+# sitseg_parse +10, unc_sitseg_stored_crc +8, resident in every build.
+UNC_MAC_CODE_DEFAULT=176548
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -826,7 +831,9 @@ UNC_MAC_CODE_DEFAULT=176480
 # a CRC routine and a flag per row, with the segment CRC check (above).
 # -4 on 2026-10-24, 36,244 -> 36,240: `.data` alignment, with the segment
 # header CRC check (above).
-UNC_MAC_A5_DEFAULT=36240
+# +28 on 2026-10-24, 36,240 -> 36,268: `.data` alignment under the per-fork
+# segment CRCs (above); no data was added.
+UNC_MAC_A5_DEFAULT=36268
 # A CEILING PER CONFIGURATION, because one ceiling measured on another build
 # cannot fire. The figures above are the RESIDENT control build, which carries
 # every decoder; the shipped build's resident code is a third of that, so
@@ -1257,8 +1264,15 @@ UNC_MAC_A5_DEFAULT=36240
 # header CRC a StuffIt segment stores at 94, required by sitseg_parse
 # (DECISIONS.md 2026-10-24, *the check the header carries*); the A5 is
 # `.data` alignment.
-UNC_MAC_CODE_EAGER=40860
-UNC_MAC_A5_EAGER=16276
+# +68 and -4 on 2026-10-24, 40,860 -> 40,928 and 16,276 -> 16,272: the
+# running CRCs a StuffIt segment stores are one per fork, 96 the resource
+# fork's and 98 the data fork's, and 96-97 is zero only for a file with
+# no resource fork
+# (DECISIONS.md 2026-10-24, *the two bytes the writer drew*). The A5 is
+# the 32-byte-aligned object after the code: +72 of code padded to +96
+# in all, and the hook's cheaper fork select brought it to +68 and +64.
+UNC_MAC_CODE_EAGER=40928
+UNC_MAC_A5_EAGER=16272
 # +8 on 2026-10-02 for the same reason as the eager pair above: the
 # overlay call that now says WHICH of StuffIt 2.x's ciphers an entry
 # wants. A5 fell to 19,096 and its ceiling is left where it was.
@@ -1353,7 +1367,9 @@ UNC_MAC_A5_EAGER=16276
 # data + bss 16,344, under its ceiling.
 # +40 code on 2026-10-24, the segment header CRC check (the eager pair
 # above); data + bss 16,336, under its ceiling.
-UNC_MAC_CODE_LAZY=39520
+# +64 code on 2026-10-24, the per-fork segment CRCs (the eager pair
+# above); data + bss 16,336, under its ceiling.
+UNC_MAC_CODE_LAZY=39584
 UNC_MAC_A5_LAZY=19200
 if [ -n "$UNC_OVL_RESIDENT" ]; then
     UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-$UNC_MAC_CODE_DEFAULT}

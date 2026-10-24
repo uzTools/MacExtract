@@ -61,8 +61,9 @@
  */
 #include "fmt_ddseg_priv.h"
 
-uint16_t unc_ddseg_stored_crc(const uint8_t *head)
+uint16_t unc_ddseg_stored_crc(const uint8_t *head, int fork)
 {
+    (void)fork;                      /* one sum, over the part's payload */
     return unc_get_u16be(head + DS_CRC);
 }
 

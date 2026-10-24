@@ -45,20 +45,22 @@ int sitseg_parse(const uint8_t *h, int32_t len, UncSegmentDesc *desc)
      * read here: 41 A7 from StuffIt Lite 3.0.5 and InstallerMaker 2.0,
      * 35 63 and 52 0C from Deluxe 5.0, 93 E1 from DropSegment 5.0 — the
      * same in every part of a set, and given by no CRC-16 or sum of the
-     * file or the header that was tried. Most likely a random set ID:
-     * 0x41A7 is 16,807, QuickDraw Random's first value from the seed
-     * InitGraf sets, written by two programs over unrelated files on
-     * freshly booted emulators (a hypothesis; fmt_sitseg.c).
+     * file or the header that was tried. Measured in Deluxe 2.0.1's own
+     * code the same day: QuickDraw's _Random, drawn once per set and
+     * never seeded, so a launch's first set is 16,807 = 41 A7
+     * (fmt_sitseg.c; DECISIONS.md 2026-10-24, *the two bytes the writer
+     * drew*).
      * Every B0 56 part on this machine was written by
      * tools/synth_sitsplit.py (BLOCKERS.md, *Withdrawn claims*). What
-     * stands in for them is measured on the 42 real parts of eight sets:
-     * byte 2 is zero and so are bytes 96 and 97, and 94-95 are a
-     * CRC-16/ARC of bytes 0..93 (98-99 are the running CRC fmt_sitseg.c
-     * describes). The header CRC is required since the evening of
+     * stands in for them is measured on the 42 real parts of eight sets
+     * and in Deluxe 2.0.1's code: byte 2 is zero (the part number is a
+     * 16-bit word at 2), and 94-95 are a CRC-16/ARC of bytes 0..93
+     * (96-99 are the two running CRCs fmt_sitseg.c describes; 96-97
+     * are tested below, where the fork length is known). The header CRC
+     * is required since the evening of
      * 2026-10-24, and is the 1-in-65,536 the two magic bytes were
      * (DECISIONS.md 2026-10-24, *the check the header carries*). */
     if (h[2] != 0x00) return UNC_ERR_FORMAT;
-    if (h[96] != 0x00 || h[97] != 0x00) return UNC_ERR_FORMAT;
     if (h[SS_PART] == 0) return UNC_ERR_FORMAT;
     if (unc_get_u16be(h + SS_CRC) != unc_crc16_arc(0, h, SS_CRC))
         return UNC_ERR_FORMAT;
@@ -75,6 +77,13 @@ int sitseg_parse(const uint8_t *h, int32_t len, UncSegmentDesc *desc)
     data = unc_get_u32be(h + SS_DATALEN);
     if (rsrc > UNC_MAC_MAX || data > UNC_MAC_MAX) return UNC_ERR_FORMAT;
     if (rsrc == 0 && data == 0) return UNC_ERR_FORMAT;
+    /* Bytes 96-97 are the resource fork's running CRC, so a file with no
+     * resource fork stores 0 there - the sum of nothing. Required only
+     * then: it was required always until the evening of 2026-10-24, on
+     * 42 parts that all happened to be cut from files with no resource
+     * fork, and refused every part of a file with one (DECISIONS.md
+     * 2026-10-24, *the two bytes the writer drew*). */
+    if (rsrc == 0 && (h[96] != 0x00 || h[97] != 0x00)) return UNC_ERR_FORMAT;
 
     if (desc) {
         desc->scheme   = UNC_FORMAT_SITSEG;

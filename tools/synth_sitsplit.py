@@ -18,14 +18,20 @@ Header layout comes from that parser and nowhere else:
   100  payload
 
    94  CRC-16/ARC of bytes 0..93, big-endian
-   96  0x0000
-   98  CRC-16/ARC of the payloads of parts 1..n, running, big-endian
+   96  CRC-16/ARC of the RESOURCE fork's bytes in parts 1..n, running
+   98  CRC-16/ARC of the DATA fork's bytes in parts 1..n, running
 
-The two CRCs are what StuffIt writes, measured 2026-10-24 on 40 parts of
-seven sets StuffIt itself cut (src/fmt_sitseg.c's file comment); this
-wrote zero in both until that day. Bytes 0-1 are NOT: StuffIt writes a
-per-set value, most likely a random identifier, and B0 56 is one such
-value that `unar`, this suite's oracle, requires. Bytes 5+namelen..67
+The three CRCs are what StuffIt writes: the header's measured 2026-10-24
+on 40 parts of seven sets StuffIt itself cut, the two running sums in
+StuffIt Deluxe 2.0.1's own code and on the sets it cut from files with
+a resource fork that evening (src/fmt_sitseg.c's file comment;
+DECISIONS.md 2026-10-24, *the two bytes the writer drew*). This wrote
+zero in all three until that day, and until that evening one sum over
+both forks together at 98 — which only a file with no resource fork
+could tell from the real rule, and every real set then on hand was one.
+Bytes 0-1 are NOT measured here: StuffIt draws them from QuickDraw's
+Random once per set, and B0 56 is one such value that `unar`, this
+suite's oracle, requires. Bytes 5+namelen..67
 are zero here and whatever was in StuffIt's buffer there. The sets
 StuffIt wrote are graded separately (run_segments.py, REAL_SITSEG). A consequence worth stating — the total part COUNT is
 not stored anywhere, so a reader knows the set is complete only by
@@ -60,10 +66,12 @@ def crc16_arc(data, crc=0):
 
 
 def header(part, name, rsrclen, datalen, ftype=TYPE, creator=CREATOR,
-           created=CREATED, modified=MODIFIED, flags=FFLAGS, running=0):
-    """One part's header. `running` is the CRC-16/ARC of the payloads of
-    parts 1..`part`, this one's included: crc16_arc over everything cut
-    so far."""
+           created=CREATED, modified=MODIFIED, flags=FFLAGS, running=0,
+           running_rsrc=0):
+    """One part's header. `running_rsrc` and `running` are the
+    CRC-16/ARCs of the resource fork's and the data fork's bytes in
+    parts 1..`part`, this one's included: each is crc16_arc over what
+    of that fork has been cut so far, and 0 where none has."""
     if not 1 <= len(name) <= 63:
         raise ValueError("name length must be 1..63")
     if b"\0" in name:
@@ -76,6 +84,7 @@ def header(part, name, rsrclen, datalen, ftype=TYPE, creator=CREATOR,
     struct.pack_into(">4s4sHIIII", h, 68, ftype, creator, flags,
                      created, modified, rsrclen, datalen)
     struct.pack_into(">H", h, 94, crc16_arc(h[:94]))
+    struct.pack_into(">H", h, 96, running_rsrc)
     struct.pack_into(">H", h, 98, running)
     return bytes(h)
 
@@ -101,9 +110,11 @@ def write_set(outdir, names, payload, rsrclen, datalen, cuts, name=b"Test.sit",
     for i in range(len(names)):
         chunk = payload[bounds[i]:bounds[i + 1]]
         p = os.path.join(outdir, names[i])
+        cut = bounds[i + 1]                  # payload bytes written so far
         with open(p, "wb") as f:
             f.write(header(i + 1, name, rsrclen, datalen,
-                           running=crc16_arc(payload[:bounds[i + 1]]),
+                           running_rsrc=crc16_arc(payload[:min(cut, rsrclen)]),
+                           running=crc16_arc(payload[rsrclen:cut]),
                            **hdrkw))
             f.write(chunk)
         paths.append(p)

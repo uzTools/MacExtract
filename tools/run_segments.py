@@ -754,9 +754,17 @@ def split_behaviours(macextract, case, d, kind, whole, parts, original,
 # installer disks of 1996; `unar` refuses all of them, so they are
 # graded by what they must join to: the file they were cut from, where it
 # is kept, and otherwise the running CRC-16/ARC every part stores at 98 —
-# over the whole payload, in the last part.
+# the DATA fork's, whole in the last part. The four sets cut from files
+# with a resource fork (rsrca-rsrcd: StuffIt Deluxe 2.0.1, run here by
+# tools/vmac/sitopt.py --segment small and big) carry that fork's
+# SHA-256 as a sixth field and are graded on it, and on the resource
+# fork's own running CRC at 96; rsrcc's part 1 ends inside its resource
+# fork. The eight sets of 42 parts before them were all cut from files
+# with no resource fork, which is how "96-97 is zero" and one sum over
+# both forks passed for the rule until the evening of 2026-10-24
+# (DECISIONS.md, *the two bytes the writer drew*).
 #   (directory under SPECIMENS/sitseg-real, part 1, SHA-256 of the joined
-#    file, parts, what)
+#    DATA fork, parts, what[, SHA-256 of the joined resource fork])
 REAL_SITSEG = {
     "lite1": ("lite1", "Subject.1",
               "2dc051415ab02da4a0075f749a78fa33ff8279295b3b872135c9935cbcde1ac2",
@@ -783,6 +791,31 @@ REAL_SITSEG = {
              "db89afe5c3331fa44d3a709eda9a051be86298a2575afbb0dfe2e367932ed365",
              2, "StuffIt Deluxe 5.0's Save As onto two 800K floppies, "
                 "Seg1/SIT! and Seg2/SIT!"),
+    "rsrca": ("rsrca", "SubjA.1",
+              "cdd87f09828fb093537eaa2eeffe6f5e70568285f2b6e2c171df50510adc24f1",
+              1, "StuffIt Deluxe 2.0.1 over a file with a 323-byte resource "
+                 "fork and 50,000 bytes of data, one part: 96-97 is the "
+                 "resource fork's CRC, 98-99 the data fork's",
+              "ec0c379f4f895f4161a58f6456c90ee27102d18d99b6ffc91fa196f5fe7fc58d"),
+    "rsrcb": ("rsrcb", "SubjB.1",
+              "70defa37bc5290bdc7de17ce7d464aaf9257a23d0cc51c41e7518c3d0d9d0486",
+              1, "the same writer over a 30,266-byte resource fork and 50,000 "
+                 "bytes of data, one part; its bytes 0-1 are 3A F1, the "
+                 "second value of QuickDraw Random's sequence, cut second "
+                 "in one launch",
+              "cac30e5c9fc89a00235f062dd96f71dfef61b388bde47ab931b2278d8b1fd6a3"),
+    "rsrcc": ("rsrcc", "SubjC.1",
+              "4972bb56f8255b7dd65652cf40de4e1edfd8be3f38c508b1fe1928d70e8cebdf",
+              2, "StuffIt Deluxe 2.0.1 at its default part size over a "
+                 "900,211-byte resource fork and 300,000 bytes of data: "
+                 "part 1 ends inside the resource fork and stores 0 as "
+                 "its data sum",
+              "6c029530f92b1dbc20779f38412c5dc75949b38f91f93728785e5513f468a352"),
+    "rsrcd": ("rsrcd", "SubjD.1",
+              "d2ab680b931d2189f5f11e4ac361f24fbdf8374710e8b962cdeb06ef3ef81b80",
+              2, "the same over a 100,211-byte resource fork and 1,000,000 "
+                 "bytes of data: part 1 holds the whole resource fork",
+              "7990c154591d97292a8bab159973653f1b2cdd715391529199ea7b2399edc1c2"),
     "fat": ("fat", "Now Utilities 6.0 Disk 1",
             "3433f1c94e707e16c20bdce9343b35e7e2752828adc0e2e017fa5da02d5d6d7a",
             2, "Now Utilities 6.0 (1996), a fat installer: part 1's data fork "
@@ -801,7 +834,8 @@ def arc_crc(data, crc=0):
 
 
 def real_sitseg_run(macextract, case, workroot, fails):
-    sub, first, want, nparts, _what = REAL_SITSEG[case]
+    sub, first, want, nparts, _what = REAL_SITSEG[case][:5]
+    want_rsrc = REAL_SITSEG[case][5] if len(REAL_SITSEG[case]) > 5 else None
     src = os.path.join(SPECIMENS, "sitseg-real", sub)
     d = os.path.join(workroot, "real-" + case)
     shutil.copytree(src, d)
@@ -827,6 +861,21 @@ def real_sitseg_run(macextract, case, workroot, fails):
     fails.check(arc_crc(got) == stored,
                 "%s: running CRC %04x, the last part stores %04x"
                 % (case, arc_crc(got), stored))
+    # A set cut from a file WITH a resource fork: that fork comes back
+    # as the ._NAME beside the data fork (`--forks hidden` writes it
+    # raw), and the last part's bytes 96-97
+    # are its own running CRC-16/ARC. (A set cut from a file without one
+    # stores 0 there, the sum of nothing, which the probe requires.)
+    if want_rsrc is not None:
+        rpath = os.path.join(d, "_out", "._" + outs[0])
+        rgot = open(rpath, "rb").read() if os.path.exists(rpath) else b""
+        fails.check(hashlib.sha256(rgot).hexdigest() == want_rsrc,
+                    "%s: joined resource fork is not the one StuffIt cut "
+                    "(%d bytes)" % (case, len(rgot)))
+        rstored = struct.unpack(">H", open(last, "rb").read(100)[96:98])[0]
+        fails.check(arc_crc(rgot) == rstored,
+                    "%s: resource fork's running CRC %04x, the last part "
+                    "stores %04x" % (case, arc_crc(rgot), rstored))
     # A set graded with a resource fork beside a part must fail without
     # it, or the fork is not what the grade above tested.
     sidecars = [p for p in allfiles if p.endswith(".rsrc")]

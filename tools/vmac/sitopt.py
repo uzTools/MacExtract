@@ -468,6 +468,9 @@ def main():
     ap.add_argument("--options", action="store_true")
     ap.add_argument("--map", action="store_true")
     ap.add_argument("--make", action="store_true")
+    ap.add_argument("--segment", choices=sorted(SEG_RUNS),
+                    help="have 2.0.1's Segment script command cut two "
+                         "files with resource forks, in one launch")
     ap.add_argument("--show", nargs="?", const=True,
                     help="an archive, or a directory of them")
     ap.add_argument("--force", action="store_true")
@@ -483,6 +486,8 @@ def main():
                     help="this build already has Expert menus")
     args = ap.parse_args()
 
+    if args.segment:
+        return phase_segment(args)
     if args.setup:
         fetch()
         return 0
@@ -3491,6 +3496,137 @@ def phase_make(args):
     # from a run that made all three.
     read_back(os.path.join(s.work, "boot.hfv"), outdir)
     return show(outdir)
+
+
+# StuffIt Deluxe 2.0.1 cuts segments, run from its own script language
+# (`Segment` is STR# 257's 34th word; with no size it cuts at the
+# dialog's default, 793,500 payload bytes a part). Each run is ONE
+# launch of the application, and the order is the point: a set's bytes
+# 0-1 are the launch's next QuickDraw `_Random`, so the first file cut
+# gets 41 A7 and the second 3A F1 on every run (DECISIONS.md
+# 2026-10-24, *the two bytes the writer drew*). Every subject has a
+# resource fork, which no set before these had: `small` is one part
+# each, `big` two, the first of SubjC's ending inside its resource
+# fork. The specimens are in specimens/sitseg-real/rsrc{a,b,c,d}.
+# What it cannot see: anything about other writers, and a set cut
+# second in a launch by anything but this script.
+def seg_text(n, seed):
+    """`n` bytes of deterministic word salad: text, so it is the TEXT
+    file it claims to be, and different per seed."""
+    words = ["alpha", "beta", "gamma", "delta", "epsilon", "zeta", "eta",
+             "theta", "iota", "kappa", "lambda", "mu"]
+    out, x, have = [], seed, 0
+    while have < n:
+        x = (x * 1103515245 + 12345) & 0x7fffffff
+        w = words[(x >> 16) % len(words)]
+        out.append(w)
+        have += len(w) + 1
+    return (" ".join(out) + "\r").encode("mac_roman")[:n]
+
+
+def seg_str(tail, seed):
+    """A one-'STR ' resource fork: a 200-byte string, then `tail` more
+    bytes of the resource's data, which nothing parses."""
+    return one_resource("STR ", 0, bytes([200]) + seg_text(200, 3) +
+                        seg_text(tail, seed))
+
+
+# name -> (subjects as (name, data bytes, data seed, resource fork))
+SEG_RUNS = {
+    "small": (("SubjA", 50000, 7,
+               one_resource("STR ", 0, b"\x0ca resource A")),
+              ("SubjB", 50000, 11,
+               one_resource("STR ", 0, bytes([255]) + seg_text(255, 3) +
+                            seg_text(29700, 5)))),
+    "big": (("SubjC", 300000, 17, seg_str(899700, 19)),
+            ("SubjD", 1000000, 23, seg_str(99700, 29))),
+}
+
+
+def phase_segment(args):
+    """Cut the run's two subjects with `Segment`, then read every part
+    and the status file back as MacBinary into specimens/sitopt/seg-RUN."""
+    subjects = SEG_RUNS[args.segment]
+    outdir = os.path.join(SPECIMENS, "seg-" + args.segment)
+    os.makedirs(outdir, exist_ok=True)
+    img = os.path.join(WORK, "run-seg-%s.hfv" % args.segment)
+    shutil.copyfile(BOOT, img)
+    script = "\r".join(
+        ["; written by tools/vmac/sitopt.py --segment " + args.segment,
+         'Write Status To "{Startup}SegStatus.out"',
+         "Continue On Error"] +
+        ['Segment "{Startup}%s"' % name for name, _n, _s, _r in subjects] +
+        ["Quit", ""])
+    work = tempfile.mkdtemp(prefix="sitopt-seg-")
+    env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
+    try:
+        files = [("Run Segment", macbinary("Run Segment", "TEXT", "SIT!",
+                                          script.encode("mac_roman")))]
+        for name, n, seed, rsrc in subjects:
+            files.append((name, macbinary(name, "TEXT", "ttxt",
+                                          seg_text(n, seed), rsrc)))
+        hfs(env, "hmount", img)
+        for name, blob in files:
+            mb = os.path.join(work, name + ".bin")
+            open(mb, "wb").write(blob)
+            if name != "Run Segment":
+                shutil.copyfile(mb, os.path.join(outdir, name + ".in.bin"))
+            got = hfs(env, "hcopy", "-m", mb, (VOL + ":").encode())
+            if got.returncode != 0:
+                raise SystemExit("sitopt: hcopy failed: %s" % got.stderr)
+        hfs(env, "humount")
+    finally:
+        shutil.rmtree(env["HOME"], ignore_errors=True)
+        shutil.rmtree(work, ignore_errors=True)
+
+    s = Session(img, [], outdir, mem=args.emu)
+    try:
+        launch(s, args)
+        s.peek(SCRIPTS_X, "scripts-menu")
+        s.mac.command_key("e")
+        s.shot("script-picker", wait=8.0)
+        s.mac._xdo("type", "--delay", "120", "Run")
+        s.shot("script-selected", wait=3.0)
+        s.mac.key("Return")
+        s.shot("script-running", wait=args.script_wait)
+        s.shot("script-done", wait=20.0)
+        s.menu(SPECIAL_X, SHUT_DOWN_Y, "special-menu")
+        s.shot("off", wait=35.0)
+        written = os.path.join(s.work, "boot.hfv")
+        env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
+        try:
+            if subprocess.run(["hmount", written], capture_output=True,
+                              env=env).returncode == 0:
+                names = ["SegStatus.out"] + [
+                    "%s.%d" % (name, k) for name, _n, _s, _r in subjects
+                    for k in range(1, 13)]
+                for n in names:
+                    subprocess.run(["hcopy", "-m", (VOL + ":" + n).encode(),
+                                    os.path.join(outdir,
+                                                 n + ".bin").encode()],
+                                   capture_output=True, env=env)
+                subprocess.run(["humount"], capture_output=True, env=env)
+        finally:
+            shutil.rmtree(env["HOME"], ignore_errors=True)
+    finally:
+        time.sleep(4)
+        s.close()
+    st = os.path.join(outdir, "SegStatus.out.bin")
+    if os.path.exists(st):
+        data, _r = forks(st)
+        print("=== SegStatus.out")
+        for line in data.decode("mac-roman", "replace").split("\r"):
+            if line.strip():
+                print("  " + line)
+    for f in sorted(os.listdir(outdir)):
+        if f.endswith(".bin") and not f.endswith(".in.bin") and \
+                not f.startswith("SegStatus"):
+            data, _r = forks(os.path.join(outdir, f))
+            h = data[:100]
+            print("  %-12s %8d B  0-1 %s  part %d  94 %s 96 %s 98 %s"
+                  % (f[:-4], len(data), h[:2].hex(), h[3], h[94:96].hex(),
+                     h[96:98].hex(), h[98:100].hex()))
+    return 0
 
 
 def read_back(img, outdir):

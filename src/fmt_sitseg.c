@@ -15,10 +15,12 @@
  * see NOTICE):
  *
  *   Every part begins with a 100-byte header:
- *      0  two bytes, the same in every part of a set and not derived
- *      1  from the file. XADMaster requires B0 56; StuffIt does not write
- *         it (measured 2026-10-24, below), and nothing tests them.
- *      2  0x00        (XADMaster: "assume there are less than 256 parts")
+ *      0  two bytes, the same in every part of a set: a random set
+ *      1  identifier (measured 2026-10-24, below). XADMaster requires
+ *         B0 56; StuffIt does not write it, and nothing here tests them.
+ *      2  0x00        (XADMaster: "assume there are less than 256 parts";
+ *                      Deluxe 2.0.1 keeps the part number as a 16-bit
+ *                      word at 2, so this is its high byte)
  *      3  part number, 1-based
  *      4  name length of the ORIGINAL file, 1..63, no NUL in the name
  *      5  name bytes
@@ -35,28 +37,43 @@
  * here — StuffIt Deluxe 2.0.1, StuffIt Lite 3.0.5 (two sets of one
  * file), Deluxe 5.0 (two files), DropSegment 5.0 and InstallerMaker 2.0,
  * written on emulated Macs
- * by MacStamp's session — and on Now Utilities 6.0's two installer disks
- * (1996):
- *     0-1  41 A7 (Lite, both sets, AND InstallerMaker over another file),
- *          35 63 and 52 0C (Deluxe 5.0, two files), 93 E1 (DropSegment),
- *          D3 36 (Now Utilities). No CRC-16 or sum of the file or the
- *          header fits all six. Hypothesis: a random set ID, QuickDraw's
- *          Random — 0x41A7 is 16,807, its first value from the seed
- *          InitGraf sets, and the two 41 A7 sets were each the first
- *          thing done on a freshly booted emulator
+ * by MacStamp's session — on Now Utilities 6.0's two installer disks
+ * (1996), and in Deluxe 2.0.1's own code (CODE 5) and four sets it cut
+ * here from files WITH a resource fork, which none of the others had
+ * (tools/vmac/sitopt.py --segment):
+ *     0-1  QuickDraw _Random, drawn once per set: Deluxe 2.0.1's only
+ *          call to it (CODE 5 +0x3444) is stored here, before the part
+ *          number is set to 1. Never seeded: the segmenter first writes
+ *          GetDateTime into low-memory RndSeed (+0x323a), which _Random
+ *          does not read, so a launch's sets take _Random's sequence
+ *          from the 1 InitGraf sets: 41 A7, 3A F1, AC D9... Two launches
+ *          of two sets each wrote 41 A7 then 3A F1. Other writers, code
+ *          not read: 41 A7 (Lite, both sets, and InstallerMaker), 35 63
+ *          and 52 0C (Deluxe 5.0), 93 E1 (DropSegment), D3 36 (Now
+ *          Utilities). Deluxe 2.0.1's Join refuses a part whose 0-1
+ *          differ from part 1's (+0x287c, STR# 269 "does NOT belong");
+ *          this engine identifies a set as XADMaster does (below)
  *    94-95 a CRC-16/ARC of this header's bytes 0..93: 42 parts of 42,
  *          seven writers, StuffIt Deluxe 2.0.1 (1991) to 5.0. Required
  *          by sitseg_parse since the evening of 2026-10-24; it stands
  *          where the two magic bytes stood (DECISIONS.md 2026-10-24,
  *          *the check the header carries*)
- *    96-97 zero in every part
- *    98-99 a CRC-16/ARC RUNNING across the set: over the payloads of
- *          parts 1..n, so the last part's is the whole file's. The
- *          joiner checks it as each part's last payload byte goes past
- *          (unc_segment.c, seg_read); unc_sitseg_extract below, a lone
- *          part read with no joiner, does not.
- * tools/synth_sitsplit.py writes both CRCs as StuffIt does, since the
- * evening of 2026-10-24; zero before.
+ *    96-97 a CRC-16/ARC RUNNING across the set over the RESOURCE fork's
+ *          bytes in parts 1..n, so 0 in every part of a file without
+ *          one (the sum of nothing)
+ *    98-99 the same over the DATA fork's bytes, so 0 in a part that
+ *          ends inside the resource fork, and the last part's is the
+ *          whole data fork's. Deluxe 2.0.1 folds each fork's bytes into
+ *          its own sum (CODE 5 +0x3f5c..+0x40ca) and copies the two to
+ *          96 and 98 (+0x3e32); its Join compares them there (+0x295c).
+ *          This joiner holds each part to the one its last payload byte
+ *          falls in (unc_segment.c, seg_read); unc_sitseg_extract below,
+ *          a lone part read with no joiner, does not. Until the evening
+ *          of 2026-10-24 96-97 were required to be zero and 98-99 held
+ *          to one sum over both forks, which refused every set cut from
+ *          a file with a resource fork (DECISIONS.md 2026-10-24, *the
+ *          two bytes the writer drew*)
+ * tools/synth_sitsplit.py writes the three CRCs as StuffIt does.
  * And part 1 of a self-extracting set is an application's DATA fork,
  * which in a fat installer goes on past the segment: Now Utilities'
  * Disk 1 carries 56,206 bytes of PowerPC code after it. Its resource
@@ -113,12 +130,13 @@ int unc_sitseg_match(const UncSegmentDesc *desc,
     return (int)cand.part;
 }
 
-/* The CRC-16/ARC a part stores at 98, over the payloads of parts 1..its
- * own. The joiner folds the same sum as the parts go past and holds
- * each part to its stored value (unc_segment.c). */
-uint16_t unc_sitseg_stored_crc(const uint8_t *head)
+/* The two running CRC-16/ARCs a part stores (the file comment): at 96
+ * over the resource fork's bytes cut so far, at 98 the data fork's.
+ * The joiner folds the same sums as the parts go past and holds each
+ * part to the one its last payload byte falls in (unc_segment.c). */
+uint16_t unc_sitseg_stored_crc(const uint8_t *head, int fork)
 {
-    return unc_get_u16be(head + 98);
+    return unc_get_u16be(head + 96 + fork + fork);    /* fork is 0 or 1 */
 }
 
 /* ------------------------------------------------------------------ */

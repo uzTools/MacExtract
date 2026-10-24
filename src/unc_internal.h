@@ -1251,9 +1251,11 @@ int unc_sitseg_emit(UncCtx *c, const UncSegmentDesc *desc, uint32_t base,
 int unc_sitseg_describe(UncIO *io, UncSegmentDesc *desc);
 int unc_sitseg_match(const UncSegmentDesc *desc,
                      const uint8_t *head, int32_t len);
-/* The CRC-16/ARC a part stores at 98 over the payloads of parts 1..its
- * own; the joiner holds each part to it as it is read (unc_segment.c). */
-uint16_t unc_sitseg_stored_crc(const uint8_t *head);
+/* The two running CRC-16/ARCs a part stores: at 96 over the resource
+ * fork's bytes in parts 1..its own, at 98 the data fork's (`fork` 0 and
+ * 1); the joiner holds each part to the one its last byte falls in
+ * (unc_segment.c). */
+uint16_t unc_sitseg_stored_crc(const uint8_t *head, int fork);
 
 /* One part of a DiskDoubler `SPLT` set (fmt_ddseg.c). unc_ddseg_payload
  * is what the joiner asks a freshly opened part: how many of its bytes
@@ -1271,7 +1273,7 @@ int unc_ddseg_payload(const UncSegmentDesc *desc, const uint8_t *head,
  * checks it against a running CRC when a part happens to be read
  * straight through, which is the common case and not a guarantee
  * (unc_segment.c). */
-uint16_t unc_ddseg_stored_crc(const uint8_t *head);
+uint16_t unc_ddseg_stored_crc(const uint8_t *head, int fork);
 
 /* One part of a spanned ("split") zip set (fmt_zipseg.c). The probe
  * needs the io handle because the only part that identifies itself

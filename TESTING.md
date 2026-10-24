@@ -5209,7 +5209,7 @@ cut exactly on the fork boundary, data-only, resource-only, twelve
 parts (one carrying no payload), and a set whose filenames contradict
 the part order with a name-alike intruder beside it.
 
-**And eight real sets, since 2026-10-24** (`REAL_SITSEG`), which `unar`
+**And twelve real sets, since 2026-10-24** (`REAL_SITSEG`), which `unar`
 refuses. Seven StuffIt itself cut: StuffIt Deluxe 2.0.1 at 75K, every part typed
 `SegM`, StuffIt Lite 3.0.5 at 24K and 8K, Deluxe 5.0 at
 24K and by Save As onto two floppies, DropSegment 5.0's self-extracting
@@ -5218,7 +5218,13 @@ InstallerMaker 2.0 installer, whose part 1 is an `APPL/STi1`'s. MacStamp's sessi
 The eighth is Now Utilities 6.0's two installer disks (1996), a fat
 installer whose part 1 goes on past its segment with PowerPC code and
 carries, in the `.rsrc` beside it, the `'endD'` that says where the
-segment stops. They
+segment stops. The last four are Deluxe 2.0.1 again, run here by
+`tools/vmac/sitopt.py --segment small` and `big` over files WITH a
+resource fork, which none of the eight had: two sets of one part and two
+of two, one of whose part 1 ends inside the resource fork. They are
+graded on that fork's SHA-256 too, and on its own running CRC at 96;
+the binary before the evening of 2026-10-24 refuses all four
+(DECISIONS.md, *the two bytes the writer drew*). They
 live in `$UNC_VMAC_HOME/specimens/sitseg-real/`, and the suite says
 so loudly and skips them where that is missing. Each is graded by the
 SHA-256 of what it must join to — the original for four, otherwise

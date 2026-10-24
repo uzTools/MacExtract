@@ -3756,6 +3756,7 @@ Four things it will teach you if you drive another application here:
     tools/vmac/sitopt.py --add-modules  the three Optimizers --install missed
     tools/vmac/sitopt.py --makemods     Sound 1, Photoshop 1, JPEG Lossy
     tools/vmac/sitopt.py --dcmpdata     run MacPaint 1's COMP and DCMP
+    tools/vmac/sitopt.py --segment small|big   cut two files with resource forks
 
 **It installs by COPYING, not by running the installer.** The download is a
 StuffIt archive of two DiskCopy images; disk 1 holds one file, an installer
@@ -3885,6 +3886,18 @@ What it CANNOT see:
 - **whether 3.5.1 would use a 2.0 module.** `--install351` puts `Text 1` in
   both places 3.5 might look, and that application does not launch here.
 - **the 512 KB machine.** It boots `mv-4M` throughout.
+
+**`--segment` cuts StuffIt segments with 2.0.1's own `Segment` script
+command**, two subjects with resource forks per launch, and reads every
+part back into `specimens/sitopt/seg-small` or `seg-big`. `small` is one
+part each; `big` is two each, at the default 793,500 payload bytes a
+part, and SubjC's part 1 ends inside its resource fork. The sets in
+`specimens/sitseg-real/rsrc{a,b,c,d}` came from these runs. A set's
+bytes 0-1 are the launch's next `_Random`, so the first file always gets
+41 A7 and the second 3A F1; a re-run repeats each part except for the
+name buffer past the name and the header CRC over it (DECISIONS.md
+2026-10-24, *the two bytes the writer drew*). What it cannot see: any
+writer but 2.0.1, and a size other than the default.
 
 ### Photoshop 1.0.7, and the document its Optimizer can read
 
