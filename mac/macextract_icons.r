@@ -226,10 +226,12 @@ resource 'FREF' (129) { '****', 1, "" };
    (DECISIONS.md 2026-10-23, *the format 7.0.3 sniffs*). The list is the
    one MacStamp offers MacExtract for (its data/choices.tsv and
    formats.tsv, re-read 2026-10-24 at its 5b76852): the type each of those formats carries, and the
-   `also` types beside it — and `SDar`, the pair the maintainer chose on
-   2026-10-24 for a SuperDisk! archive with or without its resource fork,
-   which no file in MacStamp's 104,437-file census, TCDB or Apple's
-   Internet Config tables carries. Each maps to icon local ID 1, the application's,
+   `also` types beside it. That includes `SDar`, the maintainer's choice
+   on 2026-10-24 for a SuperDisk! archive's data fork alone; a
+   self-extractor that keeps its resource fork stays `APPL` with its own
+   creator (`AlYS` or `alyS`), with `SDar`/`MExt` offered beside it. No
+   file in MacStamp's 104,437-file census, TCDB or Apple's Internet Config
+   tables carries the type `SDar`. Each maps to icon local ID 1, the application's,
    for the reason above. The resource fork grows by about 12 bytes a type
    and no code changes. */
 resource 'FREF' (130) { 'BINA', 1, "" };   /* MacBinary, AppleSingle (Apple's table) */

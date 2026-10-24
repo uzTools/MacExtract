@@ -9270,10 +9270,12 @@ offers MacExtract alone in the alternate-program dialog, which extracts
 it with both forks byte-exact (renamed `Alpha~1`, since the container
 carries no name and its source is beside it).
 
-**Eight more, 2026-10-24: twenty-nine types.** `SDar`, the pair the
-maintainer chose for an Alysis SuperDisk! archive with or without its
-resource fork, which no file in MacStamp's 104,437-file census, TCDB or
-either Internet Config table carries; and seven MacStamp added for split
+**Eight more, 2026-10-24: twenty-nine types.** `SDar`, the maintainer's
+choice for an Alysis SuperDisk! archive's data fork alone — a
+self-extractor that keeps its resource fork stays `APPL` with its own
+creator, `AlYS` or `alyS`, with `SDar`/`MExt` the alternative MacStamp
+offers (its `b0bd1ac`) — which no file in MacStamp's 104,437-file census,
+TCDB or either Internet Config table carries; and seven MacStamp added for split
 sets, re-read at its `5b76852`: `Seg1`, `Seg2`, `Seg3`, `SegN`, `SegM` and
 `Part` for StuffIt segments, `DDSP` for DiskDoubler's split parts. +216 B
 of resource fork (232,238 → 232,454), no code. Measured (`as703.py --set
