@@ -9293,7 +9293,12 @@ sets, re-read at its `5b76852`: `Seg1`, `Seg2`, `Seg3`, `SegN`, `SegM` and
 was dropped the same day**, leaving twenty-eight: the eight `Part` files on
 Info-Mac IV are finished programs with empty data forks, an expansion that
 stopped before its last step (TCDB's *"Translation in Process"*), and no
-StuffIt writes a segment so; `SegM` is StuffIt Deluxe 2.0.1's, every part. +216 B
+StuffIt writes a segment so; `SegM` is StuffIt Deluxe 2.0.1's, every part.
+**And `ARC7` the same evening, twenty-nine again**: MacStamp's type for an
+ARC 6 or 7 archive (its `16948e9`, the maintainer's choice), which ArcMac
+1.3c lists and cannot unpack — every method-10 member answers *"I don't
+know how to unpack file"* — so `mArc`/`arc*` would open nothing; no file
+in the census or any table here carries the type. +216 B
 of resource fork (232,238 → 232,454), no code. Measured (`as703.py --set
 sdar`): `derived-SD__Utilities.x`'s data fork alone, typed `SDar/MExt`,
 draws MacExtract's icon, and a double-click launches MacExtract on it with

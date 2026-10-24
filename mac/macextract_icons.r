@@ -225,7 +225,7 @@ resource 'FREF' (129) { '****', 1, "" };
    with the wildcard alone, listed above StuffIt Expander with 'BINA'
    (DECISIONS.md 2026-10-23, *the format 7.0.3 sniffs*). The list is the
    one MacStamp offers MacExtract for (its data/choices.tsv and
-   formats.tsv, re-read 2026-10-24 at its 5b76852): the type each of those formats carries, and the
+   formats.tsv, re-read 2026-10-24 at its 16948e9): the type each of those formats carries, and the
    `also` types beside it. That includes `SDar`, the maintainer's choice
    on 2026-10-24 for a SuperDisk! archive's data fork alone; a
    self-extractor that keeps its resource fork stays `APPL` with its own
@@ -266,6 +266,7 @@ resource 'FREF' (154) { 'Seg3', 1, "" };   /* StuffIt segment */
 resource 'FREF' (155) { 'SegN', 1, "" };   /* StuffIt segment */
 resource 'FREF' (156) { 'SegM', 1, "" };   /* StuffIt segment */
 resource 'FREF' (158) { 'DDSP', 1, "" };   /* DiskDoubler split part */
+resource 'FREF' (157) { 'ARC7', 1, "" };   /* ARC 6/7 (ARC+Plus), which ArcMac cannot unpack */
 
 resource 'BNDL' (128) {
     'MExt', 0,
@@ -273,7 +274,8 @@ resource 'BNDL' (128) {
        'FREF', { 0, 128, 1, 129,
                 2, 130, 3, 131, 4, 132, 5, 133, 6, 134, 7, 135, 8, 136, 9, 137, 10, 138, 11, 139, 12, 140, 13, 141, 14, 142, 15, 143, 16, 144, 17, 145, 18, 146,
                 19, 147, 20, 148, 21, 149, 22, 150, 23, 151,
-                24, 152, 25, 153, 26, 154, 27, 155, 28, 156, 29, 158 } }
+                24, 152, 25, 153, 26, 154, 27, 155, 28, 156, 29, 158,
+                30, 157 } }
 };
 
 /* The SIGNATURE resource: type = the creator code, ID 0. The Finder wants

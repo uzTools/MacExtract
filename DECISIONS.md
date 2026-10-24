@@ -29599,3 +29599,8 @@ dropped: the eight `Part` files on Info-Mac IV are finished programs
 whose expansion stopped before retyping them, and no StuffIt writes a
 segment so.
 
+**`ARC7` joins the bundle the same evening**, MacStamp's new type for ARC 6
+and 7 archives with MacExtract as the one creator offered (its `16948e9`):
+ArcMac 1.3c, asked on System 6.0.8, cannot unpack their method-10
+members. Twenty-nine types, the two lists identical again.
+
