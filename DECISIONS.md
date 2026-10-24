@@ -459,6 +459,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-24 (the length part 1 kept in its resource fork) — a fat installer's part 1 states where its segment ends in an 'endD' resource; both hosts read it, and Now Utilities 6.0 joins byte for byte
 - 2026-10-24 (the header left alone) — a loose AppleDouble header is not joined to the file beside it: built, measured and declined; compress on the modern Mac instead
 - 2026-10-24 (the fork the peel dropped) — the CLI's peel of a wrapped part keeps its resource fork as a sidecar, so a fat installer's part 1 found in an envelope beside Disk 2 joins right
+- 2026-10-24 (the fork that was never downloaded) — a fat part 1 without its resource fork is not re-cut: two routes built and priced, 128 B and 304 B resident, and declined because no download produces that file
 
 ---
 
@@ -29637,7 +29638,8 @@ asked for are unchanged. The two options OPEN_ITEMS.md offered were both
 worse: the total less the later parts needs every disk measured before
 the first is read, and the code fragment's extent misses the byte
 between the segment and the fragment. A part 1 whose resource fork did
-not survive still joins wrong (OPEN_ITEMS.md). On the CLI the set joins
+not survive still joins wrong, and stays so (*the fork that was never
+downloaded*, below). On the CLI the set joins
 to the file the CRC confirms and every fork in it matches `unar`'s
 from that file; `run_segments.py` grades it as its eighth real set and fails it
 both without the fix and without the `.rsrc`. On the Mac, System 6.0.8 at
@@ -29705,4 +29707,48 @@ part with none leaves no empty file, and the peel directory is removed
 after the join as before, whatever it holds. The join still reads data
 forks only (`unc_extract_segments`); the fork is read for one number,
 and by the host. A part 1 whose resource fork did not survive its
-transfer still joins wrong (OPEN_ITEMS.md, *StuffIt segments*).
+transfer still joins wrong, and stays so (*the fork that was never
+downloaded*, below).
+
+## 2026-10-24 (the fork that was never downloaded) — a fat part 1 without its resource fork is not re-cut: two routes built and priced, 128 B and 304 B resident, and declined because no download produces that file
+
+**Claim.** A fat self-extracting StuffIt set whose part 1 has lost its
+resource fork keeps joining wrong. Both ways of recovering the cut
+without the fork were built, measured on the Mac and on the CLI, and
+not adopted (OPEN_ITEMS.md, Part 1, *Limits of the formats themselves*).
+
+**Evidence.** Measured on Now Utilities 6.0's two disks, the one fat set
+on this machine, against a control build of the same day. Route A, the
+payload total less the later parts' payloads, lands on the `'endD'`
+byte exactly, 1,132,983, from the later parts' sizes alone; on the Mac
+it is a catalog loop in the shell's `seg_need`, the loop `SegHaveAll`
+already runs, and costs CODE +140, A5 −12 in the shipped build, the
+same 128 B in the lazy and resident-control builds. Route B, part 1's
+own running CRC-16/ARC at 98 watched byte by byte in the joiner, the
+match taken that is followed by a PEF container (`Joy!peff`, one byte
+after the cut in that file; 28 matches in the fork, 25 before the cut),
+costs CODE +292, A5 +12, 304 B resident in every build, and runs its
+loop over every StuffIt set's part 1, fat or not — about ten seconds a
+megabyte on a Macintosh Plus, an estimate from the instruction count
+and not a tick-probe measurement. Neither moves the sniffer's image or
+the bundle. Both prototypes join the set without its `.rsrc` to the
+file the CRC confirms and the other seven real sets, 40 parts, as
+before. Route A's one false trigger is a non-fat set whose last part
+carries trailing bytes, which joins right today and would be cut short;
+it cannot act on a part it has not been given, the CLI's `--ask` or a
+later floppy. Route B's rule rests on that one file's shape.
+
+**Consequence.** The maintainer's decision: every form such a set is
+distributed in keeps the fork — the floppies, a disk image, a `.sit`, a
+MacBinary or BinHex download — so a bare data fork of part 1 exists
+only through the user's own copy across a share or a disk without
+forks, the mistake README already names (*From a modern Mac, compress
+first*), and yesterday's rule for that state stands (*the header left
+alone*): a line, not bytes. Nothing is changed in either host; the
+prototypes were scratch worktrees and are gone. What the Mac still
+lacks is a report line saying the fork is missing instead of *archive
+structure is corrupt*, which is the per-part running-CRC check in
+OPEN_ITEMS.md's StuffIt segments table and is not priced.
+
+**What it cost.** Three builds of the Macintosh application per
+configuration, nine seconds each, and nothing resident.
