@@ -3985,9 +3985,10 @@ static int SegAskUser(SegHost *h, int part)
 static int seg_need(void *ctx, const UncSegmentDesc *desc, int part, UncIO *io)
 {
     SegHost *h = (SegHost *)ctx;
+    uint32_t end = UNC_SIZE_UNKNOWN;
     long eof;
+    int rsrc;
 
-    (void)desc;
     if (part < 1 || part > kSegMaxKnown) return UNC_ERR_SEGMENTED;
 #ifndef UNC_MAC_AUTOTEST
     if (!h->loc[part].name[0] && !h->cancelled) SegAskUser(h, part);
@@ -3995,28 +3996,43 @@ static int seg_need(void *ctx, const UncSegmentDesc *desc, int part, UncIO *io)
 #endif
     if (!h->loc[part].name[0]) return UNC_ERR_SEGMENTED;
 
-    if (MyOpenFork(h->loc[part].vRefNum, h->loc[part].dirID,
-                   h->loc[part].name, fsRdPerm, 0, &h->refNum) != noErr)
-        return UNC_ERR_SEGMENTED;
-    eof = 0;
-    GetEOF(h->refNum, &eof);
-    if (eof <= 0) { FSClose(h->refNum); h->refNum = 0; return UNC_ERR_SEGMENTED; }
+    /* A fat installer's part 1 goes on past its segment, and its resource
+     * fork says where the segment stops (unc_segment_first_end): for part
+     * 1 the loop opens that fork first and closes it again, so that one
+     * fork is open at a time. SegHaveAll still counts the whole data
+     * fork, so it can take a fat set for complete one part early; the
+     * engine then asks for that part like any other. */
+    for (rsrc = part == 1; ; rsrc = 0) {
+        eof = 0;
+        if (MyOpenFork(h->loc[part].vRefNum, h->loc[part].dirID,
+                       h->loc[part].name, fsRdPerm, rsrc, &h->refNum) == noErr)
+            GetEOF(h->refNum, &eof);
+        if (eof <= 0) {
+            if (h->refNum) FSClose(h->refNum);
+            h->refNum = 0;
+            if (rsrc) continue;
+            return UNC_ERR_SEGMENTED;
+        }
+        h->fio.refNum = h->refNum;
+        h->fio.size = (uint32_t)eof;
+        h->fio.pos = 0;
+        io->ctx = &h->fio;
+        io->read = fio_read;
+        io->seek = fio_seek;
+        io->tell = fio_tell;
+        io->size = fio_size;
+        if (!rsrc) break;
+        end = unc_segment_first_end(desc, io, end);
+        FSClose(h->refNum);
+        h->refNum = 0;
+    }
+    if (end < h->fio.size) h->fio.size = end;
 
     /* What this part contributes to the whole, for the "still to read"
      * line in the alert. Every part carries the same header, which is
      * not payload. */
-    if (part <= kSegMaxKnown)
-        h->psize[part] = (uint32_t)eof > h->desc.head_len
-                       ? (uint32_t)eof - h->desc.head_len : 0;
-
-    h->fio.refNum = h->refNum;
-    h->fio.size = (uint32_t)eof;
-    h->fio.pos = 0;
-    io->ctx = &h->fio;
-    io->read = fio_read;
-    io->seek = fio_seek;
-    io->tell = fio_tell;
-    io->size = fio_size;
+    h->psize[part] = h->fio.size > h->desc.head_len
+                   ? h->fio.size - h->desc.head_len : 0;
     return UNC_OK;
 }
 

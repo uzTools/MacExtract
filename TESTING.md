@@ -5209,20 +5209,26 @@ cut exactly on the fork boundary, data-only, resource-only, twelve
 parts (one carrying no payload), and a set whose filenames contradict
 the part order with a name-alike intruder beside it.
 
-**And seven sets StuffIt itself cut, since 2026-10-24** (`REAL_SITSEG`),
-which `unar` refuses: StuffIt Deluxe 2.0.1 at 75K, every part typed
+**And eight real sets, since 2026-10-24** (`REAL_SITSEG`), which `unar`
+refuses. Seven StuffIt itself cut: StuffIt Deluxe 2.0.1 at 75K, every part typed
 `SegM`, StuffIt Lite 3.0.5 at 24K and 8K, Deluxe 5.0 at
 24K and by Save As onto two floppies, DropSegment 5.0's self-extracting
 set, whose part 1 is the data fork of an `APPL/AUs2`, and an
-InstallerMaker 2.0 installer, whose part 1 is an `APPL/STi1`'s. MacStamp's session wrote them on emulated Macs;
-they live in `$UNC_VMAC_HOME/specimens/sitseg-real/`, and the suite says
+InstallerMaker 2.0 installer, whose part 1 is an `APPL/STi1`'s. MacStamp's session wrote them on emulated Macs.
+The eighth is Now Utilities 6.0's two installer disks (1996), a fat
+installer whose part 1 goes on past its segment with PowerPC code and
+carries, in the `.rsrc` beside it, the `'endD'` that says where the
+segment stops. They
+live in `$UNC_VMAC_HOME/specimens/sitseg-real/`, and the suite says
 so loudly and skips them where that is missing. Each is graded by the
 SHA-256 of what it must join to — the original for four, otherwise
 the archive whose CRC the last part stores, which then tests clean — and
 by that running CRC-16/ARC. **Shown to fail**: the binary before the fix
-refuses them all.
-**What they cannot see**: a fat installer's part 1, whose data fork goes
-on past the segment (OPEN_ITEMS.md), and any writer other than these three. Plus behaviours:
+refuses the seven and joins the eighth wrong, and a set with a `.rsrc`
+beside a part is run again without it, and must then fail.
+The Mac application's reading of `'endD'` is `segcheck.py --case sit-fat`'s,
+on an emulator (`tools/vmac/README.md`). **What they cannot see**: any
+writer other than these. Plus behaviours:
 opening a part other than the first, a missing part, `--ask` accepting
 and refusing files, `--no-parts`, and the part-open counters.
 

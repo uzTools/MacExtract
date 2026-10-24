@@ -2103,6 +2103,13 @@ static int segsrc_need(void *ctx, const UncSegmentDesc *desc, int part,
     return UNC_OK;
 }
 
+/* Big-endian, for the resource fork below. */
+static void put16be(uint8_t *p, uint32_t v)
+{
+    p[0] = (uint8_t)(v >> 8);
+    p[1] = (uint8_t)v;
+}
+
 static void test_sitseg(void)
 {
     uint8_t whole[UNC_SEG_HEAD + 300];
@@ -2189,6 +2196,64 @@ static void test_sitseg(void)
         CHECK(unc_sitseg_probe(big, UNC_SEG_HEAD, &bio) == 0);
         test_make_memio(&bio, &bm, big, UNC_SEG_HEAD + 300);  /* exact */
         CHECK(unc_sitseg_probe(big, UNC_SEG_HEAD, &bio) == UNC_FORMAT_SITSEG);
+    }
+
+    /* --- a fat installer's part 1: its resource fork's 'endD' ------- */
+    /* A fork of two types, 'ICN#' then 'endD', each with one ID-0
+     * reference; the data area holds an 8-byte icon stand-in and the
+     * four-byte 'endD' (Inside Macintosh: More Macintosh Toolbox,
+     * "Resource File Format"). */
+    {
+        uint8_t rf[16 + 20 + 28 + 2 + 16 + 24];
+        MemIO rm;
+        UncIO rio;
+        UncSegmentDesc other = desc;
+        const uint32_t mapoff = 16 + 20, tl = mapoff + 28;
+        memset(rf, 0, sizeof rf);
+        unc_put_u32be(rf + 0, 16);                    /* data area */
+        unc_put_u32be(rf + 4, mapoff);
+        unc_put_u32be(rf + 8, 20);
+        unc_put_u32be(rf + 12, (uint32_t)sizeof rf - mapoff);
+        unc_put_u32be(rf + 16, 8);                    /* 'ICN#' 0, 8 B */
+        unc_put_u32be(rf + 28, 4);                    /* 'endD' 0, 4 B */
+        unc_put_u32be(rf + 32, 1132983);
+        put16be(rf + mapoff + 24, 28);                /* type list */
+        put16be(rf + tl, 1);                          /* two types */
+        memcpy(rf + tl + 2, "ICN#", 4);
+        put16be(rf + tl + 8, 18);                     /* refs at tl+18 */
+        memcpy(rf + tl + 10, "endD", 4);
+        put16be(rf + tl + 16, 30);                    /* refs at tl+30 */
+        unc_put_u32be(rf + tl + 18 + 4, 0);           /* ICN# at data+0 */
+        unc_put_u32be(rf + tl + 30 + 4, 12);          /* endD at data+12 */
+        test_make_memio(&rio, &rm, rf, sizeof rf);
+        CHECK(unc_segment_first_end(&desc, &rio, 1189189) == 1132983);
+        /* No fork, a fork without it, or a value that is not inside
+         * the data fork: the fork's own length. */
+        CHECK(unc_segment_first_end(&desc, NULL, 1189189) == 1189189);
+        CHECK(unc_segment_first_end(&desc, &rio, 1132983) == 1132983);
+        CHECK(unc_segment_first_end(&desc, &rio, 1000) == 1000);
+        memcpy(rf + tl + 10, "endd", 4);
+        test_make_memio(&rio, &rm, rf, sizeof rf);
+        CHECK(unc_segment_first_end(&desc, &rio, 1189189) == 1189189);
+        memcpy(rf + tl + 10, "endD", 4);
+        unc_put_u32be(rf + 28, 5);                    /* not four bytes */
+        test_make_memio(&rio, &rm, rf, sizeof rf);
+        CHECK(unc_segment_first_end(&desc, &rio, 1189189) == 1189189);
+        unc_put_u32be(rf + 28, 4);
+        unc_put_u32be(rf + 32, UNC_SEG_HEAD);         /* no payload */
+        test_make_memio(&rio, &rm, rf, sizeof rf);
+        CHECK(unc_segment_first_end(&desc, &rio, 1189189) == 1189189);
+        unc_put_u32be(rf + 32, 1132983);
+        put16be(rf + tl + 30, 1);                     /* ID 1, not 0 */
+        test_make_memio(&rio, &rm, rf, sizeof rf);
+        CHECK(unc_segment_first_end(&desc, &rio, 1189189) == 1189189);
+        put16be(rf + tl + 30, 0);
+        /* A truncated fork, and another scheme's set. */
+        test_make_memio(&rio, &rm, rf, (uint32_t)sizeof rf - 12);
+        CHECK(unc_segment_first_end(&desc, &rio, 1189189) == 1189189);
+        other.scheme = UNC_FORMAT_SPLIT;
+        test_make_memio(&rio, &rm, rf, sizeof rf);
+        CHECK(unc_segment_first_end(&other, &rio, 1189189) == 1189189);
     }
 
     /* --- a set of one part needs no volume source ----------------- */

@@ -748,9 +748,10 @@ def split_behaviours(macextract, case, d, kind, whole, parts, original,
 # Every set above is tools/synth_sitsplit.py's, and so was every set this
 # suite ever graded: a generator and an oracle (`unar`) that both require
 # XADMaster's B0 56, so neither could notice that StuffIt does not write
-# it (BLOCKERS.md, *Withdrawn claims*, 2026-10-24). These seven were cut by
+# it (BLOCKERS.md, *Withdrawn claims*, 2026-10-24). Seven were cut by
 # StuffIt itself, on emulated Macs, by MacStamp's session (its DECISIONS.md,
-# *StuffIt segments named*), and `unar` refuses all of them, so they are
+# *StuffIt segments named*), and the eighth is Now Utilities 6.0's two
+# installer disks of 1996; `unar` refuses all of them, so they are
 # graded by what they must join to: the file they were cut from, where it
 # is kept, and otherwise the running CRC-16/ARC every part stores at 98 —
 # over the whole payload, in the last part.
@@ -782,6 +783,12 @@ REAL_SITSEG = {
              "db89afe5c3331fa44d3a709eda9a051be86298a2575afbb0dfe2e367932ed365",
              2, "StuffIt Deluxe 5.0's Save As onto two 800K floppies, "
                 "Seg1/SIT! and Seg2/SIT!"),
+    "fat": ("fat", "Now Utilities 6.0 Disk 1",
+            "3433f1c94e707e16c20bdce9343b35e7e2752828adc0e2e017fa5da02d5d6d7a",
+            2, "Now Utilities 6.0 (1996), a fat installer: part 1's data fork "
+               "goes on past the segment with PowerPC code, and its resource "
+               "fork (the .rsrc beside it) has the 'endD' that says where "
+               "the segment stops"),
 }
 
 
@@ -798,7 +805,8 @@ def real_sitseg_run(macextract, case, workroot, fails):
     src = os.path.join(SPECIMENS, "sitseg-real", sub)
     d = os.path.join(workroot, "real-" + case)
     shutil.copytree(src, d)
-    parts = sorted(os.listdir(d))
+    allfiles = sorted(os.listdir(d))
+    parts = [p for p in allfiles if not p.endswith(".rsrc")]
     fails.check(len(parts) == nparts, "%s: %d parts, not %d"
                 % (case, len(parts), nparts))
     rc, out = ours_extract(macextract, os.path.join(d, first),
@@ -819,6 +827,20 @@ def real_sitseg_run(macextract, case, workroot, fails):
     fails.check(arc_crc(got) == stored,
                 "%s: running CRC %04x, the last part stores %04x"
                 % (case, arc_crc(got), stored))
+    # A set graded with a resource fork beside a part must fail without
+    # it, or the fork is not what the grade above tested.
+    sidecars = [p for p in allfiles if p.endswith(".rsrc")]
+    if sidecars:
+        for p in sidecars:
+            os.remove(os.path.join(d, p))
+        bare = os.path.join(d, "_bare")
+        brc, _ = ours_extract(macextract, os.path.join(d, first), bare)
+        bouts = [f for f in os.listdir(bare) if not f.startswith("._")]
+        bgot = open(os.path.join(bare, bouts[0]), "rb").read() if bouts \
+            else b""
+        fails.check(hashlib.sha256(bgot).hexdigest() != want,
+                    "%s: joins right without %s, so the grade does not "
+                    "test it" % (case, ", ".join(sidecars)))
     return rc == 0
 
 

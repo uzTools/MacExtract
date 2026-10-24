@@ -70,6 +70,12 @@ CASES = {
         "a DiskDoubler `SPLT` set CUT BY DISKDOUBLER ITSELF, both forks: "
         "the one scheme the Mac had never joined",
         "run"),
+    "sit-fat": (
+        "Now Utilities 6.0's two installer disks, a FAT installer: part 1 "
+        "goes on past its segment with PowerPC code, and only the 'endD' "
+        "in its resource fork says where to stop. Run twice, with the fork "
+        "and without, because only the second can show the first tested it",
+        "run"),
 }
 
 
@@ -323,7 +329,49 @@ def run_ddseg_real(case, mem, workdir):
                   out.strip()[-200:])
 
 
+# The set lives with the other real StuffIt sets (tools/run_segments.py,
+# REAL_SITSEG "fat"), and the joined file it must give is the one the CRC
+# its last part stores confirms.
+FAT_DIR = os.path.join(R.VMAC_HOME, "specimens", "sitseg-real", "fat")
+FAT_PART1 = "Now Utilities 6.0 Disk 1"
+FAT_SHA256 = "3433f1c94e707e16c20bdce9343b35e7e2752828adc0e2e017fa5da02d5d6d7a"
+
+
+def run_sit_fat(case, mem, workdir):
+    """A fat installer's set, joined on the Mac from part 1's own 'endD'."""
+    import hashlib
+    p1 = os.path.join(FAT_DIR, FAT_PART1)
+    p2 = os.path.join(FAT_DIR, "Now Utilities 6.0 Disk 2")
+    if not all(os.path.exists(p) for p in (p1, p1 + ".rsrc", p2)):
+        print(f"segcheck: SKIP {case} (no {FAT_DIR})")
+        return None
+    got = {}
+    for fork in (True, False):
+        argv = [sys.executable, os.path.join(HERE, "run.py"), p1,
+                "--mem", mem, "--keep-disks", "--in-kb", "4096",
+                "--out-kb", "4096", "--extra-file", f"{p2}:zzz-piece2"]
+        if fork:
+            argv += ["--rsrc", p1 + ".rsrc"]
+        out = subprocess.run(argv, capture_output=True, text=True)
+        out = out.stdout + out.stderr
+        kept = [l.split("disks kept in", 1)[1].strip()
+                for l in out.splitlines() if "disks kept in" in l]
+        if not kept:
+            return False, "run.py kept no disks to read"
+        data = read_out_volume(kept[0], FAT_PART1)
+        shutil.rmtree(kept[0], ignore_errors=True)
+        got[fork] = hashlib.sha256(data).hexdigest() if data else None
+    if got[True] != FAT_SHA256:
+        return False, "joined wrong with the resource fork (%s)" % got[True]
+    if got[False] == FAT_SHA256:
+        return False, "joined right WITHOUT the resource fork: not tested"
+    return True, ("joined byte for byte from part 1's 'endD', and wrong "
+                  "without its resource fork")
+
+
 def run_scheme(case, mem, workdir):
+    if case == "sit-fat":
+        return run_sit_fat(case, mem, workdir)
     if case == "ddseg-real":
         return run_ddseg_real(case, mem, workdir)
     if case == "mimeseg":

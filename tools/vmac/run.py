@@ -100,14 +100,16 @@ def sh(*argv, **kw):
                           errors="surrogateescape", **kw)
 
 
-def make_floppy(path, volname, payload=None, extras=(), size_kb=FLOPPY_KB):
+def make_floppy(path, volname, payload=None, extras=(), size_kb=FLOPPY_KB,
+                payload_rsrc=None):
     """Create a fresh HFS floppy image, optionally with data-fork files.
 
     `payload` lands as ARCHIVE_NAME, which is the file the autotest app
     opens. `extras` are (host path, Mac name) pairs put beside it — the
     other parts of a segmented set, whose names are deliberately NOT
     required to resemble each other, since the app finds them by
-    reading their headers.
+    reading their headers. `payload_rsrc`, a host file, is the payload's
+    RESOURCE fork: the payload then goes on through MacBinary.
     """
     with open(path, "wb") as f:
         f.truncate(size_kb * 1024)
@@ -121,11 +123,41 @@ def make_floppy(path, volname, payload=None, extras=(), size_kb=FLOPPY_KB):
             # -r: raw copy, data fork only. The archive is a plain byte stream;
             # its type/creator are irrelevant because the app opens it by name.
             for src, macname in files:
-                subprocess.run(["hcopy", "-r", src, f"{volname}:{macname}"],
+                mode = "-r"
+                if payload_rsrc and src == payload and macname == ARCHIVE_NAME:
+                    src = os.path.join(env["HOME"], "payload.bin")
+                    open(src, "wb").write(_macbinary(
+                        ARCHIVE_NAME, open(payload, "rb").read(),
+                        open(payload_rsrc, "rb").read()))
+                    mode = "-m"
+                subprocess.run(["hcopy", mode, src, f"{volname}:{macname}"],
                                check=True, capture_output=True, env=env)
             subprocess.run(["humount", path], check=True, capture_output=True, env=env)
     finally:
         shutil.rmtree(env["HOME"], ignore_errors=True)
+
+
+def _macbinary(name, data, rsrc):
+    """MacBinary II of one file, type and creator `????`: hcopy -m is how
+    hfsutils puts a resource fork on a volume. As arcmac.macbinary, which
+    imports this module and so is not imported here; hcopy refuses one
+    without the version bytes and the header CRC (CRC-16/XMODEM)."""
+    n = name.encode("mac-roman")[:63]
+    h = bytearray(128)
+    h[1] = len(n)
+    h[2:2 + len(n)] = n
+    h[65:73] = b"????????"
+    h[83:87] = len(data).to_bytes(4, "big")
+    h[87:91] = len(rsrc).to_bytes(4, "big")
+    h[122] = h[123] = 129
+    crc = 0
+    for b in h[:124]:
+        crc ^= b << 8
+        for _ in range(8):
+            crc = (crc << 1) ^ 0x1021 if crc & 0x8000 else crc << 1
+    h[124:126] = (crc & 0xFFFF).to_bytes(2, "big")
+    pad = lambda b: b + bytes(-len(b) % 128)
+    return bytes(h) + pad(data) + pad(rsrc)
 
 
 def build_autotest_app(defines=()):
@@ -263,7 +295,8 @@ class Display:
 
 
 def run_one(fixture, mem, timeout, poll, workdir, bootimg, keep_png=None,
-            emu_dir=None, extras=(), out_kb=FLOPPY_KB, out_from=None):
+            emu_dir=None, extras=(), out_kb=FLOPPY_KB, out_from=None,
+            in_kb=FLOPPY_KB, rsrc=None):
     """Boot the Mac on one fixture.
 
     Returns (values or None, seconds, png, emulator-exited). The last one
@@ -284,7 +317,8 @@ def run_one(fixture, mem, timeout, poll, workdir, bootimg, keep_png=None,
     # volume as it goes. Mini vMac cannot open qcow2, so this is a copy --
     # sparse, into the run's own directory, which the caller deletes.
     sh("cp", "--sparse=always", bootimg, boot)
-    make_floppy(indsk, "In", payload=fixture, extras=extras)
+    make_floppy(indsk, "In", payload=fixture, extras=extras, size_kb=in_kb,
+                payload_rsrc=rsrc)
     # `out_kb` exists to make the DESTINATION run out of room on purpose:
     # the full-disk path is otherwise unreachable, and a path nothing has
     # ever executed is not a path anyone should trust. See --out-kb.
@@ -596,6 +630,12 @@ def main():
                          "UNC_ERR_ABORTED (-8), rather than failing every "
                          "remaining entry. It reports FAIL by construction "
                          "-- read the numbers, not the verdict.")
+    ap.add_argument("--in-kb", type=int, default=FLOPPY_KB,
+                    help="size of the SOURCE volume in KB (default "
+                         f"{FLOPPY_KB}), for a set that does not fit a floppy")
+    ap.add_argument("--rsrc", metavar="HOSTPATH",
+                    help="the fixture's resource fork: it goes on the In "
+                         "volume with both forks (one fixture only)")
     ap.add_argument("--as", dest="as_name", default=None, metavar="NAME",
                     help="the fixture's name on the In floppy (default "
                          f"{ARCHIVE_NAME}). Must begin 'archive.': the app "
@@ -682,7 +722,7 @@ def sweep(args, fixtures, extras, appbin, rundir):
             vals, secs, png, died, boot, extract = run_one(
                 fixture, args.mem, args.timeout, args.poll, workdir, bootimg,
                 keep, args.emu, extras=extras, out_kb=args.out_kb,
-                out_from=args.out_from)
+                out_from=args.out_from, in_kb=args.in_kb, rsrc=args.rsrc)
             status = AT_STATUS.get(signed32(vals[1])) if vals else None
             if vals is None and died:
                 verdict, detail = "EMUDIED", (

@@ -1338,6 +1338,40 @@ typedef struct {
     char     peeldir[1024];
 } SegHost;
 
+/* How much of part `part`'s file is the part: its size, except that a
+ * fat installer's part 1 stops where its resource fork says (under
+ * either sidecar spelling, as load_mkey looks; unc_segment_first_end). */
+static uint32_t seg_file_len(const SegHost *h, int part)
+{
+    struct stat st;
+    uint32_t len;
+    char rp[1100];
+    int which;
+
+    if (stat(h->path[part], &st) != 0) return UNC_SIZE_UNKNOWN;
+    len = (uint32_t)st.st_size;
+    if (part != 1 || h->desc.scheme != UNC_FORMAT_SITSEG) return len;
+    for (which = 0; which < 2; which++) {
+        FileIO rf;
+        UncIO rio;
+        uint32_t end;
+        rsrc_path(h->path[part], which, rp, sizeof rp);
+        if (stat(rp, &st) != 0 || !S_ISREG(st.st_mode)) continue;
+        rf.f = fopen(rp, "rb");
+        if (!rf.f) continue;
+        rf.size = (unc_off_t)st.st_size;
+        rio.ctx = &rf;
+        rio.read = fio_read;
+        rio.seek = fio_seek;
+        rio.tell = fio_tell;
+        rio.size = fio_size;
+        end = unc_segment_first_end(&h->desc, &rio, len);
+        fclose(rf.f);
+        if (end != len) return end;
+    }
+    return len;
+}
+
 /* Read a candidate's first bytes and return its part number in the
  * set, or 0. Never opens directories or unreadable files. */
 static int seg_part_of(const SegHost *h, const char *path)
@@ -1510,10 +1544,9 @@ static int seg_have_all(const SegHost *h)
 
     if (h->desc.total == UNC_SIZE_UNKNOWN) return 0;
     for (p = 1; p <= UNC_SEG_MAX_PARTS && h->path[p]; p++) {
-        struct stat st;
-        if (stat(h->path[p], &st) != 0) return 0;
-        if ((uint32_t)st.st_size <= h->desc.head_len) return 0;
-        sum += (uint32_t)st.st_size - h->desc.head_len;
+        uint32_t len = seg_file_len(h, p);
+        if (len == UNC_SIZE_UNKNOWN || len <= h->desc.head_len) return 0;
+        sum += len - h->desc.head_len;
         if (sum >= h->desc.total) return 1;
     }
     return 0;
@@ -1954,8 +1987,8 @@ static int seg_need(void *ctx, const UncSegmentDesc *desc, int part, UncIO *io)
     f = fopen(h->path[part], "rb");
     if (!f) return UNC_ERR_SEGMENTED;
     h->open_io.f = f;
-    h->open_io.size = stat(h->path[part], &st) == 0 ? (unc_off_t)st.st_size
-                                                    : UNC_OFF_UNKNOWN;
+    h->open_io.size = stat(h->path[part], &st) == 0
+                    ? (unc_off_t)seg_file_len(h, part) : UNC_OFF_UNKNOWN;
     io->ctx = &h->open_io;
     io->read = fio_read;
     io->seek = fio_seek;
@@ -1978,13 +2011,11 @@ static void seg_release(void *ctx, UncIO *io)
 static uint32_t seg_size_of(void *ctx, const UncSegmentDesc *desc, int part)
 {
     SegHost *h = (SegHost *)ctx;
-    struct stat st;
 
     (void)desc;
     if (part < 1 || part > UNC_SEG_MAX_PARTS || !h->path[part])
         return UNC_SIZE_UNKNOWN;
-    if (stat(h->path[part], &st) != 0) return UNC_SIZE_UNKNOWN;
-    return (uint32_t)st.st_size;
+    return seg_file_len(h, part);
 }
 
 /* ------------------------------------------------------------------ */

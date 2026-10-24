@@ -176,10 +176,13 @@ REPO = os.path.dirname(HERE)
 # **-64 more each 2026-10-24, DERIVED**: the StuffIt segment probe, the
 # control's CODE +80 and A5 -16 (DECISIONS.md 2026-10-24, *the magic
 # StuffIt never wrote*); OVL_SAVED +96 below more than offsets it.
+# **-512 more each 2026-10-24, DERIVED**: a fat installer's 'endD', the
+# control's CODE +500 and A5 +12 (DECISIONS.md 2026-10-24, *the length part 1 kept in its resource fork*);
+# OVL_SAVED +288 below offsets all but the shipped pair's 224.
 TIERS = {
-    "sys3-512K": (201142, "System 3.0, Macintosh 512Ke (222,070 B free)"),
-    "sys6-512K": (105760, "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
-    "floor-1M":  (630048, "System 6.0.8, 1 MB Mac Plus — the floor target"),
+    "sys3-512K": (200630, "System 3.0, Macintosh 512Ke (222,070 B free)"),
+    "sys6-512K": (105248, "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
+    "floor-1M":  (629536, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
 # -32 on all three 2026-10-21, DERIVED from TIERS_CONTROL +32 (the bundle's
 # working directory, DECISIONS.md 2026-10-21, *the Desktop Manager System 6
@@ -371,11 +374,12 @@ TIERS = {
 # data + bss -680. The machine gave +4,204, because the jump table, the
 # stub segments and the relocations trimmed at launch are resident bytes
 # this unit never counted — which is why TIERS was measured, not moved.
-TIERS_CONTROL = 212064     # build/mac-resident, CODE + A5, 2026-10-24
+TIERS_CONTROL = 212576     # build/mac-resident, CODE + A5, 2026-10-24
 # +352 on 2026-10-22: the eleven malformed-input fixes, every decoder linked
 # in; TIERS above drops 352 to match (TIERS_MACHINE, physical RAM, unmoved).
 # +32 more on 2026-10-23 with Compact Pro's fork-extent check; TIERS -32.
 # +64 more on 2026-10-24 with the StuffIt segment probe; TIERS -64.
+# +512 more on 2026-10-24 with a fat installer's 'endD'; TIERS -512.
 # **What this control cannot see: the autotest harness.** TIERS was read
 # on the machine from an autotest build (`UNC_MAC_AUTOTEST`), and
 # build/mac-resident has no harness in it, so harness growth lowers what a
@@ -773,7 +777,10 @@ EXPECT = {
 # **+96 2026-10-24, -> 155,280**: the StuffIt segment probe, the control's
 # +64 (CODE +80, A5 -16) against the shipped pair's -32 (CODE -4, A5 -28)
 # (DECISIONS.md 2026-10-24, *the magic StuffIt never wrote*). TIERS -64.
-OVL_SAVED = 155280
+# **+288 2026-10-24, -> 155,568**: a fat installer's 'endD', the control's
+# +512 (CODE +500, A5 +12) against the shipped pair's +224 (CODE +200, A5
+# +24) (DECISIONS.md 2026-10-24, *the length part 1 kept in its resource fork*). TIERS -512.
+OVL_SAVED = 155568
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
 # every kept image is one — as is the bundle an envelope holds on to.
@@ -923,7 +930,7 @@ IMAGES = {
     "OVL_ID_SUPERDISK":   6634,
     "OVL_ID_TEXT":        11346,
     "OVL_ID_ZIPOLD":      10832,
-    "OVL_ID_SNIFF":       11972,
+    "OVL_ID_SNIFF":       12380,
 }
 # **ZIPOLD +3,374 B and EXO +972 B, the bundle +4,344 B, 2026-10-17**:
 # Mac OS X's sidecars, the shared code in ZIPOLD and zip's half in EXO,
@@ -960,7 +967,11 @@ IMAGES = {
 # total instead of XADMaster's B0 56 (DECISIONS.md 2026-10-24, *the magic
 # StuffIt never wrote*). The sniffer is released before extraction, so no
 # format's budget moves.
-BUNDLE = 179924
+# **SNIFF +408 and the bundle +408, 2026-10-24**: unc_segment_first_end,
+# where a fat installer's part 1 ends, in the sniffer's image rather than
+# resident (DECISIONS.md 2026-10-24, *the length part 1 kept in its resource fork*). A layer that keeps the
+# whole bundle — a segmented set, an envelope — keeps these 408 B too.
+BUNDLE = 180332
 
 # What the SHIPPED lane asserts, and it is the refused fixtures BY NAME
 # rather than a tally: a tier that refuses two different fixtures and still

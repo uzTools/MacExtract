@@ -95,6 +95,7 @@ else()
     # unc_macbinary_probe, which two images reach through the host vector
     # (DECISIONS.md 2026-10-21, *the probes that left with the bundle*).
     list(FILTER ENGINE_SRC EXCLUDE REGEX "unc_crypt\\.c$")
+    list(FILTER ENGINE_SRC EXCLUDE REGEX "fmt_sitseg_end\\.c$")
     list(FILTER ENGINE_SRC EXCLUDE REGEX "fmt_spacesaver\\.c$")
     list(FILTER ENGINE_SRC EXCLUDE REGEX "fmt_cpt\\.c$")
     list(FILTER ENGINE_SRC EXCLUDE REGEX "fmt_dd\\.c$")
@@ -819,6 +820,7 @@ add_custom_command(
             ${ENGINE_DIR}/src/fmt_sit5_probe.c
             ${ENGINE_DIR}/src/fmt_sit_probe.c
             ${ENGINE_DIR}/src/fmt_sitseg_probe.c
+            ${ENGINE_DIR}/src/fmt_sitseg_end.c
             ${ENGINE_DIR}/src/fmt_spacesaver_probe.c
             ${ENGINE_DIR}/src/fmt_sqp_probe.c
             ${ENGINE_DIR}/src/fmt_superdisk_probe.c
@@ -849,6 +851,7 @@ add_custom_command(
             ${ENGINE_DIR}/src/fmt_sit5_probe.c
             ${ENGINE_DIR}/src/fmt_sit_probe.c
             ${ENGINE_DIR}/src/fmt_sitseg_probe.c
+            ${ENGINE_DIR}/src/fmt_sitseg_end.c
             ${ENGINE_DIR}/src/fmt_spacesaver_probe.c
             ${ENGINE_DIR}/src/fmt_sqp_probe.c
             ${ENGINE_DIR}/src/fmt_superdisk_probe.c

@@ -456,6 +456,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-23 (the probes next door) — MacStamp's identifier held against this sniffer over 994 fixtures: no format it names that this engine refuses; MacCompress 3.2's own format is the 1990 DiskDoubler container, and a file it wrote extracts byte-exact
 - 2026-10-23 (the shims that were one function) — the 21 decoder shims become one routine and an 18-byte call each, the release's `switch` a two-byte row per format: 800 B back on every shipped budget, and a format costs the resident build its row and nothing more
 - 2026-10-24 (the magic StuffIt never wrote) — StuffIt segments begin with a per-set value, not XADMaster's B0 56; every set StuffIt cut was refused, and six now join to what was cut
+- 2026-10-24 (the length part 1 kept in its resource fork) — a fat installer's part 1 states where its segment ends in an 'endD' resource; both hosts read it, and Now Utilities 6.0 joins byte for byte
 
 ---
 
@@ -29581,10 +29582,10 @@ Deluxe 5.0 floppy sets added the same day, both joining to the CRC their
 last part stores. **Found with it**: Now
 Utilities 6.0 (1996), whose Disk 1 is a fat installer carrying PowerPC
 code after its segment, which the joiner joins in — refused before,
-reported as a corrupt archive now; and the running CRC, which nothing
-checks. Both are OPEN_ITEMS.md's, because closing the first changes
-the order in which the Mac application asks for parts. The withdrawn
-claim, and what it cost, are BLOCKERS.md's.
+reported as a corrupt archive now (joined right the same day, from its
+own resource fork: *the length part 1 kept in its resource fork*,
+below); and the running CRC, which nothing checks (OPEN_ITEMS.md). The
+withdrawn claim, and what it cost, are BLOCKERS.md's.
 
 **The same evening, two more.** StuffIt Deluxe 2.0.1 (1991) cuts sets
 with every part typed `SegM`, the type no later version wrote, and its
@@ -29603,4 +29604,48 @@ segment so.
 and 7 archives with MacExtract as the one creator offered (its `16948e9`):
 ArcMac 1.3c, asked on System 6.0.8, cannot unpack their method-10
 members. Twenty-nine types, the two lists identical again.
+
+## 2026-10-24 (the length part 1 kept in its resource fork) — a fat installer's part 1 states where its segment ends in an 'endD' resource; both hosts read it, and Now Utilities 6.0 joins byte for byte
+
+**Claim.** Part 1 of a fat self-extracting StuffIt set does state its own
+length, in its resource fork rather than its header: Now Utilities 6.0's
+Disk 1 (1996) has an `'endD'` 0 of four bytes, 1,132,983, and that is
+where its segment ends in a data fork that goes on to 1,189,189.
+
+**Evidence.** Three independent agreements on the one fat set on this
+machine: the payload ending there has the CRC-16/ARC its header stores at
+98 (`9f6a`); the payload total less Disk 2's payload puts the end at the
+same byte; and its `'cfrg'` 0 places the fragment *"Install SEA Join
+PPC"* at 1,132,984, its 56,205 bytes running to the end of the fork. The
+four letters `endD` sit in `CODE` 2 of this extractor and of InstallerMaker
+2.0's, whose part 1 has no such resource and needs none: its data fork
+ends where its segment does. The resource's meaning rests on that one
+file; nothing published names it.
+
+**Consequence.** `unc_segment_first_end` (`src/fmt_sitseg.c`) reads it
+with small reads, never the whole fork (an extractor's is 100 KB and
+more), and each host reports its answer as part 1's size: the CLI from
+the `NAME.rsrc` or `._NAME` beside part 1, the Mac application from the
+file's own resource fork, opened once before its data fork so that one
+fork is open at a time. The joiner and the order in which parts are
+asked for are unchanged. The two options OPEN_ITEMS.md offered were both
+worse: the total less the later parts needs every disk measured before
+the first is read, and the code fragment's extent misses the byte
+between the segment and the fragment. A part 1 whose resource fork did
+not survive still joins wrong (OPEN_ITEMS.md). On the CLI the set joins
+to the file the CRC confirms and every fork in it matches `unar`'s
+from that file; `run_segments.py` grades it as its eighth real set and fails it
+both without the fix and without the `.rsrc`. On the Mac, System 6.0.8 at
+4 MB and 1 MB, the application joins it byte for byte with part 1's
+resource fork and wrongly without (`segcheck.py --case sit-fat`).
+
+**What it cost.** The lookup is 332 B of 68000 code, so it lives in the
+sniffer's image, which a StuffIt set keeps in memory while it joins, and
+the shipped build carries a 74 B shim and the shell's 126: CODE +200 and
+A5 +24, the A5 being `.data` alignment, so +224 B off every budget; the
+resident control +512. No tally moves on any tier, shipped or resident,
+and the lookup's frame is 64 B (`-Os -fstack-usage`), under the joiner's
+part open, which a StuffIt set reaches from a fork copy, never from a
+decoder. A layer that keeps the
+whole bundle keeps the image's 408 B more.
 

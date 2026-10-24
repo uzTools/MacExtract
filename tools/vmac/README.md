@@ -185,7 +185,7 @@ read.
 | `sys30.py` | the **System 3.0 / Finder 5.1** tier: same disks, same grid, same grader as `run.py`, but launched by double-click because that system reads no shell name — see above |
 | `mkboot.py` | strip that image to System + Finder and make it boot straight into the application; `--keep-inits` leaves the System Folder as it is |
 | `drive.py` | boot a Mac and take clicks, keys and screenshots from a command file, one step at a time — the issue #1 reproduction |
-| `run.py` | build the disks, boot, screenshot, decode, check. `--out-kb` sizes the DESTINATION volume, which is how the full-disk path is reached at all — see below. **It cannot grade more than 128 files**: the autotest keeps that many records (`AT_MAXREC`) and an archive with more fails by count, as a 153-file icon set did on 2026-10-16 with every file on the disk |
+| `run.py` | build the disks, boot, screenshot, decode, check. `--out-kb` sizes the DESTINATION volume, which is how the full-disk path is reached at all — see below; `--in-kb` sizes the source, and `--rsrc` gives the fixture a resource fork (*`sit-fat`*, below). **It cannot grade more than 128 files**: the autotest keeps that many records (`AT_MAXREC`) and an archive with more fails by count, as a 153-file icon set did on 2026-10-16 with every file on the disk |
 | `interactive.py` | drive the real UI (SFGetFile, progress dialog, Cancel, Cmd-., the password dialog) and photograph each step |
 | `os9.py` | boot Mac OS 9 on emulated PowerPC, launch the application from the keyboard, and check both forks of what it wrote — see below |
 | `os9probe.py` | diagnostic: which input primitives actually reach the Mac OS 9 guest? Not part of any suite |
@@ -4467,7 +4467,7 @@ key kept only as an expanded DES schedule, never as eight bytes.
 ### Replaying the segment work — `segcheck.py`
 
     tools/vmac/segcheck.py --list
-    tools/vmac/segcheck.py                 # all nine, 4 MB
+    tools/vmac/segcheck.py                 # all ten, 4 MB
     tools/vmac/segcheck.py --mem 1M        # the floor target
     tools/vmac/segcheck.py --case cpt-middle
 
@@ -4494,6 +4494,15 @@ no manifest; nothing but DiskDoubler writes the container). Part 2 goes
 on the volume under a name that resembles nothing, because a `SPLT` part
 is matched by the 26 identity bytes in its header and never by its
 filename.
+
+**`sit-fat` is the one case that needs a part's RESOURCE fork** (added
+2026-10-24): Now Utilities 6.0's two installer disks, from
+`$UNC_VMAC_HOME/specimens/sitseg-real/fat/`, where part 1's `'endD'` is
+what says where its segment stops (DECISIONS.md 2026-10-24, *the length
+part 1 kept in its resource fork*). `run.py --rsrc` puts part 1 on the In
+volume with both forks, through MacBinary, and `--in-kb 4096` makes room
+for a set larger than a floppy. It runs twice, and passes only if the
+joined file is the right one with the fork and a wrong one without it.
 
 ### The two schemes that are placed by FILENAME — `--named`
 

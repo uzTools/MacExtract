@@ -147,6 +147,7 @@ typedef int32_t (*OverlayEntry)(const OverlayHost *host, int32_t which,
 #define OVL_SQP_EXTRACT        50
 #define OVL_PF_EXTRACT         51
 #define OVL_SNIFF              52  /* unc_sniff: a = UncIO*; returns the UncFormat */
+#define OVL_SEG_FIRST_END      53  /* unc_segment_first_end: a = OvlArgs* (obj desc, in rsrc, len datalen) */
 
 /* One struct for every entry, because the entry signature is fixed. Fields
  * are named for their role rather than their type so a reader can follow a

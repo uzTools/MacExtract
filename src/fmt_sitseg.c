@@ -54,9 +54,10 @@
  *          stores zero there.
  * And part 1 of a self-extracting set is an application's DATA fork,
  * which in a fat installer goes on past the segment: Now Utilities'
- * Disk 1 carries 56,206 bytes of PowerPC code after it, which this
- * joiner, taking the whole fork, joins in (OPEN_ITEMS.md). All of it
- * is in BLOCKERS.md, *Withdrawn claims*, and DECISIONS.md 2026-10-24.
+ * Disk 1 carries 56,206 bytes of PowerPC code after it. Its resource
+ * fork says where the segment stops (fmt_sitseg_end.c).
+ * All of it is in BLOCKERS.md, *Withdrawn claims*, and DECISIONS.md
+ * 2026-10-24.
  *
  * A part is matched to its set by name length + name bytes + the 26
  * bytes at offset 68 — XADMaster's memcmp, and the reason the part

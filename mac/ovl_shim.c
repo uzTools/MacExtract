@@ -96,6 +96,20 @@ UncFormat unc_sniff(UncIO *io)
     return (UncFormat)e(&gOvlHost, OVL_SNIFF, io, NULL);
 }
 
+/* In the same image: where a fat installer's part 1 ends. A StuffIt set
+ * keeps the bundle whole while it joins (ovl_release_if_unwanted), so the
+ * image is there when part 1 is opened; without it the answer is the
+ * fork's own length, which is what a part with no 'endD' gets anyway. */
+uint32_t unc_segment_first_end(const UncSegmentDesc *desc, UncIO *rsrc,
+                               uint32_t datalen)
+{
+    OverlayEntry e = ovl_image(OVL_ID_SNIFF);
+    OvlArgs g;
+    if (!e) return datalen;
+    g.obj = (void *)desc; g.in = rsrc; g.len = datalen;
+    return (uint32_t)e(&gOvlHost, OVL_SEG_FIRST_END, &g, NULL);
+}
+
 
 #define OVL_CALL(which, gp) (e(&gOvlHost, (which), (gp), NULL))
 

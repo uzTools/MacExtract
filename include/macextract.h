@@ -798,6 +798,17 @@ int unc_segment_describe(UncIO *io, UncSegmentDesc *desc);
 int unc_segment_match(const UncSegmentDesc *desc,
                       const uint8_t *head, int32_t len);
 
+/* How much of part 1's data fork is the part: `datalen` (the fork's
+ * length), or less where `rsrc`, that file's RESOURCE fork, says so.
+ * A fat self-extracting StuffIt set carries PowerPC code after the
+ * segment in its first part's data fork, and records where the segment
+ * ends in an 'endD' resource; a host that can open the resource fork
+ * calls this from need() for part 1 and reports the answer as the
+ * part's size. `rsrc` may be NULL, and any other scheme, or a fork
+ * without the resource, answers `datalen`. */
+uint32_t unc_segment_first_end(const UncSegmentDesc *desc, UncIO *rsrc,
+                               uint32_t datalen);
+
 /* Supplies parts on demand.
  *
  * ZERO THIS STRUCT BEFORE FILLING IT IN. Optional members are marked by
@@ -811,7 +822,10 @@ typedef struct UncVolumeSource {
      * UNC_ERR_SEGMENTED if it cannot be produced (missing, or the user
      * declined), or another negative error. The engine may ask for a
      * part it has already read: hosts that can should remember where
-     * each part was found rather than asking the user twice. */
+     * each part was found rather than asking the user twice. The
+     * stream's size is the part's length; for part 1, a host that can
+     * read the file's resource fork reports unc_segment_first_end's
+     * answer instead of the fork's EOF. */
     int  (*need)(void *ctx, const UncSegmentDesc *desc, int part, UncIO *io);
     /* Release a stream previously handed over by need(). May be NULL.
      * The engine releases the current part before asking for another,
