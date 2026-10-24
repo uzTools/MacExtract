@@ -154,10 +154,12 @@ This project's decoders are transcriptions/ports of algorithms from:
     written with the wrong table, the nonzero-date test that stands in
     for a MacBinary I header's missing checksum, the byte-swapped
     AppleSingle header, DiskDoubler's stored header CRC of zero
-    (`src/fmt_dd_probe.c`), and the whole StuffIt split header in
+    (`src/fmt_dd_probe.c`), and the StuffIt split header's offsets in
     `src/fmt_sitseg.c` and `src/fmt_sitseg_probe.c`, which Aladdin never
     published and which nothing else in `reference/` reads (deark and
-    macutils were both looked at). The engine has no detect-only
+    macutils were both looked at). Not its B0 56 magic since
+    2026-10-24: StuffIt writes a per-set value there, measured on six
+    sets it cut, and the bytes that stand in for it are measured too. The engine has no detect-only
     signature at all since 2026-10-18, when every format it named
     without extracting went (DECISIONS.md 2026-10-18, *the formats it
     only named*). The DiskDoubler probe's headers are not XADMaster's

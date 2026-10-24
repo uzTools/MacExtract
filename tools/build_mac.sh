@@ -612,7 +612,12 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # floor budget does not change — only this measurement baseline does.
 # +8 on 2026-10-23, 175,776 -> 175,784: Compact Pro's fork-extent check
 # hoisted ahead of the encrypted path (the control; shipped unmoved).
-UNC_MAC_CODE_DEFAULT=175784
+# +80 on 2026-10-24, 175,784 -> 175,864, A5 -16 below: the StuffIt segment
+# probe tests what StuffIt writes instead of B0 56 (DECISIONS.md
+# 2026-10-24, *the magic StuffIt never wrote*): the control. The shipped
+# pair goes DOWN 32 (CODE -4, A5 -28), the parse it shares with the
+# resident reader having lost a branch.
+UNC_MAC_CODE_DEFAULT=175864
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -801,7 +806,8 @@ UNC_MAC_CODE_DEFAULT=175784
 # +24 on 2026-10-23, 36,192 -> 36,216: data + bss alignment shifting under
 # Compact Pro's hoisted fork-extent check (the RESIDENT control only; the
 # shipped build's A5 is unmoved, so the floor budget does not change).
-UNC_MAC_A5_DEFAULT=36216
+# -16 on 2026-10-24, 36,216 -> 36,200, with the segment probe (above).
+UNC_MAC_A5_DEFAULT=36200
 # A CEILING PER CONFIGURATION, because one ceiling measured on another build
 # cannot fire. The figures above are the RESIDENT control build, which carries
 # every decoder; the shipped build's resident code is a third of that, so
@@ -1214,8 +1220,11 @@ UNC_MAC_A5_DEFAULT=36216
 # and a table, the release's `switch` a two-byte row per format
 # (DECISIONS.md 2026-10-23, *the shims that were one function*): 800 B back
 # on every budget. The +32 is that table, `gKeepSet`.
-UNC_MAC_CODE_EAGER=40548
-UNC_MAC_A5_EAGER=16268
+# -4 and -28 on 2026-10-24, 40,548 -> 40,544 and 16,268 -> 16,240: the
+# StuffIt segment parse the shipped pair keeps resident lost a branch
+# (DECISIONS.md 2026-10-24, *the magic StuffIt never wrote*).
+UNC_MAC_CODE_EAGER=40544
+UNC_MAC_A5_EAGER=16240
 # +8 on 2026-10-02 for the same reason as the eager pair above: the
 # overlay call that now says WHICH of StuffIt 2.x's ciphers an entry
 # wants. A5 fell to 19,096 and its ceiling is left where it was.

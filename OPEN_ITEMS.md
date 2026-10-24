@@ -284,6 +284,17 @@ exceeded (`S_REP_*`) rather than a dropped subtree, priced in resident
 bytes; the number may be raised (~340 B a level) or the stack grown, but
 neither is required to close it.
 
+## StuffIt segments: what the sets StuffIt wrote left open
+
+Measured 2026-10-24 (DECISIONS.md, *the magic StuffIt never wrote*).
+
+| what | state | closes by |
+|---|---|---|
+| a fat self-extracting set's part 1 | **joins wrong, reported**: Now Utilities 6.0's Disk 1 is an installer whose data fork holds the segment and then 56,206 B of PowerPC code; the joiner takes the whole fork, and the joined archive extracts as *"archive structure is corrupt"*. The stored CRCs place the boundary exactly. No header field states a part's length | sizing part 1 as the total less the later parts, which needs every part measured before part 1 is read — the Mac shell's order of asking changes — or the code fragment's own extent; the maintainer's choice |
+| the running CRC-16/ARC at 98 | not checked; every set `tools/synth_sitsplit.py` writes, `Palette.sit` on the share among them, stores zero there | checking it per part; the generator writing real ones first |
+| bytes 0-1 and 94-95 | 0-1 a per-set value, **hypothesis** QuickDraw `Random` (41 A7 = 16,807, its first value, written twice on fresh boots); 94-95 not identified; nothing reads either | a writer's code: StuffIt Lite's `CODE` is packed (`ADCR`, its own `DCMP` beside it), 7.0.3's engine is PEF |
+| `SegM` and `Part` | types in MacStamp's census (12 files), no writer found | a set carrying them |
+
 ## Formats classic Mac programs wrote that nothing here opens — leads, not findings
 
 From the 190 entries of Macintosh Repository's *Compression & Archiving*

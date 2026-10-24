@@ -743,6 +743,81 @@ def split_behaviours(macextract, case, d, kind, whole, parts, original,
                 "%s: the set did not survive the mutation tests" % case)
 
 
+# --- StuffIt segments that StuffIt wrote -------------------------------------
+
+# Every set above is tools/synth_sitsplit.py's, and so was every set this
+# suite ever graded: a generator and an oracle (`unar`) that both require
+# XADMaster's B0 56, so neither could notice that StuffIt does not write
+# it (BLOCKERS.md, *Withdrawn claims*, 2026-10-24). These six were cut by
+# StuffIt itself, on emulated Macs, by MacStamp's session (its DECISIONS.md,
+# *StuffIt segments named*), and `unar` refuses all of them, so they are
+# graded by what they must join to: the file they were cut from, where it
+# is kept, and otherwise the running CRC-16/ARC every part stores at 98 —
+# over the whole payload, in the last part.
+#   (directory under SPECIMENS/sitseg-real, part 1, SHA-256 of the joined
+#    file, parts, what)
+REAL_SITSEG = {
+    "lite1": ("lite1", "Subject.1",
+              "2dc051415ab02da4a0075f749a78fa33ff8279295b3b872135c9935cbcde1ac2",
+              4, "StuffIt Lite 3.0.5, 24K parts of derived-Education7.1.cpt"),
+    "lite8": ("lite8", "Eight.1",
+              "2dc051415ab02da4a0075f749a78fa33ff8279295b3b872135c9935cbcde1ac2",
+              11, "StuffIt Lite 3.0.5, 8K parts of the same file"),
+    "dlx5": ("dlx5", "Subject.1",
+             "b5923c87aa50b20d07a6069789cfa8be2f8877358858b65b646e1c0a1da5e0f6",
+             13, "StuffIt Deluxe 5.0, 24K parts of 300,000 bytes kept beside"),
+    "sea": ("sea", "Sea.1",
+            "adb8f81e1de965e2b8a264b351236869a6bc9b5f006f3d9d96af0137983f4c8e",
+            3, "DropSegment 5.0, self-extracting: part 1 is the data fork of "
+               "an APPL/AUs2; the joined StuffIt 5 archive holds dlx5's file"),
+    "im": ("im", "MyProduct.1",
+           "173ff3a490b4391f5f9fc64ce67b9f29889940481ca44dc73a8c4c794874d940",
+           3, "InstallerMaker 2.0: part 1 is the data fork of the APPL/STi1 "
+              "installer, parts 2-3 Seg2/STi1 and Seg3/STi1"),
+    "flop": ("flop", "Archive.sit.1",
+             "db89afe5c3331fa44d3a709eda9a051be86298a2575afbb0dfe2e367932ed365",
+             2, "StuffIt Deluxe 5.0's Save As onto two 800K floppies, "
+                "Seg1/SIT! and Seg2/SIT!"),
+}
+
+
+def arc_crc(data, crc=0):
+    for b in data:
+        crc ^= b
+        for _ in range(8):
+            crc = (crc >> 1) ^ 0xA001 if crc & 1 else crc >> 1
+    return crc
+
+
+def real_sitseg_run(macextract, case, workroot, fails):
+    sub, first, want, nparts, _what = REAL_SITSEG[case]
+    src = os.path.join(SPECIMENS, "sitseg-real", sub)
+    d = os.path.join(workroot, "real-" + case)
+    shutil.copytree(src, d)
+    parts = sorted(os.listdir(d))
+    fails.check(len(parts) == nparts, "%s: %d parts, not %d"
+                % (case, len(parts), nparts))
+    rc, out = ours_extract(macextract, os.path.join(d, first),
+                           os.path.join(d, "_out"))
+    fails.check(rc == 0, "%s: extraction failed: %s" % (case, out.strip()))
+    outs = [f for f in os.listdir(os.path.join(d, "_out"))
+            if not f.startswith("._")] if os.path.isdir(
+        os.path.join(d, "_out")) else []
+    got = open(os.path.join(d, "_out", outs[0]), "rb").read() if outs else b""
+    import hashlib
+    fails.check(hashlib.sha256(got).hexdigest() == want,
+                "%s: joined file is not the one StuffIt cut (%d bytes)"
+                % (case, len(got)))
+    # The format fact the grade leans on where no original is kept.
+    last = max((os.path.join(d, p) for p in parts),
+               key=lambda p: open(p, "rb").read(4)[3])
+    stored = struct.unpack(">H", open(last, "rb").read(100)[98:100])[0]
+    fails.check(arc_crc(got) == stored,
+                "%s: running CRC %04x, the last part stores %04x"
+                % (case, arc_crc(got), stored))
+    return rc == 0
+
+
 # --- Compact Pro segments -------------------------------------------------
 
 
@@ -1452,6 +1527,13 @@ def main():
     wrapcases = [c for c in (selected or sorted(WRAPPED_CASES))
                  if c in WRAPPED_CASES]
     cptcases = [c for c in (selected or sorted(CPT_CASES)) if c in CPT_CASES]
+    realcases = [c for c in (selected or sorted(REAL_SITSEG))
+                 if c in REAL_SITSEG]
+    if realcases and not os.path.isdir(os.path.join(SPECIMENS, "sitseg-real")):
+        print("run_segments: NO real StuffIt sets at %s; skipping them "
+              "(TESTING.md, *Segmented archives*, says where they come from)"
+              % os.path.join(SPECIMENS, "sitseg-real"))
+        realcases = []
     splitcases = [c for c in (selected or sorted(ssynth.CASES))
                   if c in ssynth.CASES]
     ddsegcases = [c for c in (selected or sorted(dsynth.CASES))
@@ -1579,6 +1661,14 @@ def main():
                 d, _src, parts, whole, want = r
                 zip_behaviours(macextract, c, d, parts, whole, want,
                                workroot, fails)
+
+        # --- StuffIt segments StuffIt wrote ------------------------------
+        nreal = 0
+        for c in realcases:
+            nreal += 1 if real_sitseg_run(macextract, c, workroot, fails) else 0
+        if realcases:
+            print("  real StuffIt sets: %d of %d joined to what was cut"
+                  % (nreal, len(realcases)))
 
         # --- Compact Pro segments ---------------------------------------
         for c in cptcases:

@@ -15,8 +15,9 @@
  * see NOTICE):
  *
  *   Every part begins with a 100-byte header:
- *      0  0xB0
- *      1  0x56
+ *      0  two bytes, the same in every part of a set and not derived
+ *      1  from the file. XADMaster requires B0 56; StuffIt does not write
+ *         it (measured 2026-10-24, below), and nothing tests them.
  *      2  0x00        (XADMaster: "assume there are less than 256 parts")
  *      3  part number, 1-based
  *      4  name length of the ORIGINAL file, 1..63, no NUL in the name
@@ -27,8 +28,32 @@
  *
  *   The payload follows. Concatenating the payloads of parts 1..N in
  *   order yields the original file: its resource fork, then its data
- *   fork. Bytes 5+namelen..67 and 94..99 are described by no reference
- *   implementation, and nothing here reads them.
+ *   fork. Bytes 5+namelen..67 are whatever was in StuffIt's name
+ *   buffer; nothing here reads them.
+ *
+ * Measured 2026-10-24 on the first sets StuffIt itself cut to be read
+ * here — StuffIt Lite 3.0.5 (two sets of one file), Deluxe 5.0 (two
+ * files), DropSegment 5.0 and InstallerMaker 2.0, written on emulated Macs
+ * by MacStamp's session — and on Now Utilities 6.0's two installer disks
+ * (1996):
+ *     0-1  41 A7 (Lite, both sets, AND InstallerMaker over another file),
+ *          35 63 and 52 0C (Deluxe 5.0, two files), 93 E1 (DropSegment),
+ *          D3 36 (Now Utilities). No CRC-16 or sum of the file or the
+ *          header fits all six. Hypothesis: a random set ID, QuickDraw's
+ *          Random — 0x41A7 is 16,807, its first value from the seed
+ *          InitGraf sets, and the two 41 A7 sets were each the first
+ *          thing done on a freshly booted emulator
+ *    94-95 a value that differs from part to part, not identified
+ *    96-97 zero in every part
+ *    98-99 a CRC-16/ARC RUNNING across the set: over the payloads of
+ *          parts 1..n, so the last part's is the whole file's. Not
+ *          checked here (OPEN_ITEMS.md); every set our generator writes
+ *          stores zero there.
+ * And part 1 of a self-extracting set is an application's DATA fork,
+ * which in a fat installer goes on past the segment: Now Utilities'
+ * Disk 1 carries 56,206 bytes of PowerPC code after it, which this
+ * joiner, taking the whole fork, joins in (OPEN_ITEMS.md). All of it
+ * is in BLOCKERS.md, *Withdrawn claims*, and DECISIONS.md 2026-10-24.
  *
  * A part is matched to its set by name length + name bytes + the 26
  * bytes at offset 68 — XADMaster's memcmp, and the reason the part

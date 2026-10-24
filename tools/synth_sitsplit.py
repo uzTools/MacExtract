@@ -17,10 +17,13 @@ Header layout comes from that parser and nowhere else:
        rsrclen(4) datalen(4)          <- the 26 fingerprint bytes
   100  payload
 
-Bytes 5+namelen..67 and 94..99 are described by no reference
-implementation. They are written as zero here, and nothing in the
-engine reads them: this file must not invent a meaning for a field it
-cannot check. A consequence worth stating — the total part COUNT is
+Bytes 5+namelen..67 and 94..99 are written as zero here. **This is not
+what StuffIt writes**, measured 2026-10-24 on four sets StuffIt itself
+cut (src/fmt_sitseg.c's file comment): bytes 0-1 are a per-set value,
+most likely a random identifier, of which B0 56 is one, and 98-99 a CRC-16/ARC running across the set. The
+B0 56 and the zero CRC stay here because `unar`, this suite's oracle,
+requires the first and does not read the second; the sets StuffIt wrote
+are graded separately (run_segments.py, REAL_SITSEG). A consequence worth stating — the total part COUNT is
 not stored anywhere, so a reader knows the set is complete only by
 summing payloads to rsrclen + datalen, which is what our joiner and
 XADMaster both do.

@@ -2149,6 +2149,46 @@ static void test_sitseg(void)
         /* Part 0 is not a part. */
         seg_head(other, 0, "Thing.sit", 100, 200, 0x11223344u);
         CHECK(unc_sitseg_probe(other, UNC_SEG_HEAD, NULL) == 0);
+
+        /* What StuffIt itself writes (2026-10-24): the first two bytes
+         * a per-set value, not XADMaster's B0 56 — 41 A7 is what StuffIt
+         * Lite 3.0.5 and InstallerMaker 2.0 wrote — and the running CRC
+         * at 98.
+         * Refused until then; every B0 56 part here was our own. */
+        seg_head(other, 2, "Thing.sit", 100, 200, 0x11223344u);
+        other[0] = 0x41; other[1] = 0xA7;
+        other[94] = 0x03; other[95] = 0x62;     /* varies by part */
+        other[98] = 0x19; other[99] = 0x40;     /* the running CRC */
+        CHECK(unc_sitseg_probe(other, UNC_SEG_HEAD, NULL) == UNC_FORMAT_SITSEG);
+        CHECK(unc_segment_match(&desc, other, UNC_SEG_HEAD) == 2);
+        /* ...and what stands in for the two bytes: 96 and 97 zero, ... */
+        other[96] = 0x01;
+        CHECK(unc_sitseg_probe(other, UNC_SEG_HEAD, NULL) == 0);
+        other[96] = 0x00; other[97] = 0x01;
+        CHECK(unc_sitseg_probe(other, UNC_SEG_HEAD, NULL) == 0);
+        other[97] = 0x00;
+        /* ...byte 2 zero, ... */
+        other[2] = 0x01;
+        CHECK(unc_sitseg_probe(other, UNC_SEG_HEAD, NULL) == 0);
+        other[2] = 0x00;
+        /* ...and forks that are sizes: none at all, or past 2 GB. */
+        seg_head(other, 2, "Thing.sit", 0, 0, 0x11223344u);
+        CHECK(unc_sitseg_probe(other, UNC_SEG_HEAD, NULL) == 0);
+        seg_head(other, 2, "Thing.sit", 0x80000000u, 200, 0x11223344u);
+        CHECK(unc_sitseg_probe(other, UNC_SEG_HEAD, NULL) == 0);
+    }
+
+    /* --- a part whose payload outgrows the whole it is part of ------ */
+    {
+        uint8_t big[UNC_SEG_HEAD + 400];
+        MemIO bm;
+        UncIO bio;
+        memset(big, 0x5A, sizeof big);
+        seg_head(big, 1, "Thing.sit", 100, 200, 0x11223344u);
+        test_make_memio(&bio, &bm, big, sizeof big);     /* 400 > 300 */
+        CHECK(unc_sitseg_probe(big, UNC_SEG_HEAD, &bio) == 0);
+        test_make_memio(&bio, &bm, big, UNC_SEG_HEAD + 300);  /* exact */
+        CHECK(unc_sitseg_probe(big, UNC_SEG_HEAD, &bio) == UNC_FORMAT_SITSEG);
     }
 
     /* --- a set of one part needs no volume source ----------------- */

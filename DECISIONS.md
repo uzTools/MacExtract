@@ -455,6 +455,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-23 (the format 7.0.3 sniffs) — StuffIt 7.0.3's Expander opens AppleSingle under any type, creator or name, and has no AppleDouble reader: nine subjects on Mac OS 9.2, asked for by MacStamp
 - 2026-10-23 (the probes next door) — MacStamp's identifier held against this sniffer over 994 fixtures: no format it names that this engine refuses; MacCompress 3.2's own format is the 1990 DiskDoubler container, and a file it wrote extracts byte-exact
 - 2026-10-23 (the shims that were one function) — the 21 decoder shims become one routine and an 18-byte call each, the release's `switch` a two-byte row per format: 800 B back on every shipped budget, and a format costs the resident build its row and nothing more
+- 2026-10-24 (the magic StuffIt never wrote) — StuffIt segments begin with a per-set value, not XADMaster's B0 56; every set StuffIt cut was refused, and six now join to what was cut
 
 ---
 
@@ -29537,3 +29538,50 @@ The estimate before the work was −0.9 to −1.1 KB, then −0.6 to −0.8 KB
 once a stub was priced at the 68000's stack-passed arguments rather than
 assumed; the measured −800 B sits at the top of the second.
 
+## 2026-10-24 (the magic StuffIt never wrote) — StuffIt segments begin with a per-set value, not XADMaster's B0 56; every set StuffIt cut was refused, and six now join to what was cut
+
+**Claim.** The segment probe required bytes 0-1 to be `B0 56`, from
+XADStuffItSplitParser.m. StuffIt writes a value there that is the same
+in every part of a set and not derived from the file, so every set
+StuffIt itself cut was "format not recognized". The probe now tests what
+32 real parts share instead. Measured.
+
+**Evidence.** MacStamp's session cut sets with StuffIt Lite 3.0.5 on
+System 6.0.8, Deluxe 5.0 on Mac OS 8.1 and DropSegment 5.0, self-
+extracting, and found `41 A7`, `35 63` and `93 E1` where the probe wanted
+`B0 56`. Read here: every part of all four sniffed *unknown*; every
+`B0 56` part on the machine — the suite's seven cases and `Palette.sit`
+on the maintainer's share, whose dates are the generator's
+`A8B4C1E0`/`A8B4C2F0` — was `tools/synth_sitsplit.py`'s, graded by
+`unar`, which requires the same constant. What the real parts share:
+byte 2 zero, bytes 96-97 zero, and at 98-99 a CRC-16/ARC running across
+the set (28 of 28 parts of the three plain sets; the self-extracting
+set's too, once its part 1 is the 46,939-byte data fork rather than
+the file MacStamp saved). No CRC-16 or sum tried gives bytes 0-1, and
+two more sets settled what they are not: InstallerMaker 2.0 wrote `41 A7`
+over a different file than StuffIt Lite's, and Deluxe 5.0 wrote `52 0C`
+for a second file where it had written `35 63` for the first. **Hypothesis,
+well supported**: a random set identifier from QuickDraw's `Random`.
+0x41A7 is 16,807, the Park–Miller multiplier and so `Random`'s first value
+from the seed of 1 `InitGraf` leaves, and both `41 A7` sets were the first
+thing done on a freshly booted emulator; every other value turns up within
+the sequence's first 65,536 draws, as any 16-bit value would. With
+the probe testing those, all four join to what was cut, and so do the two added later that day, byte for byte,
+three against their originals and the fourth through its StuffIt 5
+archive to the same 300,000 bytes as the Deluxe set's. No verdict on the
+994 fixtures moved; over 14,933 cached files the rule takes the 31 real
+parts, Now Utilities 6.0's two installer disks, and one table of small
+numbers in MacStamp's scratch.
+
+**Consequence.** The probe tests byte 2, bytes 96-97 and sane fork
+sizes, and, where the length is known, that a part's payload fits the
+total; five unit checks pin those and fail on the old probe, and
+`run_segments.py` grades six real sets, the InstallerMaker 2.0 and
+Deluxe 5.0 floppy sets added the same day, both joining to the CRC their
+last part stores. **Found with it**: Now
+Utilities 6.0 (1996), whose Disk 1 is a fat installer carrying PowerPC
+code after its segment, which the joiner joins in — refused before,
+reported as a corrupt archive now; and the running CRC, which nothing
+checks. Both are OPEN_ITEMS.md's, because closing the first changes
+the order in which the Mac application asks for parts. The withdrawn
+claim, and what it cost, are BLOCKERS.md's.
