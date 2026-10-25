@@ -645,7 +645,10 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # writer that was in 4.3BSD*): unc_hecx_extract 2,086 -> 2,084 with the
 # comparison written `want - sum == size`; CODE + A5 unmoved, and the
 # shipped pair and `ovl_binhex` unmoved too.
-UNC_MAC_CODE_DEFAULT=177128
+# +160 on 2026-10-25, 177,128 -> 177,288, A5 +64 below: the two failures
+# that said nothing, a MIME nest past its depth and a refused PBSetCatInfo,
+# each now a report line (DECISIONS.md 2026-10-25, *the two that said nothing*).
+UNC_MAC_CODE_DEFAULT=177288
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -847,7 +850,9 @@ UNC_MAC_CODE_DEFAULT=177128
 # (above), 26 B, less alignment.
 # +4 on 2026-10-25, 36,276 -> 36,280: alignment, with the 32-bit `.dl`
 # sum (above); no data was added.
-UNC_MAC_A5_DEFAULT=36280
+# +64 on 2026-10-25, 36,280 -> 36,344: the two report sentences and their
+# `.data` alignment (above).
+UNC_MAC_A5_DEFAULT=36344
 # A CEILING PER CONFIGURATION, because one ceiling measured on another build
 # cannot fire. The figures above are the RESIDENT control build, which carries
 # every decoder; the shipped build's resident code is a third of that, so
@@ -1289,8 +1294,13 @@ UNC_MAC_A5_DEFAULT=36280
 # 2026-10-24, *the format before BinHex*). Its reader is in `ovl_binhex`
 # and its probe in the sniffer's image; resident is the engine table's row
 # (16 B) and its name (10 B), `.data` +28 and `.bss` +4 by alignment.
-UNC_MAC_CODE_EAGER=40928
-UNC_MAC_A5_EAGER=16304
+# +76 and +84 on 2026-10-25, 40,928 -> 41,004 and 16,304 -> 16,388: a
+# refused PBSetCatInfo reported ("name: Finder info refused", RepEntry now
+# shared with the INEXACT line) and UNC_ERR_NESTED's sentence, the engine's
+# own (DECISIONS.md 2026-10-25, *the two that said nothing*). 160 B off every budget; the A5
+# is the two strings and `.data` alignment.
+UNC_MAC_CODE_EAGER=41004
+UNC_MAC_A5_EAGER=16388
 # +8 on 2026-10-02 for the same reason as the eager pair above: the
 # overlay call that now says WHICH of StuffIt 2.x's ciphers an entry
 # wants. A5 fell to 19,096 and its ceiling is left where it was.
@@ -1389,7 +1399,9 @@ UNC_MAC_A5_EAGER=16304
 # above); data + bss 16,336, under its ceiling.
 # +0 code on 2026-10-24, SUMacC's `.dl` (the eager pair above); data + bss
 # 16,368, under its ceiling.
-UNC_MAC_CODE_LAZY=39584
+# +80 code on 2026-10-25, the two report lines (the eager pair above); data +
+# bss 16,432, under its ceiling.
+UNC_MAC_CODE_LAZY=39664
 UNC_MAC_A5_LAZY=19200
 if [ -n "$UNC_OVL_RESIDENT" ]; then
     UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-$UNC_MAC_CODE_DEFAULT}

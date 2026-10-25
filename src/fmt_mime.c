@@ -697,6 +697,10 @@ static int mime_emit(MimeCtx *m, const MimeHdrs *h, const MimePart *data,
     uint32_t dsize = 0;
     int have_af = 0, sret, err = UNC_OK, est = UNC_OK;
 
+    /* Neither a data part nor an applefile: the walk is handing over a
+     * multipart it could not descend into, to be named and refused. */
+    if (!data && !af) est = UNC_ERR_NESTED;
+
     if (af) {
         if (mime_read_applefile(m, af, a) == UNC_OK) have_af = 1;
     }
@@ -984,6 +988,15 @@ int unc_mime_extract(UncCtx *c)
                 err = mime_emit(m, &m->h, &part, &m->af, &any);
                 have_af = 0;
                 af_level = -1;
+                if (err != UNC_OK) break;
+            } else if (mime_ci_prefix(m->h.ctype, MIME_CTYPE_MAX,
+                                      "multipart/") && m->h.bndlen > 0) {
+                /* A multipart past MIME_MAX_DEPTH. Its subtree is walked
+                 * as this one leaf, and whatever it holds is lost; until
+                 * 2026-10-25 it was lost with nothing said. It is now an
+                 * entry that fails, named as any part is. */
+                m->nnamelen = 0;
+                err = mime_emit(m, &m->h, NULL, NULL, &any);
                 if (err != UNC_OK) break;
             } else if (mime_is_attachment(&m->h)) {
                 m->nnamelen = 0;

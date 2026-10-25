@@ -803,6 +803,44 @@ def main():
               "wrote %r" % {k: len(v) for k, v in got.items()})
 
         # ---------------------------------------------------------- #
+        # A multipart nested past the walk's depth (MIME_MAX_DEPTH, 4)  #
+        # ---------------------------------------------------------- #
+        # Its subtree cannot be walked, and until 2026-10-25 whatever it
+        # held was dropped with nothing said: a five-level nest whose only
+        # attachment sits at the bottom exited "not a recognized archive".
+        # It is now one entry that fails, named as any part is
+        # (DECISIONS.md 2026-10-25, *the two that said nothing*). Four
+        # levels must still extract; mpack, which recurses, has no cap.
+        leaf = (b'Content-Type: application/octet-stream; name="deep.bin"\r\n'
+                b"Content-Transfer-Encoding: base64\r\n\r\n" +
+                b64(b"at the bottom\n"))
+        for depth in (4, 5):
+            part = leaf                      # the message is one level
+            for i in range(depth - 1):
+                part = (b'Content-Type: multipart/mixed; boundary="lvl%d"'
+                        b"\r\n\r\n--lvl%d\r\n" % (i, i) + part +
+                        b"\r\n--lvl%d--\r\n" % i)
+            h, body = part.split(b"\r\n\r\n", 1)
+            p = write("nest%d.mim" % depth,
+                      message([(h + b"\r\n", body)],
+                              ctype=b"multipart/mixed", boundary=b"top"))
+            r = subprocess.run([macextract, "x", "-o",
+                                os.path.join(tmp, "nest%d" % depth), p],
+                               capture_output=True, text=True)
+            out = os.listdir(os.path.join(tmp, "nest%d" % depth)) \
+                if os.path.isdir(os.path.join(tmp, "nest%d" % depth)) else []
+            if depth == 4:
+                check("nest of 4: the attachment comes out",
+                      r.returncode == 0 and out == ["deep.bin"],
+                      "exit %d, %s" % (r.returncode, out))
+            else:
+                check("nest of 5: one entry fails, and says why",
+                      r.returncode != 0 and out == [] and
+                      "nested too deep to open" in r.stderr,
+                      "exit %d, %s, %r" % (r.returncode, out,
+                                           r.stderr.strip()[-120:]))
+
+        # ---------------------------------------------------------- #
         # Progress on mail of a realistic size                        #
         # ---------------------------------------------------------- #
         # The walk and each entry's sizing pass read what the writing

@@ -1394,19 +1394,6 @@ static void RepEntryFailed(const uint8_t *orig, int olen, const char *why)
 /* The same, for the failure the engine reports once the entry has been
  * accepted. The reason is what the user can act on, so each says what is
  * wrong rather than naming the error. */
-/* An entry an Optimizer left INEXACT. It did not fail — the file is on
- * the disk and it opens — so it is not a RepFailed, and the report says
- * what is true of it instead. One sentence, because on this target a
- * literal is .rodata in the A5 world and resident for every extraction
- * (see the UNC_ERR_MODULE arm below). */
-static void RepInexact(const uint8_t *orig, int olen)
-{
-    if (!RepNew(1)) return;
-    RepCatBytes(orig, olen);
-    RepMarkBreak();
-    RepCat(S_REP_INEXACT);
-}
-
 static void RepFailed(const uint8_t *orig, int olen, int status)
 {
     if (!RepNew(1)) return;
@@ -1421,6 +1408,12 @@ static void RepFailed(const uint8_t *orig, int olen, int status)
         break;
     case UNC_ERR_UNSUPPORTED:
         RepCat(S_REP_UNSUPPORTED);
+        break;
+    case UNC_ERR_NESTED:
+        /* A mail part nested past what the MIME walk follows. The
+         * engine's own words, for the reason below. */
+        RepCat(": ");
+        RepCat(unc_strerror(status));
         break;
     case UNC_ERR_MODULE:
         /* The only case here that does not carry its own sentence, and
@@ -2681,6 +2674,23 @@ static void DTBundle(DTPBRec *d, OSType creator, OSType self, long dir)
  * Then, last, the lock: a locked file refuses every write above. Files
  * only — HFS has no locked folder, and the run writes inside a folder
  * after its entry. */
+/* "<the entry's own name>: <what>", for an entry that did not fail and
+ * still has something true to be said of it: an Optimizer left it
+ * INEXACT (it is on the disk and it opens, so it is not a RepFailed), or
+ * the File Manager refused its Finder info. One sentence each, because on
+ * this target a literal is .rodata in the A5 world and resident for every
+ * extraction (see RepFailed's UNC_ERR_MODULE arm). */
+static void RepEntry(MacSink *s, const char *what)
+{
+    int b = 0, k;
+    for (k = 0; k < (int)s->cur.name_len; k++)
+        if (s->cur.name[k] == '/') b = k + 1;
+    if (!RepNew(1)) return;
+    RepCatBytes(s->cur.name + b, (int)s->cur.name_len - b);
+    RepMarkBreak();
+    RepCat(what);
+}
+
 static void StampCat(MacSink *s)
 {
     /* One block for the three calls, which run one after another: three
@@ -2772,8 +2782,15 @@ static void StampCat(MacSink *s)
             pb.hFileInfo.ioDirID == s->heldDir)
             s->heldMd = s->cur.mod_date;
         pb.hFileInfo.ioDirID = s->curDirID;  /* PBGetCatInfo clobbers it */
-        if (PBSetCatInfoSync(&pb) == noErr && !s->cur.is_dir &&
-            (pb.hFileInfo.ioFlFndrInfo.fdFlags & 0x2000)) {
+        /* Refused, the item keeps no type, creator, flags or dates, and
+         * the run would still end "Extraction complete." with nothing
+         * said: GateKeeper 1.3 vetoes this call for any program it has
+         * not named (DECISIONS.md 2026-10-21, *the guard that vetoes the
+         * Finder info*). Both forks are on the disk either way. */
+        if (PBSetCatInfoSync(&pb) != noErr)
+            RepEntry(s, S_REP_FINFO_REFUSED);
+        else if (!s->cur.is_dir &&
+                 (pb.hFileInfo.ioFlFndrInfo.fdFlags & 0x2000)) {
             bndl = pb.hFileInfo.ioFlFndrInfo.fdCreator;
             self = pb.hFileInfo.ioFlFndrInfo.fdType;
         }
@@ -2899,10 +2916,7 @@ static int SINK_END(void *ctx, int status)
      * module_restored). Saying nothing would leave a file under the
      * archive's name that differs from the one that was archived. */
     if (status == UNC_OK && s->cur.module_restored == 2) {
-        int b = 0, k;
-        for (k = 0; k < (int)s->cur.name_len; k++)
-            if (s->cur.name[k] == '/') b = k + 1;
-        RepInexact(s->cur.name + b, (int)s->cur.name_len - b);
+        RepEntry(s, S_REP_INEXACT);
         s->inexact++;
     }
     if (s->cur.is_dir) s->dirCount++;

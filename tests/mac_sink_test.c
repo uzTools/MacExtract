@@ -168,6 +168,7 @@ static int gDrop;
 static long gMockZone;   /* the machine's offset east of GMT (ZoneProbe) */
 static int gHasDT = 1;                 /* the volume has a Desktop Manager */
 static int gDTSetCalls;
+static OSErr gSetCatErr;               /* PBSetCatInfo refuses with it */
 
 static CatRec *cat_rec(const char *path, int make)
 {
@@ -574,6 +575,7 @@ OSErr PBSetCatInfoSync(CInfoPBRec *pb)
     full_path(pb->hFileInfo.ioDirID, pb->hFileInfo.ioNamePtr, 0, path,
               sizeof path);
     if (stat(path, &st) != 0) return fnfErr;
+    if (gSetCatErr) return gSetCatErr;      /* GateKeeper's veto, say */
     r = cat_rec(path, 1);
     if (!(gDrop & DROP_FINFO)) memcpy(r->finfo, &pb->hFileInfo.ioFlFndrInfo, 16);
     else memcpy(r->finfo, &pb->hFileInfo.ioFlFndrInfo, 10);  /* type..flags */
@@ -1049,6 +1051,59 @@ int main(int argc, char **argv)
                 fprintf(stderr, "meta [no Desktop Manager]: no comment "
                         "written, nothing reported\n");
             gHasDT = 1;
+        }
+        /* PBSetCatInfo refused, as GateKeeper 1.3 vetoes it: the file is
+         * there and the report must say its Finder info was not set,
+         * named, rather than end in "Extraction complete." alone
+         * (DECISIONS.md 2026-10-21, *the guard that vetoes the Finder
+         * info*). */
+        {
+            MacSink sk2; UncEntryInfo info;
+            char dir[600];
+            snprintf(dir, sizeof dir, "%s/veto", base);
+            mkdir(dir, 0755);
+            snprintf(gOutDir, sizeof gOutDir, "%s", dir);
+            snprintf(gDirs[0], sizeof gDirs[0], "%s", gOutDir);
+            gNumDirs = 1;
+            RepReset();
+            gSetCatErr = paramErr;
+            memset(&sk2, 0, sizeof sk2); sk2.vRefNum = 1; sk2.rootDirID = 0;
+            memset(&info, 0, sizeof info);
+            memcpy(info.name, "App", 3); info.name_len = 3;
+            info.type = 0x4150504C;         /* 'APPL' */
+            if (sink_begin(&sk2, &info) == 0) sink_end(&sk2, UNC_OK);
+            gSetCatErr = 0;
+            if (gRepN != 1 ||
+                strcmp((char *)gRepBuf + gRepStart[0],
+                       "App" S_REP_FINFO_REFUSED) != 0) {
+                fprintf(stderr, "meta [Finder info refused]: %d report "
+                        "line(s), first \"%s\"\n", (int)gRepN,
+                        gRepN ? (char *)gRepBuf + gRepStart[0] : "");
+                ok = 0;
+            } else
+                fprintf(stderr, "meta [Finder info refused]: \"%s\"\n",
+                        (char *)gRepBuf + gRepStart[0]);
+        }
+        /* A mail part nested past the MIME walk's depth fails as
+         * UNC_ERR_NESTED, and the report names it with the engine's own
+         * sentence after a colon, as every other failure. */
+        {
+            MacSink sk2; UncEntryInfo info;
+            RepReset();
+            memset(&sk2, 0, sizeof sk2); sk2.vRefNum = 1; sk2.rootDirID = 0;
+            memset(&info, 0, sizeof info);
+            memcpy(info.name, "part3", 5); info.name_len = 5;
+            if (sink_begin(&sk2, &info) == 0) sink_end(&sk2, UNC_ERR_NESTED);
+            if (gRepN != 1 ||
+                strcmp((char *)gRepBuf + gRepStart[0],
+                       "part3: nested too deep to open") != 0) {
+                fprintf(stderr, "meta [nested too deep]: %d report "
+                        "line(s), first \"%s\"\n", (int)gRepN,
+                        gRepN ? (char *)gRepBuf + gRepStart[0] : "");
+                ok = 0;
+            } else
+                fprintf(stderr, "meta [nested too deep]: \"%s\"\n",
+                        (char *)gRepBuf + gRepStart[0]);
         }
         /* A comment the engine marks as UTF-8 (UNC_META_CMT_UTF8): the
          * Desktop Manager is handed it folded into MacRoman — e-acute,

@@ -161,7 +161,7 @@ enum {
      * *the disk images that found another home*); the number is not
      * reused, so a caller built against an older header cannot read a
      * new code as that one.                                            */
-    UNC_ERR_MODULE      = -15
+    UNC_ERR_MODULE      = -15,
     /* -16 was UNC_ERR_TOODEEP, for an entry nested deeper than the
      * engine carried folders. It existed for four hours on 2026-10-07
      * and was deleted the same day: the limit it reported was 24
@@ -170,6 +170,12 @@ enum {
      * depth limit now, so nothing can be too deep for one. The number
      * is not reused, so a caller built against that header cannot read
      * a new code as that one.                                          */
+    /* A part nested deeper than its reader follows: a MIME multipart
+     * past MIME_MAX_DEPTH (4), whose subtree is reported as one entry
+     * that fails rather than dropped. Not -16's arbitrary cap returned:
+     * this one is the size of the walk's fixed arrays (DECISIONS.md
+     * 2026-10-25, *the two that said nothing*).                       */
+    UNC_ERR_NESTED      = -17
 };
 
 /* Human-readable message for an error code. */

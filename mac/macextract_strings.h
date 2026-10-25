@@ -125,6 +125,7 @@
 #define S_REP_NO_NAME       ": no free name"
 #define S_REP_NOT_CREATED   ": could not be created"
 #define S_REP_INEXACT       ": not identical to the original"
+#define S_REP_FINFO_REFUSED ": Finder info refused"
 /* The same words for both: what the engine cannot hold, and a fork the
  * File Manager cannot write, which is 2 GB on every Macintosh. */
 #define S_REP_TOOLARGE      ": file too large (>2GB)"

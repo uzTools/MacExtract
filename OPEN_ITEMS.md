@@ -208,19 +208,6 @@ with the zone put into PRAM by the emulator build, not by Map.
 | whether gmtDelta already includes daylight saving | **hypothesis**: three non-Apple readers say it does; dlsDelta is not added | Map's daylight-saving box toggled once on 7.0.1, and the 12 bytes read back |
 | AppleSingle/AppleDouble written by mpack, whose entry 8 is the writer's wall clock and not RFC 1740's GMT | **the maintainer's decision**: the RFC is followed, so such a file moves by the reader's offset | a rule to tell the writer apart, or a decision to treat entry 8 as wall clock |
 
-## A refused PBSetCatInfo is not reported
-
-Under GateKeeper 1.3 in its "Notify & Veto" mode, `PBSetCatInfo` on an
-extracted application is vetoed — GateKeeper's `File(Other)` privilege,
-which it grants StuffIt and Compact Pro by name and not this program — and
-the file comes out with no type, creator, flags or dates while the run
-ends in *Extraction complete.*, measured 2026-10-21 on System 6.0.8
-(DECISIONS.md 2026-10-21, *the guard that vetoes the Finder info*). Both
-forks are on the disk; GateKeeper's own alert names the veto. `StampCat`
-ignores the call's result. Closes with a report line for the entry
-(`S_REP_*`, "name: Finder info refused"), priced in resident bytes, and
-the GateKeeper run repeated (`tools/vmac/README.md`, *GateKeeper*).
-
 ## System 7.0.1 rewrites one byte of FXInfo
 
 FXInfo +9 (`fdXFlags`) reads 0x70 on a System 7.0.1 output disk where the
@@ -279,22 +266,6 @@ Macintosh 128K*).
 | the report window's buffers, `gRepBuf` and the row arrays | 8,730 B of bss, and 1,568 B of code | the bss is resident for the whole run whatever the archive. A handle grown as lines arrive would cost most runs a few hundred bytes; `interactive.py` reads the box, so it must still show the same |
 | the overlay shims, `mac/ovl_shim.c` | 2,462 B of code | about twenty-five dispatchers of one shape; a table-driven dispatch might be a third of that |
 | the relocator, `Retro68Relocate` and `Retro68ApplyRelocations` | 1,656 B of code | runs once at launch and stays in `CODE` 1. Elf2Mac's linker script places it at the START of `.text`, so it cannot be trimmed off the end as the relocations are; needs a layout Elf2Mac does not offer (`--mac-keep-ldscript` shows the script) |
-
-## MIME multipart nested past the depth cap is dropped silently
-
-A `multipart/*` more than `MIME_MAX_DEPTH` (4) levels deep is not pushed
-onto the boundary stack; its subtree is walked as one opaque leaf, emitted
-by nothing, and lost without a per-entry error. Measured 2026-10-22 with
-the Linux CLI, no emulator: a five-level nest whose only attachment sits at
-the bottom lists nothing and exits *not a recognized archive*; four levels
-extract it. The walk is iterative, so the cap is the fixed `MimeCtx` arrays,
-not the 68000 no-recursion rule; mpack (the oracle where `unar` fails, and
-`unar` rejects these outright) recurses unbounded and would keep it. Real
-mail nests two or three deep, so the ceiling is sound — the silent loss is
-the defect. Closes by making the cap loud: a report line when depth is
-exceeded (`S_REP_*`) rather than a dropped subtree, priced in resident
-bytes; the number may be raised (~340 B a level) or the stack grown, but
-neither is required to close it.
 
 ## Formats classic Mac programs wrote that nothing here opens — leads, not findings
 

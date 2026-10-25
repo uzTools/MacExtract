@@ -465,6 +465,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-24 (the two bytes the writer drew) — bytes 0-1 of a StuffIt segment are QuickDraw's _Random, drawn once per set and never seeded; and 96-97, which the probe required to be zero, are the resource fork's running CRC, so every set of a file with one was refused
 - 2026-10-24 (the format before BinHex) — SUMacC's `.dl` extracts through the `.hex`/`.hcx` driver; hexbin's first-line test alone took base64 of zeros, so the first line must also open "@@"; shipped CODE +0, A5 +32
 - 2026-10-25 (the writer that was in 4.3BSD) — SUMacC's tohex and fromhex were in 4.3BSD all along: tohex wrote the wild file, and the format's own readers compare the sum on 32 bits, so this does too
+- 2026-10-25 (the two that said nothing) — a MIME multipart past the walk's depth and a Finder info GateKeeper vetoes are report lines, not silence: UNC_ERR_NESTED, and "name: Finder info refused"
 
 ---
 
@@ -30089,3 +30090,45 @@ found: the carousel disc's 26 `mactosh` directories, the USENIX '87 copy
 of SUMacC and searches for `fromhex`, `tohex`, `sumacc`, `grow.dl`,
 `handson.dl` and `fromhex.dl` on Discmaster gave `xlispold.dl` alone.
 The Macintosh `FromHex` binary (`mactosh/util/fromhex.sit`) was not run.
+
+## 2026-10-25 (the two that said nothing) — a MIME multipart past the walk's depth and a Finder info GateKeeper vetoes are report lines, not silence: UNC_ERR_NESTED, and "name: Finder info refused"
+
+**Claim.** Two ways an extraction lost something without a word are now
+reported, each as one line naming the entry.
+
+**A MIME multipart nested past `MIME_MAX_DEPTH` (4).** Its subtree is still
+walked as one leaf, because the boundary stack is the walk's fixed arrays
+(~340 B a level) and real mail nests two or three deep. What changed is
+that the leaf is now an entry that fails, `UNC_ERR_NESTED` (-17), named as
+any part is: "part1: nested too deep to open". Before, a five-level nest
+whose only attachment sat at the bottom exited *not a recognized archive*.
+-16 stays retired: its 24-level cap was chosen by nobody, and this one is
+an array's size, the cap OPEN_ITEMS.md had already called sound. The Mac
+shell reuses the engine's sentence, as it does for `UNC_ERR_MODULE`.
+`run_mime.py` adds a four-level nest that must extract and a five-level
+one that must fail and say why; the CLI before the change fails the
+second.
+
+**A refused `PBSetCatInfo`.** `StampCat` read the call's result only to
+decide whether to register a bundle. Under GateKeeper 1.3's Notify & Veto
+mode an application came out with no type, creator, flags or dates, and
+the run said *Extraction complete.* (*the guard that vetoes the Finder
+info*). A refusal is now the report line "name: Finder info refused".
+`RepEntry` is shared with the INEXACT line it was written beside.
+
+**Measured.** System 6.0.8, GateKeeper 1.3 set to veto, `OriginalCM.sit`,
+`tools/vmac/drive.py` on the 2026-10-21 disk with this build: GateKeeper's
+alert, then the report "Cap'n Magneto: Finder info refused" above
+*Extraction complete.* The veto comes back as an error and not as
+`noErr`, which only this run could show. The sink test fails the refused
+call and the `UNC_ERR_NESTED` failure on Linux and checks both lines;
+the first fails with the line removed.
+
+**What it cost.** Shipped CODE +76 and A5 +84, the A5 being the two
+sentences and `.data` alignment: 160 B off every budget. The control
++224 and `ovl_text` +92 (the MIME walk); `OVL_SAVED` +64 and `TIERS`
+−224.
+
+**What it cannot see.** GateKeeper only, one System; the error a guard
+returns is not recorded, and any non-`noErr` result is reported.
+

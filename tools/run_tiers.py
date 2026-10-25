@@ -182,10 +182,13 @@ REPO = os.path.dirname(HERE)
 # **-112 more each 2026-10-24, DERIVED**: the StuffIt segment CRC check, the
 # control's CODE +80 and A5 +32 (DECISIONS.md 2026-10-24, *the sum each part carries*);
 # OVL_SAVED +16 below offsets all but the shipped pair's 96.
+# **-224 more each 2026-10-25, DERIVED**: the two report lines, the control's
+# CODE +160 and A5 +64 (DECISIONS.md 2026-10-25, *the two that said nothing*); OVL_SAVED +64
+# offsets all but the shipped pair's 160.
 TIERS = {
-    "sys3-512K": (199798, "System 3.0, Macintosh 512Ke (222,070 B free)"),
-    "sys6-512K": (104416, "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
-    "floor-1M":  (628704, "System 6.0.8, 1 MB Mac Plus — the floor target"),
+    "sys3-512K": (199574, "System 3.0, Macintosh 512Ke (222,070 B free)"),
+    "sys6-512K": (104192, "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
+    "floor-1M":  (628480, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
 # **-592 more each 2026-10-24, DERIVED**: SUMacC's `.dl`, the control's
 # CODE +584 and A5 +8 (DECISIONS.md 2026-10-24, *the format before
@@ -389,7 +392,7 @@ TIERS = {
 # data + bss -680. The machine gave +4,204, because the jump table, the
 # stub segments and the relocations trimmed at launch are resident bytes
 # this unit never counted — which is why TIERS was measured, not moved.
-TIERS_CONTROL = 213408     # build/mac-resident, CODE + A5, 2026-10-24
+TIERS_CONTROL = 213632     # build/mac-resident, CODE + A5, 2026-10-25
 # +352 on 2026-10-22: the eleven malformed-input fixes, every decoder linked
 # in; TIERS above drops 352 to match (TIERS_MACHINE, physical RAM, unmoved).
 # +32 more on 2026-10-23 with Compact Pro's fork-extent check; TIERS -32.
@@ -399,6 +402,7 @@ TIERS_CONTROL = 213408     # build/mac-resident, CODE + A5, 2026-10-24
 # +96 more on 2026-10-24 with the segment CRCs one per fork; TIERS -96.
 # +32 more on 2026-10-24 with the segment header CRC required; TIERS -32.
 # +592 more on 2026-10-24 with SUMacC's `.dl`; TIERS -592.
+# +224 more on 2026-10-25 with the two report lines; TIERS -224.
 # **What this control cannot see: the autotest harness.** TIERS was read
 # on the machine from an autotest build (`UNC_MAC_AUTOTEST`), and
 # build/mac-resident has no harness in it, so harness growth lowers what a
@@ -816,7 +820,10 @@ EXPECT = {
 # reader is in `ovl_binhex` and the probe in the sniffer's image, and the
 # table row is resident in both (DECISIONS.md 2026-10-24, *the format
 # before BinHex*). TIERS -592.
-OVL_SAVED = 156176
+# **+64 2026-10-25, -> 156,240**: the two report lines, the control's +224
+# (CODE +160, A5 +64) against the shipped pair's +160 (CODE +76, A5 +84)
+# (DECISIONS.md 2026-10-25, *the two that said nothing*). TIERS -224.
+OVL_SAVED = 156240
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
 # every kept image is one — as is the bundle an envelope holds on to.
@@ -964,7 +971,7 @@ IMAGES = {
     "OVL_ID_STUFFIT":     28194,
     "OVL_ID_SQP":         1736,
     "OVL_ID_SUPERDISK":   6634,
-    "OVL_ID_TEXT":        11346,
+    "OVL_ID_TEXT":        11438,
     "OVL_ID_ZIPOLD":      10832,
     "OVL_ID_SNIFF":       12556,
 }
@@ -1019,7 +1026,10 @@ IMAGES = {
 # **BINHEX +476, SNIFF +120 and the bundle +596, 2026-10-24**: SUMacC's
 # `.dl`, its reader in the `.hex`/`.hcx` driver and its first-line test in
 # the BinHex probe (DECISIONS.md 2026-10-24, *the format before BinHex*).
-BUNDLE = 180984
+# **TEXT +92 and the bundle +92, 2026-10-25**: MIME's walk reports a
+# multipart past its depth as an entry that fails (DECISIONS.md 2026-10-25,
+# *the two that said nothing*).
+BUNDLE = 181076
 
 # What the SHIPPED lane asserts, and it is the refused fixtures BY NAME
 # rather than a tally: a tier that refuses two different fixtures and still
