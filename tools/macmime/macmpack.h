@@ -27,25 +27,15 @@
  * Universal Interfaces of macfile.c's era called it. */
 #define Date2Secs DateToSeconds
 
-/* macfile.c reads ONE field of this, `vMAttrib`, and only after
- * PBHGetVolParmsSync has returned noErr — which needs the Desktop
- * Manager, i.e. System 7 or an AppleShare volume. This tool runs on
- * System 6.0.8, where that call fails and the field is never read.
- *
- * Retro68 has no GetVolParmsInfoBuffer and no copy of Inside Macintosh:
- * Files is in reference/, so the layout below is NOT transcribed from
- * anything: it is an opaque buffer big enough for the call, with the one
- * named field macfile.c mentions. That is sound only for as long as the
- * call keeps failing, so the harness CHECKS it rather than assuming:
- * `tools/vmac/macmime.py --check` requires the produced applefile's
- * ENT_COMMENT entry to be 0 bytes long, which is what a failed lookup
- * produces. If that check ever fires, this struct is the first thing to
- * distrust — and the fix is a real reference, not a guess. */
-#define bHasDesktopMgr 4
-typedef struct GetVolParmsInfoBuffer {
-    long vMAttrib;
-    char opaque[124];
-} GetVolParmsInfoBuffer;
+/* macfile.c reads `vMAttrib` of GetVolParmsInfoBuffer, bit
+ * bHasDesktopMgr, only after PBHGetVolParmsSync has returned noErr —
+ * which needs the Desktop Manager, i.e. System 7 or an AppleShare volume.
+ * Both come from Multiverse.h since multiversal 580f330 (Retro68 #327,
+ * 0cbd3cb): Apple's layout, `vMAttrib` after a 2-byte `vMVersion`, and
+ * bit 12. Until 2026-10-25 this header guessed them, `vMAttrib` at offset
+ * 0 and bit 4, both wrong, which held only because the call fails on the
+ * System 6.0.8 this tool runs on; `tools/vmac/macmime.py --check` still
+ * requires the comment entry it produces there to be empty. */
 
 /* buffer for copy operations — the real macmpack.h's own size */
 #define COPY_BUFSIZE 1024
