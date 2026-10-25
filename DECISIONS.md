@@ -466,6 +466,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-24 (the format before BinHex) — SUMacC's `.dl` extracts through the `.hex`/`.hcx` driver; hexbin's first-line test alone took base64 of zeros, so the first line must also open "@@"; shipped CODE +0, A5 +32
 - 2026-10-25 (the writer that was in 4.3BSD) — SUMacC's tohex and fromhex were in 4.3BSD all along: tohex wrote the wild file, and the format's own readers compare the sum on 32 bits, so this does too
 - 2026-10-25 (the two that said nothing) — a MIME multipart past the walk's depth and a Finder info GateKeeper vetoes are report lines, not silence: UNC_ERR_NESTED, and "name: Finder info refused"
+- 2026-10-25 (the envelopes that left) — the encryption check joins the sniffer's image and the MacBinary and AppleDouble readers BinHex's: 2,464 B back on every budget but an envelope's
 
 ---
 
@@ -30137,4 +30138,61 @@ after a first wording of 150 characters measured 176; `TIERS` −144.
 
 **What it cannot see.** GateKeeper only, one System; the error a guard
 returns is not recorded, and any non-`noErr` result is reported.
+
+## 2026-10-25 (the envelopes that left) — the encryption check joins the sniffer's image and the MacBinary and AppleDouble readers BinHex's: 2,464 B back on every budget but an envelope's
+
+**Claim.** Two things that were resident in the shipped build for every
+archive now sit in the overlay bundle, which the release gives back
+before the engine takes its budget. Every format but an envelope gains
+2,496 B (`OVL_SAVED`); an envelope layer, which keeps the whole bundle,
+loses 232.
+
+**What moved.**
+- `unc_archive_encrypted` (`src/unc_encinfo.c`, 576 B of code) joins the
+  sniffer's image. The eager release is its only caller, and it runs with
+  the bundle whole, so the image is always there to ask. Without the
+  image the answer is UNKNOWN, which the release already treats as yes.
+- `unc_macbinary_extract` and `unc_appledouble_extract` join BinHex's
+  image, beside the third envelope. They have no codecs and are reached
+  only through the engine's format table and the shell's envelope peek,
+  `EnvRun`. That peek already sniffs and unwraps BinHex and uuencode
+  through images, and its one caller, `SegScanWrapped`, runs before the
+  release. So the readers inherit a constraint the code already met, and
+  add none.
+- Their shared helpers stay resident, because the LZH, zip, MIME and
+  sidecar images reach them through the host vector:
+  `unc_macbinary_meta` and `unc_as_record` move into the probe files
+  beside the probes (`fmt_macbinary_probe.c`, `fmt_applesingle_probe.c`),
+  and the sniffer's forwards file leaves them out, as it does
+  `unc_macbinary_probe`. The MacBinary reader calls the probe, which is
+  `mb_version > 0` and in the vector, where it called `mb_version`, so no
+  vector entry is added.
+
+**Measured.** Shipped CODE −2,480 and A5 +16; lazy −1,908 and +20; the
+control +40 and −8. BinHex's image +2,076, the sniffer's +652, the bundle
+183,804 B. The lazy build now reads BinHex's image for any envelope and
+holds the encryption check in the sniffer's image, which it keeps; it is
+not shipped. The engine, the CLI and every Linux suite are unchanged by
+construction (the same sources, moved between files).
+
+On the machine: `run.py --mem 1M` on System 6.0.8, the shipped build's
+autotest, five of five byte-exact — two MacBinary files (one a chain to a
+StuffIt archive), AppleSingle's `synth-as-meta.as`, a zip and a Compact
+Pro archive, the last two being the formats the encryption check decides
+for.
+
+**What it cannot see.** The full tier sweeps were not re-run;
+`run_tiers.py`'s model takes the new figures, and the overlay host lane
+(`tests/run_overlay_host.sh`) loads the images off the Macintosh.
+
+**And the encryption check's YES, on the machine.** The autotest has no
+password, so it cannot tell a kept cipher from a released one;
+`interactive.py --password --password-kind zip|cpt` (new that day) can. It
+boots the shipped build on System 6.0.8, opens an encrypted zip and an
+encrypted Compact Pro archive (`tools/synth_crypt.py`), answers the real
+password dialog, and reads every entry back: all decrypted, both. The
+same zip run with the shim forced to answer NO lost its entries, so the
+phase fails when the ciphers are released. Compact Pro's resource forks
+came back with the file's own name at byte 48, the reserved header area
+the system stamps, and are compared masked as everywhere else here.
 

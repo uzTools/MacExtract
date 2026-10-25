@@ -4429,6 +4429,16 @@ comparing them, so the phase fails on its own rather than on somebody
 reading a screenshot. Verified on System 6.0.8: both asks, the second
 one saying "That password was refused", and every entry byte-exact.
 
+`--password-kind zip` and `--password-kind cpt` (added 2026-10-25) put an
+encrypted zip or Compact Pro archive in its place, as a data fork: the
+two formats whose ciphers the shipped build keeps only when
+`unc_archive_encrypted` says an entry needs them (DECISIONS.md
+2026-10-25, *the envelopes that left*). The right password is typed at
+the first ask, because neither gives this reader a verifier to refuse a
+wrong one with, and resource forks are compared with the reserved header
+bytes masked. Verified on System 6.0.8: both decrypt; with the check
+forced to NO, the zip's entries are lost.
+
 ### A Private File through the application — `interactive.py --privatefile`
 
     tools/vmac/interactive.py --privatefile -o shots fixtures/anything.bin

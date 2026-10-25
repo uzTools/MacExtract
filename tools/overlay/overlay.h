@@ -96,7 +96,10 @@ typedef int32_t (*OverlayEntry)(const OverlayHost *host, int32_t which,
  * a .hqx loads ~3 KB rather than the 15,864 B the whole text group cost —
  * which is the difference between a decoder that fits a small machine and one
  * that does not. Measured by nm over the objects, not assumed. */
-#define OVL_ID_BINHEX        140
+#define OVL_ID_BINHEX        140   /* and since 2026-10-25 MacBinary and
+                                    * AppleSingle/AppleDouble beside it,
+                                    * 7,158 B: the envelopes, which keep
+                                    * the whole bundle anyway */
 #define OVL_ID_BTOA          141   /* btoa/atob, which nothing calls into
                                     * and which calls nothing            */
 #define OVL_ID_SQP           142   /* AppleLink packages. Its own image for
@@ -148,6 +151,9 @@ typedef int32_t (*OverlayEntry)(const OverlayHost *host, int32_t which,
 #define OVL_PF_EXTRACT         51
 #define OVL_SNIFF              52  /* unc_sniff: a = UncIO*; returns the UncFormat */
 #define OVL_SEG_FIRST_END      53  /* unc_segment_first_end: a = OvlArgs* (obj desc, in rsrc, len datalen) */
+#define OVL_ARCHIVE_ENCRYPTED  54  /* unc_archive_encrypted: a = UncIO*, b = the UncFormat */
+#define OVL_MACBINARY_EXTRACT  55
+#define OVL_APPLEDOUBLE_EXTRACT 56
 
 /* One struct for every entry, because the entry signature is fixed. Fields
  * are named for their role rather than their type so a reader can follow a

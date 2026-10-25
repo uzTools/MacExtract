@@ -259,8 +259,6 @@ Macintosh 128K*).
 
 | what | resident | what would close it |
 |---|---|---|
-| the encryption check before the release, `unc_archive_encrypted` | 618 B of code | it runs only inside the release, with the bundle whole, so it can join `ovl_sniff`; move it and measure |
-| the MacBinary and AppleDouble readers, `unc_macbinary_extract` and `unc_appledouble_extract` | 1,880 B of code | an image of their own: an envelope keeps the whole bundle, so it costs envelopes nothing. `unc_macbinary_meta` and `unc_as_record` stay resident, because the LZH and zip images reach them through the host vector. Every call site must run with the bundle whole, the envelope peek in `SegScanWrapped` among them |
 | segment joining in the engine: `unc_segment.c`, the five `fmt_*seg.c` and the parsers their probe files share | 6,498 B of code | an image kept by the release for every set scheme. Part of it is reached by images through the host vector (`unc_zip_scan_eocd`) and stays; how much can move is not measured |
 | the shell's set code, `SegAskUser`, `SegScanWrapped`, `SegPartOf` and the rest | 3,166 B of code | it calls the Toolbox, and an image reaches nothing outside itself but the host vector; needs Toolbox entries in the vector first. Not priced |
 | the report window's buffers, `gRepBuf` and the row arrays | 8,730 B of bss, and 1,568 B of code | the bss is resident for the whole run whatever the archive. A handle grown as lines arrive would cost most runs a few hundred bytes; `interactive.py` reads the box, so it must still show the same |

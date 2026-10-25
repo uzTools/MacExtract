@@ -1,9 +1,13 @@
-/* ovl_binhex.c — BinHex 4 as an overlay.
+/* ovl_binhex.c — BinHex 4 as an overlay, and since 2026-10-25 the other
+ * two envelopes a Macintosh file travels in, MacBinary and AppleSingle/
+ * AppleDouble. An envelope keeps the whole bundle, so in the shipped build
+ * they cost nothing where they sit; the lazy build reads this image for
+ * any of the three.
  *
  * The decoder source is compiled in UNMODIFIED; every engine helper it calls
  * is defined by ovl_forwards_gen.c as a forward through the host vector
- * (tools/overlay/mkforwards.py). The PROBE is not here: it stays resident, or
- * sniffing a file would load the decoder in order to decide it is not one.
+ * (tools/overlay/mkforwards.py). The probes are the sniffer's image's; what
+ * a reader shares with them is resident (fmt_*_probe.c).
  *
  * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
  */
@@ -24,6 +28,10 @@ int32_t ovl_main(const OverlayHost *host, int32_t which, void *a, void *b)
         return 0x4F4B;
     case OVL_BINHEX_EXTRACT:
         return (int32_t)unc_binhex_extract((UncCtx *)a);
+    case OVL_MACBINARY_EXTRACT:
+        return (int32_t)unc_macbinary_extract((UncCtx *)a);
+    case OVL_APPLEDOUBLE_EXTRACT:
+        return (int32_t)unc_appledouble_extract((UncCtx *)a);
     default:
         return -1;
     }

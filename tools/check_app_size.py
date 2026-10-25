@@ -130,9 +130,12 @@ import sys
 # resource holding code, data and relocations, no CODE 0 jump table, no
 # DATA, no RELA — and mac/mac_start.c in place of Retro68's _start
 # (DECISIONS.md 2026-10-22, *the runtime the application did not need*).
-EXPECT = 48896
+# RE-TAKEN 2026-10-25, 48,896 -> 46,336: the encryption check and the
+# MacBinary and AppleDouble readers left the resident link for the
+# sniffer's and BinHex's images (DECISIONS.md 2026-10-25, *the envelopes that left*).
+EXPECT = 46336
 TOLERANCE = 2048
-TAKEN = "2026-10-22"
+TAKEN = "2026-10-25"
 
 # And the BUNDLE, watched from 2026-09-26 for one reason: FORMATS.md quotes it
 # in three places and nothing measured it, so it was wrong by 544 B — the
@@ -255,9 +258,14 @@ TAKEN = "2026-10-22"
 # (DECISIONS.md 2026-10-21, *the probes that left with the bundle*).
 # RE-TAKEN 2026-10-22, 192,288 -> 179,496: the MacsBug names discarded
 # from every image (DECISIONS.md 2026-10-22, *the names in the code*).
-EXPECT_BUNDLE = 179496
+# -> 183,804 2026-10-25: +1,580 inside the tolerance over 2026-10-23..25
+# (the segment probe and CRCs, a fat installer's 'endD', SUMacC's .dl, the
+# MIME depth report), then the MacBinary and AppleDouble readers into
+# `ovl_binhex` (+2,076) and the encryption check into `ovl_sniff` (+652)
+# (DECISIONS.md 2026-10-25, *the envelopes that left*).
+EXPECT_BUNDLE = 183804
 TOLERANCE_BUNDLE = 2048
-TAKEN_BUNDLE = "2026-10-22"
+TAKEN_BUNDLE = "2026-10-25"
 
 
 def main():

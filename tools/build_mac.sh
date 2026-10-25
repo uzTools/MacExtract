@@ -650,7 +650,11 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # each now a report line (DECISIONS.md 2026-10-25, *the two that said nothing*).
 # +44 on 2026-10-25, 177,288 -> 177,332, A5 +100 below: the advice line
 # after "Finder info refused", once a run (the eager pair).
-UNC_MAC_CODE_DEFAULT=177332
+# +40 on 2026-10-25, 177,332 -> 177,372, A5 -8 below: the encryption check
+# and the MacBinary and AppleDouble readers left the shipped resident link
+# (DECISIONS.md 2026-10-25, *the envelopes that left*); the control keeps them, and gains the
+# two helpers' moves and MacBinary's probe call.
+UNC_MAC_CODE_DEFAULT=177372
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -855,7 +859,8 @@ UNC_MAC_CODE_DEFAULT=177332
 # +64 on 2026-10-25, 36,280 -> 36,344: the two report sentences and their
 # `.data` alignment (above).
 # +100 on 2026-10-25, 36,344 -> 36,444: that advice's sentence (above).
-UNC_MAC_A5_DEFAULT=36444
+# -8 on 2026-10-25, 36,444 -> 36,436, `.data` alignment (above).
+UNC_MAC_A5_DEFAULT=36436
 # A CEILING PER CONFIGURATION, because one ceiling measured on another build
 # cannot fire. The figures above are the RESIDENT control build, which carries
 # every decoder; the shipped build's resident code is a third of that, so
@@ -1305,8 +1310,13 @@ UNC_MAC_A5_DEFAULT=36444
 # +44 and +100 the same day, 41,004 -> 41,048 and 16,388 -> 16,488: one
 # line after the refusals, once a run, saying what probably refused them
 # and what to do (S_REP_FINFO_WHY, 118 characters). 144 B off every budget.
-UNC_MAC_CODE_EAGER=41048
-UNC_MAC_A5_EAGER=16488
+# -2,480 and +16 on 2026-10-25, 41,048 -> 38,568 and 16,488 -> 16,504: the
+# encryption check into the sniffer's image (-576) and the MacBinary and
+# AppleDouble readers into BinHex's (DECISIONS.md 2026-10-25, *the envelopes that left*).
+# 2,464 B back on every budget; an envelope keeps the whole bundle and
+# pays them there.
+UNC_MAC_CODE_EAGER=38568
+UNC_MAC_A5_EAGER=16504
 # +8 on 2026-10-02 for the same reason as the eager pair above: the
 # overlay call that now says WHICH of StuffIt 2.x's ciphers an entry
 # wants. A5 fell to 19,096 and its ceiling is left where it was.
@@ -1409,7 +1419,10 @@ UNC_MAC_A5_EAGER=16488
 # bss 16,432, under its ceiling.
 # +44 code the same day, that advice (the eager pair above); data + bss
 # 16,548, under its ceiling.
-UNC_MAC_CODE_LAZY=39708
+# -1,908 code on 2026-10-25, the same moves (the eager pair above; the lazy
+# loader never called the encryption check); data + bss 16,568, under its
+# ceiling.
+UNC_MAC_CODE_LAZY=37800
 UNC_MAC_A5_LAZY=19200
 if [ -n "$UNC_OVL_RESIDENT" ]; then
     UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-$UNC_MAC_CODE_DEFAULT}

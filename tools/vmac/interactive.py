@@ -2087,14 +2087,35 @@ def phase_password(args, appbin, workdir, shot):
     import synth_wrapped as W                               # noqa: E402
 
     password = "hushnow"
-    sit, rsrc, _ = SC.build_sit_des(password.encode("mac_roman"))
-    binpath = os.path.join(workdir, "secret.bin")
-    open(binpath, "wb").write(W.macbinary("Secret.sit", sit, rsrc,
-                                          b"SIT!", b"SIT!"))
+    kind = args.password_kind
     stock = os.path.join(R.VMAC_HOME, args.system)
     bootimg = os.path.join(workdir, "boot-password.hfv")
-    R.sh(sys.executable, os.path.join(HERE, "mkboot.py"), stock, appbin,
-         bootimg, "--macbin", f"{binpath}:Secret.sit")
+    if kind == "sit":
+        sit, rsrc, _ = SC.build_sit_des(password.encode("mac_roman"))
+        binpath = os.path.join(workdir, "secret.bin")
+        open(binpath, "wb").write(W.macbinary("Secret.sit", sit, rsrc,
+                                              b"SIT!", b"SIT!"))
+        R.sh(sys.executable, os.path.join(HERE, "mkboot.py"), stock, appbin,
+             bootimg, "--macbin", f"{binpath}:Secret.sit")
+    else:
+        # zip and Compact Pro: the two formats whose directory says,
+        # before anything is decoded, whether an entry is encrypted, so
+        # the shipped build's release keeps the ciphers for these only
+        # when unc_archive_encrypted answers yes (mac/ovl_load_eager.c).
+        # A data fork is all either needs. Neither gives this reader a
+        # verifier to refuse a wrong password with, so the right one is
+        # typed at the first ask.
+        import synth_cpt as CPT                             # noqa: E402
+        if kind == "zip":
+            blob, _ = SC.build_zip_crypt(password.encode("mac_roman"))
+            cases = [(n, plain, b"") for n, _m, plain in SC.ZIP_CASES]
+        else:
+            blob, _ = SC.build_cpt(password.encode("mac_roman"))
+            cases = [(n, d, r) for n, _t, _c, d, r in CPT.CASES]
+        apath = os.path.join(workdir, "secret." + kind)
+        open(apath, "wb").write(blob)
+        R.sh(sys.executable, os.path.join(HERE, "mkboot.py"), stock, appbin,
+             bootimg, "--data", f"{apath}:Secret.{kind}")
 
     scratch = os.path.join(args.outdir, ".settle.png")
     mac = Mac(bootimg, args.emu, workdir)
@@ -2113,20 +2134,21 @@ def phase_password(args, appbin, workdir, shot):
         mac.key("Return")                     # Save -> extraction starts
         time.sleep(8.0)
         shot(mac, "pw-3-asked.png")
-        # OK on the EMPTY field first: it is a wrong password, so the
-        # dialog comes back with "Incorrect password." under the request.
-        # Until 2026-10-16 it was taken for Cancel and every encrypted
-        # entry was skipped; then nothing typed below reaches a dialog and
-        # this phase fails on the volume.
-        mac.key("Return")
-        time.sleep(3.0)
-        shot(mac, "pw-3b-empty-ok.png")
-        for ch in "wrongone":                 # the refused one, first
-            mac.key(ch)
-        shot(mac, "pw-4-typed-wrong.png")
-        mac.key("Return")
-        time.sleep(4.0)
-        shot(mac, "pw-5-asked-again.png")
+        if kind == "sit":
+            # OK on the EMPTY field first: it is a wrong password, so the
+            # dialog comes back with "Incorrect password." under the request.
+            # Until 2026-10-16 it was taken for Cancel and every encrypted
+            # entry was skipped; then nothing typed below reaches a dialog and
+            # this phase fails on the volume.
+            mac.key("Return")
+            time.sleep(3.0)
+            shot(mac, "pw-3b-empty-ok.png")
+            for ch in "wrongone":                 # the refused one, first
+                mac.key(ch)
+            shot(mac, "pw-4-typed-wrong.png")
+            mac.key("Return")
+            time.sleep(4.0)
+            shot(mac, "pw-5-asked-again.png")
         for ch in password:
             mac.key(ch)
         shot(mac, "pw-6-typed.png")
@@ -2141,6 +2163,39 @@ def phase_password(args, appbin, workdir, shot):
 
     written = os.path.join(workdir, "boot.hfv")
     bad = 0
+    if kind != "sit":
+        # A resource fork is compared with bytes 16..127 masked, the
+        # convention every on-Mac check here uses: the system stamps that
+        # region of the header (Compact Pro's cases came back with their
+        # own names at 48), so a fork written on a Mac is never
+        # byte-identical there (tools/vmac_check.py, mask_reserved).
+        sys.path.insert(0, os.path.join(R.REPO, "tools"))
+        from vmac_check import mask_reserved                # noqa: E402
+        for name, data, rsrcfork in cases:
+            got = read_forks(written, name.encode("mac_roman"), workdir)
+            if got is not None:
+                got = (got[0], mask_reserved(got[1]))
+                rsrcfork = mask_reserved(rsrcfork)
+            if got is None:
+                print(f"interactive: {name!r} is not on the volume")
+                bad += 1
+            elif got != (data, rsrcfork):
+                where = []
+                for fork, a, b in (("data", got[0], data),
+                                   ("rsrc", got[1], rsrcfork)):
+                    if a != b:
+                        k = next((i for i in range(min(len(a), len(b)))
+                                  if a[i] != b[i]), min(len(a), len(b)))
+                        where.append("%s from byte %d (%s, wanted %s)"
+                                     % (fork, k, a[k:k + 8].hex(),
+                                        b[k:k + 8].hex()))
+                print(f"interactive: {name!r} came out {len(got[0])}+"
+                      f"{len(got[1])} bytes, wanted {len(data)}+"
+                      f"{len(rsrcfork)}: " + "; ".join(where))
+                bad += 1
+        print("interactive: password dialog, %s: " % kind
+              + ("WORKS — every entry decrypted" if not bad else "FAILED"))
+        return bad == 0
     for name, data, rsrcfork in SC.SIT_CASES:
         got = read_joined(written, name.encode("mac_roman"), workdir)
         if got is None:
@@ -2628,6 +2683,12 @@ def main():
                          "WRONG part first. Ends by reading the joined file "
                          "back off the boot volume and comparing it to the "
                          "fixture, so this phase can fail on its own.")
+    ap.add_argument("--password-kind", choices=("sit", "zip", "cpt"),
+                    default="sit",
+                    help="with --password: which encrypted archive. zip and "
+                         "cpt are the two whose ciphers the shipped build "
+                         "keeps only if the directory says an entry needs "
+                         "them")
     ap.add_argument("--password", action="store_true",
                     help="the password phase: extract an ENCRYPTED archive, "
                          "answer the dialog wrongly once and then correctly, "

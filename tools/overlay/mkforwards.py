@@ -57,8 +57,10 @@ HEADERS = ("src/unc_internal.h", "include/macextract.h")
 # The sniffer's image (tools/overlay/ovl_sniff.c) defines the MacBinary probe
 # itself — the one probe two decoders reach through the vector, for the
 # self-extractor stubs LZH and zip look inside — so its forwards file must
-# leave that one out, or the linker sees it twice.
-SNIFF = ["unc_macbinary_probe"]
+# leave that one out, or the linker sees it twice. Since 2026-10-25 the same
+# for the two readers' shared helpers, which live in the probe files beside
+# their probes now that the readers are an image (ovl_binhex.c).
+SNIFF = ["unc_macbinary_probe", "unc_macbinary_meta", "unc_as_record"]
 
 # The shared codec machinery — the bit reader, the Huffman and canonical
 # coders, LZW and LZAH — which several decoders call and which therefore had

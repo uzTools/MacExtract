@@ -96,6 +96,9 @@ else()
     # (DECISIONS.md 2026-10-21, *the probes that left with the bundle*).
     list(FILTER ENGINE_SRC EXCLUDE REGEX "unc_crypt\\.c$")
     list(FILTER ENGINE_SRC EXCLUDE REGEX "fmt_sitseg_end\\.c$")
+    list(FILTER ENGINE_SRC EXCLUDE REGEX "unc_encinfo\\.c$")
+    list(FILTER ENGINE_SRC EXCLUDE REGEX "fmt_macbinary\\.c$")
+    list(FILTER ENGINE_SRC EXCLUDE REGEX "fmt_applesingle\\.c$")
     list(FILTER ENGINE_SRC EXCLUDE REGEX "fmt_spacesaver\\.c$")
     list(FILTER ENGINE_SRC EXCLUDE REGEX "fmt_cpt\\.c$")
     list(FILTER ENGINE_SRC EXCLUDE REGEX "fmt_dd\\.c$")
@@ -743,12 +746,16 @@ add_custom_command(
             ${ENGINE_DIR}/src/fmt_binhex.c
             ${ENGINE_DIR}/src/fmt_hecx.c
             ${ENGINE_DIR}/src/fmt_binhex_probe.c
+            ${ENGINE_DIR}/src/fmt_macbinary.c
+            ${ENGINE_DIR}/src/fmt_applesingle.c
     DEPENDS ${ENGINE_DIR}/tools/overlay/ovl_binhex.c
             ${CMAKE_CURRENT_BINARY_DIR}/ovl_forwards_gen.c
             ${CMAKE_CURRENT_BINARY_DIR}/ovl_host_gen.h
             ${ENGINE_DIR}/src/fmt_binhex.c
             ${ENGINE_DIR}/src/fmt_hecx.c
             ${ENGINE_DIR}/src/fmt_binhex_probe.c
+            ${ENGINE_DIR}/src/fmt_macbinary.c
+            ${ENGINE_DIR}/src/fmt_applesingle.c
             ${OVL_DEPS})
 
 add_custom_command(
@@ -821,6 +828,7 @@ add_custom_command(
             ${ENGINE_DIR}/src/fmt_sit_probe.c
             ${ENGINE_DIR}/src/fmt_sitseg_probe.c
             ${ENGINE_DIR}/src/fmt_sitseg_end.c
+            ${ENGINE_DIR}/src/unc_encinfo.c
             ${ENGINE_DIR}/src/fmt_spacesaver_probe.c
             ${ENGINE_DIR}/src/fmt_sqp_probe.c
             ${ENGINE_DIR}/src/fmt_superdisk_probe.c
@@ -852,6 +860,7 @@ add_custom_command(
             ${ENGINE_DIR}/src/fmt_sit_probe.c
             ${ENGINE_DIR}/src/fmt_sitseg_probe.c
             ${ENGINE_DIR}/src/fmt_sitseg_end.c
+            ${ENGINE_DIR}/src/unc_encinfo.c
             ${ENGINE_DIR}/src/fmt_spacesaver_probe.c
             ${ENGINE_DIR}/src/fmt_sqp_probe.c
             ${ENGINE_DIR}/src/fmt_superdisk_probe.c

@@ -96,6 +96,17 @@ UncFormat unc_sniff(UncIO *io)
     return (UncFormat)e(&gOvlHost, OVL_SNIFF, io, NULL);
 }
 
+/* In the same image: does a Compact Pro or zip archive hold an encrypted
+ * entry. Asked only by the eager release, with the bundle still whole
+ * (mac/ovl_load_eager.c), so the image is always there to ask; without it
+ * the answer is UNKNOWN, which the release treats as yes. */
+int unc_archive_encrypted(UncFormat fmt, UncIO *io)
+{
+    OverlayEntry e = ovl_image(OVL_ID_SNIFF);
+    if (!e) return UNC_ENC_UNKNOWN;
+    return (int)e(&gOvlHost, OVL_ARCHIVE_ENCRYPTED, io, (void *)(long)fmt);
+}
+
 /* In the same image: where a fat installer's part 1 ends. A StuffIt set
  * keeps the bundle whole while it joins (ovl_release_if_unwanted), so the
  * image is there when part 1 is opened; without it the answer is the
@@ -298,6 +309,10 @@ DECODER(unc_uu_extract,         OVL_ID_TEXT,       OVL_UU_EXTRACT,         RUN_C
 DECODER(unc_btoa_extract,       OVL_ID_BTOA,       OVL_BTOA_EXTRACT,       RUN_CODECS)
 DECODER(unc_b64_extract,        OVL_ID_TEXT,       OVL_B64_EXTRACT,        RUN_CODECS)
 DECODER(unc_binhex_extract,     OVL_ID_BINHEX,     OVL_BINHEX_EXTRACT,     RUN_CODECS)
+/* MacBinary and AppleSingle/AppleDouble, beside BinHex: readers with no
+ * codecs, which copy forks through the resident helpers. */
+DECODER(unc_macbinary_extract,  OVL_ID_BINHEX,     OVL_MACBINARY_EXTRACT,  0)
+DECODER(unc_appledouble_extract, OVL_ID_BINHEX,    OVL_APPLEDOUBLE_EXTRACT, 0)
 DECODER(unc_sit_extract,        OVL_ID_STUFFIT,    OVL_SIT_EXTRACT,        RUN_CODECS)
 DECODER(unc_sit5_extract,       OVL_ID_STUFFIT,    OVL_SIT5_EXTRACT,       RUN_CODECS)
 /* Private File: a reader with no codecs, in the StuffIt image beside the
