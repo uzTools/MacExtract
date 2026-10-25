@@ -119,7 +119,37 @@ are the same story for the same reason: that method looks back over as much as
 and the rest of the archive still comes out. Every other format fits in
 512 KB, and with 1 MB the question does not arise.
 
-v$VERSION fixes what v0.42.0 broke. On System 7.0.1, and on System 6
+v$VERSION makes split StuffIt archives work. Every set StuffIt itself
+cut -- with StuffIt Lite, Deluxe, DropSegment or InstallerMaker -- was
+refused as an unknown format by every earlier release: the tests had
+only ever seen sets made by a program written for them. They open now,
+including a file with a resource fork and the installers whose first
+disk also carries PowerPC code. Each part's checksum is checked as it
+is read, so a damaged disk is reported before you are asked for the
+next one.
+
+When the Finder offers to open a document with another program -- as
+System 7.6 and Mac OS 9 do when its own program is missing --
+MacExtract is now in the list for the archive types it reads. An
+archive that names MacExtract as its creator shows an archive icon,
+not the application's.
+
+Two more formats open: the .dl files of Stanford's SUMacC, which came
+before BinHex, and MacCompress 3.2's archives. An archive made by
+DiskDoubler's Combine that holds a file stored as it was, such as a
+self-extractor, now gives back all its files, and each file comes back
+to its place in its window. A .gz made of several pieces joined end to
+end comes out whole; only the first piece used to.
+
+If virus protection such as GateKeeper stops MacExtract setting files'
+types, creators and dates, the report now names those files and says
+what to do; it used to end in "Extraction complete." A mail message
+nested too deep to open is named too. A dozen ways a damaged archive
+could crash MacExtract, hang it, or quietly drop files are fixed. And
+MacExtract itself takes about 2.5 KB less memory, which every archive
+gets instead.
+
+v0.43.0 fixes what v0.42.0 broke. On System 7.0.1, and on System 6
 with AppleShare's "Desktop Mgr" file in the System Folder, once an
 application or anything else with its own icon had come out at the top
 of a folder, nothing after it could be created there, and of several
