@@ -30113,13 +30113,18 @@ second.
 decide whether to register a bundle. Under GateKeeper 1.3's Notify & Veto
 mode an application came out with no type, creator, flags or dates, and
 the run said *Extraction complete.* (*the guard that vetoes the Finder
-info*). A refusal is now the report line "name: Finder info refused".
+info*). A refusal is now the report line "name: Finder info refused", and once
+a run, after them, what to do: *"Probably virus protection such as
+Gatekeeper refused these files' type, creator and dates. Turn it off and
+extract again."* (the maintainer's request, the same day). "Probably",
+because the File Manager has by then accepted the file and both forks,
+which is what a guard leaves, and GateKeeper is the one guard measured.
 `RepEntry` is shared with the INEXACT line it was written beside.
 
 **Measured.** System 6.0.8, GateKeeper 1.3 set to veto, `OriginalCM.sit`,
 `tools/vmac/drive.py` on the 2026-10-21 disk with this build: GateKeeper's
-alert, then the report "Cap'n Magneto: Finder info refused" above
-*Extraction complete.* The veto comes back as an error and not as
+alert, then the report "Cap'n Magneto: Finder info refused", the advice
+wrapped under it, and *Extraction complete.* The veto comes back as an error and not as
 `noErr`, which only this run could show. The sink test fails the refused
 call and the `UNC_ERR_NESTED` failure on Linux and checks both lines;
 the first fails with the line removed.
@@ -30127,7 +30132,8 @@ the first fails with the line removed.
 **What it cost.** Shipped CODE +76 and A5 +84, the A5 being the two
 sentences and `.data` alignment: 160 B off every budget. The control
 +224 and `ovl_text` +92 (the MIME walk); `OVL_SAVED` +64 and `TIERS`
-−224.
+−224. The advice is CODE +44 and A5 +100 more in every build, 144 B,
+after a first wording of 150 characters measured 176; `TIERS` −144.
 
 **What it cannot see.** GateKeeper only, one System; the error a guard
 returns is not recorded, and any non-`noErr` result is reported.

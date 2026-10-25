@@ -126,6 +126,13 @@
 #define S_REP_NOT_CREATED   ": could not be created"
 #define S_REP_INEXACT       ": not identical to the original"
 #define S_REP_FINFO_REFUSED ": Finder info refused"
+/* After the lines above, once a run: the File Manager took the file and
+ * both its forks, and only the Finder info was refused, which is what a
+ * guard does (GateKeeper 1.3, measured; DECISIONS.md 2026-10-25, *the two
+ * that said nothing*). "Probably", because it is the one guard measured. */
+#define S_REP_FINFO_WHY     "Probably virus protection such as Gatekeeper " \
+                            "refused these files' type, creator and " \
+                            "dates. Turn it off and extract again."
 /* The same words for both: what the engine cannot hold, and a fork the
  * File Manager cannot write, which is 2 GB on every Macintosh. */
 #define S_REP_TOOLARGE      ": file too large (>2GB)"

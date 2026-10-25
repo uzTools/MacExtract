@@ -1109,6 +1109,7 @@ typedef struct {
     Str63        curName;      /* sanitized current file name */
     UncEntryInfo cur;
     int          entries, errors, unsupported;
+    int          vetoed;         /* PBSetCatInfo refusals (StampCat) */
     int          inexact;    /* restored, but not the original file */
     /* The shape of what was written, for the envelope unwrap in
      * ExtractOne: one file and no folders is what an envelope layer
@@ -2787,8 +2788,10 @@ static void StampCat(MacSink *s)
          * said: GateKeeper 1.3 vetoes this call for any program it has
          * not named (DECISIONS.md 2026-10-21, *the guard that vetoes the
          * Finder info*). Both forks are on the disk either way. */
-        if (PBSetCatInfoSync(&pb) != noErr)
+        if (PBSetCatInfoSync(&pb) != noErr) {
             RepEntry(s, S_REP_FINFO_REFUSED);
+            s->vetoed++;
+        }
         else if (!s->cur.is_dir &&
                  (pb.hFileInfo.ioFlFndrInfo.fdFlags & 0x2000)) {
             bndl = pb.hFileInfo.ioFlFndrInfo.fdCreator;
@@ -4625,7 +4628,7 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
 
     sink.vRefNum = outVol;
     sink.rootDirID = outDir;
-    sink.entries = sink.errors = sink.unsupported = 0;
+    sink.entries = sink.errors = sink.unsupported = sink.vetoed = 0;
     gUnsupported = 0;
     sink.fileCount = sink.dirCount = 0;
     sink.lastName[0] = 0;
@@ -4798,6 +4801,9 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
     *entries = sink.entries;
     *errors = sink.errors;
     gUnsupported = sink.unsupported;
+    /* What to do about "Finder info refused", said once for the run and
+     * not on every line it follows. */
+    if (sink.vetoed && RepNew(1)) RepCat(S_REP_FINFO_WHY);
     if (shape) {
         shape->fileCount = sink.fileCount;
         shape->dirCount = sink.dirCount;

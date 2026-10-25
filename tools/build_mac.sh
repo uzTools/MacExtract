@@ -648,7 +648,9 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # +160 on 2026-10-25, 177,128 -> 177,288, A5 +64 below: the two failures
 # that said nothing, a MIME nest past its depth and a refused PBSetCatInfo,
 # each now a report line (DECISIONS.md 2026-10-25, *the two that said nothing*).
-UNC_MAC_CODE_DEFAULT=177288
+# +44 on 2026-10-25, 177,288 -> 177,332, A5 +100 below: the advice line
+# after "Finder info refused", once a run (the eager pair).
+UNC_MAC_CODE_DEFAULT=177332
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -852,7 +854,8 @@ UNC_MAC_CODE_DEFAULT=177288
 # sum (above); no data was added.
 # +64 on 2026-10-25, 36,280 -> 36,344: the two report sentences and their
 # `.data` alignment (above).
-UNC_MAC_A5_DEFAULT=36344
+# +100 on 2026-10-25, 36,344 -> 36,444: that advice's sentence (above).
+UNC_MAC_A5_DEFAULT=36444
 # A CEILING PER CONFIGURATION, because one ceiling measured on another build
 # cannot fire. The figures above are the RESIDENT control build, which carries
 # every decoder; the shipped build's resident code is a third of that, so
@@ -1299,8 +1302,11 @@ UNC_MAC_A5_DEFAULT=36344
 # shared with the INEXACT line) and UNC_ERR_NESTED's sentence, the engine's
 # own (DECISIONS.md 2026-10-25, *the two that said nothing*). 160 B off every budget; the A5
 # is the two strings and `.data` alignment.
-UNC_MAC_CODE_EAGER=41004
-UNC_MAC_A5_EAGER=16388
+# +44 and +100 the same day, 41,004 -> 41,048 and 16,388 -> 16,488: one
+# line after the refusals, once a run, saying what probably refused them
+# and what to do (S_REP_FINFO_WHY, 118 characters). 144 B off every budget.
+UNC_MAC_CODE_EAGER=41048
+UNC_MAC_A5_EAGER=16488
 # +8 on 2026-10-02 for the same reason as the eager pair above: the
 # overlay call that now says WHICH of StuffIt 2.x's ciphers an entry
 # wants. A5 fell to 19,096 and its ceiling is left where it was.
@@ -1401,7 +1407,9 @@ UNC_MAC_A5_EAGER=16388
 # 16,368, under its ceiling.
 # +80 code on 2026-10-25, the two report lines (the eager pair above); data +
 # bss 16,432, under its ceiling.
-UNC_MAC_CODE_LAZY=39664
+# +44 code the same day, that advice (the eager pair above); data + bss
+# 16,548, under its ceiling.
+UNC_MAC_CODE_LAZY=39708
 UNC_MAC_A5_LAZY=19200
 if [ -n "$UNC_OVL_RESIDENT" ]; then
     UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-$UNC_MAC_CODE_DEFAULT}

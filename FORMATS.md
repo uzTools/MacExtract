@@ -5372,14 +5372,15 @@ the bundle*), and seventeen since.
 
 | build | switch | resident `CODE` | A5 | `MacExtract.code.bin` | `MacExtract.bin` |
 |---|---|---|---|---|---|
-| **eager — SHIPPED** | (default) | **41,004 B** | 16,388 B | **48,768 B** | **234,496 B** |
-| lazy | `UNC_OVL_LAZY=1` | 39,664 B | 16,432 B | 47,232 B | 233,216 B |
-| resident — the control | `UNC_OVL_RESIDENT=1` | **177,288 B** | **36,344 B** | 207,360 B | 211,968 B |
+| **eager — SHIPPED** | (default) | **41,048 B** | 16,488 B | **48,896 B** | **234,624 B** |
+| lazy | `UNC_OVL_LAZY=1` | 39,708 B | 16,548 B | 47,488 B | 233,344 B |
+| resident — the control | `UNC_OVL_RESIDENT=1` | **177,332 B** | **36,444 B** | 207,488 B | 212,224 B |
 
 Re-taken 2026-10-25 for the two report lines (DECISIONS.md 2026-10-25,
 *the two that said nothing*): against `tools/build_mac.sh`'s ceilings, the
 shipped pair CODE +76 and A5 +84, the lazy build +80, the control +160 and
-+64, `ovl_text` +92. The rows above had not followed the night before's
++64, `ovl_text` +92; then CODE +44 and A5 +100 in all three for the
+advice after a refusal. The rows above had not followed the night before's
 `.dl` and segment CRCs, which moved the ceilings; they are read off the
 builds now. Before it:
 Re-taken 2026-10-24 for a StuffIt segment's running CRCs held one per fork

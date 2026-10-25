@@ -1073,6 +1073,11 @@ int main(int argc, char **argv)
             info.type = 0x4150504C;         /* 'APPL' */
             if (sink_begin(&sk2, &info) == 0) sink_end(&sk2, UNC_OK);
             gSetCatErr = 0;
+            if (sk2.vetoed != 1) {
+                fprintf(stderr, "meta [Finder info refused]: %d refusal(s) "
+                        "counted, not 1\n", sk2.vetoed);
+                ok = 0;
+            }
             if (gRepN != 1 ||
                 strcmp((char *)gRepBuf + gRepStart[0],
                        "App" S_REP_FINFO_REFUSED) != 0) {
