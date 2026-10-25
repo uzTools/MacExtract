@@ -464,6 +464,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-24 (the check the header carries) — the CRC-16/ARC a StuffIt segment stores at 94 is required by the parse the probe and the reader share; it stands where XADMaster's two magic bytes stood
 - 2026-10-24 (the two bytes the writer drew) — bytes 0-1 of a StuffIt segment are QuickDraw's _Random, drawn once per set and never seeded; and 96-97, which the probe required to be zero, are the resource fork's running CRC, so every set of a file with one was refused
 - 2026-10-24 (the format before BinHex) — SUMacC's `.dl` extracts through the `.hex`/`.hcx` driver; hexbin's first-line test alone took base64 of zeros, so the first line must also open "@@"; shipped CODE +0, A5 +32
+- 2026-10-25 (the writer that was in 4.3BSD) — SUMacC's tohex and fromhex were in 4.3BSD all along: tohex wrote the wild file, and the format's own readers compare the sum on 32 bits, so this does too
 
 ---
 
@@ -30006,8 +30007,9 @@ hexbin never would; only the first line passing hexbin's test is looked
 at now. A `.dl` of a fork whose first byte is not zero is no longer this
 format, and hexbin reads it; `tools/run_hecx.py` asserts both halves.
 
-**The sum is compared on 16 bits**, as `dl.c`'s `verify_crc` does,
-though the eight characters hold 32. All 32 agree on the one file; a sum
+**The sum is compared on 16 bits** (WITHDRAWN 2026-10-25: SUMacC's own
+readers compare 32, *the writer that was in 4.3BSD*), as `dl.c`'s
+`verify_crc` does, though the eight characters hold 32. All 32 agree on the one file; a sum
 of bytes mod 65,536 still catches every change of fewer than 257 bytes,
 and comparing 32 would refuse a file hexbin reads for a damaged sum
 character that guards nothing.
@@ -30033,4 +30035,57 @@ the Macintosh, the `.hcx` allocation. Stack: the `.dl` path is
 -fstack-usage`: 484 + 48 against 524 + 76 + 32 before the merge).
 
 **What it does not see.** No writer: SUMacC's `dl` tools have not been
-found, and one file is all the format's output there is here.
+found (WITHDRAWN 2026-10-25: they were in 4.3BSD, *the writer that was in
+4.3BSD*), and one file is all the format's output there is here.
+
+## 2026-10-25 (the writer that was in 4.3BSD) — SUMacC's tohex and fromhex were in 4.3BSD all along: tohex wrote the wild file, and the format's own readers compare the sum on 32 bits, so this does too
+
+**Claim (measured).** SUMacC's source ships in 4.3BSD's contributed
+software, `new.tar.gz` → `sumacc.tar.Z` (June 1986), on TUHS. Its
+`cmd/tohex.c` is the `.dl` writer: run on the fork hexbin decodes from
+`mactosh/lang/xlispold.dl`, it writes that file byte for byte, less the
+three blank lines the wild copy ends with. `cmd/fromhex.c`, its UNIX
+reader, reads the file ("checksum good!") to hexbin's fork, and
+`etc/download.doc` (Bill Croft and Ed Pattermann, SUMEX) describes the
+format. "SUMacC's tools have not been found" was one site's category
+listing repeated; the first search found them (BLOCKERS.md, *Withdrawn
+claims*).
+
+**The sum is now compared on 32 bits.** `cmd/fromhex.c`, the Macintosh
+`etc/fromhex.c` and the Pascal `etc/fromhex.p` all compare the whole
+32-bit value `tohex` writes; hexbin's 16 is its `verify_crc`, written for
+16-bit CRCs, masking it. What the 2026-10-24 entry weighed — refusing a
+file hexbin reads — is what the format's own readers do.
+
+**What the writer confirms, and what it does not.** `tohex` breaks its
+line after every 33rd byte, so the first line of any resource fork it
+encodes is 66 characters opening "@@": hexbin's first-line test and the
+"@@" this adds both hold for everything it writes. `fromhex` has no line
+rule at all — it skips every character outside '@'..'O' from the start
+of the file, headers removed by hand (`etc/download.doc`) — and it takes
+a line break inside the sum for a digit, where hexbin and this skip it;
+`run_hecx.py` asserts that difference rather than hiding it.
+
+**Evidence the tests can fail.** `tools/run_hecx.py` builds `tohex` and
+`fromhex` from `reference/sumacc` (`tools/fetch_references.sh`) and
+grades every `.dl` case against both and hexbin; it now writes its forks
+with `tohex` and asserts its own generator agrees with it at 66
+characters. The 16-bit build of 2026-10-24 fails the high-half case,
+which hexbin reads, `fromhex` refuses and this refuses.
+
+**What it cost.** Nothing shipped: CODE and A5 unmoved in the shipped
+and lazy builds, `ovl_binhex` 5,082 B unmoved, so every grant stands.
+`want == size + sum` was +4 B of overlay against the masked compare;
+written `want - sum == size` it is −2 at the overlay's flags and lands
+at the same image size. The control's `unc_hecx_extract` 2,086 → 2,084
+and its A5 +4 by alignment, CODE + A5 unmoved, so `TIERS_CONTROL` and
+`OVL_SAVED` stand.
+
+**What it does not see.** `tohex` is compiled on this machine, not run
+on the VAX it was written for; its `htonl`, its own, swaps
+unconditionally and so writes the sum big-endian only on a little-endian
+host, which a VAX and this machine both are. No second wild `.dl` was
+found: the carousel disc's 26 `mactosh` directories, the USENIX '87 copy
+of SUMacC and searches for `fromhex`, `tohex`, `sumacc`, `grow.dl`,
+`handson.dl` and `fromhex.dl` on Discmaster gave `xlispold.dl` alone.
+The Macintosh `FromHex` binary (`mactosh/util/fromhex.sit`) was not run.

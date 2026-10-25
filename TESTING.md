@@ -1987,15 +1987,20 @@ Shown to fail: a build that ignores the sum fails six checks, and one
 that does not put back the space a one-character `.hcx` line lost fails
 the stripped-spaces variant.
 
-`.dl`: the one wild file against hexbin, then 23 cases on forks the
-script encodes by `dl.c`'s rules and on that file (endings, mail in front,
+`.dl`: graded by hexbin and by SUMacC's own `tohex` (the writer) and
+`fromhex` (its UNIX reader), both built from `reference/sumacc` at run
+time. The wild file must be what `tohex` writes for its fork; then 24
+cases on `tohex`'s output and on that file (endings, mail in front,
 rewrapped, a line break in the sum, the sum's high half, a character or
 the sum changed, cut, a first byte that is not 0, base64 of zeros), each
-read by hexbin too. Shown to fail: HEAD's build fails 15 checks here.
+with what hexbin and `fromhex` must say. Shown to fail: the build before
+`.dl` fails 14 checks, and the 16-bit sum of 2026-10-24 fails the
+high-half case.
 
 **What it cannot see.** Only BinHex 2.0 has written anything here; a
 `.hex` from BinHex 1.0 or the BASIC BinHexes would be graded by hexbin
-alone, and no `.dl` writer has been run at all. It runs the CLI only; the Mac application's three runs (System
+alone; `tohex` is compiled here, not run on the VAX it was written for,
+and one wild file is all the output of it there is. It runs the CLI only; the Mac application's three runs (System
 6.0.8 and System 3.0, 1 MB) are `tools/vmac/run.py` and `sys30.py`, not
 `ci.sh`.
 

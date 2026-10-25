@@ -326,9 +326,6 @@ before 4.0*). Left:
 - **No `.hex` from any writer but BinHex 2.0.** BinHex 1.0 and the BASIC
   BinHexes before it wrote the format too (`reference/notes/BinHex.md`).
   Closing it is a specimen from one of them, or the program.
-- **`.dl` has one file and no writer.** SUMacC's `dl` tools have not been
-  found (DECISIONS.md 2026-10-24, *the format before BinHex*). Closing it
-  is their source or a second file.
 - **`src/fmt_hecx.c` is hexbin's.** BinHex 2.0's own `CODE` (5.6 KB) is
   the writer, and reading the layout out of it is the route Packit III
   1.3 gave PackIt's ciphers (NOTICE).

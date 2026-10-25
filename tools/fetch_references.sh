@@ -75,6 +75,23 @@ if [ ! -d reference/macutils ]; then
     rm /tmp/macutils.tar.gz
 fi
 
+# SUMacC (Bill Croft, SUMEX, Stanford; June 1986 here) — the format
+# macutils' hexbin calls "dl" came from it: cmd/tohex.c is the WRITER of
+# `.dl`, cmd/fromhex.c its own UNIX reader, etc/fromhex.c and fromhex.p
+# its Macintosh readers, etc/download.doc the description. Its sum is
+# compared on 32 bits there, not on hexbin's 16 (DECISIONS.md 2026-10-25,
+# *the writer that was in 4.3BSD*). tools/run_hecx.py builds tohex and
+# fromhex from here and grades against both. 4.3BSD's contributed
+# software carries it as sumacc.tar.Z inside new.tar.gz; TUHS has the set.
+if [ ! -d reference/sumacc ]; then
+    mkdir -p reference/sumacc
+    curl -sL -o /tmp/43new.tar.gz \
+        "https://www.tuhs.org/Archive/Distributions/UCB/4BSD/4.3BSD/new.tar.gz"
+    tar xzf /tmp/43new.tar.gz -O sumacc.tar.Z | uncompress -c | \
+        tar xf - -C reference/sumacc --strip-components=1
+    rm -f /tmp/43new.tar.gz
+fi
+
 # NOT `cd reference/notes`, which is what these blocks used to open with.
 # Every block BELOW them names its file from the repository root, so the
 # cd made all of those write into reference/notes/reference/notes/ — a

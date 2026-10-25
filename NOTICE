@@ -100,9 +100,14 @@ hand.
                        the transcription is BinHex 2.0's own output
                        from known input (tools/vmac/binhex2.py) and
                        three 1985 files whose sums verify. SUMacC's
-                       `.dl` in the same file: its coding, sum and
-                       first-line rule from macutils' hexbin/dl.c and
-                       hexbin.c.
+                       `.dl` in the same file: its coding and first-line
+                       rule from macutils' hexbin/dl.c and hexbin.c, and
+                       the 32-bit sum comparison from SUMacC's own
+                       readers (reference/sumacc, cmd/fromhex.c,
+                       etc/fromhex.c and fromhex.p; Bill Croft, SUMEX,
+                       Stanford). No code of SUMacC's is in this
+                       project; its tohex and fromhex are built from
+                       reference/ only to grade against.
   src/unc_sidecar.c    Mac OS X's AppleDouble sidecars: which names are
                        sidecars (a leaf starting "._", an optional first
                        component "__MACOSX"), that folders under

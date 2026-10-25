@@ -640,7 +640,12 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # +462, which now inlines hx_walk (848 + 776 -> 2,086), and
 # unc_binhex_probe +122. The control only; the shipped pair is CODE +0 and
 # A5 +32 (the eager pair below).
-UNC_MAC_CODE_DEFAULT=177132
+# -4 on 2026-10-25, 177,132 -> 177,128, A5 +4 below: the `.dl` sum compared
+# on 32 bits, as SUMacC's own readers do (DECISIONS.md 2026-10-25, *the
+# writer that was in 4.3BSD*): unc_hecx_extract 2,086 -> 2,084 with the
+# comparison written `want - sum == size`; CODE + A5 unmoved, and the
+# shipped pair and `ovl_binhex` unmoved too.
+UNC_MAC_CODE_DEFAULT=177128
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -840,7 +845,9 @@ UNC_MAC_CODE_DEFAULT=177132
 # segment CRCs (above); no data was added.
 # +8 on 2026-10-24, 36,268 -> 36,276: the `.dl` table row and its name
 # (above), 26 B, less alignment.
-UNC_MAC_A5_DEFAULT=36276
+# +4 on 2026-10-25, 36,276 -> 36,280: alignment, with the 32-bit `.dl`
+# sum (above); no data was added.
+UNC_MAC_A5_DEFAULT=36280
 # A CEILING PER CONFIGURATION, because one ceiling measured on another build
 # cannot fire. The figures above are the RESIDENT control build, which carries
 # every decoder; the shipped build's resident code is a third of that, so

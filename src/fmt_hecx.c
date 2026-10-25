@@ -68,12 +68,13 @@
  * Source: reference/macutils/hexbin/dl.c (dl, dl_fork) and hexbin.c
  * (find_header); macutils/README has the format as SUMacC's, the first
  * hexified one, and dl.c as based on its original distribution. The type
- * and creator are dl.c's, APPL and ????. The sum is compared on its low 16
- * bits, as dl.c's verify_crc does, though eight characters hold 32: the
- * one file found (mactosh/lang/xlispold.dl) agrees on all 32, and a sum of
- * bytes mod 65,536 already catches any change of fewer than 257 bytes
- * (DECISIONS.md 2026-10-24, *the format before BinHex*). It goes through
- * the same driver below: one document, counted, then written.
+ * and creator are dl.c's, APPL and ????. The sum is compared on all 32
+ * bits, as SUMacC's own readers do — reference/sumacc/cmd/fromhex.c,
+ * etc/fromhex.c and etc/fromhex.p — and not on dl.c's 16, which is its
+ * shared verify_crc masking a 32-bit sum; cmd/tohex.c, the writer, writes
+ * all 32 (DECISIONS.md 2026-10-25, *the writer that was in 4.3BSD*). It
+ * goes through the same driver below: one document, counted, then
+ * written.
  *
  * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
  */
@@ -290,7 +291,7 @@ static int dl_walk(UncCtx *c, UncBufIn *in, uint8_t *obuf, uint32_t ocap,
         c->sink->write(c->sink->ctx, UNC_FORK_RSRC, obuf, (int32_t)have) < 0)
         return UNC_ERR_SINK;
     doc->size[1] = n >> 1;
-    return ((want ^ (doc->size[1] + sum)) & 0xFFFFu) ? UNC_ERR_CRC : UNC_OK;
+    return want - sum == doc->size[1] ? UNC_OK : UNC_ERR_CRC;
 }
 
 /* hexbin.c's find_header test for a `.dl` document's first line: 1 if

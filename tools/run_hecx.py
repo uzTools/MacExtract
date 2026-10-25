@@ -39,25 +39,26 @@ on purpose, the departure is asserted rather than hidden:
                                                         and its CRC refuses
   a '#..$hhhh' line + prose  not recognised as this format
 
-`.dl` (src/fmt_hecx.c, dl_walk) is graded on its one wild file, and on
-files this script encodes with dl.c's rules, each read by hexbin too:
+`.dl` (src/fmt_hecx.c, dl_walk) is graded by hexbin AND by SUMacC's
+own tools, built from reference/sumacc: tohex, the writer, and fromhex,
+its UNIX reader. The wild file must be tohex's output for its fork:
 
-  synthetic forks            same fork as encoded       hexbin agrees
-  lf / crlf / cr endings     same fork                  hexbin agrees
+  tohex's output, 6 sizes    same fork                  hexbin, fromhex agree
+  lf / crlf / cr endings     same fork                  hexbin, fromhex agree
   mail headers in front      same fork                  hexbin agrees
-  rewrapped at 64            same fork                  hexbin agrees
-  a line break in the sum    same fork                  hexbin agrees
-  the sum's high 16 bits     same fork (both compare 16 bits of the 32)
-  a body character changed   refused                    hexbin refuses
-  the sum changed            refused                    hexbin refuses
-  no '|', or cut in the sum  refused                    hexbin refuses
+  rewrapped at 64            same fork                  hexbin, fromhex agree
+  a line break in the sum    same fork, as hexbin       fromhex refuses
+  the sum's high 16 bits     refused, as fromhex        hexbin reads it
+  a body character changed   refused                    both refuse
+  the sum changed            refused                    both refuse
+  no '|', or cut in the sum  refused                    both refuse
   cut inside the fork        refused, never exit 0
-  a first byte that is not 0 not this format            hexbin reads it
+  a first byte that is not 0 not this format            both read it
   base64 of a run of zeros   base64, not `.dl`
 
-What it cannot see: only BinHex 2.0 has been run as a writer, and for
-`.dl` no writer at all — SUMacC's tools have not been found, and the one
-file is the only output of theirs there is. BinHex 1.0
+What it cannot see: only BinHex 2.0 has been run as a writer; for `.dl`,
+SUMacC's tohex is compiled on this machine, not run as it ran on a VAX,
+and the one wild file is all the output of theirs there is. BinHex 1.0
 and the BASIC BinHexes before it wrote `.hex` too (reference/notes/
 BinHex.md), and none of their output has been found to grade against.
 """
@@ -286,9 +287,39 @@ def variants(cli, base, problems):
     return ran
 
 
-def dl_encode(fork, width=64, eol=b"\n", sum_add=0):
-    """A `.dl` as dl.c reads one: '@'+nibble, high first, '|', and eight
-    nibbles of the byte count plus every byte."""
+SUMACC = os.path.join(ROOT, "reference", "sumacc", "cmd")
+
+
+def sumacc_tools(w):
+    """SUMacC's writer and its own reader, built from reference/: the
+    (tohex, fromhex) paths, or None if either will not build."""
+    out = []
+    for name in ("tohex", "fromhex"):
+        src = os.path.join(SUMACC, name + ".c")
+        exe = os.path.join(w, name)
+        if not os.path.exists(src) or subprocess.run(
+                ["cc", "-std=gnu89", "-w", "-o", exe, src],
+                capture_output=True).returncode != 0:
+            return None
+        out.append(exe)
+    return tuple(out)
+
+
+def tohex(tools, fork):
+    return subprocess.run([tools[0]], input=fork,
+                          capture_output=True).stdout
+
+
+def fromhex(tools, blob):
+    """(sum good, fork) as SUMacC's own UNIX reader reads `blob`."""
+    r = subprocess.run([tools[1]], input=blob, capture_output=True)
+    return b"checksum good!" in r.stderr, r.stdout
+
+
+def dl_encode(fork, width=66, eol=b"\n", sum_add=0):
+    """A `.dl` with dl.c's rules, for what tohex cannot be asked to write:
+    another width or line ending, a wrong sum. At width 66 and "\n" it is
+    tohex's own output, which dl_variants asserts."""
     body = bytes(0x40 | (b >> s & 0xF) for b in fork for s in (4, 0))
     total = (len(fork) + sum(fork) + sum_add) & 0xFFFFFFFF
     tail = b"|" + bytes(0x40 | (total >> s & 0xF)
@@ -299,10 +330,23 @@ def dl_encode(fork, width=64, eol=b"\n", sum_add=0):
 
 
 def dl_variants(cli, problems):
-    """`.dl` cases, on encoded forks and on the wild file."""
+    """`.dl` cases, graded by hexbin and by SUMacC's own writer and reader."""
+    w = tempfile.mkdtemp()
+    try:
+        tools = sumacc_tools(w)
+        if tools is None:
+            problems.append("dl: SUMacC's tohex/fromhex do not build from "
+                            "reference/sumacc (tools/fetch_references.sh)")
+            return 0
+        return dl_cases(cli, tools, problems)
+    finally:
+        shutil.rmtree(w, ignore_errors=True)
+
+
+def dl_cases(cli, tools, problems):
     ran = 0
 
-    def check(label, blob, fork, hb_reads=True):
+    def check(label, blob, fork, hb_reads=True, fh_good=True):
         got = ours(cli, blob, "t.dl")
         if fork is None:
             if got[0] == 0:
@@ -317,57 +361,88 @@ def dl_variants(cli, problems):
                     label, "reads" if hb[0] == 0 else "refuses"))
             elif hb_reads and fork is not None and hb[2] != fork:
                 problems.append("dl %s: hexbin's fork differs" % label)
+        if fh_good is not None:
+            good, fh = fromhex(tools, blob)
+            if good != fh_good:
+                problems.append("dl %s: fromhex says the sum is %s" % (
+                    label, "good" if good else "bad"))
+            elif good and fork is not None and fh != fork:
+                problems.append("dl %s: fromhex's fork differs" % label)
 
     import random
     rnd = random.Random(1985)
-    # From 32 B: a fork whose text fits on one line, '|' and sum and all,
-    # is an odd line and no `.dl` to hexbin or here.
-    for size in (31, 32, 4095, 4096, 4097, 70000):
+    # Written by tohex, SUMacC's writer. From 33 B: tohex breaks its line
+    # after every 33rd byte, so a smaller fork is one line holding '|' and
+    # the sum, odd in length and no `.dl` to hexbin or here; no resource
+    # fork is that small, its header alone being 256 B.
+    for size in (32, 33, 4095, 4096, 4097, 70000):
         fork = bytes([0]) + bytes(rnd.randrange(256) for _ in range(size))
-        check("encoded, %d B" % len(fork), dl_encode(fork), fork); ran += 1
+        blob = tohex(tools, fork)
+        if blob != dl_encode(fork):
+            problems.append("dl %d B: dl_encode is not tohex" % len(fork))
+        check("tohex, %d B" % len(fork), blob, fork); ran += 1
     zeros = bytes(3000)
-    check("encoded, zeros", dl_encode(zeros), zeros); ran += 1
+    check("tohex, zeros", tohex(tools, zeros), zeros); ran += 1
 
     wild = read(os.path.join(FIXDIR, "dl-wild-xlispold.dl"))
-    fork = hexbin(wild)[2] if wild is not None else bytes(
-        [0, 0, 1, 0]) + bytes(rnd.randrange(256) for _ in range(5000))
-    base = wild if wild is not None else dl_encode(fork)
+    if wild is not None:
+        fork = hexbin(wild)[2]
+        # The wild file is tohex's output and three blank lines.
+        out = tohex(tools, fork)
+        if not wild.startswith(out) or wild[len(out):].strip(b"\n"):
+            problems.append("dl xlispold.dl: not what tohex writes for its "
+                            "fork")
+        ran += 1
+        base = wild
+    else:
+        fork = bytes([0, 0, 1, 0]) + bytes(rnd.randrange(256)
+                                           for _ in range(5000))
+        base = tohex(tools, fork)
     for eol in (b"\n", b"\r\n", b"\r"):
         check("endings %r" % eol, relines(base, eol), fork); ran += 1
+    # fromhex wants the headers gone (etc/download.doc); hexbin and this
+    # skip them.
     check("mail in front",
-          b"From: someone\nSubject: a file\n\n" + base, fork); ran += 1
+          b"From: someone\nSubject: a file\n\n" + base, fork,
+          fh_good=None); ran += 1
     check("rewrapped at 64", dl_encode(fork, 64), fork); ran += 1
     enc = dl_encode(fork)
     bar = enc.index(b"|")
+    # hexbin reads by lines and never sees the break; fromhex takes it for
+    # a digit. This follows hexbin.
     check("a line break in the sum", enc[:bar + 4] + b"\n" + enc[bar + 4:],
-          fork); ran += 1
+          fork, fh_good=False); ran += 1
+    # The sum is 32 bits, as fromhex reads it (DECISIONS.md 2026-10-25, *the
+    # writer that was in 4.3BSD*); hexbin compares 16 and reads this.
     check("the sum's high 16 bits changed", dl_encode(fork, sum_add=1 << 16),
-          fork); ran += 1
+          None, True, False); ran += 1
 
     i = base.index(b"@", 200)
     flip = bytearray(base)
     flip[i] = ord("A")
-    check("a body character changed", bytes(flip), None, False); ran += 1
-    check("the sum changed", dl_encode(fork, sum_add=1), None, False)
+    check("a body character changed", bytes(flip), None, False, False)
+    ran += 1
+    check("the sum changed", dl_encode(fork, sum_add=1), None, False, False)
     ran += 1
     cut = base[:base.index(b"|")]
-    check("no '|'", cut, None, False); ran += 1
-    check("cut in the sum", base[:base.index(b"|") + 5], None, False)
+    check("no '|'", cut, None, False, False); ran += 1
+    check("cut in the sum", base[:base.index(b"|") + 5], None, False, False)
     ran += 1
     for frac in (0.3, 0.6, 0.9):
         check("cut at %d%%" % int(frac * 100), cut[:int(len(cut) * frac)],
-              None, hb_reads=None)
+              None, None, None)
         ran += 1
 
     # The departure: a first byte that is not 0 cannot be a resource fork's
     # data offset, and the line it opens is not taken for a `.dl` here.
+    # hexbin and fromhex both read it.
     odd = bytes([0x10]) + fork[1:]
-    blob = dl_encode(odd)
+    blob = tohex(tools, odd)
     if sniff(cli, blob) != "unknown":
         problems.append("dl a first byte of 0x10: sniffed %r" % sniff(cli, blob))
-    if hexbin(blob)[0] != 0:
-        problems.append("dl a first byte of 0x10: hexbin refuses it — the "
-                        "departure in fmt_hecx.c is not one")
+    if hexbin(blob)[0] != 0 or not fromhex(tools, blob)[0]:
+        problems.append("dl a first byte of 0x10: hexbin or fromhex refuses "
+                        "it — the departure in fmt_hecx.c is not one")
     ran += 1
     # Why: base64 of zeros is a line of 'A', which hexbin's test alone takes.
     import base64
