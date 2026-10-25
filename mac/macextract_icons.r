@@ -212,9 +212,13 @@ resource 'FREF' (128) { 'APPL', 0, "" };
    Measured as well as read: with this resource and a file typed '????', the
    drop launches the application on System 7.0.1, and without it the same
    drag only moves the icon. Nothing below System 7 has the gesture at all
-   (DECISIONS.md 2026-08-31). Local ID 1 maps to the same 'ICN#' as the
-   application: a document this program can open keeps its own icon, because
-   the Finder draws icons by CREATOR, and nothing anywhere carries ours. */
+   (DECISIONS.md 2026-08-31). Local ID 1 maps to the archive icon,
+   'ICN#' 129 (mac/macextract_archive_icons.r): the Finder draws a document
+   by its CREATOR, so this shows only on files whose creator is ours, which
+   MacStamp writes when the user picks MacExtract. Until 2026-10-25 it was
+   the application's own 'ICN#', on the reading that no file carried our
+   creator, and those archives drew as the application (DECISIONS.md
+   2026-10-25, *the archives that drew as the application*). */
 resource 'FREF' (129) { '****', 1, "" };
 
 /* The exact types as well, one FREF each, because the wildcard is not a
@@ -235,8 +239,9 @@ resource 'FREF' (129) { '****', 1, "" };
    claims it: TCDB's "Translation in Process", and all eight such files
    on Info-Mac IV are finished programs with empty data forks, an
    expansion that stopped before retyping them — claimed 2026-10-24 and
-   dropped the same day, and MacStamp's tables dropped it too. Each maps to icon local ID 1, the application's,
-   for the reason above. The resource fork grows by about 12 bytes a type
+   dropped the same day, and MacStamp's tables dropped it too. Re-read at
+   MacStamp's 6896433 on 2026-10-25: the same 29 types. Each maps to icon
+   local ID 1, the archive icon, for the reason above. The resource fork grows by about 12 bytes a type
    and no code changes. */
 resource 'FREF' (130) { 'BINA', 1, "" };   /* MacBinary, AppleSingle (Apple's table) */
 resource 'FREF' (131) { 'ApSi', 1, "" };   /* AppleSingle (StuffIt Expander's own) */
@@ -270,7 +275,7 @@ resource 'FREF' (157) { 'ARC7', 1, "" };   /* ARC 6/7 (ARC+Plus), which ArcMac c
 
 resource 'BNDL' (128) {
     'MExt', 0,
-    { 'ICN#', { 0, 128, 1, 128 },
+    { 'ICN#', { 0, 128, 1, 129 },
        'FREF', { 0, 128, 1, 129,
                 2, 130, 3, 131, 4, 132, 5, 133, 6, 134, 7, 135, 8, 136, 9, 137, 10, 138, 11, 139, 12, 140, 13, 141, 14, 142, 15, 143, 16, 144, 17, 145, 18, 146,
                 19, 147, 20, 148, 21, 149, 22, 150, 23, 151,

@@ -12,7 +12,9 @@ it. Emits ICN#, ics#, icl4, ics4, icl8, ics8, FREF and BNDL, all at ID 128.
 
 DO NOT REPLACE mac/macextract_icons.r WITH ITS OUTPUT. That file has since
 gained resources written by hand and not emitted here -- the '****' FREF
-129 and its BNDL entry, and both 'vers' -- and a whole-file regeneration
+129, the archive types' FREFs 130 on, their BNDL entries with icon local
+ID 1 mapped to the archive icon 'ICN#' 129 (make_archive_icon.py), and
+both 'vers' -- and a whole-file regeneration
 deletes them silently. Run it elsewhere and splice the members that
 changed (DECISIONS.md 2026-10-11, *the icon that did not darken*).
 """

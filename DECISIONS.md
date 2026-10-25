@@ -469,6 +469,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-25 (the envelopes that left) — the encryption check joins the sniffer's image and the MacBinary and AppleDouble readers BinHex's: 2,464 B back on every budget but an envelope's
 - 2026-10-25 (the archive Symantec shipped) — a DDAR record is the stored file's catalog entry: +78 is its resource fork, a creator other than DDAP is stored raw, and +100.. is the Finder's position; read off DD Expand 3.7.7
 - 2026-10-25 (the review before the release) — the 38 commits since v0.43.0 read before tagging: a DiskDoubler walk that could step backward for ever, and four smaller faults
+- 2026-10-25 (the archives that drew as the application) — the documents MacExtract's bundle claims draw the archive icon, not the application's: MacStamp writes our creator, so the Finder shows them
 
 ---
 
@@ -30284,3 +30285,27 @@ now holds part 2 to the bound and part 1 not.
 +144, `ovl_cptdd` +72, `ovl_exo` +32, the sniffer's +12; each grant +144
 less the images it keeps (FORMATS.md, *What each format is granted*).
 Arithmetic, no emulator booted.
+
+## 2026-10-25 (the archives that drew as the application) — the documents MacExtract's bundle claims draw the archive icon, not the application's: MacStamp writes our creator, so the Finder shows them
+
+**Claim (measured).** On the maintainer's LC, archives MacStamp had
+stamped with creator `MExt` drew as the application. The bundle mapped
+icon local ID 1, every document type it claims, to the application's
+`ICN#` 128, on the reading that no file carried our creator. MacStamp
+writes it whenever the user picks MacExtract. Local ID 1 is now the
+archive icon drawn on 2026-10-11 for the stubs (*where the stubs can
+live*), `ICN#` 129 and its five siblings, generated into
+`mac/macextract_archive_icons.r` by `tools/icon/make_archive_icon.py`.
+
+**The types, re-read.** MacStamp at 6896433 offers MacExtract for 29
+types (choices.tsv, and formats.tsv's own and accepted types); the
+bundle's FREFs 130-158 are the same 29.
+
+**Cost, measured.** No code and no A5. The resource fork +2,336 B. The
+resource map +72 B, six 12-byte references once the generator stopped
+naming the resources, and the map is heap: the 1 MB budget probe
+(`run.py --mem 1M -D UNC_AT_BUDGET`, `derived-ASCbeep.sit`) gave 742,708 B
+without the icon and 742,636 B with it, and `FreeMem` at the start fell by
+the same 72. TIERS and TIERS_MACHINE -72 on all three tiers, the 512 KB
+pair derived. Every FREF added before this grew the same map unpriced,
+about 12 B a type.

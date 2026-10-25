@@ -5372,11 +5372,13 @@ the bundle*), and seventeen since.
 
 | build | switch | resident `CODE` | A5 | `MacExtract.code.bin` | `MacExtract.bin` |
 |---|---|---|---|---|---|
-| **eager — SHIPPED** | (default) | **38,588 B** | 16,484 B | **46,336 B** | **235,136 B** |
-| lazy | `UNC_OVL_LAZY=1` | 37,824 B | 16,544 B | 45,568 B | 234,496 B |
-| resident — the control | `UNC_OVL_RESIDENT=1` | **177,732 B** | **36,476 B** | 208,000 B | 212,608 B |
+| **eager — SHIPPED** | (default) | **38,588 B** | 16,484 B | **46,336 B** | **237,568 B** |
+| lazy | `UNC_OVL_LAZY=1` | 37,824 B | 16,544 B | 45,568 B | 236,800 B |
+| resident — the control | `UNC_OVL_RESIDENT=1` | **177,732 B** | **36,476 B** | 208,000 B | 214,912 B |
 
-Re-taken 2026-10-25 for the review before v0.44.0 (DECISIONS.md 2026-10-25,
+The `MacExtract.bin` column +2,304 to +2,432 the same day for the archive
+document icon, resources only (DECISIONS.md 2026-10-25, *the archives that
+drew as the application*). Re-taken 2026-10-25 for the review before v0.44.0 (DECISIONS.md 2026-10-25,
 *the review before the release*): shipped CODE +20 and A5 −20, lazy +24 and
 −24, the control +120 and +24; `ovl_cptdd` +72, `ovl_exo` +32, the sniffer's
 +12. Before it, for the envelope readers and the encryption check
