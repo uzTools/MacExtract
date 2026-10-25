@@ -16,24 +16,18 @@ result against the same engine's Linux output.
 `--system` picks the boot system: `System6.hfv` (6.0.8) or `Sys7.img` (7.0.1).
 System 7 is where `SFReply.vRefNum` becomes a working directory and the Process
 Manager starts honouring the `SIZE` partition, so it is a different set of code
-paths, not just a different splash screen. Run the System 7 tier at 4 MB.
+paths. Run the System 7 tier at 4 MB.
 
 **512 KB machines.** `--emu mv-512Ke` on either driver boots a Macintosh
 512Ke, the smallest machine this application runs on: `sys30.py --emu
-mv-512Ke` is **72/74** on the shipped build (the 72 on 2026-10-09 and
-`4alnch11.zip` and `synth-sqp-clear.pkg` on 2026-10-10/11; 69/71 on
-2026-09-25, 67/71 with every
-decoder resident, 66/69 before the sample grew, 65/69 before the reserve went
-flat, 64/69 before the LZW bound), `run.py --emu mv-512Ke --system
-System6.hfv` is **68/74** (the 72 on 2026-10-09, one fixture fewer than `run_tiers.py`
-predicted on a stale base, and the two newest on 2026-10-10/11; 66/71 on 2026-09-27, the tier it predicted
-before anything ran it; 64/71 on 2026-09-22 with
-every decoder resident, 63/69 on 2026-09-04, 58/69 before the stack was cut) (FORMATS.md, *512 KB machines*). With every decoder resident
-(`-D UNC_OVL_RESIDENT`) the two are **68/72** and **63/72** (2026-10-09).
-The resident budgets measured are **205,476 B** and **110,076 B**, re-taken
-on the machine 2026-10-09 evening with the floor's. `tools/run_tiers.py`
-reproduces both lanes on all three tiers on Linux, fixture for fixture and
-by name.
+mv-512Ke` is **72/74** and `run.py --emu mv-512Ke --system System6.hfv` is
+**68/74** on the shipped build, the refusals per entry and by name (the
+current dates are BLOCKERS.md's, *Status*; FORMATS.md, *512 KB machines*).
+With every decoder resident (`-D UNC_OVL_RESIDENT`) the two are **68/72** and
+**63/72** (2026-10-09). The resident budgets measured are **205,476 B** and
+**110,076 B**, re-taken on the machine 2026-10-09 evening with the floor's.
+`tools/run_tiers.py` reproduces both lanes on all three tiers on Linux,
+fixture for fixture and by name.
 
 **A true Macintosh 512K — `mv-512K`, a 64 KB ROM — boots, and this
 application bombs on it.** It cannot read HFS, which is the whole of the
@@ -48,15 +42,14 @@ Everything below wants a display and is watched by eye. `$V` is
     $V/mv-512K/minivmac -r $V/Mac512K.ROM $V/Sys11.img    # MFS:  boots to Finder 1.1
 
 **A Macintosh 128K — `mv-128K` — is too small to run it**, and that is the
-RAM rather than the ROM: same volume, same ROM, same System as the 512K above,
-`ID = 03` on launch (FORMATS.md, *A Macintosh 128K*). `tools/vmac/memtest`
-is what measures the machine instead — it prints the low-memory globals, then
-bisects the largest single `NewPtr` the heap will grant, which is the question
-the Segment Loader asks and the one `FreeMem` does not answer: `FreeMem` reads
-4,846 B on a 128K and on a 512K alike, because the zone grows on demand. Build
-it by hand like `traptest`, put it on as `Finder`, and read the numbers off
-the screen; run it on **both** machines, because a number means nothing until
-the same probe has been seen to produce a different one somewhere:
+RAM rather than the ROM: `ID = 03` on launch (FORMATS.md, *A Macintosh
+128K*). `tools/vmac/memtest` measures the machine instead — it prints the
+low-memory globals, then bisects the largest single `NewPtr` the heap will
+grant, which is what the Segment Loader asks and `FreeMem` does not answer
+(`FreeMem` reads 4,846 B on a 128K and a 512K alike; the zone grows on
+demand). Build it by hand like `traptest`, put it on as `Finder`, read the
+numbers off the screen, and run it on **both** machines — a number means
+nothing until the same probe has produced a different one somewhere:
 
     cmake -B build/memtest -S tools/vmac/memtest \
           -DCMAKE_TOOLCHAIN_FILE=$RETRO68/m68k-apple-macos/cmake/retro68.toolchain.cmake
@@ -69,9 +62,8 @@ the same probe has been seen to produce a different one somewhere:
 
 **What it cannot see:** it measures a machine with nothing else resident, so
 its figures are a ceiling and not a budget — the application's own globals and
-stack come out of the same span before the engine sees any of it. It also
-paints its own white ground, because digits over the desktop's 50 % grey
-cannot be read back off a screenshot.
+stack come out of the same span. It paints its own white ground, because
+digits over the desktop's 50 % grey cannot be read back off a screenshot.
 
 **`mkmfs.py` writes the MFS volumes**, because Retro68's `.dsk` is always
 800K HFS. It builds, lists and extracts:
@@ -80,11 +72,10 @@ cannot be read back off a screenshot.
     mkmfs.py --list $V/AppMFS.img
     mkmfs.py --extract System $V/Sys11.img /tmp/System11.bin
 
-**Use System 3.0, not System 1.1**, and use Apple's own MFS disk:
-`setup.sh` fetches `Sys30MFS.img` by unpacking Macintosh Garden's
-`System_3.x.sit` with this repository's CLI, and it boots the 64K-ROM machine
-straight off. A volume built here from `Sys30.img`'s HFS copies boots too, if
-a disk with different contents is ever wanted — `hcopy -m` lifts the files out
+**Use System 3.0, not System 1.1**, and Apple's own MFS disk: `setup.sh`
+fetches `Sys30MFS.img` by unpacking Macintosh Garden's `System_3.x.sit` with
+this repository's CLI, and it boots the 64K-ROM machine straight off. A volume
+built from `Sys30.img`'s HFS copies boots too — `hcopy -m` lifts the files out
 and the boot blocks come from the same disk:
 
     hmount Sys30.img; hcd "System Folder"
@@ -93,8 +84,8 @@ and the boot blocks come from the same disk:
              /tmp/System30.bin /tmp/Finder30.bin
 
 To launch something without a Finder in the frame, put it on as `Finder`:
-System 3.0 ignores the boot blocks' shell name on MFS just as it does on HFS,
-so `--shell` is for System 1.1, which is the one system here that reads it.
+System 3.0 ignores the boot blocks' shell name on MFS as on HFS, so `--shell`
+is for System 1.1, the one system here that reads it.
 
     mkmfs.py --extract System $V/Sys30MFS.img /tmp/System30mfs.bin
     mkmfs.py $V/TrapBoot30.img --boot $V/Sys30MFS.img --name "System Software" \
@@ -103,207 +94,157 @@ so `--shell` is for System 1.1, which is the one system here that reads it.
 A volume with no `Desktop` file makes the Finder offer "minor repairs" on
 first open; click OK and it rebuilds one.
 
-**`traptest/` is the minimal reproduction** for what the 64K ROM actually
-lacks: it paints a mark, makes one call, paints the next, and never returns —
-a probe that exits has its marks erased by the desktop repaint before a
-screenshot can be taken. Its calls are in the order the application makes
-them, so where it stops is where the application stops; marks are eight to a
-row in the top 75 points, because the system error dialog covers the middle of
-the screen and a mark under it cannot be read from the screenshot that shows
-the bomb. `-DTRAPTEST_NO_MEM` drops the two memory calls, which is how the
-File Manager rows in FORMATS.md are reached on a 64K ROM at all. Build it by
-hand, put it on the volume above as `Finder`, and read the marks — **on
-`mv-512Ke` as well as `mv-512K`**, because a probe that stops early says
-nothing until the same probe has been seen to finish somewhere:
+**`traptest/` is the minimal reproduction** for what the 64K ROM lacks: it
+paints a mark, makes one call, paints the next, and never returns (a probe
+that exits has its marks erased by the desktop repaint). Its calls are in the
+application's order, so where it stops is where the application stops; marks
+are eight to a row in the top 75 points, clear of the system error dialog.
+`-DTRAPTEST_NO_MEM` drops the two memory calls, which is how the File Manager
+rows in FORMATS.md are reached on a 64K ROM at all. Build it by hand, put it on
+the volume above as `Finder`, and read the marks — **on `mv-512Ke` as well as
+`mv-512K`**, because a probe that stops early says nothing until it has been
+seen to finish somewhere:
 
     cmake -B build/traptest -S tools/vmac/traptest \
           -DCMAKE_TOOLCHAIN_FILE=$RETRO68/m68k-apple-macos/cmake/retro68.toolchain.cmake
     cmake --build build/traptest
 
 **System 3.0 has its own driver, `sys30.py`, and `run.py --system Sys30.img`
-does NOT work.** That system ignores the boot blocks' shell name, so
-`mkboot.py`'s usual shell replacement launches nothing and every fixture comes
-back NOGRID — which reads exactly like an application that will not start
-(DECISIONS.md 2026-08-30, *the shell name System 3.0 does not read*).
-`sys30.py` boots to the Finder and double-clicks the application instead.
-That changes how a run starts and not what it has — launching unloads the
-Finder, 12 bytes' worth (FORMATS.md, *512 KB machines*). `interactive.py
---system Sys30.img --e2e` covers the user interface there; both its Standard
-File row and its Finder icon positions are per-system tables, because System
-3.0 leaves a different number of items in the volume window and lists the
-invisible `DeskTop` file that System 6 hides.
+does NOT work.** That system ignores the boot blocks' shell name, so every
+fixture comes back NOGRID — which reads exactly like an application that will
+not start (DECISIONS.md 2026-08-30, *the shell name System 3.0 does not
+read*). `sys30.py` boots to the Finder and double-clicks the application
+instead; launching unloads the Finder, 12 bytes' worth (FORMATS.md, *512 KB
+machines*). `interactive.py --system Sys30.img --e2e` covers the user
+interface there; its Standard File row and Finder icon positions are
+per-system tables, because System 3.0 leaves a different number of items in
+the volume window and lists the invisible `DeskTop` file that System 6 hides.
 
 Nothing here runs in `./ci.sh`: it needs ~80 MB of downloads, an X server and
 minutes per fixture. It is a deliberate, on-demand check.
 
 **What a full re-verification costs, as host wall clock** (measured
-2026-08-07, two cores, all-out emulators — this is how long YOU wait, and says
-nothing whatever about Mac Plus time; see the 1x note below). The totals were
-~240 s and ~233 s when the sample held 44 fixtures; the per-fixture figure is
-what every run since has reported, so scale it rather than trusting a total
-measured on a different list:
+2026-08-07, two cores, all-out emulators — how long YOU wait, not Mac Plus
+time; see the 1x note below). Scale the per-fixture figure by the list;
+`sample.txt` holds 74 fixtures:
 
 | tier | command | cost |
 |---|---|---|
-| System 6.0.8, 1 MB, 55 fixtures | `run.py --mem 1M --list sample.txt` | ~5.1 s per fixture, one boot each |
-| System 6.0.8, 4 MB, the stock System Folder, 74 fixtures | `run.py --keep-inits --list sample.txt` | the same per fixture; a tier of its own since 2026-10-21, run beside the stripped one. **Not at 1 MB**: with twenty INITs and cdevs loaded the machine shows the System's own stop-sign alert with its text undrawn before the application paints anything (NOGRID, 300 s each; measured on two fixtures 2026-10-21), which is what the strip was written for |
-| System 7.0.1, 4 MB, 55 fixtures | `run.py --system Sys7.img --list sample.txt` | ~5.1 s per fixture, one boot each |
+| System 6.0.8, 1 MB | `run.py --mem 1M --list sample.txt` | ~5.1 s per fixture, one boot each |
+| System 6.0.8, 4 MB, the stock System Folder | `run.py --keep-inits --list sample.txt` | the same per fixture; a tier of its own since 2026-10-21. **Not at 1 MB**: with every INIT and cdev loaded the System's own stop-sign alert comes up, text undrawn, before the application paints anything (NOGRID, 300 s each; two fixtures, 2026-10-21) |
+| System 7.0.1, 4 MB | `run.py --system Sys7.img --list sample.txt` | ~5.1 s per fixture, one boot each |
 | Mac OS 9.2, 22 fixtures | `os9.py --list os9sample.txt --launch` | tens of minutes — one full PowerPC boot per fixture |
 
-**Stagger the start by a few seconds when the application has changed.** The
-display race below is fixed, but the two runs still share one CMake build
-directory per define-set (`build/mac-autotest`), and two `cmake -B` on it at
-the same moment ends with one of them exiting 1 before it boots anything
-(measured 2026-08-26). Once the build exists both runs find it up to date and
-overlap cleanly, which is why parallel tiers usually work: the first run of
-the day is the one that collides.
+**Stagger the start by a few seconds when the application has changed.** Two
+runs share one CMake build directory per define-set (`build/mac-autotest`),
+and two `cmake -B` on it at the same moment ends with one exiting 1 before it
+boots anything (measured 2026-08-26). Once the build exists, runs overlap
+cleanly.
 
-Run the two Mini vMac tiers in parallel if you have the cores — **safe since
-2026-08-15**, and it was not before: `Display` looked for a free X display by
-testing `/tmp/.X<n>-lock` and then starting Xvfb on it, which is check-then-act.
-Two runs started together both chose `:90`, the loser's Xvfb died of the taken
-lock, and its readiness probe then succeeded against the WINNER's server — so
-both runs drew on one display and screenshotted each other's emulator. Three
-fixtures "failed" with another run's numbers before anyone noticed the numbers
-belonged to a different archive. Xvfb now picks the display itself
-(`-displayfd`) and reports it back. Do NOT run
-anything else alongside these, and **never alongside `./ci.sh`**: every
-harness here grades itself through `tools/vmac_check.py`, which shells out
-to `build/rel/macextract` as its oracle, and CI's `make clean` takes that
-binary away mid-sweep. This warning named `os9.py` alone until 2026-09-05,
-when a `run.py` floor sweep was started beside CI and came back **38/69** —
-31 fixtures the Macintosh had extracted correctly and nothing could
-compare, which reads exactly like a regression until the reason column is
-read.
+Run the two Mini vMac tiers in parallel if you have the cores — safe since
+2026-08-15, when Xvfb began picking its own display (`-displayfd`); before,
+two runs could draw on one display and grade each other's emulator
+(DECISIONS.md 2026-08-15). Safe for correctness, not for the host-side
+watchdogs, which are wall-clock: with two 512Ke sweeps side by side on
+2026-10-21, `sys30.py` took ~19 s a fixture and one came back `NOGRID` that
+passed alone. **Re-run a `NOGRID` or `EMUDIED` from a parallel sweep alone
+before reading it.** Do NOT run anything else alongside these, and
+**never alongside `./ci.sh`**: every harness here grades itself through
+`tools/vmac_check.py`, which shells out to `build/rel/macextract`, and CI's
+`make clean` takes that binary away mid-sweep — a floor sweep beside CI came
+back **38/69** on 2026-09-05, every "failure" a missing oracle.
 
 ## What the pieces do
 
 | file | role |
 |---|---|
-| `segcheck.py` | **replay every segmented-archive scenario in one command** — the six joining schemes, parts inside envelopes, and a chained file, across both harnesses |
-| `setup.sh` | fetch + build the emulator, the ROM and the System 3.0, 6.0.8 and 7.0.1 images into `$UNC_VMAC_HOME` (default `~/.cache/macextract/vmac/`) |
-| `sys30.py` | the **System 3.0 / Finder 5.1** tier: same disks, same grid, same grader as `run.py`, but launched by double-click because that system reads no shell name — see above |
-| `mkboot.py` | strip that image to System + Finder and make it boot straight into the application; `--keep-inits` leaves the System Folder as it is |
-| `drive.py` | boot a Mac and take clicks, keys and screenshots from a command file, one step at a time — the issue #1 reproduction |
-| `run.py` | build the disks, boot, screenshot, decode, check. `--out-kb` sizes the DESTINATION volume, which is how the full-disk path is reached at all — see below; `--in-kb` sizes the source, and `--rsrc` gives the fixture a resource fork (*`sit-fat`*, below). **It cannot grade more than 128 files**: the autotest keeps that many records (`AT_MAXREC`) and an archive with more fails by count, as a 153-file icon set did on 2026-10-16 with every file on the disk |
-| `interactive.py` | drive the real UI (SFGetFile, progress dialog, Cancel, Cmd-., the password dialog) and photograph each step |
-| `os9.py` | boot Mac OS 9 on emulated PowerPC, launch the application from the keyboard, and check both forks of what it wrote — see below |
-| `os9probe.py` | diagnostic: which input primitives actually reach the Mac OS 9 guest? Not part of any suite |
-| `os9sample.txt` | the fixtures replayed on Mac OS 9 — one per format, since each costs a whole boot |
-| `mountcheck.py` | boot a system image with disks attached and photograph the desktop — "does this mount?", and "does this system boot at all?" |
-| `mkapmdisk.py` | build an Apple-partitioned transfer disk that Mac OS on PowerPC will mount |
-| `checkdisk.py` | verify a run by READING its Out volume — both forks, and the names the on-screen grid cannot carry |
-| `diskdoubler.py` | **ask DiskDoubler itself what it can write** — run the 3.7 application, compress a subject with each method its menu offers, read the method byte back; and `--adjudicate`, which runs a self-extracting fixture and grades the forks no oracle can decode |
-| `ddpro.py` | the other half of the format: DiskDoubler **Pro** 4.1, which writes `DDA2` and whose Split command is the source of the `SPLT` questions still open |
-| `ddencode.py` | **grade a method by WRITING it**: encode a fork, hand it to Salient's own 1991 DiskDoubler, and see whether it comes back. How methods 3, 4 and 5 were graded with no specimen |
-| `ndd.py` | the releases nothing here had run: Salient's **3.1.2** (1991, the oldest reachable — it has the only method 2 fork), **DiskDoubler 4.0** and **Norton DiskDoubler Pro 1.1** (Symantec — whose application is 4.1.1). `--specimens`, `--harvest` and `--grade` need no emulator |
-| `superdisk.py` | grade SuperDisk! with its own self-extractors; `--nest`/`--stored`/`--rootfile` hand that extractor a stream written here; `--on-mac` replays both payloads through our application |
-| `spacesaver.py` | Aladdin's **SpaceSaver**, off the StuffIt Deluxe 5.0.1 CD. 3.5.1 runs; 5.0 does not run on 7.0.1. `--layout` reads the format out of it without booting anything — see below before spending a boot on it |
-| `sdcompress.py` | the other half: Alysis's 1991 **SuperDisk! control panel**, which COMPRESSES. It wrote the five specimens the single-file container was derived from, and `--verify` re-grades them |
-| `maclha.py` | **MacLHA 2.00**, out of the corpus (`derived-MacLHa_2.00.sit`), driven to write a `.lzh` holding a file with a real resource fork — the specimen no MacLHA archive in reach is. `--setup` builds the volume, `--make` drives the application (keyboard where it has a shortcut; its Header and Type menus are HIERARCHICAL and cannot be used here, and nothing needs them because `MacBinary` is already checked), `--check` grades both forks with our CLI. **The Type menu was worth reading anyway, and it is now**: `LHa`, `LHarc`, `None` — `-lh5-`, `-lh1-`, `-lh0-` — so it cannot write an `-lh2-`/`-lh3-` specimen — which `tools/run_lzh.py` grades against LHa's own encoder instead (TESTING.md) — and the inaccessible submenu costs nothing (read out of `MENU` 134 with `hcopy`, no emulator) |
-| `zipmeta.py` | **what Aladdin's software does with a MacZip archive's Finder metadata.** `--table` reads the `UnZip Translator`'s extension-to-type table without booting; `--expander` hands StuffIt Expander a four-entry cut of the real archive and reads the volume back |
-| `sitzip.py` | the same question put to the two LATER boxes — **StuffIt Deluxe 5.5 and 7.0.3 Classic, on Mac OS 9, with no installer driven**: the engine, the translators and the application are placed into a plain-HFS System Folder from Linux. `--carbonlib` installs the one thing that cannot be placed — see below |
-| `sitcomment.py` | **StuffIt 5's archive flag byte, bit 5** — measured 2026-10-06. `--read` and `--aete` ask both later boxes what they offer for a comment and print their scripting dictionaries, no emulator; `--specimen` boots Mac OS 9 and has `tools/aesit/` drive StuffIt Deluxe 7.0.3 by Apple event into writing an archive that is encrypted AND commented; `--probe` launches 5.5; `--macos86` replays the Mac OS 8.6 boot that is not the route |
-| `expander.py` | **the yardstick**: StuffIt Expander 4.0.2 and this application on one Mac Plus, over one archive, timed by one instrument. `--fetch` downloads Aladdin's distribution and unpacks the application out of it; `--sizes` reads both memory partitions without booting anything |
-| `macclock.py` | **the stopwatch** `expander.py` times with: the emulated `Ticks` and screen buffer, read out of Mini vMac's memory at 50 Hz; `clockcal/` is its known duration (`expander.py --calibrate`) |
-| `sitmeta.py` | **which header bytes become a file's or folder's Finder info**: StuffIt Expander 4.0.2 over the classic corpus and over sentinel archives, read back with `hfscat.py`; `--writer201` has StuffIt Deluxe 2.0.1 stuff a folder of sentinel catalog records; `--sit5` puts StuffIt 5 to Expander 5.5 on Mac OS 9. `ddmeta.py`, `nowmeta.py` and `sdmeta.py` ask DiskDoubler 3.7, Now QuickFiler 5.0.1 and SuperDisk!'s self-extractor the same question — see *Finder info, read back* |
-| `hfscat.py` | every catalog record on an HFS image, whole: FInfo/FXInfo, DInfo/DXInfo, dates, the lock bit, and `patch()` to plant values before a boot; `--json`, `--fcmt` for a System 6 Desktop file's comments. `--check` holds it against `hls` |
-| `macmime.py` | **a MIME message written BY a Macintosh**, with mpack's own Macintosh port: `tools/macmime/` compiles `encode_applefile()` and `encode()` out of `reference/mpack` unmodified, and this boots System 6.0.8 into them. `--make` writes the specimen, `--check` grades it (18/18) — see below before changing it, because two of its three failure modes were in the HARNESS |
-| `mkcollide.py` | build an archive whose names collide on HFS, and verify what `BumpName` did with them — nothing in the corpus collides |
-| `privatefile.py` | **Aladdin Private File 2.0 encrypts known files**: `--fetch` takes the application out of its installer with no installer run, `--make NAME` boots System 7.0.1 with it in `Startup Items` and writes the three specimens `tools/run_privatefile.py` grades — see below |
-| `maccompress.py` | **MacCompress 3.2 writes its own format**: `--fetch` takes the application off Discmaster (SHA-1 checked), `--make` compresses a two-fork subject on System 6, `--check` extracts it with our CLI. The subject is named `Alpha` and so takes the volume window's FIRST icon slot; the application is the second, at (172, 105) |
+| `segcheck.py` | **replay every segmented-archive scenario in one command** |
+| `setup.sh` | fetch + build the emulators, ROMs and System images into `$UNC_VMAC_HOME` (default `~/.cache/macextract/vmac/`) |
+| `sys30.py` | the **System 3.0 / Finder 5.1** tier, launched by double-click |
+| `mkboot.py` | strip a System image to System + Finder and boot straight into the application; `--keep-inits` leaves the System Folder as it is |
+| `drive.py` | boot a Mac and take clicks, keys and screenshots from a command file, one step at a time |
+| `run.py` | build the disks, boot, screenshot, decode, check. `--out-kb`/`--in-kb` size the volumes, `--rsrc` gives the fixture a resource fork. **It cannot grade more than 128 files** (`AT_MAXREC`; a 153-file set failed by count on 2026-10-16) |
+| `interactive.py` | drive the real UI and photograph each step |
+| `os9.py` | Mac OS 9 on emulated PowerPC, both forks checked off the disk |
+| `os9probe.py` | diagnostic: which input primitives reach the Mac OS 9 guest. Not part of any suite |
+| `os9sample.txt` | the fixtures replayed on Mac OS 9, one per format |
+| `mountcheck.py` | boot a system image with disks attached and photograph the desktop |
+| `mkapmdisk.py` | build an Apple-partitioned transfer disk Mac OS on PowerPC will mount |
+| `checkdisk.py` | verify a run by READING its Out volume: both forks, and names |
+| `diskdoubler.py` | DiskDoubler 3.7 writes each method its menu offers; `--adjudicate` grades the forks no oracle decodes |
+| `ddpro.py` | DiskDoubler **Pro** 4.1: `DDA2` and `SPLT` |
+| `ddencode.py` | **grade a method by WRITING it** for Salient's 1991 DiskDoubler |
+| `ndd.py` | DiskDoubler 3.1.2, 4.0 and Norton DiskDoubler Pro 1.1 |
+| `superdisk.py` | grade SuperDisk! with its own self-extractors |
+| `spacesaver.py` | Aladdin's **SpaceSaver**, and much of StuffIt Deluxe 3.5.1 |
+| `sdcompress.py` | the **SuperDisk! control panel**, which compresses |
+| `maclha.py` | **MacLHA 2.00** writes a `.lzh` with a real resource fork: `--setup`, `--make`, `--check`. Its Type menu (`MENU` 134, read with `hcopy`) offers `-lh5-`, `-lh1-`, `-lh0-` only; `-lh2-`/`-lh3-` are graded by `tools/run_lzh.py` (TESTING.md) |
+| `zipmeta.py` | what StuffIt 3.5.1 does with a MacZip archive's Finder metadata |
+| `sitzip.py` | the same for StuffIt Deluxe 5.5 and 7.0.3 on Mac OS 9, placed with no installer |
+| `sitcomment.py` | StuffIt 5's archive flag byte, bit 5 |
+| `expander.py` | **the yardstick**: StuffIt Expander 4.0.2 against this application, timed |
+| `macclock.py` | **the stopwatch** `expander.py` times with; `clockcal/` is its known duration |
+| `sitmeta.py` | which header bytes become Finder info, read back with `hfscat.py`; `ddmeta.py`, `nowmeta.py`, `sdmeta.py` are its siblings |
+| `hfscat.py` | every catalog record on an HFS image, whole; `patch()` plants values before a boot |
+| `macmime.py` | **a MIME message written BY a Macintosh**, with mpack's own Mac port (`tools/macmime/`) |
+| `mkcollide.py` | an archive whose names collide on HFS, and a check of what `BumpName` did |
+| `privatefile.py` | **Aladdin Private File 2.0** writes the specimens `tools/run_privatefile.py` grades |
+| `maccompress.py` | **MacCompress 3.2**: `--fetch` (Discmaster, SHA-1 checked), `--make` on System 6, `--check`. The subject `Alpha` takes the volume window's FIRST icon slot; the application the second, at (172, 105) |
 
 `tools/quickdraw-repro/` is a sibling that reuses `mkboot.py` and this
-directory's `Display`/emulator plumbing to answer one narrow question about
-System 6's Toolbox. It is where `mkboot.py --finder` came from.
+directory's `Display`/emulator plumbing for one narrow question about
+System 6's Toolbox; `mkboot.py --finder` came from it.
 
 `tools/aetran/` is the other sibling: a Retro68 application that sends one
 Apple event to another application, which is how the btoa/atob translator is
 reached without its inaccessible submenu (`sitcrypt.py --btoa-send`, below).
 It is built by that harness, never by `ci.sh`, and it is System 7 only.
 
-The verification halves live one directory up because they are useful on their
-own: `tools/decode_grid.py` (screenshot → eight numbers) and
-`tools/vmac_check.py` (those numbers vs. the oracle).
+The verification halves live one directory up: `tools/decode_grid.py`
+(screenshot → eight numbers) and `tools/vmac_check.py` (those numbers vs. the
+oracle).
 
 ## Why it works the way it does
 
-**Results come off the SCREEN — and, since 2026-08-02, off the disk as well.**
-The app paints its results as a black/white bit grid (three calibration
-squares, a sync word, eight 32-bit values) which a screenshot captures exactly;
-see `at_report()` in `mac/macextract_mac.c`. That is what `run.py` decodes.
+**Results come off the SCREEN and off the disk.** The app paints a black/white
+bit grid (three calibration squares, a sync word, eight 32-bit values;
+`at_report()` in `mac/macextract_mac.c`) that `run.py` decodes; it needs
+nothing of the volume and reports liveness and setup failures, but cannot
+carry a NAME — `checkdisk.py` reads the disk for that (*Checking a run off the
+disk*, below). **The sync word is painted LAST**, so a mid-paint screenshot
+has no sync and is rejected; any `--poll` is correct (DECISIONS.md
+2026-08-28, *the certificate painted first*).
 
-The reason it was the *only* channel used to be a claim that Mini vMac's
-write-back is "lazy and partial — it will commit one fork of a file and not the
-other", so extracted files could not be read back on the host. **That does not
-reproduce and is withdrawn** (BLOCKERS.md): the whole sample was replayed with
-`--keep-disks` and every Out volume read back byte-exact, both forks, names
-included — 55/55. See "Checking a run off the disk" at the end of this file.
-
-The grid stays: it is proven, it needs nothing of the volume, and it reports
-liveness and setup failures that a disk cannot. What it cannot do is carry a
-NAME, which is why `checkdisk.py` now exists beside it.
-
-**A run that drives the FINDER ends with Special > Shut Down, and must.**
-Mini vMac writes the guest's sectors through buffered stdio and flushes
-when a volume is ejected, so killing the emulator with a volume still
-mounted loses whatever the Finder had not written — and an image COPIED
-out of a killed session is torn: it does not boot at all. `arcmac.py`
-picked Shut Down for that reason in M13; `spacesaver.py` did not, and
-three of its runs read their subjects back "unchanged" from a machine
-whose every frame is the striped garbage screen. One of those readbacks
-became a documented fact about the format (BLOCKERS.md). Either shut
-down, or put the subjects on a second volume and Put Away (Cmd-Y) — what
-`sdcompress.py` does.
-
-**And photograph the pick, because the item is one row from a different
-one.** Shut Down is at **(225, 139)** on System 7 and at **(175, 123)** on
-System 6 — the two Special menus are not the same length, and 123 on System 7
-is **Restart**, which `spacesaver.py` and `sitcrypt.py` picked in every run
-either had ever made (measured 2026-09-01 off their own forty-three
-`*-special-menu.png`; corrected in both; BLOCKERS.md, withdrawn claims).
-Restart ejects the volumes too, which is why nothing failed and nobody
-noticed — but `rescomp.py` has the case where it tore a write, below.
+**A run that drives the FINDER ends with Special > Shut Down, and must.** Mini
+vMac flushes a volume's writes when it is ejected, so a killed emulator loses
+what the Finder had not written, and an image COPIED out of a killed session
+does not boot. Or put the subjects on a second volume and Put Away (Cmd-Y), as
+`sdcompress.py` does. **Photograph the pick**: Shut Down is at **(225, 139)**
+on System 7 and **(175, 123)** on System 6; 123 on System 7 is **Restart**,
+which ejects too and so hid the mistake until 2026-09-01 (BLOCKERS.md,
+withdrawn claims) — `rescomp.py` has the case where it tore a write.
 
 **The app is the boot shell.** The boot blocks' shell name (offset 0x1A) is
-rewritten from `Finder` to `macextract`, so the ROM hands control straight to
-the application. No Finder, no synthetic double-click, no mouse automation —
-the machine boots into the test and nothing else runs.
+rewritten from `Finder` to `macextract`. **Nothing mounts disks** then (the
+volume walk saw one volume after 30 s), so the autotest build calls
+`PBMountVol` on each drive (`MountAllDrives`); the interactive application
+uses Standard File, which does its own. `mkboot.py --finder` keeps the Finder
+as shell, the application at the volume root, launched by double-click.
 
-That is a materially different environment, and it is worth naming: **nothing
-mounts disks**, and no other process competes for the heap. A disk inserted
-after startup never appears — the disk-inserted event is posted, but volumes
-are mounted when somebody asks and normally that somebody is the Finder
-(measured: the volume walk saw exactly one volume after 30 s, with both images
-present and both mounting fine when the Finder was left as shell). The
-autotest build calls `PBMountVol` on each drive number first
-(`MountAllDrives`); the interactive application uses Standard File, which does
-its own disk handling.
-`mkboot.py --finder` is the other arrangement — Finder left as the shell, the
-application at the volume root, launched by double-clicking it — for questions
-that only make sense outside the boot-shell setup. `tools/quickdraw-repro/`
-uses it.
-
-**The System Folder is stripped to System + Finder.** The stock image ships
-with a dozen INITs and cdevs; on the 1 MB floor-target machine that is the
-difference between a result and a dead machine, and it would make peak-heap
-figures incomparable between runs. **What every stripped tier cannot see:
-what an INIT adds to the System.** The stock `System6.hfv` carries
-AppleShare's 1988 `Desktop Mgr` INIT, which gives System 6 a Desktop
-Manager, and v0.41.0 bombed under it on a System 7 trap no stripped boot
-ever reached (uzTools/MacExtract issue #1; DECISIONS.md 2026-10-21, *the
-Desktop Manager System 6 can have*). `run.py --keep-inits` boots the
-System Folder as it is, every INIT loaded, MultiFinder included where the
-Finder is kept — the lane that fails on the old shell and passes on the
-fixed one, and **74/74** over the sample at 4 MB on 2026-10-21:
+**The System Folder is stripped to System + Finder**: on the 1 MB machine the
+stock INITs and cdevs are the difference between a result and a dead machine,
+and they would make peak-heap figures incomparable. **What every stripped tier
+cannot see: what an INIT adds to the System** (uzTools/MacExtract issue #1;
+DECISIONS.md 2026-10-21, *the Desktop Manager System 6 can have*). `run.py
+--keep-inits` boots the System Folder as it is, MultiFinder included where the
+Finder is kept — **74/74** over the sample at 4 MB on 2026-10-21:
 
     tools/vmac/run.py --keep-inits --expect ARCHIVE.sit     # NOGRID before 2026-10-21
     tools/vmac/run.py --keep-inits --list tools/vmac/sample.txt
 
-The reporter's whole story — the Finder, MultiFinder, the release binary,
-the archive typed `BINA`/`SITx` as Mini vMac's ImportFl types it — is
-`drive.py`: a booted Mac that takes clicks and keys from a file, so each
-screen can be looked at before the next step is chosen:
+The reporter's whole story — Finder, MultiFinder, the release binary, the
+archive typed `BINA`/`SITx` as Mini vMac's ImportFl types it — is `drive.py`,
+a booted Mac taking clicks and keys from a file one step at a time:
 
     mkboot.py $V/System6.hfv dist/MacExtract.bin boot.hfv --finder --keep-inits \
               --data ARCHIVE.sit:ARCHIVE.sit
@@ -311,150 +252,58 @@ screen can be looked at before the next step is chosen:
     drive.py boot.hfv mv-4M shots/ &        # then: echo 'dclick 472 45' >> shots/cmd
 
 Menus want the button held: `down X Y`, `move X Y`, `up`. **GateKeeper**
-(DECISIONS.md 2026-10-21, *the guard that vetoes the Finder info*) is the
-same boot with its three files in the System Folder, `hcopy -m` from
-`~/.cache/macextract/gatekeeper/specimens/`; its mode is in the Control
-Panel (Apple menu, Gatekeeper Controls, Settings), and the output is read
-off a COPY of the run's `boot.hfv` with `hcopy -m`, because the Finder
-info a vetoed `PBSetCatInfo` loses is invisible on the screen.
+(DECISIONS.md 2026-10-21, *the guard that vetoes the Finder info*) is the same
+boot with its three files in the System Folder, `hcopy -m` from
+`~/.cache/macextract/gatekeeper/specimens/`; its mode is in the Control Panel
+(Apple menu, Gatekeeper Controls, Settings), and the output is read off a COPY
+of the run's `boot.hfv` with `hcopy -m` — vetoed Finder info is invisible on
+screen.
 
-**The application always says whether it is alive.** Before doing any work it
-paints a grid with `ret = -1000` ("running"); a missing `In`/`Out` volume paints
-`-1001`/`-1002`. So the host can tell *never launched* from *still decoding*
-from *bad disk set* — which a bare timeout cannot. `run.py` reports those as
-`NOGRID`, `TIMEOUT` and `SETUP` respectively, distinct from a real `FAIL`.
+**Verdicts.** Before any work the app paints `ret = -1000` ("running"); a
+missing `In`/`Out` volume paints `-1001`/`-1002`; `run.py` reports `NOGRID`,
+`TIMEOUT` and `SETUP`, distinct from `FAIL`. **`EMUDIED` means the host
+failed, not the Mac** (twice in an 88-run sweep, both passed on re-run):
+**re-run it before drawing any conclusion.** `run.py` and `os9.py` turn
+SIGTERM/SIGINT into a clean exit; after any interrupted sweep check `pgrep -x
+minivmac`, `pgrep -f qemu-system`, `pgrep -x Xvfb` — strays cost the next
+emulator CPU.
 
-**A killed run used to leave its emulator behind — fixed.** Both `run.py` and `os9.py` start
-the emulator with `start_new_session=True` on purpose — a stray signal to the
-process group must not take it down mid-write — so a driver killed by a
-`timeout` never reaches its cleanup and the child survives. Seen twice:
-an orphaned `qemu-system-ppc`, and two orphaned `Xvfb` displays. Check with
-`pgrep -x minivmac`, `pgrep -f qemu-system`, `pgrep -x Xvfb` after any
-interrupted sweep; they cost CPU the next emulator needs. Both harnesses now
-turn SIGTERM and SIGINT into a `SystemExit`, so the signal unwinds and the
-existing cleanup runs; verified by interrupting a 1x run with a live emulator
-and finding nothing left over, and again on 2026-08-02 by interrupting an
-`os9.py --list` sweep mid-boot — it printed "interrupted by signal 15" and
-left zero `qemu-system-ppc` behind.
+**Timing.** `run.py --emu mv-4M-1x` splits boot from extraction (the "alive"
+grid marks where work starts); `timing.txt` is the set, FORMATS.md has the
+tables. `UNC_AT_PROGRESS` paints the engine's byte counter into the grid, so
+an unfinished run can be interrogated — decode rates are very non-uniform (a
+306 KB BinHex took 150 s, 205 KB of it in the last 100 s), and a timeout says
+nothing. `decode_grid.py` costs ~50 ms a call, ~5 % of a 1x core at `--poll
+1`; FORMATS.md's Arsenic timings were taken at `--poll 20`.
 
-**`EMUDIED` means the host failed, not the Mac.** The emulator process
-occasionally exits within a few seconds of launch — twice in an 88-run sweep
-here — and both fixtures passed on an immediate re-run. That used to be
-reported as `NOGRID` with the text "nothing decodable within 300s", which
-reads like a Mac-side bug and is wrong on the elapsed time as well; it is now
-its own verdict. **Re-run an `EMUDIED` fixture before drawing any conclusion
-from it.**
+**Wall-clock time is not Mac Plus time — except in a 1x build.** `mv-4M` and
+`mv-1M` run *all out* (the sweeps); `mv-4M-1x` and `mv-1M-1x` run at
+authentic 7 MHz and are the **only** builds a timing claim may come from.
+`interactive.py` defaults to `mv-4M-1x`, or the progress dialog is gone before
+it can be photographed. `mv-1M-1x` exists because StuffIt 5's low-memory
+inverse BWT runs only when memory is tight: a claim at the intersection of two
+axes needs a build at that intersection.
 
-**Timing is settled.** `run.py --emu mv-4M-1x` runs an authentic build and
-splits boot from extraction (the app paints its "alive" grid before touching a
-disk, so the harness can see where work starts), and `timing.txt` is the set
-to measure. 8/8 since 2026-08-02, plus StuffIt 5 / Arsenic on 2026-08-07;
-FORMATS.md has the tables. This paragraph read "attempted and not settled"
-until 2026-08-07, long after the measurements existed — the 306 KB BinHex that
-"did not finish in fifteen minutes" simply takes 150 s, and every timeout
-chosen for it expired mid-run because its decode rate is very non-uniform.
-The instrument that settled it was `UNC_AT_PROGRESS`, which paints the
-engine's byte counter into the grid as it runs, so a run that has NOT finished
-can still be interrogated:
+**This box has two cores** (`nproc`, checked 2026-09-05). At 1x the emulator
+paces itself against real time, so anything else CPU-heavy — `./ci.sh`, a
+sweep, a second `interactive.py`, another SESSION's emulator — inflates the
+number. `interactive.py` waits fixed seconds between clicks, so a Mac below 1x
+photographs the wrong moments. **Run timing, and the interactive phases, one
+at a time.**
 
-    t+~7 min     49,152 / 306,651   (16%)
-    t+~9 min     98,304 / 306,651   (32%)
-    t+11 min    303,104 / 306,651   (99%)   <- 205 KB in the last 100 s
+**`interactive.py` is mostly not self-checking**: same clicks, same order, a
+numbered screenshot per step. Every phase but `--e2e` ends on ONE check that
+can fail — `--segments` the joined bytes, `--dest` which volume, `--wd` which
+folder, the default phase the names its second boot wrote — because a
+screenshot of the wrong dialog looks like the right one. `--e2e` is for a
+photograph: an extracted application drawing its own splash screen.
 
-Still true and still the trap: **do not poll every few seconds**, because
-decoding a 512x342 grid in Python steals the CPU from the emulator you are
-timing.
-
-**And on a LONG 1x run it does worse than steal CPU: it reports a bogus
-FAIL.** `--poll 5` and below finish in about five seconds with `nfiles 0` and
-a nonsense value in the grid's `ret` slot — four times out of four on
-`derived-Library_ISBN_Barcoder.sit` at `--mem 1M --emu mv-1M-1x` (twice at
-`--poll 5`, once at `--poll 2`, once at `--poll 1`), against five clean runs
-at `--poll 20`. **Use `--poll 20` for the Arsenic fixtures**; the timings in
-FORMATS.md were taken there. The likely cause is a poll landing while the app
-is still painting its "alive" grid, so `ret` holds neither a result nor the
-running sentinel and run.py takes it as final — that is a **hypothesis**, and
-the failure pattern is what is measured. **FIXED 2026-08-28, and `--poll 1` now passes.** `--poll 3` was not safe
-at 4 MB either — re-measuring `timing.txt`, `popper-1.7.tar.Z` and
-`derived-PackIt.pit` both reported FAIL with a truncated total and
-`peak heap 0 B`, 2 of 13, while passing at `--poll 20` and all out at both
-memory sizes. The cause is not a race to be avoided by polling slowly:
-`at_report` erases the screen to white and paints FORWARD, and it painted the
-sync word FIRST, so a screenshot taken mid-paint decoded cleanly with the
-unpainted tail reading as zeros. The kept frame proves it —
-`derived-PackIt.pit` reported `totalRsrcLen` 0x00008000 where the truth is
-0x0000DB05, which is that value with painting stopped after its 17th bit.
-The sync word is now painted LAST, so it certifies completion: a mid-paint
-screenshot has no sync, `decode_grid.py` rejects it, and the host looks
-again. Both fixtures pass at `--poll 3` and at `--poll 1`.
-
-**What still argues for a slower poll is CPU, not correctness.**
-`decode_grid.py` costs ~50 ms a call — mostly Python parsing an ASCII PGM of
-every pixel — so `--poll 1` spends ~5 % of the core the 1x emulator is
-pacing against. Crop the region and emit binary `P5` and that goes away.
-
-**Two 22-minute runs were spent finding this out**, on an A/B that then could
-not be resolved: `-Os` and `-O2` builds of `sit_arsenic.c` came out exactly
-one poll interval apart at `--poll 20` and both `--poll 5` re-runs failed
-instantly. FORMATS.md, *Per-file `-O2`*.
-
-**Wall-clock time is not Mac Plus time — except in a 1x build.** `setup.sh`
-produces four emulators, because RAM size and speed are both compile-time
-options. `mv-4M` and `mv-1M` run *all out*, as fast as the host allows, which
-is what the fixture sweeps use because correctness does not depend on speed
-and 55 fixtures x 2 memory sizes at Mac Plus speed would take all day.
-`mv-4M-1x` and `mv-1M-1x` run at authentic 7 MHz and are the **only** builds a
-timing claim may be drawn from. `interactive.py` defaults to `mv-4M-1x`,
-because at all-out speed the extraction is over before the progress dialog can
-be photographed and Cmd-. has nothing left to cancel.
-
-`mv-1M-1x` was added on 2026-08-07 for one reason worth remembering: the
-StuffIt 5 decoder only falls back to its low-memory inverse BWT when memory is
-tight, so **the cost of that fallback is not measurable on any of the other
-three** — a 4 MB machine never takes the path, and both all-out builds cannot
-be quoted for time. A claim that lives at the intersection of two axes needs a
-build at that intersection.
-
-**This box has two cores** (`nproc`; the host CPU has four and the container
-is limited to two — the figure here read "one core" until it was checked on
-2026-09-05). At 1x the emulator paces itself against real time, so anything
-else CPU-heavy — `./ci.sh`, a corpus sweep, a second `interactive.py`, or
-another SESSION's emulator on the same machine — inflates the number you are
-measuring. Run timing alone.
-
-**And it is not only the number.** `interactive.py` waits fixed seconds
-between clicks, so a Mac running below 1x desynchronises the whole
-choreography: two phases run side by side on 2026-08-09 and every frame of one
-came out a step early — `3-cancelled.png` showing the progress dialog,
-`4-back.png` showing the alert that belonged in it, the Cmd-. round never
-happening at all. Nothing failed; the screenshots were simply of the wrong
-moments. **Run the interactive phases one at a time.**
-
-**`interactive.py` is mostly not self-checking.** It guarantees the same clicks
-in the same order and writes a numbered screenshot per step; judging them is
-the reader's job. Every phase but `--e2e` does end on ONE thing that can fail
-on its own — `--segments` on the joined bytes, `--dest` on which volume holds
-the output, `--wd` on which folder does, the default phase on the names its
-second boot wrote — and those exist because a screenshot of the wrong dialog
-looks exactly like a screenshot of the right one. The default phase once
-reported "settled after ~134s" for a run that spent all 134 in a "Replace
-existing" alert and extracted nothing (2026-08-09). `--e2e` has no such line
-on purpose: what it is for *is* a photograph, an extracted application drawing
-its own splash screen.
-Three lessons are baked into it, all of which produced confident-looking
-nonsense first:
-
-- *Press buttons with Return, not coordinates.* Clicking SFGetFile's Open at a
-  measured point hit **Drive** one row up, switched to an empty volume, and
-  made every later screenshot meaningless while still "succeeding".
-- *Set X input focus explicitly.* With no window manager nothing assigns it,
-  so key events go to the root window. Mouse clicks are delivered by position
-  and work anyway — which makes it look like the Mac ignores one particular
-  key rather than receiving none.
-- *A phase written for a new path can leave the old one less covered.*
-  `--dest` passed twice while the DEFAULT destination was broken, because it
-  sends the output to an empty floppy and the bug needed the archive's own
-  folder. Ask which case the new phase stopped exercising.
+- *Press buttons with Return, not coordinates* (a measured Open hit
+  **Drive**).
+- *Set X input focus explicitly*: with no window manager, keys go to the root
+  window while clicks still work.
+- *A phase written for a new path can leave the old one less covered*:
+  `--dest` passed while the DEFAULT destination was broken.
 
 ## What StuffIt does with a zip's Finder metadata — `zipmeta.py`
 
@@ -462,26 +311,19 @@ nonsense first:
     tools/vmac/zipmeta.py --table        # no emulator
     tools/vmac/zipmeta.py --expander     # one boot, reads the volume back
 
-`--make` cuts four entries out of a real MacZip archive keeping their
-local headers, `0x334d` fields and compressed data BYTE FOR BYTE — only
-the central-directory offsets are rewritten — so this grades Aladdin
-against a published archive and not against one written here.
+`--make` cuts four entries out of a real MacZip archive keeping their local
+headers, `0x334d` fields and compressed data BYTE FOR BYTE — only the
+central-directory offsets are rewritten. **`--table` is the answer and needs
+no boot**: the `UnZip Translator`'s `E2Ty` resource is nineteen rows of
+extension → type/creator (2 + 19 × 16 = 306, the whole resource). The result
+is in FORMATS.md, *What Aladdin's own software does with the same bytes*.
 
-**`--table` is the answer and needs no boot.** The `UnZip Translator`'s
-`E2Ty` resource is nineteen rows of extension → type/creator, parsed by
-arithmetic that checks itself: 2 + 19 × 16 = 306, the whole resource.
-The result is in FORMATS.md, *What Aladdin's own software does with the
-same bytes*.
-
-**What it cannot see.** It grades ONE StuffIt, the 3.5.1 that
-`spacesaver.py` installs, which predates the field by four years — so a
-negative here is not a fact about StuffIt in general; `sitzip.py`, below,
-is where 5.5 and 7.0.3 are. It cannot tell
-"read the field and ignored it" from "never looked", because both leave
-the same volume; the translator's own bytes are what distinguish them.
-And `checksum.md5` coming back right proves nothing: `TEXT/ttxt` is the
-table's answer for anything it does not recognise. **Read the `MSWD`
-rows.**
+**What it cannot see.** It grades ONE StuffIt, the 3.5.1 that `spacesaver.py`
+installs, which predates the field by four years (`sitzip.py` has 5.5 and
+7.0.3). It cannot tell "read the field and ignored it" from "never looked";
+the translator's bytes distinguish them. `checksum.md5` coming back right
+proves nothing — `TEXT/ttxt` is the table's answer for anything unrecognised.
+**Read the `MSWD` rows.**
 
 ## The same question, two boxes later — `sitzip.py`
 
@@ -492,85 +334,58 @@ rows.**
     tools/vmac/sitzip.py --run 703
     tools/vmac/sitzip.py --list -o <rundir>    # what the run left behind
 
-`zipmeta.py` grades StuffIt 3.5.2, which predates Info-ZIP's `0x334d` by
-four years. This grades **5.5 and 7.0.3** on the same four-entry subject,
-and the result is in FORMATS.md, *What Aladdin's own software does with
-the same bytes*.
+This grades **5.5 and 7.0.3** on `zipmeta.py`'s four-entry subject; the
+result is in FORMATS.md, *What Aladdin's own software does with the same
+bytes*.
 
-**Nothing is installed by an installer.** Both boxes' payloads extract
-whole with this engine (FORMATS.md, *StuffIt 5's method 14*), and
-`hfsboot.img` — below — is a plain-HFS Mac OS 9 boot volume hfsutils can
-write, so the engine, the seventeen translators (5.5) or the engine shell
-and twenty-three plug-ins (7.0.3) are `hcopy -m`'d into a System Folder
-from Linux. That is what made this cheap enough to do at all: the
-alternative was walking two Aladdin installers with a pointer that costs
-~40 s a move.
+**Nothing is installed by an installer.** Both payloads extract whole with
+this engine (FORMATS.md, *StuffIt 5's method 14*), and `hfsboot.img` (below)
+is a plain-HFS Mac OS 9 boot volume hfsutils can write, so the engine, the
+seventeen translators (5.5) or the engine shell and twenty-three plug-ins
+(7.0.3) are `hcopy -m`'d into a System Folder from Linux.
 
-**Where each piece goes is read off the software.** The 5.5 engine's own
-`STR# 999` *Aladdin Folder Names* is `Extensions`, `Aladdin`,
-`Extensions:Aladdin`; its `STR# 1004` *Path Names* holds `:Extensions`
-and `StuffIt Engine™`; its `fld# 999` names `Translators`, `Viewers`,
-`Magic Menu Extensions`. The installer's own *What was installed (and
-where)* draws the same tree in two `PICT`s. 7.0.3's `StuffItEngineShell`
-is a `shlb` carrying the Pascal string `StuffIt Plug-Ins`.
+**Where each piece goes is read off the software**: the 5.5 engine's `STR#
+999` (`Extensions`, `Aladdin`, `Extensions:Aladdin`), `STR# 1004`
+(`:Extensions`, `StuffIt Engine™`) and `fld# 999` (`Translators`, `Viewers`,
+`Magic Menu Extensions`); 7.0.3's `StuffItEngineShell` carries `StuffIt
+Plug-Ins`.
 
 **Entries are selected by TYPE and CREATOR, never by name.** An
-InstallerMaker payload carries a zero-length `STde`/`STin` DIRECTIVE
-beside most real files — one per thing the installer deletes or moves —
-and `! Zip Translator` is one of them. A name pattern picks the directive
-as happily as the file, and placing it would put an empty file where the
-engine looks for a translator. The counts are asserted (17 translators,
-23 plug-ins), so a payload that changes shape fails rather than
-half-installs.
+InstallerMaker payload carries zero-length `STde`/`STin` directives beside
+most real files (`! Zip Translator` is one), and a name pattern picks the
+directive as happily as the file. The counts are asserted (17 translators, 23
+plug-ins), so a payload that changes shape fails rather than half-installs.
 
-**`--carbonlib` is a prerequisite for 7.0.3 and nothing else.** Its
-Expander refuses to launch: *"Expander requires CarbonLib 1.6.0 or
-later."*, and the image carries **1.4**, read off the extension's own
-`vers`. Apple ships 1.6 as a self-mounting image whose data fork is NDIF
-— the resource fork's `bcem` names the volume `CarbonLib` — so nothing
-here decompresses it and the Macintosh mounts it instead. The 40 MB
-`CarbonLib_160_languages.sit` is the same `.smi` once per language and
-no help. The run ends by reading `CarbonLib`'s `vers` back **off the
-disk**, not off a screenshot, and keeps the volume as
-`hfsboot-carbon.img` only if it says 1.6.
+**`--carbonlib` is a prerequisite for 7.0.3 only.** Its Expander refuses to
+launch (*"Expander requires CarbonLib 1.6.0 or later."*), and the image
+carries **1.4**. Apple ships 1.6 as a self-mounting image whose data fork is
+NDIF, so the Macintosh mounts it; the 40 MB `CarbonLib_160_languages.sit` is
+no help. The run reads `CarbonLib`'s `vers` back **off the disk** and keeps
+the volume as `hfsboot-carbon.img` only if it says 1.6.
 
 ### Four things that each cost a boot
 
-- **Do not open with os9.py's `Cmd-Q, Return`.** That pair quits the
-  Setup Assistant, which the HFS+ master puts up on every boot;
-  `hfsboot.img` does not have one, so the Finder is frontmost and the
-  Return opens the SELECTED icon's name for EDITING. The boot volume is
-  selected on a fresh desktop, so the next three keystrokes went into
-  its name and Cmd-Down committed them: `HFSBoot` was renamed `sit` and
-  its window opened in place of the transfer volume's. **A keystroke
-  that is harmless in one application renames a volume in another.**
-- **The Expand command's Command key is not the same in both boxes.**
-  5.5's `MENU` 129 is `File ▸ Expand… / E`; 7.0.3's is
-  `File ▸ Expand / O`. A chord the application does not have is
-  indistinguishable from one the guest ignored — 7.0.3 sat on its drop
-  window for 127 s under ⌘E. Read the `MENU` resource, do not guess.
-- **The two Expand dialogs are not the same dialog.** 5.5 puts up
-  Standard File, already listing the transfer volume. 7.0.3 puts up
-  **Navigation Services**, which opens on the Desktop, lists the
-  volumes, and greys `Open` out the moment a FILE is highlighted — so
-  the archive is taken with `Choose`, and the run that pressed Return
-  instead opened the boot volume and reported a healthy "expansion
-  started".
-- **Return does not reach a button that is not the default**, which is
-  how both licence agreements stop a keyboard-only run: Apple's disk
-  image draws `Disagree` and `Agree` identically, and so does the
-  installer's *"you must agree to the terms"* alert — six presses moved
-  neither. Those two clicks are the only pointer work here, and their
-  coordinates are measured off the screenshots they are named for.
+- **Do not open with os9.py's `Cmd-Q, Return`.** That pair quits the HFS+
+  master's Setup Assistant; `hfsboot.img` has none, so the Return opens the
+  selected icon's name for EDITING — `HFSBoot` was renamed `sit`. **A
+  keystroke harmless in one application renames a volume in another.**
+- **The Expand command's Command key differs**: 5.5's `MENU` 129 is `File ▸
+  Expand… / E`, 7.0.3's is `File ▸ Expand / O`. A chord the application lacks
+  looks like one the guest ignored. Read the `MENU` resource, do not guess.
+- **The two Expand dialogs differ.** 5.5 puts up Standard File on the
+  transfer volume. 7.0.3 puts up **Navigation Services**, which opens on the
+  Desktop and greys `Open` out once a FILE is highlighted — take the archive
+  with `Choose`; Return opens the boot volume and looks like a healthy start.
+- **Return does not reach a button that is not the default**: both licence
+  agreements (Apple's disk image, the installer's *"you must agree"* alert)
+  need a click. Those two clicks are the only pointer work here, at
+  coordinates measured off the screenshots they are named for.
 
-**What it cannot see.** The same two things `zipmeta.py` cannot: it
-grades each box's **Expander** and not every reader in it, and it cannot
-tell "read the field and ignored it" from "never looked" — both leave
-the same volume. The binaries' own bytes are what distinguish those, and
-that reading is in FORMATS.md beside the result. One keyboard primitive
-it relies on that no other harness here uses: **Tab selects the first
-icon in a Finder window by name**, which is how the installer on a disk
-whose contents are unknown gets opened.
+**What it cannot see.** As `zipmeta.py`: each box's **Expander** and not every
+reader in it, and "ignored" vs "never looked" (FORMATS.md beside the result
+reads the binaries). It relies on one primitive no other harness here uses:
+**Tab selects the first icon in a Finder window by name**, which opens an
+installer on a disk whose contents are unknown.
 
 ### The same boxes over the hard cases — `compat9.py`
 
@@ -580,35 +395,29 @@ whose contents are unknown gets opened.
     compat9.py --stop -o <dir>            # kills the pid --boot wrote, nothing else
     compat9.py --read -o <dir>            # every file on the transfer volume, both forks
 
-The results are FORMATS.md's, *Run over the hard cases* and, for
-`--set zip`, *Zip methods in the three boxes*. The subjects are
-2.0.1's archives, an encrypted Compact Pro archive, an mpack set and a
-BinHex posting. **Each subject sits in a folder of its own** because most of
-them expand to the same name, and **each has creator `SITx`**, which is both
-Expanders' signature. The Finder then opens a subject with Tab and Cmd-Down
-and hands it over as an `odoc`: no Expand dialog, no Navigation Services,
-no pointer, on either box. A fresh transfer volume needed no desktop
-rebuild for this; the binding was there on the first subject.
+The results are FORMATS.md's, *Run over the hard cases* and, for `--set zip`,
+*Zip methods in the three boxes*. The subjects are 2.0.1's archives, an
+encrypted Compact Pro archive, an mpack set and a BinHex posting, **each in a
+folder of its own** (most expand to the same name) and **each with creator
+`SITx`**, both Expanders' signature: the Finder opens a subject with Tab and
+Cmd-Down and hands it over as an `odoc` — no Expand dialog, no pointer.
 
-It is driven by hand, one frame at a time, and three things made that
-necessary:
+It is driven by hand, one frame at a time:
 
-- **Close only the subject's folder window.** The volume window stays open
-  behind it, so typing the volume's name there selects `StuffIt Expander`,
-  and Cmd-Down then launches it with no document.
-- **Look before typing a password.** 7.0.3 asks for one on four of the five
-  2.0 ciphers and not on `NewDE`. There the password went into an error
-  alert and the Return dismissed it, which was luck: the same keystrokes
-  into the Finder would have renamed the selected icon.
-- **An archive that is refused still leaves files behind.** 7.0.3 leaves an
-  empty or resource-only stub for every entry it refuses, and 5.5's MIME
-  reader leaves an empty file. So the verdict is the bytes `--read`
-  reports, never the icon in the frame.
+- **Close only the subject's folder window.** Typing the volume's name in the
+  volume window selects `StuffIt Expander`, and Cmd-Down launches it with no
+  document.
+- **Look before typing a password.** 7.0.3 asks on four of the five 2.0
+  ciphers and not on `NewDE`; the same keystrokes into the Finder would
+  rename the selected icon.
+- **A refused archive still leaves files behind** (7.0.3 an empty or
+  resource-only stub per refused entry, 5.5's MIME reader an empty file). The
+  verdict is the bytes `--read` reports, never the icon.
 
-**What it cannot see.** The Deluxe APPLICATIONS (5.5's will not start on
-this installation, *What `--probe` measured* below; 7.0.3's is driven by
-`as703.py --set boxes`, below); why a reader refused, beyond its own
-words; and more than one subject per question.
+**What it cannot see.** The Deluxe APPLICATIONS (5.5's will not start on this
+installation, *What `--probe` measured* below; 7.0.3's is driven by
+`as703.py --set boxes`); why a reader refused, beyond its own words; and more
+than one subject per question.
 
 ### AppleSingle under 7.0.3, by pair and name — `as703.py`
 
@@ -624,34 +433,29 @@ words; and more than one subject per question.
 
 The results are FORMATS.md's, *AppleSingle and AppleDouble in 7.0.3*. The
 subjects are one AppleSingle file under six pairs and names and three
-AppleDouble shapes, each in a folder of its own; the ownerless one
-(`????/????`) goes through File ▸ Expand, whose Navigation Services
-dialog lists it and takes it with `Choose` at `sitzip.DIST["703"]["choose"]`,
-still (668, 510) on 2026-10-23. Driven by hand, like `compat9.py`.
+AppleDouble shapes, each in its own folder; the ownerless one (`????/????`)
+goes through File ▸ Expand, taken with `Choose` at
+`sitzip.DIST["703"]["choose"]`, (668, 510) on 2026-10-23. Driven by hand.
 
-- **Type-to-select needs the letters within the Finder's delay.** Sent
-  0.6 s apart, `s`, `i`, `t` selected `SitZip`, then nothing, then
-  `Trash`, and Cmd-Down opened the Trash; 0.3 s apart they select the
-  volume. One letter is enough where it is unique.
-- **A refused subject still gets a folder and a stub**, as under
-  `compat9.py`; the verdict is `--read`'s bytes.
+- **Type-to-select needs the letters within the Finder's delay.** 0.6 s apart,
+  `s`, `i`, `t` selected `SitZip`, nothing, then `Trash`; 0.3 s apart they
+  select the volume. One letter is enough where it is unique.
+- **A refused subject still gets a folder and a stub**; the verdict is
+  `--read`'s bytes.
 - **The Expander quits after an `odoc` and stays after File ▸ Expand**, so
-  the Cmd-W that closes a folder window must wait for the alert's OK to
-  take it away.
-- **The boot volume has StuffIt Browser™ in it** (`Extensions:Aladdin:TFI
-  Extensions`, from the 5.5 era), and it opens a `.sit` inside the Finder
-  before any owner is looked for. For the alternate-program dialog on an
-  archive, `hdel` it from the run's `boot.img` first, and `hdel` the
-  Expander from `transfer.img` — both before `--boot`.
-- **Escape does not cancel the alternate-program dialog**, and a letter
-  typed into it selects a row; Cancel is a click at (612, 363).
+  the Cmd-W that closes a folder window must wait for the alert's OK.
+- **The boot volume has StuffIt Browser™** (`Extensions:Aladdin:TFI
+  Extensions`), which opens a `.sit` inside the Finder before any owner is
+  looked for. For the alternate-program dialog, `hdel` it from the run's
+  `boot.img` and the Expander from `transfer.img`, both before `--boot`.
+- **Escape does not cancel the alternate-program dialog**, and a typed letter
+  selects a row; Cancel is a click at (612, 363).
 - **`--set boxes` puts Deluxe and Tiger on the volume**, Tiger from
   `~/.cache/macextract/compat/tiger/Tiger.bin` (Info-Mac II's, through
   Discmaster, SHA-1 `878a0f50…`). Deluxe's `Open…` (⌘O) lists archive kinds
   only; its decoders are `Translate ▸ Expand…`, keyless, reached by a held
-  press. That dialog reopens in the LAST folder it showed, so a walk typed
-  from the volume's top lands somewhere else: a second Expand of the
-  previous subject wrote `Comment Folder.1`. ⌘↑ first.
+  press. That dialog reopens in the LAST folder it showed (a second Expand
+  wrote `Comment Folder.1`) — ⌘↑ first.
 
 ## The archive comment, and bit 5 — `sitcomment.py`
 
@@ -662,143 +466,95 @@ still (668, 510) on 2026-10-23. Driven by hand, like `compat9.py`.
     tools/vmac/sitcomment.py --probe -o <dir>    boot, launch Deluxe 5.5
     tools/vmac/sitcomment.py --macos86 -o <dir>  the boot that is not the route
 
-**Bit 5 is measured, and half of that needed no emulator.** What bit 5
-MEANS was settled by `Tutorial Files/Sample Archive.sit`, which **StuffIt
-Deluxe 5.5 ships inside its own installer** — the payload `sitzip.py
---payload 55` extracts and the payload `--read` indexes to find a `MENU`
-resource. It sets the bit, carries a 204-byte comment, and its own
-`firstoffs` closes the arithmetic. What needed `--specimen` is the
-ORDER of the password hash and the comment block, which only an archive
-setting bits 5 AND 7 can say: **three boots produced two of them**,
-`enc-comment-added.sit` and `enc-comment-stuffed.sit`, both `0xb0`
-(FORMATS.md, *StuffIt 5's archive flag byte, and what bit 5 is*;
-`tools/derive_sit5crypt.py` grades all six specimens on demand).
+**Bit 5 is measured** (FORMATS.md, *StuffIt 5's archive flag byte, and what
+bit 5 is*). Its meaning came from `Tutorial Files/Sample Archive.sit` inside
+Deluxe 5.5's installer (`sitzip.py --payload 55`), no emulator; `--specimen`
+was needed only for the ORDER of password hash and comment block, which only
+an archive setting bits 5 AND 7 can say: three boots produced
+`enc-comment-added.sit` and `enc-comment-stuffed.sit`, both `0xb0`.
+`tools/derive_sit5crypt.py` grades all six specimens on demand.
 
 **`--read` and `--aete` need no emulator.** `--read` prints what each box
-offers for a comment; `--aete` parses both scripting dictionaries whole —
-the `aete` layout with its strings packed and every other field on a word
-boundary, and it raises rather than printing if a byte is left over,
-because a dictionary read wrongly still looks plausible in every
-four-character code. What they say:
+offers for a comment; `--aete` parses both scripting dictionaries whole and
+raises if a byte is left over, because a dictionary read wrongly still looks
+plausible:
 
 | box | comment UI | scripting |
 |---|---|---|
 | Deluxe 5.5 | `MENU` 131 *Archive* ▸ `Edit Comment...`, **no Command key**; `STR# 30000` #13, a clickable comments AREA in the archive window | `Arc ` has `comment` (`comm`) and `password` (`pass`), both settable; `SIT!`/`STUF` takes `encrypting`; the Standard Suite has `get` and `set` |
 | Deluxe 7.0.3 Classic | `MENU` 132 *Archive* ▸ `Edit Comment…`, **no Command key** | `ARCH` has `comment` (`COMM`) and `password` (`PASS`), both settable; `STFF`/`stff` takes a `password` directly; `core/setd` is in its `aedt` and **not** in its `aete` |
 
-**The menu was believed dead on both and the dictionary is not** — a
-keyless menu item was recorded as not selectable on either guest, which is
-why this is driven by Apple event. On Mac OS 9 that was withdrawn on
-2026-10-23 (*What the pointer cannot select*, below); the Apple-event
-route stands on its own, since it reads the archive's byte back.
+The keyless menu item is reachable on Mac OS 9 (*What the pointer cannot
+select*, below); the Apple-event route stands on its own, since it reads the
+archive's byte back.
 
-**`--specimen` sends the events.** `tools/aesit/` is the sender, a
-Retro68 application in aetran.c's shape: the harness drives only the
-Finder, by type-to-select and Cmd-Down, and everything after that happens
-inside the Macintosh, where no coordinate can miss. It launches StuffIt
-Deluxe itself, works through a LADDER of event shapes, writes every
-reply's `errn` to `AEResult` beside itself **after each step**, reads the
-archive's own flag byte back off the disk, and prints it. The transfer
-volume carries the two archives it works on — one commented, one
-encrypted, both Aladdin's own output out of the cache.
+**`--specimen` sends the events.** `tools/aesit/` is the sender, a Retro68
+application in aetran.c's shape: the harness drives only the Finder, by
+type-to-select and Cmd-Down, and everything after happens inside the
+Macintosh. It launches StuffIt Deluxe, opens an archive already on the volume
+with `aevt/odoc`, `core/setd`s one property, closes, writes every reply's
+`errn` to `AEResult` **after each step**, and reads the archive's flag byte
+back off the disk. One phase adds a COMMENT to the encrypted
+`enc-swordfish.sit`; the other adds a PASSWORD to the commented `Sample
+Archive.sit` and stuffs a file into it. Both end at `0xb0`.
 
-**What the ladder does now**, and it is the shape that worked rather than
-the first one tried: open an archive already on the volume with
-`aevt/odoc`, `core/setd` one property on it, close. One phase adds a
-COMMENT to the encrypted `enc-swordfish.sit`; the other adds a PASSWORD
-to the commented `Sample Archive.sit` and then stuffs a file into it.
-Both end at `0xb0` and both are read back off the disk by `aesit`
-itself.
+**What the event ladder measured, 2026-10-06, three boots:**
 
-**What the ladder measured, 2026-10-06, three boots:**
-
-- **`make` fails and `open` does not.** Three shapes of *make new
-  archive* — `at` an alias of the folder, no `at` at all, and `stuff`
-  with no destination — all answer **-1701**, `errAEDescNotFound`:
-  7.0.3 wants an insertion location nothing here has built. An archive
-  already on the volume works on the first attempt. **When an
-  application will not CREATE the artefact, hand it one and ask it to
-  CHANGE it.**
+- **`make` fails and `open` does not.** Three shapes of *make new archive*
+  answer **-1701**, `errAEDescNotFound`; an archive already on the volume
+  works first time. **When an application will not CREATE the artefact, hand
+  it one and ask it to CHANGE it.**
 - **A reply of 0 says the term was understood and nothing more.** `set
-  password of archive 1` answers 0 and leaves the archive byte for byte,
-  because nothing made StuffIt rewrite it; the same event followed by a
-  `stuff` produces `0xb0`. This is why `aesit` opens the archive and
-  prints byte 83 rather than reporting the `errn` and stopping.
-- **StuffIt Deluxe 7.0.3 launches on Mac OS 9.2 from an assembled
-  installation**, with its own menu bar and toolbar, and it has **no
-  "properly installed" check at all** — that string is 5.5's `STR# 269`
-  #30 and 7.0.3 has no equivalent. What it does put up is a registration
-  **nag** with *Not Now* and *Register*, and it is a nag: Apple events are
-  handled with it on screen.
-- **`core/setd` works, and only on a resolved object.** With no archive
-  open, `set`, `save` and `close` all answer **-1708** and `stuff into`
-  answers **-1728** — so the -1708 is the object, not a missing handler
-  (`aedt` 129 lists `core/setd` and `core/save`). With an archive open,
-  `set password` answers **0**.
-- **`core/save` answers -1708 to an archive object even so**, and
-  `core/clos` answers 0, so closing is what has to write.
+  password of archive 1` answers 0 and leaves the archive byte for byte; the
+  same event followed by a `stuff` produces `0xb0`. So `aesit` prints byte
+  83, not the `errn`.
+- **Deluxe 7.0.3 launches on Mac OS 9.2 from an assembled installation** and
+  has no "properly installed" check; its registration nag (*Not Now* /
+  *Register*) does not block Apple events.
+- **`core/setd` works only on a resolved object**: with no archive open,
+  `set`, `save` and `close` answer **-1708** and `stuff into` **-1728**; with
+  one open, `set password` answers **0**. **`core/save` answers -1708 to an
+  archive object even so**, and `core/clos` answers 0, so closing is what
+  writes.
 - **`FlushVol` is enough to read the volume from outside.** `UnmountVol`
-  answers **-47**, `fBsyErr`, while StuffIt Deluxe is running off that
-  same volume — and `hmount` reads it anyway, with every file the run
-  wrote on it.
-- **A Pascal string literal's length byte is not checked by anything.**
-  `"\017Encrypted.sit"` is fifteen for thirteen characters, and the only
-  symptom was the file reading as absent — which is also what a missing
-  file looks like. `aesit` now checks each of its compiled-in names
-  against `sizeof` the literal and says so.
+  answers **-47** while Deluxe runs off that volume, and `hmount` reads it
+  anyway.
+- **A Pascal string literal's length byte is checked by nothing**:
+  `"\017Encrypted.sit"` is fifteen for thirteen characters and read as a
+  missing file. `aesit` now checks each compiled-in name against `sizeof`.
 
-**What this cannot see.** Whether an accepted event changed anything —
-the flag byte is the answer and the `errn` is not. **Bit 6**, which
-nothing on this machine sets. And one application per boot: every
-statement above is about 7.0.3, since 5.5 still stops at `STR# 269` #30
-(*What `--probe` measured*, below).
+**What this cannot see.** Whether an accepted event changed anything — the
+flag byte is the answer, not the `errn`. **Bit 6**, which nothing on this
+machine sets. And 5.5, which still stops at `STR# 269` #30 (below).
 
 ### What `--probe` measured, 2026-10-06
 
-It assembles 5.5 with the **application** on the transfer volume instead
-of `sitzip.py`'s Expander, boots, type-selects `stu` and photographs the
-result.
+It assembles 5.5 with the **application** on the transfer volume, boots,
+type-selects `stu` and photographs the result.
 
-- **StuffIt Deluxe 5.5 launches on Mac OS 9.2.** Its splash is drawn and
-  the menu bar is its own — `File Edit View Label Archive Translate
-  Scripts iSupport Help` — so what 9.2 refuses is **5.0.1**, not Deluxe
-  (`probe55/12-launched.png`).
-- **It will not run on an ASSEMBLED installation.** Over the splash:
-  *"This copy of StuffIt Deluxe™ has not been properly installed.
-  Please run the installer again to reinstall StuffIt Deluxe™."* —
-  `STR# 269` *Alerts/Errors* #30.
-- **The alert is a wall, not a nag.** Its OK is the default button, so
-  Return reaches it with no pointer; dismissing it **quits the
-  application** — the menu bar is the Finder's again in
-  `probe55b/14-dismissed.png`, and a ⌘S after it does nothing
-  (`15-stuff.png`). A frame that looks like a dismissed alert and a frame
-  that looks like a quit application are the same frame minus the menu
-  bar, which is the only part of it worth reading.
+- **Deluxe 5.5 launches on Mac OS 9.2** — splash and its own menu bar — so
+  what 9.2 refuses is **5.0.1**, not Deluxe (`probe55/12-launched.png`).
+- **It will not run on an ASSEMBLED installation**: *"This copy of StuffIt
+  Deluxe™ has not been properly installed..."*, `STR# 269` *Alerts/Errors*
+  #30.
+- **The alert is a wall, not a nag.** Return reaches its OK, and dismissing
+  it **quits the application** (`probe55b/14-dismissed.png`); only the menu
+  bar tells a dismissed alert from a quit application.
 
-Two routes out, neither needing anything off this machine: place whatever
-the check wants — the 5.5 payload also carries `Aladdin Compression™`
-(`APPC/ALCO`), `Compression Extension` (`FEXT/TFI`), `True Finder
-Integration™` (`cdev/TFI`), `Magic Menu™` (`TFIx/TFI`) and a `Text
-Encoding Converter` (`shlb/encv`), none of which
-`sitzip.DIST["55"]["place"]` places — or drive Aladdin's own installer
-with one of the published 5.x codes already in `spacesaver.CODES`.
-Placing all five answers *whether* and not *which*, and the disassembly
-got as far as the alert and no further: 5.5 is a fat binary, so its 68K
-`CODE` is readable with the toolchain's own `objdump`, and `CODE` 11 at
-`0x3844` is `{ Alert269(30); <one more call>; return 0; }` — where
-`Alert269` is `CODE` 4 at `0x3b4`, a two-argument wrapper that pushes
-269 under whatever index it is given. **Nothing in `CODE` 11 calls
-`0x3844`**, by absolute or relative branch, so the caller — and with it
-the condition — is in another segment and was not found by searching for
-the address. **7.0.3 needing none of this is why neither route has been
-spent**: the box that runs is the box the events go to.
+Two routes out, neither spent because 7.0.3 needs neither: place what the
+check wants — the payload also carries `Aladdin Compression™` (`APPC/ALCO`),
+`Compression Extension` (`FEXT/TFI`), `True Finder Integration™`
+(`cdev/TFI`), `Magic Menu™` (`TFIx/TFI`) and a `Text Encoding Converter`
+(`shlb/encv`), none of which `sitzip.DIST["55"]["place"]` places — or drive
+Aladdin's installer with a published 5.x code from `spacesaver.CODES`. The
+disassembly got as far as `CODE` 11 at `0x3844`, `{ Alert269(30); <one more
+call>; return 0; }` (`Alert269` is `CODE` 4 at `0x3b4`); nothing in `CODE` 11
+calls `0x3844`, so the condition is in another segment, not found.
 
 ## Making Now Compress archives with Now Compress — `nowcompress.py`
 
-Three of the five Now Compress block shapes had no real archive anywhere, so
-they were graded against the implementation `fmt_now.c` was transcribed from.
-`nowcompress.py` fixes that the way `cptsegment.py` fixed segmented Compact
-Pro: by running the original application.
+Specimens of the Now Compress block shapes, written by the original
+application.
 
     tools/vmac/nowcompress.py --setup     # fetch Now Utilities 5.0.1, convert
     tools/vmac/nowcompress.py --install   # install Now QuickFiler on System 7
@@ -816,310 +572,174 @@ Pro: by running the original application.
     tools/vmac/nowcompress.py --expand OUTDIR FILE.bin ...   # and below
     tools/vmac/nowcompress.py --dearchive OUTDIR FILE.bin ...  # the same, for ARCHIVES
 
-The compressor is **Now QuickFiler**, whose menu has Compress ▸ Faster/Smaller
-and Archive ▸ Faster/Smaller. Files go on the volume with `hcopy -r`, which
-writes the **data fork alone** — so until `--case forks` every member the
-harness had ever made had an empty resource fork, and a rule written in terms
-of the two forks looked like a rule about tables (BLOCKERS.md, *Withdrawn
-claims*). That case passes its members through `make_volume(macbinary=...)`
-instead, which is `hcopy -m` and carries both forks. Specimens land in
+The compressor is **Now QuickFiler** (Compress ▸ Faster/Smaller, Archive ▸
+Faster/Smaller). `hcopy -r` writes the **data fork alone**, so only `--case
+forks` (through `make_volume(macbinary=...)`, i.e. `hcopy -m`) has members
+with a resource fork — a rule once read off data-only members was withdrawn
+(BLOCKERS.md, *Withdrawn claims*). Specimens land in
 `$UNC_VMAC_HOME/specimens/now/<case>/` with the inputs beside them and a
-screenshot per step; `tools/run_now.py` picks them up if they are there and
-skips them with a message if they are not.
+screenshot per step; `tools/run_now.py` picks them up if present and skips
+with a message if not.
 
-**A case that varies one property of a COMPRESSED block has to keep the
-content compressible.** The first build of `--case match` used a keystream,
-which is incompressible: the encoder stored seven of its eleven members, and a
-stored block has no header and so no byte 2 to read. The rebuild gives each
-member 1,000 de Bruijn bytes — unique substrings, so nothing matches them —
-followed by 1,000 copies of a letter of its own, which compresses, matches
-nothing earlier, and costs every member the same (DECISIONS.md 2026-09-21,
-*the ladder that was walked back down*).
+**A case that varies one property of a COMPRESSED block must keep the content
+compressible** (a keystream made the encoder store seven of eleven members;
+Now Compress refuses a file it cannot compress). The cases, each one boot:
 
-Three things to know before re-running it:
+| case | what it plants | what it settled |
+|---|---|---|
+| `match` | 1,000 de Bruijn bytes, then 1,000 copies of a letter of the member's own | DECISIONS.md 2026-09-21, *the ladder that was walked back down* |
+| `probe` | a 4,000-byte run of one byte; 6,000 bytes over `{A, B}`; 6,000 over `{A, B, C, D}` with known frequencies; 6,000 whose second half repeats its first — a table found by what it MUST contain | docs/formats/now-compress.md, *Shape 3* |
+| `reach` | five 16 KB members, the fifth a copy of the first: a perfect match 64 KB back. Largest offset taken: 32,766 against a 32,768-byte window | DECISIONS.md 2026-09-21, *the window that stopped at the fork* |
+| `tokdist`, `toklen` | one match of known distance (40, 2 to 16,384) or length (24, 2 to 255) in a slice of an order-2 de Bruijn sequence over 256 symbols, then a compressible tail; ~4 minutes, 64 members, two of `tokdist`'s a Huffman-only block INSIDE an archive | `tools/derive_now.py`; DECISIONS.md 2026-09-21, *the pair that never repeats* |
+| `huffgap` | ten mixed files; eight came back Huffman-over-LZSS, each starting one zero byte after the table, then `00 03`; byte 0 (4, 6, 7, 8, 10, 14) a flush count | docs/formats/now-compress.md |
+| `deep`, `deeparc` | Fibonacci byte histograms, compressed and archived: every table 10 to 13 deep, escape count zero — evidence for a negative | docs/formats/now-compress.md, *What this note does NOT describe* |
+| `tree` | two folders and two loose files: a pre-order flattening, a folder record then the number of entries its +80 field states | docs/formats/now-compress.md, *The archive layer* |
+| `forks` | members with a resource fork (`make_volume(macbinary=...)`) | BLOCKERS.md, *Withdrawn claims* |
 
-- **The application is commercial and is not committed**, exactly like the
-  ROM: `--setup` fetches Macintosh Garden's installer image by URL and checks
-  its MD5. Now Utilities asks for a serial number at first launch and offers a
-  one-week demo; the demo is what the script uses.
-- **The installer image is NDIF**, Apple's undocumented compressed format.
-  `--setup` converts it to a raw HFS volume with an ADC decoder and a block
-  map derived from the image itself; if the conversion is ever wrong the
-  result will not mount, which is the check.
+**QuickFiler also compresses in the background** (its balloon help; queues
+`ToBeCompressedDB` and kin). **It has never fired in a run here** — the
+`archive` case leaves `mixed.bin` and `one.txt` at 49,000 and 7,500 bytes
+beside the `.sea` — but every case keeps the menu-pick screenshot so a
+specimen is attributed to the pick it shows.
+
+Before re-running it:
+
+- **The application is commercial and is not committed**, like the ROM:
+  `--setup` fetches Macintosh Garden's installer image by URL and checks its
+  MD5. The one-week demo offered at first launch is what the script uses.
+- **The installer image is NDIF**; `--setup` converts it to raw HFS with an
+  ADC decoder and a block map derived from the image. A wrong conversion will
+  not mount, which is the check.
 - **The installer's checkbox list is read back off the screen** after every
-  click. Clicking it blind is how the first attempt turned QuickFiler off.
+  click; clicking blind turned QuickFiler off.
 
-**`--setup6` and `--case6` are the SECOND encoder**, Now Utilities 6.0
-of March 1996, and they exist because a field constant across
-everything one program writes is a fact about that program
-(docs/formats/now-compress.md, *Two encoders*). Four differences from
-the 5.0.1 path, each of which cost a run to find:
+**`--setup6` and `--case6` are the SECOND encoder**, Now Utilities 6.0 (March
+1996), because a field constant across one program's output is a fact about
+that program (docs/formats/now-compress.md, *Two encoders*). There is no
+installer: `--setup6` places the extension and its toolbox from 6.0's `.sit`
+(it needs `unar`; the outer archive is StuffIt 5) into `System
+Folder:Extensions` of a copy of `Sys7.img`, keeping the leading spaces in
+`  Now Toolbox` and ` Now QuickFiler Extension` (the load order). 6.0's menu
+sits mid-bar, so its submenus open to the RIGHT and its rows are 36 px higher
+than 5.0.1's; its Demo button is at (264, 306), not (237, 306). Specimens land
+in `specimens/now6/`, beside 5.0.1's. Now Utilities 3.0.2 and 4.0.2 have no
+compressor.
 
-- **there is no installer to drive.** 6.0's `.sit` holds a StuffIt
-  archive of finished files, so `--setup6` places them instead: the
-  extension and its toolbox into `System Folder:Extensions` of a copy
-  of `Sys7.img`, the droplets at the root. It needs `unar`, the outer
-  archive being StuffIt 5;
-- **the leading spaces in `  Now Toolbox` and ` Now QuickFiler
-  Extension` are the load order** — extensions load alphabetically and
-  the Toolbox must come first — so they are kept, not stripped;
-- **6.0's QuickFiler menu sits mid-bar**, not against the screen edge,
-  so its submenus open to the RIGHT and its item rows are 36 px higher
-  than 5.0.1's. Its Demo button is at (264, 306) rather than (237, 306);
-- specimens land in `specimens/now6/` so that nothing overwrites
-  5.0.1's — comparing the two directories is the experiment.
-
-**Now Utilities 3.0.2 and 4.0.2 are not worth fetching**: they have no
-compressor at all. Their two disks each are Super Boomerang, NowMenus,
-WYSIWYG Menus, Startup Manager and the rest; QuickFiler arrives in 5.
-
-**QuickFiler also compresses by itself, and both versions do.** Its
-menu's *Don't Compress* and *Compress When Idle* items belong to a
-background compressor: it keeps queues (`ToBeCompressedDB`,
-`ToBeRecompressedDB`, `ToBeDecompressedDB`) and an exclusion list
-(`DoNotCompressFileDBNV`), compresses files that have been unmodified
-for a set time once the system has been idle for one, and expands them
-again on open. *Don't Compress* excludes the selection — by item,
-creator, type or Finder label — and the System Folder is excluded
-always. Its own balloon help is the source, and 5.0.1's extension
-carries the same strings as 6.0's, so this is not new in 6.
-**It has never fired in a run here**: a case's volume comes back with
-only the files the menu was released on changed — the `archive` case
-leaves `mixed.bin` and `one.txt` at 49,000 and 7,500 bytes beside the
-`.sea` — and the mis-clicked first 6.0 run came back with nothing
-compressed at all. A specimen is still worth attributing to the menu
-pick the screenshot shows rather than to the run, which is why every
-case keeps that screenshot.
-
-**The `probe` case exists to make a code table legible**, and it is the
-technique worth reusing: its four members are a 4,000-byte run of one byte,
-6,000 bytes over `{A, B}`, 6,000 over `{A, B, C, D}` with known frequencies,
-and 6,000 whose second half repeats its first. A block whose literals can
-only be two known bytes is found by what its table MUST contain rather than
-by where the table might be — which is how the archive coder's header was
-read at all, the harness's other members being prose and keystream whose
-tables look like every other table (docs/formats/now-compress.md, *Shape 3*).
-
-**`--case reach` answers a question about a bound, and that is the other
-thing a made-to-order archive is good for.** Five 16 KB members whose
-fifth is a byte-for-byte copy of the first put a perfect match 64 KB back;
-the encoder does not take it, and the archive's largest offset is 32,766
-against a 32,768-byte window. That is what says `NOW_HISTORY` is right and
-the offset table's reach to 65,791 is capacity nothing writes
-(DECISIONS.md 2026-09-21, *the window that stopped at the fork*).
-
-**`--case tokdist` and `--case toklen` plant a match whose length and
-distance are known**, which is what turned the archive coder's tokens from
-a bit pattern into two tables. Each member is a slice of a **de Bruijn
-sequence of order 2 over 256 symbols** — every pair of bytes occurs
-exactly once in it, so an LZ encoder can find no match in it at all —
-followed by a copy of that member's own first bytes and a compressible
-tail, because Now Compress refuses a file it cannot compress. The one
-match in the member is therefore at a distance this file chose (40 of
-them, 2 to 16,384) or of a length this file chose (24, from 2 to 255),
-and `tools/derive_now.py` reads the token's bits off against it
-(DECISIONS.md 2026-09-21, *the pair that never repeats*).
-
-Both cases are one emulator run each, ~4 minutes, and they leave 64 members
-of real encoder output behind; two of `tokdist`'s came back as a Huffman-only
-block INSIDE an archive, a combination no other specimen has.
-
-**`--case huffgap` was for the gap that turned out not to exist.** Ten files
-of mixed content, compressed rather than archived, to multiply the one
-shape this project had two specimens of — where a Huffman-over-LZSS block's
-bit stream begins was down as unknown, "23 bits after the table in one and 18
-in the other". Eight of the ten came back as that shape, and all eight start
-where the two did: one zero byte after the table, then the `00 03` that opens
-any LZSS stream, coded through the block's own table. The case is kept
-because ten blocks is what makes the rule a measurement rather than a
-coincidence, and because its byte-0 values (4, 6, 7, 8, 10, 14) are what
-showed that byte to be a flush count.
-
-**`--case deep` and `--case deeparc` asked for a code past 15 bits and were
-refused.** Their four files have Fibonacci byte histograms — the distribution
-that makes a Huffman code as deep as it can be, 20 bits at 21 symbols — and
-are compressed in one case and archived in the other, because a Huffman-only
-block had only ever come out of the archive path. Every table that came back
-is 10 to 13 deep with an escape count of zero: each shape puts an LZ coder
-under the Huffman one, and it eats the skew that would have made the code
-deep. The cases are kept as the evidence for a negative
-(docs/formats/now-compress.md, *What this note does NOT describe*).
-
-**`--case tree` puts folders in an archive**, which only the corpus's 1995
-fixture had: two folders and two loose files, so that how the entry table
-nests them is read off more than one specimen. It is a pre-order
-flattening — a folder record, then exactly the number of entries its +80
-field states (docs/formats/now-compress.md, *The archive layer*).
-
-What the encoder writes per mode is FORMATS.md ✧; why any of it matters is
+What the encoder writes per mode is FORMATS.md ✧; why it matters is
 DECISIONS.md, "Now Compress, written by Now Compress".
 
-**`--adjudicate` grades us with the archive's own decoder.** A self-extracting
-archive contains the extractor that shipped with it, so it is both a specimen
-and an implementation:
+**`--adjudicate` grades us with the archive's own decoder** — a `.sea` carries
+the extractor that shipped with it:
 
     tools/vmac/nowcompress.py --adjudicate \
         fixtures/SyntheticReferences2.0.sea.bin \
         fixtures/derived-SyntheticReferences2.0.sea
 
 puts the `.sea` on a 25 MB volume, runs it under System 7, reads the volume
-back and compares every fork against our own extraction — resource forks with
-bytes 16..127 masked, the `vmac_check.py` convention, because the Resource
-Manager stamps that region whenever it touches a file. That is what settled
-the corpus's 1995 archive, which `unar` cannot decode at all. It works for any
-`.sea` in the corpus, not just this one.
+back and compares every fork against our extraction — resource forks with
+bytes 16..127 masked, the `vmac_check.py` convention (the Resource Manager
+stamps that region). It works for any `.sea` in the corpus, and settled the
+1995 archive `unar` cannot decode.
 
-**And it takes any archive at all, by splicing.** `tools/mutate_now.py`'s
-`splice` puts a different data fork into a `.sea`'s MacBinary, so the
-extractor Now Software shipped can be pointed at an archive this project
-wrote — which is how `synth_now.py --ladder` asks the encoder about the
-thirteen synthetic archives (TESTING.md). **The control that route needs
-is a length change**: `probe`'s 3,830-byte archive inside `tree`'s
-self-extractor, which was built around one 1,894 bytes long, extracts all
-four members byte-exact.
+**And it takes any archive, by splicing.** `tools/mutate_now.py`'s `splice`
+puts a different data fork into a `.sea`'s MacBinary, which is how
+`synth_now.py --ladder` asks the encoder about the thirteen synthetic
+archives (TESTING.md). **The control is a length change**: `probe`'s
+3,830-byte archive inside `tree`'s self-extractor (built around 1,894 bytes)
+extracts all four members byte-exact.
 
-**What `--adjudicate` could not see until 2026-09-21**: an extractor that
-refuses an archive leaves an empty volume, an empty volume compares zero
-forks, and zero forks all agree — so it printed *"agrees with us on every
-fork"* for two archives it had refused. It now fails when it graded
-nothing. Read the fork COUNT, not the verdict.
+**An extractor that refuses leaves an empty volume, and zero forks all
+agree** — `--adjudicate` fails when it graded nothing since 2026-09-21. Read
+the fork COUNT, not the verdict.
 
-**`--expand` runs the DECOMPRESSING half**, which is what turns "nothing here
-reads this field" into a statement about the format:
+**`--expand` runs the DECOMPRESSING half**, which turns "nothing here reads
+this field" into a statement about the format:
 
     tools/mutate_now.py --byte2 0x5a --splice IN.bin OUT.bin IN.dat OUT.dat
     tools/vmac/nowcompress.py --expand /tmp/out OUT.bin ...
 
-`--expand` puts MacBinary files on a volume — MacBinary because the type and
-creator are what make QuickFiler offer the item at all — selects them all and
-releases the menu on **Decompress**, then reads the volume back into `OUTDIR`.
-`tools/mutate_now.py` is the other half: it changes ONE field, recomputes
-every checksum over it (a block's four-byte trailer, an entry record's, the
-block table's, the file header's) and can splice the result back into a
-MacBinary or a `.sea`, so what reaches the Mac is a file no correct reader can
-tell from the original. Between them they settled four fields on 2026-09-21
-(docs/formats/now-compress.md).
-
-Five things to know:
+`--expand` puts MacBinary files on a volume (the type and creator make
+QuickFiler offer the item), selects them all, releases the menu on
+**Decompress**, and reads the volume back into `OUTDIR`. `tools/mutate_now.py`
+changes ONE field and recomputes every checksum over it (block trailer, entry
+record, block table, file header), so no correct reader can tell the result
+from the original (docs/formats/now-compress.md).
 
 - **Decompress and Dearchive are plain menu items** at y 300 and 235, not
-  submenus, which is the only reason this can be driven at all: Mini vMac
-  cannot select a submenu item however the mouse is moved (*hierarchical
-  menus*, above).
-- **Put a control on the volume.** Every run here carries one unmutated file
-  spliced through the same path; without it a failure cannot be told from a
-  harness fault, and the splice rewrites the MacBinary length and CRC.
-- **QuickFiler names what it expands after the entry record's name**, not the
-  file's, so `--rename` changes both when several mutations of one specimen
-  have to share a volume. Give a rung a name **as long as the one it
-  replaces**: the encoder leaves 23 catalogue-shaped bytes after a short
-  Pascal name, and a longer name walks over them.
-- **A file it refuses puts up an alert and waits**, so `--expand` presses
-  Return once per file on the volume rather than twice per run, and waits
-  fifteen seconds per file after them. That is what makes a whole ladder
-  of mutations one run instead of one run each: before 2026-09-21 the
-  first refusal would have stopped every file behind it, and a ladder is
-  put on one volume precisely because some rungs are expected to be
-  refused. **A file it has not REACHED looks exactly like one it
-  refused** — same type, same creator, same bytes — which is how a
-  five-rung ladder first came back with three refusals of which only one
-  was real. Read the last screenshot before believing a refusal: an icon
-  still highlighted is one still in the selection, and one replaced by
-  its expansion is not.
-- **Two refusals, two different alerts, and the difference is the
-  measurement.** *"A part of the file X is damaged. Do you want to continue
-  decompressing…"* is a BLOCK the decoder could not accept — it offers
-  Continue and goes on to the next file. *"…is damaged and cannot be
-  repaired"* is the file being rejected outright, which is what a file
-  written here from scratch gets. Photograph the alert: which one it is
-  says which layer noticed.
+  submenus (*What the pointer cannot select*, below).
+- **Put a control on the volume**: one unmutated file spliced through the same
+  path, or a failure cannot be told from a harness fault.
+- **QuickFiler names its output after the entry record's name**, not the
+  file's, so `mutate_now.py --rename` changes both when several mutations
+  share a volume. Keep the new name **as long as the one it replaces**: the
+  encoder leaves 23 catalogue-shaped bytes after a short Pascal name.
+- **A refused file puts up an alert and waits**, so `--expand` presses Return
+  once per file and waits fifteen seconds per file. **A file it has not
+  REACHED looks exactly like one it refused**; read the last screenshot — an
+  icon still highlighted is still in the selection.
+- **Two refusals, two alerts, and the difference is the measurement.** *"A
+  part of the file X is damaged. Do you want to continue decompressing…"* is
+  a BLOCK the decoder rejected; *"…is damaged and cannot be repaired"* is the
+  file rejected outright. Photograph the alert.
 
 ## Making ArcMac archives with ArcMac — `arcmac.py`
-
-An ArcMac entry's payload is one compressed stream holding both forks, and no
-document anywhere states which fork comes first. `arcmac.py` measured it the
-way `nowcompress.py` measured the Now Compress block shapes: by running the
-original application.
 
     tools/vmac/arcmac.py --wild     # the two archives in the wild, fork by fork
     tools/vmac/arcmac.py --setup    # fetch ArcMac 1.2a, rebuild the application
     tools/vmac/arcmac.py --make     # boot, archive a two-fork file, read it back
     tools/vmac/arcmac.py --decide   # report which fork the payload starts with
 
-The answer is **data fork first** (FORMATS.md ★★★; why it had to be measured
-is DECISIONS.md, "ArcMac's fork order"). Specimens land in
-`$UNC_VMAC_HOME/specimens/arcmac/` as plain `.arc` files, with the input forks
-beside them and a screenshot per step. Nothing here runs in `ci.sh`.
-
-The specimens are `run.py` inputs like any other archive, and since 2026-08-21
-they are graded like any other archive too — `--expect` grades a file that has
-no oracle manifest against this engine's own Linux output, which is what the
-manifest was only ever used to locate:
+The answer is **data fork first** (FORMATS.md ★★★; DECISIONS.md, "ArcMac's
+fork order"). Specimens land in `$UNC_VMAC_HOME/specimens/arcmac/` as plain
+`.arc` files, with the input forks and a screenshot per step. They are
+`run.py` inputs like any archive; `--expect` grades a file with no oracle
+manifest against this engine's Linux output:
 
     tools/vmac/run.py --expect $UNC_VMAC_HOME/specimens/arcmac/Packed.ARC
 
-Before that it had to be done by hand, reading the grid:
-
-    tools/vmac/run.py --pngdir /tmp/p $UNC_VMAC_HOME/specimens/arcmac/Packed.ARC
-    tools/decode_grid.py /tmp/p/Packed.ARC.png
-
-Either way both fork CRC-32s must equal those of `specimens/arcmac/in-data`
-and `in-rsrc` — the bytes that went INTO ArcMac on the emulated Mac in the
-first place. That closes the loop without an oracle: encoded on a Mac,
-decoded on a Mac, checked against the input. What `--expect` does NOT do is
-adjudicate the Linux side; the suite for that format does (TESTING.md), and
-the run says so on every line it prints.
-
-Four things to know before re-running it:
+Both fork CRC-32s must equal those of `specimens/arcmac/in-data` and
+`in-rsrc`, the bytes that went INTO ArcMac — encoded on a Mac, decoded on a
+Mac, checked against the input. `--expect` does NOT adjudicate the Linux side;
+that format's suite does (TESTING.md), and the run says so on every line.
 
 - **The encoder comes out of the archive it is needed for.** `--setup`
-  fetches `ARCMACRC.BIN` — shareware, by URL, checked by SHA-256, not
-  committed — whose first entry IS the ArcMac application: an APPL with an
-  empty data fork. That entry is decoded with our own CLI and re-wrapped as
-  MacBinary, so no self-extractor has to run inside the guest.
-- **Do not copy a Mac header's Finder info into MacBinary unexamined.** The
-  first attempt put the application on the volume where the Finder did not
-  show it; the disk read "112K in disk, 1 item", which looks like a failed
-  copy and is not. `arcmac.macbinary` passes 0. **Why is NOT
-  `invisible`, which this said until 2026-09-22**: `fdFlags` is `h[42:44]`
-  per `macunpack/arc.h`, and across all 5 ArcMac files and 11 entries here
-  it is 0x2100 on the application and 0x0100 on every document —
-  `fHasBundle | fHasBeenInited`, with `fInvisible` (0x4000) set nowhere
-  (BLOCKERS.md, *Withdrawn claims*).
-- **ArcMac 1.3c is a command shell, not a dialog.** It opens "Martian
-  Operating System"; the verb is `arc a<modifiers> archive files`, documented
-  under *ArcMac Command Summary* in the `ARCMAC.DOC` that ships with it. Pass
-  `--cmd` (repeatable) to run anything else at that prompt.
-- **The run ends with Special ▸ Shut Down** — the general rule above; here
-  it is what the Finder showing `Test.ARC` on screen and the host's copy of
-  the image not having it cost.
+  fetches `ARCMACRC.BIN` (shareware, SHA-256 checked, not committed), whose
+  first entry IS the ArcMac application; our CLI decodes it and re-wraps it as
+  MacBinary, so no self-extractor runs in the guest.
+- **Do not copy a Mac header's Finder info into MacBinary unexamined.**
+  Copied, the application did not show in the Finder ("112K in disk, 1
+  item"); `arcmac.macbinary` passes 0. The flags are `fHasBundle |
+  fHasBeenInited` (0x2100 application, 0x0100 documents, `macunpack/arc.h`
+  `h[42:44]`), not `invisible` (BLOCKERS.md, *Withdrawn claims*).
+- **ArcMac 1.3c is a command shell**, "Martian Operating System"; the verb is
+  `arc a<modifiers> archive files` (*ArcMac Command Summary* in its
+  `ARCMAC.DOC`). `--cmd` (repeatable) runs anything else at that prompt.
+- **The run ends with Special ▸ Shut Down**, the general rule above.
 
 ## BinHex 2.0 writes `.hex` and `.hcx` — `binhex2.py`
 
     tools/vmac/binhex2.py --make     boot System 6.0.8, encode four times
     tools/vmac/binhex2.py --check    our CLI against the subject's forks
 
-BinHex 2.0 (1984) is `binhex_2.0.bin` from Macintosh Repository, fetched
-by hand into `$UNC_VMAC_HOME/specimens/binhex2/` and checked by SHA-1; it
-is re-wrapped from its forks because `hcopy -m` refuses its MacBinary I
-header. File ▸ *Application -> Upload* encodes, *Compressed* (checked at
-launch) picks `.hcx` over `.hex`, and every run ends with an alert that
-Return dismisses. `--make` writes `XF.hcx`, `XF.hex`, `XFlf.hex` (*Send
-line feeds*) and `YN.hex` (`XF.hcx` encoded again), and builds a fresh
-volume first: a killed run leaves the old one "damaged". That volume is
-where `tools/harvest.py --restore` lifts the four `derived-bh2-*` fixtures
-from.
+BinHex 2.0 (1984) is `binhex_2.0.bin` from Macintosh Repository, fetched by
+hand into `$UNC_VMAC_HOME/specimens/binhex2/` and checked by SHA-1; it is
+re-wrapped from its forks because `hcopy -m` refuses its MacBinary I header.
+File ▸ *Application -> Upload* encodes, *Compressed* (checked at launch) picks
+`.hcx` over `.hex`, and every run ends with an alert Return dismisses.
+`--make` writes `XF.hcx`, `XF.hex`, `XFlf.hex` (*Send line feeds*) and
+`YN.hex` (`XF.hcx` encoded again) on a fresh volume (a killed run leaves the
+old one "damaged"); `tools/harvest.py --restore` lifts the four
+`derived-bh2-*` fixtures from it.
 
-Standard File is clicked by row, and the rows are the volume's files by
-name: every output is named to sort after `TwoForks`, or the next encode
-picks up the previous output instead — which is how the first `.hex`
-held a `.hcx`.
+Standard File is clicked by row, and the rows are the volume's files by name:
+every output is named to sort after `TwoForks`, or the next encode picks up
+the previous output.
 
 ## Asking DiskDoubler what it can write — `diskdoubler.py`
 
-Six of DiskDoubler's eleven methods were declined because "nothing reachable
-writes one". Running the application settled that: two of the six were
-reachable, and are now implemented (BLOCKERS.md).
+Running DiskDoubler 3.7 showed two of the six methods once declined as
+"nothing reachable writes one" to be reachable; both are implemented
+(BLOCKERS.md).
 
     tools/vmac/diskdoubler.py --setup      # fetch DiskDoubler 3.7, unpack its disk
     tools/vmac/diskdoubler.py --wild       # every DD container ON that disk, by method
@@ -1135,78 +755,52 @@ reachable, and are now implemented (BLOCKERS.md).
     tools/vmac/diskdoubler.py --beta-verify    # grade what ß05 wrote
 
 `--make` takes `A`, `B`, `guess` or `both` — the four items of the "How To
-Compress" popup. What each one writes is FORMATS.md ✦; why it matters is
+Compress" popup. What each writes is FORMATS.md ✦; why it matters is
 DECISIONS.md, "DiskDoubler methods 1 and 7". Specimens land in
-`$UNC_VMAC_HOME/specimens/diskdoubler/` with the input forks beside them
-(`in-data`, `in-rsrc`) and a screenshot per step. Nothing here runs in
-`ci.sh`.
+`$UNC_VMAC_HOME/specimens/diskdoubler/` with the input forks (`in-data`,
+`in-rsrc`) and a screenshot per step.
 
-Four things to know before re-running it:
-
-- **The application does not run on its own.** DiskDoubler is an extension
-  with an application beside it; launched with no INIT loaded, the
-  application takes the personalization, writes it into its own resource fork
-  and quits without ever showing a window — which on a screenshot looks
-  exactly like a crash. `--install` puts the INIT in Extensions, and the work
-  is then done from the Finder's own **DD** menu.
-- **Both halves personalize themselves on first use**, into their own file.
-  Mini vMac boots from a COPY of the boot image, so the INIT does it on every
-  run; the dialog has no default button, so Return leaves it exactly where it
-  was.
-- **Method 7 is not reachable from this keyboard.** The popup only offers
-  "Sigma Hardware" when a Sigma Designs compression card is fitted, and
-  nothing here emulates one. The specimens for it come from `--wild`: the 3.7
-  distribution disk was built on a machine that had the card, and two THINK C
-  libraries on it are method 7.
-- **The run ends with Put Away, and must**, for the reason `arcmac.py`
-  documents below: Mini vMac flushes the guest's writes when the volume is
-  ejected, so a run killed with it still mounted reads back an unchanged disk.
+- **The application does not run on its own.** Launched with no INIT
+  loaded, it takes the personalization, writes it into its own resource fork
+  and quits without a window — which looks like a crash. `--install` puts the
+  INIT in Extensions; the work is done from the Finder's **DD** menu.
+- **Both halves personalize themselves on first use**, and Mini vMac boots a
+  COPY of the boot image, so the INIT does it every run; the dialog has no
+  default button, so Return does nothing there.
+- **Method 7 is not reachable from this keyboard**: "Sigma Hardware" appears
+  only with a Sigma Designs card fitted. Its specimens come from `--wild` —
+  two THINK C libraries on the 3.7 distribution disk are method 7.
+- **The run ends with Put Away, and must** (*Why it works the way it does*,
+  above).
 
 ### The oldest DiskDoubler there is — `--beta`
 
-**DiskDoubler ß05, Copyright 1990 Salient**, which is four versions older
-than anything this project had run and the reason the 84-byte header
-turned out not to be the format's (`docs/formats/diskdoubler-container.md`,
-*The header size, and the 1990 header*). It rides in
-`DiskDoublerExpand3.sit` on the same Macintosh Garden page `--setup`
-already fetches from, and `--beta` fetches it by URL and sha256 like
-everything else here.
+**DiskDoubler ß05, Copyright 1990 Salient**, the reason the 84-byte header
+is not the format's (`docs/formats/diskdoubler-container.md`, *The header
+size, and the 1990 header*). It rides in `DiskDoublerExpand3.sit` on the
+Macintosh Garden page `--setup` fetches from; `--beta` fetches it by URL and
+sha256.
 
-Four things that are different from every other run in this file:
-
-- **It is an INIT with no application at all**, so `--install`'s System 7
-  image is no use: `install_beta()` puts it in a **System 6.0.8** System
-  Folder and the work is done from the Finder's own **DD** menu, which
-  that INIT adds. System 6 because the INIT is two years older than
-  System 7, and because 6.0.8 is the tier every other figure here is
-  quoted on.
-- **The menu's x is measured, not assumed.** `--beta-probe` boots and
-  photographs the menu bar without clicking anything; the Finder's own
-  five titles leave **DD at 221–234**, which is where `BETA_MENU_X`
-  comes from. Re-measure it if the boot image changes — an INIT's menu
-  sits wherever the Finder's leave room, and a miss here reads as a run
-  that compressed nothing.
-- **There are no settings.** The menu is `Compress Selection;Expand
-  Selection` and that is the whole application, so there is one thing to
-  write and `--make`'s four-item popup has no counterpart.
-- **`--beta-verify` grades it against the bytes DiskDoubler was given**,
-  because `unar` answers "format not recognized" for one of these and no
-  other reader exists. Two passes since 2026-09-22, when the engine
-  learned the shape: the specimen **as it is**, which grades the code
-  that ships, and the specimen **rewritten with an 84-byte header** and
-  the two forks' checksums written where one keeps them — the stronger
-  statement, because those sums are computed from the INPUT and are the
-  two DiskDoubler 3.7 itself stored for the same forks. Both forks
-  byte-exact both ways.
+- **It is an INIT with no application**, so `install_beta()` puts it in a
+  **System 6.0.8** System Folder and the work is done from the Finder's
+  **DD** menu.
+- **The menu's x is measured, not assumed.** `--beta-probe` photographs the
+  menu bar without clicking; `BETA_MENU_X` comes from it (DD at 221–234).
+  Re-measure it if the boot image changes — a miss reads as a run that
+  compressed nothing.
+- **There are no settings**: `Compress Selection;Expand Selection` is the
+  whole menu.
+- **`--beta-verify` grades it against the bytes DiskDoubler was given**
+  (`unar` answers "format not recognized" for one, and no other reader
+  exists), in two passes: the specimen **as it is**, and **rewritten with an
+  84-byte header** and the two fork checksums DiskDoubler 3.7 stored for the
+  same input. Both forks byte-exact both ways.
 
 ### The two `DDAR` record shapes no corpus fixture has — `--combine`
 
-All 36 entries of the corpus's 7 `DDAR` archives are files at the top
-level, so the folder records and the `0x20` raw-fork shape were read by
-nothing here and `docs/formats/diskdoubler-container.md` could not
-measure them. `--combine` builds a volume with a known tree on it and
-drives **Combine**, DiskDoubler's own archive command, from the same DD
-menu `--make` uses.
+All 36 entries of the corpus's 7 `DDAR` archives are top-level files.
+`--combine` builds a volume with a known tree and drives **Combine**,
+DiskDoubler's own archive command, from the DD menu:
 
     Payload/Nest/One, Payload/Nest/Two     text
     Payload/Raw                            24 KB nothing compresses
@@ -1214,119 +808,90 @@ menu `--make` uses.
     Payload/Empty                          zero bytes
     Payload/Already.dd                     a file DiskDoubler had compressed
 
-`--verify-combine` runs offline, on the saved specimens, and grades this
-engine's extraction against **the bytes DiskDoubler was given** — 7
-entries, 0 disagreements. Three things to know:
+`--verify-combine` runs offline on the saved specimens against **the bytes
+DiskDoubler was given** — 7 entries, 0 disagreements.
 
-- **the items are selected by typing, not by clicking an icon.** The
-  Finder selects by name, so `p` picks `Payload` and Cmd-O opens it;
-  Cmd-A inside it is what enables Combine, which is greyed out until
-  something is selected.
-- **`--combine raw` needs `--make A` to have run**, because one of its
-  subjects is the `.dd` that produced. Combine turns out to EXPAND an
-  already-compressed file and archive what was inside, so that entry is
-  graded on the original's bytes.
-- **It did not produce the `0x20` flag**, and five shapes were offered
-  to it on purpose. That is a measured negative about DiskDoubler 3.7,
-  not about the format; 1.x and 2.x are not reachable from here.
+- **Select by typing**: `p` picks `Payload`, Cmd-O opens it, Cmd-A inside it
+  enables Combine.
+- **`--combine raw` needs `--make A` to have run** (one subject is its `.dd`).
+  Combine EXPANDS an already-compressed file and archives what was inside, so
+  that entry is graded on the original's bytes.
+- **It did not produce the `0x20` flag** from five shapes offered on purpose
+  — a measured negative about DiskDoubler 3.7, not the format; 1.x and 2.x
+  are not reachable here.
 
 ### The forks neither oracle can decode — `--adjudicate`
 
     tools/vmac/diskdoubler.py --adjudicate lha-expander-103.hqx --write-manifest
     tools/vmac/diskdoubler.py --adjudicate terrain-man-20.hqx  --write-manifest
 
-Two corpus fixtures hold forks that `unar` fails on and `macunpack` — built
-with its own DiskDoubler support — fails on too. Both are SELF-EXTRACTING, so
-each carries a third implementation in its resource fork, the bargain
-`superdisk.py` and `nowcompress.py` already make. The fixture named on the
-command line is the ENVELOPE, because the derived `.sea` in `fixtures/` is its
-data fork alone and a self-extractor without its code is just an archive.
+Two corpus fixtures hold forks that `unar` and `macunpack` both fail on. Both
+are SELF-EXTRACTING, so each carries a third implementation. Name the
+ENVELOPE: the derived `.sea` in `fixtures/` is its data fork alone, without
+the extractor code.
 
-`--write-manifest` records the verdict where `ci.sh` will keep checking it,
-which is the point: a fork the Mac wrote goes into the fixture's manifest with
-`data_oracle` naming this harness, exactly as `make_manifests.py` records a
-fork the second oracle rescued.
-
-**Only DATA forks can go in**, and re-running this will not change that:
-every resource fork the Mac wrote agrees with ours only under the
-`vmac_check.py` mask (measured 2026-08-21; DECISIONS.md for why). Those forks
-stay `unadjudicated` with the mask noted in their reason.
+`--write-manifest` records the verdict where `ci.sh` keeps checking it: a
+fork the Mac wrote goes into the fixture's manifest with `data_oracle` naming
+this harness, as `make_manifests.py` records a fork the second oracle
+rescued. **Only DATA forks can go in**: every resource fork the Mac wrote
+agrees with ours only under the `vmac_check.py` mask (measured 2026-08-21;
+DECISIONS.md), so those stay `unadjudicated` with the mask in their reason.
 
 ### DiskDoubler's own expander on a DDAR archive — `--ddar`
 
     tools/vmac/diskdoubler.py --ddar fixtures/im2-DD3.7.7AuxFiles.dd
 
-DD Expand 3.7.7, Symantec's own expander, opens the archive under System 7
-and expands it; then every file and folder it wrote is held against ours,
-both forks (the resource header's reserved bytes masked, as above) and the
-Finder info from the catalog (`hfscat.py`) against `macextract l --meta`:
-a file's FInfo, a folder's DInfo and DXInfo whole. The one difference not
-counted is `inited` (0x0100), which DD Expand clears on what it expands.
-**9 of 9** on `im2-DD3.7.7AuxFiles.dd`, measured 2026-10-25, and 0 of 9
-with the CLI from before that day's fix (DECISIONS.md 2026-10-25, *the
-archive Symantec shipped*).
+DD Expand 3.7.7, Symantec's own expander, expands the archive under System 7;
+every file and folder it wrote is held against ours, both forks (reserved
+resource-header bytes masked) and the catalog's Finder info (`hfscat.py`)
+against `macextract l --meta` — a file's FInfo, a folder's DInfo and DXInfo
+whole, except `inited` (0x0100), which DD Expand clears. **9 of 9** on
+`im2-DD3.7.7AuxFiles.dd`, measured 2026-10-25, and 0 of 9 with the CLI from
+before that day's fix (DECISIONS.md 2026-10-25, *the archive Symantec
+shipped*).
 
-The expander is not committed. It is the Info-Mac II CD's `:Utility:DD
-Expand™:DD Expand™`, as MacBinary at `$UNC_VMAC_HOME/specimens/diskdoubler/
+The expander is not committed: the Info-Mac II CD's `:Utility:DD Expand™:DD
+Expand™`, as MacBinary at `$UNC_VMAC_HOME/specimens/diskdoubler/
 ddexpand-377.bin`, SHA-256 checked. **What it cannot see**: a `DDA2`
-archive, which DD Expand 3.7.7 is not the writer of; and comments, which
-live in the Desktop file the read-back drops.
+archive, which DD Expand 3.7.7 does not write; and comments, which live in
+the Desktop file the read-back drops.
 
 ## The other half of DiskDoubler — `ddpro.py`
 
-`diskdoubler.py` runs DiskDoubler 3.7, whose two software methods are 1 and
-8. DiskDoubler **Pro** 4.1 writes the other container: `DDA2` archives, and
-methods 9, 6 and 10 behind the AD1/AD2/DD1/DD2/DD3 items of its Settings
-dialog. Two open questions need it, and neither can be answered by reading a
-file (OPEN_ITEMS.md):
+DiskDoubler **Pro** 4.1 writes `DDA2` archives, and methods 9, 6 and 10
+behind the AD1/AD2/DD1/DD2/DD3 items of its Settings dialog.
 
     tools/vmac/ddpro.py --setup     # fetch 4.1, unpack it
     tools/vmac/ddpro.py --install   # System 7 + its Finder-menu extension
     tools/vmac/ddpro.py --probe     # photograph the menus and dialogs
+    tools/vmac/ddpro.py --experiments   # one session, both questions below
 
-- **A `DDA2` stored entry with a resource fork. ANSWERED 2026-08-21: there
-  is no such thing.** DiskDoubler Pro writes the headerless `0x1000` record
-  only for a file whose data fork is stored AND which has no resource fork —
-  4.1's "Create Archive…" on one incompressible forked file writes an
-  ordinary header with the data fork STORED, and so does 4.1.1 on seven at
-  once. `ndd.py --stored` measures all four cells; `--dates` settles which of
-  `+54` and `+58` is the creation (FORMATS.md, DECISIONS.md).
-- **What the 4 bytes at `+4` of a `SPLT` header mean. ANSWERED 2026-08-21:
-  the Mac's `TickCount` when the file was split.** Three files split 72 s
-  apart differ by 4,324 and 4,330 ticks, and two of the three were
-  byte-identical with different names (FORMATS.md, DECISIONS.md).
+- **A `DDA2` stored entry with a resource fork does not exist** (measured
+  2026-08-21): the headerless `0x1000` record is written only for a file
+  whose data fork is stored AND which has no resource fork. `ndd.py --stored`
+  measures all four cells; `--dates` settles which of `+54` and `+58` is the
+  creation (FORMATS.md, DECISIONS.md).
+- **The 4 bytes at `+4` of a `SPLT` header are the Mac's `TickCount` at the
+  split** (measured 2026-08-21): three files split 72 s apart differ by 4,324
+  and 4,330 ticks (FORMATS.md, DECISIONS.md).
 
-    tools/vmac/ddpro.py --experiments   # one session, both questions
-
-Like `diskdoubler.py` this is an extension with an application beside it, so
-the work is done from the Finder's own menu; unlike it, the download is a
-StuffIt archive rather than a disk image, and our own CLI unpacks it.
-
-Four things each cost a run before the fourth one worked. Why they are easy
-to misread is DECISIONS.md 2026-08-21; what to do about them is:
+The download is a StuffIt archive our CLI unpacks; the work is done from the
+Finder's menu. Traps, each of which cost a run (DECISIONS.md 2026-08-21):
 
 - **Never press Return at the desktop** — it opens the selected icon's name
-  for editing, and the next keystroke types into it. `select()` sends Escape
-  first.
-- **Put the application on the work volume.** The Finder menu is a front end;
-  without it, "Create Archive…" answers *The DiskDoubler application cannot
-  be found.* and greys the whole menu out behind the dialog.
-- **Spell the Mac name in the source.** The application is `DiskDoubler™`,
-  and what a Mac Roman `™` becomes in a Linux directory depends on the
-  transcoding.
-- **Leave room for what DiskDoubler writes.** A split leaves the original in
-  place, and the menu says "Split File (760K)" — a subject smaller than that
-  comes out in one piece and answers nothing.
+  for editing. `select()` sends Escape first.
+- **Put the application on the work volume**, or "Create Archive…" answers
+  *The DiskDoubler application cannot be found.* and greys the menu out.
+- **Spell the Mac name in the source**: `DiskDoubler™`; what `™` becomes in a
+  Linux directory depends on the transcoding.
+- **Leave room for what DiskDoubler writes**: "Split File (760K)" — a smaller
+  subject comes out in one piece.
 
 ## The last two DiskDoublers — `ndd.py`
 
-`diskdoubler.py` runs Salient's 3.7 and `ddpro.py` runs Fifth Generation's
-DiskDoubler Pro 4.1. This one covers the other two ends of the product's
-history: **DiskDoubler 4.0**, the release that first bundled AutoDoubler and
-CopyDoubler as *SuperDoubler*, and **Norton DiskDoubler Pro 1.1**, Symantec's
-last one — whose application is DiskDoubler **4.1.1**, not 1.1. Why that
-matters and what it settled is DECISIONS.md 2026-08-21 (the Symantec
-release).
+**DiskDoubler 4.0** (the first *SuperDoubler* bundle) and **Norton
+DiskDoubler Pro 1.1**, Symantec's last, whose application is DiskDoubler
+**4.1.1** (DECISIONS.md 2026-08-21, the Symantec release).
 
     tools/vmac/ndd.py --setup      fetch all three
     tools/vmac/ndd.py --specimens  decode Salient's 1991 disk; report methods
@@ -1340,51 +905,35 @@ release).
     tools/vmac/ndd.py --archive    seven files, one incompressible with a fork
     tools/vmac/ndd.py --dexvert    a third collector's samples, over the network
 
-`--specimens`, `--harvest` and `--grade` need no emulator and no X server.
-The rest are one boot each, about ten minutes of host wall clock.
+`--specimens`, `--harvest` and `--grade` need no emulator and no X server;
+the rest are one boot each, about ten minutes of host wall clock.
 
-**`--specimens` is the one that pays.** Salient's 3.1.2 floppy (WinWorld, a
-PC abandonware library nobody here had searched — BLOCKERS.md) holds 24
-DiskDoubler containers written in 1991: one method 2 fork, which is the only
-one this project has ever found and what method 2 is graded on, and 22 method
-7 forks of up to eight chunks. Each carries its own checksum, so the disk
-grades itself and the mode returns non-zero on any mismatch.
+**`--specimens`**: Salient's 3.1.2 floppy (WinWorld) holds 24 DiskDoubler
+containers written in 1991 — the only method 2 fork this project has found,
+and 22 method 7 forks of up to eight chunks. Each carries its own checksum,
+so the mode returns non-zero on any mismatch.
 
-Four things here that the other two harnesses do not have:
-
-- **The download is behind a one-shot token.** Macintosh Repository answers a
-  plain `GET download.php?id=` with an interstitial that says the link has
-  expired, which reads as "the file is gone" and is not: the token is minted
-  by a 302 that only appears with the software page's own session cookie
-  behind it, and the file is a POST of the hidden field on the page past that
+- **The download is behind a one-shot token.** A plain `GET download.php?id=`
+  answers "link expired"; the token comes from a 302 that needs the software
+  page's session cookie, and the file is a POST of the hidden field past that
   redirect. `fetch_norton()` does the three steps. The failure mode is a
-  168-byte HTML body saved as `.img` that `file(1)` cheerfully calls a floppy,
-  so the SHA-1 is checked against the published one.
-- **Everything on that floppy is DiskDoubler-compressed** — types `DDF0`
-  through `DDF3`, creator `DDAP`. `--harvest` decodes all of it with our own
-  CLI and prints each container's methods, so the installer disk is ten more
-  graded specimens, the same way 3.7's distribution disk turned out to carry
-  the only two method 7 forks reachable here.
-- **The boot image is built out of forks this engine decoded**, because
-  nothing on the disk can be installed without decompressing it first. That
-  is the point rather than a shortcut: a wrong byte does not produce a
-  warning, it produces a System 7 that will not start.
-- **Put the subjects in a folder.** `session(..., folder="Subjects")` leaves
-  the application at the volume root, because Select All in the root window
-  selects the application DiskDoubler is about to launch. The Return trap
-  `ddpro.py` documents applies here too — `select()` sends Escape first, and
-  the folder is opened with Cmd-O.
+  168-byte HTML body saved as `.img`, so the SHA-1 is checked.
+- **Everything on that floppy is DiskDoubler-compressed** (`DDF0`–`DDF3`,
+  creator `DDAP`); `--harvest` decodes all of it and prints each container's
+  methods — ten more graded specimens.
+- **The boot image is built out of forks this engine decoded**: a wrong byte
+  produces a System 7 that will not start.
+- **Put the subjects in a folder.** `session(..., folder="Subjects")` keeps
+  them apart from the application at the volume root, which Select All would
+  catch. `select()` sends Escape first; the folder is opened with Cmd-O.
 
-`--stored` grades itself: it reads the archive back with our own CLI and
-compares every fork with the bytes that went in, resource forks with 16..127
-masked, and returns non-zero on any mismatch.
+`--stored` grades itself against the bytes that went in, resource forks with
+16..127 masked, non-zero on any mismatch.
 
 ## SuperDisk!'s compressor — `sdcompress.py`
 
-`superdisk.py` grades this engine with SuperDisk!'s own expanders, which is
-all the corpus's self-extracting archives offer. This one runs the half that
-compresses: Alysis's 1991 ` SuperDisk!` control panel (`cdev`/`AlyS`), which
-OPEN_ITEMS.md said did not survive (BLOCKERS.md).
+Alysis's 1991 ` SuperDisk!` control panel (`cdev`/`AlyS`), the half that
+compresses (BLOCKERS.md).
 
     tools/vmac/sdcompress.py --setup      fetch it (Macintosh Repository)
     tools/vmac/sdcompress.py --install    System 7 + the control panel
@@ -1397,99 +946,67 @@ OPEN_ITEMS.md said did not survive (BLOCKERS.md).
     tools/vmac/sdcompress.py --sweep      the same bytes once per setting
     tools/vmac/sdcompress.py --boundary   subjects sized for a refill boundary
 
-`--sweep` is the controlled experiment: identical content, one subject per
-setting, so the only thing differing between outputs is the setting. It found
-that Speed=Fast writes method **6** where everything else writes 1 — and
-method 6 was broken until it did.
+**`--sweep`** is identical content once per setting: Speed=Fast writes method
+**6** where everything else writes 1.
 
-Two more traps it cost a run each to learn, on top of the two above:
+**`--boundary`** compresses four subjects at Speed=Fast, sized so the coded
+flag bitmap ends exactly on a 32-bit refill (DECISIONS.md 2026-08-28). The
+panel codes each flag BYTE in one bit (`tools/sdhuff.py` measures it), so the
+bitmap is `nflags + 5` bits and `ceil(ulen/8) + 5 ≡ 0 (mod 32)` is the aim:
+1240 and 2008 bytes land on 160 and 256 bits; 1248 and 2016 are one bit past,
+as controls. It prints the bit count and the verdict per subject;
+`tools/sdmodule/run_sdmodule.py` grades the specimens. (`ceil(ulen/8) % 4 ==
+0` is the rule for `run_sdmodule.py`'s flat 8-bit code, not the panel's.)
 
-- **Close the panel with Cmd-W, not its close box.** A click at the measured
-  close-box coordinate did not close the window, so the next click — "Make
-  File" at a page-1 coordinate — landed on the settings page's **Off** button.
-  No dialog opened, and the file name meant for it was typed into the Finder,
-  which renamed a control panel to "Coff".
+**`--specimens`**: five subjects chosen to DISAGREE — one with a resource
+fork, one stamped 1990 and 1995, one with a 20-character name (the only one
+that shows the body is padded to an even offset), one over 32 KB. `--verify`
+needs no emulator.
+
+- **Close the panel with Cmd-W, not its close box**: a missed close box sent
+  the next click to the settings page's **Off** button and the typed name into
+  the Finder, which renamed a control panel "Coff".
 - **Reopening lands on the last page shown**, so `reopen_panel` presses "Last
-  Page" twice before anything is clicked at a page-1 coordinate.
-
-**`--boundary` is the one that found a decode defect** — on its second
-attempt, 2026-08-28. It compresses four subjects at Speed=Fast, sized so the
-coded flag bitmap ends exactly on a 32-bit refill, which is where this engine
-read the literals four bytes early.
-
-The sizing is the whole of it. The first four subjects (2026-08-25) used
-`ceil(ulen/8) % 4 == 0` — a rule about the flat 8-bit code
-`tools/sdmodule/run_sdmodule.py` writes, and about nothing the panel writes —
-missed by 2 to 5 bits, and the miss was written up as "a real block cannot
-reach it". `tools/sdhuff.py` measures what the panel actually writes: it codes
-each flag BYTE in one bit, so the bitmap is `nflags + 5` bits for this subject
-and `ceil(ulen/8) + 5 ≡ 0 (mod 32)` is the aim. 1240 and 2008 bytes land on
-160 and 256 bits; 1248 and 2016 are one bit past, as controls. All four came
-back method 6; the two on the boundary were wrong from byte 0 and are
-byte-exact since the fix (DECISIONS.md 2026-08-28). It prints the measured bit
-count and the verdict per subject, and the specimens it leaves are graded by
-`run_sdmodule.py`.
-
-`--specimens` is the one that mattered: five subjects chosen to DISAGREE with
-each other, because the first specimen alone made the header layout look
-obvious and would have got it wrong — its data size, its total and its name
-length were indistinguishable. One has a resource fork, one is stamped 1990
-and 1995, one has a 20-character name (the only one that reveals the body is
-padded to an even offset), one is over 32 KB. `--verify` needs no emulator.
-
-Three things that cost a run each:
-
-- **The extension is the RESULT, not the trigger.** Renaming a file to
-  `Alpha.x` under a loaded SuperDisk! changes nothing — measured, the bytes
-  come back identical. `.x` is what the compressor names its output; the work
-  is done from the control panel's "Make File" button.
-- **Rebuild the boot image every run.** The panel saves its settings *and its
-  current page* into the System Folder, and Mini vMac writes back, so a
-  second run opens where the first left off and a coordinate measured on page
-  1 lands on page 2. One run clicked "Off" that way — turning compression off
-  — and photographed a settings page believing it was a file dialog.
-  `session()` re-copies `Sys7.img` unconditionally.
-- **The Apple menu is not worth fighting.** Two attempts at holding it open
-  produced frames with the title inverted and no menu. Navigating the boot
-  volume to `System Folder:Control Panels` is slower, reliable, and proves
-  the panel is installed.
+  Page" twice before any page-1 click.
+- **The extension is the RESULT, not the trigger**: renaming a file `Alpha.x`
+  changes nothing (measured); the work is the panel's "Make File" button.
+- **Rebuild the boot image every run**: the panel saves its settings *and its
+  current page* into the System Folder. `session()` re-copies `Sys7.img`
+  unconditionally.
+- **The Apple menu is not worth fighting** (two attempts gave an inverted
+  title and no menu). Navigate to `System Folder:Control Panels` instead.
 
 ## Alysis Resource Compressor 2.0 — `rescomp.py`
 
-The hunt for something that WRITES SuperDisk!'s methods 10, 13 and 20. The
-vendor's technology page names SuperDisk! 2.x as the release with the newer
-codecs and no archive has it; this 1993 application does carry the whole
-library — `Cmpr` 3, 5, 19, 21, 22 (SlowFastB **and** Tennessee end to end),
-23 and 26, the same bodies as Disk Expander 1.2's.
+The hunt for something that WRITES SuperDisk!'s methods 10, 13 and 20. This
+1993 application carries `Cmpr` 3, 5, 19, 21, 22 (SlowFastB **and**
+Tennessee end to end), 23 and 26, the same bodies as Disk Expander 1.2's.
 
     tools/vmac/rescomp.py --modules    list them; no emulator, no X
     tools/vmac/rescomp.py --probe      boot it, photograph its menus
     tools/vmac/rescomp.py --compress   compress a subject and read it back
 
-**It compresses, and it is still not the writer.** 8,001 bytes of `STR`
-became 472 — and what it wrote is Apple's compressed-resource container
-(`A89F6572`, version 8, `defProcID` **0**), not a `Cmpr` stream: none of the
-seven modules reproduces the subject from that payload. Its help has no codec
-choice in it. The modules are there for its Decompress button.
+**It compresses, and it is not the writer.** 8,001 bytes of `STR` became 472
+in Apple's compressed-resource container (`A89F6572`, version 8, `defProcID`
+**0**), not a `Cmpr` stream: none of the seven modules reproduces the subject
+from that payload. The modules are there for its Decompress button.
 
-Two things it cost, both worth copying:
-
-- **Aim the Special menu at a measured coordinate.** The first run borrowed
-  118 from another harness and hit **Restart**. The subject came back with its
-  new resource data written and its old resource MAP still in place, which
-  parses as garbage — a torn read that looks exactly like a format finding
-  until you notice the fork is still its original length. Shut Down is at 139.
-- **The read-back is the result, not the screen.** The on-screen `Cmprssd`
-  column said 472 in both runs; only the flushed volume showed whether the
-  file had actually been rewritten.
+- **Aim the Special menu at a measured coordinate.** 118, borrowed from
+  another harness, hit **Restart**: new resource data with the old resource
+  MAP, a torn read that looks like a format finding until the fork's length is
+  checked. Shut Down is at 139.
+- **The read-back is the result, not the screen**: the `Cmprssd` column said
+  472 in both runs.
 
 ## SpaceSaver — `spacesaver.py`, and what it will and will not do
 
-3.5.1 runs, its container has been read out of it (`--layout`, below), and
-it has still never compressed anything here. The application is
-reachable — the Deluxe 5.0.1 CD carries a standalone installer — but
-**SpaceSaver 5.0 needs System 7.5.3 and 8 MB**, and forced past its own two
-"Install anyway?" alerts on 7.0.1 it bombs with *unimplemented trap*.
+3.5.1 runs, its container has been read out of it (`--layout`), and **it has
+never compressed anything here**. **SpaceSaver 5.0 needs System 7.5.3 and
+8 MB**: forced past its two "Install anyway?" alerts on 7.0.1 it bombs with
+*unimplemented trap*. **3.5.1 stops at a registration number** it will not
+accept empty, and no serial was sought (the maintainer waived the licence's
+reverse-engineering clause, which is not the same permission). DECISIONS.md
+2026-08-22 (SpaceSaver, and SpaceSaver later) has both.
 
     tools/vmac/spacesaver.py --setup     fetch the CD (156 MB), lift the installer
     tools/vmac/spacesaver.py --probe     boot with it and photograph
@@ -1498,12 +1015,6 @@ reachable — the Deluxe 5.0.1 CD carries a standalone installer — but
     tools/vmac/spacesaver.py --setup351   fetch the 3.5.1 two-floppy set
     tools/vmac/spacesaver.py --probe351   boot with both floppies mounted
     tools/vmac/spacesaver.py --install351 run the 3.5.1 installer
-
-**3.5.1 stops at a registration number** it will not accept an empty value
-for, and no serial was sought — the maintainer waived the licence's
-reverse-engineering clause, which is not the same permission. **5.0 needs
-System 7.5.3**, which is the open route. DECISIONS.md 2026-08-22
-(SpaceSaver, and SpaceSaver later) has both.
 
     tools/vmac/spacesaver.py --setup40    fetch StuffIt Deluxe 4.0
     tools/vmac/spacesaver.py --install40  run it, trying each published code
@@ -1535,182 +1046,91 @@ System 7.5.3**, which is the open route. DECISIONS.md 2026-08-22
     tools/vmac/spacesaver.py --pkgexpander    the same, to StuffIt Expander
     tools/vmac/spacesaver.py --pkgconvert     the same, to DropConvert
 
-Every mode from `--specimen` on ends with Special > Shut Down (the general
-rule at the top of this file) — **at the right coordinate only since
-2026-09-01**: before that they picked Restart, one item above it, which
-flushes as well and so hid the mistake. `ssenrolled.hfv`, made before the
-rule was followed at all, does not boot.
+Also: `--magicname`, `--info` (*SpaceSaver Info...* answers, so the engine
+is reachable), `--ssmenu`, `--enrollidle`, `--freshinstall` and `--calib`.
+Every mode from `--specimen` on ends with Special > Shut Down at the right
+coordinate (*Why it works the way it does*); `ssenrolled.hfv`, made before
+that rule, does not boot.
 
-**`--layout` needs no emulator at all.** It lifts `~StuffIt SpaceSaver™`
-(`cdev/SMKR`) and `StuffIt Engine™` off `ssinstalled.hfv` with `hcopy`,
-parses their resource maps, and prints the compression header, the fork
-record, and the compressor table read from each `CMod` module's own bytes —
-plus the engine's MacsBug symbols, which name every routine the reading
-came from. It ends with **nine witnesses**: byte patterns that must be
-present in `SSEn 1` and `ACMP 1`, printed with the offset each was found
-at, so a different build of SpaceSaver makes it say MISSING and exit 1
-rather than silently confirm today's reading. The layout itself is in
-FORMATS.md, *StuffIt SpaceSaver's container*.
+**`--layout` needs no emulator.** It lifts `~StuffIt SpaceSaver™`
+(`cdev/SMKR`) and `StuffIt Engine™` off `ssinstalled.hfv` with `hcopy` and
+prints the compression header, the fork record, the compressor table from
+each `CMod` module and the engine's MacsBug symbols, ending with **nine
+witnesses** — byte patterns that must be in `SSEn 1` and `ACMP 1` — so a
+different build says MISSING and exits 1 (FORMATS.md, *StuffIt SpaceSaver's
+container*).
 
-**`--pkg` is in this file because the translator is on this image.** The same
-installation carries fourteen of Aladdin's translators, and one of them reads
-AppleLink packages. It prints that translator's `Name`, its vocabulary and
-its recogniser, with four witnesses — a recogniser that turned out to parse
-the translator API's command language rather than a file (BLOCKERS.md). The
-format is read out of a DIFFERENT translator, 3.0.7's, and *The AppleLink
-package expander* below is how to get that one; FORMATS.md, *AppleLink
-packages: SqueezePlay*, is what came of it.
+**`--pkg`** prints the AppleLink translator's `Name`, vocabulary and
+recogniser (four witnesses); the recogniser parses the translator API's
+command language, not a file (BLOCKERS.md). The format came from 3.0.7's
+translator (*The AppleLink package expander*, below). Offering a
+`tools/synth_sqp.py` package to `AppleLink Package Translator` **3.0.3** has
+not been run (DECISIONS.md 2026-10-05, *the deviation that was the
+reference*).
 
-**And the next thing these boot modes are for.** `tools/synth_sqp.py` writes
-real packages now, and the one run that would settle what no automated lane
-here can — whether Aladdin's own expander reads what this project's reading
-produces — is offering one to `AppleLink Package Translator` **3.0.3**
-rather than to 3.5's `PKG Expand Translator`, which is what all three modes
-below drive. Nobody has tried it (OPEN_ITEMS.md, *AppleLink `.pkg`*).
-
-**The three `--pkg*` boot modes offer that translator a package written
-here, and all three come back empty.** Each writes five one-line packages
-into `StuffIt Deluxe™ Folder` — `Decode <item> to <destination>`, the grammar
-`--pkg` transcribed, one per Finder type so the type is a variable — plus
+**The three `--pkg*` boot modes offer 3.5's translator a package written here,
+and all three come back empty** (DECISIONS.md 2026-09-01, *the package that
+cannot be handed over*). Each writes five one-line packages into `StuffIt
+Deluxe™ Folder` (`Decode <item> to <destination>`, one per Finder type) plus
 `Payload.hqx`, the BinHex file they name. `--pkgexpand` drives *Translate ▸
-PKG Expand…* and also runs *CPT Expand…* over a real `.cpt` as its control;
-`--pkgexpander` drives StuffIt Expander's `⌘E`; `--pkgconvert` drives
-DropConvert's `⌘C`, whose dialog wants *type, Return to Add, then click
-Convert at (452, 289)*. Every run ends in Shut Down and reads the volume back.
-The result and what it means: DECISIONS.md 2026-09-01, *the package that
-cannot be handed over*.
+PKG Expand…* with *CPT Expand…* over a real `.cpt` as control;
+`--pkgexpander` drives Expander's `⌘E`; `--pkgconvert` drives DropConvert's
+`⌘C` (*type, Return to Add, then click Convert at (452, 289)*). **What they
+cannot see**: *"this build will not take that input"* from *"this text is not
+a package"*. **Read the control first**: `Payload.hqx` must have become
+`Widget` (Expander) or `Widget.sit` (DropConvert). Its resource fork comes
+back the right LENGTH with different bytes (BLOCKERS.md 2026-08-23); compare
+data forks. Every field is read from the writer, not from output.
 
-**What they cannot see.** Whether the packages are the problem. Each run
-proves only that Aladdin's software did nothing with the file, and the engine
-never reports anything either way, so *"this build will not take that input"*
-and *"this text is not a package"* look identical from here. **Read the
-control first**: `Payload.hqx` must have become `Widget` (Expander) or
-`Widget.sit` (DropConvert), and the report line says which — a run whose
-control did not fire says nothing about packages at all. Its resource fork
-comes back the right LENGTH and different bytes, because the Finder opens an
-extracted file to draw its icon and the Resource Manager rewrites the map's
-live fields (BLOCKERS.md 2026-08-23); the data fork is the comparison.
+**The extension installs** (2026-08-25): any boot leaves `System
+Folder:Preferences:SpaceSaver Preferences` (`Pref/SMKR`, 10,496 B), patched
+or not, so `--patch-init`'s gate was never closing. Check that file after any
+run; its `Opts 1` resource carries the `small` name rule. Why the rule never
+fires is not explained.
 
-What it cannot see: whether any of this describes a real compressed file.
-Nothing here has produced one, so every field is read from the writer, not
-from output.
+**Nothing has made SpaceSaver compress anything**: the `small` name rule
+(`--specimen`), enrolled and idle (`--idlespec`), Magic Menu's *SpaceSaver
+Compress* (`--magic`, `--enrollmagic`), `DropCompress™` (`--drop`,
+`--dragdrop`), and the modes above. `--suffix` renaming to `.SIT` returns a
+StuffIt archive — Magic Menu's doing. `--idlenow` deletes `~Magic Menu™` so
+SpaceSaver's own menu (`STR# 1024`: *Turn Idle-Time On*, **Idle Now**, *Open
+Control Panel*) has the bar (DECISIONS.md 2026-08-22, what will not
+compress). **That menu is at x=425** (`SS_MENU_X`; 283 is Magic Menu's). When
+a mouse mode does nothing, suspect the coordinate: `--calib` photographs the
+pointer at known positions, and the newer modes print `xdotool
+getmouselocation`.
 
-**The extension installs, and finding that out needed no screenshot**
-(2026-08-25). A boot that never opens the control panel leaves
-`System Folder:Preferences:SpaceSaver Preferences` (`Pref/SMKR`, 10,496 B) on
-an image that had none — patched and unpatched alike, so `--patch-init`'s one
-silent gate was never closing. That file is the signature to check after any
-run here; `hcopy` it and read its `Opts 1` resource, which carries the `small`
-name rule. What it does NOT explain is why the rule never fires.
+- **`ssinstalled.hfv` is flushed** (`--install351` ends with Shut Down); the
+  torn one is `ssinstalled-torn.hfv`.
+- **`--parade` cannot see the startup icon parade**: Mini vMac runs
+  unthrottled, so its 30 frames are the settled desktop.
+- **Lift the installed image out of `/tmp`** (`--keep-installed`): `run.py`
+  boots a COPY, so the boot image looks untouched.
+- **Do not press the installer's Restart** (its only button at the end):
+  Mini vMac flushes on eject or shutdown, not a guest restart, so the image
+  comes back stock and unbootable. Cmd-Q, then Shut Down in the Finder.
+- **3.5.1 and 4.0 reject every code Macintosh Garden publishes** (those are
+  for 3.0.7 and 5.x; 5.x needs 7.5.3 and 8000K).
 
-**Nothing has made SpaceSaver compress anything**, and the modes above are
-the attempts. Four were added on 2026-08-25 and between them they moved the
-question a long way (OPEN_ITEMS.md): `--magicname` (a matching NAME and a
-menu command in one run), `--info` (ask *SpaceSaver Info...* about a file —
-it answers, so the engine is reachable), `--ssmenu` (press every icon slot
-across the bar and photograph what opens) and `--enrollidle` (enrol the
-volume, close the panel with its close box, pick *Idle Now*, stay still,
-shut down).
+Input rules for both Aladdin installers, each of which cost a run:
 
-**SpaceSaver's own menu is at x=425, not 283.** 283 is where Magic Menu's
-icon is, and `SS_MENU_X` said 283 — which is why `--idlenow` deleted Magic
-Menu, pressed the hole it left, and reported no icon menu at all. When a
-mouse-driven mode here does nothing, suspect the coordinate before the Mac:
-`--calib` parks the pointer at known Mac positions and photographs each, and
-the newer modes print `xdotool getmouselocation` beside what they asked for.
-
-The modes below are the older attempts: the panel's `small` name rule (`--specimen`), the same with
-the disk enrolled and the machine left idle (`--idlespec`), Magic Menu's
-*SpaceSaver Compress* (`--magic`, `--enrollmagic`), and `DropCompress™`
-both launched and dropped on (`--drop`, `--dragdrop`). One thing on that
-settings page DOES fire: `--suffix` renames a subject to end in `.SIT` and
-gets a StuffIt archive back — Magic Menu's doing, not SpaceSaver's.
-
-**`--idlenow` is the one that changed the question.** It deletes
-`~Magic Menu™` before booting so that SpaceSaver's own menu (`STR# 1024`:
-*Turn Idle-Time On*, **Idle Now**, *Open Control Panel*) has the menu bar
-to itself — and the menu bar came up with no icon menu at all. Nothing
-here has ever needed SpaceSaver's EXTENSION as opposed to its control
-panel, so the next thing to establish is whether `INIT 0` installs
-(DECISIONS.md 2026-08-22, what will not compress).
-
-**The installed image is now a flushed one.** `--install351` ends with
-Shut Down as of 2026-08-22, and `ssinstalled.hfv` was remade with it; the
-one it replaces is kept beside it as `ssinstalled-torn.hfv`. It changed
-nothing about the compressor, and it removes a variable.
-
-**`--parade` cannot answer that, and says so.** It photographs the
-machine from the moment the emulator starts, 30 frames at 0.15 s, and
-every one of them is the settled desktop: Mini vMac runs unthrottled, so
-a Mac Plus is at the Finder before an X client can grab the first frame.
-The startup icon parade is not observable through this harness.
-
-**Lift the installed image out of `/tmp`.** `run.py` boots from a COPY, so an
-installer's entire output lands in the session's temp dir and the original
-boot image still looks untouched — which reads as "the installer wrote
-nothing".
-
-**Installing it, panel by panel** (measured 2026-08-25, `--freshinstall`):
-Standard Install — whose text says it installs "the complete StuffIt
-Deluxe™ and StuffIt SpaceSaver™ packages" — then a destination chooser,
-then *"Your Macintosh needs to be restarted after installation is
-complete. Do you wish to continue?"*, then the copy, then *"Installation
-was successful ... needs to be restarted"* with **Restart** as its only
-button.
-
-**Do not press Restart.** Mini vMac flushes a volume on eject or
-shutdown, not on a guest restart, so pressing it throws the whole
-install away: the image comes back stock and unbootable, which reads as
-"the installer did nothing". Quit with Cmd-Q and shut down through the
-Finder instead.
-
-Three input rules, each of which cost a run here: **a button is clicked
-ONCE** (only icons are double-clicked); **walk the pointer to it** —
-a warp followed immediately by a click lands short, and 66 px short of
-"Yes" is "No"; and **these alerts default to No**, so Return does not
-mean yes. `--freshinstall` photographs the pointer sitting on each
-button before the click, which is the only way a miss is visible.
-
-**3.5.1 and 4.0 both reject every code Macintosh Garden publishes** — those
-are for 3.0.7 and 5.x, and 5.x is what cannot run here (7.5.3 and 8000K,
-against a 4 MB Plus). The open route is a Mac II-class Mini vMac variant
-plus a 7.5.3 image.
-
-**Every panel in both Aladdin installers swallows its first input.** A click
-on a button and a Return both leave the panel on screen; the second acts.
-Three runs went into reading that as a wrong coordinate — and the
-coordinates were measured off the frames and right. The tell: the frame
-after the input is IDENTICAL to the one before, where a genuine miss
-usually shows something else selected.
-
-Two more, both of which produce frames that lie: **3.5.1's floppy opens its
-own window on boot and 4.0's does not**, so the same installer click lands on
-bare desktop and every frame after shows an empty Finder — which reads as
-"the installer quit". And **Cmd-A does not select a System 7 dialog field's
-text**: a run meant to try four codes typed all four in end to end and tested
-none, while reporting four attempts. Backspace the field empty.
-
-Three things that cost a run each, all about input reaching the installer:
-
-- **Its first input is swallowed.** A click on the licence panel's Agree and
-  a Return both leave it on screen; the panel only moves on the second. The
-  harness sends a click and then a Return.
-- **There are TWO "Install anyway?" alerts**, not one — 7.5.3 and 8000K —
-  and both default to **No**, so a blind Return quits the installer. The
-  frame after that looks exactly like a finished install: the Finder, with
-  the volume open.
-- **Wait longer than feels necessary.** A click sent before its dialog
-  appears lands on whatever is behind, and the next frame shows the dialog
-  still up — which reads as "the click missed the button" and is not.
+- **Every panel swallows its first input**: the tell is a frame IDENTICAL to
+  the one before. The harness sends a click, then a Return.
+- **A button is clicked ONCE**, and **walk the pointer to it** — a warp then
+  an immediate click lands short (66 px short of "Yes" is "No").
+  `--freshinstall` photographs the pointer on each button first.
+- **The two "Install anyway?" alerts (7.5.3, 8000K) default to No**; a blind
+  Return quits, and looks like a finished install.
+- **Wait longer than feels necessary**: a click before its dialog lands
+  behind it.
+- **3.5.1's floppy opens its own window on boot and 4.0's does not.**
+- **Cmd-A does not select a System 7 dialog field's text**: backspace it.
 
 ## Grading a method by writing it — `ddencode.py`
 
-Every other harness here decodes something somebody else made. This one
-does the opposite, because DiskDoubler methods 3, 4 and 5 have no specimen
-and never will unless a 1990 file turns up: it **encodes** a fork, wraps it
-in a `0xABCD0054` container with a correct header CRC, and hands it to
-Salient's own 1991 application, which comes off the 3.1.2 disk uncompressed
-and runs.
+DiskDoubler methods 3, 4 and 5 have no specimen, so this **encodes** a fork,
+wraps it in a `0xABCD0054` container with a correct header CRC, and hands it
+to Salient's 1991 application, off the 3.1.2 disk uncompressed.
 
     tools/vmac/ddencode.py --build            write them; round-trip here
     tools/vmac/ddencode.py --probe            the 1991 INIT, in the Finder
@@ -1718,103 +1138,76 @@ and runs.
     tools/vmac/ddencode.py --expand           let 1991 read them
     tools/vmac/ddencode.py --expand --era 411 let 4.1.1 read them
 
-`--build` needs no emulator and must pass before a boot is worth it: it is
-only encoder-vs-decoder, both ours, so it catches transcription slips and
-proves nothing about the format. `--expand` is the part that grades.
+`--build` needs no emulator and must pass before a boot is worth it; it is
+encoder-vs-decoder, both ours, so it catches transcription slips and proves
+nothing about the format. `--expand` is the part that grades.
 
-Four things this one has that the others do not:
-
-- **The 1991 INIT adds no menu to the Finder's menu bar.** That arrived with
-  the separate "Finder Menu" extension of 3.7 and 4.x. It does register the
-  `DDF2`/`DDAP` icons, which is how a `--probe` frame shows it loaded at
-  all, and expanding is a double-click.
-- **The application personalizes on first launch**, like 3.7's. `--expand`
-  answers it once and quits before touching any file, so the dialog does not
-  interrupt the run.
-- **Give the subjects a type nothing owns.** Expanding a `TEXT` file
-  launches TeachText, and the next `Cmd-O` then opens **TeachText's** Open
-  dialog — which is how the first run of `--expand` expanded one file and
-  typed the other three names into a standard file dialog, reporting three
-  false "the expander did not take it". Click the Finder window before each
-  file, too.
-- **Use 1991, not 4.1.1, for methods 3 and 4.** 4.1.1 has dropped them and
-  answers *Unknown compression method*. `--era 411` is worth running anyway:
-  it is a second opinion on method 5.
+- **The 1991 INIT adds no Finder menu** (that came with 3.7's "Finder Menu"
+  extension). It registers the `DDF2`/`DDAP` icons, which is how a `--probe`
+  frame shows it loaded; expanding is a double-click.
+- **The application personalizes on first launch**; `--expand` answers it
+  once and quits before touching any file.
+- **Give the subjects a type nothing owns.** Expanding a `TEXT` file launches
+  TeachText, and the next `Cmd-O` opens TeachText's dialog — three false "the
+  expander did not take it". Click the Finder window before each file, too.
+- **Use 1991, not 4.1.1, for methods 3 and 4**: 4.1.1 answers *Unknown
+  compression method*. `--era 411` is a second opinion on method 5.
 
 ## A Macintosh writes a MIME message — `macmime.py`
 
-`src/fmt_mime.c` is transcribed from mpack 1.6 and had only ever been graded
-against messages made on Linux. mpack's Macintosh PORT is in the same
-reference tree, so the specimen is made here rather than waited for
-(DECISIONS.md 2026-08-29, *a Macintosh wrote a MIME message*).
+`src/fmt_mime.c` is transcribed from mpack 1.6; mpack's Macintosh PORT is in
+the same reference tree, so the specimen is made here (DECISIONS.md
+2026-08-29, *a Macintosh wrote a MIME message*).
 
     tools/vmac/macmime.py --make     boot System 6.0.8 and write it
     tools/vmac/macmime.py --check    grade what came off the disk
     tools/vmac/macmime.py            both
 
-`--make` boots straight into the encoder — no Finder, no mouse — and reads
-`Out.mime` back off the image. `--check` needs no emulator and can be re-run
-over the kept specimen at will.
+`--make` boots straight into the encoder and reads `Out.mime` back off the
+image. `--check` needs no emulator.
 
-Four things this one has that the others do not:
-
-- **Retro68's newlib file I/O cannot be used on System 6.0.8.** A bare
-  `open()` never returns there, so every `FILE *` mpack touches is built with
-  `funopen()` over hand-filled HFS param blocks. If a future harness wants
-  stdio on a Mac, this is the reason it will not get it.
-- **The subject lives in the System Folder, not at the root.** `mkboot.py`
-  puts a shell application in the blessed folder and that is the default
-  directory it starts in; a subject at the root gets −43.
+- **Retro68's newlib file I/O cannot be used on System 6.0.8**: a bare
+  `open()` never returns, so every `FILE *` mpack touches is `funopen()` over
+  hand-filled HFS param blocks.
+- **The subject lives in the System Folder, not at the root**: `mkboot.py`'s
+  shell starts in the blessed folder; a subject at the root gets −43.
 - **`hcopy -m` does not carry the Finder flags onto the volume.** They are set
-  on the Mac with `PBHSetFInfoSync` and the catalogue is re-read afterwards,
-  so what the applefile carries is what the volume holds.
-- **The application draws its progress on screen**, one line per step, and the
-  frames are kept in `$UNC_VMAC_HOME/specimens/macmime/shots/`. Every failure
-  above was diagnosed from a frame rather than from a timeout.
+  on the Mac with `PBHSetFInfoSync` and the catalogue re-read afterwards.
+- **The application draws its progress on screen**, one line per step; frames
+  are kept in `$UNC_VMAC_HOME/specimens/macmime/shots/`.
 
-What it cannot see: one message from one encoder, and it cannot settle line
-endings — the specimen is LF-terminated because of the C library the port was
-compiled against, not because of anything a Macintosh decided. FORMATS.md,
-*base64 and MIME*, says so where the result is.
+What it cannot see: one message from one encoder, and line endings — the
+specimen is LF-terminated because of the C library the port was compiled
+against. FORMATS.md, *base64 and MIME*, says so where the result is.
 
 ## Grading SuperDisk! with SuperDisk! — `superdisk.py`
 
-Nothing outside the two corpus archives reads the format, so the only oracle
-it has is the archives themselves: both are self-extracting applications.
-`superdisk.py` is the same bargain `nowcompress.py --adjudicate` makes.
+Nothing outside the two corpus archives reads the format, and both are
+self-extracting applications — the same bargain as `nowcompress.py
+--adjudicate`.
 
     tools/vmac/superdisk.py --list                    what the corpus holds
     tools/vmac/superdisk.py --adjudicate FIXTURE.hqx  run it, compare forks
 
-The archive is unwrapped from its envelope with our own CLI, rebuilt as
-MacBinary, put alone on a 25 MB volume and launched under System 7; its "Save
-the expanded file as:" box is accepted with Return, and every fork it wrote is
-read back off the image with `hfsutils` and compared with `macextract x`.
-Resource forks are compared with bytes 16..127 masked, the `vmac_check.py`
-convention. The verdict is 5 forks across the 2 archives, all identical
-(2026-08-20; FORMATS.md ✧✧). Screenshots land in
-`$UNC_VMAC_HOME/specimens/superdisk/`. Nothing here runs in `ci.sh` —
+The archive is unwrapped with our CLI, rebuilt as MacBinary, put alone on a
+25 MB volume and launched under System 7; its "Save the expanded file as:"
+box takes Return, and every fork it wrote is read back with `hfsutils` and
+compared with `macextract x`, resource forks with bytes 16..127 masked. 5
+forks across the 2 archives, all identical (2026-08-20; FORMATS.md ✧✧).
+Screenshots land in `$UNC_VMAC_HOME/specimens/superdisk/`;
 `tools/run_superdisk.py` replays the verdict offline.
 
-Two things to know before re-running it:
-
-- **The application is opened with Select All, not with a coordinate.** The
-  volume holds exactly one item, so ⌘A then ⌘O needs no measurement — and a
-  measurement is what broke here: a double-click on a point measured from the
-  first archive's window merely SELECTED the second one, whose icon the Finder
-  had drawn a few pixels higher. The run then "succeeded" having launched
-  nothing, which is what a screenshot of the right window at the wrong moment
-  always looks like.
-- **The run ends with Put Away, and must**, for the reason `arcmac.py`
-  documents above: Mini vMac flushes the guest's writes when the volume is
-  ejected, so a run killed with it still mounted reads back an empty disk.
+- **The application is opened with Select All, not a coordinate**: the
+  volume holds one item, so ⌘A then ⌘O. A measured double-click merely
+  SELECTED the second archive (its icon drawn a few pixels higher) and the run
+  "succeeded" having launched nothing.
+- **The run ends with Put Away, and must** (*Why it works the way it does*).
 
 ### Handing that extractor a stream written HERE — `--nest`, `--stored`, `--rootfile`
 
-Same application, different data fork. `SD! Utilities.x` is an APPL whose data
-fork IS the archive, so replacing that fork and leaving the resource fork alone
-gives the format's own `CODE 2` a record stream this project built — the only
-second reader this container has anywhere (`tools/synth_sd.py` writes them).
+`SD! Utilities.x` is an APPL whose data fork IS the archive, so replacing
+that fork gives the format's own `CODE 2` a record stream built here
+(`tools/synth_sd.py`) — the container's only second reader.
 
     tools/vmac/superdisk.py --nest              a 10-folder path, past the cap
     tools/vmac/superdisk.py --stored            the one block shape no fixture has
@@ -1822,57 +1215,46 @@ second reader this container has anywhere (`tools/synth_sd.py` writes them).
     tools/vmac/superdisk.py --rootfile --invented   ...with a guessed record
 
 Measured 2026-09-01, one boot each. `--nest` builds ten folders of 31
-characters, paths from 43 to 331 bytes: the Macintosh made every one of the
-eleven files, all byte-identical, and for the three past 255 bytes **the uncut
-path `unc_path_leaf` reports is the path the Macintosh built** — which is the
-whole point, since that machine creates each component through the File
-Manager and never assembles a path. `--stored` reads back byte-exact, so the
-stored-block encoding is confirmed by the extractor it was disassembled out
-of. `tools/run_names.py` replays the `--nest` verdict offline; nothing here
-runs in `ci.sh`.
+characters, paths 43 to 331 bytes: the Macintosh made all eleven files
+byte-identical, and for the three past 255 bytes **the uncut path
+`unc_path_leaf` reports is the path the Macintosh built** (it creates each
+component through the File Manager). `--stored` reads back byte-exact.
+`tools/run_names.py` replays the `--nest` verdict offline.
 
-What these CANNOT see: whether SuperDisk! itself would ever WRITE such a
-stream. They establish what its expander reads, which is what an extractor
-needs and is not the same claim.
+What these CANNOT see: whether SuperDisk! would ever WRITE such a stream —
+only what its expander reads.
 
-**One run bombed and has not been reduced — treat it as a hypothesis.** The
-first `--nest` attempt died with *"unimplemented trap"* after the Save box,
-having written nothing (Mini vMac flushes on eject, so a bombed run reads back
-an empty volume). That stream differed from the ones that work in four ways,
-and each has since been run on its own and is fine: the depth (`--nest`), the
-stored blocks (`--stored`), a file as the FIRST record (`--rootfile`), and a
-file record whose fields were guessed rather than copied (`--invented`). What
-is left untested is the one combination — a root file FOLLOWED by a folder —
-and that is one boot for whoever wants it. The archive is
-`synth_sd.nest()` with `control.txt` moved to the front.
+**One run bombed and has not been reduced — a hypothesis.** The first
+`--nest` attempt died with *"unimplemented trap"* after the Save box, writing
+nothing. Its four differences from the working streams have each run fine
+alone (depth, stored blocks, a file as the FIRST record, a guessed file
+record); the untested combination is a root file FOLLOWED by a folder —
+`synth_sd.nest()` with `control.txt` moved to the front, one boot.
 
 ### Replaying a SuperDisk! archive through OUR Mac application
 
-`run.py` grades against an oracle manifest and this format has none, so the
-two archives are read off the grid directly, exactly as the ArcMac specimens
-are. They are payloads rather than fixtures, so unwrap them first:
+This format has no oracle manifest, so the grid is read directly. Unwrap the
+payloads first:
 
     macextract x -nr -o /tmp/sd fixtures/alysis-disk-expander-12.hqx
     tools/vmac/run.py --pngdir /tmp/p "/tmp/sd/Disk Expander .X"
     tools/decode_grid.py "/tmp/p/Disk Expander .X.png"
 
-`run.py` will report FAIL — "no oracle manifest" — and that is the harness
-saying it cannot grade, not a result. The grid is the result; compare it with
-the same engine's Linux aggregate:
+`run.py` reports FAIL — "no oracle manifest" — which means it cannot grade,
+not a result. Compare the grid with the Linux aggregate over a `macextract x
+-nr --forks hidden` of the same payload:
 
     python3 -c "import sys; sys.path.insert(0,'tools'); \
       from vmac_check import aggregate_dir; print(aggregate_dir('DIR'))"
 
-over a `macextract x -nr --forks hidden` of the same payload. Both archives
-matched at 4 MB and at 1 MB on 2026-08-20; the numbers are in FORMATS.md,
-"SuperDisk! on the Mac".
+Both archives matched at 4 MB and 1 MB on 2026-08-20 (FORMATS.md, "SuperDisk!
+on the Mac").
 
 ## How deep a Macintosh will nest — `depthtest/`
 
-What `UNC_PATH_MAXDEPTH` should have been measured against before it was
-chosen. Build it by hand like `memtest` and `traptest`, put it on a
-THROWAWAY boot volume as the shell, and read the numbers off the screen —
-it creates folders on the volume it booted from:
+What `UNC_PATH_MAXDEPTH` is measured against. Build it by hand like `memtest`
+and `traptest`, put it on a THROWAWAY boot volume as the shell (it creates
+folders on the volume it booted from), and read the numbers off the screen:
 
     cmake -B build/depthtest -S tools/vmac/depthtest \
           -DCMAKE_TOOLCHAIN_FILE=$RETRO68/m68k-apple-macos/cmake/retro68.toolchain.cmake
@@ -1881,59 +1263,49 @@ it creates folders on the volume it booted from:
               --app-name DepthTest
     $V/mv-4M/minivmac -r $V/vMac.ROM /tmp/depth.hfv
 
-Two numbers, because there are two routes to a file and only one has a
-string in it: `PBDirCreateSync` with a parent dirID per level, which is
-what the shell's `EnsureDir` does and which reached **250 levels with
-noErr** — the probe's own loop cap — and `PBGetCatInfo` given a full
-`Volume:a:b:...` pathname, which stops at **49 levels of four characters**
-because a `Str255` holds 254 bytes of it. FORMATS.md (*What the
-DESTINATION actually allows*) has the table.
+Two numbers, for the two routes to a file: `PBDirCreateSync` with a parent
+dirID per level (the shell's `EnsureDir`) reached **250 levels with noErr** —
+the probe's own loop cap — and `PBGetCatInfo` given a full `Volume:a:b:...`
+pathname stops at **49 levels of four characters** (a `Str255` holds 254
+bytes of it). FORMATS.md, *What the DESTINATION actually allows*, has the
+table.
 
-**What it cannot see:** anything above 250, which is where the loop stops
-rather than where the Mac does; and whether the FINDER can navigate what
-the File Manager will create, which is a different question and not one
-the shell needs an answer to, since it never asks the Finder to.
+**What it cannot see:** anything above 250, where the loop stops rather than
+the Mac; and whether the FINDER can navigate what the File Manager creates,
+which the shell never asks.
 
 ## The yardstick — `expander.py`
 
-**Every other Mac Plus figure this project publishes is absolute, and absolute
-is the wrong shape.** What a user weighs is whether this is faster or slower
-than the free tool they would otherwise run on that machine. This boots both
-applications on the same emulated Mac Plus, at authentic 7 MHz, over the same
-archive on the same volume.
+This boots StuffIt Expander 4.0.2 and this application on the same emulated
+Mac Plus, at authentic 7 MHz, over the same archive on the same volume — the
+comparison a user weighs.
 
     tools/vmac/expander.py --fetch          # download 4.0.2 and unpack the app
     tools/vmac/expander.py --sizes          # both SIZE resources; no emulator
     tools/vmac/expander.py --quiet 60 --json y.json fixtures/derived-Export.sit
 
-Results and the ratio: FORMATS.md, *Timed on the same Mac Plus*.
-**One emulator at a time, and nothing else on the box** — the 1x rule above.
+Results and the ratio: FORMATS.md, *Timed on the same Mac Plus*. **One
+emulator at a time, and nothing else on the box** — the 1x rule above.
 
 `--fetch` takes Macintosh Garden's `stuffit_expander_4.0.2.sea_.bin`, checks
 its SHA-256, walks MacBinary → self-extracting StuffIt → 400K disk image with
-our own CLI, and copies the application off that image. Two things about that:
+our CLI, and copies the application off that image.
 
 - **Garden signs its download URLs and answers a bare GET with HTTP 418.** The
-  page is fetched first and its cookie jar reused for the file. `arcmac.py`
-  does the same two-step; it does not need the jar on the page request and
-  this does.
-- **hfsutils refuses a volume "smaller than 800K"**, and the distribution
-  image is 400K. Padding a temporary copy to 800K mounts it, and reading only
-  ever follows the MDB's own extents, so the padding is never looked at. That
-  refusal was the whole of "an HFS reader this machine does not have"
-  (BLOCKERS.md, withdrawn claims).
+  page is fetched first and its cookie jar reused for the file (`arcmac.py`
+  does the same two-step without the jar on the page request).
+- **hfsutils refuses a volume "smaller than 800K"**, and the image is 400K;
+  padding a temporary copy to 800K mounts it (reads follow the MDB's extents).
+  That refusal was the whole of a withdrawn "no HFS reader" claim (BLOCKERS.md).
 
-**The instrument is `macclock.py`, since 2026-10-19.** Both applications are
-driven to a Standard File dialog with the archive selected, then timed from
-the keystroke or click that starts the work to the last change of the Mac's
-screen buffer before it holds still for `--quiet` seconds. Expander cannot be
-asked what it took, so the clock has to be outside both applications — but it
-need not be outside the Mac: the host reads the emulated `Ticks` and the
-21,888-byte screen buffer straight out of Mini vMac's memory at 50 Hz
-(`/proc/<pid>/mem`, read-only, no file written), and a duration is
-**emulated ticks ÷ 60.15**, with host seconds beside it as a check. Until
-then it was screenshots every 3 s, a ±3 s floor and ~50 ms of stolen CPU per
-poll; the 50 Hz read costs ~0.1 ms.
+**The instrument is `macclock.py`** (since 2026-10-19; DECISIONS.md
+2026-10-19, *the clock inside the Mac*). Both applications are driven to a
+Standard File dialog with the archive selected, then timed from the keystroke
+or click that starts the work to the last change of the screen buffer before
+it holds still for `--quiet` seconds. The host reads the emulated `Ticks` and
+the 21,888-byte screen buffer out of Mini vMac's memory at 50 Hz
+(`/proc/<pid>/mem`, read-only), ~0.1 ms a read; a duration is **emulated
+ticks ÷ 60.15**, host seconds beside it as a check.
 
     tools/vmac/expander.py --calibrate jkjk6                 # a known wait, ~3 min
     tools/vmac/expander.py --ours dist/MacExtract.bin --repeat 2 \
@@ -1942,94 +1314,46 @@ poll; the 50 Hz read costs ~0.1 ms.
 
 **Calibrated against `clockcal/`**, a 60-line application that busy-waits a
 number of ticks fixed by the key pressed and draws a mark at each end
-(`--calibrate`; boot shell, built by the script). 2026-10-19 on `mv-4M-1x`:
-600 ticks asked read 602 and 603, 660 read 662 twice, 3,600 read 3,602 —
-**+2 to +3 ticks of keystroke latency, constant**, and the 60-tick shift of
-the end mark read as +59 and +60 ticks. Host seconds ÷ Mac seconds was
-0.9986–1.0001 on all five, with other sessions' emulators on the box. The
-first attempt read **2 ticks** for a 600-tick wait: its `--quiet` was 3 s,
-shorter than the silent wait, so the stopwatch stopped at the start mark —
-the blind spot below, met on purpose. DECISIONS.md 2026-10-19, *the clock
-inside the Mac*.
-
-**Why ticks rather than the host clock:** at 1x Mini vMac drops emulated time
-it is more than 8 ticks behind (`RunEmulatedTicksToTrueTime`), so a loaded
-host stretches host seconds and not ticks. Every row in the JSON carries
-`ratio` (host ÷ Mac); far from 1.00, the host was the bottleneck and the
-tick figure is the one to keep.
+(`--calibrate`; built by the script): on `mv-4M-1x`, 2026-10-19, **+2 to +3
+ticks of keystroke latency, constant**, host ÷ Mac seconds 0.9986–1.0001. A
+`--quiet` shorter than the silent wait stops the stopwatch at the start mark.
+**Keep ticks, not host seconds**: at 1x Mini vMac drops emulated time it is
+more than 8 ticks behind (`RunEmulatedTicksToTrueTime`); every JSON row
+carries `ratio` (host ÷ Mac), and far from 1.00 the host was the bottleneck.
 
 **What `macclock.py` cannot see:** whether a Mini vMac tick holds as many
-instructions as a real Mac Plus's (fidelity; MANUAL_TESTS.md); disk time,
-which the emulator's driver makes free; a tick lost while interrupts are
-masked (clockcal reads the same `Ticks`); work that draws nothing for longer
-than `--quiet` — our own progress bar sits still for over 30 s at 0 % on an
-Arsenic archive at 1 MB, which `--quiet 30` read as a 0.5 s run, so use
-300 there and check the run wrote its files; and that a Mac Plus draws its own pointer into the screen
-buffer, so the harness moves the pointer BEFORE the mark, never after.
+instructions as a real Mac Plus's (MANUAL_TESTS.md); disk time, which the
+emulator makes free; a tick lost while interrupts are masked; work that draws
+nothing for longer than `--quiet` — our progress bar sits at 0 % for over 30 s
+on an Arsenic archive at 1 MB, so use `--quiet 300` there and check the run
+wrote its files. The pointer is drawn into the screen buffer, so the harness
+moves it BEFORE the mark.
 
-**Four things cost a run each, and not one of them failed loudly:**
-
-- **The first row is not the archive.** Our side clicked the first row of
-  Standard File and pressed Return, on the assumption that the archive is
-  the only thing on the volume worth opening. `mkboot.py` stopped deleting
-  the Finder's **`Desktop` file** on 2026-08-30, one day after the yardstick
-  rows were published, because the password phase needs it kept — and that
-  file is invisible to `hdir` and VISIBLE in our dialog, which filters
-  nothing. Every fixture whose name sorts after `Desktop` therefore had
-  `Desktop` extracted instead: `macburger-helper.hqx` and `unshar-111.hqx`
-  both reported *"This file could not be extracted"* three seconds in,
-  photographed, on builds either side of 2026-09-20.
-  `derived-FirstClass_Demo.cpt` and `derived-Export.sit` sort BEFORE it
-  ("der" < "Des"), which is why the published rows were taken cleanly and
-  nobody saw this for three weeks. The file is named by type-ahead now
-  (`select_by_name`), and `ours-2-selected.png` photographs the highlighted
-  row before Return is pressed.
-
-- **Expander's dialog is not the stock one.** Aladdin's DLOG puts the file
-  list ~48 px higher, so the row `interactive.py` measured lands below the last
-  item: the click selected `System Folder`, Return opened it, and the run
-  reported three seconds and expanded nothing. The file list is not clicked at
-  all now — the first row is preselected — and the Expand button is pressed at
-  a coordinate measured off this harness's own frame. Return would probably do
-  as well; it was tried, looked dead, and the volume it left empty is explained
-  by the flush below rather than by the key, so it is untested and not
-  disproved.
-- **Nothing had assigned X keyboard focus.** `settle()` only screenshots, and
-  the focus call lives in `origin()`, so Command-E went to the root window —
-  the same trap the three lessons above describe, in its "the Mac ignores one
-  particular key" disguise.
+- **The first row is not the archive**: our dialog lists the Finder's
+  invisible `Desktop` file (`mkboot.py` keeps it since 2026-08-30), so a
+  fixture sorting after it had `Desktop` extracted instead. The file is named
+  by type-ahead (`select_by_name`), and `ours-2-selected.png` photographs the
+  highlighted row before Return.
+- **Expander's dialog is not the stock one** (the list ~48 px higher): the
+  first row is preselected, and Expand is pressed at a coordinate measured off
+  this harness's frame. Return is untested, not disproved.
+- **Assign X keyboard focus** (`origin()`, not `settle()`).
 - **Expander's output is not on the image until it quits.** Our sink calls
-  `FlushVol` after closing each fork, so its files are on the host image the
-  moment the alert goes up; Expander leaves its writes in the File Manager's
-  cache, and SIGKILLing the emulator throws them away. A 278 KB archive
-  expanded for 56 s, with the progress window photographed mid-run, and the
-  image afterwards held nothing at all. The harness sends Command-Q after the
-  measurement has ended, so it costs the comparison nothing.
-
-  **Measured rather than inferred since 2026-08-30**, by mounting a copy of
-  the `boot.hfv` the emulator is writing — `live_names()`, at three points:
-  when the screen stops changing, after the quit key, and after the kill. Our
-  files are there at the first; Expander's appear at the second, **within a
-  second of the keystroke** and with no repaint at all. `--json` carries
+  `FlushVol` per fork; Expander's writes sit in the File Manager's cache, and
+  SIGKILL loses them, so the harness sends Command-Q after the measurement.
+  `live_names()` mounts a copy of the live `boot.hfv` when the screen stops,
+  after the quit key and after the kill; `--json` carries
   `on_disk_before_quit`, `on_disk_after_quit`, `flush_seconds` and
-  `quit_redrew`, and FORMATS.md (*Timed on the same Mac Plus*) has what it
-  means for the ratio.
+  `quit_redrew` (FORMATS.md, *Timed on the same Mac Plus*).
 
-**What the SCREEN cannot see, and why the image probe exists.** Command-Q
-commits Expander's writes and **repaints nothing**: the frames either side of
-it are byte-identical. A screen-timed quit therefore reports one poll interval
-whether the application quit, flushed 415 KB, or ignored the key entirely —
-which is what the harness did report for one afternoon, until the frames were
-hashed and the number turned out to be the floor rather than a measurement.
-`quit` and `to_disk` in the JSON are screen figures and inherit that; the
-`on_disk_*` lists are the ones that observed anything.
+**What the SCREEN cannot see**: Command-Q commits Expander's writes and
+**repaints nothing**, so `quit` and `to_disk` in the JSON (screen figures)
+read one poll interval whatever happened; the `on_disk_*` lists observe.
 
-**What it cannot see.** Whether Expander's output is CORRECT: a run is graded
-on having produced files at all, and nothing here compares its bytes with
-ours. And nothing outside the four families 4.0.2 opens by itself — zip, gzip,
-tar, uuencode and the rest need DropStuff with Expander Enhancer, System 7 and
-not free, so timing those would be measuring a configuration a System 6 user
-does not have.
+**What it cannot see.** Whether Expander's output is CORRECT (a run is graded
+on producing files, never on their bytes). And anything outside the four
+families 4.0.2 opens by itself — the rest need DropStuff with Expander
+Enhancer, System 7 and not free.
 
 ## Finder info, read back — `sitmeta.py` and its three siblings
 
@@ -2049,60 +1373,54 @@ does not have.
 Results: FORMATS.md, *Finder info in the archive*; reasoning: DECISIONS.md
 2026-10-17, *the window StuffIt kept in the name*. Results land in
 `$UNC_VMAC_HOME/../sitmeta/` as JSON, one file per boot, each header beside
-the catalog record it became; `--report` reads every one of them.
+the catalog record it became; `--report` reads them all.
 
 **The instrument is the catalog, not the screen.** `hfscat.py` walks the
-catalog B-tree's leaf chain of the image the emulator wrote and returns
-each record whole, offsets from libhfs's `apple.h`. Its control: every
-file's type and creator agree with `hls` (145 of 145 on `System6.hfv`),
-and `--shift 2` makes all 145 disagree. `patch()` re-reads what it wrote,
-and MacMount's independent `fd_location` agrees with it.
+catalog B-tree's leaf chain and returns each record whole (offsets from
+libhfs's `apple.h`). Its control: every type and creator agrees with `hls`
+(145 of 145 on `System6.hfv`), and `--shift 2` makes all 145 disagree.
+`patch()` re-reads what it wrote, and MacMount's `fd_location` agrees.
 
-**Two kinds of evidence.** The corpus says what real writers put in the
-bytes and what Expander made of it; a SENTINEL archive says which bytes
-Expander reads, because every byte nothing defines names its own offset
-(`0x01 0x27` can only have come from @38). `--report` lines every
-catalog field up against every header byte, then holds the measured
-rules against every entry; `--control` drops each gate and mask, and
-must disagree — 806 entries on the corpus, 500 of them file flags.
+**Two kinds of evidence.** The corpus says what real writers put in the bytes
+and what Expander made of it; a SENTINEL archive says which bytes Expander
+reads, because every undefined byte names its own offset (`0x01 0x27` can
+only come from @38). `--report` lines every catalog field up against every
+header byte and holds the measured rules against every entry; `--control`
+drops each gate and mask and must disagree — 806 entries on the corpus, 500
+of them file flags.
 
-**How a boot runs.** Expander is the boot shell (`mkboot.py`), up to
-eight archives sit at the root as `zq00.sit`…, and each is opened with
-⌘E, its name typed into Standard File, and Expand pressed at
-`expander.py`'s coordinate; Return after each dismisses an alert if one
-is up, and ⌘Q at the end commits Expander's writes. `--plan` puts
-archives whose top-level names collide in different boots. An entry
-whose path is found twice on the volume is reported unmatched and left
-out, never guessed (`derived-TaxTemplates1990.sit`'s `README`).
+**How a boot runs.** Expander is the boot shell (`mkboot.py`), up to eight
+archives sit at the root as `zq00.sit`…, each opened with ⌘E, its name typed
+into Standard File, Expand pressed at `expander.py`'s coordinate; Return
+after each dismisses any alert, and ⌘Q at the end commits the writes.
+`--plan` puts archives whose top-level names collide in different boots. A
+path found twice on the volume is reported unmatched, never guessed
+(`derived-TaxTemplates1990.sit`'s `README`).
 
 **Three things that cost a boot each:**
 
 - **Wait for a free emulator by process NAME** (`ps -eo comm`), never by
-  grepping `ps aux`: the second matches any shell whose command line
-  mentions `minivmac`, including another session's own wait loop, and
-  two sessions polling that way wait on each other for good. The
-  classic sweep stalled on exactly that, with no emulator running.
-- **DiskDoubler checks its header**: +82 is a CRC-16/XMODEM of bytes
-  0..81, and a sentinel header without it is refused (*"Corrupted file
-  or wrong file type"*). `ddmeta.py` recomputes it.
-- **StuffIt 5 checks its second block**: b+2 is a CRC-16/ARC over the
-  whole block with that word zeroed, and Expander 5.5 refuses an entry
-  that disagrees (*"a disk related error (-12043)"*). Four sentinel
-  boots got that before it was found; `--plain` extracting the same
-  archive is what said the sentinels were the cause. `sit5_sentinel`
-  recomputes it, and a no-op call reproduces the archive byte for byte.
+  grepping `ps aux`, which matches another session's wait loop — two sessions
+  then wait on each other for good.
+- **DiskDoubler checks its header**: +82 is a CRC-16/XMODEM of bytes 0..81;
+  without it a sentinel is refused (*"Corrupted file or wrong file type"*).
+  `ddmeta.py` recomputes it.
+- **StuffIt 5 checks its second block**: b+2 is a CRC-16/ARC over the block
+  with that word zeroed; Expander 5.5 refuses a mismatch (*"a disk related
+  error (-12043)"*). `--plain` on the same archive isolates the sentinels as
+  the cause; `sit5_sentinel` recomputes it, and a no-op call reproduces the
+  archive byte for byte.
 
-**What none of them can see.** Get Info comments, which are in the
-Finder's Desktop file; any reader but the one each runs (Expander 4.0.2,
-Expander 5.5, DiskDoubler 3.7, QuickFiler 5.0.1, one SuperDisk!
-self-extractor); and, for the top-level folder an expander creates,
-which of the expander or the Finder chose its location — every format
-gives that one a value its header does not hold.
+**What none of them can see.** Get Info comments (the Finder's Desktop file);
+any reader but the one each runs (Expander 4.0.2, Expander 5.5, DiskDoubler
+3.7, QuickFiler 5.0.1, one SuperDisk! self-extractor); and, for the top-level
+folder an expander creates, whether the expander or the Finder chose its
+location.
 
 ## The downloads, and why none of them are committed
 
-`setup.sh` fetches by URL and verifies by SHA-256, exactly as `fixtures/` does,
-because two of the three are Apple's copyrighted property:
+`setup.sh` fetches by URL and verifies by SHA-256, as `fixtures/` does,
+because the ROMs and Systems are Apple's copyrighted property:
 
 | file | source | why |
 |---|---|---|
@@ -2110,6 +1428,10 @@ because two of the three are Apple's copyrighted property:
 | `vMac.ROM` | Internet Archive `mac_rom_archive_-_as_of_8-19-2011`, member `4D1F8172 - MacPlus v3.ROM` | Macintosh Plus ROM — **Apple copyright** |
 | `System6.hfv` | Internet Archive `system-6_202607` | System 6.0.8 — **Apple copyright** |
 | `Sys7.img` | Internet Archive `AppleMacintoshSystem701` | System 7.0.1 — **Apple copyright** |
+| `Sys30.img` | Internet Archive `30_20230725` | System 3.0 / Finder 5.1, 800K HFS — **Apple copyright** |
+| `Sys11.img` | Internet Archive `system-1.1_apr1984` | System 1.1, 400K MFS — **Apple copyright** |
+| `System_3.x.sit` → `Sys30MFS.img` | Macintosh Garden (`old.mac.gdn`) | System 3.0 on 400K MFS — **Apple copyright** |
+| `Mac512K.ROM`, `Mac128K.ROM`, `MacII.ROM` | the same ROM archive, members `28BA4E50`, `28BA61CE`, `9779D2C4` | the 64K-ROM negative and the colour tier — **Apple copyright** |
 
 If a hash ever fails to match, the upstream file changed: check it by hand
 rather than editing the expected hash.
@@ -2123,11 +1445,9 @@ in `$RETRO68` or `/opt/Retro68-build/toolchain`.
 
 ## Mac OS 8.6 under QEMU — booted 2026-10-06, and it does not reach Mac OS
 
-**The retail Mac OS 8.6 install CD is on this disk**, and the claim it
-replaced is BLOCKERS.md's *"this machine has no Mac OS install media"*,
-which had stood since 2026-09-27 as the blocker on StuffIt 5's encrypted
-flag bit 5 (OPEN_ITEMS.md). It came off the same host `os9.py --setup`
-already uses, in one 304 MB download:
+**The retail Mac OS 8.6 install CD is on this disk** (it withdrew BLOCKERS.md's
+*"this machine has no Mac OS install media"*), from the host `os9.py --setup`
+uses, one 304 MB download:
 
     mkdir -p ~/.cache/macextract/macos86 && cd ~/.cache/macextract/macos86
     curl -L -o MacOS8.6.7z \
@@ -2136,204 +1456,107 @@ already uses, in one 304 MB download:
     7z x MacOS8.6.7z            # -> MacOS8.6.iso, 665,600,000 B
     hmount MacOS8.6.iso && hdir
 
-`file` calls it *Macintosh HFS data (bootable)*, the boot blocks open
-`LK` and name `System`, the volume is `Mac OS 8.6` created 1999-04-16,
-and `hdir` lists `System Folder`, `Install Mac OS 8.6`, `Utilities` and
-`CD Extras` — retail install media and not a dud. The image is not
-committed, like every ROM and System image here.
+`hdir` lists `System Folder`, `Install Mac OS 8.6`, `Utilities` and `CD
+Extras` (volume `Mac OS 8.6`, created 1999-04-16). Not committed.
 
-**It does not boot, and the reason is the firmware.** Four refusals, in
-the order a boot meets them; the first three are preparation and the
-fourth is the wall (DECISIONS.md 2026-10-06, *the platform the ROM would
-not admit to*):
+**It does not boot, and the reason is the firmware** (DECISIONS.md
+2026-10-06, *the platform the ROM would not admit to*). Four refusals, in the
+order a boot meets them:
 
 | gate | what it is | measured |
 |---|---|---|
-| no blessed folder | the volume's `drFndrInfo[0]` is **0**, so OpenBIOS's `\\:tbxi` finds nothing. The System Folder's catalog record gives dir ID **989**; writing that at MDB+0x6C blesses it | prepared |
-| no partition map | the file is a bare HFS volume at offset 0. `media=cdrom` and `media=disk` both fail; wrapping it with `mkapmdisk.clone_head` — the donor head from `MacOS9.img`, the Apple_HFS entry repointed — makes OpenBIOS load the ROM | prepared |
-| the ROM's own Forth | **`System Folder:Mac OS ROM`'s `<BOOT-SCRIPT>` refuses the machine itself.** It accepts `/` model `iMac,1`, or compatible containing `powermac1,1` or `powerbook1,1`, and aborts *"this image is not for this platform"* otherwise. QEMU's `mac99` is `PowerMac3,1` and `g3beige` is neither; the one-byte edit `powermac1,1` → `powermac3,1` clears it | prepared |
-| **`MacOS: "/rtas" not found!`** | past those three the ROM's ELF runs and **Mac OS itself stops**: `MacOS: Boot Failure! (0xF3C481F6)`. OpenBIOS implements no `/rtas` node and 8.6's ROM requires one | **the wall** |
+| no blessed folder | `drFndrInfo[0]` is **0**; the System Folder's dir ID **989** written at MDB+0x6C blesses it | prepared |
+| no partition map | a bare HFS volume; `media=cdrom` and `media=disk` both fail; `mkapmdisk.clone_head` (the donor head from `MacOS9.img`, Apple_HFS entry repointed) makes OpenBIOS load the ROM | prepared |
+| the ROM's own Forth | `System Folder:Mac OS ROM`'s `<BOOT-SCRIPT>` accepts `iMac,1`, `powermac1,1` or `powerbook1,1` only (*"this image is not for this platform"*); QEMU's `mac99` is `PowerMac3,1`; the one-byte edit `powermac1,1` → `powermac3,1` clears it | prepared |
+| **`MacOS: "/rtas" not found!`** | the ROM's ELF runs and **Mac OS stops**: `MacOS: Boot Failure! (0xF3C481F6)`. OpenBIOS implements no `/rtas` node | **the wall** |
 
-**`os9.Qemu.settle()` cannot be used on a guest that does not boot, and
-it says the opposite.** Its positive signal is `_menubar_present` — mean
-brightness of the top 20 rows above 0.6, which separates the Mac OS 9
-startup splash from a settled desktop — and OpenBIOS's console is black
-text on pale yellow, so it reads **True from the first frame of a guest
-that never left the firmware.** Every 8.6 run here was read off the
-frames for that reason, and `--macos86` screenshots on a fixed interval
-rather than settling. The gate is sound for what it was measured on and
-is a brightness test everywhere else: *a proxy is not the thing*, and
-this is the second guest it has been pointed at.
+**`os9.Qemu.settle()` reads True from the first frame of a guest that never
+left the firmware**: its `_menubar_present` is mean brightness of the top 20
+rows above 0.6, and OpenBIOS's console is black on pale yellow. Every 8.6 run
+was read off the frames; `--macos86` screenshots on a fixed interval.
 
-**What tells the two ROMs apart is one line of each file's own prologue**,
-and it is why 9.2 boots here and 8.6 cannot: Mac OS 9's `Mac OS ROM`
-(2001-09-25, data fork 2,811,320 B) declares
-`<COMPATIBLE>MacRISC</COMPATIBLE>` and its boot script tests for
-`macrisc` — a family every New World QEMU machine advertises — and it
-asks for no `/rtas`. 8.6's (1999-04-05, 1,945,332 B) names three
-specific 1998–99 machines and wants RTAS. Read either without
-booting:
+**What tells the two ROMs apart is each file's own prologue**: Mac OS 9's
+`Mac OS ROM` (2001-09-25, data fork 2,811,320 B) declares
+`<COMPATIBLE>MacRISC</COMPATIBLE>`, tests for `macrisc` and asks for no
+`/rtas`; 8.6's (1999-04-05, 1,945,332 B) names three 1998–99 machines and
+wants RTAS. Read either without booting:
 
     hmount MacOS8.6.iso && hcd "System Folder" && hcopy -r ":Mac OS ROM" rom.bin
     head -c 120 rom.bin                       # the <COMPATIBLE> list
     # the <BOOT-SCRIPT> section is plain Forth; find it with
     # `grep -aob "<BOOT-SCRIPT" rom.bin`
 
-**`sitcomment.py --prepare86` builds the three images and `--macos86`
-boots the last of them**, so the wall is two commands and `--machine`
-picks the machine. They live beside the ISO and are not committed:
+**`sitcomment.py --prepare86` builds the three images and `--macos86` boots
+the last**; `--machine` picks the machine. Beside the ISO, not committed:
 `MacOS8.6-blessed.iso` (refusal 1), `MacOS8.6-apm.img` (1–2),
-`MacOS8.6-apm-pm31.img` (1–3) — 2 GB in total, and `--prepare86`
-re-uses whichever already exist.
+`MacOS8.6-apm-pm31.img` (1–3) — 2 GB in total, re-used if present.
 
-**What would move it**, and neither is a search: an Open Firmware that
-provides `/rtas` — real hardware, or an OpenBIOS that implements it —
-or a `Mac OS ROM` that boots an 8.6 System without one. **The thing not
-to do is fetch more 8.x media**: two more items are on the same host, a
-1.65 GB pre-installed 8.6 hard-disk image (`mac-os-8.6-hd.tar.gz`) and
-the 8.5 retail CD (`mac-os-8.5-install-cd-691-2017-a`), and nothing
-measured here says a different 8.x image carries a different ROM
-requirement. The pre-installed image is the one with a real chance,
-because whoever built it had to get past this.
-
-**And it was never the route to bit 5** — that row closed on 2026-10-06
-without it, see `sitcomment.py` below.
+**What would move it**: an Open Firmware providing `/rtas` (real hardware, or
+an OpenBIOS implementing it) or a `Mac OS ROM` that boots 8.6 without one.
+Nothing measured says a different 8.x image (the same host's 1.65 GB
+`mac-os-8.6-hd.tar.gz`, the 8.5 CD `mac-os-8.5-install-cd-691-2017-a`)
+carries a different ROM requirement. **It was never the route to bit 5**,
+which closed on 2026-10-06 without it (`sitcomment.py`, above).
 
 ## Mac OS 9
 
 `os9.py` boots Mac OS 9.2 under `qemu-system-ppc -M mac99,via=pmu`, headless,
-screenshotting through QEMU's own monitor rather than an X server, launches
-the application and checks what it wrote:
+screenshotting through QEMU's monitor, launches the application and checks
+what it wrote:
 
     os9.py --setup                                       # fetch the 2 GB image
     os9.py fixtures/derived-DDT.sit -o shots/ --launch    # one fixture
     os9.py --list os9sample.txt -o shots/ --launch        # the format sample
     os9.py fixtures/foo.sit -o shots/ --hfsplus           # extract onto HFS+
 
-An idle host reaches the Finder desktop in ~110 s. Every fixture boots its own
-pristine copy of the master image — Mac OS 9 writes to its boot volume as it
-goes — and `--keep-boot` is off by default because each copy is 2 GB. The
-master's published SHA-1 is verified before every run, and `--setup --force`
-re-fetches: the harness once booted the master in place and never hashed it,
-so the drift was invisible until the local copy stopped matching archive.org
-and the volume read back hardware-locked (BLOCKERS.md, *Corrected figures*).
+An idle host reaches the Finder in ~110 s. Every fixture boots its own copy of
+the master (Mac OS 9 writes to its boot volume); `--keep-boot` is off because
+each copy is 2 GB. The master's published SHA-1 is verified before every run;
+`--setup --force` re-fetches (BLOCKERS.md, *Corrected figures*).
 
-**Do not point `-o` at a tmpfs.** `/tmp` is one on this machine, 16 GB of an
-8 GB host's RAM, and the boot copy lands in the output directory — so a sweep
-there spends 2 GB of RAM per fixture beside a running emulator. Measured
-2026-09-25: a 22-fixture sweep aborted at the thirteenth with *"never reached
-the Finder desktop"*, which is what a host in swap looks like from inside the
-harness — the guest missed its settle timeout and nothing about the guest was
-wrong. `boot_copy()` now warns when the destination is `tmpfs` or `ramfs`.
-The same sweep with `-o` on disk is the one to trust.
+**Do not point `-o` at a tmpfs** (`/tmp` is one here): the boot copy lands in
+the output directory, 2 GB of RAM per fixture, and a host in swap reads as
+*"never reached the Finder desktop"* (2026-09-25). `boot_copy()` warns on
+`tmpfs` or `ramfs`.
 
-**`os9.py` drives the Finder from the keyboard, and it does not have to.**
-Typing selects an icon by name and Cmd-Down opens it — no coordinates, no
-double-click threshold — which is why every fixture run goes that way and
-still should: it is faster and it cannot mis-aim.
+**`os9.py` drives the Finder from the keyboard**: typing selects an icon by
+name, Cmd-Down opens it. It types `m`, `a`, `c` (`Mail` is on that desktop
+too). **A harness that selects by name depends on that name, and nothing
+compiles the dependency.** The pointer works too (*Mac OS 9 with the pointer*,
+below; BLOCKERS.md, *Withdrawn claims*).
 
-**What it CAN do is aim at a name that no longer exists.** It typed `u`, `n`,
-`c` from before the project was renamed to MacExtract (2026-08-26), so the
-selection landed on nothing and Cmd-Down opened whatever the Finder had
-selected instead — the System Folder, photographed in `13-sfgetfile.png` of a
-run that reported "application launched" and extracted nothing. The rename had
-changed the volume and the application in `run_one` and left the keystrokes,
-and no OS 9 run happened between the two to notice. It types `m`, `a`, `c`
-now — three letters, because `Mail` is on that desktop too. **A harness that
-selects by name has a dependency on that name that nothing compiles.**
-
-But the reason it was written that way is withdrawn. `os9probe.py` measured
-five mouse primitives at 0.0000 each on 2026-08-02 and concluded the pointer
-was unusable; all five fired with the cursor pinned in a corner, because the
-harness selects an absolute `usb-tablet` this guest has no driver for, and
-because one large delta to a relative mouse saturates at ±63 px per ADB
-packet. **`os9mouse.py` positions the cursor to within 3 px and clicks**
-(BLOCKERS.md, *Withdrawn claims*), which is what made an installer and an
-encrypted specimen possible. See *Mac OS 9 with the pointer*, below.
-
-**`--autotest` scored three healthy fixtures as failures until 2026-09-25,
-and both causes are fixed.** That route writes every input to the volume as
-`ARCHIVE_ON_VOLUME` — `archive.sit` — and handed the REFERENCE the fixture's
-own path, so gzip and `.Z`, which name their single entry after the archive,
-came back as `archive` against Linux's `synth-exo-Z`: `ret=0`, matching CRCs
-and byte counts, a name mismatch and nothing else. `verify_output()` had
-copied the fixture to `as-the-mac-saw-it/archive.sit` for that exact reason
-since 2026-08-08; the `--autotest` and `--hfsplus` verifiers were written
-later and did not inherit it. Both do now. `synth-os9-rar.rar` failed for the
-other reason: `ret=-6` with nothing written is the CORRECT refusal for a
-detect-only format, and the route demanded `UNC_OK` (it is `ret=-1`, a file
-that is no archive, since the RAR stopped being named on 2026-10-18). It now passes when both
-sides refuse — the reference exiting non-zero with no files, the Mac
-reporting a non-zero `ret` with no files — and prints the reference's own
-message, while staying strict everywhere else, so a Macintosh that writes
-nothing while the engine extracts still fails.
-
-**So this route scores `os9sample.txt` 22/22 on a healthy build**, as
-`--launch` does (FORMATS.md, *Mac OS 9 tier*); it read 19/22 before the fix,
-which is in BLOCKERS.md as a harness artefact rather than a result. Anything
-needing `-D` is stuck with `--autotest`, since that is the only route the
-switch reaches.
-
-**`--hfsplus` writes to a volume the host cannot read.** The boot volume is
-HFS+ inside an HFS wrapper — wrapper MDB signature `0x4244 'BD'`,
-`drEmbedSigWord` `0x482B 'H+'`, embedded volume header at byte 966656 of the
-partition — and hfsutils mounts the WRAPPER, whose root holds exactly one
-file, Apple's `Where_have_all_my_files_gone?` placeholder. Nothing here can
-write HFS+ (no hfsprogs, no kernel module), which is why the application
-cannot be dropped into `Startup Items` offline and the Finder has to be
-automated. It also gives a free, unambiguous test: output written to that
-volume is NOT visible in the wrapper, which is how the HFS+ runs prove where
-their output landed rather than trusting a signature word the classic File
-Manager reports as `'BD'` for compatibility anyway. The boot volume is
-HFS+; renaming it to `Out` in the Finder is enough to point the *autotest*
-build at it, since that build finds its volumes by name. The result comes back
-through `at_report_file()` — a small file on the plain-HFS input volume
-carrying the same values `at_report()` would paint, plus every output name,
-because the framebuffer grid is invisible on a 32-bit screen. That the output
-really landed on HFS+ is checked by mounting the volume's HFS *wrapper*: if
-the files were on plain HFS they would be visible there, and they are not.
-
-**`--autotest` is the third combination, and it exists to separate two
-things `--launch` and `--hfsplus` change together.** `--launch` runs the
+**Three routes, to separate build from volume.** `--launch` runs the
 INTERACTIVE build onto a plain-HFS transfer volume; `--hfsplus` runs the
-AUTOTEST build onto the HFS+ boot volume. When one passes and the other bombs,
-the pair convicts neither the build nor the volume. `--autotest` runs the
-autotest build with a plain-HFS output volume — a third APM disk named `Out`,
-so no Finder rename is needed — which leaves the BUILD as the only difference
-from `--launch`. It is also the only route here that reads both channels at
-once: the report off `In`, and then every fork off `Out` byte for byte, which
-`--hfsplus` cannot do because no host tool opens HFS+. `-D UNC_AT_SAMEVOL`
-points the sink at the archive's own volume, the way the interactive
-application writes beside the archive; `Out` still has to be mounted, because
-`FindVolWait` looks it up before the switch redirects the sink, and the run
-checks it came back empty.
+AUTOTEST build onto the HFS+ boot volume; `--autotest` runs the autotest build
+onto a third APM disk named `Out`, so the BUILD is its only difference from
+`--launch`, and it reads both channels (the report off `In`, every fork off
+`Out`). `--autotest` scores `os9sample.txt` **22/22** on a healthy build, as
+`--launch` does (FORMATS.md, *Mac OS 9 tier*). Its verifier grades against the
+fixture as the Mac saw it (`archive.sit`, so gzip and `.Z` names compare), and
+a fixture both sides refuse passes, printing the reference's message.
+Anything needing `-D` is stuck with `--autotest`. `-D UNC_AT_SAMEVOL` points
+the sink at the archive's own volume; `Out` must still be mounted
+(`FindVolWait` looks it up first), and the run checks it came back empty.
 
     os9.py fixtures/derived-DandStoQIF2.sea --autotest -o <dir>
     os9.py fixtures/derived-DandStoQIF2.sea --autotest -D UNC_AT_SAMEVOL -o <dir>
 
-**The reference is `macextract x`, unwrap loop ON.** This harness launches
-the INTERACTIVE build, which takes envelopes off in `ExtractOne`; `-nr` is
-right for the AUTOTEST build, which `--hfsplus` and the Mini vMac tiers use.
-os9.py ran `-nr` until 2026-08-27 because it once launched the autotest build
-too, and the tier was not re-run in between: `export-hc.hqx` came back as
-"MISSING Export.sit, UNEXPECTED Export" from a Mac that had correctly opened
-the BinHex, then the StuffIt inside it, and written the HyperCard stack byte
-for byte. **When a harness changes what it drives, its oracle is part of what
-changed.**
+**`--hfsplus` writes to a volume the host cannot read.** The boot volume is
+HFS+ inside an HFS wrapper (wrapper MDB `0x4244 'BD'`, `drEmbedSigWord`
+`0x482B 'H+'`, embedded header at byte 966656 of the partition); hfsutils
+mounts the WRAPPER, whose root holds only `Where_have_all_my_files_gone?`.
+Renaming the boot volume `Out` in the Finder points the autotest build at it.
+The result comes back through `at_report_file()`, a small file on the
+plain-HFS input volume with the grid's values plus every output name (the grid
+is invisible on a 32-bit screen); that the output landed on HFS+ is checked by
+its ABSENCE from the wrapper.
 
-**Every screenshot in this tier was one step behind its label until
-2026-08-28.** The sequence sent three keystrokes after the application was up:
-one Return for the archive, one for what the code called "the alert", and a
-Cmd-Q to quit. The second Return is in fact what accepts the DESTINATION
-dialog, so `14-result.png` photographed SFPutFile under the name of the
-result, the step that printed "extraction reported" had timed that dialog
-opening, and Cmd-Q was typed into a modal dialog that never sees it — the
-application was still running when the emulator was killed. The extraction
-itself was never in question; it is read off the volume, which is why 20/20
-stood. **A harness that stops before the end still reports every step it did
-take.**
+**The reference is `macextract x`, unwrap loop ON**, for the interactive build;
+`-nr` is right for the autotest build (`--hfsplus`, the Mini vMac tiers).
+**When a harness changes what it drives, its oracle is part of what changed.**
 
-It now runs to the end and says what it waited for at each point:
+**The sequence runs to the end and says what it waited for** (DECISIONS.md
+2026-08-28, *the OS 9 tier's last three keystrokes*):
 
 | shot | what it is | how it is waited for |
 |---|---|---|
@@ -2345,161 +1568,90 @@ It now runs to the end and says what it waited for at each point:
 | `18-finder` | the Finder, application gone | one rectangle changes |
 | `19-names` | a crop of `18-finder` on the volume window | — |
 
-The result is the only one that cannot be waited for with `wait_change`: the
-progress dialog repaints ten times a second, so the first change after the
-destination dialog is that dialog appearing and never the alert behind it.
-`still()` waits for the screen to stop instead, and prints how long it took —
-`synth-packit-2.pit` finishes within 13 s of the Return that starts it, on a
-machine where the whole boot takes ~130 s. **Cmd-. is what quits the
-application**, not Cmd-Q: it is Standard File's Cancel, and the SFGetFile loop
-in `ExtractOne`'s caller ends on `!reply.good`. It is sent through `ask()`
-rather than `key()` so a keycode name QEMU does not know is reported instead
-of looking like a keystroke the guest ignored.
+The progress dialog repaints ten times a second, so the result is waited for
+with `still()`, which prints how long it took. **Cmd-. quits the
+application** (Standard File's Cancel ends the SFGetFile loop), sent through
+`ask()` so a keycode name QEMU does not know is reported, not ignored.
 
-**`--cancel` interrupts the extraction instead of waiting it out**, which is
-the one thing the Mini vMac tiers have driven since M10 and this one never
-had:
+**`--cancel` interrupts the extraction**:
 
     os9.py fixtures/derived-Library_ISBN_Barcoder.sit -o <dir> --launch --cancel
 
-Cmd-. reaches `ProgressPump()`'s own keyDown check, the application deletes
-the entry it had in flight and puts up "Extraction cancelled.", and the pass
-condition is then a **strict, non-empty subset**: every file that IS on the
-volume must still be byte-exact, at least one entry must be missing, and at
-least one must be there. Both degenerate outcomes fail as a broken TEST rather
-than passing — a cancel that arrives after the last entry has tested nothing,
-and one that arrives before the first cannot tell a working Cancel from a dead
-keystroke. **Pick a slow archive**: this machine extracts
-`derived-XferIt_1.5b4.sea`, the largest fixture in the format sample, in under
-ten seconds. `derived-Library_ISBN_Barcoder.sit` is the subject the result
-below was measured on — StuffIt 5, 34 entries, no name in it that the Mac
-shortens into a collision.
+The pass condition is a **strict, non-empty subset**: every file on the volume
+byte-exact, at least one entry missing, at least one there; both degenerate
+outcomes fail as a broken TEST. **Pick a slow archive**
+(`derived-XferIt_1.5b4.sea` extracts in under ten seconds);
+`derived-Library_ISBN_Barcoder.sit` (StuffIt 5, 34 entries) is the measured
+subject. **The chord is sent until the dialog goes away, and the count is the
+measurement**: `ProgressPump()` runs only from `prog_tick`, so a format that
+never ticks is not pumping (DECISIONS.md 2026-08-28; `tools/run_ticks.py`).
+None landing prints **"Cmd-. DID NOT CANCEL"**. It waits on `PROGRESS_TITLE`
+between sends, because "0%  estimating time left" is perfectly still.
 
-**The chord is sent until the dialog goes away, and the count is the
-measurement.** `ProgressPump()` runs only from `prog_tick`, which the engine
-calls per 8-16 KB of input consumed — so an application decoding a format that
-never ticks is not pumping at all, and a chord into it looks exactly like a
-chord that does not work. **That is how Now Compress's missing progress
-callback was found**: one Cmd-. did nothing, then three did nothing, on the
-one format in the corpus that never called back (DECISIONS.md 2026-08-28;
-`tools/run_ticks.py` now fails on it). The loop prints how many it took — 1
-means the first landed, none prints **"Cmd-. DID NOT CANCEL"** rather than a
-quiet pass. Waiting on `PROGRESS_TITLE` between sends is what makes the count
-meaningful: a progress dialog reading "0%  estimating time left" is perfectly
-still, and `still()` read that as a finished extraction 14 s into a 30 s one.
-
-**`--cancel-click` cancels through the BUTTON**, which is the other branch of
-`ProgressPump()` — the chord is its own keyDown test, the button is the
-`DialogSelect` beside it — and needs the pointer:
+**`--cancel-click` cancels through the BUTTON**, with the pointer:
 
     os9.py fixtures/derived-Library_ISBN_Barcoder.sit -o <dir> --launch \
            --cancel-click
     os9.py ... --cancel-click --click-at 150,168     # the control
 
-Three things make it work, and each is a way it failed to:
+- **Park the cursor before the dialog exists** (`goto()` costs ~40 s), while
+  SFPutFile is up; `14b-parked.png` shows it (DECISIONS.md 2026-08-28,
+  *clicking a dialog that does not exist yet*).
+- **HOLD the button**, `Pointer.press(hold=0.9)`: the mouseDown is dequeued up
+  to a tick late and `TrackControl` reads a short tap as released outside.
+- **A relative `usb-mouse`** (`Qemu(pointer=True)`), never the absolute
+  tablet.
 
-- **The cursor is parked before the dialog exists.** `goto()` is a closed loop
-  costing ~40 s and the progress dialog lasts as long as the extraction, so
-  aiming at it once it is up cannot work. The parking happens while SFPutFile
-  is still on screen — a modal dialog waits forever — and `14b-parked.png` is
-  the photograph of the cursor sitting where the button will be. The Return
-  that starts the extraction moves nothing.
-- **The button is HELD down**, `Pointer.press(hold=0.9)`. An application that
-  pumps events only from its progress callback dequeues the mouseDown up to a
-  tick late, and `DialogSelect` then calls `TrackControl`, which asks whether
-  the button is still down: a 60 ms tap that is already over reads as a click
-  released outside the control and hits no item.
-- **The guest gets a relative `usb-mouse`** (`Qemu(pointer=True)`), never the
-  absolute tablet a fixture run leaves attached and unused.
-
-`CANCEL_BUTTON` is computed from `mac/macextract.r` rather than eyeballed:
-`DLOG` 128 sits at global (80,80)-(400,190) and does not autocentre, and item
-1 of `DITL` 128 is at local (220,78)-(300,98), so the middle is (340,168) —
-which is where `15-progress.png` draws it.
-
-**The control is what makes the pass mean anything.** `--click-at 150,168`
-presses the same dialog's blank background, 190 px from the button, and
-everything else about the run is identical. Measured 2026-08-28, one boot
-each, `derived-Library_ISBN_Barcoder.sit`: the button cancels on the first
-press, 1 of 34 entries written and byte-exact; the background press does not,
-all 34 entries are written, and the run FAILS as a cancel that arrived too
-late. Without that second boot, "the extraction stopped early" is equally
-consistent with any mouse press waking the application up.
+`CANCEL_BUTTON` (340,168) is computed from `mac/macextract.r`: `DLOG` 128 at
+global (80,80)-(400,190), not autocentred, item 1 of `DITL` 128 at local
+(220,78)-(300,98). **The control** `--click-at 150,168` presses the dialog's
+background: measured 2026-08-28, the button cancels at the first press (1 of
+34 written), the background does not (all 34, the run FAILS as a late cancel).
 
 **`--encrypted` answers the password dialog**, and brings its own archive:
 
     os9.py --encrypted --launch -o <dir>          # no fixture: it makes one
 
-Nothing in the corpus is encrypted, so the subject is built by
-`tools/synth_crypt.py` (StuffIt classic DES, three entries, password
-`hushnow`) and put on the volume as **MacBinary** — `'MKey'` 0, which verifies
-the password, is in the archive's resource fork, so a data fork alone cannot
-be decrypted by anything. `verify_output()` is given the same password for the
-reference side; without that every entry reads as "missing on Linux".
+`tools/synth_crypt.py`'s StuffIt classic DES archive (three entries, password
+`hushnow`), as **MacBinary** (`'MKey'` 0 is in the resource fork);
+`verify_output()` gets the password for the reference. A **wrong** password
+goes first and must be refused; both dialogs are keyboard work (`PassFilter`).
+**Wait over the right rectangle**: the refusal changes only the MESSAGE —
+0.43 % of the window in 123 s, 19 % of `PASSWORD_MSG` in 4 s (DECISIONS.md
+2026-08-28, *the password dialog on Mac OS 9*).
 
-A **wrong** password is typed first and must be refused, because the retry is
-the path a user meets and because an application that ignored what was typed
-would pass a single-password run. Both dialogs are keyboard work —
-`PassFilter` maps Return to OK and Escape to Cancel — so this needs no pointer.
+**`19-names.png` photographs an 8-bit name**: `synth-packit-2.pit`'s `App` +
+MacRoman `CC A9` draws as `AppÃ©` in the Finder and in Standard File
+(`17-back.png`) — what the Linux CLI prints (`cli/main.c`, `macroman_high`).
 
-**Wait over the right rectangle.** The refusal changes the dialog's MESSAGE and
-nothing else, and the dialog is a small part of `WINDOW_RECT`: measured over
-the window, one rewrapped paragraph moved 0.43 % in 123 s and printed "NO
-CHANGE" about a dialog that had changed. `PASSWORD_MSG` is the message area
-from `DITL` 132, and over that the same event is 19 % in 4 s.
+**Names**: the Mac writes each component as `ComponentToStr63()` does (`':'`
+back to `'/'`, cut at 31), so `verify_output()` maps reference names through
+`mac_leaf()` first and fails outright when two map to ONE Mac name (the shell
+numbers the second `~1`; `tools/run_macnames.py`). **So this tier cannot see
+an over-long name**; `run_names.py` covers that.
 
-**`19-names.png` is the photograph of an 8-bit name.** Every tier checks the
-BYTES of a MacRoman filename and no tier had ever shown the GLYPHS on Mac
-OS 9. `synth-packit-2.pit` carries one: `App` followed by MacRoman `CC A9`,
-which the Finder and Standard File both draw as `AppÃ©` — the same two
-characters the Linux CLI prints, which converts MacRoman to UTF-8 on its way
-out (`cli/main.c`, `macroman_high`). Look at `17-back.png` too: Standard File
-lists the extracted files, so the name is drawn twice by two different pieces
-of the Toolbox.
-
-**The two sides spell some names differently, and both are right.** The Mac
-writes each component as `ComponentToStr63()` does — the engine's `':'` back to
-`'/'`, cut at 31 characters — so `SD! Utilities : MacWrite` on Linux is
-`SD! Utilities / MacWrite` on the volume. `verify_output()` maps the reference
-names through `mac_leaf()` before comparing (the HFS+ path always did) and
-fails the fixture outright when two of them map to ONE Mac name: the shell
-numbers the second `~1` (`tools/run_macnames.py`, 2026-08-28), so both files
-are there and the harness cannot say which reference file either one is.
-**What this costs**: a name the Mac cut at 31 characters now compares equal to
-the whole one, so this tier cannot see an over-long name. Nothing in the
-sample has one; `run_names.py` is where that lives.
-
-**The result is checked off the disk image, not off the screen.** Mini vMac
-needs the on-screen CRC grid; QEMU does not, because the transfer volume is a
-plain host file. After the emulator exits, `verify_output()` lifts the
-Apple_HFS partition out, mounts it with hfsutils, pulls each extracted file
-off as MacBinary (`hcopy -m`, which is the only way to get a resource fork
-through hfsutils) and compares **both forks byte for byte** against
-`macextract x`, unwrap loop on — the reference above, not the autotest one.
-A mismatch names the file and the fork; a volume the guest never flushed fails
-to mount rather than passing quietly.
+**The result is checked off the disk image**: after the emulator exits,
+`verify_output()` lifts the Apple_HFS partition out, pulls each file off with
+`hcopy -m` and compares **both forks byte for byte**. A volume the guest never
+flushed fails to mount.
 
 `mkapmdisk.py` clones its partition map and drivers from a disk Mac OS 9
-already mounts and repoints only the `Apple_HFS` entry. A map built by hand
-from the format documentation — correct-looking DDR, correct-looking entries,
-status word copied off a real disk — was silently ignored: no volume, no
-error, nothing to debug. Cloning a known-good head worked first time.
+already mounts and repoints only the `Apple_HFS` entry; a hand-built map was
+silently ignored.
 
 ## What every walk can see — `walkprobe.py`
 
-Harnesses here read a Macintosh volume back — with `hls`, and two of
-them with `hdir` — and grade what the application under test wrote onto
-it, and they did not agree about what a listing contains. This builds
-one volume holding every shape that tells them apart — a plain file, an
-INVISIBLE one, a dotted one with the invisible bit CLEAR, and `Icon\r`,
-at the root, inside a folder and inside an INVISIBLE folder, plus one
-LOCKED file — runs every walk in the tree against it, and says which
-came back short. No emulator, no ROM, no X server; seconds.
+Harnesses here grade what an application wrote by listing a Macintosh volume
+with `hls` or `hdir`. This builds one volume holding every shape that tells
+listings apart — a plain file, an INVISIBLE one, a dotted one with the
+invisible bit CLEAR, and `Icon\r`, at the root, inside a folder and inside an
+INVISIBLE folder, plus one LOCKED file — runs every walk in the tree against
+it, and says which came back short. No emulator, no ROM, no X server; seconds.
 
     tools/vmac/walkprobe.py            # the table
     tools/vmac/walkprobe.py --check    # and assert it against the EXPECT_* sets
 
-As of **2026-09-23**, **twelve** subjects and **four** columns:
+**Twelve** subjects and **four** columns (2026-09-23; `--check` reproduces it):
 
 | walk | invisible file | descends | invisible folder | locked file |
 |---|---|---|---|---|
@@ -2516,80 +1668,52 @@ As of **2026-09-23**, **twelve** subjects and **four** columns:
 | `macmime.HFS.ls` | 4/4 | no | — | yes |
 | `mkboot.HFS.ls` | **4/4** | no | — | yes |
 
-**All twelve.** The last three joined on 2026-09-23, when *"none of the
-other nine listers is gradeable"* turned out to be true of four of them
-and not of these — each takes an arbitrary image and returns an entry
-set, so there was never a reason not to grade them. **Grading
-`mkboot.HFS.ls` found a defect the reading had missed**: it came back
-**3/4, missing `Icon\r`**, because it read its listing with `text=True`
-and universal newlines cut the name at the carriage return — and
-`mkboot.py`'s own `rmtree` says in a comment that the files surviving a
-strip *are* `Icon\r`. `verify_stripped` is built on that listing. Fixed
-the same way as the Compact Pro walks: bytes, split on b"\n".
+The root-only walks list ONE directory by design; their callers walk depth
+themselves or read volumes built flat, which `EXPECT_FLAT` records.
+`EXPECT_BLIND` and `EXPECT_NO_LOCKED` are empty and kept, because they fail in
+the other direction: take `-a` out of any walk and the probe names it.
+**`--check` can fail, and every column has been made to.**
 
-`interactive.volume_entries` is itself new — the entry-set listing that
-`phase_wrapped`, `phase_chain` and `phase_named` held three copies of.
-Collapsing them fixed the same `splitlines()` bug once and turned three
-ungradeable inline blocks into one graded function.
+**Read listings as bytes, split on `b"\n"`.** `text=True` applies universal
+newlines, which cut `Icon\r` at its carriage return: `mkboot.HFS.ls` came
+back 3/4 (and `verify_stripped` is built on it), and the Compact Pro walks
+handed `hcopy` a file named `Icon`. `hdir` prints the CR verbatim.
 
-The three are root-only by design, not by oversight: each lists ONE
-directory, and the callers that need depth walk it themselves. `EXPECT_BLIND` and `EXPECT_NO_LOCKED`
-are empty sets and are kept, because they fail in the other direction:
-take `-a` back out of any walk and the probe names it. The four that show
-`—` never descend at all, which `EXPECT_FLAT` records as a property —
-each reads a volume built flat by `make_volume`, or a boot volume whose
-`System Folder` is not output.
+**A locked file is not an `-a` question**: `hdir` prints it with a leading
+`F`, so a walk keeping lines on `line.startswith("f")` throws locked files
+away. One locked item exists across the cache's 84 images —
+`[DiskExpress Activity Log]` on the Norton DiskDoubler Pro floppy, invisible
+AND locked. **An invisible FOLDER** is its own cell: Now QuickFiler creates
+`[Now QuickFiler Folder]` (invisible) holding a visible `NCdb`/`NCex`
+database, on six kept `specimens/now/*` volumes.
 
-**`superdisk.read_forks` went last, and what made it last was the
-CALLERS, not the walk.** It has **38 call sites** across nine harnesses.
-Thirty-four select — by leaf name, by creator (`SMKR`, `SITe`), by type,
-or by a DiskDoubler header — and the flag cannot reach those. **Four do
-not**: `--adjudicate` in `superdisk.py`, `nowcompress.py` and
-`diskdoubler.py`, and `superdisk.py --nest`, each of which holds EVERY
-entry on the guest volume against our own extraction, so an entry with
-no counterpart in our output is a difference. That is why the filter
-lives inside `read_forks` rather than in each caller.
+**Four callers hold EVERY guest entry against our extraction**
+(`--adjudicate` in `superdisk.py`, `nowcompress.py` and `diskdoubler.py`, and
+`superdisk.py --nest`), which is why the `FINDER_OWN` filter lives inside
+`superdisk.read_forks` rather than in its 38 call sites; all four were re-run
+and it dropped exactly `Desktop DB` and `Desktop DF`. **Every walk prints what
+its filter dropped, on every run**, so the filter is a measurement:
+`cptsegment` and `cptcrypt` drop `Desktop`; `nowcompress` `Desktop` and
+`[Now QuickFiler Folder]`; `diskdoubler --wild` on the 3.7 disk `Desktop`
+(still 10 compressed files). The template is `arcmac.read_volume`: `-a`, a
+filter measured on the harness's own volume (`hls -a -1` adds exactly
+`Desktop`, FNDR/ERIK), raw bytes for `hcopy`, one Mini vMac re-run.
+`FINDER_OWN` lives in `mkboot.py`, the module with no imports of its own. The
+rest of `spacesaver.py` is unexercised under `-a` and selects by name or
+creator — an expectation, not a measurement.
 
-**All four were re-run**, and in each the filter dropped exactly
-`Desktop DB` and `Desktop DF` — the files that would otherwise have been
-compared against nothing: `superdisk --adjudicate` 2/2 forks identical,
-`diskdoubler --adjudicate` 10/10, `superdisk --nest` 11 files with the
-Macintosh agreeing, `nowcompress --adjudicate` every fork identical
-including one of 9,949,696 B. `spacesaver --layout` and `--pkg` were run
-too, and select correctly on a volume where `-a` now surfaces seventeen
-invisible `Icon` files. **The rest of `spacesaver.py` is still
-unexercised**, and selects by name or creator — an expectation, not a
-measurement.
+**Survey by CAPABILITY, not spelling** (grepping for `hls` missed the `hdir`
+walks; grepping for `read_forks` conflated two functions of that name). An
+`ast` walk finds 30 functions in `tools/` that run `hls` or `hdir`, and all 30
+pass `-a` since 2026-09-23 — including the ones `walkprobe.py` cannot grade:
+`interactive.read_joined`, `rescomp.report`, `sitcrypt.list_folder`,
+`expander.app_from_image`, `spacesaver.lift_installer`, `os9.wrapper_names`
+(a NEGATIVE, which a blind listing makes easiest to satisfy) and
+`mkboot.verify_stripped` (an invisible `Ghost INIT` passed it; `ls()` takes
+`-a` as a parameter because `strip_system_folder` deletes what `ls` returns
+and `Desktop` is kept on purpose).
 
-**The inventory was wrong twice in one day, and both times because the
-search was for a SPELLING.** It listed six of eight while claiming
-"every walk in the tree" — built by grepping for `hls`, and two walks
-use `hdir`. Then it listed eight of nine, because it was extended by
-grepping for the NAME `read_forks` and every hit was credited to
-`superdisk.read_forks`: `nowcompress.py` defines its own, and
-`--adjudicate` calls THAT one, so the harness re-run that was supposed
-to prove the filter safe passed with a blind walk and printed no filter
-line at all. The missing line is what gave it away.
-
-**The population is thirty, not nine, and all thirty pass `-a` since
-2026-09-23.** Asking for the CAPABILITY — an `ast` walk over `tools/`
-for any function that runs `hls` or `hdir` — finds 30. Nine are graded
-in the table above (plus their nested `walk` helpers and this probe's
-own measurement functions); the other nine are not gradeable by
-`walkprobe.py`, because none of them takes an arbitrary image and
-returns an entry set. They were taken anyway, one flag each:
-
-| function | what it reads | what `-a` was worth |
-|---|---|---|
-| `interactive.phase_wrapped` / `phase_chain` / `phase_named` | the volume's entry SET, against what the application should have written | **real**: an invisible output would read as one never made. `phase_chain` already hand-filtered `Desktop`, which is the same fact spelled once |
-| `macmime.HFS.ls` | a MIME phase's output volume, compared with what it wrote | **real**, and it had the `text=True` universal-newline bug too |
-| `interactive.read_joined` | a diagnostic listing — *"not on the volume, which holds:"* | printed only when the file was NOT found, so a listing that hides one misleads exactly when it is read |
-| `rescomp.report` | the report of what the work volume holds | same: the listing IS the finding |
-| `sitcrypt.list_folder` | *"the only way to see what DropConvert called its output"* | an invisible output was not seeable at all |
-| `expander.app_from_image` | the one `APPL` on a 400K image | an invisible application would read as "no application" |
-| `spacesaver.lift_installer` | the installer, found by searching the listing | a name search cannot find a hidden file |
-
-The re-survey is one command and is how this stays true:
+The re-survey is one command:
 
     python3 - <<'EOF'   # any function in tools/ that lists a volume
     import ast, os
@@ -2606,119 +1730,24 @@ The re-survey is one command and is how this stays true:
                     if not ok: print("BLIND", p, n.lineno, n.name)
     EOF
 
-**`FINDER_OWN` lives in `mkboot.py`**, the module with no imports of its
-own. It was in `arcmac.py` until `interactive.py` needed it and could
-not import that file — arcmac imports `Mac` from interactive, so the
-arrow already pointed the other way.
-
-**Two of the four columns are new, and both came off a real volume
-rather than out of a list of things that could go wrong.** The cache in
-`~/.cache/macextract/vmac` holds 84 mountable images; listing every one
-twice, with `-a` and without, says what the flag is actually worth here:
-
-- **an invisible FOLDER** is the cell where the first two columns cross,
-  and passing either does not imply passing it. Now QuickFiler creates
-  `[Now QuickFiler Folder]` on the volume it is compressing on and puts a
-  `NCdb`/`NCex` database inside it — the FOLDER invisible, the database
-  not — on six of the kept `specimens/now/*` work volumes.
-  `diskdoubler.volume_files` was the walk that earned this column: it
-  descends, and it used to walk straight past a folder it could not see;
-- **a LOCKED file** has nothing to do with `-a` at all. `hdir` prints one
-  with a leading `F`, so `cptsegment.read_volume` and
-  `cptcrypt.read_volume`, which kept a listing line on
-  `line.startswith("f")`, threw every locked file away along with the
-  directories that test was aimed at. `mkboot.Hfs.ls` had the same
-  character set and the same hole. One locked item exists across all 84
-  images — `[DiskExpress Activity Log]` on the Norton DiskDoubler Pro
-  floppy, invisible AND locked.
-
-**`--check` can fail, and every column has been made to.** Taking `-a`
-back out of a walk reports it newly blind; claiming a walk descends when
-it does not reports that; the hidden-folder column was failed both ways
-against `diskdoubler.volume_files` on the day it was written, and the
-locked column named the two Compact Pro walks before they were fixed and
-named them again, as gains, after.
-
-**The table grew twice on the day it was written, and neither growth was
-a new walk being added to the tree.**
-
-- **Two walks were missing from it.** `cptsegment.read_volume` and
-  `cptcrypt.read_volume` list with `hdir` rather than `hls`, so the
-  survey that built this table — a grep for `hls` — did not find them.
-  `hdir` hides the invisible bit exactly as `hls` does and takes the
-  same `-a`: 3 lines against 5 on the probe volume, re-derived on every
-  run. DECISIONS.md already said this about `hdir` and no probe had
-  ever asked it.
-- **The second column did not exist**, and the volume it measures has
-  been there since the probe was written: the same four subjects are
-  copied into `Folder`, and the verdict compared leaf NAMES. The folder
-  holds the same four names as the root, so a walk that returned two
-  entries and one that returned eight both scored 4/4. **Four of the
-  eight never descend.** That is not automatically a defect — all four
-  read volumes built flat, which `EXPECT_FLAT` records — but it was a
-  property the probe's own docstring claimed to test and could not see.
-
-**What each fix cost, and what `-a` is NOT free of.** The template is
-`arcmac.read_volume`: the flag, a three-name `FINDER_OWN` filter
-measured on that harness's OWN volume rather than assumed — `hls -a -1`
-there adds exactly `Desktop`, FNDR/ERIK, invisible, to the four `hls -1`
-gives — the raw-bytes rule for `hcopy`, and one Mini vMac run to
-re-verify. Its two callers (`arcmac.make`, `maclha.make`) select by file
-TYPE and extension, so neither compares fork sets. Every walk fixed
-since **prints what its filter dropped, on every run**, so the filter is
-a measurement rather than a constant somebody trusted:
-
-- `cptsegment` and `cptcrypt`: `Desktop`, and nothing else.
-- `nowcompress`: `Desktop` and `[Now QuickFiler Folder]`, which is the
-  application's own bookkeeping and the thing this walk used to miss.
-- `diskdoubler --wild` on the 3.7 disk: `Desktop`, and the figure it
-  reports is unchanged at 10 compressed files.
-- `superdisk` on a System 7 work volume: `Desktop DB` and `Desktop DF`.
-
-And `-a` cost one real defect on the way in, which is why the rule is to
-re-run the harness: it made `Icon\r` reachable for the first time, and
-the two Compact Pro walks read their listing with `text=True`, which
-applies **universal newlines** — the carriage return inside the HFS name
-becomes a line break, so `hcopy` was handed `Icon` and a file that does
-not exist. `hdir` prints the CR verbatim; the listing is bytes now.
-
-**Two things outside the walks were fixed the same day.**
-`os9.wrapper_names` is a NEGATIVE — the verdict is that none of the output
-is on the plain-HFS wrapper — and it was reading the listing that makes a
-negative EASIEST to satisfy. And `mkboot.verify_stripped`, which asserts
-that the boot image's System Folder holds only System and Finder, **could
-not fail on the files the strip is unable to delete**: an invisible
-`Ghost INIT` copied into a freshly stripped System Folder passed it. Both
-now pass `-a`; `ls()` takes it as a parameter rather than a default,
-because `strip_system_folder` deletes what `ls` returns and the Finder's
-`Desktop` is invisible and kept on purpose. `run.py` on one fixture, 1/1.
-
-**What it cannot see:** whether any of the blind walks has ever actually
-lost something. That depends on whether the application each one grades
-writes an invisible file, which is a question about those applications
-and not about the walks — and it is worth asking of each, because the
-one case this file called "already known to be a real risk" turned out
-not to be one. `arcmac.macbinary`'s docstring said the ArcMac header's
-Finder info carries the invisible bit; measured over all 5 ArcMac files
-and 11 entries here, none does (BLOCKERS.md, *Withdrawn claims*). The
-walk was blind either way, and the flag cost nothing, so it was still
-worth taking — but the risk that ordered the work was not there.
+**What it cannot see:** whether a blind walk ever lost something — that
+depends on whether the application it grades writes invisible files. The one
+case called a real risk was not: no ArcMac header here sets the invisible bit
+(BLOCKERS.md, *Withdrawn claims*).
 
 ## Mac OS 9 with the pointer — `os9mouse.py`
 
-What `os9.py`'s keyboard route cannot do is operate an application: click a
-checkbox, walk an installer, answer a dialog. `os9mouse.py` does, and it is
-what produced the StuffIt 5 encryption specimens (FORMATS.md, *StuffIt 5's
-RC4*).
+`os9.py`'s keyboard route cannot operate an application: click a checkbox,
+walk an installer, answer a dialog. `os9mouse.py` does; it produced the
+StuffIt 5 encryption specimens (FORMATS.md, *StuffIt 5's RC4*).
 
     python3 -c "import sys; sys.path.insert(0,'tools/vmac'); import os9mouse; \
                 m = os9mouse.Mac(cd=True); m.settle(); m.png('desk')"
 
-It is a module rather than a command because every session is a different
-dozen steps. The positioning algorithm itself is `Pointer`, which takes a
-"send these monitor commands" and a "give me a frame" and belongs to neither
-guest: `Mac` hands it its own, and `os9.py` hands it `Qemu`'s for
-`--cancel-click`. The pieces:
+It is a module, because every session is a different dozen steps. The
+positioning algorithm is `Pointer`, which takes a "send these monitor
+commands" and a "give me a frame" and belongs to neither guest: `Mac` hands it
+its own, and `os9.py` hands it `Qemu`'s for `--cancel-click`.
 
 | call | does |
 |---|---|
@@ -2730,66 +1759,47 @@ guest: `Mac` hands it its own, and `os9.py` hands it `Qemu`'s for
 | `m.settle()` | wait until the screen stops changing, with a floor |
 | `find_not_yet(frame)` | locate DropStuff's "Not Yet" button, which moves |
 
-Four things it knows that cost a run each, all in the module's own docstring:
-the absolute pointer is inert; the menu-bar clock and a blinking caret both
-defeat frame-differencing (hence `largest_blob`); positioning takes ~40 s,
-which is longer than a sticky menu stays open, so use Command keys; and
-DropStuff's nag shuffles its buttons, so the label is matched, not assumed.
+From the module's docstring: the absolute pointer is inert; the menu-bar clock
+and a blinking caret defeat frame-differencing (hence `largest_blob`);
+positioning takes ~40 s, longer than a sticky menu stays open, so use Command
+keys; DropStuff's nag shuffles its buttons, so the label is matched.
 
-**Getting a file back out** is the same trick as everywhere else here: write
-it to the plain-HFS transfer volume, then unmount that volume from inside the
-guest (select it, Cmd-Y) so the guest flushes, and read the Apple_HFS
-partition with hfsutils. The boot volume is HFS+ and the host cannot read it.
+**Getting a file back out**: write it to the plain-HFS transfer volume,
+unmount that volume inside the guest (select it, Cmd-Y) so it flushes, and
+read the Apple_HFS partition with hfsutils. The boot volume is HFS+.
 
 ### What the pointer cannot select, on either emulator
 
-**A menu ITEM is not reliably selectable by this harness, and as of
-2026-09-27 that is measured on both guests rather than one.** Mini vMac's
-hierarchical submenus were the first case (`sitcrypt.py`, *the Translate
-menu*): the submenu opens, the parent stays highlighted, the item under the
-pointer never does, and the release selects nothing — three ways in were
-tried.
+**Measured on both guests, 2026-09-27.** On Mini vMac's hierarchical
+submenus (`sitcrypt.py`, *the Translate menu*), the submenu opens and the
+parent stays highlighted, but the item under the pointer never highlights and
+the release selects nothing (three ways in tried). On **Mac OS 9 under QEMU,
+DropStuff's TOP-LEVEL `File` menu**: clicking title then item fails because
+`goto()`'s ~40 s outlasts the sticky menu (`shots/c_ds_prefs.png`); holding
+the button and stepping in keeps the menu open (`shots/c_ds_menu_held.png`)
+but **no item highlights**.
 
-The same symptom is now recorded on **Mac OS 9 under QEMU, on a TOP-LEVEL
-menu**, which is what makes it a harness limit rather than a quirk of
-hierarchical tracking. Driving DropStuff's `File` menu:
+So on Mini vMac, reach a menu item by its **Command key**; DropStuff's
+`Stuff…` (⌘S) and `Quit` (⌘Q) are drivable, its keyless `Preferences…` was
+not. (A System 6 submenu did work once — *A hierarchical submenu DOES open
+here*, under `sitopt.py` below — so a submenu is worth one attempt.)
 
-- **clicking the title, then the item** fails for a different reason —
-  `goto()` costs ~40 s and the sticky menu has closed by the time the second
-  click lands (`shots/c_ds_prefs.png`, the menu gone and no dialog);
-- **holding the button down and stepping into the item** removes the timeout
-  — the menu is still open in `shots/c_ds_menu_held.png` — but **no item
-  highlights**, and the release selects nothing. Same signature as the
-  submenu case.
+**On Mac OS 9 the held press DOES select, sometimes — corrected 2026-10-23**
+(BLOCKERS.md, *Withdrawn claims*). StuffIt Deluxe 7.0.3's keyless `Translate ▸
+Expand…` was selected twice: `goto` the title, `mouse_button 1` and a 1.2 s
+wait, ONE `step(10, 24)` packet, 1.2 s, release (`as703.py --set boxes`,
+`37-translate-held.png`). DropStuff's did not; the difference is not reduced
+(one short packet against several, the wait, or the application). A Command
+key where there is one, one attempt at a held press where there is not.
 
-So on Mini vMac, reach a menu item by its **Command key** or not at all.
-DropStuff's `Stuff…` (⌘S) and `Quit` (⌘Q) are drivable; its `Preferences…`,
-which has no Command key, was not.
-
-**On Mac OS 9 the held press DOES select, sometimes — corrected
-2026-10-23** (BLOCKERS.md, *Withdrawn claims*). StuffIt Deluxe 7.0.3's
-`Translate ▸ Expand…`, which has no Command key, was selected twice the
-same way: `goto` the title, `mouse_button 1` and a 1.2 s wait, ONE
-`step(10, 24)` packet, 1.2 s, release (`as703.py --set boxes`,
-`37-translate-held.png`, the item highlighted). DropStuff's did not, and
-the difference is not reduced: a single short packet against several, the
-wait, or the application. So: a Command key where there is one, and one
-attempt at a held press where there is not.
-
-**But DRAGGING works, and that is the useful half of the same experiment.**
-Holding the button down across relative `mouse_move` packets is exactly what
-a Finder drag needs, and it tracks: pressing on an application icon, stepping
-882 px across the screen and releasing over a volume copied it, ghost icon and
-all (`shots/h_drag_over.png`, `shots/h_dropped.png`, 2026-09-27). So the limit
-is the Menu Manager specifically, not held-button interaction in general —
-file copies, window drags and anything else that is press-move-release are
-available. **Held moves are not 1:1**, measured 2026-10-23 in the Finder: a
-requested 60, 60 travelled about 47, 50, and five 25 px packets about 83,
-so a drag aimed open-loop at an icon 125 px away dropped short, onto the
-folder between. Step, photograph, correct, then release. And a press
-where two icons overlap takes the one drawn on top; press on the wanted
-icon's NAME, which only it owns. There is no `drag()` helper yet; it is
-four lines:
+**DRAGGING works**: pressing on an application icon, stepping 882 px across
+the screen and releasing over a volume copied it (`shots/h_drag_over.png`,
+`shots/h_dropped.png`, 2026-09-27) — the limit is the Menu Manager, not
+press-move-release. **Held moves are not 1:1** (2026-10-23, Finder): a
+requested 60, 60 travelled about 47, 50, and five 25 px packets about 83, so
+an open-loop drag 125 px dropped short. Step, photograph, correct, then
+release. Where two icons overlap a press takes the one on top; press on the
+wanted icon's NAME. There is no `drag()` helper; it is four lines:
 
     m.goto(sx, sy)
     m.burst(["mouse_button 1"], wait=0.6)
@@ -2798,149 +1808,102 @@ four lines:
 
 ### A plain-HFS Mac OS 9 boot volume — `hfsboot.img`
 
-`$UNC_VMAC_HOME/../sit5/hfsboot.img` is a 1 GB **Mac OS Standard**
-volume carrying a bootable System Folder, built 2026-09-27 with no install
-media:
+`$UNC_VMAC_HOME/../sit5/hfsboot.img` is a 1 GB **Mac OS Standard** volume
+carrying a bootable System Folder, built 2026-09-27 with no install media:
 
     tools/vmac/mkapmdisk.py <MacOS9.img> hfsboot.img 1024 HFSBoot
     # attach as a fourth drive, drag the System Folder onto it inside the
     # guest (1,751 items, ~215 MB, about five minutes), then Cmd-Y to flush
 
 Relaunch with it as `index=0` and it is the startup disk: it sits at the top
-of the desktop volume icons, the *"did not shut down properly"* alert stops
-appearing, and the HFS+ volume gains ~500 MB as its virtual-memory swapfile
-goes idle. **That is how to tell which volume booted**, since About This
-Computer is behind the Apple menu and menu items are not selectable here.
-
-It exists because *"StuffIt Deluxe 5.0.1 needs an HFS boot volume"* turned
-out to be false — the application raises its file-system alert in all four
-combinations of boot volume and application volume, so the trigger is Mac OS
-9.2 (BLOCKERS.md, *Withdrawn claims*). The volume is kept anyway: the next
-HFS-versus-HFS+ question costs one relaunch instead of an afternoon.
+of the desktop volume icons, the *"did not shut down properly"* alert stops,
+and the HFS+ volume gains ~500 MB as its swapfile goes idle — **that is how to
+tell which volume booted**. hfsutils can write it, which is what `sitzip.py`
+places software through. (*"StuffIt Deluxe 5.0.1 needs an HFS boot volume"*
+is withdrawn: its alert comes up in all four combinations, so the trigger is
+Mac OS 9.2; BLOCKERS.md, *Withdrawn claims*.)
 
 ## A colour Finder — `colouricon.py`
 
 **Mini vMac is not only a Plus.** `-m II` emulates a Macintosh II, and
 `-depth` fixes its colour depth at build time: `setup.sh` builds `mv-II16`
 (16 colours) and `mv-II256` (256) on `MacII.ROM`. It is the one tier here
-that draws `icl4`/`ics4` — which this file and MANUAL_TESTS.md called
-impossible until 2026-10-11 (BLOCKERS.md, *Withdrawn claims*) — and the
-one that shows an icon SELECTED in colour.
+that draws `icl4`/`ics4` (BLOCKERS.md, *Withdrawn claims*) and shows an icon
+SELECTED in colour.
 
-The stock `Sys7.img` will not start it: it is a "Minimal" Plus install.
-The System used is an installed **System 7.5.5** volume, Macintosh
-Repository item 73348, *Mac OS 7.5.5 for Mini vMac*:
-`macosinstall755.rar`, 27,594,360 B, SHA-256
-`14f511e3adf0599c36f2ca1b5d6de110b91cb4cc66374c5e328069de720a9d26`,
-holding a 100 MB `macosinstall755.dsk`. The page's download is a form
-POST (`download.php?u=0&id=65475&go=1` with its hidden `d` and
-`via_http=1`, and the session cookie), so `setup.sh` does not fetch it.
-Copy the `.dsk` per run, `hdel "Desktop DB" "Desktop DF"` so the Finder
-reads the icon afresh, and `hcopy -m dist/MacExtract.bin :MacExtract`. Then:
+The stock `Sys7.img` will not start it (a "Minimal" Plus install). The System
+used is an installed **System 7.5.5** volume, Macintosh Repository item 73348,
+*Mac OS 7.5.5 for Mini vMac*: `macosinstall755.rar`, 27,594,360 B, SHA-256
+`14f511e3adf0599c36f2ca1b5d6de110b91cb4cc66374c5e328069de720a9d26`, holding a
+100 MB `macosinstall755.dsk`. Its download is a form POST
+(`download.php?u=0&id=65475&go=1` with its hidden `d` and `via_http=1`, and
+the session cookie), so `setup.sh` does not fetch it. Copy the `.dsk` per run,
+`hdel "Desktop DB" "Desktop DF"` so the Finder reads the icon afresh, and
+`hcopy -m dist/MacExtract.bin :MacExtract`. Then:
 
     colouricon.py --emu mv-II256 run.img shot \
         c:474,355 w:40 d:598,45 w:8 s c:330,255 s c:202,200 s
 
 dismisses the "not shut down properly" alert, opens the volume, and
-photographs it plain, with MacExtract selected and with SimpleText
-selected. The coordinates are that volume's, measured off its frames.
-What it cannot see is in the script's docstring; the results are
-DECISIONS.md 2026-10-11, *the icon that did not darken*, and
-`docs/screens/0c-icon-selected-256.png`, `0d-icon-selected-16.png`.
+photographs it plain, with MacExtract selected and with SimpleText selected.
+The coordinates are that volume's, measured off its frames. What it cannot see
+is in the script's docstring; the results are DECISIONS.md 2026-10-11, *the
+icon that did not darken*, and `docs/screens/0c-icon-selected-256.png`,
+`0d-icon-selected-16.png`.
 
 ## Checking a run off the disk instead of off the screen
 
-`run.py` reads its result from the framebuffer: the application paints a grid
-of a file count, two summed CRC-32s and two summed lengths, and the host
-decodes it. That works, and it is blind to one thing — **a summed CRC cannot
-carry a filename**, so no run.py verdict has ever depended on an output NAME.
-A real defect in the gzip/.Z fallback name lived in the corpus for weeks
-because of it.
-
-That was not a necessary limitation. BLOCKERS.md had claimed since M10 that
-Mini vMac's write-back is "lazy and PARTIAL — it can commit one fork of a file
-but not the other", so the Out volume could not be trusted. It does not
-reproduce:
+`run.py`'s grid carries a file count, two summed CRC-32s and two summed
+lengths — **a summed CRC cannot carry a filename** (a wrong gzip/.Z fallback
+name lived in the corpus for weeks because of it). Mini vMac's write-back is
+complete ("lazy and partial" is withdrawn, BLOCKERS.md), so the Out volume is
+read back:
 
     run.py --keep-disks --list sample.txt      # keep each run's disk images
     checkdisk.py /tmp/vmacrun-*/               # read them back
 
-**55/55 byte-exact**, both forks, names and folder structure included, over
-the committed sample — including `derived-RWAsm_Folder.sit` at 38 files and 73
-forks, an 8-bit `spinning brain ƒ` folder, a MacRoman `Appé`, and a
-`.DS_Store`.
+**55/55 byte-exact** when it was established (2026-08-02), both forks, names
+and folder structure included — `derived-RWAsm_Folder.sit` at 38 files and 73
+forks, an 8-bit `spinning brain ƒ` folder, a MacRoman `Appé`, a `.DS_Store`.
 
 `checkdisk.py` identifies each run's fixture from the `in.dsk` beside the
-`out.dsk`, so it needs no bookkeeping, and it feeds the reference extraction a
-copy named `archive.sit` — the name the Mac saw — because gzip and .Z derive
-their output name from the archive's filename.
+`out.dsk`, and feeds the reference extraction a copy named `archive.sit` (the
+name the Mac saw), because gzip and .Z derive their output name from it.
+**`--fixture PATH` names an archive not in `fixtures/`** (repeatable),
+matched by CONTENT; without it a generated subject (`tools/synth_*.py`) skips
+with "cannot identify the fixture".
 
-**`--fixture PATH` names an archive that is not in `fixtures/`**, repeatable.
-It matches by CONTENT like the automatic route, so naming the wrong file
-identifies nothing; without it a run over a GENERATED subject skips with
-"cannot identify the fixture", which is what every `tools/synth_*.py`
-archive did until 2026-10-07.
+**Its walk raises past depth 26** (since 2026-10-07; it silently returned
+`[]` past 8, which reads as files MISSING ON THE MAC). `walk(dirs=True)` adds
+the FOLDERS, which an assertion that a folder must NOT exist needs, or it
+cannot fail.
 
-**Its volume walk stopped at eight levels until the same day, silently.**
-`walk()` returned `[]` past depth 8, so a correct 24-level volume came back
-as 32 files MISSING ON THE MAC — a harness limit that reads exactly like an
-application defect, and invisible because nothing in the sample nests past
-6. The guard is now at 26, which no volume this engine wrote can reach, and
-it RAISES instead of returning what it has. `walk(dirs=True)` adds the
-FOLDERS, which the comparison does not want and an assertion about a folder
-that must not exist does: without it that assertion is a lookup in a set of
-file paths and cannot fail.
+**It has to know what the Mac does to a name — two rules**
+(`tools/vmac_check.py`, `mac_component`): every component is fitted to 31
+characters with its extension KEPT, and a StuffIt 5 name (UTF-8) is folded
+into the bytes an HFS name holds, so a Japanese name arrives as a row of `_`.
+The fold applies only where `macextract sniff` says the names are UTF-8.
+**Fold before normalizing**: `ユーザーライセンスの購入.rtf` is DECOMPOSED in
+the archive, thirteen code points where the composed spelling is twelve, so an
+NFC fold predicts one `_` too few. The oracle manifests hold the composed
+spelling, which `run_diff.py` normalizes away and this cannot.
 
-**It has to know what the Mac does to a name, and since 2026-09-22 that is
-two rules rather than one** (`tools/vmac_check.py`, `mac_component`): every
-component is fitted to 31 characters with its extension KEPT, and a StuffIt
-5 name — UTF-8, where every other format states MacRoman — is folded into
-the bytes an HFS name holds first, so a Japanese name arrives as a row of
-`_`. The fold is applied only where the engine says the names are UTF-8
-(`macextract sniff`), because folding a zip name that MacRoman cannot spell
-would invent an agreement the Mac does not make. **Fold before normalizing**:
-the shell folds the archive's own bytes and `ユーザーライセンスの購入.rtf`
-is DECOMPOSED in the archive, thirteen code points where the composed
-spelling is twelve, so an NFC fold predicts one `_` too few. The oracle
-manifests hold the composed spelling, which `run_diff.py` normalizes away
-and this cannot.
+Three hfsutils traps, worth knowing before writing anything similar:
 
-Three hfsutils traps it hit, all worth knowing before writing anything
-similar:
+- **`hls` hides a file whose Finder INVISIBLE bit is set** unless given `-a`,
+  and **the leading dot has nothing to do with it** (measured as a 2x2 by
+  `walkprobe.py`). `.DS_Store` needs the flag because a Macintosh writes it
+  invisible; `Icon\r` (51,781 bytes of resource fork) was reported MISSING
+  from a Mac OS 9 volume that held it.
+- **Do not `rstrip()` `hls -1`'s output.** A carriage return is a legal HFS
+  name character and the last one of `Icon\r`. Split on `\n`.
+- **Every path argument must be encoded as MacRoman**, not UTF-8, or any 8-bit
+  name is a file that does not exist (`os9.py`'s `_walk_volume` listed
+  `Terrainman 2.0 ƒ` as empty until 2026-09-04).
 
-- **`hls` hides a file whose Finder INVISIBLE bit is set** unless given
-  `-a`, and **the leading dot has nothing to do with it** — which is what
-  this file and `checkdisk.py` both said until 2026-09-22. Measured as a
-  2x2 by `walkprobe.py`, all four cells: a dotted name with the bit clear
-  is listed without `-a`, and a name with the bit set is hidden whether it
-  starts with a dot or not. `.DS_Store` needed the flag because a
-  Macintosh writes it invisible. The defect that found this was on a Mac
-  OS 9 volume where `hls -F -1` listed four entries and `hls -a -F -1`
-  listed five; the fifth was `Icon\r`, 51,781 bytes of resource fork,
-  which the application had written correctly and the harness reported
-  MISSING.
-- **`rstrip()` is not how you take the newline off `hls -1`'s output.** A
-  carriage return is a legal HFS filename character and it is the last
-  one of `Icon\r`, the name every custom folder icon on a Macintosh has.
-  Splitting on `\n` has already removed everything that is not name.
-- **Every path argument must be encoded as MacRoman**, not UTF-8, or any
-  8-bit name is a file that does not exist.
-
-`os9.py` had learned the third one for `hcopy`
-and not for the `hls` its folder walk runs: a FILE with an 8-bit name at
-the root had been checked since 2026-08-28, and the first FOLDER with one
-— `Terrainman 2.0 ƒ`, on 2026-09-04 — listed as empty, so the harness
-failed a run the application had completed and the volume held whole.
-Fixed the same day (`_walk_volume`). It learned the first two on
-**2026-09-22**, when `derived-800saywhat301j.sit` joined `os9sample.txt`
-and its `Icon\r` came back MISSING from a volume that held it — so until
-that day an invisible entry was invisible to this tier's COMPARISON as
-well as to the Finder. All three were already right in `checkdisk.py`,
-which is the shape of the lesson: a harness written twice learns once.
-
-The same question was then asked of **every** volume walk in this tree,
-because the wrong explanation above is exactly what made the flag look
-like somebody else's problem — see *What every walk can see*, below.
+All three were right in `checkdisk.py` before `os9.py` learned them: a harness
+written twice learns once. *What every walk can see*, above, asks the same of
+every walk.
 
 ## The Finder metadata, read off the disk — `hfscat.py`, `metarun.py`
 
@@ -2951,54 +1914,48 @@ like somebody else's problem — see *What every walk can see*, below.
     metarun.py --check-expander .tmp/vmacrun-*/
     hfscat.py out.dsk [--json] [--fcmt DeskTop]   # its control: *Finder info, read back*
 
-`hfscat.py` walks an HFS image's catalog B-tree (libhfs's `apple.h`
-layout) and prints, per file, the whole FInfo and FXInfo, three dates and
-the locked bit, and per folder the DInfo, DXInfo and dates; `--fcmt` lists
-a System 6-or-earlier `Desktop` file's `FCMT` comments. `metarun.py` runs
-`synth-as-meta.as`, `synth-sqp-meta.pkg`, a generated `nested.pkg`
-(A/x, A/B/y, A/z, folder dates held across a subfolder) and
-`synth-macosx.zip` (Mac OS X's sidecars, since 2026-10-17) and
-`synth-macosx-spot.zip` (their Spotlight comments, folded into MacRoman,
-since 2026-10-18; on 7.0.1 the Desktop Manager gives back 199 bytes of a
-255-byte comment) with `-D UNC_AT_DTCOMMENT`,
-keeps the disks (`sys30.py --keep-disks` too, since 2026-10-17) and grades
-every value against the synthesizers' input, with the shell's one
-deliberate change (fdComment cleared; inited is kept where the Finder
-info is stated, a bundle's too, since 2026-10-18). Results:
-DECISIONS.md 2026-10-17, *the metadata, carried to the disk*.
+`hfscat.py` walks an HFS image's catalog B-tree (libhfs's `apple.h` layout)
+and prints per file the whole FInfo and FXInfo, three dates and the locked
+bit, per folder the DInfo, DXInfo and dates; `--fcmt` lists a System
+6-or-earlier `Desktop` file's `FCMT` comments. `metarun.py` runs
+`synth-as-meta.as`, `synth-sqp-meta.pkg`, a generated `nested.pkg` (A/x,
+A/B/y, A/z, folder dates held across a subfolder), `synth-macosx.zip` (Mac OS
+X's sidecars) and `synth-macosx-spot.zip` (their Spotlight comments, folded
+into MacRoman; on 7.0.1 the Desktop Manager gives back 199 bytes of a
+255-byte comment) with `-D UNC_AT_DTCOMMENT`, keeps the disks (`sys30.py
+--keep-disks` too), and grades every value against the synthesizers' input,
+allowing the shell's one deliberate change (fdComment cleared; inited is kept
+where the Finder info is stated). Results: DECISIONS.md 2026-10-17, *the
+metadata, carried to the disk*.
 
-**`--expander`** runs seven corpus archives that hold every StuffIt
-classic writer class and every rule between them, and the 17 sentinel
-archives Expander extracted whole, through the application (`run.py
---keep-disks --expect`, one boot each, about 5 s all-out), and holds every
-catalog record on the output disk to the one StuffIt Expander 4.0.2 wrote
-for the same entry (`sitmeta.py`'s results): FInfo/DInfo, FXInfo/DXInfo,
-three dates, the lock. No difference is allowed: the shell's bundle rule
-went 2026-10-18 (*the icon Expander registers*). Its control is built in
-(Expander's records, one byte shifted) and a second was run once: `origin/main`'s
-application, 112 of 496 values wrong (DECISIONS.md 2026-10-17, *the
-window Expander puts back*). It needs `build/rel/macextract` for run.py's
-own verdict.
+**`--expander`** runs seven corpus archives covering every StuffIt classic
+writer class, and the 17 sentinel archives Expander extracted whole, through
+the application (`run.py --keep-disks --expect`, one boot each, about 5 s
+all-out), and holds every catalog record on the output disk to the one
+StuffIt Expander 4.0.2 wrote for the same entry (`sitmeta.py`'s results):
+FInfo/DInfo, FXInfo/DXInfo, three dates, the lock. No difference is allowed
+(DECISIONS.md 2026-10-18, *the icon Expander registers*). Its control is
+built in (Expander's records, one byte shifted); a second was run once:
+`origin/main`'s application, 112 of 496 values wrong (DECISIONS.md
+2026-10-17, *the window Expander puts back*). It needs `build/rel/macextract`
+for run.py's own verdict.
 
 **`-D UNC_AT_DTCOMMENT`** appends a `DTCM` trailer to the autotest report:
-what `PBHGetVolParms` and `PBDTGetPath` answer on the output volume, and
-each file's comment read back with `PBDTGetComment` — the half no host
-tool reads off a System 7 disk. It writes the file, **ejects In**, then
-paints the grid: without the eject the report never reached `in.dsk` on
-System 6.0.8 (three runs), the budget probe's lesson of 2026-10-10.
+what `PBHGetVolParms` and `PBDTGetPath` answer on the output volume, and each
+file's comment via `PBDTGetComment` — the half no host tool reads off a System
+7 disk. It writes the file, **ejects In**, then paints the grid; without the
+eject the report never reached `in.dsk` on System 6.0.8 (three runs).
 
 **A System 7.0.1 floppy has no Desktop Manager** (vMAttrib 0xE0), so the
 comment needs `--out-kb 8192` there; on System 3.0 and 6.0.8 no volume has
 one.
 
 **What they cannot see.** The extents-overflow file (`hfscat.py` refuses a
-catalog that continues there), HFS+, MFS, a partition map. `Desktop DB`.
-What the Finder then does with any of it: draws the icon there, opens the
-window at that rectangle, shows the comment. A folder's comment: neither
-fixture gives a folder one. **An output that is not a volume's root**: both
-extract to Out's root, where directory 0 and the root agree, so a comment
-lost in any folder passed here (DECISIONS.md 2026-10-18, *the comment the
-root kept*).
+catalog that continues there), HFS+, MFS, a partition map. `Desktop DB`. What
+the Finder then does with any of it. A folder's comment: neither fixture gives
+a folder one. **An output that is not a volume's root**: both extract to Out's
+root, where directory 0 and the root agree (DECISIONS.md 2026-10-18, *the
+comment the root kept*).
 
 ### Dates in the Macintosh's zone — `tzrun.py`
 
@@ -3006,19 +1963,18 @@ root kept*).
     tzrun.py --tier sys7-tz fixtures/derived-MUSFMT10.ZIP   # wall clocks: none move
     tzrun.py --check sys7-tz .tmp/vmacrun-*/   # re-grade a kept run
 
-Extracts one archive per tier with `--keep-disks` and holds every catalog
-date to `l --meta`: a date marked `Z` moved by the tier's zone, every other
-one not. The zone is the emulator's: **this Mini vMac keeps no PRAM between
-launches** — `RTC_Init` zeroes it and writes the location record at
-0xE4..0xEF from three globals, 0 on X11 — so `setup.sh` builds `mv-4M-tz`
-with those globals patched (5 h west, a non-zero location). Tiers:
-System 7.0.1 on `mv-4M-tz` (−18,000 s) and on `mv-4M` (never set: 0),
-System 6.0.8 on `mv-4M-tz` (−18,000 s) and System 3.0 on `mv-4M-tz` (no
-Gestalt: 0). Results: DECISIONS.md 2026-10-17, *dates in the Macintosh's
-own zone*.
+Extracts one archive per tier with `--keep-disks` and holds every catalog date
+to `l --meta`: a date marked `Z` moves by the tier's zone, every other one
+not. **This Mini vMac keeps no PRAM between launches** — `RTC_Init` zeroes it
+and writes the location record at 0xE4..0xEF from three globals, 0 on X11 —
+so `setup.sh` builds `mv-4M-tz` with those globals patched (5 h west, a
+non-zero location). Tiers: System 7.0.1 on `mv-4M-tz` (−18,000 s) and on
+`mv-4M` (never set: 0), System 6.0.8 on `mv-4M-tz` (−18,000 s), System 3.0 on
+`mv-4M-tz` (no Gestalt: 0). Results: DECISIONS.md 2026-10-17, *dates in the
+Macintosh's own zone*.
 
-**What it cannot see.** The Map control panel itself, and its
-daylight-saving box. Mac OS 9. A 512 KB machine.
+**What it cannot see.** The Map control panel itself, and its daylight-saving
+box. Mac OS 9. A 512 KB machine.
 
 ### What the Finder does with a restored position — `finderpos.py`
 
@@ -3028,119 +1984,103 @@ daylight-saving box. Mac OS 9. A 512 KB machine.
     finderpos.py -o DIR --seeded --creator zQx7 --launch --rebuild 2 \
         -DUNC_AT_NODTREG                   # the control, launched, rebuilt
 
-Extracts a generated package (a folder with a window rectangle, three
-files placed off any automatic grid, and MacExtract itself as an
-application) with the current tree's autotest build onto an 8 MB volume,
-opens the volume and the folder in the Finder, photographs them, chooses
-Shut Down and reads the catalog back: what the Finder moved, and whether it
-registered the application's bundle (`Desktop` resources on System 6, a
-count of the creator in `Desktop DB` on System 7). `--seeded` first boots
-the blank volume once in the Finder, so it already has a desktop — the
-user's-disk case, through `run.py --out-from IMG`. System 6 has no
-type-select, so `--out-at` is the volume's desktop icon; a run without it
+Extracts a generated package (a folder with a window rectangle, three files
+placed off any automatic grid, and MacExtract itself as an application) with
+the current tree's autotest build onto an 8 MB volume, opens the volume and
+folder in the Finder, photographs them, chooses Shut Down and reads the
+catalog back: what the Finder moved, and whether it registered the
+application's bundle (`Desktop` resources on System 6, a count of the creator
+in `Desktop DB` on System 7). `--seeded` first boots the blank volume once in
+the Finder, so it has a desktop (`run.py --out-from IMG`). System 6 has no
+type-select, so `--out-at` is the volume's desktop icon; without it the run
 photographs the desktop and stops. `--creator` gives the application a
-signature no desktop here has seen; `--launch` opens and quits it from the
-Finder; `--rebuild N` boots again with Command-Option held; `--out-kb 1440`
-is a floppy; `-D` passes a build switch (`UNC_AT_NODTREG`, the control
-without the bundle registration). Results: DECISIONS.md 2026-10-17, *the
-bit that kept the position*, and 2026-10-18, *the icon Expander registers*.
+signature no desktop has seen; `--launch` opens and quits it; `--rebuild N`
+boots again with Command-Option held; `--out-kb 1440` is a floppy; `-D` passes
+a build switch (`UNC_AT_NODTREG`, the control without the bundle
+registration). Results: DECISIONS.md 2026-10-17, *the bit that kept the
+position*, and 2026-10-18, *the icon Expander registers*.
 
-**Two traps it hit.** Typing before `Mac.origin()` sends the keys to the X
-root (the window gets focus at the first coordinate lookup), and
+**Two traps.** Typing before `Mac.origin()` sends the keys to the X root, and
 `Mac.shot()` parks the pointer, so a held menu photographed with it is
-released off-screen: Shut Down never ran and the image was torn.
+released off-screen — Shut Down never ran and the image was torn.
 
-**What it cannot see.** System 3.0; Mac OS 9 (that run was a one-off
-driver over `os9.py`, *the icon Expander registers*); the icon after
-`--rebuild`, whose volume window opens behind the folder's; how the Finder
-places what it relocates, beyond the catalog and the frame; System 7's
-`Desktop DB` beyond a byte count.
+**What it cannot see.** System 3.0; Mac OS 9 (a one-off driver over `os9.py`,
+*the icon Expander registers*); the icon after `--rebuild`, whose volume
+window opens behind the folder's; how the Finder places what it relocates,
+beyond the catalog and the frame; System 7's `Desktop DB` beyond a byte count.
 
 ## On-demand probes — the `-D` switches and the one-off harnesses
 
 Every switch below rebuilds the autotest application and answers one question
-the normal replay cannot. The first two change the BUILD — which overlay
-lifetime, or none — and the rest add a probe. None is part of any suite; each
-is run by hand when the question comes up again. **A `-D` the CMakeLists does
-not know is silently ignored** — `run.py` passes it through the environment and
-CMake drops what it has no rule for, so a probe can "work" and change nothing.
-Check that its numbers actually moved before believing them.
+the normal replay cannot. The first two change the BUILD (which overlay
+lifetime, or none); the rest add a probe. None is part of any suite. **A `-D`
+the CMakeLists does not know is silently ignored** — `run.py` passes it
+through the environment and CMake drops what it has no rule for, so a probe
+can "work" and change nothing. Check that its numbers moved before believing
+them. Results are not repeated here; each line says where they live.
 
-Results are not repeated here; each line says where they live.
-
-**`run.py --as NAME` chooses the archive's NAME on the In floppy**, which
-was always `archive.sit` before 2026-10-11, and the autotest opens the
-first root file called `archive.*`. The shell dispatches on the
-extension before it reads a byte, so a name is an input like any other:
-`--as archive.zip` is what found every plain zip failing (DECISIONS.md
-2026-10-11, *the zip that was a set of one*). **What it cannot see:**
-the sweeps still run under the default, so a path reached only by
-another extension (`.NNN`, `.zNN`, the gzip/.Z fallback name) is tested
-only when somebody asks for it.
+**`run.py --as NAME` chooses the archive's NAME on the In floppy** (default
+`archive.sit`; the autotest opens the first root file called `archive.*`).
+The shell dispatches on the extension before it reads a byte, so a name is an
+input: `--as archive.zip` found every plain zip failing (DECISIONS.md
+2026-10-11, *the zip that was a set of one*). **What it cannot see:** the
+sweeps run under the default, so a path reached only by another extension
+(`.NNN`, `.zNN`, the gzip/.Z fallback name) is tested only when asked for.
 
 | switch | answers | where the result is |
 |---|---|---|
-| `UNC_OVL_LAZY` | the OTHER overlay lifetime: one image per format, read when a format turns out to want it, instead of the shipped bundle-at-launch. Changes the BUILD rather than adding a probe, and every harness can pass it because it is a boolean | FORMATS.md, *Overlays* |
-| `UNC_OVL_RESIDENT` | the application as it was before 2026-09-25 — every decoder linked in, no images. The CONTROL for any budget claim about the overlays, since its budget does not move with the archive | FORMATS.md, *Overlays* |
-| `UNC_AT_BUDGET` | why an entry was refused: over budget, or `NewPtr` failed | DECISIONS.md 2026-08-06, OPEN_ITEMS.md section 5 |
-| `UNC_AT_RESERVE` | what the shell actually needs of the heap kept back from the engine — a `FreeMem()` low-water mark, printed on the completion alert. It priced `kMemReserveMax` from 80 KB down to 48 KB (13,242 B measured). **Needs a fixture that FITS and is heavy**: a small one never fires the progress pump, and one too big has its allocation refused before the heap is stressed | FORMATS.md, *Budget* |
-| `UNC_AT_STACK` | what `kStackBump` is actually worth. Paints the whole region between ApplLimit and the stack base at launch and reads back how far down anything wrote. **Read the watermark, not the first transition**: a frame is made by moving the stack pointer, so a frame holding an uninitialised buffer leaves clean longs INSIDE the region it used, and two earlier versions of this probe — scan up for the first dirty long, scan down for the first clean one — both reported the same number for a 3 KB BinHex file and a 34-entry StuffIt 5 archive. Autotest under-reads the shipped build, which has the dialogs | FORMATS.md, *Stack* |
-| `UNC_AT_HANDLES` | does `MoveHHi` move an engine block, and does it help | OPEN_ITEMS.md section 5 (do-not-retry) |
+| `UNC_OVL_LAZY` | the OTHER overlay lifetime: one image per format, read when a format wants it, instead of the shipped bundle-at-launch. A boolean, so every harness can pass it | FORMATS.md, *Overlays* |
+| `UNC_OVL_RESIDENT` | every decoder linked in, no images (the application before 2026-09-25) — the CONTROL for any budget claim about the overlays | FORMATS.md, *Overlays* |
+| `UNC_AT_BUDGET` | why an entry was refused: over budget, or `NewPtr` failed | below; DECISIONS.md 2026-08-06 |
+| `UNC_AT_RESERVE` | what the shell needs of the heap kept back from the engine — a `FreeMem()` low-water mark on the completion alert; it priced `kMemReserveMax` from 80 KB down to 48 KB (13,242 B measured). **Needs a fixture that FITS and is heavy**: a small one never fires the progress pump, a big one is refused before the heap is stressed | FORMATS.md, *Budget* |
+| `UNC_AT_STACK` | what `kStackBump` is worth: paints the region between ApplLimit and the stack base at launch and reads back how far down anything wrote. **Read the watermark, not the first transition** — a frame holding an uninitialised buffer leaves clean longs inside it. Autotest under-reads the shipped build, which has the dialogs | FORMATS.md, *Stack* |
+| `UNC_AT_HANDLES` | does `MoveHHi` move an engine block, and does it help | below; DECISIONS.md 2026-08-06, *the Arsenic block's first allocation is sized from the entry* |
 | `UNC_AT_INTERLEAVE` | do reads return zeros while output is written to the same volume | BLOCKERS.md *Withdrawn claims* |
 | `UNC_AT_SAMEVOL` | does extraction onto the archive's own volume work | DECISIONS.md 2026-08-02 |
 | `UNC_AT_WD` | is `SFReply.vRefNum` handled as a System 7 working directory | DECISIONS.md 2026-08-01 |
 | `UNC_AT_CANCEL` | does an aborted entry leave anything behind | BLOCKERS.md, MANUAL_TESTS.md checklist |
-| `UNC_OVL_NOFLUSH` | whether the overlay loader's instruction-cache flush is NEEDED: the same application with `ovl_flush_code` a bare return (2 B against 106 shipped). Only a CPU with a cache can answer, so it is built with `tools/build_mac.sh` (`UNC_MAC_BUILD_DIR=build/mac-noflush`), renamed in its MacBinary header, and run on real hardware beside the shipped build | DECISIONS.md 2026-10-12, *the flush the LC 475 did not need* |
-| `UNC_AT_TWICE` | what a second extraction of the same archive into the same folder makes of the first one's folders. FAILs by construction — the grid counts both runs; read the Out disk with `--keep-disks` and `hls -R` | DECISIONS.md 2026-10-11, *the folder that is already there* |
-| `UNC_AT_NOHIDECURSOR` | is `HideCursor()` before painting the grid necessary | yes — BLOCKERS.md; two things must be right before the test means anything: the pointer must be INSIDE the emulator window (at (144,129) on the 800x600 Xvfb) and the drag must cross cell CENTRES, since a path between rows disturbs nothing. `UNC_VMAC_PARK` overrides the parking position |
-| `UNC_AT_PROGRESS` | how fast is the engine actually going, mid-run | BLOCKERS.md "Timing on a 7 MHz Mac Plus" |
+| `UNC_OVL_NOFLUSH` | whether the overlay loader's instruction-cache flush is NEEDED: `ovl_flush_code` a bare return (2 B against 106 shipped). Only a CPU with a cache can answer: built with `tools/build_mac.sh` (`UNC_MAC_BUILD_DIR=build/mac-noflush`), renamed in its MacBinary header, run on real hardware beside the shipped build | DECISIONS.md 2026-10-12, *the flush the LC 475 did not need* |
+| `UNC_AT_TWICE` | what a second extraction into the same folder makes of the first one's folders. FAILs by construction (the grid counts both runs); read the Out disk with `--keep-disks` and `hls -R` | DECISIONS.md 2026-10-11, *the folder that is already there* |
+| `UNC_AT_NOHIDECURSOR` | is `HideCursor()` before painting the grid necessary — yes. The pointer must be INSIDE the emulator window (at (144,129) on the 800x600 Xvfb) and the drag must cross cell CENTRES; `UNC_VMAC_PARK` overrides the parking position | BLOCKERS.md |
+| `UNC_AT_PROGRESS` | how fast the engine is going, mid-run (the byte counter in the grid) | BLOCKERS.md "Timing on a 7 MHz Mac Plus" |
 | `UNC_MAC_SLURP_ARCHIVE` | rebuilds the old read-whole-archive-into-RAM path | DECISIONS.md 2026-08-02 |
-| `UNC_AT_TIMING` | split the extraction into File Manager reads, writes, the rest of the File Manager and the engine, in TICKS, in grid slots 3-6, and the harness read-back after it in slot 7 (so the CRC check FAILS by construction — read the numbers, not the verdict). The instrument that showed 98.5 % of a StuffIt run is the engine, and the one that resolves an optimiser change: FORMATS.md, *What -O3 is worth, and where* | FORMATS.md |
-| `UNC_AT_TICKGAP` | how long a click waits: the widest gap between two progress callbacks in TICKS, File Manager time included, with the input position either side, the gap before the first and after the last, the count, and `RunExtract`'s own duration in ticks (`run=`, to 1/60 s where the poll gives 20 s). Each callback runs the shipped `prog_tick` with no dialog, so the pump's cost is in that duration. The grid is untouched, so the run still grades its bytes; `run.py` prints the rest from the report file. Run it at `--emu mv-4M-1x`, or the ticks are the host's. **What it cannot see:** the bar's redraw, the 10 Hz gate's up to 0.1 s on top of a gap, another process to switch to (the application is the boot shell, on System 7 too), and anything an AppleShare or a slow disk adds to the File Manager | FORMATS.md, *How long a click waits* |
+| `UNC_AT_TIMING` | the extraction split into File Manager reads, writes, the rest of the File Manager and the engine, in TICKS, in grid slots 3-6, the harness read-back in slot 7 (so the CRC check FAILS by construction — read the numbers) | FORMATS.md, *What -O3 is worth, and where* |
+| `UNC_AT_TICKGAP` | how long a click waits: the widest gap between two progress callbacks in TICKS (File Manager time included), the input position either side, the gaps before the first and after the last, the count, and `RunExtract`'s duration (`run=`). The grid is untouched, so the run still grades; `run.py` prints the rest from the report file. Run at `--emu mv-4M-1x`. **Cannot see:** the bar's redraw, the 10 Hz gate's up to 0.1 s, another process to switch to, what AppleShare or a slow disk adds | FORMATS.md, *How long a click waits* |
 | `UNC_MAC_STAGE_WRITES` | the older whole-fork staging write path (also in `ci.sh`) | TESTING.md |
+| `UNC_AT_DTCOMMENT`, `UNC_AT_NODTREG` | the Desktop Manager comment read-back; the control without bundle registration | *The Finder metadata, read off the disk*, *What the Finder does with a restored position*, above |
 
 ### Filling the destination on purpose — `--out-kb`
 
     run.py --mem 1M --out-kb 800 fixtures/derived-OTCFM68KGlue.sit
 
-`hformat` refuses anything under 800 KB, so the smallest destination is an
-800 KB volume and the fixture has to be one whose output exceeds it;
+`hformat` refuses anything under 800 KB, so the fixture must output more:
 `derived-OTCFM68KGlue.sit` (17 entries, ~1 MB out) and
-`derived-XferIt_1.5b4.sea` (10 entries, 926 KB out) both do.
+`derived-XferIt_1.5b4.sea` (10 entries, 926 KB out) both do. It reports FAIL
+by construction. **Read the numbers**: 9 files written, `errors` = **1**,
+`ret` = −9 (`UNC_ERR_SINK`), the eight remaining entries never attempted —
+every extractor ends the archive on a sink failure (the withdrawn
+one-error-per-entry claim, BLOCKERS.md).
 
-It reports FAIL by construction — fewer files came out than the oracle
-expects. **Read the numbers.** What it proves is that the run STOPS: 9 files
-written, `errors` = **1**, `ret` = −9 (`UNC_ERR_SINK`), and the eight
-remaining entries never attempted. That is the check behind the withdrawn
-claim in BLOCKERS.md that a full disk produces one error per remaining
-entry; it does not, because every extractor ends the archive on a sink
-failure.
+**The default is a 1,440 KB floppy, a limit in the OTHER direction too.** A
+single entry larger than the volume fails at `SetEOF` about twenty seconds
+in, `ret` −9, and reads like a per-entry memory refusal unless the `ret` slot
+is read: `derived-EasyFind.dmg.sit`, one entry of 1,851,907 B, needs
+`--out-kb 2400` (BLOCKERS.md, *Withdrawn claims*, 2026-09-18). A fixture
+capped near its memory minimum walks a low rung of Arsenic's sampled index,
+long even all-out — XMenu 704 s, EasyFind 1,427 s at 562,000 B — so use
+`--timeout 1700`, or a timeout reads as a refusal too.
 
-**The default is a 1,440 KB floppy, and that is a limit in the OTHER
-direction too.** A single entry larger than the volume fails at `SetEOF`
-about twenty seconds in, `ret` −9, and reads exactly like a per-entry memory
-refusal unless the `ret` slot is read: `derived-EasyFind.dmg.sit`, one entry
-of 1,851,907 B, was carried as "still refused on a 1 MB Mac Plus" for 18 days
-on runs that had never had room to write it (BLOCKERS.md, *Withdrawn
-claims*, 2026-09-18). `--out-kb 2400` is what that fixture needs. And a
-fixture capped near its memory minimum sits on a low rung of Arsenic's
-sampled index, where the walk is long even all-out — XMenu 704 s, EasyFind
-1,427 s at 562,000 B — so `--timeout 1700` rather than the default, or a
-timeout reads as a refusal as well.
-
-**What it cannot see:** the alert the user is shown. That lives in the
-interactive build, which this harness does not run — `interactive.py` does.
-The message is chosen from `gLastWriteErr`, and only the choosing is
-untested.
+**What it cannot see:** the alert the user is shown (the interactive build;
+`interactive.py`). The message is chosen from `gLastWriteErr`, and only the
+choosing is untested.
 
 ### Why an entry is refused — `UNC_AT_BUDGET`
 
     run.py --mem 1M -D UNC_AT_BUDGET fixtures/<fixture>
 
-The grid carries what the engine **used** and never what it was **allowed**, so
-a budget refusal and a genuine shortage look identical on screen — and
+The grid carries what the engine **used**, never what it was **allowed**, and
 `mal_alloc` returns NULL for two unrelated reasons with opposite fixes. The
-probe overwrites four slots:
+probe overwrites the slots:
 
 | grid slot | carries |
 |---|---|
@@ -3153,54 +2093,38 @@ probe overwrites four slots:
 | `sumRsrcCRC` | 1 = over budget, 2 = `NewPtr` returned NULL |
 | `totalRsrcLen` | `ApplLimit` |
 
-**Corrected 2026-08-31.** The free figure and the budget were written into two
-slots and then overwritten by the zone bounds two lines later, so the budget
-never reached the grid and reading it meant editing the source. They have
-their own slots now, taken from the third and fourth block addresses.
+(Corrected 2026-08-31: the free figure and the budget were overwritten before
+reaching the grid.) `FreeMem()` minus `MaxBlock()`, both **at the refusal**,
+is the fragmentation; free heap at the start does not give it. The refused
+size, free-at-refusal and held-at-refusal of earlier revisions are in
+DECISIONS.md 2026-08-06; edit the `UNC_AT_BUDGET` block to swap them back. It
+reports FAIL by construction. **Read the numbers, not the verdict.**
 
-`FreeMem()` minus `MaxBlock()`, both sampled **at the refusal**, is the
-fragmentation; sampling free heap at the start of the run does not give it, and
-one such inference has already had to be corrected. Earlier revisions carried
-the refused size, free-at-refusal and held-at-refusal instead — those figures
-are in DECISIONS.md 2026-08-06; swap them back by editing the `UNC_AT_BUDGET`
-block if a re-run needs them.
+**The completion alert's fields reach a sweep too** (since 2026-10-10): the
+autotest writes `e1` (first per-entry status) and the overlay diagnostics `wa
+kf rf fc fn` (`mac/ovl_load.h`) to the report FILE on `In` after the eight
+grid values, and `run.py`, `sys30.py` and `os9.py --autotest` print them as
+`[e1= wa= kf= rf= fc= fn= bg= short= why= free0=]`. The probe build ejects
+`In` after writing it (Mini vMac flushes on eject). On a healthy run `wa`,
+`kf`, `short` and `why` are 0; `rf` is the `UncFormat` the release kept for,
+0 when no layer released (an envelope keeps the bundle); `fc` is the flush
+route (0 none, 1 `_HWPriv`, 2 `FlushCodeCache`) and `fn` its calls. **What it
+cannot see:** `rf` is the last releasing layer's only, and `bg`/`short` the
+last budget's — a `.sit.hqx` re-takes one per layer.
 
-It reports FAIL by construction, because the overwritten slots no longer match
-the oracle. **Read the numbers, not the verdict.**
+**Pair it with `-D UNC_OVL_RESIDENT` for a budget that can be subtracted from
+another.** The switch costs the eager configuration 400 B of `CODE` + A5 and
+the control 304 B, so a grant compared against a base from a DIFFERENT build
+carries the difference as a mystery — 2,926 B of "residue" on 2026-09-27
+(FORMATS.md, *Three configurations, one tree*; DECISIONS.md 2026-09-27, *the
+residue that was two numbers*).
 
-**The completion alert's fields reach a sweep too** (since 2026-10-10). The
-grid has no slot left for `e1` (first per-entry status) or the overlay
-diagnostics `wa kf rf fc fn` (`mac/ovl_load.h`), so the autotest writes them
-to the report FILE on `In` after the eight grid values, and `run.py`,
-`sys30.py` and `os9.py --autotest` print them per fixture as
-`[e1= wa= kf= rf= fc= fn= bg= short= why= free0=]`. The probe build
-ejects `In` after writing the file, because Mini vMac flushes an image on
-eject and the host kills it at the grid: without the eject the file reached
-`in.dsk` on System 7.0.1 only (2026-10-10). On a healthy run `wa`
-(the image id wanted after the release), `kf`, `short` and `why` are 0; `rf`
-is the `UncFormat` the release kept for, 0 when no layer released (an
-envelope keeps the bundle); `fc` is the flush route (0 none, 1 `_HWPriv`,
-2 `FlushCodeCache`) and `fn` its calls. **What it cannot see:** `rf` is the
-last releasing layer's only, and `bg`/`short` the last budget's — a
-`.sit.hqx` re-takes one per layer.
-
-**Pair it with `-D UNC_OVL_RESIDENT` to get a budget that can be subtracted
-from another.** The switch is not free — it costs the eager configuration
-400 B of `CODE` + A5 and the control 304 B — so a budget read here is that
-much lower than the build the tallies come from, and a grant compared against
-a base from a DIFFERENT build carries the difference as a mystery. That is
-what 2,926 B of "residue" turned out to be on 2026-09-27 (FORMATS.md, *Three
-configurations, one tree*; DECISIONS.md 2026-09-27, *the residue that was two
-numbers*).
-
-`UNC_AT_HANDLES` additionally swaps the engine allocator to `NewHandle` +
-`MoveHHi` + `HLock` (the reverted remedy, kept buildable) and reports the
-block's **address** either side of `MoveHHi`. Its first revision reported
-`MaxBlock` there and **could not fail**: `MaxBlock` is blind to where inside a
-free run a block sits, so moving one from the bottom to the top reads exactly
-like not moving it. It instruments the first allocation of 64 KB or more, which
-is not necessarily the Arsenic block — StuffIt's combined io/output buffer also
-qualifies — so it proves `MoveHHi` moves *an* engine block, not that one.
+`UNC_AT_HANDLES` swaps the engine allocator to `NewHandle` + `MoveHHi` +
+`HLock` (the reverted remedy, kept buildable) and reports the block's
+**address** either side of `MoveHHi` (`MaxBlock` is blind to where a block
+sits, and could not fail). It instruments the first allocation of 64 KB or
+more, which may be StuffIt's combined io/output buffer rather than the
+Arsenic block — it proves `MoveHHi` moves *an* engine block.
 
 ### The same-volume and interleaved-read questions
 
@@ -3209,21 +2133,20 @@ qualifies — so it proves `MoveHHi` moves *an* engine block, not that one.
     run.py -D UNC_AT_INTERLEAVE fixtures/derived-PCCTS.tar
     run.py -D UNC_AT_SAMEVOL --list sample.txt
 
-The first reads one file three ways on one volume — undisturbed, in 4 KB chunks
-with a file created and written between every chunk, and again seeking with
-`SetFPos` before each read — and compares CRC-32s. The second points the output
-at the volume the archive is being read from, which is what the interactive
-application does and what no other run here does.
+The first reads one file three ways on one volume — undisturbed, in 4 KB
+chunks with a file created and written between every chunk, and seeking with
+`SetFPos` before each read — and compares CRC-32s. The second points the
+output at the archive's own volume, which is what the interactive application
+does and no other run here does.
 
 ### Working directories, without a Finder
 
     run.py -D UNC_AT_WD fixtures/derived-EmpireBuilderDemo.sit
 
 Makes a real working directory over a real subfolder with `PBOpenWD` and
-extracts through it exactly as `ExtractOne()` does, counting what landed in the
-folder and what leaked to the root. Every other harness here extracts into a
-volume root, where a working directory and the root are the same directory —
-which is why this code was untested until 2026-08-01.
+extracts through it as `ExtractOne()` does, counting what landed in the folder
+and what leaked to the root. Every other harness extracts into a volume root,
+where a working directory and the root are the same directory.
 
 ### Name collisions — `mkcollide.py`
 
@@ -3231,13 +2154,11 @@ which is why this code was untested until 2026-08-01.
     run.py --keep-disks /tmp/collide.tar
     mkcollide.py --verify <that run's out.dsk>
 
-`BumpName()` appends `~1`..`~9` when a sanitized name already exists, and
-**nothing in the corpus can exercise it**: across all 783 manifests no two
-entries collide under the Mac's rules (case-insensitive HFS, 31-character
-components, `:` <-> `/`) — measured, not assumed, and re-measured on
-2026-08-08. So the archive has to be built for it. Five entries collide two
-ways, and each payload is distinct and self-identifying, so the check is "the
-right bytes are in the file with the right name", not "five files exist":
+`BumpName()` appends `~1`..`~9` when a sanitized name exists, and **nothing in
+the corpus exercises it**: no two entries across the manifests collide under
+the Mac's rules (case-insensitive HFS, 31-character components, `:` <-> `/`;
+measured 2026-08-08). Five entries collide two ways, each payload distinct and
+self-identifying, so the check is "the right bytes under the right name":
 
 | archive entry | on the Mac | payload |
 |---|---|---|
@@ -3247,13 +2168,13 @@ right bytes are in the file with the right name", not "five files exist":
 | `collide-me-when-truncated-to-31-beta` | `collide-me-when-truncated-to-~1` | beta |
 | `collide-me-when-truncated-to-31-gamma` | `collide-me-when-truncated-to-~2` | gamma |
 
-All five arrive, none overwrites another, each holds its own payload, and the
-29-character clamp is visible: `collide-me-when-truncated-to-` is 29
-characters, then `~1` makes 31. Archive order decides who keeps the plain name.
+All five arrive, none overwrites another, and the 29-character clamp is
+visible (`collide-me-when-truncated-to-` is 29, then `~1` makes 31). Archive
+order decides who keeps the plain name.
 
 ### The `SIZE` partition
 
-    sed -i 's/4096 \* 1024, 400 \* 1024/600 * 1024, 400 * 1024/' mac/macextract.r
+    sed -i 's/2048 \* 1024, 400 \* 1024/600 * 1024, 400 * 1024/' mac/macextract.r
     run.py --system Sys7.img fixtures/derived-KeyGraphics.sit
     run.py                   fixtures/derived-KeyGraphics.sit
     os9.py fixtures/derived-KeyGraphics.sit -o <dir> --hfsplus --expect-refusal
@@ -3261,58 +2182,42 @@ characters, then `~1` makes 31. Archive order decides who keeps the plain name.
 
 A partition big enough to launch and too small for a 512 KB Arsenic block,
 against a fixture that needs ~656 KB and passes at 4 MB. `--expect-refusal`
-makes the run self-checking: it passes only when the Linux engine DOES extract
-the fixture, the Mac writes nothing, the archive returns `UNC_OK`, and an entry
-is counted as refused — without that first condition a negative test would pass
-just as happily on an empty archive. Three-system table in FORMATS.md.
+passes only when the Linux engine DOES extract the fixture, the Mac writes
+nothing, the archive returns `UNC_OK`, and an entry is counted as refused —
+without the first condition it would pass on an empty archive. Three-system
+table in FORMATS.md.
 
 ### Forcing a memory refusal on screen
 
-The `SIZE` edit above is the wrong instrument for this one, and finding that
-out cost four runs. A partition is only enforced under MultiFinder — System
-7 and up — and until 2026-08-25 `interactive.py`'s Standard File clicks were
-calibrated for System 6 alone; on System 7 they selected the wrong item and
-the application answered `UNC_ERR_FORMAT` about a file that is not an
-archive. That frame looks like a code failure and is not. The clicks are
-per-system now (below), so the `SIZE` route is available again — it is still
-two boots and a Get Info against one throwaway build.
+A partition is only enforced under MultiFinder (System 7 and up), so the
+`SIZE` route is two boots and a Get Info. Capping the budget in a throwaway
+build is cheaper, on any system `interactive.py` drives:
 
-Cap the budget instead, in a throwaway build, on the machine the harness can
-drive (the System 7 objection below is gone since 2026-08-25 — the phase runs
-there now — but this recipe is still the cheaper instrument):
-
-    sed -i 's/ma.budget = freenow - reserve;/ma.budget = 150000L; (void)reserve;/' \
+    sed -i 's/a->budget = freenow - reserve;/a->budget = 150000L; (void)reserve;/' \
         mac/macextract_mac.c
     interactive.py --emu mv-4M -o /tmp/alert fixtures/derived-AuthoRize_2.0.sit
     git checkout mac/macextract_mac.c    # temporary, on purpose — wrap it in a trap
 
-The alert is in `2-extracting.png`: the default phase clicks Cancel at a
-fixed time, and a run that fails BEFORE then leaves its result alert up in
-that frame. Photographed 2026-08-24: *Needs 72K more memory. Give MacExtract
-more in Get Info.*
+The alert is in `2-extracting.png`: the default phase clicks Cancel at a fixed
+time, and a run that fails before then leaves its result alert in that frame.
+Photographed 2026-08-24: *Needs 72K more memory. Give MacExtract more in Get
+Info.*
 
 ### Photographing the refusal alert
 
-No build trick and no fixture: hand the application a file it cannot open,
-and the alert is in `2-extracting.png` for the same reason the
-memory one is — the run fails before the phase clicks Cancel.
+Hand the application a file it cannot open:
 
     interactive.py --emu mv-4M -o /tmp/rarshot /tmp/Sample.rar
 
-Photographed 2026-08-26 with a RAR archive out of libarchive's test suite:
-*"MacExtract cannot open RAR files."* Since 2026-10-18 the alert is *"This
-file could not be extracted."* and comes before the destination dialog, so
-it is in `1b-destination.png` (DECISIONS.md 2026-10-18, *the question after
-the look*); any file the engine does not recognise does it, and since
-2026-10-18 a RAR is one (DECISIONS.md 2026-10-18, *the formats it only
-named*).
+The alert is *"This file could not be extracted."* and comes before the
+destination dialog, so it is in `1b-destination.png` (DECISIONS.md
+2026-10-18, *the question after the look*); any file the engine does not
+recognise does it, a RAR among them (DECISIONS.md 2026-10-18, *the formats it
+only named*). **`interactive.py` exits 1 on this run and that is not a
+failure**: there is no output for the CLI and the Mac to agree about. The
+screenshot is the result.
 
-**`interactive.py` exits 1 on this run and that is not a failure**: its
-phase-2 check is that the CLI and the Mac agree on extracted output, and
-there is no output to agree about. The screenshot is the result.
-
-The same build trick photographs the OTHER two failure alerts, which no
-headless harness runs:
+The same build trick photographs the OTHER two failure alerts:
 
     # the disk is full — the real gLastWriteErr path, without a full disk
     sed -i 's#(Ptr)((const char \*)buf + off));#&\n        { static int nw = 0; if (++nw > 2) werr = dskFulErr; }#' \
@@ -3320,115 +2225,71 @@ headless harness runs:
     # memory too fragmented — that branch fires on any run
     sed -i 's/        gShortPiece = 0;/&\n        gShortPiece = 1;/' mac/macextract_mac.c
 
-`run.py --out-kb` already measures that a genuinely full volume returns
-`dskFulErr` here and stops the run; what these show is the sentence the user
-is given afterwards. Photographed 2026-08-24, both two lines.
+`run.py --out-kb` measures that a full volume returns `dskFulErr` and stops
+the run; these show the sentence the user gets. Photographed 2026-08-24, both
+two lines.
 
-**The alert box is two lines wide, and the wrap is not obvious.** Measured
-off those frames, it breaks between 32 and 36 characters, so a message over
-about 60 characters draws a third line that sits level with the OK button
-and looks broken. Three shipped strings did; they were shortened. Check a
-new one by eye on a frame, not by counting.
+**The alert box breaks between 32 and 36 characters** (measured off those
+frames), so a message over about 60 characters draws a third line level with
+the OK button. Check a new string by eye on a frame, not by counting.
 
-**When a frame is ambiguous, make the alert say which branch drew it.**
-Temporarily replacing the generic `ret != UNC_OK` branch with one that
-`PStrCatNum`s `ret`, `gShortBy`, `gShortPiece`, `entries` and `errors` ended
-three runs of guessing in one frame — `entries = 0` said the archive had
-never been opened, which no amount of staring at the shipped wording could
-have told anyone.
+**When a frame is ambiguous, make the alert say which branch drew it**:
+temporarily `PStrCatNum` `ret`, `gShortBy`, `gShortPiece`, `entries` and
+`errors` into the generic `ret != UNC_OK` branch (`entries = 0` once said the
+archive had never been opened).
 
 ### The end-of-run report — `interactive.py --report`
 
     tools/vmac/interactive.py --report --emu mv-4M -o shots fixtures/anything.sit
 
-Ignores the fixture: the archive is generated (`report_archive`), because
-nothing in the corpus can make this box say anything. It holds names too long
-for HFS, one that fits only once its extension goes, a duplicate, two folders
-that shorten to the same name, eighteen photographs alike for 31 characters,
-and one entry whose checksum is broken by a single bit — so the box lists a
+Ignores the fixture: the archive is generated (`report_archive`) with names
+too long for HFS, one that fits only once its extension goes, a duplicate, two
+folders that shorten to the same name, eighteen photographs alike for 31
+characters, and one entry with a one-bit checksum break — so the box lists a
 rename, a numbered file, a numbered FOLDER and a per-entry failure at once,
-and is long enough that the scroll bar is live.
+long enough that the scroll bar is live.
 
-Five frames: the box, the box scrolled six lines, Standard File over it after
-**Save as Text**, the box redrawn once that is dismissed (which is what proves
-the default ring and the list come back), and SFGetFile afterwards.
-
-**It asserts, and the assertion is the saved DOCUMENT**, read back off the
-volume with `hcopy -t` and checked line by line — a photograph of a box full
-of text cannot fail, and a missing line in that file can. It also checks the
-names the report CLAIMS against the names on the volume.
-
-`--emu mv-4M` rather than the 1x default: nothing here is timed, and the
-archive is a few hundred bytes.
+Five frames: the box, the box scrolled six lines, Standard File after **Save
+as Text**, the box redrawn once that is dismissed (the default ring and list
+come back), and SFGetFile afterwards. **It asserts on the saved DOCUMENT**,
+read back with `hcopy -t` line by line, and on the names the report CLAIMS
+against the names on the volume. `--emu mv-4M`: nothing here is timed.
 
 The box's three click targets are constants measured off `DLOG 133` in
 `mac/macextract.r` (`REPORT_OK`, `REPORT_SAVE`, `REPORT_DOWN`). **Re-measure
-them if that resource moves** — this is the harness that clicks fixed
-coordinates.
+them if that resource moves.**
 
 #### The one line a generated archive cannot make — `interactive.py --report-utf8`
 
     tools/vmac/interactive.py --report-utf8 --emu mv-4M -o shots fixtures/anything.sit
 
-*"`<name>` was named in characters this Macintosh cannot write"* is the
-report's only line that no DiskDoubler archive can reach: the fold runs where
-the ENGINE says a name is UTF-8, and `fmt_sit5.c` alone says so. So this phase
-ignores the fixture the other way round — it uses one real corpus archive,
-`derived-800saywhat301j.sit`, whose three Japanese names MacRoman has a byte
-for none of. Four frames (the box, Standard File after **Save as Text**, the
-box redrawn, SFGetFile) and the same assertion `--report` makes: the saved
-DOCUMENT, plus the names on the volume. A photograph of a box full of `_`
-cannot fail.
-
-The counts in that assertion are not the ones a reader would guess —
-`ユーザーライセンスの購入` is thirteen `_` and not twelve, because the
-archive stores `ザ` decomposed. The outcome line is the CLEAN one,
-*"Extraction complete."*: nothing failed, every entry came out, and the
-box is up only because the shell has something to say about the names.
+*"`<name>` was named in characters this Macintosh cannot write"* needs a name
+the ENGINE says is UTF-8 (only `fmt_sit5.c` does), so this phase uses
+`derived-800saywhat301j.sit`, whose three Japanese names MacRoman cannot
+spell. Four frames (box, Save as Text, box redrawn, SFGetFile) and
+`--report`'s assertion. `ユーザーライセンスの購入` is thirteen `_`, not
+twelve (`ザ` is stored decomposed); the outcome line is the CLEAN
+*"Extraction complete."*.
 
 **Why the report goes to a floppy, and the control that says so**
 
     tools/vmac/interactive.py --report-utf8 --utf8-to-boot --emu mv-4M \
         -o shots fixtures/derived-800saywhat301j.sit
 
-Extract this archive onto the BOOT volume instead and the saved report
-cannot be read off the image afterwards, though the Macintosh plainly
-has it. `--utf8-to-boot` is that run: it drops the one click that
-switches volumes, keeps the image, and reads it twice —
-
-    the extraction's output is in the catalog   : YES
-    the report is in the catalog                : NO
-    the report's TEXT is in the image's blocks  : YES
-
-so **the bytes land and the directory record does not**, which is why a
-30 s flush wait, Control-Q, SIGTERM and the shell's own `FlushVol` all
-changed nothing: they were aimed at a write that had already happened.
-The exit code is 1, because the phase's own assertion still fails —
-that is the point of a control. DECISIONS.md 2026-09-22, *the file that
-was on the disk and not in the catalog*.
-
-**It does not search for the report's NAME**, and neither should
-anything else here: `Extraction Report` is the name `SFPutFile` offers,
-so it is in the application's resources on the same volume and a raw
-search for it says YES in every run, saved or not. The blocks are
-searched for a string only the saved document can hold.
+Onto the BOOT volume, the saved report's TEXT is in the image's blocks and its
+catalog record is not (`--utf8-to-boot` reads both; exit 1 is the control;
+DECISIONS.md 2026-09-22, *the file that was on the disk and not in the
+catalog*). **Do not search for the report's NAME**: `Extraction Report` is in
+the application's resources on the same volume.
 
 **And one level below that — `--utf8-second`, the discriminator**
 
     tools/vmac/interactive.py --report-utf8 --utf8-to-boot --utf8-second \
         --emu mv-4M -o shots fixtures/derived-800saywhat301j.sit
 
-Whether the missing entry is destroyed or merely unwritten is answered
-by doing the save a SECOND time, under the name `Second`, so one more
-catalog update follows the lost one. Both land:
-
-    the report is in the catalog       : YES
-    the SECOND report is in the catalog: YES
-
-So the first entry was **unflushed, not lost**, and a fixed tail of
-Mini vMac's buffered stdio is ruled out — both entries live in the same
-catalog leaf, so a lost tail would have taken them both. This phase
-exits 0. DECISIONS.md 2026-09-22, *the entry a second write placed*.
+Saving a SECOND time puts both records in the catalog: the first was
+**unflushed, not lost** (both live in one leaf). Exit 0 (DECISIONS.md
+2026-09-22, *the entry a second write placed*).
 
 ### Driving the real UI
 
@@ -3465,119 +2326,77 @@ exits 0. DECISIONS.md 2026-09-22, *the entry a second write placed*.
                                     # come back: a Finder click, then the
                                     # Application menu
 
-Run them one at a time (see "This box has one core", above). **One at a
-time is not only about the core**: every phase builds the application
-into the same `build/mac-interactive`, so two `interactive.py` runs
-started together fight over it and one dies in `cmake --build`.
+Run them one at a time (*This box has two cores*, above) — and every phase
+builds into the same `build/mac-interactive`, so two runs started together
+fight over it and one dies in `cmake --build`.
 
 ### A one-drive Mac — `onedrive.py`
 
     onedrive.py [--app MacExtract.bin]     # 0 = nothing asked for after Save
 
-`mv-4M-1d` (setup.sh) has two drives: the boot disk and one floppy, so the
+`mv-4M-1d` (setup.sh) has two drives, the boot disk and one floppy, so the
 System asks for disks by name and ejects the one in the drive, as a one-drive
 Mac does. The walk launches MacExtract from floppy ME, ejects it in the Open
-dialog, opens an archive on floppy C and saves to the boot disk; it then
-answers every *"Please insert the disk"* and fails if there was any. The build
-before `preload` (2026-10-14) asks ME, C, ME, C and fails; after, nothing.
+dialog, opens an archive on floppy C and saves to the boot disk, then answers
+every *"Please insert the disk"* and fails if there was any. The build before
+`preload` (2026-10-14) asks ME, C, ME, C and fails; after, nothing.
 `onedrive.py --drop` is the drop's list of documents, given by Cmd-O on two
 archives carrying MacExtract's creator; it prints every disk asked for and is
 a measurement, not a check (DECISIONS.md 2026-10-14, *the swaps that are the
 System's*). **What neither can see** is in the docstring: an actual drop on an
-alias (System 7.0.1's Finder will not take one for an application on an ejected
-disk). Coordinates are System 7's.
+alias. Coordinates are System 7's.
 
-**`--diskswap` needs a fixture that is not an archive.** It reads back the
-joined FILE, and the application unpacks a joined archive, so with a `.sit`
-the file it looks for is never written and the phase fails on a correct
-run — on the build before 2026-10-13 too. A few KB of random bytes passes
-(DECISIONS.md 2026-10-13, *the disk that was still in the drive*).
+**`--diskswap` needs a fixture that is not an archive**: it reads back the
+joined FILE, and the application unpacks a joined archive. A few KB of random
+bytes passes (DECISIONS.md 2026-10-13, *the disk that was still in the
+drive*).
 
 **`--diskeject` asserts the eject from outside the machine**: Mini vMac
-`fclose`s a disk image when the Mac ejects it, so the phase reads the
-emulator's `/proc/<pid>/fd`. Passed on `System6.hfv`, `Sys7.img` and
-`Sys30.img` (2026-10-13, `derived-ScrollbarPattern.sit`); the build before
-fails it. **Since 2026-10-14 it also checks the System 7 Finder afterwards**
-(`DESK7_THIRD_DISK`): an ejected but still mounted Floppy A stays there as a
-dimmed icon, 636 px off the desktop pattern on the build without the
-unmount and 0 with it. On System 3.0 and 6 that frame shows no dimmed icon
-on either build, so there the check is not made. **What it cannot see:** a real one-drive Mac. Mini vMac puts
-every inserted disk in a new drive, so Floppy B never goes into the drive
-Floppy A left (MANUAL_TESTS.md §4).
+`fclose`s an image when the Mac ejects it, so the phase reads the emulator's
+`/proc/<pid>/fd`. Passed on `System6.hfv`, `Sys7.img` and `Sys30.img`
+(2026-10-13, `derived-ScrollbarPattern.sit`); the build before fails it. On
+System 7 it also checks the Finder afterwards (`DESK7_THIRD_DISK`): an ejected
+but still mounted Floppy A stays as a dimmed icon, 636 px off the desktop
+pattern without the unmount and 0 with it; on System 3.0 and 6 that frame
+shows no dimmed icon on either build, so the check is not made. **What it
+cannot see:** a real one-drive Mac — Mini vMac puts every inserted disk in a
+new drive (MANUAL_TESTS.md §4).
 
-**`--named zip` needs a fixture larger than 64 KB.** `zip -s 64k` marks
-an archive split whatever its size, so a smaller payload makes one
-`Aset.zip` and no `Aset.z01`, and the application correctly answers
-*"This archive has more parts. Find them and try again."* — a harness
-invocation error that photographs exactly like an application bug, which
-is the shape this directory keeps meeting. Drive it with
-`fixtures/derived-xmasbeeps.sit`.
+**`--named zip` needs a fixture larger than 64 KB.** `zip -s 64k` marks an
+archive split whatever its size, so a smaller payload makes one `Aset.zip` and
+no `Aset.z01`, and the application correctly answers *"This archive has more
+parts. Find them and try again."* — an invocation error that photographs like
+a bug. Drive it with `fixtures/derived-xmasbeeps.sit`.
 
-**On System 7 the dialog is not the same dialog, and the clicks know it
-since 2026-08-25.** System 7 draws its own Standard File — a directory
-pop-up above the list, a Desktop button beside it — whose first row sits ten
-points higher, so a System 6 coordinate selects the SECOND item. `calibrate()`
-picks the row off `SF_ROWS` for the system being booted, and a system with no
-entry there is refused rather than clicked at. The other half is WHERE the
-dialog opens: System 7's Process Manager gives each application its own
-default directory, so under the boot-shell arrangement it opens inside the
-System Folder listing `Finder`, `System` and the application.
-`sf_to_volume_root()` presses Desktop and opens the volume — two clicks, no
-menu tracking — and does nothing at all on System 6, which opens at the root
-already.
+**On System 7 the Standard File dialog is not the same dialog.** Its first row
+sits ten points higher, so `calibrate()` picks the row off `SF_ROWS` per
+system and refuses a system with no entry. System 7's Process Manager also
+opens the dialog inside the System Folder under the boot-shell arrangement;
+`sf_to_volume_root()` presses Desktop and opens the volume (two clicks, no
+menu tracking), and does nothing on System 6.
 
-`--e2e` leaves the **Finder** in place instead of installing the application as
-the boot shell, which is the only way to launch the application the way a
-person does and the only way to launch what it extracted. Both runs photograph
-every step, and `docs/screens/` comes from here.
+`--e2e` leaves the **Finder** as shell, the only way to launch the
+application as a person does and to launch what it extracted; it uses
+`derived-ScrollbarPattern.sit`, whose entry is an application drawing its own
+splash screen. `docs/screens/` comes from here, except `0-icon.png`, from
+`mountcheck.py --open` on `dist/MacExtract.dsk`: in the `--e2e` window the
+undeletable `StuffIt Expander™ 4.0.1 Folder`'s label is painted over
+`MacExtract`'s. The cancel run uses `derived-EmpireBuilderDemo.sit`: after a
+cancel SFGetFile must list exactly `Demo Manual V1.6`, no `EB Sounds`.
 
-**It cannot photograph a legible icon label**, so `docs/screens/0-icon.png`
-comes from `mountcheck.py --open` instead. The `--e2e` volume window holds four
-items in one row, one of them the empty `StuffIt Expander™ 4.0.1 Folder` that
-`mkboot.py` cannot delete, and the Finder paints overlapping labels in HFS
-catalog order — which is by name. `MacExtract` sorts before `StuffIt…`, so that
-folder's label lands on top of the application's and the name is unreadable in
-`e2e-2-volume.png`; the icon itself is unobstructed. `mountcheck.py --open`
-opens `dist/MacExtract.dsk`, whose volume holds the application and nothing
-else, so there is nothing to collide with.
+`--segments` cuts the fixture into three, leaves part 1 alone on the boot
+volume and the other two on a second floppy, so the folder scan fails and the
+alert appears; it then offers the WRONG part on purpose, to see it refused by
+fingerprint, and **ends on a byte comparison** of the joined file.
+**Standard File opens on the last-inserted volume** — click Drive and
+photograph before clicking a row — and **`Mac()` boots a private copy**: read
+results from `<workdir>/boot.hfv`.
 
-What a pass looks like, and the fixtures that make it checkable: `--e2e` uses
-`derived-ScrollbarPattern.sit`, whose entry is an application — so the last
-step is double-clicking `Scrollbar Pattern Editor` in the Finder and seeing it
-draw its own splash screen, which exercises type/creator, the Finder inited
-flag and resource-fork integrity together (the application *is* its resource
-fork). The cancel run uses `derived-EmpireBuilderDemo.sit`, three entries: after
-a cancel, SFGetFile must list exactly `Demo Manual V1.6` — the one entry that
-finished — with no trace of `EB Sounds`, the entry that was being written.
-Partial-output cleanup seen in the file list rather than inferred. Status for
-both is in BLOCKERS.md.
-
-`--segments` cuts the fixture into three parts, leaves part 1 alone on the
-boot volume and puts the other two on a second floppy, so the folder scan
-must fail and the alert must appear. It then offers the WRONG part on
-purpose, to see it refused by fingerprint and named for what it is. Unlike
-the other two phases **it ends on a byte comparison** — the joined file read
-back off the volume the Mac wrote to, against the fixture — and exits
-nonzero if they differ, so it is not purely a look-at-it harness.
-
-Two things it will get wrong if you copy it:
-
-- **Standard File opens on the last-inserted volume**, which is the parts
-  floppy, not the boot disk. Click Drive and photograph the result before
-  clicking a row. The first version did not, opened part 2, and produced a
-  screenshot of the app asking for part 1 — correct behaviour that read
-  exactly like a bug.
-- **`Mac()` boots from a private copy of the boot image.** Read results back
-  from `<workdir>/boot.hfv`, not from the image you handed it, or a run that
-  worked reports "not found".
-
-`--dest` is the same shape for the destination dialog: the archive on the boot
-volume, an empty floppy beside it, the DESTINATION dialog switched to the
-floppy with its own Drive button (`SFPUT_DRIVE` — SFPutFile's buttons sit lower
-than SFGetFile's, so `SF_DRIVE` misses), and then a read of **both** volumes.
-Every output name must be on the chosen volume and none on the archive's. Give
-it a small fixture with a folder in it, `derived-Downer.sit`; nothing here is
-measuring speed and the phase waits out `EXTRACT_QUIET` at the end.
+`--dest` puts the archive on the boot volume and an empty floppy beside it,
+switches the DESTINATION dialog to the floppy with its own Drive button
+(`SFPUT_DRIVE`; `SF_DRIVE` misses, SFPutFile's buttons sit lower), and reads
+**both** volumes: every output name on the chosen one, none on the archive's.
+Use `derived-Downer.sit`; it waits out `EXTRACT_QUIET`.
 
 ### What the Finder does with a dropped archive — `interactive.py --drop`
 
@@ -3588,58 +2407,45 @@ measuring speed and the phase waits out `EXTRACT_QUIET` at the end.
 Seven frames: the desktop, the open volume, **Get Info on the application**, a
 CONTROL drag to empty space, the archive dropped on the application's icon,
 the same after a launch's worth of seconds, and the extraction that follows
-when the drop worked — the last one is what says the application was handed
-the right FILE rather than merely woken up. `--emu mv-4M` because nothing here
-is timed.
+when the drop worked. The answer is DECISIONS.md 2026-08-31, *the drop the
+Finder does not make*.
 
-The answer, and what it decides, is DECISIONS.md 2026-08-31, *the drop the
-Finder does not make*. Three things about running it:
-
-- **The control frame is what makes the negatives mean anything.** Every
-  refusal looks exactly like a drag that was never delivered. `drop-4` is the
+- **The control frame makes the negatives mean anything**: `drop-4` is the
   archive dragged to empty space; if it did not move, stop reading the run.
 - **The phase sets the archive's TYPE with `hattrib`**, because `mkboot.py
-  --data` leaves hfsutils' default and a Finder that gates on the
-  application's `FREF` list cannot match a type nobody declared. The first
-  System 7 run was a false negative for exactly this. `--drop-type '????'` is
-  the other half of the wildcard experiment: a type nobody declared, against a
+  --data` leaves hfsutils' default and a Finder gating on the `FREF` list
+  cannot match it. `--drop-type '????'` is a type nobody declared, against a
   `FREF` that claims everything.
 - **Get Info is taken before the drags**, because a successful drop parks the
-  archive on top of the icon the Get Info click is aimed at, and the wrong
-  file's Info window looks like the right one.
+  archive on top of the icon the Get Info click aims at.
 
 Icon coordinates live in `FINDER_ICONS`, per system, `archive` alongside
 `app`; System 7 opens its volume window near the BOTTOM of the screen, so the
-control drag moves up there rather than down.
+control drag moves up there.
 
 **What it cannot see.** It photographs; it reads nothing off the volume. A
-launch proves the Finder accepted the drop; `drop-7` is what says the
-application was told WHICH file, since it has read `AppParmHandle` from
-2026-08-31 (this paragraph said it did not until 2026-10-10).
+launch proves the Finder accepted the drop; `drop-7` says the application was
+told WHICH file (it reads `AppParmHandle`).
 
 ### Leaving an extraction — `interactive.py --switch`
 
     interactive.py fixtures/derived-EmpireBuilderDemo.sit --switch --system Sys7.img
 
-Two launches from the Finder in one boot. The first opens About
-mid-extraction, clicks the Finder's disk icon and comes back through the
-Application menu. The second hides MacExtract from that menu and lets the
-extraction finish behind the Finder. The third chooses File > Quit, which
-must cancel and quit. Fifteen frames, and
-it ends on the first launch's names on the volume. The result is
-DECISIONS.md 2026-10-12, *the application nobody could leave*.
+Launches from the Finder in one boot: the first opens About mid-extraction,
+clicks the Finder's disk icon and comes back through the Application menu;
+the second hides MacExtract from that menu and lets the extraction finish
+behind the Finder; the third chooses File > Quit, which must cancel and quit.
+Fifteen frames, ending on the first launch's names on the volume (DECISIONS.md
+2026-10-12, *the application nobody could leave*).
 
-- **Hold, do not click.** A press is seen only at the next progress
-  callback, so `hold_and_shoot()` keeps the button down and photographs the
-  open menu without `Mac.shot`, which would park the pointer and release
-  nothing.
+- **Hold, do not click.** A press is seen only at the next progress callback,
+  so `hold_and_shoot()` keeps the button down and photographs the open menu
+  without `Mac.shot`, which would park the pointer and release nothing.
 - **Down, then across.** A diagonal path opens every menu whose title it
-  crosses, and it released on File > Quit once and on "About Balloon
-  Help…" once. `pick()` moves straight down, then sideways.
-- **What it cannot see:** how much of the processor the Finder got, and
-  the second launch's output, whose names collide with the first's and are
-  numbered. The menu coordinates are System 7.0.1's (`APPLE_MENU`,
-  `APP_MENU`).
+  crosses; `pick()` moves straight down, then sideways.
+- **What it cannot see:** how much of the processor the Finder got, and the
+  second launch's output, whose names collide with the first's. The menu
+  coordinates are System 7.0.1's (`APPLE_MENU`, `APP_MENU`).
 
 ### Who a double-click goes to — `deskclaim.py`
 
@@ -3656,39 +2462,35 @@ DECISIONS.md 2026-10-12, *the application nobody could leave*.
                      --open "StuffIt Deluxe Folder" --open "MacExtract Helpers" \
                      --archive-at archive.sit --expect handed
 
-Double-clicks a `SIT!` archive in the Finder, after optionally adding a
+Double-clicks a `SIT!` archive in the Finder, after optionally: adding a
 `SIT!` → MacExtract entry to the volume's `Desktop` file (`--claim`, plus a
-bundle with `--bundle`), retagging the application file's creator, moving
-it into a folder the run never opens, giving it a bundle filed under its
-new creator (`--stub-bundle`, the shape a stub would have; `--doc-icon
-TYPE` adds a document icon for TYPE to it), deleting the
-`Desktop` file so the Finder rebuilds it at boot (`--no-desktop`), or
-putting the archive on a second floppy. `--stub FILE` boots a REAL stub
-(`companion/make_stub.py`) in `MacExtract Helpers` beside an untouched
-MacExtract, and `--multifinder` puts System 6's MultiFinder back and
-starts it. `--extra FILE:PATH` puts another application on the volume —
-StuffIt beside the stub — and `--open` opens folders before the archive,
-in order, because the Finder registers what it sees: by position, or on
-System 7 by NAME, type-selected (an icon there can land off the window's
-edge; `--archive-at` takes a name too). On System 7 `--no-desktop`
-deletes `Desktop DB` and `Desktop DF`. **It grades the DIALOG in
-`claim-3-launched.png`, not the volume**: a launch that was not handed the
-file shows the Open dialog, the run's Return opens the archive from it,
-and the entries land anyway — the first version passed on exactly that.
-The Finder's refusal alert is identified positively, System 6's and
-System 7's; MacExtract's dialogs by all three rows of their frame, since
-one row matched StuffIt Deluxe's archive window. A frame with none of
-these is `nothing` — a double-click that missed, or another application:
-look at it. **`--app-folder` moves the archive's icon**: read its position off
-`claim-2-volume.png` and pass `--archive-at`. The expected names are
-`--want`, not derived, so a run needs no `build/rel` CLI and can share the
-machine with `./ci.sh`. Results are DECISIONS.md 2026-10-10, *the
-double-click that goes by the application's creator*, and 2026-10-11,
-*where the stubs can live*, and *the stub that hands it on*; and
+bundle with `--bundle`); retagging the application's creator; moving it into a
+folder the run never opens; giving it a bundle under its new creator
+(`--stub-bundle`; `--doc-icon TYPE` adds a document icon); deleting the
+`Desktop` file so the Finder rebuilds it (`--no-desktop`; on System 7 `Desktop
+DB` and `Desktop DF`); or putting the archive on a second floppy. `--stub FILE`
+boots a REAL stub (`companion/make_stub.py`) in `MacExtract Helpers` beside an
+untouched MacExtract; `--multifinder` puts System 6's MultiFinder back.
+`--extra FILE:PATH` puts another application on the volume, and `--open`
+opens folders before the archive, in order, because the Finder registers what
+it sees: by position, or on System 7 by NAME, type-selected (`--archive-at`
+takes a name too).
+
+**It grades the DIALOG in `claim-3-launched.png`, not the volume**: a launch
+that was not handed the file shows the Open dialog, the run's Return opens the
+archive from it, and the entries land anyway. The Finder's refusal alert is
+identified positively (System 6's and 7's); MacExtract's dialogs by all three
+rows of their frame (one row matched StuffIt Deluxe's archive window). A frame
+with none of these is `nothing` — look at it. **`--app-folder` moves the
+archive's icon**: read its position off `claim-2-volume.png` and pass
+`--archive-at`. The expected names are `--want`, so a run needs no `build/rel`
+CLI and can share the machine with `./ci.sh`. Results: DECISIONS.md
+2026-10-10, *the double-click that goes by the application's creator*;
+2026-10-11, *where the stubs can live* and *the stub that hands it on*;
 2026-10-12, *the stub beside StuffIt*. **What it cannot see:** System 7's
-`Desktop DB`, which it neither reads nor writes — there, which
-application registered is read off the icons; and whether StuffIt OPENED
-an archive beyond the frame that shows its window.
+`Desktop DB`, which it neither reads nor writes (which application registered
+is read off the icons); and whether StuffIt OPENED an archive beyond the frame
+showing its window.
 
 ### Several archives opened at once — `relaunch.py`
 
@@ -3701,21 +2503,18 @@ an archive beyond the frame that shows its window.
                     --first derived-Cool_Tools__.sit --second derived-a2basic.dmg.sit
 
 Opens a `.cpt` and a `.sit` TOGETHER from the Finder (Select All, Open) and
-grades both: the destination dialog for each, and every entry of both on
-the volume. `--expect first` is the control, for a build before the reload.
-`--in-disk` puts the pair on a second disk with room for its output, which
-System 3.0's boot disk does not have for `a2basic`; a `-D UNC_AT_HEAPLOG`
-build's `Heap Log` is printed at the end. Results are DECISIONS.md
-2026-10-12, *the reload that the list needs*. `--keep-inits` boots the
-stock System Folder, AppleShare's `Desktop Mgr` INIT and MultiFinder in,
-where the volume has a Desktop Manager as System 7's does; the default
-pair then puts an application with a bundle at the top of an output that
-is a folder, which is the one place v0.42.0 closed the Finder's working
-directory (DECISIONS.md 2026-10-22, *the working directory the bundle
-closed*). `run.py` cannot see that: it extracts into a volume's root by
-dirID, the application into a working directory with dirID 0. **What it
-cannot see:** an entry refused for memory and one refused for a full disk
-look the same to the volume check — read `r-6-second-done.png`.
+grades both: the destination dialog for each, and every entry of both on the
+volume. `--expect first` is the control, for a build before the reload.
+`--in-disk` puts the pair on a second disk with room for its output (System
+3.0's boot disk has none for `a2basic`); a `-D UNC_AT_HEAPLOG` build's `Heap
+Log` is printed at the end. Results: DECISIONS.md 2026-10-12, *the reload that
+the list needs*. `--keep-inits` boots the stock System Folder (`Desktop Mgr`
+and MultiFinder in), where the default pair puts an application with a bundle
+at the top of a folder output — the one place v0.42.0 closed the Finder's
+working directory (DECISIONS.md 2026-10-22, *the working directory the bundle
+closed*); `run.py` cannot see that, since it extracts into a volume's root by
+dirID. **What it cannot see:** an entry refused for memory and one refused for
+a full disk look the same to the volume check — read `r-6-second-done.png`.
 
 ### Making a segmented Compact Pro archive — `cptsegment.py`
 
@@ -3725,39 +2524,26 @@ look the same to the volume check — read `r-6-second-done.png`.
     cptsegment.py --verify           does tools/synth_cptsplit.py still
                                      reproduce the specimens byte for byte?
 
-The only harness here that drives **somebody else's application**. Compact
-Pro 1.51 comes out of the corpus through our own CLI, goes onto the boot
-volume as MacBinary beside the archive to be cut, and the driver works
-`Misc > Segment` with a chosen size. The set lands in
-`$UNC_VMAC_HOME/specimens/<case>/` with a `case.json`; it is not committed,
-for the reason no fixture is — and it is kept beside the emulator rather
-than under `build/`, because the first two specimens were written there and
-the next `./ci.sh` ran `make clean` and deleted both.
+Compact Pro 1.51 comes out of the corpus through our CLI, goes onto the boot
+volume as MacBinary beside the archive to be cut, and the driver works `Misc >
+Segment` with a chosen size. The set lands in `$UNC_VMAC_HOME/specimens/<case>/`
+with a `case.json` — not committed, and kept beside the emulator rather than
+under `build/`, which `./ci.sh`'s `make clean` empties. Nothing documents the
+segmented layout, so the specimen IS the documentation (DECISIONS.md
+2026-08-14); `--verify` holds `tools/synth_cptsplit.py` to reproducing these
+sets exactly.
 
-Why this exists at all is in DECISIONS.md 2026-08-14: nothing documents the
-segmented layout, so the specimen IS the documentation, and the application
-is the only thing that writes one. `--verify` is what keeps the description
-honest: `tools/synth_cptsplit.py` writes sets from that derivation, and it
-has to reproduce these ones exactly — a generator validated against nothing
-is just a second copy of the reader's assumptions.
+Driving another application here:
 
-Four things it will teach you if you drive another application here:
-
-- **A `--data` copy is invisible to it.** Our own application opens what it
-  is handed by name; another one filters Standard File on TYPE, so the
-  archive has to arrive as MacBinary with `PACT`/`CPCT` on it. That is what
-  `mkboot.py --macbin` is for.
-- **Its Standard File is not ours.** The dialog is the application's own
-  resource: this one's first row is at y=88 where `interactive.py`'s is at
-  137. Clicking ours selected nothing, and the shot showed a dialog with
-  Open dimmed — a photograph of a working machine doing nothing.
-- **Menu titles have to be measured, not counted.** The first map was one
-  menu to the left the whole way along, so every shot was mislabelled and
-  the "Misc" photograph was of the View menu.
-- **The number of Save boxes is not known in advance** — it is what the
-  segment size and the archive decide. The driver stops when the screen
-  stops changing rather than counting, because a fixed count either leaves
-  a dialog up or types Return into the catalog window afterwards.
+- **A `--data` copy is invisible to it.** Another application filters Standard
+  File on TYPE, so the archive arrives as MacBinary with `PACT`/`CPCT` on it —
+  `mkboot.py --macbin`.
+- **Its Standard File is not ours**: this one's first row is at y=88 where
+  `interactive.py`'s is at 137.
+- **Menu titles have to be measured, not counted** (the first map was one menu
+  to the left the whole way along).
+- **The number of Save boxes is not known in advance**: the driver stops when
+  the screen stops changing rather than counting.
 
 ### StuffIt Deluxe 2.0.1 writes an optimized archive — `sitopt.py`
 
@@ -3778,123 +2564,89 @@ Four things it will teach you if you drive another application here:
     tools/vmac/sitopt.py --dcmpdata     run MacPaint 1's COMP and DCMP
     tools/vmac/sitopt.py --segment small|big   cut two files with resource forks
 
-**It installs by COPYING, not by running the installer.** The download is a
-StuffIt archive of two DiskCopy images; disk 1 holds one file, an installer
-whose DATA fork is itself a StuffIt archive, and `macextract` unwraps the lot
-— so the application, `Text 1`, `PassLock`, the Engine, Magic Menu and
-Aladdin's own Preferences file go onto a copy of `System6.hfv` from Linux.
-Where each belongs is not guessed: `UnInstall Dlx Files Script`, on disk 2 of
-the box, erases `{system}Optimizers:Text 1` and the rest by name. Without
-the Preferences file the application stops at a Standard File dialog before
-it draws a window.
+**It installs by COPYING, not by running the installer.** Disk 1's installer
+has a DATA fork that is itself a StuffIt archive; `macextract` unwraps it, so
+the application, `Text 1`, `PassLock`, the Engine, Magic Menu and Aladdin's
+Preferences file go onto a copy of `System6.hfv` from Linux. Where each
+belongs comes from disk 2's `UnInstall Dlx Files Script`, which erases
+`{system}Optimizers:Text 1` and the rest by name. Without the Preferences
+file the application stops at a Standard File dialog before drawing a window.
 
-**Registration, and where the code comes from.** 2.0.1 wants a name, a
-**signature drawn in a box** — it will not take OK without one — and a
-serial. The code is on the page the download itself is on,
+**Registration.** 2.0.1 wants a name, a **signature drawn in a box** (no OK
+without one) and a serial. The code is on the download's own page,
 `macintoshgarden.org/apps/stuffit-deluxe-2`: *"A nnnnn (where 'n' = any
-number)"*. It is **not** `/apps/stuffit-deluxe`, whose codes `spacesaver.py`
-carries for 3.0.7 and 5.x; six of those were tried first and refused, and a
-registration wall was written into five files before the maintainer asked
-which page (BLOCKERS.md, withdrawn claims). `--personalize` keeps the
-registered image, because the application writes the personalization into
-its own resource fork — **do not re-run `--install` afterwards**, which
-rebuilds the volume from `System6.hfv` and loses it.
+number)"* — **not** `/apps/stuffit-deluxe`, whose 3.0.7 and 5.x codes
+`spacesaver.py` carries (BLOCKERS.md, withdrawn claims). `--personalize`
+keeps the registered image, because the application writes the
+personalization into its own resource fork — **do not re-run `--install`
+afterwards**; it rebuilds from `System6.hfv`.
 
-**The run is a SCRIPT, not a sequence of clicks.** StuffIt Deluxe 2.0 has its
-own scripting language — vocabulary in the application's STR# 257, shapes in
-the payload's `Sample Scripts` — and `Scripts ▸ Execute Script…` (**⌘E**, not
-the menu item: at y=20 the item never highlights) runs a TEXT/`SIT!` file of
-it. `Write Status To` makes the application report what it did, and that
-status file comes back with the run:
+**The run is a SCRIPT, not clicks.** StuffIt Deluxe 2.0's scripting language
+(vocabulary in the application's STR# 257, shapes in the payload's `Sample
+Scripts`) runs from `Scripts ▸ Execute Script…` — **⌘E**; at y=20 the item
+never highlights. `Write Status To` makes the application report what it did:
 
     Creating new archive: Macintosh:Optimized.sit
     Stuffing items matching: Macintosh:Subject
             (stuffing file: Subject)
 
-So the archive is written by commands whose spelling is Aladdin's, the
-control and the optimized pair come from one boot, and a syntax error says
-so instead of vanishing.
+so the control and the optimized pair come from one boot, and a syntax error
+says so.
 
-**Read the image the emulator WROTE.** Mini vMac boots a copy in the
-session's temp directory, so mounting the image you handed it reports every
-archive missing from a run that made all three.
+**Read the image the emulator WROTE** (a copy in the session's temp
+directory); the image you handed it shows every archive missing.
 
 **`--unstuff` is the oracle.** It boots the image `--make` wrote, deletes the
-original subject so what comes back cannot be it, and has Magic Menu unstuff
-`Optimized.sit`. For `Text 1` that gives the OPTIMIZED bytes — 594 of them,
-no resource fork — which is what makes "correct" definable for a
-preprocessor that undoes nothing, and what `tools/run_sitopt.py` grades
-against.
+original subject, and has Magic Menu unstuff `Optimized.sit`. For `Text 1`
+that gives the OPTIMIZED bytes — 594, no resource fork — which
+`tools/run_sitopt.py` grades against.
 
-**The reversible Optimizer needed a document nothing here had.** `MacPaint
-1` carries a `DCMP` and keys on type `PNTG` (the literal is in its `COMP`
-resource three times); the 933-fixture corpus has six `sfil` sounds and no
-paint document at all. So `--add-paint` puts **MacPaint 2.0** on the same
-image — it is on this machine, in a `.sea.hqx` our own engine unwraps — and
-`--paint` launches it, drags three strokes across the canvas, saves
-`Painting` and keeps the image. `--makepaint` then stuffs that twice,
-Optimizer off and on. **Click the icon to launch it**: type-select and ⌘O
-renamed the application to `Painting` on the first attempt, because nothing
-had launched and the Finder took the keystrokes.
+**`MacPaint 1` keys on type `PNTG`**, and the corpus has no paint document,
+so `--add-paint` puts **MacPaint 2.0** (a `.sea.hqx` our engine unwraps) on
+the image, `--paint` drags three strokes and saves `Painting`, and
+`--makepaint` stuffs it with the Optimizer off and on. **Click the icon to
+launch it**: type-select and ⌘O renamed the application `Painting`.
 
-**The last three modules asked for documents, and said which.** Read out
-of each `COMP`: `Sound 1` compares the file's type against **`FSSD`** —
-Sound Designer II — and then wants an `INFO` 1000 resource; `Photoshop 1`
-compares against **`8BIM`**, Photoshop 1.0's own type rather than the later
-`8BPS`, and wants an `8BIM` 1000 resource of ten bytes or more whose word
-at +8 is a colour mode. A corpus `sfil` sound suitcase and an ImageMagick
-PSD were both declined, correctly, before that was read. `--makemods`
-builds subjects to those tests — the Photoshop one has a genuine PSD data
-fork and a resource fork made to satisfy the module — and all three then
-bite, writing 1, 2 and 3 into byte 106.
+**The last three modules' acceptance tests, read out of each `COMP`**: `Sound
+1` wants type **`FSSD`** (Sound Designer II) and an `INFO` 1000 resource;
+`Photoshop 1` wants **`8BIM`** (Photoshop 1.0's type, not `8BPS`) and an
+`8BIM` 1000 resource of ten bytes or more whose word at +8 is a colour mode.
+`--makemods` builds subjects to those tests (the Photoshop one with a genuine
+PSD data fork) and all three bite, writing 1, 2 and 3 into byte 106.
 
-**Three lessons from those runs, none of them about StuffIt.** The first
-attempt installed two of the five Optimizers and the application said so
-in the script's status file (*"Optimizer Not Found: Sound 1"*), which is
-what `Write Status To` is for. The module names go through the reversible
-`/`→`:` swap on the way out of the payload and have to go back: the
-Macintosh file is `Photoshop/JPEG Lossy`. And the resource forks this
-harness built were **unreadable** — the map was missing its attributes
-word, so `Get1Resource` returned NULL and the module declined a subject
-built for it; `spacesaver.resources()` parses what `one_resource()` writes
-now, which is the check that should have been there first.
+- **Read the script's status file**: *"Optimizer Not Found: Sound 1"* is how
+  a missed install shows.
+- **Module names go through the reversible `/`→`:` swap**: the Macintosh file
+  is `Photoshop/JPEG Lossy`.
+- **Check a built resource fork parses** (`spacesaver.resources()` on what
+  `one_resource()` writes): a map missing its attributes word made
+  `Get1Resource` return NULL.
 
-**`--unstuffapp` takes `--archive`, `--item` and `--add-archive` since
-2026-09-29**, so the application can be asked about any of the eight:
+**`--unstuffapp` takes `--archive`, `--item` and `--add-archive`**, so the
+application can be asked about any archive:
 
     tools/vmac/sitopt.py --unstuffapp --tag unjpeg1 \
       --image $VMAC/sitopt/sitopt-painted.hfv \
       --add-archive /tmp/OptJpeg.sit.bin --archive OptJpeg.sit --item Photo
 
-That image is the one with all five Optimizers installed; the archives
-`--makemods` wrote are not on it, which is what `--add-archive` is for.
-**Asked about `OptJpeg.sit`, 2.0.1 refuses its own archive** — *"This
-file cannot be decoded by this version of the Photoshop JPEG
-optimizer"* — and the alert is MODAL, so the script never finishes and
-no status file comes back; the missing `UnStatus.out` is the symptom,
-and the screenshot is the finding. `OptPhoto.sit` on the same image in
-the same boot unstuffs cleanly, which is the control that makes it a
-fact about the module — and the archive then said the rest without any
-emulator at all: the entry is STORED, so its 80 bytes are the module's
-own output, and four of them are non-zero (FORMATS.md, *What an
-Optimizer did to the fork*). **A run that produces a refusal is worth
-reading the bytes behind before it is explained.**
+That image has all five Optimizers installed. **2.0.1 refuses its own
+`OptJpeg.sit`** — *"This file cannot be decoded by this version of the
+Photoshop JPEG optimizer"* — in a MODAL alert, so no `UnStatus.out` comes back
+and the screenshot is the finding; `OptPhoto.sit` in the same boot unstuffs
+cleanly, the control. The entry is STORED, so its 80 bytes are the module's
+output (FORMATS.md, *What an Optimizer did to the fork*).
 
-**`--unstuff` on the MacPaint archive is the other half of the answer.**
-Magic Menu refuses it — *"Items that were encrypted or compressed with an
-optimizer or compressor will be skipped. The Engine does not currently
-support this. Please use StuffIt Deluxe instead."* — where it unstuffed the
-`Text 1` one without comment. That is where the line Aladdin's own Engine
-draws was measured; `run_sitopt.py` asserts it as a fact about that
-application, and this engine refuses neither archive.
+**Magic Menu refuses the MacPaint archive** — *"Items that were encrypted or
+compressed with an optimizer or compressor will be skipped. The Engine does
+not currently support this. Please use StuffIt Deluxe instead."* — and
+unstuffs the `Text 1` one; `run_sitopt.py` asserts that line as a fact about
+Aladdin's Engine. This engine refuses neither.
 
-**A hierarchical submenu DOES open here, which the note below says it does
-not.** `--options` pulls `Magic ▸ StuffIt Options ▸` down ten pixels at a
-time: the parent highlights and the submenu draws, to the LEFT because the
-parent is near the right edge. That is System 6 and Magic Menu 2.0; the
-measured failure is System 7's Translate menu and it stands. There was
-nothing in this one worth selecting — compression method, Leave/Delete
-Originals, no Optimizer, which is why the application had to run.
+**A hierarchical submenu DOES open here.** `--options` pulls `Magic ▸ StuffIt
+Options ▸` down ten pixels at a time: the parent highlights and the submenu
+draws, to the LEFT (the parent is near the right edge). That is System 6 and
+Magic Menu 2.0; System 7's Translate menu failure stands (*What the pointer
+cannot select*). Nothing in it was worth selecting.
 
 What it CANNOT see:
 
@@ -3908,16 +2660,15 @@ What it CANNOT see:
 - **the 512 KB machine.** It boots `mv-4M` throughout.
 
 **`--segment` cuts StuffIt segments with 2.0.1's own `Segment` script
-command**, two subjects with resource forks per launch, and reads every
-part back into `specimens/sitopt/seg-small` or `seg-big`. `small` is one
-part each; `big` is two each, at the default 793,500 payload bytes a
-part, and SubjC's part 1 ends inside its resource fork. The sets in
-`specimens/sitseg-real/rsrc{a,b,c,d}` came from these runs. A set's
-bytes 0-1 are the launch's next `_Random`, so the first file always gets
-41 A7 and the second 3A F1; a re-run repeats each part except for the
-name buffer past the name and the header CRC over it (DECISIONS.md
-2026-10-24, *the two bytes the writer drew*). What it cannot see: any
-writer but 2.0.1, and a size other than the default.
+command**, two subjects with resource forks per launch, read back into
+`specimens/sitopt/seg-small` or `seg-big`. `small` is one part each; `big` is
+two each, at the default 793,500 payload bytes a part, and SubjC's part 1 ends
+inside its resource fork. The sets in `specimens/sitseg-real/rsrc{a,b,c,d}`
+came from these runs. A set's bytes 0-1 are the launch's next `_Random` (the
+first file always 41 A7, the second 3A F1); a re-run repeats each part except
+the name buffer past the name and the header CRC over it (DECISIONS.md
+2026-10-24, *the two bytes the writer drew*). What it cannot see: any writer
+but 2.0.1, and a size other than the default.
 
 ### Photoshop 1.0.7, and the document its Optimizer can read
 
@@ -3937,143 +2688,63 @@ writer but 2.0.1, and a size other than the default.
                          --against psdoc2 --tag ps-jpeg3
     tools/vmac/sitopt.py --psenc --psname PSDoc2 --against psdoc2 --tag psenc1
 
-**It runs on the Mac Plus, which its own page rules out.** Adobe's
-requirements say *"Macintosh SE or newer"*; Mini vMac's Plus is the only
-variant built here and Photoshop 1.0.7 launches on it in about 90
-seconds. The download is a StuffIt archive of one DiskCopy image, which
-this project's own engine unwraps.
+**It runs on the Mac Plus** (Adobe says *"Macintosh SE or newer"*): Photoshop
+1.0.7 launches in about 90 seconds, from a StuffIt archive of one DiskCopy
+image this engine unwraps. Two coordinates are in `sitopt.py`: the
+application's icon, and the **PENCIL** (right column, row seven; the default
+marquee saves a blank page). The New dialog defaults to 512x512 RGB;
+`--psdoc` types 256, Tab, 256. The file is **196,608 bytes — 256x256x3 — of
+raw pixels with no header**, plus an `8BIM` 1000 resource of ten bytes
+(channels, height, width, depth, mode) that the Optimizer's acceptance test
+reads (FORMATS.md). `--psjpeg` is the round trip in one boot: control,
+optimized archive, UnStuff.
 
-**Two coordinates had to be found and both are in `sitopt.py`.** The
-application's icon in the volume window, and the **PENCIL** in the
-toolbox — right column, row seven. The default tool is the marquee, so
-the first run dragged out a selection rectangle and saved a blank page.
+**`--drawing grid` is the second subject, chosen for the arithmetic** (a
+6-pixel comb crossed with a 12-pixel one plus two diagonals; `zigzag` is the
+default): it settled that `CCOD`+0x3826 does not round toward zero
+(FORMATS.md, *What an Optimizer did to the fork*; BLOCKERS.md, *Withdrawn
+claims*). `--drawing` and `--psname` make a third subject two boots and no
+editing.
 
-**The New dialog defaults to 512x512 RGB**; `--psdoc` types 256 into
-Width, Tabs, types 256 into Height, and takes the rest. What comes off
-the image is **196,608 bytes — 256x256x3 — of raw pixels with no header
-at all**, and an `8BIM` 1000 resource of ten bytes holding channels,
-height, width, depth and mode. That resource is what the Optimizer's
-acceptance test reads, and reading the module's geometry out of it is
-why the synthetic subject failed (FORMATS.md).
+**`--quality N` sets the module's own Q.** `--psmenus` photographs the
+REGISTERED menus (`--map`'s image stops at personalization); `--psopts` opens
+the two Options dialogs. Clicking a module's row in the Optimizers list opens
+**the module's own dialog** (*"Please specify the JPEG quantization level to
+use..."*, a Q field, *"Prompt for Q on each file"*); Q=25 is a default
+(FORMATS.md, *What an Optimizer did to the fork*).
 
-**`--psjpeg` is the round trip in one boot** — control archive,
-optimized archive, and an UnStuff of the optimized one — so the answer
-does not depend on carrying an archive between sessions.
+- **Neither ⌘. nor Escape cancels a 1990 modal dialog.** Click the button.
+- **A module's dialog swallows everything typed after it.** Screenshot after
+  every click.
+- **The Q field comes up SELECTED**; `--quality` types without clicking.
 
-**`--drawing grid` is a second subject chosen for the arithmetic, and it
-withdrew a claim.** `--drawing zigzag` (the default, and what made the
-first document) is five pencil strokes on white, which leaves most of
-the image flat; `grid` is a 6-pixel comb crossed with a 12-pixel one
-plus two diagonals, so nearly every 8x8 block carries an edge in both
-directions. The module stores **22,097 B** of it against the first
-subject's 14,127 and changes **21.0 %** of the pixel bytes against
-10.1 %. That was enough to settle whether `CCOD`+0x3826 rounds toward
-zero: it does not, and the first subject's 2,127 wrong bytes had been
-few enough to look like a branch the image never took (FORMATS.md,
-*What an Optimizer did to the fork*; BLOCKERS.md, *Withdrawn claims*).
-**A second subject is how a disassembly question gets settled when the
-first one is too easy** — the drawing is an argument now (`--drawing`)
-and so is the document's name (`--psname`), so a third costs two boots
-and no editing.
+**A script cannot reach `PassLock`**: `--psenc` arms it from Options ▸ Custom
+Encryption… and the scripted `Stuff` still writes an unencrypted shape with no
+prompt. `--psencgui` drives File ▸ New Archive… and Archive ▸ Stuff….
 
-**`--quality N` sets the module's own Q, which turns out to exist.**
-`--psmenus` photographs the REGISTERED application's menus — `--map`
-could not, because the image it runs on stops at the personalization
-dialog and its twelve menu shots are twelve photographs of that — and
-Options carries every compression method, `Compression Optimizers…` and
-four encryption items. `--psopts` opens the two dialogs behind it. The
-Optimizers one is an activation LIST, which is why this file said for
-an afternoon that a quality could not be set; clicking a module's row
-in that list opens **the module's own dialog**, which says *"Please
-specify the JPEG quantization level to use. Values of 20 to 30 are
-recommended. Values over 30 cause image degradation."* and has a Q
-field and a *"Prompt for Q on each file"* checkbox. So Q=25 was a
-default being read as a format (FORMATS.md, *What an Optimizer did to
-the fork*).
+- **Type-select is a SYSTEM 7 feature**, so on these System 6 volumes **click
+  the icon**: `--psicons` grows the window by DRAGGING its grow box (the zoom
+  box does nothing here) and photographs every icon. On System 7, Escape
+  clears the type-ahead buffer before each name.
+- ***"No Self-UnStuffer can be found that supports this archive"* means the
+  stubs are missing**: three `AUSt` files in the MAIN installer's payload
+  (`Self-UnStuffers/Everything UnStuffer`, `Fast UnStuffer`, `Optimal:Better
+  UnStuffer`), each supporting a set of METHODS. In a `Self-UnStuffers` folder
+  in the System Folder, `Save As … Self-UnStuffing` writes a `.sea`.
+  `UnStuffIt Deluxe™` is the standalone application, not a stub.
 
-Three things cost a run each, and all three are about 1990 modal
-dialogs:
-
-- **Neither ⌘. nor Escape cancels one.** Both were tried on the
-  Optimizers dialog and the next shot was the same dialog, so the
-  run's next menu action never happened and photographed it again.
-  Click the button.
-- **A module's dialog swallows everything after it.** The run that
-  found it was typing a file name for the Stuff dialog; the
-  quantization field accepted `PSDoc2`, then `swordfish`, and the
-  archive was never made. A screenshot after every click is what made
-  that readable rather than mysterious.
-- **The field comes up SELECTED**, so `--quality` types the number
-  without clicking first — a click would place a caret and append to
-  the 25 that is already there.
-
-**A script cannot reach `PassLock`, but it CAN encrypt.** `--psenc`
-arms PassLock from Options ▸ Custom Encryption… — the menu photograph
-afterwards shows that item ticked — and the scripted `Stuff` then
-writes an archive byte-for-byte the shape of an unencrypted one, with
-no prompt and no error in the status file. So the MENU's setting does
-not reach a scripted `Stuff`, and PassLock belongs to `--psencgui`,
-which drives File ▸ New Archive… and Archive ▸ Stuff… instead.
-
-**Two things about the Finder here, both of which cost runs.**
-
-- **Type-select is a SYSTEM 7 feature, so it does nothing on these
-  System 6 volumes.** Typing a file's name in an open window and
-  pressing ⌘O opened nothing in `--install-sea`, twice — an action
-  with a consequence, which is the evidence that counts. (`--magic`'s
-  shot is called `subject-selected` and has nothing selected in it,
-  but an absent highlight is consistent with three different things,
-  including a frame that photographed the wrong window; it was never
-  the proof.) This file said *"does not work in this harness"* for an
-  afternoon until `spacesaver/zipmeta`'s frames showed it working on
-  `ssinstalled.hfv` — which boots **System 7.0.1**, where the Finder
-  has type-ahead selection and System 6's has none. On System 7, clear
-  the type-ahead buffer with Escape before each name or a second
-  search concatenates onto the first.
-
-  So on a System 6 volume, **click the icon**, which means knowing
-  where it is: `--psicons` grows the window — by DRAGGING its grow
-  box, since the zoom box does nothing here — and photographs every
-  icon so the next run can aim.
-- **The application was telling the truth and I was placing the wrong
-  file.** *"No Self-UnStuffer can be found that supports this
-  archive"* survived `UnStuffIt Deluxe™` loose on the volume, in the
-  System Folder, in `Extensions`, in the folder its own installer
-  makes, with the `Desktop` file deleted for a rebuild, and finally on
-  the volume that installer wrote — six placements and eight boots.
-  **`UnStuffIt Deluxe™` is the standalone unstuffing application and
-  not a stub.** The self-extractor stubs are three `AUSt` files in the
-  MAIN installer's payload — `Self-UnStuffers/Everything UnStuffer`,
-  `Fast UnStuffer`, `Optimal:Better UnStuffer` — which `INSTALL` above
-  never copied, so there was genuinely none on the volume to find. With
-  them in a `Self-UnStuffers` folder in the System Folder, `Save As …
-  Self-UnStuffing` writes a `.sea` first time. Their names are the rest
-  of the message: each supports a set of METHODS, which is what *"that
-  supports this archive"* means.
-
-  Two guesses died on the way and both are worth not repeating: that a
-  file `hcopy` places is invisible because of the **Desktop database**
-  (deleting it and forcing a rebuild changed nothing), and that the
-  **installer** was doing something a copy could not (the volume it
-  wrote refused the archive too).
-
-**The script's own security words are another matter**, and this file
-said they named nothing installed until 2026-10-02, which was an
-assumption and was wrong (BLOCKERS.md). `--psdes` asks for both:
+**The script's security words name built-in ciphers** (BLOCKERS.md):
 
     tools/vmac/sitopt.py --psdes --tag psdes1
 
-`Stuff … with fast des` and `… with fast newde` each prompt for a
-password and write a real encrypted archive, with a plain control from
-the same boot. **`NewDE™` and `DES` are built into the application**;
-`Custom Encryption…` is the plug-in route, which is what the menu's
-shape said all along — the two cipher items sit beside it, not inside
-it. The optional disk's `NewDEx` (id 3) and `DESex` (id 64) are
-different things again, and this project has both as `.rsrc` files it
-has never installed.
+`Stuff … with fast des` and `… with fast newde` each prompt for a password and
+write a real encrypted archive, with a plain control from the same boot.
+`NewDE™` and `DES` are built in; `Custom Encryption…` is the plug-in route.
+The optional disk's `NewDEx` (id 3) and `DESex` (id 64) are held here as
+`.rsrc` files never installed.
 
-What `--psmatrix` CANNOT see: `Custom Compression…`, the one method in
-the Options menu with no script word.
+What `--psmatrix` CANNOT see: `Custom Compression…`, the one method in the
+Options menu with no script word.
 
 ### Every combination 2.0.1 will write — `sitcombo.py`
 
@@ -4086,40 +2757,35 @@ the Options menu with no script word.
     tools/vmac/sitcombo.py --run b --limit 5400            one boot a set
     tools/vmac/sitcombo.py --run q --quality 1,2,3,5,10 --tag setqlow
 
-Each `--run` copies `sitopt-ps.hfv`, puts its subjects and a script on
-it, and has 2.0.1 stuff and then unstuff in one boot; the sets are in
-the docstring and the grading is `tools/run_sitcombo.py` (TESTING.md).
-22 boots made the 121 archives on 2026-10-11.
+Each `--run` copies `sitopt-ps.hfv`, puts its subjects and a script on it, and
+has 2.0.1 stuff and then unstuff in one boot; the sets are in the docstring,
+the grading is `tools/run_sitcombo.py` (TESTING.md). 22 boots made the 121
+archives on 2026-10-11.
 
-**It is closed-loop where `sitopt.py` types blind.** The password
-prompts are recognised by one thresholded strip of the screen
-(`specimens/sitopt/psdes1`'s two dialogs, which differ there and
-nowhere a typed password reaches), answered when they are up, and the
-run ends when the Finder's menu bar is back — every script ends in
-`Quit`. A screen still for a minute gets one Return and a photograph.
-It asked once per ARCHIVE, never per `Stuff`, scripted or not.
+**It is closed-loop where `sitopt.py` types blind.** The password prompts are
+recognised by one thresholded strip of the screen (`specimens/sitopt/psdes1`'s
+two dialogs differ there and nowhere a typed password reaches), answered when
+up, and the run ends when the Finder's menu bar is back (every script ends in
+`Quit`). A screen still for a minute gets one Return and a photograph. It
+asked once per ARCHIVE, never per `Stuff`.
 
-Five things about the emulated screen, each of which cost a document:
+The emulated screen, each of which cost a document:
 
-- **The pointer lands 3 px left and 6 px up of where it is sent**,
-  measured on PSGray's pencil rows. Harmless on a 256-pixel canvas;
-  every stroke missed a 21x13 one until `PTR_FIX`.
-- **A stroke that starts on the title bar drags the window**, and one
-  that leaves Photoshop's window switches MultiFinder to the Finder,
-  after which ⌘S is the Finder's. Keep a margin.
-- **A document wider than the screen opens at 1:2** (`--zoom 2`), and
-  **one smaller than the window is centred on grey** (`--canvas`, read
-  off the new-document shot).
-- **The JPEG module's dialog refuses Q = 1, 2 and 3 silently**: OK
-  does nothing and the next keystrokes go into the Q field. `--run q`
-  tries a list and photographs which one it took (5, and 255 at the
-  top).
-- **`macextract t` on a `.sit.bin` tests the MacBinary**, not the
-  archive inside — `l` and `t` never unwrap. Grade with `x`.
+- **The pointer lands 3 px left and 6 px up of where it is sent** (`PTR_FIX`).
+- **A stroke that starts on the title bar drags the window**, and one leaving
+  Photoshop's window switches MultiFinder to the Finder. Keep a margin.
+- **A document wider than the screen opens at 1:2** (`--zoom 2`), and **one
+  smaller than the window is centred on grey** (`--canvas`, read off the
+  new-document shot).
+- **The JPEG module's dialog refuses Q = 1, 2 and 3 silently**: OK does
+  nothing and the next keystrokes go into the Q field. `--run q` tries a list
+  and photographs which it took (5, and 255 at the top).
+- **`macextract t` on a `.sit.bin` tests the MacBinary**, not the archive
+  inside — `l` and `t` never unwrap. Grade with `x`.
 
-What it CANNOT see: a coloured document Photoshop drew (`--cdocs`
-builds them in its layout instead), a real Sound Designer II file, and
-the Stuff dialog's own method popup, which no set drives.
+What it CANNOT see: a coloured document Photoshop drew (`--cdocs` builds them
+in its layout instead), a real Sound Designer II file, and the Stuff dialog's
+own method popup.
 
 ### Running an Optimizer module — `dcmptest`, `--dcmp` and `--dcmpdata`
 
@@ -4129,72 +2795,50 @@ the Stuff dialog's own method popup, which no set drives.
     tools/vmac/sitopt.py --dcmp        the calling convention, on sitopt.hfv
     tools/vmac/sitopt.py --dcmpdata    the whole data path, on sitopt-paintmade.hfv
 
-**`--dcmp` proves the calling convention and nothing else.** The probe
-opens `{system}Optimizers:MacPaint 1`, takes its `'DCMP'` with
-`Get1IndResource` — the module file holds one, and its id is the
-module's number rather than 1 — and jumps to `*handle`, which is a
-`bra.s` over the sixteen-byte header. Selector **-3** is the cheapest
-request there is: every module answers it by copying its own name into
-the caller's buffer with `_BlockMove` and writing 1 back, so no file, no
-callback and no Memory Manager are involved. It comes back with
+**`--dcmp` proves the calling convention and nothing else.** The probe opens
+`{system}Optimizers:MacPaint 1`, takes its `'DCMP'` with `Get1IndResource`
+(its id is the module's number, not 1) and jumps to `*handle`, a `bra.s` over
+the sixteen-byte header. Selector **-3** makes every module copy its own name
+into the caller's buffer with `_BlockMove` and write 1 back. It comes back
 **"MacPaint 1"** and a 1.
 
-**`--dcmpdata` is the round trip, and it needs `Painting` on the
-volume** — so it boots `sitopt-paintmade.hfv`, not `sitopt.hfv`. The
-`COMP` is handed a `CInfoPBRec` at -1 and told to run at -4, and its
-output is read back through `*selector > 0`; that remnant then goes into
-the `DCMP` at -1, in 512-byte chunks, and -2. The grader checks the
-rebuilt document against the original and against what 2.0.1's own
-unstuffer produced (`specimens/sitopt/unapp3`), and the remnant against
-a length in front of the document from offset 512 on. **0 problems** on
-2026-09-29 (FORMATS.md, *What the data path does*).
+**`--dcmpdata` is the round trip, and needs `Painting` on the volume**, so it
+boots `sitopt-paintmade.hfv`. The `COMP` is handed a `CInfoPBRec` at -1, run
+at -4, and its output read back through `*selector > 0`; that remnant goes
+into the `DCMP` at -1, in 512-byte chunks, and -2. The grader checks the
+rebuilt document against the original and against 2.0.1's own unstuffer output
+(`specimens/sitopt/unapp3`), and the remnant against a length in front of the
+document from offset 512 on. **0 problems** on 2026-09-29 (FORMATS.md, *What
+the data path does*).
 
-**It is launched AS THE FINDER**, the way `traptest` is, and for a reason
-this harness learned the hard way: that volume has a dozen icons by now
-and a type-select on it has already renamed an application once. Booting
-into the probe needs no navigation. `--dcmp` and `--dcmpdata` replace
-`Finder` on a COPY and rename the real one aside.
+**It is launched AS THE FINDER**, as `traptest` is: `--dcmp` and `--dcmpdata`
+replace `Finder` on a COPY and rename the real one aside, so no navigation is
+needed on a volume where a type-select already renamed an application.
 
-Five things cost a run each, and only one of them is about StuffIt:
-
-- **Paint the screen white first.** The desktop is a grey pattern and
-  `DrawString` over it is unreadable at 512x342: the first data-path
-  run photographed eighteen lines of results nobody could make out.
-- **One `FSRead` is not a read.** A short count is legal, and this
-  volume gives one at a file's first extent — a single call for 2,437
-  bytes came back with 2,048. The untouched tail of the buffer went
-  through the module and came out as the rebuilt document's last 389
-  bytes: **the right length with the wrong content**, which is the
-  failure that looks most like success. The module's own transform
-  loops over `_Read` for exactly this reason.
-- **`_FlushVol` returning 0 is not Shut Down.** A run that flushed and
-  then hung left the rebuilt file's catalog entry reading zero length on
-  the image. The probe calls `ShutDwnPower` now, and the shots have to
-  be taken BEFORE it — **by the clock, not by `Session.boot()`**. That
-  settle wants three identical frames and this screen never gives them:
-  the probe replaced the Finder and never called `InitCursor`, so the
-  watch is up and spinning. Two runs ran the settle's full timeout and
-  photographed *"You may now switch off your Macintosh safely."* twice.
-- **A `COMP` will not let go of its temp file.** Opening
-  `{system}Optimizers:Paint Temp 0` while the module holds it gives -49,
-  `opWrErr`, and the selector that closes it (-2) is the one that
-  deletes it. `*selector > 0` hands the bytes over instead.
-- **`PBGetCatInfo` returns the file number in `ioDirID`**, so a record
-  passed straight on names the wrong directory. Put the three input
-  fields back before handing it to a module.
+- **Paint the screen white first**; `DrawString` over the grey desktop is
+  unreadable at 512x342.
+- **One `FSRead` is not a read.** A short count is legal (2,048 of 2,437 at a
+  file's first extent), and the untouched tail came out as **the right length
+  with the wrong content**. Loop, as the module's own transform does.
+- **`_FlushVol` returning 0 is not Shut Down**: the probe calls `ShutDwnPower`,
+  and the shots are taken BEFORE it **by the clock, not by `Session.boot()`**,
+  whose settle wants three identical frames — the probe never calls
+  `InitCursor`, so the watch spins.
+- **A `COMP` will not let go of its temp file** (`Paint Temp 0` gives -49,
+  `opWrErr`; -2 deletes it). `*selector > 0` hands the bytes over.
+- **`PBGetCatInfo` returns the file number in `ioDirID`**: put the three input
+  fields back before handing the record to a module.
 
 What these CANNOT see:
 
-- **the other four modules' data paths.** `Sound 1`, `Photoshop 1` and
-  `JPEG Lossy` have a `DCMP` each and none has been run; `Text 1` has
-  none by design.
+- **the other four modules' data paths.** `Sound 1`, `Photoshop 1` and `JPEG
+  Lossy` have a `DCMP` each and none has been run; `Text 1` has none by
+  design.
 - **whether a real MacPaint would open the rebuilt file.** It is
-  byte-identical to StuffIt Deluxe's own output from offset 512 on and
-  its first 512 bytes are a stack frame; nothing here has launched
-  MacPaint on one.
-- **anything about the ENGINE side.** Feeding a module the remnant of a
-  real archive needs that remnant, which is the open item
-  (OPEN_ITEMS.md).
+  byte-identical to StuffIt Deluxe's own output from offset 512 on and its
+  first 512 bytes are a stack frame.
+- **the ENGINE side**, which is not driven through a module here
+  (DECISIONS.md 2026-09-29, *the smallest module was the biggest gain*).
 
 ### Making an encrypted StuffIt archive — `sitcrypt.py`
 
@@ -4202,97 +2846,70 @@ What these CANNOT see:
     tools/vmac/sitcrypt.py --password swordfish --tag pw9
 
 StuffIt Deluxe 3.5.1 (installed by `spacesaver.py --install351`) writes
-StuffIt classic archives with passwords, and this drives it: File ▸ New,
-Archive ▸ Stuff… with **Encrypt with password** ticked, then the
-password twice. **Those menus are MAGIC MENU's, in the Finder**: ⌘O
-does not launch the application on this image, and a double-click does
-(`sitenc351.py`, below; BLOCKERS.md, withdrawn claims, 2026-10-10). The archive comes off as MacBinary because the
-verifier — `'MKey'` 0 — is in its RESOURCE fork.
+password-protected StuffIt classic archives: File ▸ New, Archive ▸ Stuff… with
+**Encrypt with password** ticked, then the password twice. **Those menus are
+MAGIC MENU's, in the Finder**: ⌘O does not launch the application on this
+image, and a double-click does (`sitenc351.py`, below; BLOCKERS.md, withdrawn
+claims, 2026-10-10). The archive comes off as MacBinary because the verifier,
+`'MKey'` 0, is in its RESOURCE fork.
 
-It exists because the archive key's fold count was a standing
-disagreement between `unar` and XADMaster that no generated file could
-settle. Three runs settled it: 8, 9 and 17 characters need 1, 2 and 3
-folds, so the rule is ceil(len/8) and **neither reference has it**
-(FORMATS.md). `tools/run_crypt.py` replays whatever specimens are
-present.
+It settled the archive key's fold count: 8, 9 and 17 characters need 1, 2 and
+3 folds, so the rule is ceil(len/8), and **neither reference has it**
+(FORMATS.md). `tools/run_crypt.py` replays whatever specimens are present.
 
-Four things it will teach you, and each cost a run:
+- **Shut Down can stall.** With the subject on a second volume, Shut Down
+  ejected it and the Finder asked for it back, so the boot volume never
+  flushed and the archive came off forty bytes short. One volume.
+- **Rows are sixteen pixels apart, not fifteen.** At fifteen, row 5's click
+  landed on row 4 and encrypted the 727 KB application, perfectly.
+- **The invisible files count.** `Desktop DB` and `Desktop DF` are listed by
+  StuffIt's own dialog and sort first, so row 0 is not your file.
+- **The application renames what you type**: "Secret.sit" becomes
+  `Secret.sit.sit`.
 
-- **Shut Down can stall.** With the subject on a second volume, Shut
-  Down ejected it and the Finder asked for it back — so the boot volume
-  never flushed and the archive came off forty bytes short, with a
-  resource map claiming a length the file did not have. One volume.
-- **Rows are sixteen pixels apart, not fifteen.** At fifteen the click
-  for row 5 landed on row 4 and encrypted the 727 KB application
-  instead of the subject — perfectly, which is the sort of success that
-  reads as a failure.
-- **The invisible files count.** A volume's `Desktop DB` and `Desktop
-  DF` are listed by StuffIt's own dialog and sort before anything, so
-  row 0 is not your file.
-- **The application renames what you type.** "Secret.sit" typed into
-  File ▸ New becomes `Secret.sit.sit`.
-
-**The Translate menu's submenus cannot be selected here, and that is the
-harness's limit, not the application's.** `--btoa-peek` photographs the
-menu and its `btoa/atob ▸` submenu opens correctly; what never happens is
-the submenu ITEM highlighting. Three ways in were measured — a diagonal
-jump, a sideways entry along the submenu's own row, and stepped motion
-ten pixels at a time (specimen tags `btoa`, `btoa2`, `btoa3`) — and in
-all three the parent item stays highlighted, the item under the pointer
-does not, and the release selects nothing. Plain menus and every button
-in every dialog work, so this is hierarchical tracking specifically;
-*hypothesis*, unreduced: the Menu Manager wants mouse movement the
-emulator's pointer injection does not produce.
-
-That route is gone from the script because of how it failed: with no
-picker on screen, the clicks and Return meant for it went to the Finder
-and RENAMED the subject to `Subject.ascii` — a plausible-looking
-specimen containing the plain subject. `--btoa-drop`, which drove
-`DropConvert™` instead, never wrote a file either and never could:
-`DropConvert™` converts ARCHIVES between StuffIt and self-extracting
-(OPEN_ITEMS.md, part 1). **Neither is the route.** `--btoa-send` is.
+**The Translate menu's submenu items cannot be selected here** — the
+harness's limit, not the application's. `--btoa-peek` photographs the menu and
+its `btoa/atob ▸` submenu opening; three ways in (a diagonal jump, a sideways
+entry along the submenu's row, stepped motion ten pixels at a time; tags
+`btoa`, `btoa2`, `btoa3`) all leave the parent highlighted and select nothing.
+*Hypothesis*, unreduced: the Menu Manager wants mouse movement the emulator's
+pointer injection does not produce. That route is gone from the script: with
+no picker on screen its clicks RENAMED the subject `Subject.ascii`, a
+plausible-looking specimen holding the plain subject. `--btoa-drop` drove
+`DropConvert™`, which converts ARCHIVES between StuffIt and self-extracting,
+and never wrote a file. **`--btoa-send` is the route.**
 
 ### The translator, driven by Apple event — `--btoa-send`
 
     tools/vmac/sitcrypt.py --btoa-send
 
 **No menu at all.** StuffIt Deluxe 3.5.1's `aete` declares a `translate`
-event — `SIT!`/`TRAN`, direct object an alias, `trnm` the translator's
-name, `encd` the direction, `dest` where to put the result — and its
-`SIZE` -1 is `0xd8e8`, isHighLevelEventAware and localAndRemoteHLEvents
-both set. The Apple Event Manager is in System 7.0.1 whether or not
-AppleScript is (it is not, on this image), so the submenu is not the only
-door and never was.
+event — `SIT!`/`TRAN`, direct object an alias, `trnm` the translator's name,
+`encd` the direction, `dest` where to put the result — and its `SIZE` -1 is
+`0xd8e8` (isHighLevelEventAware and localAndRemoteHLEvents set). The Apple
+Event Manager is in System 7.0.1 without AppleScript.
 
-`tools/aetran/` is the sender: a Retro68 application of about 400 lines
-that the harness cross-compiles and copies onto the volume beside the
-subject. The Finder opens it — one type-select and ⌘O, the only thing
-this mode drives — and everything after that happens inside the
-Macintosh, where no coordinate can miss: it finds its own folder through
-`GetProcessInformation`, launches StuffIt Deluxe itself with
-`LaunchApplication`, sends the event, and writes the reply's `errn` to a
-text file called `AEResult` beside itself. The specimen lands in
-`$UNC_VMAC_HOME/specimens/sitcrypt/btoasend/`, and the harness grades it
-with our own CLI and diffs it against btoa 5.2.1.
+`tools/aetran/` is the sender, a Retro68 application of about 400 lines the
+harness cross-compiles onto the volume beside the subject. The Finder opens it
+(one type-select and ⌘O, the only thing this mode drives); it finds its folder
+through `GetProcessInformation`, launches StuffIt Deluxe with
+`LaunchApplication`, sends the event, and writes the reply's `errn` to
+`AEResult` beside itself. The specimen lands in
+`$UNC_VMAC_HOME/specimens/sitcrypt/btoasend/`, graded with our CLI and diffed
+against btoa 5.2.1.
 
-Four things it measured, each of which cost a step:
-
-- **The `aete` says what the terms MEAN, not what the handler accepts.**
-  Six shapes of the same event were sent in one boot. `dest` as an
-  `fss ` naming the not-yet-existing OUTPUT FILE is the only one that
-  failed — `errn -1700`, `errAECoercionFail`. Every shape naming an
-  existing FOLDER, and every shape naming no destination at all, was
-  accepted. The destination is a place, not a name.
-- **`encd` is the direction, and its default is DECODE.** The shapes that
-  omitted it left a zero-byte `Subject.dec` beside the real output.
-- **The translator wraps before it encodes.** `Subject` comes back as
-  `Subject.MBin.ascii`: MacBinary first, btoa over that. So the output is
-  found by its type and creator (`TEXT`/`asci`) and not by a name — the
-  mistake the abandoned menu route made — and the grading takes the two
-  layers off separately.
-- **It writes the OLDER framing.** `xbtoa Begin` … `xbtoa End`, not
-  `xbtoa5`, which is the half of the decoder the Unix reference only
-  reaches with `-o` (FORMATS.md, *btoa*).
+- **The `aete` says what the terms MEAN, not what the handler accepts.** Of
+  six shapes sent in one boot, only `dest` as an `fss ` naming the
+  not-yet-existing OUTPUT FILE failed (`errn -1700`, `errAECoercionFail`);
+  every shape naming an existing FOLDER, or no destination, was accepted.
+- **`encd` is the direction, and its default is DECODE** (shapes omitting it
+  left a zero-byte `Subject.dec`).
+- **The translator wraps before it encodes**: `Subject` comes back as
+  `Subject.MBin.ascii`, MacBinary then btoa. The output is found by type and
+  creator (`TEXT`/`asci`), and the grading takes the two layers off
+  separately.
+- **It writes the OLDER framing**, `xbtoa Begin` … `xbtoa End`, not `xbtoa5`
+  (FORMATS.md, *btoa*).
 
 ### The 3.5.1 APPLICATION, and its ciphers — `sitenc351.py`
 
@@ -4302,31 +2919,30 @@ Four things it measured, each of which cost a step:
     tools/vmac/sitenc351.py --script --variants --answers 4 --tag variants1
 
 The image is `ssinstalled.hfv` plus `PassLock`, `NewDEx` and `DESex` in
-`{system}Encryptors:` and `Extensions:Aladdin:Encryptors:`, a subject and
-two scripts. `--script` launches the application, ticks *Script* in
-Preferences' *Menus* box (off by default, so ⌘E does nothing until it
-is), runs the script with ⌘E, types the password into every dialog,
-quits and shuts down, then prints each archive's header and the status
-file and writes `made.json` for `tools/run_crypt.py`. What it measured is
-FORMATS.md's, *Where an archive names the module*. Three things it will
-teach you, each of which cost a run:
+`{system}Encryptors:` and `Extensions:Aladdin:Encryptors:`, a subject and two
+scripts. `--script` launches the application, ticks *Script* in Preferences'
+*Menus* box (off by default, so ⌘E does nothing until it is), runs the script
+with ⌘E, types the password into every dialog, quits and shuts down, then
+prints each archive's header and the status file and writes `made.json` for
+`tools/run_crypt.py`. Results: FORMATS.md, *Where an archive names the
+module*.
 
-- **⌘O does not launch it; a double-click does** (`sitopt.launch351`).
-  Three ⌘O runs were written up as "does not launch" (BLOCKERS.md).
-- **The Script checkbox wants its LABEL clicked**, at (300, 273); a click
-  on the box at (282, 272) left it clear and the preview menu bar in the
-  dialog unchanged, which is the way to tell.
+- **⌘O does not launch it; a double-click does** (`sitopt.launch351`;
+  BLOCKERS.md).
+- **The Script checkbox wants its LABEL clicked**, at (300, 273); a click on
+  the box at (282, 272) leaves it clear and the dialog's preview menu bar
+  unchanged, which is the tell.
 - **Quit before Shut Down.** With the application frontmost there is no
-  Special menu, the click at Shut Down's position does nothing, and the
-  image is never flushed — `script1` came back unmountable.
+  Special menu and the image is never flushed (`script1` came back
+  unmountable).
 
 What this CANNOT see:
 
 - **any 3.x but 3.5.1**, or a third party's Encryptor module.
-- **the Optimizers dialog.** The script answers `Enable Optimizer` with
-  *"No longer supported"*, measured with no Optimizer installed.
-- **the Apple-event route**, which is not driven: its `stuff` takes only
-  the boolean `encryption`, so it cannot name a cipher.
+- **the Optimizers dialog.** The script answers `Enable Optimizer` with *"No
+  longer supported"*, measured with no Optimizer installed.
+- **the Apple-event route**, which is not driven: its `stuff` takes only the
+  boolean `encryption`, so it cannot name a cipher.
 
 ### Making a Private File — `privatefile.py`
 
@@ -4334,33 +2950,28 @@ What this CANNOT see:
     tools/vmac/privatefile.py --probe            boot and photograph the picker
     tools/vmac/privatefile.py --make t2          encrypt the subjects, lift the results
 
-`private_file_2.0.sit` comes off Macintosh Garden's mirror; its
-`Aladdin Private File Installer` is an InstallerMaker application whose
-DATA FORK is a StuffIt archive this engine opens, so **no installer is
-driven**. `PF Encrypt™` inside it is 68K with its cipher in its own
-`CODE` 4 — no StuffIt Engine, no extension, and pre-registered — and goes
-onto a copy of `Sys7.img` in `System Folder:Startup Items`, so the
-Finder launches it at boot. The subjects sit at the volume's root.
+`private_file_2.0.sit` comes off Macintosh Garden's mirror; its `Aladdin
+Private File Installer` is an InstallerMaker application whose DATA FORK is a
+StuffIt archive this engine opens, so **no installer is driven**. `PF
+Encrypt™` is 68K with its cipher in its own `CODE` 4 — no StuffIt Engine, no
+extension, pre-registered — and goes onto a copy of `Sys7.img` in `System
+Folder:Startup Items`, so the Finder launches it at boot. Subjects sit at the
+volume's root.
 
 The walk, per subject: *File ▸ Encrypt…* by mouse; its own picker (not
-Standard File), which opens in the APPLICATION's folder, so **Desktop**
-and a double-click on the volume; the subject's row; **Add**;
-**Encrypt**; the password; Return; the password again in *"Please
-re-enter your new password"*; Return. Then *File ▸ Quit*, *Special ▸
-Shut Down*, and every file on the root that was not put there comes off
-as MacBinary into `$UNC_VMAC_HOME/specimens/privatefile/TAG/`.
+Standard File), which opens in the APPLICATION's folder, so **Desktop** and a
+double-click on the volume; the subject's row; **Add**; **Encrypt**; the
+password; Return; the password again in *"Please re-enter your new
+password"*; Return. Then *File ▸ Quit*, *Special ▸ Shut Down*, and every file
+on the root that was not put there comes off as MacBinary into
+`$UNC_VMAC_HOME/specimens/privatefile/TAG/`.
 
-Three things each cost a run:
-
-- **A Command key before any click never arrives.** No window manager
-  gives the emulator focus, so the first ⌘E went nowhere; the first
-  action is a menu pick by mouse, which clicks the window.
-- **Passwords under six characters are not accepted.** OK stays dimmed
-  (`cmpi.b #6`, CODE 4 @0x3e76) and Return does nothing — the first
-  `--make` typed `abc`, then typed it again into the same field.
-- **Subjects are encrypted last row first.** A finished `X.pf` lands
-  beside `X` and sorts after it, so encrypting row 0 first would move
-  every row below it.
+- **A Command key before any click never arrives** (no window manager gives
+  the emulator focus); the first action is a menu pick by mouse.
+- **Passwords under six characters are not accepted**: OK stays dimmed
+  (`cmpi.b #6`, CODE 4 @0x3e76) and Return does nothing.
+- **Subjects are encrypted last row first**: a finished `X.pf` lands beside
+  `X` and sorts after it, so row 0 first would move every row below it.
 
 ### Asking Compact Pro about its own cipher — `cptcrypt.py`
 
@@ -4369,118 +2980,88 @@ Three things each cost a run:
                                          our cipher, and have Compact Pro
                                          extract it
 
-The arrangement that graded DiskDoubler methods 3-5 (`ddencode.py`),
-pointed at the one format whose encryption nothing else reads. It runs
-both ways: `tools/synth_cpt.py` writes an archive with the cipher
-`src/unc_crypt.c` read out of Compact Pro 1.51's `CODE` 3 and the
-application is asked to extract it, and `--make` has the application
-encrypt known subjects for this engine to read back. Both agree since
-2026-08-23.
+`ddencode.py`'s arrangement, pointed at Compact Pro's encryption, both ways:
+`tools/synth_cpt.py` writes an archive with the cipher `src/unc_crypt.c` read
+out of Compact Pro 1.51's `CODE` 3 and the application extracts it, and
+`--make` has the application encrypt known subjects for this engine to read.
+Both agree since 2026-08-23.
 
     tools/vmac/cptcrypt.py --register "Registered:35427117" --make --probe
     tools/vmac/cptcrypt.py --register "Registered:35427117"
 
-**Encryption is behind the registration**, and Macintosh Garden
-publishes one for 1.51 (`Registered` / 35427117). Without it Compact
-Pro answers Extract with *"This version of Compact Pro cannot validate
-or extract encrypted files"* and the Add dialog's Encrypt checkbox sits
-at a negative rect; with it, both work — the code at 0x4864 patches
-DITL 312 to bring the checkbox into view.
+**Encryption is behind the registration**, and Macintosh Garden publishes one
+for 1.51 (`Registered` / 35427117). Without it Compact Pro answers Extract
+with *"This version of Compact Pro cannot validate or extract encrypted
+files"* and the Add dialog's Encrypt checkbox sits at a negative rect; with
+it, the code at 0x4864 patches DITL 312 to bring the checkbox into view.
 
-`--make` is the direction that matters most: the application ENCRYPTS
-three known subjects and the archive is kept in
-`$UNC_VMAC_HOME/specimens/cptmade/` with a `made.json` saying what went
-into it. `tools/run_crypt.py` replays that archive when it is there and
-skips loudly when it is not — it is the only encrypted specimen in this
-project written by the software that invented the format, and it is
-what turned the cipher from a reading into a measurement (FORMATS.md,
-*Compact Pro's cipher*).
+`--make` keeps the archive in `$UNC_VMAC_HOME/specimens/cptmade/` with a
+`made.json`; `tools/run_crypt.py` replays it when present and skips loudly
+when not. It is the only encrypted specimen here written by the software that
+invented the format (FORMATS.md, *Compact Pro's cipher*).
 
-`--note TEXT` types a comment into **Archive > Note...**, which is what
-Compact Pro calls the archive comment, before the archive is saved:
+`--note TEXT` types a comment into **Archive > Note...** (Compact Pro's
+archive comment) before the archive is saved:
 
     tools/vmac/cptcrypt.py --register "Registered:35427117" --make \
         --plain --note 'First line.\nSecond line.' --outdir ...
 
-`\n` is a line break in the note. Two things about that dialog, both
-measured 2026-08-23: **Return does not press OK** — the field is
-multi-line and a Return puts a CR in the text, so the first run typed
-its Save, its filename and its quit into a dialog still on screen and
-wrote no archive at all — and the OK button therefore has to be
-clicked. `--plain` writes the archive unencrypted, which is what a
-comment specimen wants: nothing is asked for a password.
+`\n` is a line break. **Return does not press OK** in that multi-line field
+(measured 2026-08-23), so OK is clicked. `--plain` writes the archive
+unencrypted, so nothing asks for a password.
 
-Four things it will teach you, and three of them cost a run:
-
-- **The +8 was invisible in the disassembly and obvious in the
-  arithmetic.** Data forks of 96, 100 and 103 bytes come out as 104,
-  108 and 111 — a constant eight, so a preamble and not a block
-  cipher's padding. `--probe` exists to ask exactly that question, and
-  three lengths is what it takes to answer it.
-- **Every resource fork extracted on that machine comes back
-  restamped**, a few dozen bytes in. Not Compact Pro: a corpus archive
-  does it too. It is the Finder opening the extracted file's resource
-  fork and the Resource Manager writing the map's live fields back. Do
-  not debug a cipher with it — compare data forks.
-- **The first row of Standard File is not your file.** The boot volume
-  has an invisible `Desktop` file that sorts first, and clicking row one
-  opened THAT — which the application reported as a file it could not
-  read, i.e. exactly what a broken archive looks like.
-- **Nothing may be typed blind before the password dialog is on
-  screen.** Compact Pro asks for the password when it WRITES, not when
-  you click Add, so a Return typed early lands in Standard File and
-  walks into a folder — and the archive is saved somewhere you are not
-  looking, or not at all.
+- **Three lengths answer a preamble question**: data forks of 96, 100 and 103
+  bytes come out as 104, 108 and 111 — a constant eight, a preamble and not a
+  block cipher's padding (`--probe`).
+- **Every resource fork extracted on that machine comes back restamped**, a
+  few dozen bytes in — the Finder opening it and the Resource Manager writing
+  the map's live fields. Debug a cipher on data forks.
+- **The first row of Standard File is the invisible `Desktop` file**, which
+  the application reports as unreadable — what a broken archive looks like.
+- **Type nothing blind before the password dialog is up.** Compact Pro asks
+  when it WRITES, not at Add, so an early Return walks Standard File into a
+  folder.
 
 ### Driving our own password dialog — `interactive.py --password`
 
     tools/vmac/interactive.py --password -o shots fixtures/anything.sit
 
-The fixture argument is ignored: the archive is generated, because
-nothing in the corpus is encrypted. It is the encrypted StuffIt classic
-one `tools/synth_crypt.py` writes, delivered as MacBinary so that both
-forks arrive — which is the point, since that format keeps its password
-verifier (`'MKey'` 0) in the archive's **resource fork** and this is the
-only phase that exercises the Mac side of reading it.
+The fixture argument is ignored: the archive is `tools/synth_crypt.py`'s
+encrypted StuffIt classic one, delivered as MacBinary so the **resource
+fork** with `'MKey'` 0 arrives — the only phase exercising the Mac side of
+reading it. The walk answers **wrongly first**, so the retry path is driven,
+and ends by comparing the extracted bytes off the volume. Verified on System
+6.0.8: both asks, the second saying "That password was refused", every entry
+byte-exact.
 
-The walk answers the dialog **wrongly first**, so the retry path is
-driven too, and ends by reading the extracted bytes off the volume and
-comparing them, so the phase fails on its own rather than on somebody
-reading a screenshot. Verified on System 6.0.8: both asks, the second
-one saying "That password was refused", and every entry byte-exact.
-
-`--password-kind zip` and `--password-kind cpt` (added 2026-10-25) put an
-encrypted zip or Compact Pro archive in its place, as a data fork: the
-two formats whose ciphers the shipped build keeps only when
-`unc_archive_encrypted` says an entry needs them (DECISIONS.md
-2026-10-25, *the envelopes that left*). The right password is typed at
-the first ask, because neither gives this reader a verifier to refuse a
-wrong one with, and resource forks are compared with the reserved header
-bytes masked. Verified on System 6.0.8: both decrypt; with the check
-forced to NO, the zip's entries are lost.
+`--password-kind zip` and `--password-kind cpt` (2026-10-25) put an encrypted
+zip or Compact Pro archive in its place, as a data fork: the two formats whose
+ciphers the shipped build keeps only when `unc_archive_encrypted` says an
+entry needs them (DECISIONS.md 2026-10-25, *the envelopes that left*). The
+right password is typed first (neither has a verifier to refuse a wrong one),
+and resource forks are compared with the reserved header bytes masked.
+Verified on System 6.0.8: both decrypt; with the check forced to NO, the zip's
+entries are lost.
 
 ### A Private File through the application — `interactive.py --privatefile`
 
     tools/vmac/interactive.py --privatefile -o shots fixtures/anything.bin
 
-The same walk as `--password` over a file Private File 2.0 wrote — the
-`Forked` specimen `privatefile.py --make` lifted — so the reader's two
-crossings into other images (the key setup into `ovl_crypt`, the reader
-itself in `ovl_stuffit`) and the envelope unwrap into the StuffIt archive
-inside are run by the shipped application. Wrong password first, then
-`hushnow`; both forks of `Forked` are read back off the volume. Verified
-on System 6.0.8 on 2026-10-09 at 4 MB and, with `--emu mv-1M-1x`, at the
-1 MB floor, and on 2026-10-10 on both 512 KB machines (`--emu mv-512Ke`,
-with `--system System6.hfv` and `--system Sys30.img`): refused, asked
-again, both forks byte-exact. **On `Sys30.img` the phase boots to the
-Finder** and double-clicks the volume and then the application, as `--e2e`
-does, because System 3.0 reads no shell name; `pf-0-volume.png` is that
-window. The second Standard File row is `Forked.pf` on both systems.
+`--password`'s walk over the `Forked` specimen `privatefile.py --make` lifted,
+so the reader's crossings into other images (key setup in `ovl_crypt`, the
+reader in `ovl_stuffit`) and the envelope unwrap run in the shipped
+application. Wrong password first, then `hushnow`; both forks of `Forked` read
+back. Verified on System 6.0.8 on 2026-10-09 at 4 MB and, with `--emu
+mv-1M-1x`, at 1 MB, and on 2026-10-10 on both 512 KB machines (`--emu
+mv-512Ke`, with `--system System6.hfv` and `--system Sys30.img`): refused,
+asked again, both forks byte-exact. **On `Sys30.img` the phase boots to the
+Finder** and double-clicks the volume and the application, as `--e2e` does;
+`pf-0-volume.png` is that window. The second Standard File row is `Forked.pf`
+on both systems.
 
-**The resource fork is compared with bytes 16..127 masked**, as every
-on-Mac harness does: the first run compared it raw and failed on the
-file's own name, which the Macintosh stamps into that system-reserved
-range (DECISIONS.md 2026-10-09, *the specimen was one search away*).
+**The resource fork is compared with bytes 16..127 masked**, as every on-Mac
+harness does — the Macintosh stamps the file's name into that range
+(DECISIONS.md 2026-10-09, *the specimen was one search away*).
 
 ### Reading a running application's memory — the Shortcut updater probe
 
@@ -4491,21 +3072,20 @@ range (DECISIONS.md 2026-10-09, *the specimen was one search away*).
     tools/sit_mkey_oracle.py --mkey 4d87bcb0c49abe53 --scan dump*.bin
     tools/sit_mkey_oracle.py --mkey 4d87bcb0c49abe53 --ak <hit>  # confirm
 
-`--scan` runs `tools/sit_akscan.c` (built on demand; ~6 s per 12 MB dump),
-and `--ak` unfolds a password of up to eight characters from a key that
-verifies. Used on Aladdin's *Shortcut 1.5.3 Update* (kept at
-`~/.cache/macextract/specimens/shortcut-updater/`, with what it installed
-in `installed/`): System 7.0.1 at 4 MB, the updater in `Startup Items`,
-and a stand-in `Shortcut™` (`cdev`/`Cut!`, with a non-empty `cdev`
-resource) in `Control Panels`. Without that stand-in the updater opens a
-Standard File list filtered on `cdev`/`Cut!` and goes no further. With it,
-the updater shows Install, a restart warning (Return), *"Install software
-as:"* (Return) and extracts. The key is in every dump from the restart
-warning onward (DECISIONS.md 2026-10-10, *the installer's own key*). The
-System 7 Standard File popup at (172, 65) opens on a mouse-down; drag to
-an item and release. **What it cannot see:** a key the application has not
-computed yet, so a negative says only that the dump was too early; and a
-key kept only as an expanded DES schedule, never as eight bytes.
+`--scan` runs `tools/sit_akscan.c` (built on demand; ~6 s per 12 MB dump), and
+`--ak` unfolds a password of up to eight characters from a key that verifies.
+Used on Aladdin's *Shortcut 1.5.3 Update* (kept at
+`~/.cache/macextract/specimens/shortcut-updater/`, what it installed in
+`installed/`): System 7.0.1 at 4 MB, the updater in `Startup Items`, and a
+stand-in `Shortcut™` (`cdev`/`Cut!`, with a non-empty `cdev` resource) in
+`Control Panels` — without it the updater's Standard File list, filtered on
+`cdev`/`Cut!`, goes no further. With it: Install, a restart warning (Return),
+*"Install software as:"* (Return), and it extracts. The key is in every dump
+from the restart warning onward (DECISIONS.md 2026-10-10, *the installer's own
+key*). The System 7 Standard File popup at (172, 65) opens on a mouse-down;
+drag to an item and release. **What it cannot see:** a key not computed yet (a
+negative says only that the dump was early); a key kept only as an expanded
+DES schedule.
 
 ### Replaying the segment work — `segcheck.py`
 
@@ -4514,129 +3094,92 @@ key kept only as an expanded DES schedule, never as eight bytes.
     tools/vmac/segcheck.py --mem 1M        # the floor target
     tools/vmac/segcheck.py --case cpt-middle
 
-Everything about segmented archives on the Mac was verified once, by
-hand, on 2026-08-14. This is those commands written down, which is the
-difference between evidence and history: it caught two stale
-expectations and one real defect on its first full run (DECISIONS.md).
+The segmented-archive checks written down as commands; its first full run
+caught two stale expectations and one real defect (DECISIONS.md).
 
-Two scenarios are worth knowing about because they are easy to get
-backwards. **A StuffIt set is checked off the DISK**, not against the
-grid: it yields the joined archive, where the fixture's manifest
-describes what is inside that archive. **A Compact Pro set is checked
-against the grid**, because its reader emits the archive's entries
-directly — which is what the manifest lists. Same shape from outside,
-opposite oracles.
+**A StuffIt set is checked off the DISK**, not against the grid: it yields the
+joined archive, while the manifest describes what is inside. **A Compact Pro
+set is checked against the grid**, because its reader emits the entries
+directly. Same shape from outside, opposite oracles.
 
-**`ddseg-real` is the only case whose parts were cut by the application
-that defines the format** (added 2026-08-21). DiskDoubler Pro 4.1.1 cut
-`ddtf-ddpro411ad1.dd` into two, both are fixtures, and so is the
-AppleDouble sidecar holding the original's resource fork — so this case
-checks the joined FILE off the Out volume, both forks, against what the
-corpus publishes, as well as the grid via `--expect` (a `SPLT` part has
-no manifest; nothing but DiskDoubler writes the container). Part 2 goes
-on the volume under a name that resembles nothing, because a `SPLT` part
-is matched by the 26 identity bytes in its header and never by its
-filename.
+**`ddseg-real` is the only case whose parts were cut by the application that
+defines the format.** DiskDoubler Pro 4.1.1 cut `ddtf-ddpro411ad1.dd` into
+two; both are fixtures, as is the AppleDouble sidecar holding the original's
+resource fork, so the case checks the joined FILE off the Out volume, both
+forks, as well as the grid via `--expect`. Part 2 goes on under a name that
+resembles nothing: a `SPLT` part is matched by the 26 identity bytes in its
+header.
 
-**`sit-fat` is the one case that needs a part's RESOURCE fork** (added
-2026-10-24): Now Utilities 6.0's two installer disks, from
-`$UNC_VMAC_HOME/specimens/sitseg-real/fat/`, where part 1's `'endD'` is
-what says where its segment stops (DECISIONS.md 2026-10-24, *the length
-part 1 kept in its resource fork*). `run.py --rsrc` puts part 1 on the In
-volume with both forks, through MacBinary, and `--in-kb 4096` makes room
-for a set larger than a floppy. It runs twice, and passes only if the
-joined file is the right one with the fork and a wrong one without it.
+**`sit-fat` is the one case that needs a part's RESOURCE fork**: Now Utilities
+6.0's two installer disks, from `$UNC_VMAC_HOME/specimens/sitseg-real/fat/`,
+where part 1's `'endD'` says where its segment stops (DECISIONS.md 2026-10-24,
+*the length part 1 kept in its resource fork*). `run.py --rsrc` puts part 1 on
+the In volume with both forks, `--in-kb 4096` makes room, and it runs twice,
+passing only if the joined file is right with the fork and wrong without it.
 
 ### The two schemes that are placed by FILENAME — `--named`
 
-`run.py` can drive a StuffIt or Compact Pro set under any names at all,
-because those are found by header. It cannot drive a spanned zip or a
-`.NNN` split: the names ARE the scheme, and the autotest opens a file
-called `archive.sit`. So those two go through Standard File, where the
-name comes from the user, and the phase ends on a byte comparison — the
-one file the set must produce, read back off the volume the Mac wrote to.
+A spanned zip or a `.NNN` split cannot go through `run.py`: the names ARE the
+scheme, and the autotest opens `archive.sit`. So they go through Standard
+File, and the phase ends on a byte comparison of the one file the set must
+produce. **Both sets' stems begin with `A`**: the phase opens the FIRST ROW,
+and the invisible `Desktop` file sorts between `Blob.001` and `Set.z01`. Put
+the engine's return code into the alert when a frame is ambiguous (`ret=-1
+fam=0` said the application had never seen a family).
 
-Both sets are built with a stem beginning `A`, and that is not
-cosmetic. The phase opens the FIRST ROW of Standard File, the boot
-volume's root holds an invisible `Desktop` file, and `Set.z01` sorts
-after it while `Blob.001` sorts before — so the split case passed while
-the zip case opened `Desktop`, which is not an archive, and the
-application correctly said so. **The fourth harness bug in this
-directory to photograph as an application bug.** What settled it in one
-frame was putting the engine's return code into the alert: `ret=-1
-fam=0` said the application had never seen a family at all.
-
-`--chain` and `--wrapped` both compare NAMES on the volume against what
-the Linux CLI produces from the same file, and both require the
-application to have tidied up after itself — the intermediate layer for
-`--chain`, the decoded parts for `--wrapped`. `--chain` is the phase that
-found the application had no envelope unwrap at all (BLOCKERS.md), so it
-is worth keeping even though it now passes: it is the only thing that
-tests the claim README.md makes to users.
-
-**It is also the only harness here that can see a chain at all.** `run.py`
-drives the `-DUNC_MAC_AUTOTEST` build, which calls `RunExtract` once; the
-unwrap loop is in the interactive application and nowhere else. `--chain`
-takes any file, so a specimen for a new envelope is three lines — wrap a
-fixture with `tools/synth_wrapped.py`'s `macbinary()`, encode that with
-`reference/btoa` or `synth_uu.plain()`, and hand the result to `--chain`.
-Pick a payload with no resource fork: the phase compares the Linux CLI's
-directory listing, where a fork is a `.rsrc` sidecar the Mac does not have.
+`--chain` and `--wrapped` compare NAMES on the volume against what the Linux
+CLI produces, and require the application to have tidied up (the intermediate
+layer for `--chain`, the decoded parts for `--wrapped`). `--chain` is what
+tests README.md's envelope claim, and **the only harness that can see a
+chain**: `run.py` drives the `-DUNC_MAC_AUTOTEST` build, which calls
+`RunExtract` once; the unwrap loop is in the interactive application only. A
+new envelope's specimen is three lines — wrap a fixture with
+`tools/synth_wrapped.py`'s `macbinary()`, encode it with `reference/btoa` or
+`synth_uu.plain()`, hand it to `--chain`. Pick a payload with no resource
+fork: the CLI's listing has a `.rsrc` sidecar the Mac does not.
 
 **Which reference a phase grades against follows from which build it runs.**
 `run.py`, `checkdisk.py` and `os9.py --hfsplus` drive the autotest build and
 compare against `macextract x -nr`; `interactive.py` and `os9.py --launch`
-drive the shipped application and compare against the CLI with recursion left
-on, plus the `Comments` mapping checkdisk.py makes. `expected_names` had the
-autotest form until 2026-08-27, and so did os9.py's own reference
-(DECISIONS.md).
+drive the shipped application and compare against the CLI with recursion on,
+plus the `Comments` mapping checkdisk.py makes (`expected_names`;
+DECISIONS.md).
 
 ### Putting a disk in while the Mac is running
 
 `xdnd_insert.c` is a minimal XDND drag SOURCE, built on demand into
-`$UNC_VMAC_HOME`. Mini vMac's X11 build accepts a disk at runtime through
-exactly one door: its control mode (hold Control) offers magnify, full screen,
-reset, interrupt, quit and speed and no open-disk, it is built here with
+`$UNC_VMAC_HOME`. Mini vMac's X11 build accepts a disk at runtime only by a
+drop: its control mode has no open-disk, it is built here with
 `NeedRequestInsertDisk 0`, and `ParseOneUri` in `src/OSGLUXWN.c` turns a
-dropped `file:` URI into `Sony_Insert1a`. This display has no window manager
-and no file manager, so there was nothing to drag from until this.
+dropped `file:` URI into `Sony_Insert1a`.
 
     cc -o xdnd_insert tools/vmac/xdnd_insert.c -lX11
     DISPLAY=:<n> ./xdnd_insert /path/to/disk.dsk
 
 It finds the emulator window by its `XdndAware` property and exits nonzero if
-there is none or the target never asks for the file list — a silent success
-would be indistinguishable from a Mac that ignored the disk.
+there is none or the target never asks for the file list.
 
-**Fetching the disk-inserted event is what MOUNTS the disk.** A version of the
-application that left the queue alone and polled the volume list instead never
-saw a volume appear at all. So "did the disk mount" is not a question the
-harness can answer by waiting; something has to read the event.
+**Fetching the disk-inserted event is what MOUNTS the disk**: an application
+that polled the volume list instead never saw a volume appear.
 
-**`Mac.settle` answers "the screen stopped changing", which is not "the
-extraction finished".** The progress dialog repaints once per engine callback
-— every 8–16 KB of *input* — so on a slow decode two polls land inside one gap
-and a running extraction reads as a finished one. Every settle that waits for
-an extraction therefore passes `quiet=EXTRACT_QUIET`, a number of SECONDS the
-screen must hold still, and it has to exceed the worst repaint gap rather than
-the poll interval. Without it `--dest` returned at 33%, read a half-written
-floppy, and reported the application had sent the output to the wrong volume.
+**`Mac.settle` answers "the screen stopped changing", not "the extraction
+finished".** The progress dialog repaints once per engine callback (every
+8–16 KB of input), so every settle that waits for an extraction passes
+`quiet=EXTRACT_QUIET`, SECONDS the screen must hold still, longer than the
+worst repaint gap (`--dest` once returned at 33 %).
 
 **Re-measure `PROGRESS_CANCEL` in `interactive.py` whenever the dialog changes
-shape.** It is a hard-coded screen coordinate, so a moved button does not make
-the step fail — the click lands on dialog background, the extraction finishes
-normally, and `3-cancelled.png` is written anyway, showing the progress dialog
-instead of the alert. That happened on 2026-08-07 when the DLOG grew 30 points
-taller. The constant's comment derives it from the DLOG origin plus the DITL
-rect; **check the screenshot actually shows the alert.**
+shape.** A moved button makes the click land on the dialog background, the
+extraction finish, and `3-cancelled.png` show the progress dialog instead of
+the alert. The constant's comment derives it from the DLOG origin plus the
+DITL rect; **check the screenshot shows the alert.**
 
 ## The AppleLink package expander — getting it out, with no emulator
 
-Added 2026-10-05. The reference implementation for `.pkg` is
-`AppleLink Package Translator` 3.0.3, which ships **only** in the StuffIt
-Deluxe **3.0.7** installer — 3.5 replaced it with a `CompactPro` build
-(FORMATS.md, *AppleLink packages*). Getting it needs no boot: the installer
-is two StuffIt segments, and the join is arithmetic rather than guesswork.
+The reference implementation for `.pkg` is `AppleLink Package Translator`
+3.0.3, which ships **only** in the StuffIt Deluxe **3.0.7** installer (3.5
+replaced it; FORMATS.md, *AppleLink packages*). The installer is two StuffIt
+segments, and the join is arithmetic:
 
 ```sh
 # The 3.0.7 installer, two floppies `hmount` opens, in
@@ -4665,38 +3208,31 @@ build/rel/macextract x --only "Aladdin/Translators/AppleLink Package Translator"
 ```
 
 Then pull `'Othe' 1` out of the resource fork with `spacesaver.resources()`
-and write it to `$UNC_VMAC_HOME/pkgeng/alink307.bin`, which is where
+and write it to `$UNC_VMAC_HOME/pkgeng/alink307.bin`, where
 `tools/derive_sqp.py --witness` looks for it.
 
-**Three things to know.**
-
-- **`unar` cannot open the joined archive's translators usefully, and this
-  engine can.** `lsar` lists the members but the `.rsrc` sidecars it writes
-  are not raw resource forks — every one of them starts with the same
-  16 bytes — so `resources()` cannot parse them. `macextract x` writes the
-  fork and its CRCs pass.
-- **Neither tool recognises a StuffIt SEGMENT** (`ac d9 00 01`). `--part`
-  is for a different segmentation; `macextract l seg1.data` says *format
-  not recognized*. That is why the join is done by hand above, and the
-  check that it is right is the `assert` above: `len(a)-100 + len(b)-100`
-  equals the `0x14dd14` at offset 0x6a of segment 1 to the byte.
-- **The 148 MacsBug symbols are the whole reason this is readable.** A
-  symbol FOLLOWS the routine it names, so a name at offset X names the
-  routine ENDING at X — `tools/derive_sqp.py` documents the routines by
-  the address of their body, not of their name. `spacesaver.macsbug_symbols()`
-  returns the name offsets; mapping them to bodies is one loop and getting
-  it backwards shifts every citation by one routine.
+- **`unar` cannot open the joined archive's translators usefully**: `lsar`
+  lists the members but its `.rsrc` sidecars all start with the same 16 bytes
+  and are not raw resource forks. `macextract x` writes the fork and its CRCs
+  pass.
+- **The hand join**: the check is the `assert` — `len(a)-100 + len(b)-100`
+  equals the `0x14dd14` at offset 0x6a of segment 1, to the byte. (`macextract
+  l seg1.data` once said *format not recognized*; whether today's segment
+  support joins these two directly was not re-tested.)
+- **The 148 MacsBug symbols are what make this readable.** A symbol FOLLOWS
+  the routine it names, so a name at offset X names the routine ENDING at X;
+  `tools/derive_sqp.py` cites routines by the address of their body.
+  `spacesaver.macsbug_symbols()` returns the name offsets; mapping them
+  backwards shifts every citation by one routine.
 
 ## Asking StuffIt Expander 4.0.2 about one rule — three runs
 
 `src/fmt_binhex.c`'s last macutils citation is the skip of a LINE with
-intermediate garbage, and Expander 4.0.2 was one of three readers
-OPEN_ITEMS.md named and nobody had asked. It cannot be asked statically
-— it carries the alphabet twice (`DATA` 0, `Eng ` 0) and no inverse
-table, so its reading is built at run time — so it was asked by running
-it, with `expander.py --only expander` over three files built from
-`fixtures/mac-rot13.hqx` (which is John Stiles's own posting of
-MacROT13, and he wrote HQXer):
+intermediate garbage. Expander 4.0.2 carries the alphabet twice (`DATA` 0,
+`Eng ` 0) and no inverse table, so it was asked by running it, with
+`expander.py --only expander` over three files built from
+`fixtures/mac-rot13.hqx` (John Stiles's own posting of MacROT13; he wrote
+HQXer):
 
 | subject | what it is | Expander wrote |
 |---|---|---|
@@ -4704,55 +3240,46 @@ MacROT13, and he wrote HQXer):
 | `garbage.hqx` | one line of mail inserted mid-data | the same two: the `.cpt` is **3,309 B and md5-identical to this engine's**, and `MacROT13` is the 5,594 B application |
 | `midline.hqx` | **one bad character inserted INSIDE a data line** | `MacROT13.cpt` at **0 bytes**, and no `MacROT13` |
 
-**The third file is the whole experiment and the first two are its
-controls.** A reader that skips a bad LINE and one that skips a bad
-CHARACTER both sail through `garbage.hqx`; only a line test loses the
-other 64 characters of a line that holds one bad one. Expander wrote
-nothing at all for it — so it is not macutils' rule, and `fmt_binhex.c`
-keeps the citation (`tools/derive_hqxgarbage.py` has the other two
-readers, which need no emulator).
+**The third file is the experiment and the first two its controls**: only a
+line test loses the other 64 characters of a line holding one bad one, and
+Expander wrote nothing — so it is not macutils' rule, and `fmt_binhex.c`
+keeps the citation (`tools/derive_hqxgarbage.py` has the other two readers,
+no emulator).
 
-**Reading the bytes needs `--keep`,** because this harness grades a run
-on the NAMES it produced and says so in its own docstring — *"Whether
-Expander's output is correct"* is in its *What it cannot see*. A name
-is exactly what cannot tell a zero-byte file from a good one, and this
-question is decided by the size:
+**Reading the bytes needs `--keep`**, because this harness grades a run on
+the NAMES it produced, which cannot tell a zero-byte file from a good one:
 
     tools/vmac/expander.py --only expander --keep <dir> -o <shots> x.hqx
     hmount <dir>/boot.hfv && hdir -a && hcopy -r ":MacROT13.cpt" out.cpt
 
-**What this cannot see.** Why Expander stopped. The run puts up no
-alert — `expander-3-finished.png` is the bare desktop — and a file that
-was created from the BinHex header and then left empty is consistent
-with "aborted at the bad character" and with "decoded to a buffer and
-refused to commit it". Both are a line test's opposite, which is all
-the question needed; neither is evidence of the other.
+**What this cannot see.** Why Expander stopped: no alert
+(`expander-3-finished.png` is the bare desktop), and an empty file created
+from the BinHex header fits both "aborted at the bad character" and "decoded
+to a buffer and refused to commit". Both are a line test's opposite, which is
+all the question needed.
 
 ## StuffIt Expander 4.0.2 over 2.0.1's archives — `exp402opt.py`
 
     tools/vmac/exp402opt.py -o <shots> --keep            # every subject
     tools/vmac/exp402opt.py -o <shots> DES MimePartial   # some
 
-This is `expander.py`'s machine (System 6.0.8, Expander launched at boot)
-with nothing timed, so it runs on `mv-4M`. It boots once per subject.
-Subjects:
+`expander.py`'s machine (System 6.0.8, Expander launched at boot) with nothing
+timed, so it runs on `mv-4M`, one boot per subject:
 
 - one 2.0.1 archive per Optimizer and per cipher;
 - Compact Pro's own encrypted archive (`CptCrypt`);
 - `compat9.py`'s three text subjects, the mpack set going onto the
   volume whole.
 
-Each run selects the subject by name and presses Expand. When the subject
-has a password it types it, presses Return once for whatever alert is up,
-quits, and reads every new file off the image with `hcopy -m`. Results:
-FORMATS.md, *Run over the hard cases*.
+Each run selects the subject by name and presses Expand; with a password it
+types it, presses Return once for whatever alert is up, quits, and reads every
+new file off the image with `hcopy -m`. Results: FORMATS.md, *Run over the
+hard cases*.
 
-**Look at `-3-after-expand`, `-3b-typed` and `-3c-after-password`
-together.** A refusal and a password typed into nothing leave the same
-empty volume, and only the frames tell them apart: all five ciphers here
-show the prompt, then the masked password, then the refusal.
+**Look at `-3-after-expand`, `-3b-typed` and `-3c-after-password` together.**
+A refusal and a password typed into nothing leave the same empty volume; all
+five ciphers here show the prompt, the masked password, then the refusal.
 
-**What it cannot see.** The alert TEXT, which is read off the frames.
-4.0.2 with DropStuff with Expander Enhancer, which this machine does not
-have installed. And a wrong password, which it never types.
-
+**What it cannot see.** The alert TEXT, which is read off the frames. 4.0.2
+with DropStuff with Expander Enhancer, which this machine does not have
+installed. And a wrong password, which it never types.

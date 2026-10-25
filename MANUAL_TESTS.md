@@ -44,8 +44,8 @@ is least trustworthy. Do these first. The LC 475 cannot stand in: a
 68020-and-up CPU performs the misaligned accesses a 68000 bombs on.
 
 - [ ] **Free heap at launch.** Compare `FreeMem()` with the emulated 1 MB
-      System 6.0.8 machine's **655,100 B** (budget 634,620 B after the
-      20 KB reserve; FORMATS.md, *Budget*). The emulated figure has no
+      System 6.0.8 machine's **650,976 B** (budget 630,496 B after the
+      20 KB reserve, 2026-10-22; FORMATS.md, *Budget*). The emulated figure has no
       INITs; every 1 MB number in FORMATS.md derives from it.
 - [ ] **What the Toolbox takes at the engine's peak.** The reserve is a
       flat 20 KB (`kMemReserveMin`/`Max`, `mac/macextract_mac.c`); under
@@ -93,7 +93,6 @@ with types, creators and dates, the destination dialog, other volumes
 through Desktop, `/` in names, `~1` on a second run, a desk accessory over
 the progress window, Cmd-. on a U.S. layout and on AZERTY (BLOCKERS.md, *Status*).
 
-
 ## 5. Things the Toolbox promises
 
 - [ ] **`SFReply.vRefNum`** is a working-directory reference passed with
@@ -136,11 +135,9 @@ withdrawn claim, filed with what it cost.
 
 ## 8. A release
 
-`v0.40.0` (2026-10-11) is the newest tag, and `main` has moved past it in
-`mac/` and `src/`; both builds report `0.40.0`, and only size and date tell
-the downloads apart. Whether to cut a release is the maintainer's call
-(CLAUDE.md, *Cutting a release*); the release page is visible only from
-outside this machine.
+`v0.44.0` (2026-10-25) is the newest tag and is `main`'s `dist/`; the API
+lists its three assets. Whether to cut the next is the maintainer's call
+(CLAUDE.md, *Cutting a release*). Nothing is left in this section.
 
 ## 9. The 1.44 MB image, written with a USB floppy drive
 

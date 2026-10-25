@@ -1,10 +1,9 @@
 # PROGRESS.md — milestone status
 
-Every milestone is **DONE** and nothing is in flight. One line each: what it
-delivered, and where the detail lives. Numbers are in FORMATS.md, reasoning in
-DECISIONS.md, how a suite runs in TESTING.md, what is still missing in
-OPEN_ITEMS.md. A row is one sentence and a citation; a row that starts
-explaining itself belongs in DECISIONS.md instead.
+Every milestone is **DONE** and nothing is in flight; the current release is
+v0.44.0. One line each: what it delivered, and where the detail lives. Numbers
+are in FORMATS.md, reasoning in DECISIONS.md, how a suite runs in TESTING.md,
+what is still missing in OPEN_ITEMS.md. A row is one sentence and a citation.
 
 **The suite is 980 fixtures**, byte-exact against `unar` and, where `unar`
 fails, `macunpack`; 9,800 robustness variants clean. The Macintosh tiers and
@@ -14,73 +13,73 @@ their tallies are BLOCKERS.md's (*Status*); per-tier tables are FORMATS.md's.
 |---|---|---|
 | M0 scaffold | Build matrix (ASan/UBSan/alignment, `-m32`, release `-Werror`), the unit, differential and robustness harnesses, corpus and manifest tooling | TESTING.md |
 | M1 MacBinary, AppleSingle/Double | Data fork, resource fork, type and creator | FORMATS.md |
-| M2 BinHex 4 | Header and per-fork CRCs enforced, mail-wrapped banners, several documents in one file and one document posted in several parts | FORMATS.md, DECISIONS.md 2026-08-15 |
+| M2 BinHex 4 | Per-fork CRCs enforced, mail-wrapped banners, several documents per file and one document in several parts | DECISIONS.md 2026-08-15 |
 | M3 PackIt | Stored and Huffman; encrypted PMa5/PMa6 reported and resynced | DECISIONS.md M3 |
 | M4 Compact Pro | RLE, LZH+RLE, nested folders, index-CRC probe | FORMATS.md |
-| M5/M6 StuffIt classic | Methods 0/1/2/3/5/6/8/13, per-fork CRC-16 | FORMATS.md, BLOCKERS.md |
-| M7 StuffIt 5 + Arsenic | BWT+MTF+RLE+arithmetic with an internal CRC-32, and the sampled inverse BWT that puts StuffIt 5 inside the 1 MB floor | FORMATS.md, DECISIONS.md 2026-08-07 |
-| M8 zip, gzip, tar, `.Z` | zlib 1.3.1 vendored, inflate only; PKZIP 1.x declined per entry (until M63–M65) | FORMATS.md |
-| M9 CLI polish | Envelope auto-unwrap and `-nr`, budget sweep, 4,000-case fuzz, detect-only probes, `--forks hidden`, refusal to overwrite an existing output file | TESTING.md |
-| M10 Retro68 Mac app | The application, extracting byte-exact on System 6.0.8, System 7.0.1 and Mac OS 9.2, with the interactive UI driven end to end on System 6 | BLOCKERS.md, `tools/vmac/README.md` |
-| M11 Multi-segment | Four join schemes — StuffIt and Compact Pro segments, spanned zip, `.NNN` splits — plus parts inside per-part envelopes, on both hosts | DECISIONS.md 2026-08-09→14, FORMATS.md |
-| M12 DiskDoubler + Now Compress | DiskDoubler's three containers and methods 0/6/8/9/10; Now Compress's five stream shapes | FORMATS.md, DECISIONS.md 2026-08-15 |
-| M13 ARC + uuencode | ARC methods 1–9 and ArcMac's two-fork payload; uuencode plain, UUTool's two-fork shape, and multipart postings | FORMATS.md, DECISIONS.md M13 |
-| M14 Alysis SuperDisk! | Container, block chain and methods 1–9 and 11, read out of the archives' own self-extractors | FORMATS.md, DECISIONS.md (*SuperDisk!, read out of SuperDisk!*) |
-| M15 DiskDoubler 1 + 7 | Methods 1 (Unix compress) and 7 (Stac LZS), graded against forks DiskDoubler itself wrote | FORMATS.md, DECISIONS.md 2026-08-20 |
-| M16 DiskDoubler Pro | The headerless `DDA2` entry, and `SPLT` — the fifth segmented scheme; 456 forks graded against a CC0 corpus's published originals | DECISIONS.md 2026-08-21, FORMATS.md |
-| M17 The DiskDoubler corpus in `ci.sh` | That corpus becomes 115 fixtures with a pinned URL and a manifest each, so `run_diff.py` grades all of it | DECISIONS.md 2026-08-21, TESTING.md |
-| M18 The Symantec release | DiskDoubler 4.0 and Norton DiskDoubler Pro 1.1 run; what selects the headerless record, and the two date fields, measured | DECISIONS.md 2026-08-21 (the Symantec release), FORMATS.md |
-| M19 DiskDoubler method 2 | Salient's own 3.1.2 floppy: the only method 2 fork found anywhere, and method 7 forks longer than one chunk | DECISIONS.md 2026-08-21 (the Salient disk), FORMATS.md |
-| M20 The last three methods | DiskDoubler methods 3, 4 and 5 — every method the format has — graded by writing forks Salient's own expander reads back | DECISIONS.md 2026-08-21 (methods 3, 4 and 5), FORMATS.md |
-| M21 The forks nobody could grade | The 8 resource forks carried as "not ground truth" since M12, adjudicated; XADMaster's DDn off-by-one reduced to a 1,166-byte repro | DECISIONS.md 2026-08-22, `tools/xadmaster-ddn-repro/` |
-| M22 SuperDisk!'s other container | The single-file container, derived by making five specimens with Alysis's own 1991 control panel | DECISIONS.md 2026-08-22 (later still), FORMATS.md |
-| M23 The settings sweep | The same bytes compressed once per control-panel setting, which found method 6 broken | DECISIONS.md 2026-08-22 (last), FORMATS.md |
-| M24 StuffIt SpaceSaver | The 84-byte container and methods 0 and 4, read out of Aladdin's own engine; the 9,679-byte preset dictionary ships | DECISIONS.md 2026-08-22 (the layout), FORMATS.md |
-| M25 Decryption | Eight ciphers across six formats as one filter on the shared reader; the Mac application asks when an entry turns out to need a password | FORMATS.md (*Encryption*), DECISIONS.md 2026-08-23 (decryption) |
-| M26 btoa/atob | Both framings, graded against btoa 5.2.1 itself as encoder and reference | FORMATS.md (*btoa*), TESTING.md |
-| M27 Compact Pro comments | The archive Note saved rather than dropped, on both hosts | DECISIONS.md 2026-08-23 (Compact Pro comments), FORMATS.md |
-| M28 LZH / LHA | Every method the format has except PMarc, all four header levels, and MacLHA's MacBinary payload split back into two forks | FORMATS.md (*LZH / LHA*), DECISIONS.md 2026-08-23 (LZH) |
-| M29 The performance pass | Seven measured optimisations, two proposals killed by the measurement; 1,898 s → 1,384 s on a 7 MHz Mac Plus | DECISIONS.md 2026-08-24, FORMATS.md (*Decode cost*) |
-| M30 The rest of the performance plan | Five more, three further claims killed; `PLANNED_WORK.md` closed and deleted | DECISIONS.md 2026-08-24 (PLANNED_WORK.md, closed), FORMATS.md |
-| M31 An icon | The whole icon family generated, bound, and photographed drawn by a real Finder | DECISIONS.md 2026-08-24 (the icon), `tools/icon/` |
-| M32 A second implementation for SuperDisk! | Disk Expander's `Cmpr` Add-In Modules run under `qemu-m68k`, giving every method a second reader; method 10 implemented on the strength of it | DECISIONS.md 2026-08-25, `tools/sdmodule/` |
-| M33 ARC 0x0a and 0x0b | Crushed and Distilled — PAK's, not PKARC's — graded by PAK 2.51 under DOSBox; deark replaces `unar` as the oracle for Distilled | DECISIONS.md 2026-08-25 (ARC 0x0a and 0x0b), FORMATS.md (*ARC*) |
-| M34 ARC 7.x's Trimmed | The other method 0x0a, and the ARC 7 container read at all for the first time | DECISIONS.md 2026-08-25 (ARC 7.x Trimmed), FORMATS.md (*ARC*) |
-| M35 SpaceSaver's codecs | The `CMod` modules' compressors run under `qemu-m68k`, and all three declined methods land: every method the format has now decodes | DECISIONS.md 2026-08-25 (SpaceSaver's codecs), `tools/ssmodule/` |
-| M36 base64 and MIME | `multipart/appledouble` as one file with both forks, plus bare base64, sharutils' framing, nested multiparts and quoted-printable | FORMATS.md (*base64 and MIME*), DECISIONS.md 2026-08-26 |
-| M37 Disk images, named | Volume-shaped probes (HFS, HFS+/HFSX, Apple Partition Map, ISO 9660) — retired the same day by M38 | DECISIONS.md 2026-08-26 (disk images), `attic/` |
-| M38 Named archives, retired disk images | Nine PC-side formats named by `unc_sniff` and never extracted, with the Mac shell saying the name (the naming withdrawn by M71); the disk-image probes retired to `attic/` whole | DECISIONS.md 2026-08-26 (a name is only worth something…), 2026-10-18 (*the formats it only named*) |
-| M39 Selective extraction (CLI) | `--only NAME` on `l`, `x` and `t`, and the listing, extracting and skipping walks held against each other over the whole corpus | TESTING.md (*Selective extraction*, *The three walks agree*), DECISIONS.md 2026-08-28 (`--only`) |
-| M40 The yardstick | StuffIt Expander 4.0.2 timed on the same emulated Mac Plus over the same archives — the first external speed comparison | FORMATS.md (*Timed on the same Mac Plus*), DECISIONS.md 2026-08-29, `tools/vmac/README.md` |
-| M41 The end-of-run report | The Mac application lists what it renamed and what failed, with **Save as Text**; HFS name truncation and `~99` collision numbering | FORMATS.md (*Name limits*), DECISIONS.md 2026-08-29 (the end-of-run report), TESTING.md (*The Macintosh shell's names*) |
-| M42 A cut archive is not a complete one | Every walk tells "the archive ended" from "the bytes ran out", graded against `unar` by `run_truncation.py` | BLOCKERS.md (*9,320 robustness variants clean*), DECISIONS.md 2026-08-29 (a cut archive), TESTING.md (*A cut archive is NOTICED*) |
-| M43 The two MIME gaps | A multipart's uuencoded part no longer hides the rest; `message/partial` becomes the sixth join scheme, graded against munpack | FORMATS.md (*base64 and MIME*, *Segmented archives*), DECISIONS.md 2026-08-29 (a part that hid its message; a message in several files) |
-| M44 Level with the yardstick | `UNC_AT_TIMING` split a run on the Mac (98.5 % engine) and `UNC_HOT` puts six functions at `-O3`: 70.4 s → 52.6 s for +1,024 B | FORMATS.md (*What -O3 is worth, and where*), DECISIONS.md 2026-08-30 (the flag that was never measured on these files), BLOCKERS.md (*Withdrawn claims*) |
-| M45 System 3.0 tier | The same binary on System 3.0 / Finder 5.1 at 4 MB and 1 MB with no source change, and 512 KB machines measured | FORMATS.md (*System 3.0 tier*, *512 KB machines*), DECISIONS.md 2026-08-30 (the shell name System 3.0 does not read; 512 KB, and the machine that cannot be reached), `tools/vmac/sys30.py` |
-| M46 Two constants, and a message that lied | The stack priced (5,200 B) and `kStackBump` cut, returning 44 KB to every 1 MB extraction; a successful extraction stopped reporting a memory failure | FORMATS.md (*Stack*, *Budget*), DECISIONS.md 2026-08-31 (two constants; the message that failed a successful extraction), TESTING.md |
-| M47 The medium, not the machine | A true Macintosh 512K (64 KB ROM) boots System 3.0 off an MFS volume; the application needs HFS there | FORMATS.md (*A true Macintosh 512K*), DECISIONS.md 2026-08-31 (the medium, not the machine), BLOCKERS.md (*Withdrawn claims*) |
-| M48 Two byte reads (branch `rom64k`) | The application starts on a 64K-ROM Macintosh at 0 B of budget; on `main` since 2026-10-16 as `GrowApplZone`, one path for every ROM | DECISIONS.md 2026-10-15 (the purge MaxApplZone never did), `BRANCH_NOTES.md` on `rom64k`, FORMATS.md (*A true Macintosh 512K*), DECISIONS.md 2026-09-01 (two byte reads), MANUAL_TESTS.md §6 |
-| M49 The machine that is too small | A Macintosh 128K bombs `ID = 03`, and `tools/vmac/memtest` names the heap wall | FORMATS.md (*A Macintosh 128K*), DECISIONS.md 2026-09-01 (the machine that is too small), BLOCKERS.md (*Withdrawn claims*), `tools/vmac/memtest` |
-| M50 A folder is a name too | Two folders whose names agree for 31 characters become two folders on disk, the second numbered `~1` | FORMATS.md (*Name limits*), DECISIONS.md 2026-09-03 (a folder is a name too), BLOCKERS.md (*Withdrawn claims*), TESTING.md (*The Macintosh shell's names*) |
-| M51 The field nobody assigned | The Mac OS 9 bomb on DiskDoubler and SuperDisk! was an `UncOptions` field the shell never assigned; Mac OS 9.2 21/21 | DECISIONS.md 2026-09-04 (the field nobody assigned), BLOCKERS.md (*Withdrawn claims*), FORMATS.md (*Mac OS 9.2*), `tools/longname-repro/` |
-| M52 DART | **Removed 2026-09-25** with the format, which is out of scope again (OPEN_ITEMS.md, *Out by the brief*) | DECISIONS.md 2026-09-25 (*the disk images that found another home*), and 2026-09-09 for what it was |
-| M53 The overlays become the build | Decoders and ciphers ship as `'OVLY'` images released once the format is known: resident `CODE` 151,588 → 53,332 B and 82–105 KB more heap at 1 MB | FORMATS.md (*Overlays*), DECISIONS.md 2026-09-25 (two branches that were one file apart; the flush nobody wrote), TESTING.md (*The three Macintosh configurations*), OPEN_ITEMS.md (*The overlay loader*) |
-| M54 The specimens that were downloadable | 48 files SpaceSaver wrote and two real AppleLink packages, found by searching an index of file magic | DECISIONS.md 2026-09-26 (*the magic in somebody else's index*), FORMATS.md (*StuffIt SpaceSaver*, *AppleLink packages*), BLOCKERS.md (*Withdrawn claims*), TESTING.md |
-| M55 StuffIt 5's method 14 | All 258 entries of StuffIt 7.0.3's installer extract where 80 refused, with `tools/synth_sit14.py` as the committed encoder | FORMATS.md (*StuffIt 5's method 14*), DECISIONS.md 2026-10-03 (method 14), TESTING.md (*StuffIt method 14*), NOTICE |
-| M56 AppleLink `.pkg` | SqueezePlay packages extract through the unchanged `src/unc_lzw.c`, with `gzip` as a second implementation; run on an emulated Mac Plus | FORMATS.md (*AppleLink packages: SqueezePlay*), DECISIONS.md 2026-10-05 (*the deviation that was the reference*), TESTING.md, BLOCKERS.md (*Withdrawn claims*) |
-| M57 The scan that was already being paid for | A zip behind a self-extractor is recognised by the end-of-directory scan the sniffer already ran, at +0 reads on non-archives | DECISIONS.md 2026-10-05 (*the scan that was already being paid for*), FORMATS.md (*What the zip pair claims, and what it costs*), BLOCKERS.md (*Withdrawn claims*), TESTING.md |
-| M58 The specimens that were filed as unobtainable | Four *"no specimen in reach"* claims re-tested and three withdrawn: six AppleLink packages, DiskDoubler's `0xfff0`, two `Text 1` StuffIt archives | DECISIONS.md 2026-10-06 (four entries), FORMATS.md, BLOCKERS.md (*Withdrawn claims*), OPEN_ITEMS.md, `tools/scan_discmaster.py` |
-| M59 The reference implementation that was the fixture's payload | PackIt's ciphers and resync graded against Packit III 1.3's own routines run under `qemu-m68k`; uuencode's line-ending rule moved to deark | DECISIONS.md 2026-10-05 (*the reference implementation was the fixture's payload*, *the negative that was about one rule*), FORMATS.md (*PackIt's two ciphers*), TESTING.md (*Decryption*), NOTICE, OPEN_ITEMS.md |
-| M60 The encoder that was the reference | The MU layout cited to UUTool itself, and UUTool's default alphabet read for the first time | DECISIONS.md 2026-10-06 (*the alphabet nothing here had seen*), FORMATS.md (*uuencode: three alphabets*), TESTING.md (*ARC and uuencode*), BLOCKERS.md, NOTICE, OPEN_ITEMS.md |
-| M61 The decoder whose author wrote the definition | BinHex's second-document scan cited to DeHQX 2.0.1, which also fixed a posting cut at a `---` separator | DECISIONS.md 2026-10-06 (*the separator that was in the alphabet*), FORMATS.md (*BinHex: multipart, in both directions*), TESTING.md (*Multipart postings*), BLOCKERS.md, NOTICE, OPEN_ITEMS.md |
-| M62 The last rule that was somebody else's | `src/fmt_binhex.c` owes macutils nothing: its last rule cited to StuffIt's own `HQXEngine`; no behaviour changed | DECISIONS.md 2026-10-07 (*the engine four layers down*), TESTING.md (*derive_hqxgarbage.py*), BLOCKERS.md, NOTICE, OPEN_ITEMS.md |
-| M63 The method that was out for a premise with no halves left | Zip Implode (method 6) and ZipIt's `0x2605` FileName, with `tools/synth_implode.py` as the encoder; +0 shipped | FORMATS.md (*Implode*), DECISIONS.md 2026-10-07 (*the method that was out…*), TESTING.md, BLOCKERS.md, NOTICE, OPEN_ITEMS.md |
-| M64 The reading PKZIP 1.01 wrote and no specification states | PKZIP 1.01/1.02's Implode entries decode, the reading decided once per archive; `pkz101.exe` 13/13, +0 shipped | FORMATS.md (*The minimum match length PKZIP 1.01 and 1.02 used*), DECISIONS.md 2026-10-08 (*the second attempt that had nowhere to go*), TESTING.md, BLOCKERS.md, NOTICE |
-| M65 Shrink, the method a Macintosh wrote once | Zip Shrink (method 1) decodes, transcribed from deark; Reduce (methods 2–5) filed out of scope, until M67; +0 shipped | FORMATS.md (*Shrink*), DECISIONS.md 2026-10-08 (*the method a Macintosh wrote once*), OPEN_ITEMS.md Part 1, TESTING.md, NOTICE |
-| M66 Private File, graded by its own writer | Aladdin Private File decrypts and extracts, graded on three files PF Encrypt wrote under Mini vMac; +368 B resident | FORMATS.md (*Private File*), DECISIONS.md 2026-10-09 (*the specimen was one search away*), TESTING.md (*Private File*), tools/vmac/README.md (*Making a Private File*), NOTICE |
-| M67 Reduce comes in | Zip Reduce (methods 2–5) decodes, from APPNOTE.TXT 5.2 beside deark's `ozunreduce.h`: 2,371 of 2,379 wild entries match their stored CRC-32 and deark fails the other 8 too; Shrink and Reduce share a sixteenth image only zip keeps, +80 B resident | FORMATS.md (*Reduce*), DECISIONS.md 2026-10-11 (*Reduce comes in*), TESTING.md, BLOCKERS.md (*Withdrawn claims*), NOTICE |
-| M68 The BinHex before 4.0 | `.hex` and `.hcx` extract, transcribed from hexbin and graded on four files BinHex 2.0 itself wrote under Mini vMac and three from 1985; an envelope's same-named layer no longer deleted by the CLI; +352 B resident | FORMATS.md, DECISIONS.md 2026-10-14 (*the BinHex before 4.0*, *the layer that had its envelope's name*), OPEN_ITEMS.md, TESTING.md, NOTICE |
-| M69 The metadata, carried to the disk | Finder info and extended Finder info whole, the backup date, the lock and the Get Info comment from engine to disk, a folder's date kept across what is written in it; AppleSingle and AppleLink deliver them; 18/18 read back off the disk on Systems 3.0 and 6.0.8, 17/18 on 7.0.1; an icon's position survives the Finder; +864 B resident | DECISIONS.md 2026-10-17 (*the metadata, carried to the disk*, *the bit that kept the position*), FORMATS.md (*What keeping a folder's date costs*), TESTING.md (*The Finder metadata beyond type, creator and flags*), tools/vmac/README.md, OPEN_ITEMS.md |
-| M70 Every reader's own Finder info | MacBinary, AppleSingle, MIME and uuencode deliver every field their standards hold; StuffIt classic and DiskDoubler exactly what their own expanders restore (6,627 fields over 241 archives against Expander 4.0.2); PackIt, StuffIt 5, Now Compress, SuperDisk!, Private File, ArcMac, zip, tar, gzip and LZH their Finder info, dates, lock and comment; Mac OS X's `__MACOSX` and `._` sidecars put back on their files, and their Spotlight comment as UTF-8 the shell folds into MacRoman; dates that are instants written in the Mac's own zone where it has one; graded by `tools/run_meta.py`; +1,008 B resident (shipped CODE + A5, 75,344 → 76,352), every shipped tally unchanged | DECISIONS.md 2026-10-17 (*the window StuffIt kept in the name*, *the envelopes' own Finder info*, *the window Expander puts back*, *the archives' own Finder info*, *the sidecars Mac OS X left beside the file*, *dates in the Macintosh's own zone*), 2026-10-18 (*the comment Spotlight kept*), FORMATS.md (*Finder info in the archive*), OPEN_ITEMS.md |
-| M71 Nothing named that is not extracted | StuffIt X and the fifteen PC-side and modern formats `unc_sniff` named are `UNC_FORMAT_UNKNOWN`, the CLI's "recognized as X" path and `src/fmt_foreign.c` gone, their enumerators reserved; `tools/run_foreign.py` holds every reader to 26 real or deark-graded specimens sniffing as unknown and writing nothing; −2,032 B resident (shipped CODE + A5, 76,352 → 74,320), every shipped tally unchanged | DECISIONS.md 2026-10-18 (*the formats it only named*), FORMATS.md (*Archives this engine does not have*), TESTING.md, OPEN_ITEMS.md |
-| M72 The format before BinHex | SUMacC's `.dl` extracts through the `.hex`/`.hcx` driver, byte-exact against hexbin and SUMacC's own `fromhex` on the one wild file, which its writer `tohex` reproduces, and on the Macintosh on System 3.0 and 6.0.8; +32 B resident | DECISIONS.md 2026-10-24 (*the format before BinHex*), 2026-10-25 (*the writer that was in 4.3BSD*), FORMATS.md, TESTING.md, NOTICE |
+| M5/M6 StuffIt classic | Methods 0/1/2/3/5/6/8/13, per-fork CRC-16 | FORMATS.md |
+| M7 StuffIt 5 + Arsenic | BWT+MTF+RLE+arithmetic, with the sampled inverse BWT that fits the 1 MB floor | DECISIONS.md 2026-08-07 |
+| M8 zip, gzip, tar, `.Z` | zlib 1.3.1 vendored, inflate only | FORMATS.md |
+| M9 CLI polish | Envelope auto-unwrap, budget sweep, 4,000-case fuzz, detect-only probes, `--forks hidden`, no overwriting an existing file | TESTING.md |
+| M10 Retro68 Mac app | The application, byte-exact on System 6.0.8, 7.0.1 and Mac OS 9.2, UI driven end to end on System 6 | BLOCKERS.md, `tools/vmac/README.md` |
+| M11 Multi-segment | StuffIt and Compact Pro segments, spanned zip, `.NNN` splits, parts inside per-part envelopes | DECISIONS.md 2026-08-09→14 |
+| M12 DiskDoubler + Now Compress | DiskDoubler's three containers and methods 0/6/8/9/10; Now Compress's five stream shapes | DECISIONS.md 2026-08-15 |
+| M13 ARC + uuencode | ARC methods 1–9 and ArcMac's two forks; uuencode plain, UUTool's two-fork shape, multipart postings | DECISIONS.md M13 |
+| M14 Alysis SuperDisk! | Container, block chain, methods 1–9 and 11, read out of its own self-extractors | DECISIONS.md (*SuperDisk!, read out of SuperDisk!*) |
+| M15 DiskDoubler 1 + 7 | Methods 1 (Unix compress) and 7 (Stac LZS), graded against DiskDoubler's own forks | DECISIONS.md 2026-08-20 |
+| M16 DiskDoubler Pro | The headerless `DDA2` entry and `SPLT` segments; 456 forks graded against a CC0 corpus | DECISIONS.md 2026-08-21 |
+| M17 The DiskDoubler corpus in `ci.sh` | 115 fixtures with pinned URLs and manifests | DECISIONS.md 2026-08-21, TESTING.md |
+| M18 The Symantec release | DiskDoubler 4.0 and Norton DiskDoubler Pro 1.1 run; the headerless record and both date fields measured | DECISIONS.md 2026-08-21 (the Symantec release) |
+| M19 DiskDoubler method 2 | The only method 2 fork found, on Salient's own 3.1.2 floppy | DECISIONS.md 2026-08-21 (the Salient disk) |
+| M20 The last three methods | DiskDoubler methods 3, 4 and 5, graded by Salient's own expander | DECISIONS.md 2026-08-21 (methods 3, 4 and 5) |
+| M21 The forks nobody could grade | 8 ungraded resource forks adjudicated; XADMaster's DDn off-by-one reduced to a 1,166-byte repro | DECISIONS.md 2026-08-22, `tools/xadmaster-ddn-repro/` |
+| M22 SuperDisk!'s other container | The single-file container, from five specimens made with Alysis's 1991 control panel | DECISIONS.md 2026-08-22 (later still) |
+| M23 The settings sweep | One input compressed per control-panel setting; found method 6 broken | DECISIONS.md 2026-08-22 (last) |
+| M24 StuffIt SpaceSaver | The 84-byte container and methods 0 and 4, from Aladdin's own engine | DECISIONS.md 2026-08-22 (the layout) |
+| M25 Decryption | Eight ciphers across six formats as one filter; the Mac application asks for a password | FORMATS.md (*Encryption*), DECISIONS.md 2026-08-23 (decryption) |
+| M26 btoa/atob | Both framings, graded against btoa 5.2.1 | FORMATS.md (*btoa*) |
+| M27 Compact Pro comments | The archive Note saved, on both hosts | DECISIONS.md 2026-08-23 (Compact Pro comments) |
+| M28 LZH / LHA | Every method but PMarc, all four header levels, MacLHA's two forks | FORMATS.md (*LZH / LHA*) |
+| M29 The performance pass | Seven optimisations, two killed by measurement; 1,898 s → 1,384 s on a 7 MHz Mac Plus | DECISIONS.md 2026-08-24, FORMATS.md (*Decode cost*) |
+| M30 The rest of the performance plan | Five more, three claims killed | DECISIONS.md 2026-08-24 (PLANNED_WORK.md, closed) |
+| M31 An icon | The icon family, bound and drawn by a real Finder | DECISIONS.md 2026-08-24 (the icon), `tools/icon/` |
+| M32 A second SuperDisk! reader | Disk Expander's `Cmpr` modules under `qemu-m68k`; method 10 implemented on it | DECISIONS.md 2026-08-25, `tools/sdmodule/` |
+| M33 ARC 0x0a and 0x0b | PAK's Crushed and Distilled, graded by PAK 2.51 under DOSBox | DECISIONS.md 2026-08-25 (ARC 0x0a and 0x0b) |
+| M34 ARC 7.x's Trimmed | The other method 0x0a and the ARC 7 container | DECISIONS.md 2026-08-25 (ARC 7.x Trimmed) |
+| M35 SpaceSaver's codecs | The `CMod` compressors under `qemu-m68k`; every method decodes | DECISIONS.md 2026-08-25 (SpaceSaver's codecs), `tools/ssmodule/` |
+| M36 base64 and MIME | `multipart/appledouble`, bare base64, sharutils, nested multiparts, quoted-printable | FORMATS.md (*base64 and MIME*) |
+| M37 Disk images, named | Volume probes, retired the same day by M38 | DECISIONS.md 2026-08-26 (disk images), `attic/` |
+| M38 Named archives | Nine PC-side formats named and never extracted (withdrawn by M71); disk-image probes to `attic/` | DECISIONS.md 2026-10-18 (*the formats it only named*) |
+| M39 Selective extraction (CLI) | `--only NAME` on `l`, `x` and `t`, the three walks held against each other | TESTING.md (*Selective extraction*) |
+| M40 The yardstick | StuffIt Expander 4.0.2 timed on the same emulated Mac Plus | FORMATS.md (*Timed on the same Mac Plus*), DECISIONS.md 2026-08-29 |
+| M41 The end-of-run report | Renamed and failed entries listed, with **Save as Text** | FORMATS.md (*Name limits*), DECISIONS.md 2026-08-29 (the end-of-run report) |
+| M42 A cut archive is not a complete one | Every walk tells "the archive ended" from "the bytes ran out" | DECISIONS.md 2026-08-29 (a cut archive), TESTING.md (*A cut archive is NOTICED*) |
+| M43 The two MIME gaps | A multipart's uuencoded part no longer hides the rest; `message/partial` joins | FORMATS.md (*Segmented archives*) |
+| M44 Level with the yardstick | Six functions at `-O3`: 70.4 s → 52.6 s for +1,024 B | FORMATS.md (*What -O3 is worth, and where*) |
+| M45 System 3.0 tier | The same binary on System 3.0 at 4 MB and 1 MB; 512 KB measured | FORMATS.md (*System 3.0 tier*, *512 KB machines*), `tools/vmac/sys30.py` |
+| M46 Two constants | The stack priced (5,200 B), 44 KB back to every 1 MB extraction | FORMATS.md (*Stack*, *Budget*), DECISIONS.md 2026-08-31 (two constants) |
+| M47 The medium, not the machine | A Macintosh 512K boots System 3.0 off MFS; the application needs HFS | FORMATS.md (*A true Macintosh 512K*) |
+| M48 Two byte reads | Starts on a 64K-ROM Macintosh; on `main` since 2026-10-16 as `GrowApplZone` | DECISIONS.md 2026-10-15 (the purge MaxApplZone never did), MANUAL_TESTS.md §6 |
+| M49 The machine that is too small | A Macintosh 128K bombs `ID = 03`; `tools/vmac/memtest` names the heap wall | FORMATS.md (*A Macintosh 128K*) |
+| M50 A folder is a name too | Folders agreeing for 31 characters become two, the second `~1` | DECISIONS.md 2026-09-03 (a folder is a name too) |
+| M51 The field nobody assigned | The Mac OS 9 bomb was an unassigned `UncOptions` field; Mac OS 9.2 21/21 | DECISIONS.md 2026-09-04 (the field nobody assigned) |
+| M52 DART | **Removed 2026-09-25**, out of scope (OPEN_ITEMS.md, *Out by the brief*) | DECISIONS.md 2026-09-25 (*the disk images that found another home*) |
+| M53 The overlays become the build | Decoders ship as `'OVLY'` images: resident `CODE` 151,588 → 53,332 B | FORMATS.md (*Overlays*), DECISIONS.md 2026-09-25 (two branches that were one file apart) |
+| M54 The specimens that were downloadable | 48 SpaceSaver files and two AppleLink packages, found in an index of file magic | DECISIONS.md 2026-09-26 (*the magic in somebody else's index*) |
+| M55 StuffIt 5's method 14 | All 258 entries of StuffIt 7.0.3's installer; `tools/synth_sit14.py` encodes | DECISIONS.md 2026-10-03 (method 14) |
+| M56 AppleLink `.pkg` | SqueezePlay through the unchanged `src/unc_lzw.c`; run on an emulated Mac Plus | FORMATS.md (*AppleLink packages: SqueezePlay*) |
+| M57 The scan already paid for | A zip behind a self-extractor recognised at +0 reads on non-archives | DECISIONS.md 2026-10-05 (*the scan that was already being paid for*) |
+| M58 The specimens filed as unobtainable | Four "no specimen" claims re-tested, three withdrawn | DECISIONS.md 2026-10-06, `tools/scan_discmaster.py` |
+| M59 The reference that was the payload | PackIt's ciphers graded against Packit III 1.3 under `qemu-m68k` | DECISIONS.md 2026-10-05 (*the reference implementation was the fixture's payload*) |
+| M60 The encoder that was the reference | The MU layout cited to UUTool; its default alphabet read | DECISIONS.md 2026-10-06 (*the alphabet nothing here had seen*) |
+| M61 The decoder's author's definition | BinHex's second-document scan cited to DeHQX 2.0.1 | DECISIONS.md 2026-10-06 (*the separator that was in the alphabet*) |
+| M62 The last rule that was somebody else's | `src/fmt_binhex.c` owes macutils nothing; no behaviour changed | DECISIONS.md 2026-10-07 (*the engine four layers down*) |
+| M63 Implode | Zip method 6 and ZipIt's `0x2605`; `tools/synth_implode.py` encodes; +0 shipped | FORMATS.md (*Implode*) |
+| M64 PKZIP 1.01's reading | PKZIP 1.01/1.02's Implode entries, decided per archive; +0 shipped | DECISIONS.md 2026-10-08 (*the second attempt that had nowhere to go*) |
+| M65 Shrink | Zip method 1, transcribed from deark; +0 shipped | FORMATS.md (*Shrink*) |
+| M66 Private File | Graded on three files PF Encrypt wrote under Mini vMac; +368 B resident | FORMATS.md (*Private File*) |
+| M67 Reduce comes in | Zip methods 2–5; 2,371 of 2,379 wild entries match, deark fails the other 8; +80 B resident | FORMATS.md (*Reduce*), DECISIONS.md 2026-10-11 (*Reduce comes in*) |
+| M68 The BinHex before 4.0 | `.hex` and `.hcx`, graded on files BinHex 2.0 wrote; +352 B resident | DECISIONS.md 2026-10-14 (*the BinHex before 4.0*) |
+| M69 The metadata, carried to the disk | Finder info, backup date, lock and comment written to disk; 18/18 on Systems 3.0 and 6.0.8, 17/18 on 7.0.1; +864 B resident | DECISIONS.md 2026-10-17 (*the metadata, carried to the disk*) |
+| M70 Every reader's own Finder info | Each reader delivers what its format holds, StuffIt classic and DiskDoubler what their expanders restore; graded by `tools/run_meta.py`; +1,008 B resident | FORMATS.md (*Finder info in the archive*), DECISIONS.md 2026-10-17 (*the archives' own Finder info*) |
+| M71 Nothing named that is not extracted | Formats only named become `UNC_FORMAT_UNKNOWN`; `tools/run_foreign.py` holds 26 specimens to it; −2,032 B resident | DECISIONS.md 2026-10-18 (*the formats it only named*) |
+| M72 The format before BinHex | SUMacC's `.dl`, byte-exact against hexbin and SUMacC's `fromhex`; +32 B resident | DECISIONS.md 2026-10-24 (*the format before BinHex*) |
