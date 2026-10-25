@@ -1252,6 +1252,26 @@ every resource fork the Mac wrote agrees with ours only under the
 `vmac_check.py` mask (measured 2026-08-21; DECISIONS.md for why). Those forks
 stay `unadjudicated` with the mask noted in their reason.
 
+### DiskDoubler's own expander on a DDAR archive — `--ddar`
+
+    tools/vmac/diskdoubler.py --ddar fixtures/im2-DD3.7.7AuxFiles.dd
+
+DD Expand 3.7.7, Symantec's own expander, opens the archive under System 7
+and expands it; then every file and folder it wrote is held against ours,
+both forks (the resource header's reserved bytes masked, as above) and the
+Finder info from the catalog (`hfscat.py`) against `macextract l --meta`:
+a file's FInfo, a folder's DInfo and DXInfo whole. The one difference not
+counted is `inited` (0x0100), which DD Expand clears on what it expands.
+**9 of 9** on `im2-DD3.7.7AuxFiles.dd`, measured 2026-10-25, and 0 of 9
+with the CLI from before that day's fix (DECISIONS.md 2026-10-25, *the
+archive Symantec shipped*).
+
+The expander is not committed. It is the Info-Mac II CD's `:Utility:DD
+Expand™:DD Expand™`, as MacBinary at `$UNC_VMAC_HOME/specimens/diskdoubler/
+ddexpand-377.bin`, SHA-256 checked. **What it cannot see**: a `DDA2`
+archive, which DD Expand 3.7.7 is not the writer of; and comments, which
+live in the Desktop file the read-back drops.
+
 ## The other half of DiskDoubler — `ddpro.py`
 
 `diskdoubler.py` runs DiskDoubler 3.7, whose two software methods are 1 and

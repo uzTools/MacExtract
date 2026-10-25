@@ -6,8 +6,8 @@ DECISIONS.md, how a suite runs in TESTING.md, what is still missing in
 OPEN_ITEMS.md. A row is one sentence and a citation; a row that starts
 explaining itself belongs in DECISIONS.md instead.
 
-**The suite is 979 fixtures**, byte-exact against `unar` and, where `unar`
-fails, `macunpack`; 9,790 robustness variants clean. The Macintosh tiers and
+**The suite is 980 fixtures**, byte-exact against `unar` and, where `unar`
+fails, `macunpack`; 9,800 robustness variants clean. The Macintosh tiers and
 their tallies are BLOCKERS.md's (*Status*); per-tier tables are FORMATS.md's.
 
 | Milestone | Delivered | Detail |

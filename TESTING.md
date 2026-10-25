@@ -5745,7 +5745,7 @@ not who spent it.
   through the File Manager, and nothing here buffers the way the Mac
   shell does.
 - **Any file it is not handed.** It is a sweep, so what it measures is
-  the population you give it: the corpus is 995 files, and the
+  the population you give it: the corpus is 996 files, and the
   interesting population for a REJECTION cost is files that are not
   archives at all — `reference/`, this repository's own trees, the
   specimen cache. 8,364 of those were swept on 2026-10-05, which is

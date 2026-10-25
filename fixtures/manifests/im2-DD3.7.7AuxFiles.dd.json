@@ -1,0 +1,85 @@
+{
+ "entries": [
+  {
+   "creator": "SHRD",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": " Sigma™ Hardware INIT",
+   "rsrc_sha256": "eb87303eafc6d6dc72d74c0cf82860b1665551c5133c5f483b1827839ddff864",
+   "rsrc_size": 23043,
+   "type": "INIT"
+  },
+  {
+   "is_dir": true,
+   "name": "DiskDoubler Utilities"
+  },
+  {
+   "creator": "DSEA",
+   "data_sha256": "c92ab84d6d27cc35e1a59d9cc72121f3de71f968bdcb44b9ca989d85f664c308",
+   "data_size": 78268,
+   "name": "DiskDoubler Utilities/DD Expand™.sea",
+   "rsrc_sha256": "2711137d9dd1e245d4271ede2f6c407cafd6b0b1941a307312716b858ec10dce",
+   "rsrc_size": 6374,
+   "type": "APPL"
+  },
+  {
+   "creator": "DDRP",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "DiskDoubler Utilities/DD Verify:Repair™",
+   "rsrc_sha256": "d45469f7c502e19e4fbd7675c35fcc7e16b4fdbdbc3a1cc49e8675cf3988c0bc",
+   "rsrc_size": 46760,
+   "type": "APPL"
+  },
+  {
+   "creator": "DTRS",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "DiskDoubler Utilities/Desktop Reset™",
+   "rsrc_sha256": "2474dc3081034dbfb48758042cfeb3f0376c2272feaf8322434ff0dfd5b6c7b8",
+   "rsrc_size": 5520,
+   "type": "INIT"
+  },
+  {
+   "creator": "DVER",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "DiskDoubler Utilities/DiskTester™",
+   "rsrc_sha256": "fc3a8d20531c771ec0e1d43fdae9c63c6d34c477f02b5c91e541403d11868f87",
+   "rsrc_size": 33113,
+   "type": "APPL"
+  },
+  {
+   "creator": "Lock",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "DiskDoubler Utilities/Lock",
+   "rsrc_sha256": "5b004d5963a47f309f113cda2296d4f10075a2931912c6ce44db0b2146224dd7",
+   "rsrc_size": 8221,
+   "type": "APPL"
+  },
+  {
+   "creator": "Unlk",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "DiskDoubler Utilities/Unlock",
+   "rsrc_sha256": "0baeaddf572056e61d814ba6eaef21700ea2ecb2e3fdd96c580f30775dca26ab",
+   "rsrc_size": 8257,
+   "type": "APPL"
+  },
+  {
+   "creator": "DDHE",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "DiskDoubler™ Help",
+   "rsrc_sha256": "74cdef8eeaf292737776585cd7cb9cbf59359c6eeee00377fb5f7531db236396",
+   "rsrc_size": 3748,
+   "type": "DDHE"
+  }
+ ],
+ "fixture": "im2-DD3.7.7AuxFiles.dd",
+ "format": "DiskDoubler",
+ "oracle": "DD Expand 3.7.7 under System 7 for the layout and every fork (masked resource header); unar 1.10.8 on each DDAP record's compressed file, carved out, for the bytes; the APPL/DSEA record's forks are the archive's own (tools/vmac/README.md, *DiskDoubler's own expander on a DDAR archive*)",
+ "sha256": "07b3024f563fb16ebeb76d841d41526cf38c85cbc43deb800c8e153ad76167e8",
+ "size": 186856
+}

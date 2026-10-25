@@ -13,8 +13,8 @@ The engine is the product. The Mac app is a thin shell.
 
 **M0–M72 are DONE and nothing is in flight.** Every format in FORMATS.md's
 table extracts, and the engine recognises nothing it does not extract
-(DECISIONS.md 2026-10-18, *the formats it only named*). The engine passes a **979-fixture** differential suite
-against `unar` and, where `unar` fails, `macunpack`, plus 9,790 robustness variants. The Macintosh application extracts byte-exact on every
+(DECISIONS.md 2026-10-18, *the formats it only named*). The engine passes a **980-fixture** differential suite
+against `unar` and, where `unar` fails, `macunpack`, plus 9,800 robustness variants. The Macintosh application extracts byte-exact on every
 emulated tier from System 3.0 at 1 MB to Mac OS 9.2; the tallies are
 BLOCKERS.md's (*Status*). The interactive UI is driven end to end on System
 3.0 and System 6; above those it is deliberate scope, not an open item.

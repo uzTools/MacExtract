@@ -17,6 +17,7 @@ look at what it produces.
     diskdoubler.py --beta            compress with DiskDoubler ß05, 1990
     diskdoubler.py --beta-verify     grade what ß05 wrote
     diskdoubler.py --verify          decode every specimen and grade it
+    diskdoubler.py --ddar ARCHIVE    DD Expand 3.7.7 on a DDAR archive, against ours
 
 **The answer, measured 2026-08-20.** The Settings dialog's "How To
 Compress" popup has four items, and between them they write two methods:
@@ -1542,6 +1543,123 @@ def verify():
     return 1 if bad or not seen else 0
 
 
+# DD Expand 3.7.7, Salient/Symantec's own expander, from the Info-Mac II
+# CD (May 1993), :Utility:DD Expand™:DD Expand™, as MacBinary: MacStamp's
+# session copied it off its image with `hcopy -m` (2026-10-25). Not
+# committed, like every program these harnesses run.
+DDEXPAND_BIN = os.path.join(SPECIMENS, "ddexpand-377.bin")
+DDEXPAND_SHA = "48adb8bda263f84091a3b46b6ffc049a7b3f2d01ca3d75c678fa417dbd28dfb8"
+
+
+def ddar(archive, keep=False):
+    """Expand a DDAR archive with DD Expand 3.7.7 under System 7 and hold
+    every fork AND the Finder info it writes against our own.
+
+    Forks are compared with the resource header's OS-stamped bytes 16..127
+    masked, as --adjudicate does. Finder info is the catalog record
+    (hfscat) against `macextract l --meta`: a file's FInfo, flags without
+    `inited`, which DD Expand clears on what it expands where this engine
+    delivers the flags the archive holds; a folder's DInfo and DXInfo
+    whole."""
+    sys.path.insert(0, os.path.join(REPO, "tools"))
+    from vmac_check import mask_reserved                   # noqa: E402
+    from superdisk import read_forks                       # noqa: E402
+    import hfscat                                          # noqa: E402
+    if not os.path.exists(DDEXPAND_BIN) or hashlib.sha256(
+            open(DDEXPAND_BIN, "rb").read()).hexdigest() != DDEXPAND_SHA:
+        raise SystemExit("diskdoubler: no DD Expand 3.7.7 at %s" % DDEXPAND_BIN)
+    stem = os.path.basename(archive)
+    top = os.path.splitext(stem)[0]
+    work = R.work_tmp("ddar-")
+    arc = os.path.join(work, "arc.bin")
+    open(arc, "wb").write(macbinary(stem, "DDAR", "DDAP",
+                                    open(archive, "rb").read(), b""))
+    img = os.path.join(work, "ddar.img")
+    open(img, "wb").truncate(25 * 1024 * 1024)
+    env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
+    try:
+        subprocess.run(["hformat", "-l", "Adj", img], check=True,
+                       capture_output=True, env=env)
+        subprocess.run(["hmount", img], check=True, capture_output=True,
+                       env=env)
+        for mb in (DDEXPAND_BIN, arc):
+            subprocess.run(["hcopy", "-m", mb, "Adj:"], check=True,
+                           capture_output=True, env=env)
+        subprocess.run(["humount"], check=True, capture_output=True, env=env)
+    finally:
+        shutil.rmtree(env["HOME"], ignore_errors=True)
+    s = Session(os.path.join(HOME, "Sys7.img"), [img],
+                os.path.join(SPECIMENS, "ddar-" + top))
+    try:
+        s.boot()
+        s.mac.click(*VOLUME_ICON, double=True)
+        s.shot("volume", wait=10.0)
+        # Select All, then Open: the Finder launches the expander on the
+        # archive, a document of its own creator.
+        s.mac.command_key("a")
+        time.sleep(2)
+        s.mac.command_key("o")
+        s.shot("launched", wait=45.0)
+        for k in range(3):
+            s.mac.key("Return")
+            s.shot("return-%d" % (k + 1), wait=45.0)
+        s.mac.click(*VOLUME_ICON)
+        s.mac.command_key("y")             # Put Away: flush the writes
+        s.shot("ejected", wait=20.0)
+    finally:
+        time.sleep(5)
+        s.close()
+
+    theirs = read_forks(img)
+    cat = {r["rel"]: r for r in hfscat.records(open(img, "rb").read())}
+    ours = tempfile.mkdtemp(prefix="ddar-ours-")
+    subprocess.run([cli(), "x", "--forks", "hidden", "-o", ours, archive],
+                   capture_output=True)
+    meta = subprocess.run([cli(), "l", "--meta", archive],
+                          capture_output=True).stdout.decode("utf-8", "replace")
+    mine = {}
+    for line in meta.splitlines():
+        if line.startswith("m "):
+            f = line.split(" ", 6)
+            mine[f[6].rstrip("\n")] = (f[1], f[2])
+    bad = seen = 0
+    for rel, r in sorted(cat.items()):
+        if not rel.startswith(top + ":"):
+            continue
+        sub = rel[len(top) + 1:]
+        key = "/".join(p.replace("/", ":") for p in sub.split(":"))
+        fi, fx = mine.get(key, ("", "-"))
+        if r["kind"] == hfscat.DIR:
+            same = fi == r["finfo"] and fx == r["fxinfo"]
+            forks = True
+        else:
+            path = tuple([top] + sub.split(":"))
+            ftype, creator, tdata, trsrc = theirs[path]
+            mp = ours_path(ours, path[1:])
+            head, tail = os.path.split(mp)
+            od = open(mp, "rb").read() if os.path.isfile(mp) else b""
+            side = os.path.join(head, "._" + tail)
+            orsrc = open(side, "rb").read() if os.path.isfile(side) else b""
+            forks = od == tdata and mask_reserved(orsrc) == mask_reserved(trsrc)
+            want = r["finfo"]
+            same = len(fi) == 32 and fi[:16] == want[:16] and fi[20:] == \
+                want[20:] and (int(fi[16:20], 16) & ~0x100) == \
+                (int(want[16:20], 16) & ~0x100)
+        seen += 1
+        bad += not (forks and same)
+        print("  %-44s %-6s forks %s, Finder info %s"
+              % (sub[-44:], "folder" if r["kind"] == hfscat.DIR else "file",
+                 "agree" if forks else "DIFFER",
+                 "agrees" if same else "DIFFERS (ours %s, Mac %s)"
+                 % (fi, r["finfo"])))
+    shutil.rmtree(ours, ignore_errors=True)
+    if not keep:
+        shutil.rmtree(work, ignore_errors=True)
+    print("diskdoubler: --ddar %s: %d of %d entries agree with DD Expand 3.7.7"
+          % (stem, seen - bad, seen))
+    return 1 if (bad or not seen) else 0
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -1587,6 +1705,9 @@ def main():
     ap.add_argument("--write-manifest", action="store_true",
                     help="with --adjudicate, record the Mac's bytes for the "
                          "forks no oracle could grade")
+    ap.add_argument("--ddar", metavar="ARCHIVE",
+                    help="expand a DDAR archive with DD Expand 3.7.7 under "
+                         "System 7 and compare every fork and Finder field")
     ap.add_argument("--keep", action="store_true", help="keep the work dir")
     args = ap.parse_args()
     if args.keep:      # guard deletes images at exit otherwise
@@ -1619,10 +1740,13 @@ def main():
                           args.write_manifest)
     if args.verify:
         return verify()
+    if args.ddar:
+        return ddar(args.ddar, args.keep)
     if not (args.setup or args.install or args.wild or args.probe
             or args.probe_split or args.make or args.verify
             or args.combine or args.verify_combine or args.adjudicate
-            or args.beta or args.beta_probe or args.beta_verify):
+            or args.beta or args.beta_probe or args.beta_verify
+            or args.ddar):
         ap.print_help()
     return 0
 

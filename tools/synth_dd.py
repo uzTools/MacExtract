@@ -206,9 +206,15 @@ def build_ddar(tree):
         # may carry a copy of its header at the end and then the span
         # is 84 bytes more; an archive Combine wrote itself carries
         # none, and neither do these.
+        # The record is the STORED file's catalog entry, and a file
+        # DiskDoubler compressed is creator DDAP, its own type and creator
+        # inside the header below: DDF0/DDAP is two records of
+        # Symantec's DD3.7.7AuxFiles.dd (fixtures/im2-DD3.7.7AuxFiles.dd;
+        # docs/formats/diskdoubler-container.md, "DDAR"). These wrote the
+        # entry's own pair here until 2026-10-25, which a reader that
+        # expands only DDAP records takes for a file stored as it was.
         out.extend(_ddar_record(name, datasize=FILEHDR + 4 + len(data) + len(rsrc),
-                                rsrcsize=0, typ=node["typ"],
-                                creator=node["creator"]))
+                                rsrcsize=0, typ=b"DDF0", creator=b"DDAP"))
         out.extend(_file_header(data, rsrc, node["typ"], node["creator"]))
         out.extend(data)
         out.extend(rsrc)

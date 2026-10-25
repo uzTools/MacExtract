@@ -231,30 +231,40 @@ bytes, +76, are a CRC-16/XMODEM of its first 76**, measured 2026-10-23:
 | 8 | 64 | the name, a Str63 | **pinned**: one offset agrees over 36 entries — the length byte at +8, the bytes at +9 |
 | 72 | 1 | starts a folder | **measured 2026-09-22** on an archive DiskDoubler 3.7's Combine command wrote here from a known tree (below) |
 | 73 | 1 | ends a folder | as +72. The closing record is a COPY of the record before it with this byte set, name and all, so a reader must test it BEFORE it treats the record as an entry |
-| 74 | 4 | **the entry's whole span**, not the data fork's length | **measured**: stepping `record + 124 + this` walks all 7 corpus archives and both Combine specimens from the first record to the last byte, exactly. It is the length of the compressed FILE the record points at — so 84 + both compressed forks, plus 84 again where that file carries its header trailer |
-| 78 | 4 | (a resource fork length, by two other readers) | **0 in all 44 records here**, including a two-fork entry whose resource fork is 340 bytes. This corpus cannot tell it from a constant, and the span above is what the walk uses |
-| 82 | 4 | creation date | no manifest records a date |
+| 74 | 4 | **the stored file's data fork length** | **measured**: stepping `record + 124 + this + (+78)` walks all 8 corpus archives and both Combine specimens from the first record to the last byte, exactly. For a file DiskDoubler compressed, the data fork IS the compressed file, so this is 84 + both compressed forks, plus 84 again where that file carries its header trailer |
+| 78 | 4 | **the stored file's resource fork length**, its bytes after the data fork's | **measured 2026-10-25**: 6,374 on the one record that is not a compressed file, Symantec's `APPL/DSEA` self-extractor in `im2-DD3.7.7AuxFiles.dd`, whose resource fork DD Expand 3.7.7 writes back (equal with the reserved header masked); 0 on the 43 compressed files, which keep no resource fork (DECISIONS.md 2026-10-25, *the archive Symantec shipped*) |
+| 82 | 4 | creation date | **measured 2026-10-25**: what DD Expand 3.7.7 writes, on all eight files of `im2-DD3.7.7AuxFiles.dd` |
 | 86 | 4 | modification date | as +82 |
-| 90 | 4 | type | **not the entry's** — see below |
-| 94 | 4 | creator | as +90, and not the entry's either |
-| 98 | 2 | Finder flags, whose `0x20` says the forks follow raw | **no specimen** |
+| 90 | 4 | the STORED file's type; a folder's `frRect` | the entry's own only where DiskDoubler did not compress the file — see below. On a folder record +90..105 is the `DInfo` whole (`frRect`, `frFlags`, `frLocation`, `frView`), **measured 2026-10-25** against the catalog DD Expand 3.7.7 wrote |
+| 94 | 4 | the stored file's creator | `DDAP` on all 43 compressed files here, so **creator `DDAP` is what is expanded**; a record of any other creator is a file stored as it was, both forks raw at +124 (measured 2026-10-25) |
+| 98 | 2 | the stored file's Finder flags; XADMaster and macutils say `0x20` means the forks follow raw | the `0x20` reading has **no specimen**: the self-extractor stored raw has `0x2100` |
+| 100 | 4 | a file's `fdLocation` | **measured 2026-10-25**: eight of eight equal to what DD Expand 3.7.7 writes; +104..117 are zero in every record and the Mac writes `fdFldr` zero |
+| 106 | 4 | a folder's `frScroll`, the `DXInfo`'s first four bytes | **measured 2026-10-25**; the Mac writes the rest of the `DXInfo` zero |
 | 118 | 2 | data fork checksum | **no specimen** |
 | 120 | 2 | resource fork checksum | **no specimen** |
 | 124 | | a compressed file header, or the raw forks | |
 
-**The type at +90 is not the entry's type.** In
+**The type at +90 is the STORED file's.** In
 `derived-MAZv143.sea` the record reads `DDF1`/`DDAP` where the oracle
 says the entry is a `cdev` by `NaOH` — so what the record carries is
 the *compressed* file's type and creator, and the entry's own come from
-the file header at +124. That is why the `--grid` search pins type and
+the file header at +124. The record is the stored file's catalog entry,
+and Combine stores a file as it sits on the disk: compressed where
+DiskDoubler compressed it, and as it was where it did not. Symantec's own
+`DD Expand™.sea`, an `APPL/DSEA` whose data fork happens to begin with a
+compressed-file header too, is written back by DD Expand 3.7.7 as that
+self-extractor, not expanded (DECISIONS.md 2026-10-25, *the archive Symantec shipped*). That is why the `--grid` search pins type and
 creator inside the file header and finds nothing for them in the
 record.
 
 **An archive ends where the FILE ends.** There is no end marker. What
 looks like a stray 84-byte header before some records is the previous
 entry's header trailer, inside its span rather than beside it (*The
-header is written twice*); walking by the span at +74 lands on a record
-or on the last byte, and on nothing else, in all nine archives here.
+header is written twice*); walking by +74 and +78 lands on a record
+or on the last byte, and on nothing else, in all ten archives here.
+Walking by +74 alone, as this reader and XADMaster both did until
+2026-10-25, stops at the stored record's raw resource fork and calls the
+archive corrupt (DECISIONS.md 2026-10-25, *the archive Symantec shipped*).
 
 ### The folder records, measured
 

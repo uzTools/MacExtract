@@ -8,7 +8,7 @@
    numbers to FORMATS.md).
 
 Nothing here stops the engine or the CLI, which are byte-exact against the
-oracle across 979 fixtures in `./ci.sh`. Detail lives once — status in
+oracle across 980 fixtures in `./ci.sh`. Detail lives once — status in
 BLOCKERS.md, reasoning in DECISIONS.md, results in FORMATS.md, re-running in
 TESTING.md or `tools/vmac/README.md`, hardware in MANUAL_TESTS.md.
 
@@ -175,7 +175,7 @@ info*), less what this table still names. The leads —
 | StuffIt 5 | the Finder info of a version-3 entry, whose second block is four bytes shorter; no entry here is version 3 | Expander 5.5 on one |
 | LZH | OS/2's 0x7f/0xff headers (dates, attributes); a level 0/1 name field's bytes after a NUL, which XADMaster calls a comment | `lsar`; no specimen of the second |
 | tar | a pax `g` (global) header, stepped over | — |
-| DiskDoubler `DDAR`/`DDA2` records | bytes no reference assigns (DDAR +100..117; DDA2 folder +46..53, +62 on); only the 84-byte single-file header is measured (DECISIONS.md 2026-10-17, *the window Expander puts back*) | DiskDoubler's own expander, under emulation |
+| DiskDoubler `DDA2` records | bytes no reference assigns (folder +46..53, +62 on); the `DDAR` record's were read off DD Expand 3.7.7 on 2026-10-25 (DECISIONS.md, *the archive Symantec shipped*) | DiskDoubler Pro's own expander on a `DDA2` archive, under emulation |
 | AppleSingle entry 11 | ProDOS's access word (no write-enable is a lock) | none; RFC 1740 gives its size and not its bits, and no reference here does |
 
 Closing a row: the reader delivers the field with a `Source:` and a grade,

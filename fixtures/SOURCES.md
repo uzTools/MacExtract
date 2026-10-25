@@ -706,6 +706,7 @@ a comment was found.
 | hqxer-11.hqx | 990bd57e5a8eb156934c1409a0ec42442d95e1bb5b2169ae668398b0d8e59ccb | 50667 | http://www.nic.funet.fi/index/info-mac/cmp/hqxer-11.hqx |
 | ibacom-security-10.hqx | a9b7bb3a6af0d2428b8124e10e2540b094ff786f9b96ccad3579b1ccf3ee5c3b | 88263 | http://www.nic.funet.fi/index/info-mac/data/ibacom-security-10.hqx |
 | ie111sep.zip | a50ff41a9f41caba6748d369bf0e24589f389077c3c9d0641c578ee79a1e55d0 | 440538 | http://cd.textfiles.com/nopv18/007A/IE111SEP.ZIP |
+| im2-DD3.7.7AuxFiles.dd | 07b3024f563fb16ebeb76d841d41526cf38c85cbc43deb800c8e153ad76167e8 | 186856 | https://discmaster.textfiles.com/file/14747/Info-Mac_II_May_1993.to_/Info-Mac%20II%20(May%201993).toast/Utility/DD3.7.7AuxFiles/DD3.7.7AuxFiles.dd |
 | indexer-script-10-as.hqx | ffd96e62ff6b3ebc5ad6a498ac5425e9321aa4ea8b89016ef24bb8e8a451caa3 | 19867 | http://www.nic.funet.fi/index/info-mac/disk/indexer-script-10-as.hqx |
 | initescape.cpt | 62938966b7bf4b4900422ee70314fbc6f40aeaffdaf685488c5a584b3421a930 | 13952 | http://www.nic.funet.fi/pub/mac/init/initescape.cpt |
 | initloader.sit | 202a9f8f3c94c986fc24bfc324496b80f9421abadf3cdfe4cf51fc09e48b1008 | 28928 | http://www.nic.funet.fi/pub/mac/cp/initloader.sit |

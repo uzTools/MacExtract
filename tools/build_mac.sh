@@ -654,7 +654,10 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # and the MacBinary and AppleDouble readers left the shipped resident link
 # (DECISIONS.md 2026-10-25, *the envelopes that left*); the control keeps them, and gains the
 # two helpers' moves and MacBinary's probe call.
-UNC_MAC_CODE_DEFAULT=177372
+# +240 on 2026-10-25, 177,372 -> 177,612, A5 +16 below: DDAR's stored records
+# and the Finder info its records keep (DECISIONS.md 2026-10-25, *the archive Symantec shipped*),
+# in `ovl_cptdd` everywhere but here; the shipped pair is unmoved.
+UNC_MAC_CODE_DEFAULT=177612
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -860,7 +863,8 @@ UNC_MAC_CODE_DEFAULT=177372
 # `.data` alignment (above).
 # +100 on 2026-10-25, 36,344 -> 36,444: that advice's sentence (above).
 # -8 on 2026-10-25, 36,444 -> 36,436, `.data` alignment (above).
-UNC_MAC_A5_DEFAULT=36436
+# +16 on 2026-10-25, 36,436 -> 36,452, `.data` alignment (above).
+UNC_MAC_A5_DEFAULT=36452
 # A CEILING PER CONFIGURATION, because one ceiling measured on another build
 # cannot fire. The figures above are the RESIDENT control build, which carries
 # every decoder; the shipped build's resident code is a third of that, so

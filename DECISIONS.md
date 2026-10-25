@@ -467,6 +467,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-25 (the writer that was in 4.3BSD) — SUMacC's tohex and fromhex were in 4.3BSD all along: tohex wrote the wild file, and the format's own readers compare the sum on 32 bits, so this does too
 - 2026-10-25 (the two that said nothing) — a MIME multipart past the walk's depth and a Finder info GateKeeper vetoes are report lines, not silence: UNC_ERR_NESTED, and "name: Finder info refused"
 - 2026-10-25 (the envelopes that left) — the encryption check joins the sniffer's image and the MacBinary and AppleDouble readers BinHex's: 2,464 B back on every budget but an envelope's
+- 2026-10-25 (the archive Symantec shipped) — a DDAR record is the stored file's catalog entry: +78 is its resource fork, a creator other than DDAP is stored raw, and +100.. is the Finder's position; read off DD Expand 3.7.7
 
 ---
 
@@ -30195,4 +30196,58 @@ same zip run with the shim forced to answer NO lost its entries, so the
 phase fails when the ciphers are released. Compact Pro's resource forks
 came back with the file's own name at byte 48, the reserved header area
 the system stamps, and are compared masked as everywhere else here.
+
+## 2026-10-25 (the archive Symantec shipped) — a DDAR record is the stored file's catalog entry: +78 is its resource fork, a creator other than DDAP is stored raw, and +100.. is the Finder's position; read off DD Expand 3.7.7
+
+**Found by asking.** MacStamp's census of commercial CDs was asked for the
+specimens OPEN_ITEMS.md waits on, and it found, on the Info-Mac II CD (May
+1993), Symantec's own `DD3.7.7AuxFiles.dd`, a `DDAR` archive, beside `DD
+Expand™ 3.7.7`. That is the oracle the DiskDoubler-record row named.
+
+**Claim.** A `DDAR` record is the catalog entry of the file Combine stored,
+and Combine stores a file as it sits on the disk.
+- **+74 is that file's data fork length and +78 its resource fork's**,
+  the second fork's bytes following the first. The walk is `record + 124
+  + (+74) + (+78)`.
+- **A file of creator `DDAP` is one DiskDoubler compressed**: its data
+  fork is the compressed file and it has no resource fork, which is why
+  +78 read 0 on all 43 such records. It is expanded. A record of any
+  other creator is a file stored as it was, both forks raw: here,
+  Symantec's `APPL/DSEA` self-extractor, with +78 at 6,374.
+- **+90/+94/+98 are the stored file's type, creator and flags**, the
+  compressed file's for a `DDAP` record, as the 2026-08 reading had it.
+- **+100..103 is a file's `fdLocation`.** On a folder record, +90..105 is
+  the `DInfo` whole and +106..109 the `DXInfo`'s `frScroll`. +82/+86 are
+  the dates.
+
+**Evidence.**
+- DD Expand 3.7.7 ran on the archive under System 7 (`diskdoubler.py
+  --ddar`). It writes the self-extractor back as `APPL/DSEA` with the
+  78,268-byte data fork +74 states and the 6,374-byte resource fork +78
+  states, and expands the seven `DDAP` records.
+- Every fork it wrote equals ours (resource headers masked), and so does
+  every catalog field: eight file positions, the folder's window, the
+  dates.
+- `unar`, run on each `DDAP` record's compressed file carved out of the
+  archive, decodes all seven to the bytes we produce.
+
+**Consequence.** Before the fix, this reader and `unar` both walked by +74
+alone and stopped at the self-extractor's raw resource fork: *"file is
+truncated"* here, *"Archive parsing failed"* there, after three of nine
+entries. The reader's raw branch existed only for XADMaster's `0x20`
+flag, which no record anywhere sets, and took the inner compressed file
+for the entry. It now:
+- takes the raw branch for any creator but `DDAP`;
+- steps over +78;
+- states each file's FInfo and each folder's DInfo/DXInfo from the
+  record.
+
+The archive is fixture `im2-DD3.7.7AuxFiles.dd`, with a manifest from
+those two oracles. The differential suite fails it on the CLI from
+before the fix and passes 95 of 95 DiskDoubler fixtures after.
+
+The rule is measured on one archive that holds a record which is not a
+compressed file. It is the only such record on this machine, so
+creator `DDAP` rests on 43 records of one creator and 1 of another.
+OPEN_ITEMS.md keeps the `DDA2` half of the row.
 

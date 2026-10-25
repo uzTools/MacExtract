@@ -189,10 +189,12 @@ REPO = os.path.dirname(HERE)
 # CODE +44 and A5 +100 in every build, so OVL_SAVED does not move.
 # **-32 more each the same day, DERIVED**: the envelope readers' move, the
 # control's CODE +40 and A5 -8; OVL_SAVED +2,496 more than offsets it.
+# **-256 more each the same day, DERIVED**: DDAR's stored records, the
+# control's CODE +240 and A5 +16; OVL_SAVED +256 offsets it.
 TIERS = {
-    "sys3-512K": (199398, "System 3.0, Macintosh 512Ke (222,070 B free)"),
-    "sys6-512K": (104016, "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
-    "floor-1M":  (628304, "System 6.0.8, 1 MB Mac Plus — the floor target"),
+    "sys3-512K": (199142, "System 3.0, Macintosh 512Ke (222,070 B free)"),
+    "sys6-512K": (103760, "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
+    "floor-1M":  (628048, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
 # **-592 more each 2026-10-24, DERIVED**: SUMacC's `.dl`, the control's
 # CODE +584 and A5 +8 (DECISIONS.md 2026-10-24, *the format before
@@ -396,7 +398,7 @@ TIERS = {
 # data + bss -680. The machine gave +4,204, because the jump table, the
 # stub segments and the relocations trimmed at launch are resident bytes
 # this unit never counted — which is why TIERS was measured, not moved.
-TIERS_CONTROL = 213808     # build/mac-resident, CODE + A5, 2026-10-25
+TIERS_CONTROL = 214064     # build/mac-resident, CODE + A5, 2026-10-25
 # +352 on 2026-10-22: the eleven malformed-input fixes, every decoder linked
 # in; TIERS above drops 352 to match (TIERS_MACHINE, physical RAM, unmoved).
 # +32 more on 2026-10-23 with Compact Pro's fork-extent check; TIERS -32.
@@ -409,6 +411,7 @@ TIERS_CONTROL = 213808     # build/mac-resident, CODE + A5, 2026-10-25
 # +224 more on 2026-10-25 with the two report lines; TIERS -224.
 # +144 more the same day with the advice after them; TIERS -144.
 # +32 more the same day with the envelope readers' move; TIERS -32.
+# +256 more the same day with DDAR's stored records; TIERS -256.
 # **What this control cannot see: the autotest harness.** TIERS was read
 # on the machine from an autotest build (`UNC_MAC_AUTOTEST`), and
 # build/mac-resident has no harness in it, so harness growth lowers what a
@@ -832,7 +835,9 @@ EXPECT = {
 # **+2,496 2026-10-25, -> 158,736**: the shipped pair's -2,464 (CODE -2,480,
 # A5 +16) against the control's +32 (DECISIONS.md 2026-10-25, *the envelopes that left*).
 # TIERS -32.
-OVL_SAVED = 158736
+# **+256 2026-10-25, -> 158,992**: the control's +256 (CODE +240, A5 +16)
+# against the shipped pair's 0 (DECISIONS.md 2026-10-25, *the archive Symantec shipped*). TIERS -256.
+OVL_SAVED = 158992
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
 # every kept image is one — as is the bundle an envelope holds on to.
@@ -970,7 +975,7 @@ IMAGES = {
     "OVL_ID_BINHEX":      7158,
     "OVL_ID_BTOA":        2496,
     "OVL_ID_CODECS":      6016,
-    "OVL_ID_CPTDD":       14832,
+    "OVL_ID_CPTDD":       15072,
     "OVL_ID_CRYPT":       9604,
     "OVL_ID_EXO":         30168,
     "OVL_ID_LZH":         10458,
@@ -1041,7 +1046,9 @@ IMAGES = {
 # **BINHEX +2,076, SNIFF +652, the bundle +2,728, 2026-10-25**: the MacBinary
 # and AppleDouble readers beside BinHex, and the encryption check beside the
 # probes (DECISIONS.md 2026-10-25, *the envelopes that left*).
-BUNDLE = 183804
+# **CPTDD +240 and the bundle +240, 2026-10-25**: DDAR's stored records and
+# the Finder info its records keep (DECISIONS.md 2026-10-25, *the archive Symantec shipped*).
+BUNDLE = 184044
 
 # What the SHIPPED lane asserts, and it is the refused fixtures BY NAME
 # rather than a tally: a tier that refuses two different fixtures and still

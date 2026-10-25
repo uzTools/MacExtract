@@ -44,6 +44,7 @@
 #define DD_MAGIC   0xABCD0054u    /* the magic word AND an 84-byte header */
 #define DD_MAGIC48 0xABCD0030u    /* the same word, and 1990's 48-byte one */
 #define DD_DDAR    0x44444152u    /* 'DDAR' */
+#define DD_CREATOR_DDAP 0x44444150u /* DiskDoubler's own creator: a file it compressed */
 #define DD_DDA2    0x44444132u    /* 'DDA2' */
 
 #define DD_FILEHDR 80             /* after the 4-byte magic */
@@ -1205,10 +1206,44 @@ static int dd_emit(UncCtx *c, UncEntryInfo *e, const DdFile *f, uint32_t at)
 
 /* ---- 'DDAR' ------------------------------------------------------- */
 
+/* What a DDAR record keeps of the Finder info, into `e`. `rec` is the
+ * record past its magic, so rec[k] is record +k+4. Measured 2026-10-25
+ * against the catalog DD Expand 3.7.7 wrote from Symantec's
+ * DD3.7.7AuxFiles.dd, every field on every record:
+ *  - a FILE: fdLocation at +100..103, eight of eight; the type, creator
+ *    and flags are the entry's own, already in `e`. +104..117 are zero
+ *    in every record and the Mac wrote fdFldr zero, so they are not read.
+ *  - a FOLDER: the DInfo whole at +90..105 — frRect, frFlags, frLocation,
+ *    frView, where a file's record has its type, creator and flags — and
+ *    frScroll, the DXInfo's first four bytes, at +106..109. The Mac wrote
+ *    the rest of the DXInfo zero.
+ * Source: docs/formats/diskdoubler-container.md, "DDAR". */
+static void dd_ddar_finfo(UncEntryInfo *e, const uint8_t *rec, int isdir)
+{
+    int k;
+    if (isdir) {
+        for (k = 0; k < 16; k++) e->finder_info[k] = rec[86 + k];
+        for (k = 0; k < 4; k++) e->finder_info[16 + k] = rec[102 + k];
+        for (k = 20; k < 32; k++) e->finder_info[k] = 0;
+        e->meta |= UNC_META_FINFO | UNC_META_FXINFO;
+        return;
+    }
+    unc_put_u32be(e->finder_info, e->type);
+    unc_put_u32be(e->finder_info + 4, e->creator);
+    e->finder_info[8] = (uint8_t)(e->finder_flags >> 8);
+    e->finder_info[9] = (uint8_t)e->finder_flags;
+    for (k = 0; k < 4; k++) e->finder_info[10 + k] = rec[96 + k];
+    e->finder_info[14] = e->finder_info[15] = 0;
+    e->meta |= UNC_META_FINFO;
+}
+
 static int dd_archive(UncCtx *c)
 {
     UncPath path;
     uint8_t hdr[124];
+    uint8_t hdr_rec[124];      /* the record's Finder bytes, kept across the
+                                * file header that follows it */
+    uint32_t i;
     uint32_t at = 78;      /* 'DDAR' + 74 header bytes */
     int err;
 
@@ -1293,6 +1328,7 @@ static int dd_archive(UncCtx *c)
             e.is_dir = 1;
             e.create_date = unc_get_u32be(hdr + 78);
             e.mod_date    = unc_get_u32be(hdr + 82);
+            dd_ddar_finfo(&e, hdr, 1);
             /* A skipped entry gets no end_entry — the contract in
              * macextract.h, which this said nothing about until a host
              * skipped a FOLDER rather than a file (2026-08-28). */
@@ -1306,12 +1342,21 @@ static int dd_archive(UncCtx *c)
 
         unc_path_leaf(&path, &e, hdr + 5, nlen);
 
-        if (unc_get_u16be(hdr + 94) & 0x20) {
-            /* Stored in the archive with no file header of its own.
-             * NO SPECIMEN: five shapes were offered to DiskDoubler 3.7
-             * to provoke this flag and every one came back with a full
-             * file header (the flags word 0x0000 in all 44 records on
-             * that disk), so it stays attributed. Source:
+        /* The record is the stored FILE's catalog entry: its type and
+         * creator at +90/+94, its two forks' lengths at +74 and +78. A
+         * file DiskDoubler compressed is creator DDAP — 43 records of 43
+         * here — and is expanded; anything else is stored as it was and
+         * comes out so, both forks raw. Measured 2026-10-25 on
+         * Symantec's DD3.7.7AuxFiles.dd (Info-Mac II), whose DD Expand
+         * 3.7.7 writes its APPL/DSEA self-extractor back with a
+         * 78,268-byte data fork and the 6,374-byte resource fork +78
+         * states, and expands the seven DDAP records beside it
+         * (docs/formats/diskdoubler-container.md, "DDAR"). */
+        if ((unc_get_u16be(hdr + 94) & 0x20) ||
+            unc_get_u32be(hdr + 90) != DD_CREATOR_DDAP) {
+            /* The 0x20 flag itself has NO SPECIMEN: five shapes were
+             * offered to DiskDoubler 3.7 to provoke it and every one
+             * came back with a full file header. Source:
              * XADDiskDoublerParser.m parseArchive, with macutils'
              * macunpack/dd.h stating the same offsets under its own
              * names — two readers agreeing, not a specimen.
@@ -1331,10 +1376,13 @@ static int dd_archive(UncCtx *c)
             f.datacrc      = unc_get_u16be(hdr + 114);
             f.rsrccrc      = unc_get_u16be(hdr + 116);
             dd_entry_from(&e, &f);
+            dd_ddar_finfo(&e, hdr, 0);
             if ((err = dd_emit(c, &e, &f, start)) != UNC_OK) return err;
             at = start + datasize + rsrcsize;
             continue;
         }
+
+        for (i = 0; i < 16; i++) hdr_rec[86 + i] = hdr[86 + i];
 
         /* Otherwise a full file header follows. The entry's own record
          * has already said this file is here, so a header that runs out
@@ -1362,8 +1410,9 @@ static int dd_archive(UncCtx *c)
             if (datasize != inner && datasize != inner + 84)
                 return UNC_ERR_CORRUPT;
             dd_entry_from(&e, &f);
+            dd_ddar_finfo(&e, hdr_rec, 0);
             if ((err = dd_emit(c, &e, &f, start + 84)) != UNC_OK) return err;
-            at = start + datasize;
+            at = start + datasize + rsrcsize;
         }
     }
     return UNC_OK;
