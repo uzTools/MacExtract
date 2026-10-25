@@ -43,6 +43,7 @@ typedef void          *WindowPtr;
 #define fsWrPerm     2
 #define fsFromStart  1
 #define fsFromLEOF   2
+#define ioDirMask    16   /* ioFlAttrib's "is a directory", as Multiverse.h */
 #define true  1
 #define false 0
 

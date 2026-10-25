@@ -165,11 +165,6 @@
 #define kMemReserveMax  (20L * 1024)
 #define kMemReserveMin  (20L * 1024)
 
-#ifndef ioDirMask
-#define ioDirMask 0x10   /* ioFlAttrib bit 4 = "is a directory"
-                          * (Inside Macintosh: Files, CInfoPBRec) */
-#endif
-
 /* ------------------------------------------------------------------ */
 /* UNC_AT_TIMING — where an extraction's seconds go, on the Mac itself */
 /*                                                                    */
