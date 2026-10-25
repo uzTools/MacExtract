@@ -255,9 +255,11 @@ int unc_gzip_extract(UncCtx *c)
                 est = UNC_ERR_CRC;
                 break;
             }
+            /* The end of the file after a member is a clean end; a read
+             * that failed or was cancelled there is not. */
             m0 = unc_bufin_next(&in);
-            if (m0 < 0) break;                 /* clean end after a member */
-            m1 = unc_bufin_next(&in);
+            m1 = m0 < 0 ? -1 : unc_bufin_next(&in);
+            if (m1 < 0 && in.err != UNC_ERR_TRUNCATED) { est = in.err; break; }
             if (m0 != 0x1F || m1 != 0x8B) break;   /* trailing bytes, ignored */
             /* Another member: its 10-byte base header, then its fields. */
             hdr[0] = 0x1F; hdr[1] = 0x8B;

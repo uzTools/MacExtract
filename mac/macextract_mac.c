@@ -2360,6 +2360,9 @@ static OSErr StreamSelect(MacSink *s, int isRsrc)
  * is in ExtractOne, and threading an out-parameter through five call
  * sites to move one OSErr is the worse trade. */
 static OSErr gLastWriteErr = noErr;
+/* Finder infos refused over the whole operation, every layer of it, so
+ * that what to do about them is said once and not once a layer. */
+static int gVetoed;
 
 /* Trim a fork back to what was actually written.
  *
@@ -2680,13 +2683,16 @@ static void DTBundle(DTPBRec *d, OSType creator, OSType self, long dir)
  * INEXACT (it is on the disk and it opens, so it is not a RepFailed), or
  * the File Manager refused its Finder info. One sentence each, because on
  * this target a literal is .rodata in the A5 world and resident for every
- * extraction (see RepFailed's UNC_ERR_MODULE arm). */
+ * extraction (see RepFailed's UNC_ERR_MODULE arm). Not urgent, because
+ * neither is a failure: an archive GateKeeper vetoed whole took every
+ * line, the reserve too, and the one line saying what to do about it
+ * was dropped (2026-10-25). */
 static void RepEntry(MacSink *s, const char *what)
 {
     int b = 0, k;
     for (k = 0; k < (int)s->cur.name_len; k++)
         if (s->cur.name[k] == '/') b = k + 1;
-    if (!RepNew(1)) return;
+    if (!RepNew(0)) return;
     RepCatBytes(s->cur.name + b, (int)s->cur.name_len - b);
     RepMarkBreak();
     RepCat(what);
@@ -4801,9 +4807,7 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
     *entries = sink.entries;
     *errors = sink.errors;
     gUnsupported = sink.unsupported;
-    /* What to do about "Finder info refused", said once for the run and
-     * not on every line it follows. */
-    if (sink.vetoed && RepNew(1)) RepCat(S_REP_FINFO_WHY);
+    gVetoed += sink.vetoed;    /* ExtractOne says what to do, once */
     if (shape) {
         shape->fileCount = sink.fileCount;
         shape->dirCount = sink.dirCount;
@@ -6429,6 +6433,7 @@ static void ExtractOne(short vRefNum, long dirID, ConstStr255Param name,
          * here — but the single-layer wording is verified on screen
          * (BLOCKERS.md, tier results). */
         gLastWriteErr = noErr;
+        gVetoed = 0;
         gShortBy = 0;
         gShortPiece = 0;
 
@@ -6506,6 +6511,10 @@ static void ExtractOne(short vRefNum, long dirID, ConstStr255Param name,
     }
 
     if (pr.dlg) DisposeDialog(pr.dlg);
+
+    /* What to do about "Finder info refused", said once for the run and
+     * not on every line it follows, nor once per envelope layer. */
+    if (gVetoed && RepNew(1)) RepCat(S_REP_FINFO_WHY);
 
     /* One line says how the run ENDED. Where entries have something of
      * their own to report — a name that had to change, a failure that

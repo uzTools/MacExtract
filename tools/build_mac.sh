@@ -657,7 +657,12 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # +240 on 2026-10-25, 177,372 -> 177,612, A5 +16 below: DDAR's stored records
 # and the Finder info its records keep (DECISIONS.md 2026-10-25, *the archive Symantec shipped*),
 # in `ovl_cptdd` everywhere but here; the shipped pair is unmoved.
-UNC_MAC_CODE_DEFAULT=177612
+# +120 on 2026-10-25, 177,612 -> 177,732, A5 +24 below: the review before
+# v0.44.0 (DECISIONS.md 2026-10-25, *the review before the release*): the
+# DiskDoubler walks refuse to step backward, gzip tells a failed read from
+# the end, the StuffIt segment probe exempts part 1, and the shell's two
+# report fixes. In images everywhere but here, bar the shell's +20.
+UNC_MAC_CODE_DEFAULT=177732
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -864,7 +869,8 @@ UNC_MAC_CODE_DEFAULT=177612
 # +100 on 2026-10-25, 36,344 -> 36,444: that advice's sentence (above).
 # -8 on 2026-10-25, 36,444 -> 36,436, `.data` alignment (above).
 # +16 on 2026-10-25, 36,436 -> 36,452, `.data` alignment (above).
-UNC_MAC_A5_DEFAULT=36452
+# +24 on 2026-10-25, 36,452 -> 36,476, `.data` alignment (above).
+UNC_MAC_A5_DEFAULT=36476
 # A CEILING PER CONFIGURATION, because one ceiling measured on another build
 # cannot fire. The figures above are the RESIDENT control build, which carries
 # every decoder; the shipped build's resident code is a third of that, so
@@ -1319,8 +1325,13 @@ UNC_MAC_A5_DEFAULT=36452
 # AppleDouble readers into BinHex's (DECISIONS.md 2026-10-25, *the envelopes that left*).
 # 2,464 B back on every budget; an envelope keeps the whole bundle and
 # pays them there.
-UNC_MAC_CODE_EAGER=38568
-UNC_MAC_A5_EAGER=16504
+# +20 and -20 on 2026-10-25, 38,568 -> 38,588 and 16,504 -> 16,484: the
+# review before v0.44.0 (DECISIONS.md 2026-10-25, *the review before the
+# release*): a refused Finder info's line no longer takes the reserve, and
+# the advice after it is said once an operation, not once a layer. The A5
+# is `.data` alignment; the sum, and so every budget, is unmoved.
+UNC_MAC_CODE_EAGER=38588
+UNC_MAC_A5_EAGER=16484
 # +8 on 2026-10-02 for the same reason as the eager pair above: the
 # overlay call that now says WHICH of StuffIt 2.x's ciphers an entry
 # wants. A5 fell to 19,096 and its ceiling is left where it was.
@@ -1426,7 +1437,9 @@ UNC_MAC_A5_EAGER=16504
 # -1,908 code on 2026-10-25, the same moves (the eager pair above; the lazy
 # loader never called the encryption check); data + bss 16,568, under its
 # ceiling.
-UNC_MAC_CODE_LAZY=37800
+# +24 code on 2026-10-25, the same review (the eager pair above); data +
+# bss 16,544, under its ceiling.
+UNC_MAC_CODE_LAZY=37824
 UNC_MAC_A5_LAZY=19200
 if [ -n "$UNC_OVL_RESIDENT" ]; then
     UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-$UNC_MAC_CODE_DEFAULT}

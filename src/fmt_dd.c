@@ -1245,6 +1245,7 @@ static int dd_archive(UncCtx *c)
                                 * file header that follows it */
     uint32_t i;
     uint32_t at = 78;      /* 'DDAR' + 74 header bytes */
+    uint32_t prev = 0;     /* the last record's position */
     int err;
 
     unc_path_init(&path, c);
@@ -1255,6 +1256,12 @@ static int dd_archive(UncCtx *c)
         UncEntryInfo e;
         int isdir, enddir, sret;
 
+        /* Every record lies past the last one. The sizes that step the
+         * walk are 32-bit words off the record, and a sum that wraps
+         * sends it back to a record already read, for ever: a crafted
+         * 202-byte file listed one entry without end (2026-10-25). */
+        if (at <= prev) return UNC_ERR_CORRUPT;
+        prev = at;
         if (c->io->seek(c->io->ctx, at) < 0) return UNC_ERR_IO;
         err = unc_read_full(c->io, hdr, 4);
         if (err != UNC_OK) {
@@ -1400,9 +1407,10 @@ static int dd_archive(UncCtx *c)
             uint32_t inner;
             dd_parse_filehdr(hdr, &f);
             /* The record's own +74 is the whole ENTRY's span, and it is
-             * what walks the archive: `record + 124 + span` lands on
-             * the next record, or on the last byte, in all nine DDAR
-             * archives reachable here. What it spans is a compressed
+             * what walks the archive: `record + 124 + span` (+78, which
+             * is 0 in every DDAP record here) lands on the next record,
+             * or on the last byte, in all nine DDAR archives reachable
+             * here. What it spans is a compressed
              * FILE, so it is that file's length — with or without the
              * header trailer, and nothing else.
              * Source: docs/formats/diskdoubler-container.md, "DDAR". */
@@ -1426,6 +1434,7 @@ static int dd_archive2(UncCtx *c)
     uint8_t hdr[96];
     int sawend = 0;        /* the 0xBBBB record: this archive's own end */
     uint32_t at = 62;      /* 'DDA2' + 58 header bytes */
+    uint32_t prev = 0;     /* the last record's position */
     int lastlevel = 0, err;
 
     unc_path_init(&path, c);
@@ -1436,6 +1445,9 @@ static int dd_archive2(UncCtx *c)
         UncEntryInfo e;
         unc_off_t fsize = c->io->size(c->io->ctx);
 
+        /* As in dd_archive: a total that wraps steps back, for ever. */
+        if (at <= prev) return UNC_ERR_CORRUPT;
+        prev = at;
         if (c->io->seek(c->io->ctx, at) < 0) return UNC_ERR_IO;
         if (unc_read_full(c->io, hdr, 46) != UNC_OK) {
             /* A record that will not read is the end of the archive only

@@ -106,16 +106,20 @@ int sitseg_parse(const uint8_t *h, int32_t len, UncSegmentDesc *desc)
     return UNC_OK;
 }
 
-/* And where the length is known, the part's payload fits in the file it
- * is a piece of: nothing a real part can fail, and arithmetic a header
- * read off something else rarely survives. */
+/* And where the length is known, a later part's payload fits in the file
+ * it is a piece of: nothing a real part can fail, and arithmetic a header
+ * read off something else rarely survives. Not part 1, whose data fork
+ * also carries a fat installer's PowerPC tail, which may outweigh every
+ * later disk (fmt_sitseg_end.c); the reader takes any part 1 at least as
+ * long as its header, and the probe now agrees with it. */
 UncFormat unc_sitseg_probe(const uint8_t *head, int32_t len, UncIO *io)
 {
     uint32_t size;
 
     if (sitseg_parse(head, len, NULL) != UNC_OK) return UNC_FORMAT_UNKNOWN;
     size = io ? unc_io_size32(io) : UNC_SIZE_UNKNOWN;
-    if (size != UNC_SIZE_UNKNOWN && size >= UNC_SEG_HEAD &&
+    if (head[SS_PART] != 1 &&
+        size != UNC_SIZE_UNKNOWN && size >= UNC_SEG_HEAD &&
         size - UNC_SEG_HEAD > unc_get_u32be(head + SS_RSRCLEN)
                               + unc_get_u32be(head + SS_DATALEN))
         return UNC_FORMAT_UNKNOWN;

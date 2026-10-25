@@ -191,10 +191,13 @@ REPO = os.path.dirname(HERE)
 # control's CODE +40 and A5 -8; OVL_SAVED +2,496 more than offsets it.
 # **-256 more each the same day, DERIVED**: DDAR's stored records, the
 # control's CODE +240 and A5 +16; OVL_SAVED +256 offsets it.
+# **-144 more each the same day, DERIVED**: the review before v0.44.0
+# (DECISIONS.md 2026-10-25, *the review before the release*), the
+# control's CODE +120 and A5 +24; OVL_SAVED +144 offsets it.
 TIERS = {
-    "sys3-512K": (199142, "System 3.0, Macintosh 512Ke (222,070 B free)"),
-    "sys6-512K": (103760, "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
-    "floor-1M":  (628048, "System 6.0.8, 1 MB Mac Plus — the floor target"),
+    "sys3-512K": (198998, "System 3.0, Macintosh 512Ke (222,070 B free)"),
+    "sys6-512K": (103616, "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
+    "floor-1M":  (627904, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
 # **-592 more each 2026-10-24, DERIVED**: SUMacC's `.dl`, the control's
 # CODE +584 and A5 +8 (DECISIONS.md 2026-10-24, *the format before
@@ -398,7 +401,8 @@ TIERS = {
 # data + bss -680. The machine gave +4,204, because the jump table, the
 # stub segments and the relocations trimmed at launch are resident bytes
 # this unit never counted — which is why TIERS was measured, not moved.
-TIERS_CONTROL = 214064     # build/mac-resident, CODE + A5, 2026-10-25
+TIERS_CONTROL = 214208     # build/mac-resident, CODE + A5, 2026-10-25
+# +144 on 2026-10-25: the review before v0.44.0; TIERS above -144.
 # +352 on 2026-10-22: the eleven malformed-input fixes, every decoder linked
 # in; TIERS above drops 352 to match (TIERS_MACHINE, physical RAM, unmoved).
 # +32 more on 2026-10-23 with Compact Pro's fork-extent check; TIERS -32.
@@ -837,7 +841,9 @@ EXPECT = {
 # TIERS -32.
 # **+256 2026-10-25, -> 158,992**: the control's +256 (CODE +240, A5 +16)
 # against the shipped pair's 0 (DECISIONS.md 2026-10-25, *the archive Symantec shipped*). TIERS -256.
-OVL_SAVED = 158992
+# +144 on 2026-10-25: the review before v0.44.0 grows the control's CODE +
+# A5 by 144 and the shipped pair's not at all (CODE +20, A5 -20).
+OVL_SAVED = 159136
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
 # every kept image is one — as is the bundle an envelope holds on to.
@@ -975,9 +981,9 @@ IMAGES = {
     "OVL_ID_BINHEX":      7158,
     "OVL_ID_BTOA":        2496,
     "OVL_ID_CODECS":      6016,
-    "OVL_ID_CPTDD":       15072,
+    "OVL_ID_CPTDD":       15144,
     "OVL_ID_CRYPT":       9604,
-    "OVL_ID_EXO":         30168,
+    "OVL_ID_EXO":         30200,
     "OVL_ID_LZH":         10458,
     "OVL_ID_NOW":         4768,
     "OVL_ID_PACKIT":      2180,
@@ -987,7 +993,7 @@ IMAGES = {
     "OVL_ID_SUPERDISK":   6634,
     "OVL_ID_TEXT":        11438,
     "OVL_ID_ZIPOLD":      10832,
-    "OVL_ID_SNIFF":       13208,
+    "OVL_ID_SNIFF":       13220,
 }
 # **ZIPOLD +3,374 B and EXO +972 B, the bundle +4,344 B, 2026-10-17**:
 # Mac OS X's sidecars, the shared code in ZIPOLD and zip's half in EXO,
@@ -1048,7 +1054,10 @@ IMAGES = {
 # probes (DECISIONS.md 2026-10-25, *the envelopes that left*).
 # **CPTDD +240 and the bundle +240, 2026-10-25**: DDAR's stored records and
 # the Finder info its records keep (DECISIONS.md 2026-10-25, *the archive Symantec shipped*).
-BUNDLE = 184044
+# **CPTDD +72, EXO +32, SNIFF +12, the bundle +116 B, 2026-10-25**: the
+# review before v0.44.0 — the DiskDoubler walks' forward check, gzip's
+# failed read after a member, the segment probe's part-1 exemption.
+BUNDLE = 184160
 
 # What the SHIPPED lane asserts, and it is the refused fixtures BY NAME
 # rather than a tally: a tier that refuses two different fixtures and still

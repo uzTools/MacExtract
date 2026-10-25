@@ -468,6 +468,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-25 (the two that said nothing) — a MIME multipart past the walk's depth and a Finder info GateKeeper vetoes are report lines, not silence: UNC_ERR_NESTED, and "name: Finder info refused"
 - 2026-10-25 (the envelopes that left) — the encryption check joins the sniffer's image and the MacBinary and AppleDouble readers BinHex's: 2,464 B back on every budget but an envelope's
 - 2026-10-25 (the archive Symantec shipped) — a DDAR record is the stored file's catalog entry: +78 is its resource fork, a creator other than DDAP is stored raw, and +100.. is the Finder's position; read off DD Expand 3.7.7
+- 2026-10-25 (the review before the release) — the 38 commits since v0.43.0 read before tagging: a DiskDoubler walk that could step backward for ever, and four smaller faults
 
 ---
 
@@ -30251,3 +30252,35 @@ compressed file. It is the only such record on this machine, so
 creator `DDAP` rests on 43 records of one creator and 1 of another.
 OPEN_ITEMS.md keeps the `DDA2` half of the row.
 
+## 2026-10-25 (the review before the release) — the 38 commits since v0.43.0 read before tagging: a DiskDoubler walk that could step backward for ever, and four smaller faults
+
+**Claim (measured).** Read before v0.44.0, the commits since v0.43.0 held
+one fault worth a release's delay and four small ones; all five are fixed.
+- **The DiskDoubler walks could loop for ever.** `DDAR` steps by `start +
+  (+74) + (+78)` and `DDA2` by `start + total`, 32-bit words off the
+  record; a sum that wraps sends the walk back to a record already read.
+  A 202-byte `DDAR` file listed one entry about two million times in five
+  seconds. dc62805 made it easy to reach: every record not of creator
+  `DDAP` takes the raw branch. The `DDA2` half was in v0.43.0. Both walks
+  now refuse a record that does not lie past the last one (`UNC_ERR_CORRUPT`).
+- **gzip took a failed read after a member for the end of the file**, and
+  reported the entry whole when more members may have followed. Only a
+  true end of file is a clean end now.
+- **The StuffIt segment probe refused part 1 of a fat installer** whose
+  PowerPC tail outweighs its later disks, and a one-part set with bytes
+  after it, both of which the reader takes. Part 1 is exempt from the
+  bound (BLOCKERS.md, *Withdrawn claims*).
+- **The advice after "Finder info refused" was said once a layer, and lost
+  past 64 refusals** (BLOCKERS.md, *Withdrawn claims*). The refused and
+  INEXACT lines are no longer urgent, which RepNew reserves for failures
+  and neither is; the advice is said once, after the envelope chain.
+
+**Evidence.** Each fix has a regression that fails without it: three in
+`tests/unit_formats.c` (the two walks, gzip's failed read) and one in
+`tests/mac_sink_test.c` (70 refusals leave the reserve). The probe's test
+now holds part 2 to the bound and part 1 not.
+
+**Cost.** Shipped CODE +20 and A5 −20, so no budget moves; the control
++144, `ovl_cptdd` +72, `ovl_exo` +32, the sniffer's +12; each grant +144
+less the images it keeps (FORMATS.md, *What each format is granted*).
+Arithmetic, no emulator booted.

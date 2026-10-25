@@ -1143,6 +1143,20 @@ static void put16le(uint8_t *p, uint32_t v)
     p[1] = (uint8_t)((v >> 8) & 0xFF);
 }
 
+/* A MemIO whose reads fail at its end rather than return 0: an I/O
+ * error, at the one place a clean end of file is also legal. */
+static int32_t memio_failend_read(void *ctx, void *buf, int32_t len)
+{
+    MemIO *m = (MemIO *)ctx;
+    int32_t n;
+    if (m->pos >= m->size) return -1;
+    n = (int32_t)(m->size - m->pos);
+    if (n > len) n = len;
+    memcpy(buf, m->data + m->pos, (size_t)n);
+    m->pos += (uint32_t)n;
+    return n;
+}
+
 static void test_gzip(void)
 {
     /* gzip header + one stored deflate block + CRC/ISIZE trailer. */
@@ -1184,6 +1198,14 @@ static void test_gzip(void)
     CHECK(unc_extract_as(UNC_FORMAT_GZIP, &io, &sk, &al, NULL, NULL) == UNC_OK);
     CHECK(cap.count == 1 && cap.status[0] == UNC_ERR_CRC);
     arc[16] ^= 1;
+
+    /* A read that FAILS after a member is not the end of the file: the
+     * entry was reported whole even when more members were to come. */
+    test_make_memio(&io, &m, arc, len);
+    io.read = memio_failend_read;
+    cap_make(&sk, &cap);
+    (void)unc_extract_as(UNC_FORMAT_GZIP, &io, &sk, &al, NULL, NULL);
+    CHECK(cap.count == 1 && cap.status[0] == UNC_ERR_IO);
 
     /* Concatenated members (RFC 1952): one entry whose data is the
      * concatenation of every member, each member's own trailer verified. */
@@ -2228,10 +2250,15 @@ static void test_sitseg(void)
         MemIO bm;
         UncIO bio;
         memset(big, 0x5A, sizeof big);
-        seg_head(big, 1, "Thing.sit", 100, 200, 0x11223344u);
+        seg_head(big, 2, "Thing.sit", 100, 200, 0x11223344u);
         test_make_memio(&bio, &bm, big, sizeof big);     /* 400 > 300 */
         CHECK(unc_sitseg_probe(big, UNC_SEG_HEAD, &bio) == 0);
         test_make_memio(&bio, &bm, big, UNC_SEG_HEAD + 300);  /* exact */
+        CHECK(unc_sitseg_probe(big, UNC_SEG_HEAD, &bio) == UNC_FORMAT_SITSEG);
+        /* Part 1 is exempt: a fat installer's carries its PowerPC tail
+         * too, which can outweigh every later disk. */
+        seg_head(big, 1, "Thing.sit", 100, 200, 0x11223344u);
+        test_make_memio(&bio, &bm, big, sizeof big);
         CHECK(unc_sitseg_probe(big, UNC_SEG_HEAD, &bio) == UNC_FORMAT_SITSEG);
     }
 
@@ -5632,6 +5659,44 @@ static void test_malformed_regressions(void)
         CHECK(unc_extract_as(UNC_FORMAT_COMPACTPRO, &io, &sk, &al, NULL, NULL)
               == UNC_OK);
         CHECK(cap.count == 1 && cap.status[0] == UNC_ERR_CORRUPT);
+    }
+
+    /* DiskDoubler DDAR: a record whose data size (-124) wraps the step
+     * `start + datasize + rsrcsize` back onto itself. Listing it printed
+     * the same entry for ever; the walk must refuse to step backward. */
+    {
+        uint8_t d[78 + 124];
+        uint16_t crc;
+        UncOptions opt;
+        memset(d, 0, 78);
+        memcpy(d, "DDAR", 4);
+        crc = unc_crc16_xmodem(0, d, 76);
+        d[76] = (uint8_t)(crc >> 8); d[77] = (uint8_t)crc;
+        ddar_entry(d + 78, "a", 0, 0, 0xFFFFFF84u, 0, 0);
+        memset(&opt, 0, sizeof opt);
+        opt.list_only = 1;
+        test_make_memio(&io, &m, d, (uint32_t)sizeof d);
+        cap_make(&sk, &cap);
+        CHECK(unc_extract_as(UNC_FORMAT_DISKDOUBLER, &io, &sk, &al, NULL,
+                             &opt) == UNC_ERR_CORRUPT);
+        CHECK(cap.count == 1);
+    }
+
+    /* DiskDoubler DDA2: the second record's total (-46) steps back to
+     * the first, and the two then alternated for ever. */
+    {
+        uint8_t d[62 + 46 + 46];
+        uint16_t crc;
+        memset(d, 0, 62);
+        memcpy(d, "DDA2", 4);
+        crc = unc_crc16_xmodem(0, d, 60);
+        d[60] = (uint8_t)(crc >> 8); d[61] = (uint8_t)crc;
+        dda2_rec(d + 62, 46, 0, "a", (uint32_t)-2, 46);   /* level -2: skipped */
+        dda2_rec(d + 108, 46, 0, "b", (uint32_t)-2, (uint32_t)-46);
+        test_make_memio(&io, &m, d, (uint32_t)sizeof d);
+        cap_make(&sk, &cap);
+        CHECK(unc_extract_as(UNC_FORMAT_DISKDOUBLER, &io, &sk, &al, NULL,
+                             NULL) == UNC_ERR_CORRUPT);
     }
 
     /* StuffIt 5: a directory marker with a zero header size left `pos`

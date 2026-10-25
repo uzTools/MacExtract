@@ -1088,6 +1088,35 @@ int main(int argc, char **argv)
             } else
                 fprintf(stderr, "meta [Finder info refused]: \"%s\"\n",
                         (char *)gRepBuf + gRepStart[0]);
+            /* Refused on every entry of a big archive, the lines must
+             * leave the reserve alone: the one that says what to do
+             * comes after them, and was dropped at 64 entries. */
+            {
+                int k;
+                RepReset();
+                gSetCatErr = paramErr;
+                for (k = 0; k < 70; k++) {
+                    memset(&sk2, 0, sizeof sk2);
+                    sk2.vRefNum = 1; sk2.rootDirID = 0;
+                    memset(&info, 0, sizeof info);
+                    info.name[0] = 'a' + (k % 26); info.name[1] = 'a' + k / 26;
+                    info.name_len = 2;
+                    info.type = 0x4150504C;
+                    if (sink_begin(&sk2, &info) == 0) sink_end(&sk2, UNC_OK);
+                }
+                gSetCatErr = 0;
+                if (!RepNew(1)) {
+                    fprintf(stderr, "meta [Finder info refused]: 70 refusals "
+                            "took the reserve (%d lines)\n", (int)gRepN);
+                    ok = 0;
+                } else
+                    fprintf(stderr, "meta [Finder info refused]: 70 refusals "
+                            "leave the reserve, %d lines\n", (int)gRepN);
+                /* The checks after this read lines as C strings, out of
+                 * a pool that was all zeros until now. */
+                memset(gRepBuf, 0, sizeof gRepBuf);
+                RepReset();
+            }
         }
         /* A mail part nested past the MIME walk's depth fails as
          * UNC_ERR_NESTED, and the report names it with the engine's own
