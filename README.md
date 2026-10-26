@@ -161,6 +161,11 @@ the Mac application the same way while running on an emulated Mac Plus,
 System 7 and Mac OS 9. Two real Macs have run it: an LC 475 under System
 7.6.1 and an iMac under Mac OS 9.2.2. Nothing older has.
 
+## Support
+
+MacExtract is free. If it rescued some files for you, you can buy me a
+coffee at [ko-fi.com/khaz1](https://ko-fi.com/khaz1).
+
 ## Where things are written down
 
 [FORMATS.md](FORMATS.md) (formats, memory, speed) ·
