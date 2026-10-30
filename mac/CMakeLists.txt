@@ -155,9 +155,9 @@ set(POC_PARTDLG_R "")
 if(DEFINED ENV{UNC_POC_PARTDLG})
     set(POC_PARTDLG_R macextract_partdlg.r)
 endif()
-set(POC_COLORBAR_R "")
+set(POC_COLORBAR_R macextract_progress.r)    # the progress window, 128
 if(DEFINED ENV{UNC_POC_COLORBAR})
-    set(POC_COLORBAR_R macextract_colorbar.r)
+    set(POC_COLORBAR_R macextract_colorbar.r) # replaced by 146
 endif()
 
 add_application(MacExtract
@@ -192,6 +192,9 @@ if(DEFINED ENV{UNC_POC_DESTDLG})
 endif()
 if(DEFINED ENV{UNC_POC_COLORBAR})
     add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/macextract_colorbar.r.rsrc.bin
+        APPEND DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/macextract_strings.h)
+else()
+    add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/macextract_progress.r.rsrc.bin
         APPEND DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/macextract_strings.h)
 endif()
 if(DEFINED ENV{UNC_POC_PARTDLG})
