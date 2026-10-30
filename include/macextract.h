@@ -853,6 +853,14 @@ typedef struct UncVolumeSource {
     uint32_t (*size)(void *ctx, const UncSegmentDesc *desc, int part);
 } UncVolumeSource;
 
+/* What need() answers, for an OPEN-ENDED split only (desc->nparts == 0,
+ * which a split otherwise refuses), when part `part` does not exist: the
+ * set ended with the part before it. The joined file is then as long as
+ * what was read, which is not an error. A split states no length, so only
+ * the host can say where it ends, and only when the joiner gets there.
+ * Positive, so that no error code can be mistaken for it. */
+#define UNC_SEG_ENDS 1
+
 /* Joins the parts of `desc` and extracts the result.
  *
  * SITSEG yields one entry, with the original file's name, type/creator,

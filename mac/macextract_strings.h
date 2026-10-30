@@ -80,6 +80,10 @@
 #define S_SEG_LEFT_K        "K"
 #define S_SEG_LEFT_BYTES    " bytes"
 #define S_SEG_LEFT_END      " still to read."
+/* PoC, a plain split's next part, which may not exist:
+ * " If the set has no part <N>, click Cancel." */
+#define S_SEG_IF_NONE       " If the set has no part "
+#define S_SEG_IF_NONE_END   ", click Cancel."
 /* Find... picked the wrong part: "This is part <N>. Please choose Part <M>." */
 #define S_SEG_OTHER_PART    "This is part "
 #define S_SEG_OTHER_SAME    ". Please choose Part "
@@ -91,6 +95,17 @@
 /* Standard File's prompt does not wrap: about 200 points, then it is cut. */
 #define S_SF_DEST_PROMPT    "Extract into this folder:"
 #define S_SF_DEST_NAME      "Extract here"
+/* PoC (UNC_POC_DESTDLG), Rez: the destination dialog's own layout, and its
+ * New Folder window, whose words are System 7's (DITL -6046). */
+#define S_DEST_PROMPT       "Extract into this folder"
+#define S_DEST_EXTRACT      "Extract"
+#define S_DEST_EJECT        "Eject"
+#define S_DEST_DRIVE        "Drive"         /* System 7 on relabels it Desktop */
+#define S_NF_ASK            "Name of new folder:"
+#define S_NF_UNTITLED       "untitled folder"
+#define S_NF_CREATE         "Create"
+/* C: drawn over the New button (DrawNewButton), not its title */
+#define S_NF_NEW            "New"
 #define S_SF_REPORT_PROMPT  "Save the report as:"
 #define S_SF_REPORT_NAME    "Extraction Report"
 

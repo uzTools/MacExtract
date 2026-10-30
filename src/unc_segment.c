@@ -197,6 +197,7 @@ typedef struct SegJoin {
     uint32_t switches;             /* parts opened */
     uint32_t backward;             /* opens forced by a backward seek */
     int      err;                  /* sticky: UNC_ERR_SEGMENTED etc. */
+    int      open;                 /* an open-ended split: see UNC_SEG_ENDS */
 } SegJoin;
 
 uint32_t unc_segment_scratch_size(void)
@@ -263,6 +264,12 @@ static int seg_open(SegJoin *j, int part)
     seg_release(j);
 
     err = j->vs->need(j->vs->ctx, j->desc, part, &j->cur);
+    /* "There is no such part" ends an open-ended split, and only where the
+     * set may end: past the first part, at the next one to be measured.
+     * Anywhere else it is a part the host could not produce. */
+    if (err == UNC_SEG_ENDS && !(j->open && part > 1 && part == j->known))
+        err = UNC_ERR_SEGMENTED;
+    if (err == UNC_SEG_ENDS) return err;
     if (err != UNC_OK) {
         /* A part the host could not produce is the ARCHIVE's verdict,
          * not the entry's, however the caller happened to ask for it.
@@ -349,6 +356,11 @@ static int seg_locate(SegJoin *j, uint32_t at)
         int err;
         if (j->start[next] > at) break;      /* map overshot: gap, give up */
         err = seg_open(j, next);
+        if (err == UNC_SEG_ENDS) {          /* the set ends where it is */
+            j->total = j->start[j->known];
+            j->last = j->known - 1;
+            return err;
+        }
         if (err != UNC_OK) return err;
         if (at < j->start[j->known]) return UNC_OK;
         if (j->start[j->known] >= j->total) break;        /* set complete */
@@ -445,6 +457,7 @@ static int32_t seg_read(void *ctx, void *buf, int32_t len)
     if (j->pos >= j->total) return 0;                /* logical EOF */
 
     err = seg_locate(j, j->pos);
+    if (err == UNC_SEG_ENDS) return 0;     /* logical EOF, now known */
     if (err == UNC_ERR_SEGMENTED) {
         /* A part the host could not produce. Reported as EOF so the
          * entry fails as truncated (partial output is kept and the
@@ -576,7 +589,8 @@ int unc_extract_segments(const UncSegmentDesc *desc, UncVolumeSource *vs,
     if (!j->sc) return UNC_ERR_UNSUPPORTED;
     if (desc->nparts > UNC_SEG_MAX_PARTS) return UNC_ERR_UNSUPPORTED;
     /* Neither a size nor a count is a set nobody can tell the end of. */
-    if (desc->nparts == 0 && desc->total == UNC_SIZE_UNKNOWN)
+    if (desc->nparts == 0 && desc->total == UNC_SIZE_UNKNOWN &&
+        !j->sc->anonymous)                 /* a split may be open-ended */
         return UNC_ERR_CORRUPT;
 
     j->desc = desc;
@@ -597,6 +611,7 @@ int unc_extract_segments(const UncSegmentDesc *desc, UncVolumeSource *vs,
     j->crc_pos = 0;
     j->crc_ok = 1;                 /* nothing read yet: the sum is whole */
     j->err = UNC_OK;
+    j->open = 0;
     j->io.ctx = j;
     j->io.read = seg_read;
     j->io.seek = seg_seek;
@@ -613,9 +628,13 @@ int unc_extract_segments(const UncSegmentDesc *desc, UncVolumeSource *vs,
      * before extracting — is the prepass the addressed mode exists to
      * avoid, and on removable media it is a disk swap each. */
     if (j->sc->anonymous) {
-        if (desc->nparts == 0) return UNC_ERR_CORRUPT;
-        if (j->total == UNC_SIZE_UNKNOWN) j->total = seg_total_if_free(j);
-        if (j->total == UNC_SIZE_UNKNOWN) return UNC_ERR_CORRUPT;
+        /* No part count: OPEN-ENDED. The host is asked for each next part
+         * as the walk reaches it and says where the set ends
+         * (UNC_SEG_ENDS), so neither a count nor a length is needed, and
+         * the entry is announced without a size. */
+        if (desc->nparts == 0) j->open = 1;
+        else if (j->total == UNC_SIZE_UNKNOWN) j->total = seg_total_if_free(j);
+        if (!j->open && j->total == UNC_SIZE_UNKNOWN) return UNC_ERR_CORRUPT;
         j->split = *desc;
         j->split.head_len  = 0;      /* a part is payload, all of it */
         j->split.total     = j->total;
