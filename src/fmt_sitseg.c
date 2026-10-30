@@ -154,6 +154,27 @@ uint16_t unc_sitseg_stored_crc(const uint8_t *head, int fork)
  * Shared with UNC_FORMAT_SPLIT, which is this same shape with nothing
  * in front of it: one entry, one fork, sizes and name supplied rather
  * than parsed (unc_segment.c). */
+/* A fork of unknown length — an open-ended split's joined file: copied
+ * until the stream ends, which is its end and not a truncation. Its own
+ * path, so that unc_copy_fork keeps calling a short read of a declared
+ * 0xFFFFFFFF what it is for every other reader. */
+static int emit_fork(UncCtx *c, UncFork fork, uint32_t size, uint8_t *buf,
+                     uint32_t bufsz)
+{
+    if (size != UNC_SIZE_UNKNOWN) return unc_copy_fork(c, fork, size, buf, bufsz);
+    for (;;) {
+        int32_t r = c->io->read(c->io->ctx, buf, (int32_t)bufsz);
+        int e;
+        if (r < 0) return UNC_ERR_IO;
+        if (r == 0) return UNC_OK;
+        if (!c->opt.test_only &&
+            c->sink->write(c->sink->ctx, fork, buf, r) < 0)
+            return UNC_ERR_SINK;
+        e = unc_progress_add(&c->ps, (uint32_t)r);
+        if (e != UNC_OK) return e;
+    }
+}
+
 int unc_sitseg_emit(UncCtx *c, const UncSegmentDesc *desc, uint32_t base,
                     int data_first, const int *ioerr)
 {
@@ -190,9 +211,9 @@ int unc_sitseg_emit(UncCtx *c, const UncSegmentDesc *desc, uint32_t base,
             /* Whichever fork the stream begins with: StuffIt's split
              * puts the resource fork first, DiskDoubler's the data. */
             if (err == UNC_OK)
-                err = unc_copy_fork(c, f1, n1, buf, bufsz);
+                err = emit_fork(c, f1, n1, buf, bufsz);
             if (err == UNC_OK)
-                err = unc_copy_fork(c, f2, n2, buf, bufsz);
+                err = emit_fork(c, f2, n2, buf, bufsz);
             unc_free(c->al, buf);
         }
     }
