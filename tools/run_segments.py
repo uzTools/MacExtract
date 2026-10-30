@@ -435,8 +435,12 @@ def zip_behaviours(macextract, case, d, parts, whole, want, workroot, fails):
                         "buffered one — buffering the directory is doing "
                         "nothing" % (case, lean_opens))
 
-    # A middle part identifies itself as nothing, and the oracle refuses
-    # one too (MEASURED). Ours must refuse rather than guess.
+    # A middle part identifies itself as nothing; the oracle refuses one
+    # (MEASURED, and still checked so that a change there is noticed).
+    # Ours places it by NAME and joins the set from it, as it does every
+    # other part when the set is opened from its .zip, and as the Mac
+    # shell does: membership is by name for the whole family, so refusing
+    # the middle ones protected nothing (DECISIONS.md 2026-10-30).
     if len(parts) > 2:
         mid = parts[1]
         r = run(["unar", "-q", "-o", os.path.join(d, "_omid"),
@@ -446,9 +450,20 @@ def zip_behaviours(macextract, case, d, parts, whole, want, workroot, fails):
                     "that it cannot be identified is wrong" % case)
         rc, out = ours_extract(macextract, os.path.abspath(mid),
                                os.path.join(d, "_mid"))
-        fails.check(rc != 0, "%s: a middle part must not extract" % case)
-        fails.check("middle part of a spanned zip" in out,
-                    "%s: a middle part refused as %r" % (case, out.strip()))
+        fails.check(rc == 0, "%s: a middle part did not open its set: %s"
+                    % (case, out.strip()))
+        fails.check(read_tree(os.path.join(d, "_mid")) == want,
+                    "%s: opened from a middle part, different bytes" % case)
+        # Alone, it says which part it needs, not "format not recognized".
+        alone = os.path.join(workroot, case + "-mid-alone")
+        os.makedirs(alone)
+        shutil.copy(mid, alone)
+        rc, out = ours_extract(macextract,
+                               os.path.join(alone, os.path.basename(mid)),
+                               os.path.join(alone, "_o"))
+        fails.check(rc != 0 and "named .zip" in out,
+                    "%s: a middle part alone refused as %r"
+                    % (case, out.strip()))
 
     # --no-parts must refuse, not extract a truncated archive.
     rc, out = ours_extract(macextract, os.path.abspath(last),
