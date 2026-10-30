@@ -2394,17 +2394,12 @@ nextlayer:
             fmt = UNC_FORMAT_SPLIT;
         /* A spanned zip's middle part has nothing to recognise it by but
          * its name, NAME.zNN (the first carries the spanning signature,
-         * the last the directory). It is refused, as the reference
-         * refuses it (run_segments.py measures both) — but said for what
-         * it is, not "format not recognized". */
-        if (!no_parts && fmt == UNC_FORMAT_UNKNOWN &&
-            zip_ext_part(file) >= 1) {
-            fprintf(stderr, "macextract: %s: this looks like a middle part "
-                    "of a spanned zip, which says nothing about its set; "
-                    "open the part named .zip\n", file);
-            fclose(fio.f);
-            return 1;
-        }
+         * the last the directory). Placed by name, as every other part of
+         * the set already is when it is opened from the .zip, and as the
+         * Mac shell does: the engine's structural check on the assembled
+         * set is what keeps a wrong file out, whichever part was opened. */
+        if (!no_parts && fmt == UNC_FORMAT_UNKNOWN && zip_ext_part(file) >= 1)
+            fmt = UNC_FORMAT_ZIPSEG;
     }
 
     /* --only names the entries the user can SEE. A layer this run is

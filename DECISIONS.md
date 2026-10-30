@@ -470,6 +470,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-25 (the archive Symantec shipped) — a DDAR record is the stored file's catalog entry: +78 is its resource fork, a creator other than DDAP is stored raw, and +100.. is the Finder's position; read off DD Expand 3.7.7
 - 2026-10-25 (the review before the release) — the 38 commits since v0.43.0 read before tagging: a DiskDoubler walk that could step backward for ever, and four smaller faults
 - 2026-10-25 (the archives that drew as the application) — the documents MacExtract's bundle claims draw the archive icon, not the application's: MacStamp writes our creator, so the Finder shows them
+- 2026-10-30 (the middle part that was refused) — a spanned zip opened from a middle part, NAME.zNN, joins its set as the Mac shell's always did: every part of the family is placed by name, so refusing the middle ones protected nothing
 
 ---
 
@@ -19249,3 +19250,19 @@ UNC_AT_BUDGET`, `derived-ASCbeep.sit`) gave 742,708 B without the icon and
 742,636 B with it, `FreeMem` at start falling the same 72. TIERS and
 TIERS_MACHINE −72 on all three tiers, the 512 KB pair derived. Every FREF
 added before this grew the same map unpriced, about 12 B a type.
+
+## 2026-10-30 (the middle part that was refused) — a spanned zip opened from a middle part, NAME.zNN, joins its set as the Mac shell's always did: every part of the family is placed by name, so refusing the middle ones protected nothing
+
+**Claim (measured).** The CLI refused `NAME.z02` as "format not recognized"
+and `run_segments.py` required it to ("ours must refuse rather than
+guess"), while the Mac shell placed a `.zNN` by name and joined the set
+from it. The guess the refusal avoided is made anyway: opened from
+`NAME.zip`, the same `NAME.z01` and `NAME.z02` are taken by name alone,
+and what keeps a wrong one out either way is the engine's structural check
+on the assembled set. `unar` refusing a middle part is a fact about `unar`.
+
+**Now.** The CLI treats a file nothing recognises, named `.zNN`, as a part
+of a spanned zip: the set opens from it byte-exact, and alone it says the
+`.zip` is not beside it. The suite checks both on its five multi-part zip
+cases, and they fail against the CLI that refused (all five, measured);
+the oracle's refusal is still checked, to notice a change there.
