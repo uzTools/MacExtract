@@ -79,17 +79,18 @@
 #define S_SEG_LEFT_ABOUT    " About "
 #define S_SEG_LEFT_K        "K"
 #define S_SEG_LEFT_BYTES    " bytes"
+#ifdef UNC_POC_PARTDLG          /* both part dialogs share it; it fits */
+#define S_SEG_LEFT_END      " left."
+#else
 #define S_SEG_LEFT_END      " still to read."
-/* PoC, a plain split's next part, which may not exist:
- * " If the set has no part <N>, click Cancel." */
-#define S_SEG_IF_NONE       " If the set has no part "
-#define S_SEG_IF_NONE_END   ", click Cancel."
-/* PoC, the part dialog after an eject: ^2 is "Please i" or "I", ^1 the
- * ending, ". About <n>K still to read." or S_SEG_IF_ONE. */
-#define S_SEG_INSERT        "^2nsert the disk containing ^0^1"
-#define S_SEG_INSERT_PLEASE "Please i"
-#define S_SEG_INSERT_PLAIN  "I"
-#define S_SEG_IF_ONE        ", if the set has one. Otherwise click Cancel."
+#endif
+/* PoC, the part dialog. After an eject it says S_SEG_INSERT, else
+ * S_SEG_MISSING; ^1 is " About <n>K left." or, for a plain split's next
+ * part, which may not exist, " No part <N>? Click Cancel." Each fits the
+ * dialog's two lines with a 31-character name (Chicago 12's widths). */
+#define S_SEG_INSERT        "Insert the disk with ^0.^1"
+#define S_SEG_NO_PART       " No part "
+#define S_SEG_NO_PART_END   "? Click Cancel."
 /* Find... picked the wrong part: "This is part <N>. Please choose Part <M>." */
 #define S_SEG_OTHER_PART    "This is part "
 #define S_SEG_OTHER_SAME    ". Please choose Part "

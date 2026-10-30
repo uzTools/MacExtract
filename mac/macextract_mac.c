@@ -3862,24 +3862,13 @@ static int SegAskUser(SegHost *h, int part)
         }
         PStrCat(msg, S_SEG_CLOSE_QUOTE);
         left[0] = 0;
-        /* After an eject: "Insert the disk containing Part 4 of "Cal.sit",
-         * if the set has one. Otherwise click Cancel." for a part that may
-         * not exist, "Please insert ... ." for one that must. */
-        if (dlg == kPartEjectDLOG) {
-            if (h->askLast)
-                PStrCat(left, S_SEG_IF_ONE);
-            else {
-                PStrCat(left, ".");
-                SegCatRemaining(left, SegRemaining(h));
-            }
-        } else if (h->askLast) {
-            PStrCat(left, S_SEG_IF_NONE);
+        if (h->askLast) {          /* a split's next part, maybe none */
+            PStrCat(left, S_SEG_NO_PART);
             PStrCatNum(left, (long)part);
-            PStrCat(left, S_SEG_IF_NONE_END);
+            PStrCat(left, S_SEG_NO_PART_END);
         } else
             SegCatRemaining(left, SegRemaining(h));
-        ParamText(msg, left, h->askLast ? "\p" S_SEG_INSERT_PLAIN
-                                        : "\p" S_SEG_INSERT_PLEASE, "\p");
+        ParamText(msg, left, "\p", "\p");
 
         if (h->hide) HideWindow((WindowPtr)h->hide);
         gSegAsking = h;
