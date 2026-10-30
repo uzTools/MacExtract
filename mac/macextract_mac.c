@@ -3906,11 +3906,11 @@ static int SegAskUser(SegHost *h, int part)
             if (got) {
                 Str255 t;
                 t[0] = 0;
-                PStrCat(t, S_SEG_OTHER_PART);
+                PStrCat(t, S_SEG_THAT_PART);
                 PStrCatNum(t, (long)got);
-                PStrCat(t, S_SEG_OTHER_SAME);
+                PStrCat(t, S_SEG_NOT_PART_N);
                 PStrCatNum(t, (long)part);
-                PStrCat(t, S_SEG_OTHER_NEEDED);
+                PStrCat(t, ".");
                 ShowNote(kErrorALRT, t);
                 SegRemember(h, got, reply.vRefNum, 0, reply.fName);
             } else {

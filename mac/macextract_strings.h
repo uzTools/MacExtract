@@ -91,6 +91,10 @@
 #define S_SEG_INSERT        "Insert the disk with ^0.^1"
 #define S_SEG_NO_PART       " No part "
 #define S_SEG_NO_PART_END   "? Click Cancel."
+/* PoC, Find... picked another part of the set: "That is part <N>, not
+ * part <M>." */
+#define S_SEG_THAT_PART     "That is part "
+#define S_SEG_NOT_PART_N    ", not part "
 /* Find... picked the wrong part: "This is part <N>. Please choose Part <M>." */
 #define S_SEG_OTHER_PART    "This is part "
 #define S_SEG_OTHER_SAME    ". Please choose Part "
