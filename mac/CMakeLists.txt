@@ -194,6 +194,10 @@ if(DEFINED ENV{UNC_POC_COLORBAR})
     add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/macextract_colorbar.r.rsrc.bin
         APPEND DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/macextract_strings.h)
 endif()
+if(DEFINED ENV{UNC_POC_PARTDLG})
+    add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/macextract_partdlg.r.rsrc.bin
+        APPEND DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/macextract_strings.h)
+endif()
 
 # Retro68's rule for a .r depends on that file alone, so without this an
 # edit to the text in macextract_strings.h rebuilt the code and left the
