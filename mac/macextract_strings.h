@@ -84,6 +84,12 @@
  * " If the set has no part <N>, click Cancel." */
 #define S_SEG_IF_NONE       " If the set has no part "
 #define S_SEG_IF_NONE_END   ", click Cancel."
+/* PoC, the part dialog after an eject: ^2 is "Please i" or "I", ^1 the
+ * ending, ". About <n>K still to read." or S_SEG_IF_ONE. */
+#define S_SEG_INSERT        "^2nsert the disk containing ^0^1"
+#define S_SEG_INSERT_PLEASE "Please i"
+#define S_SEG_INSERT_PLAIN  "I"
+#define S_SEG_IF_ONE        ", if the set has one. Otherwise click Cancel."
 /* Find... picked the wrong part: "This is part <N>. Please choose Part <M>." */
 #define S_SEG_OTHER_PART    "This is part "
 #define S_SEG_OTHER_SAME    ". Please choose Part "
