@@ -933,6 +933,24 @@ if(DEFINED ENV{UNC_POC_DESTDLG})
     set(POC_DESTDLG_BUNDLE OVL_ID_DESTDLG:${CMAKE_CURRENT_BINARY_DIR}/ovl_destdlg.bin)
     set(POC_DESTDLG_BUNDLE_DEP ${CMAKE_CURRENT_BINARY_DIR}/ovl_destdlg.r)
 endif()
+# PoC (UNC_POC_PARTDLG): a segmented set's setup, the same way.
+set(POC_SEGSETUP_BUNDLE "")
+set(POC_SEGSETUP_BUNDLE_DEP "")
+if(DEFINED ENV{UNC_POC_PARTDLG})
+    add_custom_command(
+        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/ovl_segsetup.r
+        COMMAND ${CMAKE_COMMAND} -E env OVL_ID=OVL_ID_SEGSETUP
+                OVL_INC=${CMAKE_CURRENT_BINARY_DIR}
+                sh ${ENGINE_DIR}/tools/overlay/mkoverlay.sh
+                ${CMAKE_CURRENT_BINARY_DIR}/ovl_segsetup.r
+                ${ENGINE_DIR}/tools/overlay/ovl_segsetup.c
+        DEPENDS ${ENGINE_DIR}/tools/overlay/ovl_segsetup.c
+                ${CMAKE_CURRENT_SOURCE_DIR}/seg_setup.inc.c
+                ${CMAKE_CURRENT_SOURCE_DIR}/seg_types.h
+                ${OVL_DEPS})
+    set(POC_SEGSETUP_BUNDLE OVL_ID_SEGSETUP:${CMAKE_CURRENT_BINARY_DIR}/ovl_segsetup.bin)
+    set(POC_SEGSETUP_BUNDLE_DEP ${CMAKE_CURRENT_BINARY_DIR}/ovl_segsetup.r)
+endif()
 # The bundle. Depends on the per-format .r rules only so that their .bin
 # side-products exist; mkoverlay.sh writes <out>.bin beside <out>.r.
 #
@@ -964,6 +982,7 @@ add_custom_command(
             OVL_ID_ZIPOLD:${CMAKE_CURRENT_BINARY_DIR}/ovl_zipold.bin
             OVL_ID_SNIFF:${CMAKE_CURRENT_BINARY_DIR}/ovl_sniff.bin
             ${POC_DESTDLG_BUNDLE}
+            ${POC_SEGSETUP_BUNDLE}
     DEPENDS
             ${CMAKE_CURRENT_BINARY_DIR}/ovl_crypt.r
             ${CMAKE_CURRENT_BINARY_DIR}/ovl_spacesaver.r
@@ -983,6 +1002,7 @@ add_custom_command(
             ${CMAKE_CURRENT_BINARY_DIR}/ovl_zipold.r
             ${CMAKE_CURRENT_BINARY_DIR}/ovl_sniff.r
             ${POC_DESTDLG_BUNDLE_DEP}
+            ${POC_SEGSETUP_BUNDLE_DEP}
             ${ENGINE_DIR}/tools/overlay/mkbundle.py
             ${ENGINE_DIR}/tools/overlay/ovlid.py
             ${ENGINE_DIR}/tools/overlay/overlay.h)
