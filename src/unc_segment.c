@@ -198,6 +198,9 @@ typedef struct SegJoin {
     uint32_t backward;             /* opens forced by a backward seek */
     int      err;                  /* sticky: UNC_ERR_SEGMENTED etc. */
     int      open;                 /* an open-ended split: see UNC_SEG_ENDS */
+    /* The progress state, so that a total learned part by part reaches
+     * the bar (seg_progress_estimate). Never read for the stream. */
+    UncProgressState *ps;
 } SegJoin;
 
 uint32_t unc_segment_scratch_size(void)
@@ -238,6 +241,34 @@ void unc_segment_stats(const void *scratch, uint32_t *part_switches,
     if (!j) return;
     if (part_switches) *part_switches = j->switches;
     if (backward_crossings) *backward_crossings = j->backward;
+}
+
+/* The progress bar's total when the set's own is not known: on a Mac
+ * with one drive the parts on the other disks have no size until they are
+ * seen, so a spanned zip or a Compact Pro set read from floppies showed
+ * "estimating" from first part to last (the maintainer's LC 475,
+ * 2026-10-30). The parts measured so far count as they are, and each one
+ * not yet seen as a measured part that is not the last: Info-ZIP's -s and
+ * Compact Pro cut equal parts and put the remainder last, so the estimate
+ * is at most one part high, and exact once every part has been seen. Only
+ * the bar: j->total, the joined stream's length, is left alone, so a wrong
+ * estimate moves the bar and nothing else. Needs a part count, so not for
+ * an open-ended split. */
+static void seg_progress_estimate(SegJoin *j)
+{
+    uint32_t sum = 0, ref = UNC_SIZE_UNKNOWN;
+    int p, unseen = 0;
+
+    if (!j->ps || j->total != UNC_SIZE_UNKNOWN || !j->vs->size || j->open)
+        return;
+    for (p = 1; p <= j->last; p++) {
+        uint32_t s = j->vs->size(j->vs->ctx, j->desc, p);
+        if (s == UNC_SIZE_UNKNOWN) { unseen++; continue; }
+        if (p < j->last && ref == UNC_SIZE_UNKNOWN) ref = s;
+        sum += s;
+    }
+    if (unseen && ref == UNC_SIZE_UNKNOWN) return;
+    j->ps->total = sum + (uint32_t)unseen * ref;
 }
 
 static void seg_release(SegJoin *j)
@@ -282,6 +313,7 @@ static int seg_open(SegJoin *j, int part)
     }
     j->curpart = part;
     j->switches++;
+    seg_progress_estimate(j);      /* this part, at least, has a size now */
 
     /* A part shorter than its own header carries no payload and would
      * make start[] non-monotonic. */
@@ -612,6 +644,7 @@ int unc_extract_segments(const UncSegmentDesc *desc, UncVolumeSource *vs,
     j->crc_ok = 1;                 /* nothing read yet: the sum is whole */
     j->err = UNC_OK;
     j->open = 0;
+    j->ps = NULL;
     j->io.ctx = j;
     j->io.read = seg_read;
     j->io.seek = seg_seek;
@@ -659,6 +692,8 @@ int unc_extract_segments(const UncSegmentDesc *desc, UncVolumeSource *vs,
     c.segmap = j->addressed ? &map : NULL;
     c.ps.prog = prog;
     c.ps.total = j->total;
+    j->ps = &c.ps;
+    seg_progress_estimate(j);
     c.ps.done = 0;
     c.ps.since_tick = 0;
     c.ps.hold = 0;

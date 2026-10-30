@@ -4182,6 +4182,23 @@ static int seg_need(void *ctx, const UncSegmentDesc *desc, int part, UncIO *io)
     return UNC_OK;
 }
 
+#ifdef UNC_POC_PARTDLG
+/* A part's size, for the progress bar's total only (macextract.h,
+ * UncVolumeSource.size): the length recorded when the part was found,
+ * else unknown. Never by looking, as a disk that is out would be asked
+ * for. Without this the bar of a spanned zip or a Compact Pro set never
+ * had a total, from a hard disk or from floppies (the LC 475,
+ * 2026-10-30); the joiner estimates the parts not seen yet. */
+static uint32_t seg_part_size(void *ctx, const UncSegmentDesc *desc, int part)
+{
+    SegHost *h = (SegHost *)ctx;
+    (void)desc;
+    if (part < 1 || part > kSegMaxKnown || !h->plen[part])
+        return UNC_SIZE_UNKNOWN;
+    return h->plen[part];
+}
+#endif
+
 static void seg_release(void *ctx, UncIO *io)
 {
     SegHost *h = (SegHost *)ctx;
@@ -4831,6 +4848,9 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
         vs.ctx = sh;
         vs.need = seg_need;
         vs.release = seg_release;
+#ifdef UNC_POC_PARTDLG
+        vs.size = seg_part_size;
+#endif
 #ifdef UNC_AT_OVERLAY
         /* The other release site. A segmented set never came through here
          * until 2026-09-02, so the bundle was read at launch and held for the
