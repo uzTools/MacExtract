@@ -447,6 +447,8 @@ def zip_behaviours(macextract, case, d, parts, whole, want, workroot, fails):
         rc, out = ours_extract(macextract, os.path.abspath(mid),
                                os.path.join(d, "_mid"))
         fails.check(rc != 0, "%s: a middle part must not extract" % case)
+        fails.check("middle part of a spanned zip" in out,
+                    "%s: a middle part refused as %r" % (case, out.strip()))
 
     # --no-parts must refuse, not extract a truncated archive.
     rc, out = ours_extract(macextract, os.path.abspath(last),
@@ -586,6 +588,71 @@ def split_case_run(macextract, case, workroot, fails):
         fails.check(got_full == read_tree(os.path.join(d, "_unsplit")),
                     "%s: joined and unsplit reads disagree" % case)
     return d, kind, whole, parts, original
+
+
+def split_ask_cases(macextract, workroot, fails):
+    """--ask makes a split OPEN-ENDED, as the Mac shell does: the set is
+    asked for one part at a time as the join reaches it, and whether
+    there is another is asked only where the set may go on — after .001,
+    or after a part as long as the one before it. Each case below fails
+    if that rule, or the join under it, is wrong."""
+    d = os.path.join(workroot, "split-ask")
+    os.makedirs(d)
+    k = 7001
+    whole = ssynth._payload(31, 3 * k)               # three EQUAL parts
+    short = ssynth._payload(32, 3 * k - 999)         # the last one shorter
+    def cut(data, dirs, name="Ask.bin"):
+        paths = []
+        for i in range(3):
+            sub = os.path.join(d, dirs[i])
+            os.makedirs(sub, exist_ok=True)
+            p = os.path.join(sub, "%s.%03d" % (name, i + 1))
+            open(p, "wb").write(data[i * k:(i + 1) * k])
+            paths.append(p)
+        return paths
+    def ask(first, answers, dest):
+        r = subprocess.run([macextract, "x", "-nr", "--ask", "-o", dest, first],
+                           input=answers.encode(), stdout=subprocess.PIPE,
+                           stderr=subprocess.STDOUT)
+        return r.returncode, r.stdout.decode("utf-8", "replace")
+
+    # 1. Equal parts, one folder: asked about part 4 (after part 3, which
+    #    is as long as part 2), the empty answer ends the set.
+    p1 = cut(whole, ["one"] * 3)
+    rc, out = ask(p1[0], "\n", os.path.join(d, "_o1"))
+    fails.check(rc == 0, "split-ask: equal parts failed: %s" % out.strip())
+    fails.check("part 4" in out and "if the set has one" in out,
+                "split-ask: equal parts: part 4 was not asked about: %r" % out)
+    fails.check(joined_file(os.path.join(d, "_o1"), os.path.join(d, "Ask.bin"))
+                == whole, "split-ask: equal parts joined to different bytes")
+
+    # 2. A lone .001, the rest in another folder: part 2 by path, part 3
+    #    found beside it without a question, then part 4 asked about.
+    p2 = cut(whole, ["a", "b", "b"], name="Two.bin")
+    rc, out = ask(p2[0], p2[1] + "\n\n", os.path.join(d, "_o2"))
+    fails.check(rc == 0, "split-ask: two folders failed: %s" % out.strip())
+    fails.check("part 3" not in out,
+                "split-ask: part 3 was asked for, not found beside part 2")
+    fails.check(joined_file(os.path.join(d, "_o2"), os.path.join(d, "Two.bin"))
+                == whole, "split-ask: two folders joined to different bytes")
+
+    # 3. The last part shorter: the set ends there and NOTHING is asked
+    #    (stdin is closed, so a question would also read EOF and end it;
+    #    the prompt's absence is what is checked).
+    sp = []
+    for i, n in enumerate((k, k, k - 999)):
+        p = os.path.join(d, "short", "Short.bin.%03d" % (i + 1))
+        os.makedirs(os.path.dirname(p), exist_ok=True)
+        open(p, "wb").write(short[i * k:i * k + n])
+        sp.append(p)
+    rc, out = ask(sp[0], "", os.path.join(d, "_o3"))
+    fails.check(rc == 0, "split-ask: short last part failed: %s" % out.strip())
+    fails.check("if the set has one" not in out,
+                "split-ask: asked after a shorter part: %r" % out)
+    fails.check(joined_file(os.path.join(d, "_o3"), os.path.join(d, "Short.bin"))
+                == short, "split-ask: short last part joined to different bytes")
+    print("  split --ask: equal parts asked about part 4, a lone .001 asked "
+          "for part 2 only, a shorter last part asked nothing")
 
 
 def split_behaviours(macextract, case, d, kind, whole, parts, original,
@@ -1871,6 +1938,8 @@ def main():
                 d, kind, whole, parts, original = r
                 split_behaviours(macextract, c, d, kind, whole, parts,
                                  original, workroot, fails)
+        if splitcases and not selected:
+            split_ask_cases(macextract, workroot, fails)
 
         # --- DiskDoubler `SPLT` sets ------------------------------------
         for c in ddsegcases:

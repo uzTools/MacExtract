@@ -1357,6 +1357,10 @@ typedef struct {
     FileIO   open_io;                      /* one part open at a time */
     int      ask;
     int      verbose;
+    /* A split with --ask is open-ended (nparts 0): the highest NAME.NNN
+     * seen, which tells a gap (asked for) from the set's end (asked
+     * whether there is one). */
+    int      highest;
     /* Parts that arrived inside an envelope are decoded to here before
      * the join; see seg_wrapped_part_of. Empty until one has been. */
     const char *outdir;
@@ -1964,8 +1968,14 @@ static int seg_ask(SegHost *h, int part)
     for (;;) {
         size_t n;
         int got;
-        fprintf(stderr, "macextract: locate part %d of \"%s\" "
-                        "(path, or empty to give up): ", part, h->desc.name);
+        if (h->desc.scheme == UNC_FORMAT_SPLIT && h->desc.nparts == 0 &&
+            part > h->highest)
+            fprintf(stderr, "macextract: part %d of \"%s\", if the set has "
+                            "one (path, or empty if it ends here): ",
+                    part, h->desc.name);
+        else
+            fprintf(stderr, "macextract: locate part %d of \"%s\" "
+                            "(path, or empty to give up): ", part, h->desc.name);
         fflush(stderr);
         if (!fgets(line, sizeof line, stdin)) return 0;
         n = strlen(line);
@@ -2012,6 +2022,26 @@ static int seg_need(void *ctx, const UncSegmentDesc *desc, int part, UncIO *io)
 
     (void)desc;
     if (part < 1 || part > UNC_SEG_MAX_PARTS) return UNC_ERR_SEGMENTED;
+    /* An open-ended split (--ask; macextract.h, UNC_SEG_ENDS), as the Mac
+     * shell does it: below the highest number seen, a part not found is
+     * a gap, asked for like any missing part. Past it, the set may go on
+     * after .001, or after a part as long as the one before it (a cutter
+     * cuts fixed pieces and the remainder goes last): then it is asked
+     * for, and an empty answer says the set ends there. After a shorter
+     * part it ends without a question. */
+    if (h->desc.scheme == UNC_FORMAT_SPLIT && h->desc.nparts == 0 &&
+        !h->path[part]) {
+        if (part > h->highest &&
+            !(part == 2 || (h->path[part - 1] && h->path[part - 2] &&
+                            seg_file_len(h, part - 1) ==
+                            seg_file_len(h, part - 2))))
+            return UNC_SEG_ENDS;
+        if (!seg_ask(h, part))
+            return part > h->highest ? UNC_SEG_ENDS : UNC_ERR_SEGMENTED;
+        {   int hi = seg_scan_split_family(h, h->path[part]);
+            if (part > h->highest) h->highest = part;
+            if (hi > h->highest) h->highest = hi; }
+    }
     if (!h->path[part] && h->ask && !seg_ask(h, part)) return UNC_ERR_SEGMENTED;
     if (!h->path[part]) return UNC_ERR_SEGMENTED;
 
@@ -2355,8 +2385,26 @@ nextlayer:
          * 94-byte headers into a file would be silent and wrong. */
         if (!no_parts && fmt != UNC_FORMAT_DDSEG &&
             (split_family_present(file) ||
-             split_part_offered(file, partargs, nparts)))
+             split_part_offered(file, partargs, nparts) ||
+             /* --ask: a NAME.001 alone is the first of a set whose
+              * other parts the user is standing by to produce, as when
+              * each part is on a floppy of its own. */
+             (ask && split_ext_part(strrchr(file, '/') ? strrchr(file, '/') + 1
+                                                       : file) == 1)))
             fmt = UNC_FORMAT_SPLIT;
+        /* A spanned zip's middle part has nothing to recognise it by but
+         * its name, NAME.zNN (the first carries the spanning signature,
+         * the last the directory). It is refused, as the reference
+         * refuses it (run_segments.py measures both) — but said for what
+         * it is, not "format not recognized". */
+        if (!no_parts && fmt == UNC_FORMAT_UNKNOWN &&
+            zip_ext_part(file) >= 1) {
+            fprintf(stderr, "macextract: %s: this looks like a middle part "
+                    "of a spanned zip, which says nothing about its set; "
+                    "open the part named .zip\n", file);
+            fclose(fio.f);
+            return 1;
+        }
     }
 
     /* --only names the entries the user can SEE. A layer this run is
@@ -2526,6 +2574,15 @@ nextlayer:
                 fclose(fio.f);
                 return 1;
             }
+            /* With --ask the set is OPEN-ENDED, as on the Mac: the joiner
+             * asks for each next part as it gets there, and seg_need asks
+             * the user whether there is one; a gap is asked for there
+             * too. Nothing about the set's end is settled here. */
+            if (ask) {
+                seg.highest = highest;
+                seg.desc.nparts = 0;
+                goto split_ready;
+            }
             /* Something numbered past the end of the run says a part in
              * between is missing. Refused, unless --ask means the user
              * is standing by to produce it. */
@@ -2555,6 +2612,7 @@ nextlayer:
             seg.desc.nparts = (uint16_t)run;
             if (verbose)
                 fprintf(stderr, "%s: %d parts\n", seg.desc.name, run);
+        split_ready: ;
         } else if (fmt == UNC_FORMAT_CPTSEG) {
             /* Every segment carries the set's identity, so discovery is
              * by CONTENT exactly as it is for StuffIt — a set whose

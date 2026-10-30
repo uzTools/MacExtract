@@ -51,6 +51,6 @@ resource 'DITL' (143, purgeable, preload) {
         {  39, 229, 185, 246 }, UserItem   { enabled };
         { 124, 252, 125, 340 }, UserItem   { disabled };
         {1044,  20,1145, 116 }, StaticText { disabled, "" };
-        { 194,  12, 230, 340 }, StaticText { disabled, S_SEG_EJECTED };
+        { 194,  12, 230, 340 }, StaticText { disabled, S_SEG_INSERT };
     }
 };

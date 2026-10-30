@@ -1466,6 +1466,7 @@ static void RepFailed(const uint8_t *orig, int olen, int status)
         RepCat(S_REP_CRC);
         break;
     case UNC_ERR_TRUNCATED:
+    case UNC_ERR_SEGMENTED:     /* its data was in a part that is missing */
         RepCat(S_REP_TRUNCATED);
         break;
     case UNC_ERR_ENCRYPTED:
@@ -3861,13 +3862,24 @@ static int SegAskUser(SegHost *h, int part)
         }
         PStrCat(msg, S_SEG_CLOSE_QUOTE);
         left[0] = 0;
-        if (h->askLast) {
+        /* After an eject: "Insert the disk containing Part 4 of "Cal.sit",
+         * if the set has one. Otherwise click Cancel." for a part that may
+         * not exist, "Please insert ... ." for one that must. */
+        if (dlg == kPartEjectDLOG) {
+            if (h->askLast)
+                PStrCat(left, S_SEG_IF_ONE);
+            else {
+                PStrCat(left, ".");
+                SegCatRemaining(left, SegRemaining(h));
+            }
+        } else if (h->askLast) {
             PStrCat(left, S_SEG_IF_NONE);
             PStrCatNum(left, (long)part);
             PStrCat(left, S_SEG_IF_NONE_END);
         } else
             SegCatRemaining(left, SegRemaining(h));
-        ParamText(msg, left, "\p", "\p");
+        ParamText(msg, left, h->askLast ? "\p" S_SEG_INSERT_PLAIN
+                                        : "\p" S_SEG_INSERT_PLEASE, "\p");
 
         if (h->hide) HideWindow((WindowPtr)h->hide);
         gSegAsking = h;
