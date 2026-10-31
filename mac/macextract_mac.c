@@ -3815,15 +3815,48 @@ static pascal Boolean HideInvisible(CInfoPBPtr pb)
 }
 #endif
 
+/* The disks put in since the last look, each scanned. A disk without the
+ * wanted part is ejected, except, for a name scheme, one holding none of
+ * the set's names: it may hold the part renamed, so it stays mounted (a disk holding part 3 of a split, put in for part 2, goes
+ * back out: the maintainer's LC 475, 2026-10-31). True if one was. */
+static Boolean SegTakeNewDisks(SegHost *h)
+{
+    short v, drive;
+    Boolean out = false;
+    while ((v = SegNextNewVolume(h, &drive)) != 0) {
+        int p = 1;
+        SegScanHere(h, v, kSegRootDirID);
+        if (h->loc[gSegWantPart].name[0]) break;
+        if (SegByName(h))
+            while (p <= kSegMaxKnown && !(h->loc[p].name[0] &&
+                   SegDriveOf(h->loc[p].vRefNum) == drive)) p++;
+        if (p <= kSegMaxKnown) {
+            SegEjectInserted(h, drive);
+            out = true;
+        }
+    }
+    return out;
+}
+
 static pascal Boolean SegPartFilter(DialogPtr dlg, EventRecord *evt,
                                     short *itemHit)
 {
     EventRecord de;
     SegHost *h = gSegAsking;
-    (void)dlg;
-    (void)evt;
     StackSample();
+    (void)dlg;
+    if (evt->what == osEvt &&       /* WaitForFront's, for the next dialog */
+        (evt->message & 0xFF000000) == SUSPENDRESUMEBITS)
+        gBackground = (evt->message & RESUME) == 0;
     if (h == NULL) return false;
+    /* A disk put in: its event is taken here, at once, which mounts it
+     * before Standard File can switch to it (measured: acting on the event
+     * passed in, or every 30 ticks, came after Standard File had shown the
+     * disk, even one then ejected; an event handed back to it was
+     * ignored). So no inserted disk is switched to, whatever the scheme:
+     * one kept stays mounted, under Desktop or Drive. */
+    if (GetNextEvent(diskMask, &de))
+        (void)SegTakeNewDisks(h);
     if (TickCount() < gSegNextPoll) return false;
     gSegNextPoll = TickCount() + 30;
     /* The folder Standard File shows is scanned whenever it changes: a part
@@ -3840,21 +3873,7 @@ static pascal Boolean SegPartFilter(DialogPtr dlg, EventRecord *evt,
             SegScanHere(h, v, d);
         }
     }
-    /* A disk put in is scanned, whoever took its event. For a content
-     * scheme it is ejected if it holds nothing wanted, and the event is
-     * fetched here too, which mounts the disk where Standard File does not.
-     * A name scheme leaves the event to Standard File, which shows the
-     * disk so that a renamed part can still be picked. */
-    if (!SegByName(h))
-        (void)GetNextEvent(diskMask, &de);   /* mounts it, if nobody has */
-    {
-        short v, drive;
-        while ((v = SegNextNewVolume(h, &drive)) != 0) {
-            SegScanHere(h, v, kSegRootDirID);
-            if (!SegByName(h) && !h->loc[gSegWantPart].name[0])
-                SegEjectInserted(h, drive);
-        }
-    }
+    (void)SegTakeNewDisks(h);      /* a disk whose event another took */
     if (h->loc[gSegWantPart].name[0]) {   /* 1..kSegMaxKnown: seg_need's */
         gSegFound = true;
         *itemHit = 3;              /* getCancel: closes the dialog */
@@ -6102,26 +6121,39 @@ static void WaitForFront(void)
     NMRec nm;
     EventRecord ev;
     long z;
+    Boolean posted = false;
 
-    if (!gBackground) return;
-    for (z = 0; z < (long)sizeof nm; z++) ((char *)&nm)[z] = 0;
-    nm.qType = 8;
-    nm.nmMark = 1;
-    nm.nmSound = (Handle)-1;
-    nm.nmStr = (StringPtr)"\p" S_NM_ATTENTION;
-    if (NMInstall(&nm) != noErr) return;
-    while (gBackground) {
+    /* The events waiting are read first, until none is left: a click in
+     * the Finder since the last progress pump becomes the suspend event
+     * here, never after the dialog has opened behind it (measured on Mac
+     * OS 9.2: a dialog opened in the background stays blank and deaf even
+     * once brought forward). Applications switch only inside an event
+     * call, so none can happen between this loop and the dialog's own. */
+    for (;;) {
         SystemTask();
-        if (!GetNextEvent(everyEvent, &ev)) continue;
-        if (ev.what == osEvt && (ev.message & 0xFF000000) == SUSPENDRESUMEBITS)
-            gBackground = (ev.message & RESUME) == 0;
-        else if (IsDialogEvent(&ev)) {      /* the progress window's updates */
-            DialogPtr d;
-            short i;
-            (void)DialogSelect(&ev, &d, &i);
+        if (GetNextEvent(everyEvent, &ev)) {
+            if (ev.what == osEvt &&
+                (ev.message & 0xFF000000) == SUSPENDRESUMEBITS)
+                gBackground = (ev.message & RESUME) == 0;
+            else if (IsDialogEvent(&ev)) {  /* the progress window's updates */
+                DialogPtr d;
+                short i;
+                (void)DialogSelect(&ev, &d, &i);
+            }
+            continue;
+        }
+        if (!gBackground) break;
+        if (!posted) {
+            for (z = 0; z < (long)sizeof nm; z++) ((char *)&nm)[z] = 0;
+            nm.qType = 8;
+            nm.nmMark = 1;
+            nm.nmSound = (Handle)-1;
+            nm.nmStr = (StringPtr)"\p" S_NM_ATTENTION;
+            if (NMInstall(&nm) != noErr) return;
+            posted = true;
         }
     }
-    NMRemove(&nm);
+    if (posted) NMRemove(&nm);
 }
 
 static void ShowNote(short alrtID, const unsigned char *msg)
