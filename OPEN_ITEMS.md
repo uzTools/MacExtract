@@ -276,6 +276,11 @@ ships later, on MacExtract's own floppy. Left:
   sent to a running copy is dropped (DECISIONS.md 2026-10-31, *the hand-off
   that arrives once*). Closes with an odoc handler in MacExtract (resident
   bytes, unpriced) or a line in the helpers' read-me.
+- **Which application the Mac OS 9 Finder launches for one creator.**
+  StuffIt Expander beat a newer `SITx` stub in either folder order
+  (DECISIONS.md 2026-10-31, *the stub that sorts*); the rule is not
+  separated, and the stub's hand-off to the creator's own application and
+  its System 6 and 3.0 runs are not measured.
 - **`icsetup` under System 7.x with Internet Config 1.x or 2.0**, and a real
   browser download through it. Only Mac OS 9.2's built-in Internet Config
   was run.
