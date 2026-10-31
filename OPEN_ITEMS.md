@@ -280,8 +280,10 @@ ships later, on MacExtract's own floppy. Left:
   creator.** On Mac OS 9 a stub named in 8 characters or fewer beats
   Expander from a fresh desktop database (DECISIONS.md 2026-10-31, *the
   stub that sorts*); once Expander has run, the database lists it alone.
-  Whether a desktop rebuild, or opening the helpers folder, gives the stub
-  back its entry is not run; nor System 7.x, nor 9-character names.
+  A stub added after mount (a Finder duplicate) won with a 16-character
+  name; whether copying the helpers onto a volume where Expander already
+  took the creator, or a desktop rebuild, gives the stub its entry back is
+  not run; nor System 7.x, nor a running Expander.
 - **`icsetup` under System 7.x with Internet Config 1.x or 2.0**, and a real
   browser download through it. Only Mac OS 9.2's built-in Internet Config
   was run.
