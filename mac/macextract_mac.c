@@ -996,6 +996,14 @@ static void PStrCatNum(Str255 d, long n)
  *
  * Quit is Cancel: the application quits after an archive whose decoders
  * it released, which every extraction that reaches this pump has. */
+/* In the background: the Finder, say, brought forward while extracting.
+ * A dialog put up then lands behind the front application's windows and
+ * never draws (the maintainer's LC 475, 2026-10-30), so WaitForFront asks
+ * the user to come back first. Set from the suspend and resume events the
+ * SIZE resource asks for; only MultiFinder and System 7 on send them, so
+ * on System 3.0 and a System 6 without MultiFinder this stays false. */
+static Boolean gBackground;
+
 static void ProgressPump(Progress *pr)
 {
     ReserveSample();
@@ -1005,6 +1013,10 @@ static void ProgressPump(Progress *pr)
 
     SystemTask();
     if (GetNextEvent(everyEvent, &ev)) {
+        if (ev.what == osEvt && (ev.message & 0xFF000000) == SUSPENDRESUMEBITS) {
+            gBackground = (ev.message & RESUME) == 0;
+            return;
+        }
         if (ev.what == keyDown &&
             (ev.modifiers & cmdKey) &&
             (char)(ev.message & charCodeMask) == '.') {
@@ -3096,6 +3108,7 @@ static int sink_comment(void *ctx, const uint8_t *buf, uint16_t len)
 /* ------------------------------------------------------------------ */
 
 static void ShowNote(short alrtID, const unsigned char *msg);
+static void WaitForFront(void);
 #ifdef UNC_AT_HEAPLOG
 static void HeapLog(const char *tag);
 static void HeapLogFlush(void);
@@ -3848,6 +3861,8 @@ static int SegAskUser(SegHost *h, int part)
     short savedMask;
     short dlg = SegEjectPrevious(h, part) ? kPartEjectDLOG : kPartDLOG;
 
+    WaitForFront();
+
     for (;;) {
         msg[0] = 0;
         PStrCat(msg, S_SEG_PART);
@@ -3933,6 +3948,8 @@ static int SegAskUser(SegHost *h, int part)
     /* Which alert: the two differ only in their wording, which lives in
      * the DITLs so that neither costs the A5 world a byte. */
     short alrt = SegEjectPrevious(h, part) ? kSegEjectALRT : kSegALRT;
+
+    WaitForFront();
 
     for (;;) {
         msg[0] = 0;
@@ -4324,6 +4341,7 @@ static int MacAskPassword(void *ctx, uint8_t *buf, uint16_t cap,
     PStrCat(msg, S_PASS_ENTER_END);
     ParamText(msg, attempt > 0 ? "\p" S_PASS_REFUSED : "\p", "\p", "\p");
 
+    WaitForFront();
     if (ph->hide) HideWindow(ph->hide);
     ContigSample();
     dlg = GetNewDialog(kPassDLOG, NULL, (WindowPtr)-1);
@@ -6061,8 +6079,43 @@ int main(void)
 /* ================================================================== */
 #if !defined(UNC_SINK_TEST) && !defined(UNC_MAC_AUTOTEST)
 
+/* Before a dialog that needs the user: if this application is in the
+ * background, a notification (a mark in the Application menu, the alert
+ * sound, and the System's alert saying so) and nothing else until the
+ * user brings it forward. Apple's rule for a background application
+ * (Inside Macintosh: Processes, Notification Manager). qType 8 is nmType,
+ * the one value NMInstall accepts. If it cannot be posted, the dialog
+ * comes up anyway, as it always did. */
+static void WaitForFront(void)
+{
+    NMRec nm;
+    EventRecord ev;
+    long z;
+
+    if (!gBackground) return;
+    for (z = 0; z < (long)sizeof nm; z++) ((char *)&nm)[z] = 0;
+    nm.qType = 8;
+    nm.nmMark = 1;
+    nm.nmSound = (Handle)-1;
+    nm.nmStr = (StringPtr)"\p" S_NM_ATTENTION;
+    if (NMInstall(&nm) != noErr) return;
+    while (gBackground) {
+        SystemTask();
+        if (!GetNextEvent(everyEvent, &ev)) continue;
+        if (ev.what == osEvt && (ev.message & 0xFF000000) == SUSPENDRESUMEBITS)
+            gBackground = (ev.message & RESUME) == 0;
+        else if (IsDialogEvent(&ev)) {      /* the progress window's updates */
+            DialogPtr d;
+            short i;
+            (void)DialogSelect(&ev, &d, &i);
+        }
+    }
+    NMRemove(&nm);
+}
+
 static void ShowNote(short alrtID, const unsigned char *msg)
 {
+    WaitForFront();
     ParamText(msg, "\p", "\p", "\p");
     ContigSample();
     NoteAlert(alrtID, NULL);
@@ -6408,6 +6461,7 @@ static void ShowReport(const unsigned char *outcome)
     ModalFilterUPP filter;
 
     BlockMoveData(outcome, gRepOutcome, outcome[0] + 1);
+    WaitForFront();
     ContigSample();
     dlg = GetNewDialog(kReportDLOG, NULL, (WindowPtr)-1);
     if (!dlg) {                       /* no room for it: the line still gets said */
