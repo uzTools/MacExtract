@@ -246,6 +246,3 @@ ships later, on MacExtract's own floppy. Left:
 - **Several archives of different creators opened together.** Not run.
 - **Which of a file's two dates System 7 compares** between two applications
   of one creator. Not separated.
-- **How StuffIt Expander 5.5 opens other formats through companion stubs**
-  (its installer is `MacMountBench/5-Downloads/stuffit_expander_55.bin` on
-  the share). Not examined.

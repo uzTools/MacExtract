@@ -470,6 +470,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-25 (the archive Symantec shipped) — a DDAR record is the stored file's catalog entry: +78 is its resource fork, a creator other than DDAP is stored raw, and +100.. is the Finder's position; read off DD Expand 3.7.7
 - 2026-10-25 (the review before the release) — the 38 commits since v0.43.0 read before tagging: a DiskDoubler walk that could step backward for ever, and four smaller faults
 - 2026-10-25 (the archives that drew as the application) — the documents MacExtract's bundle claims draw the archive icon, not the application's: MacStamp writes our creator, so the Finder shows them
+- 2026-10-31 (the helper list Expander asks for) — StuffIt Expander 5.5's installer offers to become Internet Config's helper for downloaded files; it claims no Finder creator, so nothing in it replaces a stub
 
 ---
 
@@ -19249,3 +19250,45 @@ UNC_AT_BUDGET`, `derived-ASCbeep.sit`) gave 742,708 B without the icon and
 742,636 B with it, `FreeMem` at start falling the same 72. TIERS and
 TIERS_MACHINE −72 on all three tiers, the 512 KB pair derived. Every FREF
 added before this grew the same map unpriced, about 12 B a type.
+
+## 2026-10-31 (the helper list Expander asks for) — StuffIt Expander 5.5's installer offers to become Internet Config's helper for downloaded files; it claims no Finder creator, so nothing in it replaces a stub
+
+Question (OPEN_ITEMS.md, *The double-click helpers*): the 5.5 installer
+"says it can take ownership of other creators" — does Aladdin have a way to
+open other programs' archives by double-click that the stubs should copy?
+
+**Claim (measured, Mac OS 9.2 under QEMU, one install).** The question the
+installer asks, after copying the application, is Internet Config's, not
+the Finder's: *"Your Macintosh uses a list of helper applications to help
+expand files downloaded from the Internet. StuffIt Expander can be made the
+default helper application for expanding all files transferred to your
+machine. [...] Click "OK" to set StuffIt Expander as the default helper
+application."* (OK / Cancel; `DITL` 4002, text drawn by the installer's
+code). OK was clicked; the installer then reported success and showed no
+other alert.
+
+**Read off the installer and the application, no emulator.** The installer
+(`APPL`/`STi0`, InstallerMaker) carries `STR#` 3000 *Extension*: `.sit .pf
+.hqx .bin .uu .uue .zip .gz .tgz .tar .img .smi` — the twelve extensions it
+maps — and the alerts *"Internet Preferences is fixed for Stuffit™
+Archives"* and *"Could not fix Internet Preferences"* (`DITL` 4000, 4001).
+Expander 5.5 exposes the same thing as a preference, `DITL` 3007 *Internet
+Config*, *"Use StuffIt Expander for all available types"*. Its bundles are
+`SITx` (`APPL ZIP  Bzp2 TARF BINA TEXT ...`) and a second one owned by
+`SIT!` (`SITD SIT! SIT5 Seg* SPSV Part`), the 4.0.2 arrangement that
+decorates and opens nothing (2026-10-12, *the second bundle that only
+paints*). Its own Read Me lists the twelve formats and a "helper"
+application lookup for formats it cannot read; the installer's Read Me says
+nothing of creators.
+
+**Not measured.** What OK wrote: the Internet control panel's File Mapping
+was not opened (the run was stopped for another session's emulator time).
+That the mapping applies to a file already on disk, double-clicked in the
+Finder, is a HYPOTHESIS against: Internet Config's map is consulted by the
+program that saves a download, which then sets the file's type and creator.
+
+**Consequence.** No Finder mechanism to copy; the stubs stay. The
+installer's route suggests a different, smaller one for MacExtract —
+offering itself as Internet Config's post-processor — which reaches only
+System 7.5+ with Internet Config and only new downloads (not priced, not
+proposed).
