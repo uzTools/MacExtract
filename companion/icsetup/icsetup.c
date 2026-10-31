@@ -3,13 +3,16 @@
  *
  * What it changes: in Internet Config's `Mapping` preference, every entry
  * whose extension is one MacExtract extracts (kExts) AND which is already
- * post-processed gets post-processor creator 'MExt' and name "MacExtract".
+ * post-processed is handed to MacExtract twice over: post-processor
+ * creator 'MExt' and name "MacExtract", so the browser gives MacExtract the
+ * download; and file creator 'MExt' and application name "MacExtract", so
+ * the saved file is STAMPED as MacExtract's and a later double-click opens
+ * it in MacExtract with no stub. The entry's type is kept: MacExtract's
+ * bundle claims every one of them, so the file draws the archive icon.
  * An entry nobody post-processes stays so: on Mac OS 9.2's stock map that
  * keeps `.ascii` (plain text, SimpleText) and `.sea` (an application, run
  * rather than opened) out, and takes the 20 entries StuffIt Expander had.
- * The entry's own type and creator are left alone, so the file is still
- * stamped as before and a stub that claims that creator still opens it
- * on a double-click. Extensions with no entry are not added: choosing a
+ * Extensions with no entry are not added: choosing a
  * type and creator for them is not this program's business.
  *
  * Undo: before the first change, the whole `Mapping` is saved under this
@@ -57,7 +60,7 @@ static const unsigned char kPostName[]  = "\pMacExtract";
 static const unsigned char kEmpty[]     = "\p";
 static const unsigned char kRestored[]  = "\pThe file map is as it was before.";
 static const unsigned char kNowOpen[]   =
-    "\p file types now open in MacExtract after a download.";
+    "\p file types now open in MacExtract after a download, and when double-clicked later.";
 
 /* The extensions of the formats FORMATS.md's table says MacExtract
  * extracts, as Internet Config's map spells them (with the dot), matched
@@ -108,8 +111,8 @@ static long survey(const unsigned char *map, long size, long *already)
         if (total < fixed + 5 || fixed < 22 || q + total > size) return -1;
         if (ours(map + q + fixed) && (get32(map + q + 18) & kPostMask)) {
             n++;
-            if (get32(map + q + 14) == kMExt &&
-                (get32(map + q + 18) & kPostMask)) (*already)++;
+            if (get32(map + q + 10) == kMExt &&
+                get32(map + q + 14) == kMExt) (*already)++;
         }
         q += total;
     }
@@ -117,13 +120,15 @@ static long survey(const unsigned char *map, long size, long *already)
 }
 
 /* A new map with ours rewritten. Each entry's fixed part is copied with
- * postCreator and the post bit set; its five strings are copied, the
- * third (the post-processor's name) replaced. Anything past the five
- * strings in an entry is kept. */
-static Ptr rewrite(const unsigned char *map, long size, long *outSize)
+ * fileCreator and postCreator set to 'MExt'; its five strings are
+ * copied, the second and third (the application's and the
+ * post-processor's names) replaced. Anything past the five strings in an
+ * entry is kept. `n` is survey()'s count: each rewritten entry grows by at
+ * most twice kPostName's length, against an empty name. */
+static Ptr rewrite(const unsigned char *map, long size, long n, long *outSize)
 {
     long q = 0, o = 0;
-    Ptr out = NewPtr(size + 64L * 256);   /* names may grow, 63 B each */
+    Ptr out = NewPtr(size + n * 2L * sizeof(kPostName));
     unsigned char *w = (unsigned char *)out;
     if (!out) return NULL;
     while (q < size) {
@@ -135,12 +140,17 @@ static Ptr rewrite(const unsigned char *map, long size, long *outSize)
             o += total;
         } else {
             long start = o, p = fixed, k;
-            if (o + total + 256 > GetPtrSize(out)) { DisposePtr(out); return NULL; }
+            if (o + total + 2L * sizeof(kPostName) > GetPtrSize(out)) {
+                DisposePtr(out);
+                return NULL;
+            }
             BlockMoveData(e, w + o, fixed);
+            put32(w + o + 10, kMExt);
             put32(w + o + 14, kMExt);
             o += fixed;
             for (k = 0; k < 5; k++) {
-                const unsigned char *s = (k == 2) ? kPostName : e + p;
+                const unsigned char *s = (k == 1 || k == 2) ? kPostName
+                                                           : e + p;
                 BlockMoveData(s, w + o, s[0] + 1);
                 o += s[0] + 1;
                 p += e[p] + 1;
@@ -242,7 +252,7 @@ int main(void)
         err = ICSetPref(inst, kBackupKey, 0, map, size);
         if (err != noErr) { ICEnd(inst); fail("saving the file map", err); goto stop; }
     }
-    fresh = rewrite((unsigned char *)map, size, &newSize);
+    fresh = rewrite((unsigned char *)map, size, n, &newSize);
     if (!fresh) { ICEnd(inst); fail("memory", MemError()); goto stop; }
     err = ICSetPref(inst, kMappingKey, kICAttrNoChange, fresh, newSize);
     ICEnd(inst);

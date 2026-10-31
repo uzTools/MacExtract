@@ -485,7 +485,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-03 (the envelope that said what it held) — an envelope is peeked into before the release and keeps only what its payload needs; System 6.0.8 at 512 KB goes 70 -> 72/74
 - 2026-11-03 (the nibble that cost more than a byte) — Arsenic's inverse-BWT table at 2.5 bytes an entry puts a2basic on the fast path at 1 MB and slows every machine with room 1.6-3.7 %; not landed
 - 2026-10-31 (the helper list Expander asks for) — StuffIt Expander 5.5's installer offers to become Internet Config's helper for downloaded files; it claims no Finder creator, so nothing in it replaces a stub
-- 2026-10-31 (the hand-off that arrives once) — a post-processor's Open Documents event launches MacExtract with the archive, and is lost if MacExtract is already open; `companion/icsetup` makes MacExtract the post-processor where Expander was
+- 2026-10-31 (the hand-off that arrives once) — a post-processor's Open Documents event launches MacExtract with the archive, and is lost if MacExtract is already open; `companion/icsetup` makes MacExtract the post-processor where Expander was, and stamps downloads as MacExtract's
 
 ---
 
@@ -19705,7 +19705,7 @@ Offering MacExtract as Internet Config's post-processor is a separate
 route, reaching only System 7.5+ with Internet Config and only new
 downloads (not priced, not proposed).
 
-## 2026-10-31 (the hand-off that arrives once) — a post-processor's Open Documents event launches MacExtract with the archive, and is lost if MacExtract is already open; `companion/icsetup` makes MacExtract the post-processor where Expander was
+## 2026-10-31 (the hand-off that arrives once) — a post-processor's Open Documents event launches MacExtract with the archive, and is lost if MacExtract is already open; `companion/icsetup` makes MacExtract the post-processor where Expander was, and stamps downloads as MacExtract's
 
 Asked by the maintainer: a small helper that sets Internet Config up for
 the user, after *the helper list Expander asks for* (above).
@@ -19727,7 +19727,7 @@ helpers*.
 
 **The helper (measured, same guest; a writable copy of the boot volume,
 shut down from the guest, `Internet Preferences` read back with hfsutils
-and `companion/harvest/icmap.py`).** `companion/icsetup/`, 10,624 B as
+and `companion/harvest/icmap.py`).** `companion/icsetup/`, 10,752 B as
 MacBinary, built against Apple's `InternetConfig.h` and `libICGlueFar.a`
 (the near glue does not link). It rewrites the `Mapping` preference
 through `ICGetPref`/`ICSetPref`, saving the original under its own key
@@ -19737,9 +19737,16 @@ through `ICGetPref`/`ICSetPref`, saving the original under its own key
   is already post-processed. The first build took the extension alone and
   turned `.ascii` (SimpleText, plain text) and `.sea` (an application,
   run, not opened) into MacExtract's; on the stock map the rule takes
-  exactly the 20 entries `SITx` had. Only the post-processor creator and
-  name change; type, creator and flags stay, so a stub still opens the
-  file by double-click.
+  exactly the 20 entries `SITx` had.
+- **What changes in each.** The post-processor (creator and name) AND,
+  asked by the maintainer, the file creator and application name: all
+  `MExt`/"MacExtract". On stock Mac OS 9.2 `.sit`, `.hqx`, `.bin`, `.pit`
+  and `.taz` were stamped `SITx`, a creator no stub may claim, so without
+  this a kept download double-clicks into Expander. Type, flags, extension
+  and MIME type stay; MacExtract's bundle claims every one of the types.
+  Read back: 20 entries differ from stock, in those four fields only. An
+  archive stamped `SITD`/`MExt`, opened from the Finder, went to
+  MacExtract and was extracted.
 - **Read back**: only `Mapping` and the backup key changed; the backup is
   the stock `Mapping` byte for byte; the 20 entries name `MExt`; the walk
   lands on the end (315 entries). A second run offers Restore; Restore,
@@ -19748,7 +19755,9 @@ through `ICGetPref`/`ICSetPref`, saving the original under its own key
   (from the Finder) show *"Internet Config is not installed…"* and quit.
 
 **Size**: 59,392 B before `-gc-sections` (the universal `libInterface.a`
-is one object), 10,624 B after it and the MacsBug-name strip.
+is one object), 10,624 B after it and the MacsBug-name strip; 10,752 B
+with the stamping. Restore was run on the build before the stamping
+(same code path, unchanged).
 
 **Not run**: System 7.x with an Internet Config extension, a browser
 download, and whether a browser that finds MacExtract busy reports it.

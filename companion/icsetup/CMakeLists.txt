@@ -19,5 +19,5 @@ target_link_libraries(icsetup ICGlueFar)
 target_compile_options(icsetup PRIVATE -mcpu=68000 -Os -Wall -Wno-multichar
     -ffunction-sections)
 # The universal libInterface.a is one object; without -gc-sections all of
-# it is linked: 59,392 B as MacBinary, 10,624 B with these two flags.
+# it is linked: 59,392 B as MacBinary, 10,752 B with these two flags.
 target_link_options(icsetup PRIVATE -Wl,-gc-sections -Wl,--mac-strip-macsbug)
