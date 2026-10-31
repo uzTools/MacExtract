@@ -10,7 +10,7 @@
 
 resource 'DLOG' (146, purgeable, preload) {
     { 80, 80, 156, 360 },
-    movableDBoxProc, visible, noGoAway, 0, 146, S_PROGRESS_TITLE, noAutoCenter
+    movableDBoxProc, visible, noGoAway, 0, 146, S_BAR_TITLE, noAutoCenter
 };
 
 resource 'DITL' (146, purgeable, preload) {
