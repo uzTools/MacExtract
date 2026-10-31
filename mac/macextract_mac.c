@@ -3717,8 +3717,7 @@ static Boolean gSegFound;
  * 7.6.1, where the list stayed put. */
 
 /* The schemes whose parts say nothing of their set (macextract.h): they are
- * found by NAME, and a disk that holds none by name may still hold one
- * renamed, so it is never ejected for them. */
+ * found by NAME. */
 static int SegByName(SegHost *h)
 {
     return h->desc.scheme == UNC_FORMAT_ZIPSEG ||
@@ -3815,25 +3814,20 @@ static pascal Boolean HideInvisible(CInfoPBPtr pb)
 }
 #endif
 
-/* The disks put in since the last look, each scanned. A disk without the
- * wanted part is ejected, except, for a name scheme, one holding none of
- * the set's names: it may hold the part renamed, so it stays mounted (a disk holding part 3 of a split, put in for part 2, goes
- * back out: the maintainer's LC 475, 2026-10-31). True if one was. */
+/* The disks put in since the last look, each scanned; one without the
+ * wanted part goes back out, whatever the scheme. A part renamed on a
+ * floppy is then found only once copied off it (the maintainer's call,
+ * 2026-10-31: one drive, and the disk is out of the way). True if one
+ * was ejected. */
 static Boolean SegTakeNewDisks(SegHost *h)
 {
     short v, drive;
     Boolean out = false;
     while ((v = SegNextNewVolume(h, &drive)) != 0) {
-        int p = 1;
         SegScanHere(h, v, kSegRootDirID);
         if (h->loc[gSegWantPart].name[0]) break;
-        if (SegByName(h))
-            while (p <= kSegMaxKnown && !(h->loc[p].name[0] &&
-                   SegDriveOf(h->loc[p].vRefNum) == drive)) p++;
-        if (p <= kSegMaxKnown) {
-            SegEjectInserted(h, drive);
-            out = true;
-        }
+        SegEjectInserted(h, drive);
+        out = true;
     }
     return out;
 }
@@ -3852,9 +3846,7 @@ static pascal Boolean SegPartFilter(DialogPtr dlg, EventRecord *evt,
     /* A disk put in: its event is taken here, at once, which mounts it
      * before Standard File can switch to it (measured: acting on the event
      * passed in, or every 30 ticks, came after Standard File had shown the
-     * disk, even one then ejected; an event handed back to it was
-     * ignored). So no inserted disk is switched to, whatever the scheme:
-     * one kept stays mounted, under Desktop or Drive. */
+     * disk, even one then ejected). */
     if (GetNextEvent(diskMask, &de))
         (void)SegTakeNewDisks(h);
     if (TickCount() < gSegNextPoll) return false;
