@@ -3838,10 +3838,15 @@ static pascal Boolean SegPartFilter(DialogPtr dlg, EventRecord *evt,
     EventRecord de;
     SegHost *h = gSegAsking;
     StackSample();
-    (void)dlg;
-    if (evt->what == osEvt &&       /* WaitForFront's, for the next dialog */
-        (evt->message & 0xFF000000) == SUSPENDRESUMEBITS)
-        gBackground = (evt->message & RESUME) == 0;
+    /* Back in front: drawn whole, not just where the System thinks it was
+     * covered (the maintainer's LC 475, 2026-10-31: after clicks in the
+     * Finder, the buttons came back part-erased). */
+    if (evt->what == osEvt &&
+        (evt->message & 0xFF000000) == SUSPENDRESUMEBITS &&
+        !(gBackground = (evt->message & RESUME) == 0)) {
+        SetPort((GrafPtr)dlg);
+        InvalRect(&dlg->portRect);
+    }
     if (h == NULL) return false;
     /* A disk put in: its event is taken here, at once, which mounts it
      * before Standard File can switch to it (measured: acting on the event
