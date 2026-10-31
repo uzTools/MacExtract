@@ -19344,7 +19344,8 @@ through `ICGetPref`/`ICSetPref`, saving the original under its own key
 - **What changes in each.** The post-processor (creator and name) AND,
   asked by the maintainer, the file creator and application name: all
   `MExt`/"MacExtract". On stock Mac OS 9.2 `.sit`, `.hqx`, `.bin`, `.pit`
-  and `.taz` were stamped `SITx`, a creator no stub may claim, so without
+  and `.taz` were stamped `SITx`, a creator the stubs leave out (it is also
+  StuffIt X's; OPEN_ITEMS.md, *The double-click helpers*), so without
   this a kept download double-clicks into Expander. Type, flags, extension
   and MIME type stay; MacExtract's bundle claims every one of the types.
   Read back: 20 entries differ from stock, in those four fields only. An
