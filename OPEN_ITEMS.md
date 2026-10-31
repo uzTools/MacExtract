@@ -259,11 +259,12 @@ ships later, on MacExtract's own floppy. Left:
   sent to a running copy is dropped (DECISIONS.md 2026-10-31, *the hand-off
   that arrives once*). Closes with an odoc handler in MacExtract (resident
   bytes, unpriced) or a line in the helpers' read-me.
-- **Which application the Mac OS 9 Finder launches for one creator.**
-  StuffIt Expander beat a `SITx` stub in two boots and lost to it in a
-  third with another layout (DECISIONS.md 2026-10-31, *the stub that
-  sorts*); what decides is not separated, and the stub's hand-off to the creator's own application and
-  its System 6 and 3.0 runs are not measured.
+- **A stub on a volume where StuffIt Expander already holds its
+  creator.** On Mac OS 9 a stub named in 8 characters or fewer beats
+  Expander from a fresh desktop database (DECISIONS.md 2026-10-31, *the
+  stub that sorts*); once Expander has run, the database lists it alone.
+  Whether a desktop rebuild, or opening the helpers folder, gives the stub
+  back its entry is not run; nor System 7.x, nor 9-character names.
 - **`icsetup` under System 7.x with Internet Config 1.x or 2.0**, and a real
   browser download through it. Only Mac OS 9.2's built-in Internet Config
   was run.
