@@ -246,3 +246,12 @@ ships later, on MacExtract's own floppy. Left:
 - **Several archives of different creators opened together.** Not run.
 - **Which of a file's two dates System 7 compares** between two applications
   of one creator. Not separated.
+- **A download finishing while MacExtract is open is lost** once
+  `companion/icsetup` has made it Internet Config's post-processor:
+  MacExtract is not high-level-event aware, so the Open Documents event
+  sent to a running copy is dropped (DECISIONS.md 2026-10-31, *the hand-off
+  that arrives once*). Closes with an odoc handler in MacExtract (resident
+  bytes, unpriced) or a line in the helpers' read-me.
+- **`icsetup` under System 7.x with Internet Config 1.x or 2.0**, and a real
+  browser download through it. Only Mac OS 9.2's built-in Internet Config
+  was run.

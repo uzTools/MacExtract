@@ -471,6 +471,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-25 (the review before the release) — the 38 commits since v0.43.0 read before tagging: a DiskDoubler walk that could step backward for ever, and four smaller faults
 - 2026-10-25 (the archives that drew as the application) — the documents MacExtract's bundle claims draw the archive icon, not the application's: MacStamp writes our creator, so the Finder shows them
 - 2026-10-31 (the helper list Expander asks for) — StuffIt Expander 5.5's installer offers to become Internet Config's helper for downloaded files; it claims no Finder creator, so nothing in it replaces a stub
+- 2026-10-31 (the hand-off that arrives once) — a post-processor's Open Documents event launches MacExtract with the archive, and is lost if MacExtract is already open; `companion/icsetup` makes MacExtract the post-processor where Expander was
 
 ---
 
@@ -19306,3 +19307,51 @@ BBEdit's `R*ch`, which no stub can claim without taking BBEdit's text files.
 Offering MacExtract as Internet Config's post-processor is a separate
 route, reaching only System 7.5+ with Internet Config and only new
 downloads (not priced, not proposed).
+
+## 2026-10-31 (the hand-off that arrives once) — a post-processor's Open Documents event launches MacExtract with the archive, and is lost if MacExtract is already open; `companion/icsetup` makes MacExtract the post-processor where Expander was
+
+Asked by the maintainer: a small helper that sets Internet Config up for
+the user, after *the helper list Expander asks for* (above).
+
+**The gate first (measured, Mac OS 9.2 under QEMU, one run).** Whether a
+post-processor hand-off reaches a MacExtract whose `SIZE` says
+`notHighLevelEventAware`. `tools/aeodoc/` does what a browser does: an
+odoc for one archive to creator `MExt`.
+
+| case | how it was sent | result |
+|---|---|---|
+| A: MacExtract not running | odoc coerced to `typeAppParameters`, `LaunchApplication` | launched, asked *Extract into this folder*, extracted; data fork identical to the Linux CLI's |
+| B: MacExtract running (at its destination prompt) | `AESend` to its process, no reply asked | `AESend` returned 0; nothing extracted, no alert |
+
+So the Process Manager turns a launch event into the Finder information
+MacExtract already reads; an event to a running copy is dropped, silently
+for a sender that asks no reply. That is OPEN_ITEMS.md, *The double-click
+helpers*.
+
+**The helper (measured, same guest; a writable copy of the boot volume,
+shut down from the guest, `Internet Preferences` read back with hfsutils
+and `companion/harvest/icmap.py`).** `companion/icsetup/`, 10,624 B as
+MacBinary, built against Apple's `InternetConfig.h` and `libICGlueFar.a`
+(the near glue does not link). It rewrites the `Mapping` preference
+through `ICGetPref`/`ICSetPref`, saving the original under its own key
+`4D457874•SavedMapping` first; Restore writes that back.
+
+- **Which entries.** An extension MacExtract extracts AND an entry that
+  is already post-processed. The first build took the extension alone and
+  turned `.ascii` (SimpleText, plain text) and `.sea` (an application,
+  run, not opened) into MacExtract's; on the stock map the rule takes
+  exactly the 20 entries `SITx` had. Only the post-processor creator and
+  name change; type, creator and flags stay, so a stub still opens the
+  file by double-click.
+- **Read back**: only `Mapping` and the backup key changed; the backup is
+  the stock `Mapping` byte for byte; the 20 entries name `MExt`; the walk
+  lands on the end (315 entries). A second run offers Restore; Restore,
+  then a third run, counts the stock 20 again.
+- **No Internet Config**: System 6.0.8 (as the boot shell) and System 3.0
+  (from the Finder) show *"Internet Config is not installed…"* and quit.
+
+**Size**: 59,392 B before `-gc-sections` (the universal `libInterface.a`
+is one object), 10,624 B after it and the MacsBug-name strip.
+
+**Not run**: System 7.x with an Internet Config extension, a browser
+download, and whether a browser that finds MacExtract busy reports it.

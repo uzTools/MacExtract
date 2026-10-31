@@ -199,6 +199,11 @@ System 6's Toolbox; `mkboot.py --finder` came from it.
 Apple event to another application, which is how the btoa/atob translator is
 reached without its inaccessible submenu (`sitcrypt.py --btoa-send`, below).
 It is built by that harness, never by `ci.sh`, and it is System 7 only.
+`tools/aeodoc/` is its twin for Internet Config's post-process hand-off:
+an Open Documents event to `MExt`, once as launch parameters and once to the
+running copy, logged to `AEResult` beside it. It is run by hand (no harness
+builds it); the result is DECISIONS.md 2026-10-31, *the hand-off that
+arrives once*.
 
 The verification halves live one directory up: `tools/decode_grid.py`
 (screenshot → eight numbers) and `tools/vmac_check.py` (those numbers vs. the
