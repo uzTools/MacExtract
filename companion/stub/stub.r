@@ -55,6 +55,40 @@ resource 'DITL' (130, purgeable) {
     }
 };
 
+/* Opened with no document: this helper is again the application the
+   Finder gives its creator's archives to. */
+resource 'ALRT' (131, purgeable) {
+    { 90, 100, 200, 412 }, 131, {
+        OK, visible, sound1, OK, visible, sound1,
+        OK, visible, sound1, OK, visible, sound1
+    }, noAutoCenter
+};
+
+resource 'DITL' (131, purgeable) {
+    {
+        { 78, 232, 98, 292 }, Button { enabled, "OK" };
+        { 12, 64, 70, 300 }, StaticText { disabled,
+          "Archives this helper claims open in MacExtract again." };
+    }
+};
+
+/* The reclaim failed: ^0 is the error (System 6 has no desktop database
+   to write to). */
+resource 'ALRT' (132, purgeable) {
+    { 90, 100, 200, 412 }, 132, {
+        OK, visible, sound1, OK, visible, sound1,
+        OK, visible, sound1, OK, visible, sound1
+    }, noAutoCenter
+};
+
+resource 'DITL' (132, purgeable) {
+    {
+        { 78, 232, 98, 292 }, Button { enabled, "OK" };
+        { 12, 64, 70, 300 }, StaticText { disabled,
+          "This helper could not register itself (error ^0)." };
+    }
+};
+
 /* Small, and not aware of high-level events: the Finder then hands it the
    document the way it hands one to MacExtract, in the application's Finder
    information, which is what the stub passes on. */
