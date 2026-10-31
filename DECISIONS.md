@@ -19829,8 +19829,27 @@ document's volume, the boot volume, the rest; on each, the application
 its creator over StuffIt Expander on Mac OS 9, so a `SITx` stub can take
 Expander's downloads there — `icsetup` is then not needed for that; the
 `SIT! Helper` naming in `companion/README.md` (11) is the losing kind.
-A stub copied onto the volume after Expander (the helpers' folder copied
-from the floppy, as the user installs it) is the last added and wins with
-any name; a running Expander takes the document first (Tempelmann; not
-run). Not run: System 7.x, a real download, a stub copied onto a volume
-where Expander had already taken the creator, a desktop rebuild.
+**The three cases, and the user who installs StuffIt after MacExtract
+(measured, five more boots; the stub `SITx Helper`, 11 characters).**
+
+| case | result |
+|---|---|
+| Expander holding `SITx` (it alone in the database), the helpers folder duplicated in the Finder | the archive went to the stub |
+| Expander running, the archive opened | Expander (`Export.2`); quit, the stub again |
+| Expander holding `SITx`, `Desktop DB`/`DF` deleted so the Finder rebuilds them | Expander took the first launch, as on a fresh volume |
+| MacExtract and its helpers first, then Aladdin's own 5.5 installer onto the same volume (Internet Config question cancelled) | the stub; the database had NO Expander entry, even after Expander was launched from its folder |
+| the same volume restarted | the stub; still no Expander entry |
+
+So the StuffIt installer does not take the creator on Mac OS 9; a desktop
+rebuild does, by the registration race. **The way back without
+uninstalling StuffIt: open the helper by itself.** A stub opened with no
+document now removes its own entry and adds it again (PBDTRemoveAPPL,
+PBDTAddAPPL, PBDTFlush; Inside Macintosh: More Macintosh Toolbox, Desktop
+Manager) and says *"Archives this helper claims open in MacExtract
+again."* Measured on the rebuilt volume where Expander held `SITx`: after
+it the database listed the stub first, Expander second, and the archive
+went to MacExtract. (Opened alone, the stub used to start MacExtract at its
+Open dialog; that is what changed.) A running Expander still wins while it
+runs (Tempelmann: a running application first). Not run: System 7.x, and
+the reclaim on System 6 and 3.0, which have no desktop database for it
+(the stub then says it could not register itself).

@@ -17,6 +17,16 @@
  * offer, and the stub says so (DECISIONS.md 2026-10-31, *the stub that
  * sorts*).
  *
+ * RECLAIM. On Mac OS 9 the Finder gives a creator's documents to the
+ * application registered LAST in the volume's desktop database (Apple's
+ * Information Alley, May 1995; measured, DECISIONS.md 2026-10-31, *the
+ * stub that sorts*), so installing StuffIt after MacExtract hands `SITx`
+ * and `SIT!` back to it. A stub opened with NO document therefore removes
+ * its own entry and adds it again (PBDTRemoveAPPL, PBDTAddAPPL, PBDTFlush;
+ * Inside Macintosh: More Macintosh Toolbox, Desktop Manager), which makes
+ * it the last registered, and says so. A volume without a Desktop Manager
+ * (System 6 and older) has nothing to reclaim; there the stub says that.
+ *
  * Where MacExtract is: the folder ABOVE the stub's own — the stubs live in
  * a folder beside it (DECISIONS.md 2026-10-11, *where the stubs can live*)
  * — found by type APPL and creator MExt, so a renamed MacExtract is still
@@ -47,7 +57,8 @@
 
 QDGlobals qd;
 
-enum { kNotFoundAlert = 128, kLaunchAlert = 129, kNoOwnerAlert = 130 };
+enum { kNotFoundAlert = 128, kLaunchAlert = 129, kNoOwnerAlert = 130,
+       kReclaimedAlert = 131, kNoReclaimAlert = 132 };
 
 static void Toolbox(void)
 {
@@ -152,6 +163,42 @@ static Boolean AllOpenable(Str255 mx)
     return true;
 }
 
+/* Whether the Finder handed over any document at all. */
+static Boolean HasDocuments(void)
+{
+    Handle h = LMGetAppParmHandle();
+    const unsigned char *q;
+    if (!h || !*h) return false;
+    q = (const unsigned char *)*h;
+    return !q[0] && !q[1] && ((q[2] << 8) | q[3]) > 0;
+}
+
+/* Remove the stub's own entry from its volume's desktop database and add
+ * it again, so it is the last registered for its creator. */
+static OSErr Reclaim(short vol, long self, Str255 me, OSType creator)
+{
+    DTPBRec dt;
+    OSErr err;
+
+    dt.ioCompletion = NULL;
+    dt.ioNamePtr = NULL;
+    dt.ioVRefNum = vol;
+    err = PBDTGetPath(&dt);
+    if (err) return err;
+    dt.ioNamePtr = me;
+    dt.ioDirID = self;
+    dt.ioFileCreator = creator;
+    dt.ioTagInfo = 0;
+    PBDTRemoveAPPLSync(&dt);              /* absent is not an error here */
+    dt.ioNamePtr = me;
+    dt.ioDirID = self;
+    dt.ioFileCreator = creator;
+    dt.ioTagInfo = 0;
+    err = PBDTAddAPPLSync(&dt);
+    if (!err) err = PBDTFlushSync(&dt);
+    return err;
+}
+
 /* The first application of `creator` the Desktop Manager knows, on any
  * mounted volume, that is not this stub. Source: Inside Macintosh: Files,
  * Desktop Manager — PBDTGetPath for a volume's desktop database, then
@@ -250,6 +297,21 @@ int main(void)
         return 0;
     }
     creator = OwnCreator(vol, self, me);
+
+    /* Opened by itself: take the creator back, and stop there. */
+    if (!HasDocuments()) {
+        OSErr r = creator ? Reclaim(vol, self, me, creator) : fnfErr;
+        Toolbox();
+        if (r) {
+            Str255 num;
+            NumToString(r, num);
+            ParamText(num, NULL, NULL, NULL);
+            StopAlert(kNoReclaimAlert, NULL);
+        } else {
+            NoteAlert(kReclaimedAlert, NULL);
+        }
+        return 0;
+    }
 
     /* MacExtract's folder as the default directory, for OpenResFile here
      * and for _Launch, which names the application relative to it. */

@@ -276,14 +276,10 @@ ships later, on MacExtract's own floppy. Left:
   sent to a running copy is dropped (DECISIONS.md 2026-10-31, *the hand-off
   that arrives once*). Closes with an odoc handler in MacExtract (resident
   bytes, unpriced) or a line in the helpers' read-me.
-- **A stub on a volume where StuffIt Expander already holds its
-  creator.** On Mac OS 9 a stub named in 8 characters or fewer beats
-  Expander from a fresh desktop database (DECISIONS.md 2026-10-31, *the
-  stub that sorts*); once Expander has run, the database lists it alone.
-  A stub added after mount (a Finder duplicate) won with a 16-character
-  name; whether copying the helpers onto a volume where Expander already
-  took the creator, or a desktop rebuild, gives the stub its entry back is
-  not run; nor System 7.x, nor a running Expander.
+- **The stub's reclaim on System 7.x, 6 and 3.0.** On Mac OS 9 a helper
+  opened by itself takes its creator back from StuffIt Expander
+  (DECISIONS.md 2026-10-31, *the stub that sorts*); System 7.x and the
+  stub's alert on Systems without a desktop database are not run.
 - **`icsetup` under System 7.x with Internet Config 1.x or 2.0**, and a real
   browser download through it. Only Mac OS 9.2's built-in Internet Config
   was run.
