@@ -472,7 +472,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-25 (the archives that drew as the application) — the documents MacExtract's bundle claims draw the archive icon, not the application's: MacStamp writes our creator, so the Finder shows them
 - 2026-10-31 (the helper list Expander asks for) — StuffIt Expander 5.5's installer offers to become Internet Config's helper for downloaded files; it claims no Finder creator, so nothing in it replaces a stub
 - 2026-10-31 (the hand-off that arrives once) — a post-processor's Open Documents event launches MacExtract with the archive, and is lost if MacExtract is already open; `companion/icsetup` makes MacExtract the post-processor where Expander was, and stamps downloads as MacExtract's
-- 2026-10-31 (the stub that sorts) — a stub hands MacExtract only the types its bundle claims; on Mac OS 9 the Finder launches StuffIt Expander for `SITx` over a `SITx` stub, so the stub never runs there and `icsetup` is still what reaches downloads
+- 2026-10-31 (the stub that sorts) — a stub hands MacExtract only the types its bundle claims; which of a `SITx` stub and StuffIt Expander the Mac OS 9 Finder launches changed with the volume's layout, and what decides it is not found
 
 ---
 
@@ -19367,7 +19367,7 @@ with the stamping. Restore was run on the build before the stamping
 **Not run**: System 7.x with an Internet Config extension, a browser
 download, and whether a browser that finds MacExtract busy reports it.
 
-## 2026-10-31 (the stub that sorts) — a stub hands MacExtract only the types its bundle claims; on Mac OS 9 the Finder launches StuffIt Expander for `SITx` over a `SITx` stub, so the stub never runs there and `icsetup` is still what reaches downloads
+## 2026-10-31 (the stub that sorts) — a stub hands MacExtract only the types its bundle claims; which of a `SITx` stub and StuffIt Expander the Mac OS 9 Finder launches changed with the volume's layout, and what decides it is not found
 
 Asked by the maintainer: a `SITx` stub that sends what MacExtract opens
 to MacExtract and the rest (StuffIt X, type `SITX`, read off Expander
@@ -19393,11 +19393,25 @@ folder, a stock `.sit` typed `SITD`/`SITx` and a stand-in typed `SITX`:**
 | the `.sit` dropped on the stub | MacExtract, at its destination prompt; `Export~1` |
 | the `SITX` file dragged over the stub | the stub does not highlight: its bundle has no `SITX` |
 
-**Consequence.** On Mac OS 9, with Expander installed, a `SITx` stub is
-not what the Finder launches, newer or later in order; so the stub cannot
-replace `icsetup` there, and Expander keeps `SITx` files, the extractable
-ones included. Why Expander wins is NOT separated (it is PowerPC code; its
-`vers` is newer; Mac OS 9's rule is not System 7.0.1's) — that is the
-measurement before a `SITx` stub is worth shipping. The hand-off to the
-creator's own application (the `SITX` branch) has not run, and the new
-stub has not been run on System 6 or 3.0.
+**Then the reverse (corrected the same day, two more boots).** Four
+pairs, each an Expander re-badged to a creator of its own (`TQ01`-`TQ04`)
+against a stub of that creator, in folders `PnS`/`PnE`: the stub won all
+four — plain; stub high-level-event aware (MacExtract came up with no
+document: the Finder sent that stub an Apple event it ignores); stub with
+a newer `vers`; Expander without `cfrg`. Then the real `SITx` Expander
+and the same `SITx` stub as above, in `P0S`/`P0E`: **the stub won**, and
+the `TQ01` pair beside it too.
+
+| boot | layout | the `SITx` archive went to |
+|---|---|---|
+| 1, 2 | stub `SITx Helper` in `MacExtract Helpers`, Expander in `Aladdin` / `Zladdin`, a `SITX` file on the volume | Expander |
+| 4 | the same two applications, renamed, in `P0S` / `P0E`; a probe run first | the stub |
+
+**Consequence.** PowerPC code, a newer `vers` and Apple-event awareness
+are excluded as the cause (one boot each); the creator `SITx` is not
+special. What differs between the layouts — folder and application names,
+the `SITX` document, the probe launched first — is not separated, so
+whether a `SITx` stub can replace `icsetup` is open. (`tools/dtlist`, a
+probe to list the Desktop Manager's entries, wrote no log and is not
+committed.) The hand-off to the creator's own application has not run,
+and the new stub has not been run on System 6 or 3.0.
