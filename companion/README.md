@@ -30,3 +30,4 @@ StuffIt*). What is left is OPEN_ITEMS.md, *The double-click helpers*.
 | `../tools/icon/make_archive_icon.py` | the archive icon the stubs carry |
 | `app-bundles.tsv` | the creator and bundles of 42 creators' programs, read off the programs |
 | `harvest/` | how that table was made: `dmget.py` (Discmaster, paced), `analyze.py`, `tabulate.py`, and Macintosh Repository's category list |
+| `harvest/icmap.py` | Internet Config's extension map, read out of an `Internet Preferences` file: the creators downloads are stamped with |
