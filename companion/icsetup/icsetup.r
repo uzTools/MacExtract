@@ -8,8 +8,9 @@ resource 'DITL' (128) { {
     {118, 200, 138, 280}, Button { enabled, "Cancel" };
     {10, 70, 108, 410}, StaticText { disabled,
         "Internet Config can hand downloaded archives to MacExtract. "
-        "^0 file types will open in MacExtract after a download "
-        "(^1 already do). The file map is saved first, so this can be undone." };
+        "^0 file types will open in MacExtract after a download, and "
+        "downloads will be saved as MacExtract's (^1 already are). The file "
+        "map is saved first, so this can be undone." };
 } };
 
 resource 'ALRT' (129) { {60, 40, 190, 460}, 129, {OK, visible, sound1, OK, visible, sound1, OK, visible, sound1, OK, visible, sound1}, alertPositionMainScreen };
@@ -19,7 +20,8 @@ resource 'DITL' (129) { {
     {98, 70, 118, 180}, Button { enabled, "Restore" };
     {10, 70, 88, 410}, StaticText { disabled,
         "All ^0 archive file types already open in MacExtract after a "
-        "download. Restore puts back the file map as it was." };
+        "download and are saved as MacExtract's. Restore puts back the file "
+        "map as it was." };
 } };
 
 resource 'ALRT' (130) { {60, 40, 150, 460}, 130, {OK, visible, sound1, OK, visible, sound1, OK, visible, sound1, OK, visible, sound1}, alertPositionMainScreen };
