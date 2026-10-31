@@ -3804,6 +3804,17 @@ static void SegScanHere(SegHost *h, short v, long d)
     }
 }
 
+#ifdef UNC_POC_PARTDLG
+/* PoC: Standard File's Open lists invisible items when given no type list
+ * (Desktop DB, Move&Rename; measured on Mac OS 9.2), where its Save dialog,
+ * our destination picker, does not. A folder's frFlags sit where a file's
+ * fdFlags do, so one test hides both, wherever the filter is called. */
+static pascal Boolean HideInvisible(CInfoPBPtr pb)
+{
+    return (pb->hFileInfo.ioFlFndrInfo.fdFlags & fInvisible) != 0;
+}
+#endif
+
 static pascal Boolean SegPartFilter(DialogPtr dlg, EventRecord *evt,
                                     short *itemHit)
 {
@@ -3898,8 +3909,8 @@ static int SegAskUser(SegHost *h, int part)
         SetPt(&where, 90, 90);
         reply.good = false;
         SegStartIn(h);
-        SFPGetFile(where, "\p", NULL, -1, NULL, NULL, &reply, dlg,
-                   NewModalFilterUPP(SegPartFilter));
+        SFPGetFile(where, "\p", NewFileFilterUPP(HideInvisible), -1, NULL,
+                   NULL, &reply, dlg, NewModalFilterUPP(SegPartFilter));
         LMSetSysEvtMask(savedMask);
         gSegAsking = NULL;
         h->asked = 1;
@@ -7206,6 +7217,9 @@ int main(void)
 #ifdef UNC_AT_STACK
             SFPGetFile(where, "\p", NULL, -1, NULL, NewDlgHookProc(SFHook),
                        &reply, getDlgID, NULL);
+#elif defined(UNC_POC_PARTDLG)
+            SFGetFile(where, "\p", NewFileFilterUPP(HideInvisible), -1, NULL,
+                      NULL, &reply);
 #else
             SFGetFile(where, "\p", NULL, -1, NULL, NULL, &reply);
 #endif

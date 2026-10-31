@@ -34,6 +34,9 @@
 /* The progress window. Its status line is replaced before it is drawn. */
 #define S_PROGRESS_TITLE    "MacExtract"
 #define S_PROGRESS_STATUS   "Extracting"
+/* PoC (UNC_POC_COLORBAR), Rez: named for the action, as the Finder's
+ * "Copy" and "Move" windows are. */
+#define S_BAR_TITLE         "Extract"
 
 /* The decoders could not be read again for the next archive. */
 #define S_NO_RELOAD         "MacExtract could not get ready for the next " \
@@ -110,7 +113,7 @@
 #define S_SF_DEST_NAME      "Extract here"
 /* PoC (UNC_POC_DESTDLG), Rez: the destination dialog's own layout, and its
  * New Folder window, whose words are System 7's (DITL -6046). */
-#define S_DEST_PROMPT       "Extract into this folder"
+#define S_DEST_PROMPT       "Extract into this folder."
 #define S_DEST_EXTRACT      "Extract"
 #define S_DEST_EJECT        "Eject"
 #define S_DEST_DRIVE        "Drive"         /* System 7 on relabels it Desktop */
