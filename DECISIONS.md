@@ -486,7 +486,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-03 (the nibble that cost more than a byte) — Arsenic's inverse-BWT table at 2.5 bytes an entry puts a2basic on the fast path at 1 MB and slows every machine with room 1.6-3.7 %; not landed
 - 2026-10-31 (the helper list Expander asks for) — StuffIt Expander 5.5's installer offers to become Internet Config's helper for downloaded files; it claims no Finder creator, so nothing in it replaces a stub
 - 2026-10-31 (the hand-off that arrives once) — a post-processor's Open Documents event launches MacExtract with the archive, and is lost if MacExtract is already open; `companion/icsetup` makes MacExtract the post-processor where Expander was, and stamps downloads as MacExtract's
-- 2026-10-31 (the stub that sorts) — a stub hands MacExtract only the types its bundle claims; which of a `SITx` stub and StuffIt Expander the Mac OS 9 Finder launches changed with the volume's layout, and what decides it is not found
+- 2026-10-31 (the stub that sorts) — a stub hands MacExtract only the types its bundle claims; on Mac OS 9 the first launch after boot passes over a stub whose file name is 10 characters or more, StuffIt Expander then holds the creator, and a short name keeps it
 
 ---
 
@@ -19764,51 +19764,48 @@ with the stamping. Restore was run on the build before the stamping
 **Not run**: System 7.x with an Internet Config extension, a browser
 download, and whether a browser that finds MacExtract busy reports it.
 
-## 2026-10-31 (the stub that sorts) — a stub hands MacExtract only the types its bundle claims; which of a `SITx` stub and StuffIt Expander the Mac OS 9 Finder launches changed with the volume's layout, and what decides it is not found
+## 2026-10-31 (the stub that sorts) — a stub hands MacExtract only the types its bundle claims; on Mac OS 9 the first launch after boot passes over a stub whose file name is 10 characters or more, StuffIt Expander then holds the creator, and a short name keeps it
 
-Asked by the maintainer: a `SITx` stub that sends what MacExtract opens
-to MacExtract and the rest (StuffIt X, type `SITX`, read off Expander
-7.0.3's bundle under `SIT!`) to StuffIt Expander, which would make
-`companion/icsetup` unnecessary.
+Asked by the maintainer: a `SITx` stub that sends what MacExtract opens to
+MacExtract and the rest (StuffIt X, type `SITX`, read off Expander 7.0.3's
+bundle under `SIT!`) to StuffIt Expander, which would make
+`companion/icsetup` unnecessary; then, why Mac OS 9 kept `SITx` with
+Expander.
 
-**What the stub does now** (`companion/stub/stub.c`, 8,448 B as
-MacBinary). It reads each document's type from the Finder's list and the
-types out of MacExtract's own `FREF`s at run time. All claimed: MacExtract,
-as before. Any one not: the first other application of the stub's creator
-that the Desktop Manager lists, on any volume. None: an alert. The rule
-holds for every stub, since StuffIt X may carry `SIT!` as well.
+**What the stub does** (`companion/stub/stub.c`, 8,448 B as MacBinary).
+It reads each document's type from the Finder's list and the types out of
+MacExtract's own `FREF`s at run time. All claimed: MacExtract, as before.
+Any one not: the first other application of the stub's creator the
+Desktop Manager lists. None: an alert. Measured: a `.sit` dropped on a
+`SITx` stub reached MacExtract (a logging build read 29 types and `SITD`).
+The hand-off to the other application has not run; the stub has not been
+run on System 6 or 3.0.
 
-**Measured, Mac OS 9.2 under QEMU, two boots, a `SITx` stub (types `SITD
-PIT  TEXT`) in `MacExtract Helpers`, Expander 5.5 dated 1999 in its own
-folder, a stock `.sit` typed `SITD`/`SITx` and a stand-in typed `SITX`:**
+**Why Expander won (measured, Mac OS 9.2 under QEMU, 15 boots; a `SITx`
+stub, StuffIt Expander 5.5 dated 1999, a `SITD`/`SITx` archive at the
+root).**
 
-| case | result |
-|---|---|
-| the `.sit` opened from the Finder, Expander's folder sorting first | Expander extracted it (`Export.1`, no MacExtract prompt) |
-| the same, Expander in the Trash | the Finder's *"could not be opened, because it is in the Trash"*; the stub was not tried |
-| the `.sit` opened, Expander's folder sorting LAST | Expander again |
-| the `.sit` dropped on the stub | MacExtract, at its destination prompt; `Export~1` |
-| the `SITX` file dragged over the stub | the stub does not highlight: its bundle has no `SITX` |
+- **At mount** every volume's desktop database lists both, the stub
+  first (`tools/dtlist`, which draws PBDTGetAPPL's answers in a window).
+- **The first application launch after boot**, when it is the archive,
+  goes to the stub or to Expander by the STUB'S FILE NAME. Stub won:
+  `Stub0`, `Stub1`, `Helper`, `SITx`, `SITx Hlp` (4-8 characters). Expander
+  won: `SITx Helper` (five boots), `SITxHelper`, `Expand Helper`, `Stub
+  Helper SITx` (10-16). A logging build of the stub wrote nothing in the
+  long-name case: the Finder launched Expander itself.
+- **After Expander has run**, that volume's database lists Expander alone
+  (`dtlist`), and every later open goes to it.
+- **When anything else was launched first**, the archive went to the stub
+  with the long name too (three boots).
+- **Ruled out, a boot each**: the date (20 minutes' wait), PowerPC code
+  (`cfrg` removed), a newer `vers`, high-level-event awareness, the
+  creator `SITx` (an Expander re-badged `TQ05` won the same way), the
+  `SITX` document, the stub's `FREF` list, the folder names. Why the
+  Finder reads a name length is not known; 9 characters is not run.
 
-**Then the reverse (corrected the same day, two more boots).** Four
-pairs, each an Expander re-badged to a creator of its own (`TQ01`-`TQ04`)
-against a stub of that creator, in folders `PnS`/`PnE`: the stub won all
-four — plain; stub high-level-event aware (MacExtract came up with no
-document: the Finder sent that stub an Apple event it ignores); stub with
-a newer `vers`; Expander without `cfrg`. Then the real `SITx` Expander
-and the same `SITx` stub as above, in `P0S`/`P0E`: **the stub won**, and
-the `TQ01` pair beside it too.
-
-| boot | layout | the `SITx` archive went to |
-|---|---|---|
-| 1, 2 | stub `SITx Helper` in `MacExtract Helpers`, Expander in `Aladdin` / `Zladdin`, a `SITX` file on the volume | Expander |
-| 4 | the same two applications, renamed, in `P0S` / `P0E`; a probe run first | the stub |
-
-**Consequence.** PowerPC code, a newer `vers` and Apple-event awareness
-are excluded as the cause (one boot each); the creator `SITx` is not
-special. What differs between the layouts — folder and application names,
-the `SITX` document, the probe launched first — is not separated, so
-whether a `SITx` stub can replace `icsetup` is open. (`tools/dtlist`, a
-probe to list the Desktop Manager's entries, wrote no log and is not
-committed.) The hand-off to the creator's own application has not run,
-and the new stub has not been run on System 6 or 3.0.
+**Consequence.** A stub named in 8 characters or fewer is launched for
+its creator over StuffIt Expander on Mac OS 9, so a `SITx` stub can take
+Expander's downloads there — `icsetup` is then not needed for that; the
+`SIT! Helper` naming in `companion/README.md` (11) is the losing kind.
+Not run: System 7.x, a real download, a stub registered after Expander
+has already taken the creator (a volume Expander has been run from).
