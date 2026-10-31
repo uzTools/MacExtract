@@ -19406,9 +19406,34 @@ root).**
   `SITX` document, the stub's `FREF` list, the folder names. Why the
   Finder reads a name length is not known; 9 characters is not run.
 
+**Installed after mount, the stub wins whatever its name (one boot, the
+maintainer's lead: "the last installed or inited takes precedence").**
+The losing layout, `SITx Helper`; before any launch the stub was
+duplicated in the Finder (Cmd-D), so `SITx Helper copy` (16 characters)
+was added to the database after Expander. The first launch, `A.sit`,
+went to the stub. The database then listed the copy at index 0 and 1 and
+Expander at 2; the original's entry was gone, replaced by its copy's.
+Then StuffIt Expander launched directly and quit: both entries stayed,
+and `A.sit` still went to the stub. So Expander running does not take the
+creator; the Finder dropping the stub on a first launch does.
+
+What is published agrees: Apple's *Information Alley* (May 1995) — "the
+Finder launches the application whose record in the desktop database was
+updated last" (quoted in Info-Mac Digest v16 #354); Inside Macintosh,
+PBDTGetAPPL — index 0 is "the application file with the most recent
+creation date", 1 and up "in arbitrary order"; Thomas Tempelmann's
+*How the Finder locates the creator application of a document*
+(tempel.org, tested 7.6.1-8.6) — a running application first, then the
+document's volume, the boot volume, the rest; on each, the application
+"tagged" as "the last one added", then the others if it is not valid; and
+"different versions … quite random". None mentions a name length.
+
 **Consequence.** A stub named in 8 characters or fewer is launched for
 its creator over StuffIt Expander on Mac OS 9, so a `SITx` stub can take
 Expander's downloads there — `icsetup` is then not needed for that; the
 `SIT! Helper` naming in `companion/README.md` (11) is the losing kind.
-Not run: System 7.x, a real download, a stub registered after Expander
-has already taken the creator (a volume Expander has been run from).
+A stub copied onto the volume after Expander (the helpers' folder copied
+from the floppy, as the user installs it) is the last added and wins with
+any name; a running Expander takes the document first (Tempelmann; not
+run). Not run: System 7.x, a real download, a stub copied onto a volume
+where Expander had already taken the creator, a desktop rebuild.
