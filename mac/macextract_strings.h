@@ -47,6 +47,8 @@
 #define S_SEG_EJECTED       "Please insert the disk containing ^0.^1"
 
 #define S_REPORT_SAVE       "Save as Text\0xC9"
+/* The System's alert when a dialog waits for MacExtract to come forward. */
+#define S_NM_ATTENTION      "MacExtract needs your attention."
 
 /* ---- C: progress window (macextract_mac.c) -------------------------- */
 
