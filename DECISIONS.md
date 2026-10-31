@@ -19257,7 +19257,7 @@ Question (OPEN_ITEMS.md, *The double-click helpers*): the 5.5 installer
 "says it can take ownership of other creators" — does Aladdin have a way to
 open other programs' archives by double-click that the stubs should copy?
 
-**Claim (measured, Mac OS 9.2 under QEMU, one install).** The question the
+**Claim (measured, Mac OS 9.2 under QEMU, two installs).** The question the
 installer asks, after copying the application, is Internet Config's, not
 the Finder's: *"Your Macintosh uses a list of helper applications to help
 expand files downloaded from the Internet. StuffIt Expander can be made the
@@ -19265,7 +19265,7 @@ default helper application for expanding all files transferred to your
 machine. [...] Click "OK" to set StuffIt Expander as the default helper
 application."* (OK / Cancel; `DITL` 4002, text drawn by the installer's
 code). OK was clicked; the installer then reported success and showed no
-other alert.
+other alert, both times.
 
 **Read off the installer and the application, no emulator.** The installer
 (`APPL`/`STi0`, InstallerMaker) carries `STR#` 3000 *Extension*: `.sit .pf
@@ -19281,14 +19281,28 @@ paints*). Its own Read Me lists the twelve formats and a "helper"
 application lookup for formats it cannot read; the installer's Read Me says
 nothing of creators.
 
-**Not measured.** What OK wrote: the Internet control panel's File Mapping
-was not opened (the run was stopped for another session's emulator time).
-That the mapping applies to a file already on disk, double-clicked in the
-Finder, is a HYPOTHESIS against: Internet Config's map is consulted by the
-program that saves a download, which then sets the file's type and creator.
+**What OK wrote (measured, second install on a writable copy of the boot
+volume, shut down from the guest).** `Internet Preferences`' `Mapping`
+entry, read with `hfsutils` before and after (`companion/harvest/icmap.py`,
+the walk landing exactly on the resource's end): the 14 stock Mac OS 9.2
+entries for the twelve extensions were replaced by 22 of Aladdin's. Each
+keeps `SITx` as the post-processor, as stock already had it; what changed
+is the type and creator a saved download is STAMPED with:
 
-**Consequence.** No Finder mechanism to copy; the stubs stay. The
-installer's route suggests a different, smaller one for MacExtract —
-offering itself as Internet Config's post-processor — which reaches only
-System 7.5+ with Internet Config and only new downloads (not priced, not
-proposed).
+| extension | stock creator | after OK |
+|---|---|---|
+| `.sit` | `SITD`/`SITx` | `SIT5`, `SITD`, `SIT!` all `SIT!` (StuffIt Deluxe) |
+| `.hqx`, `.uu`, `.uue` | `TEXT`/`SITx`; `TEXT`/`R*ch` | `TEXT`/`R*ch` (BBEdit) |
+| `.bin` | `BINA`/`SITx` | `BINA`/`????` |
+| `.img` | `GKON` (GraphicConverter) | `Wrap`, `ddsk` disk images |
+| `.zip`, `.gz`, `.tgz`, `.tar`, `.pf`, `.smi` | `ZIP `, `Gzip`, `S691`, `CSIT`, `sImg` | the same creators |
+
+**Consequence.** No Finder mechanism to copy; the stubs stay. It bears on
+*which creators*: on Mac OS 9.2 after that OK, a browser that stamps
+downloads from Internet Config (hypothesis — no download was made) saves
+a `.sit` as `SIT!`, a `.zip` as `ZIP `, a `.tar` as
+`S691` (SunTar, not in `companion/app-bundles.tsv`), and BinHex and uu as
+BBEdit's `R*ch`, which no stub can claim without taking BBEdit's text files.
+Offering MacExtract as Internet Config's post-processor is a separate
+route, reaching only System 7.5+ with Internet Config and only new
+downloads (not priced, not proposed).
