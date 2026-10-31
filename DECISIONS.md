@@ -472,6 +472,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-25 (the archives that drew as the application) — the documents MacExtract's bundle claims draw the archive icon, not the application's: MacStamp writes our creator, so the Finder shows them
 - 2026-10-31 (the helper list Expander asks for) — StuffIt Expander 5.5's installer offers to become Internet Config's helper for downloaded files; it claims no Finder creator, so nothing in it replaces a stub
 - 2026-10-31 (the hand-off that arrives once) — a post-processor's Open Documents event launches MacExtract with the archive, and is lost if MacExtract is already open; `companion/icsetup` makes MacExtract the post-processor where Expander was, and stamps downloads as MacExtract's
+- 2026-10-31 (the stub that sorts) — a stub hands MacExtract only the types its bundle claims; on Mac OS 9 the Finder launches StuffIt Expander for `SITx` over a `SITx` stub, so the stub never runs there and `icsetup` is still what reaches downloads
 
 ---
 
@@ -19365,3 +19366,38 @@ with the stamping. Restore was run on the build before the stamping
 
 **Not run**: System 7.x with an Internet Config extension, a browser
 download, and whether a browser that finds MacExtract busy reports it.
+
+## 2026-10-31 (the stub that sorts) — a stub hands MacExtract only the types its bundle claims; on Mac OS 9 the Finder launches StuffIt Expander for `SITx` over a `SITx` stub, so the stub never runs there and `icsetup` is still what reaches downloads
+
+Asked by the maintainer: a `SITx` stub that sends what MacExtract opens
+to MacExtract and the rest (StuffIt X, type `SITX`, read off Expander
+7.0.3's bundle under `SIT!`) to StuffIt Expander, which would make
+`companion/icsetup` unnecessary.
+
+**What the stub does now** (`companion/stub/stub.c`, 8,448 B as
+MacBinary). It reads each document's type from the Finder's list and the
+types out of MacExtract's own `FREF`s at run time. All claimed: MacExtract,
+as before. Any one not: the first other application of the stub's creator
+that the Desktop Manager lists, on any volume. None: an alert. The rule
+holds for every stub, since StuffIt X may carry `SIT!` as well.
+
+**Measured, Mac OS 9.2 under QEMU, two boots, a `SITx` stub (types `SITD
+PIT  TEXT`) in `MacExtract Helpers`, Expander 5.5 dated 1999 in its own
+folder, a stock `.sit` typed `SITD`/`SITx` and a stand-in typed `SITX`:**
+
+| case | result |
+|---|---|
+| the `.sit` opened from the Finder, Expander's folder sorting first | Expander extracted it (`Export.1`, no MacExtract prompt) |
+| the same, Expander in the Trash | the Finder's *"could not be opened, because it is in the Trash"*; the stub was not tried |
+| the `.sit` opened, Expander's folder sorting LAST | Expander again |
+| the `.sit` dropped on the stub | MacExtract, at its destination prompt; `Export~1` |
+| the `SITX` file dragged over the stub | the stub does not highlight: its bundle has no `SITX` |
+
+**Consequence.** On Mac OS 9, with Expander installed, a `SITx` stub is
+not what the Finder launches, newer or later in order; so the stub cannot
+replace `icsetup` there, and Expander keeps `SITx` files, the extractable
+ones included. Why Expander wins is NOT separated (it is PowerPC code; its
+`vers` is newer; Mac OS 9's rule is not System 7.0.1's) — that is the
+measurement before a `SITx` stub is worth shipping. The hand-off to the
+creator's own application (the `SITX` branch) has not run, and the new
+stub has not been run on System 6 or 3.0.

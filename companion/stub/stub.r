@@ -20,7 +20,8 @@ resource 'DITL' (128, purgeable) {
     }
 };
 
-/* Launching MacExtract failed: ^0 is the error number. */
+/* Launching MacExtract, or the creator's own application, failed: ^0 is
+   the error number. */
 resource 'ALRT' (129, purgeable) {
     { 90, 100, 200, 412 }, 129, {
         OK, visible, sound1, OK, visible, sound1,
@@ -32,7 +33,25 @@ resource 'DITL' (129, purgeable) {
     {
         { 78, 232, 98, 292 }, Button { enabled, "OK" };
         { 12, 64, 70, 300 }, StaticText { disabled,
-          "MacExtract could not be started (error ^0)." };
+          "The application could not be started (error ^0)." };
+    }
+};
+
+/* A document MacExtract's bundle does not claim, and no other application
+   of this helper's creator is known to the Desktop Manager. */
+resource 'ALRT' (130, purgeable) {
+    { 90, 100, 200, 412 }, 130, {
+        OK, visible, sound1, OK, visible, sound1,
+        OK, visible, sound1, OK, visible, sound1
+    }, noAutoCenter
+};
+
+resource 'DITL' (130, purgeable) {
+    {
+        { 78, 232, 98, 292 }, Button { enabled, "OK" };
+        { 12, 64, 70, 300 }, StaticText { disabled,
+          "MacExtract cannot open this document, and the application "
+          "that made it could not be found." };
     }
 };
 
