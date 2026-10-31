@@ -3608,6 +3608,9 @@ static short SegDriveOfFile(short ref)
  * is "0 if no disk in drive; 1 or 2 if disk in drive; 8 if nonejectable
  * disk in drive; $FC-$FF if disk was ejected within last 1.5 seconds;
  * $48 if disk in drive is nonejectable but driver wants a call". */
+#ifdef UNC_POC_PARTDLG
+static void SegCopyIn(SegHost *h, int part);
+#endif
 static int SegEjectPrevious(SegHost *h, int part)
 {
     DrvQEl *q;
@@ -3655,8 +3658,18 @@ static int SegEjectPrevious(SegHost *h, int part)
 #endif
     { int p;
       for (p = 1; p <= kSegMaxKnown; p++)
-          if (h->loc[p].name[0] && SegDriveOf(h->loc[p].vRefNum) == drive)
+          if (h->loc[p].name[0] && SegDriveOf(h->loc[p].vRefNum) == drive) {
+#ifdef UNC_POC_PARTDLG
+              /* A MIME part on it is copied off first, as when it is
+               * needed: the part opened, say 3, is needed last, and the
+               * disk would go in twice (the LC 475, 2026-10-31). */
+              if (h->desc.scheme == UNC_FORMAT_MIMESEG) {
+                  SegCopyIn(h, p);
+                  if (SegDriveOf(h->loc[p].vRefNum) != drive) continue;
+              }
+#endif
               h->loc[p].name[0] = 0;
+          }
       pb.volumeParam.ioNamePtr = NULL;
       pb.volumeParam.ioVRefNum = drive;
       (void)PBUnmountVol(&pb); }
@@ -4714,6 +4727,11 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
                 sa.outVol = outVol;
                 sa.outDir = outDir;
 #ifdef UNC_POC_PARTDLG
+                /* The file opened came off this disk: it is the one ejected
+                 * at the first ask, before any part is read (a MIME set
+                 * opened from part 3 asks for part 1 first; the LC 475,
+                 * 2026-10-31). */
+                sh->lastDrive = SegDriveOf(origVol);
                 /* The setup is read from the bundle at launch and given
                  * back with it before the budget (ovl_segsetup.c). */
                 {   OverlayEntry e = ovl_image(OVL_ID_SEGSETUP);
