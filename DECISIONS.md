@@ -487,6 +487,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-31 (the helper list Expander asks for) — StuffIt Expander 5.5's installer offers to become Internet Config's helper for downloaded files; it claims no Finder creator, so nothing in it replaces a stub
 - 2026-10-31 (the hand-off that arrives once) — a post-processor's Open Documents event launches MacExtract with the archive, and is lost if MacExtract is already open; `companion/icsetup` makes MacExtract the post-processor where Expander was, and stamps downloads as MacExtract's
 - 2026-10-31 (the stub that sorts) — a stub hands MacExtract only the types its bundle claims; on Mac OS 9 the first launch after boot passes over a stub whose file name is 10 characters or more, StuffIt Expander then holds the creator, and a short name keeps it
+- 2026-11-01 (the creators Expander does not open) — on Mac OS 9 StuffIt Expander is registered under `SITx` alone and a `SIT!` archive asks which program to use; a second bundle claims no creator for a stub either; and the boot volume every Mac OS 9 run here used carries StuffIt Deluxe's Finder patches
 
 ---
 
@@ -19853,3 +19854,33 @@ Open dialog; that is what changed.) A running Expander still wins while it
 runs (Tempelmann: a running application first). Not run: System 7.x, and
 the reclaim on System 6 and 3.0, which have no desktop database for it
 (the stub then says it could not register itself).
+
+## 2026-11-01 (the creators Expander does not open) — on Mac OS 9 StuffIt Expander is registered under `SITx` alone and a `SIT!` archive asks which program to use; a second bundle claims no creator for a stub either; and the boot volume every Mac OS 9 run here used carries StuffIt Deluxe's Finder patches
+
+Asked by the maintainer: Expander "opens more than one creator code"; can
+one stub claim several?
+
+**Measured (Mac OS 9.2 under QEMU, one boot on the shared `hfsboot.img`,
+two on a copy without StuffIt Deluxe's Finder add-ons).** A volume with
+StuffIt Expander 5.5 alone (its bundles: `SITx`, and `SIT!` with a `SIT!`
+signature resource) and a stub `Multi`, creator `MXst`, given a second
+`BNDL` and signature resource owned by `TQ07`. `tools/dtlist`: Expander
+is listed under `SITx` only, nothing under `SIT!`; `Multi` under `MXst`
+only, nothing under `TQ07`. A `SIT!` archive, double-clicked: *"Could not
+find the application program that created the document"*, offering
+MacExtract, Multi and StuffIt Expander (the programs whose bundles claim
+its type, `SITD`). A `TQ07` archive: the same. So no application, and no
+stub, owns a creator through a second bundle; the 2026-10-12 result
+(System 6.0.8, 7.0.1) holds on Mac OS 9.
+
+**The confounder.** On the shared `hfsboot.img` the same `SIT!` archive
+put up *"S.sit is in an older StuffIt format … converted using the
+StuffIt Deluxe application. [Don't Open] [Open Browse Only]"*: its System
+Folder carries StuffIt Deluxe 5.0.1's True Finder Integration, Aladdin
+Compression and Magic Menu (Dec 1998), the StuffIt Engine (2001) and
+Expander preferences, left by earlier work here. True Finder Integration
+patches the Finder for StuffIt archives — the likely source of "every
+StuffIt product opens them all". Every Mac OS 9 run of 2026-10-31 used
+that volume; the one case re-run without the three add-ons, the 11-
+character `SITx Helper` losing the first launch to Expander, came out the
+same. The rest of *the stub that sorts* is not re-run clean.

@@ -1812,6 +1812,13 @@ wanted icon's NAME. There is no `drag()` helper; it is four lines:
 
 ### A plain-HFS Mac OS 9 boot volume — `hfsboot.img`
 
+**It is not stock Mac OS 9.2**: its System Folder carries StuffIt Deluxe
+5.0.1's True Finder Integration, Aladdin Compression and Magic Menu, the
+StuffIt Engine and Expander's preferences, which change what the Finder
+does with a StuffIt archive (DECISIONS.md 2026-11-01, *the creators
+Expander does not open*). Delete the three add-ons from a private copy for
+any question about the Finder.
+
 `$UNC_VMAC_HOME/../sit5/hfsboot.img` is a 1 GB **Mac OS Standard** volume
 carrying a bootable System Folder, built 2026-09-27 with no install media:
 
