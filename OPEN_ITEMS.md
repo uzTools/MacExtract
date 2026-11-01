@@ -249,9 +249,11 @@ ships later, on MacExtract's own floppy. Left:
   MacStamp's own BinHex, PackIt, btoa and base64 stamps — reach it by
   double-click only after `companion/icsetup`, and the files already on
   disk not even then.
-- **A second double-click while MacExtract runs.** MultiFinder refuses it
-  with its own alert (DECISIONS.md 2026-11-01, *the floor, and the second
-  double-click*); System 7 and Mac OS 9 from the Finder are not run.
+- **A helper opened while MacExtract runs loses the archive**, silently
+  (System 6.0.8 MultiFinder; DECISIONS.md 2026-11-01, *the Open item
+  MultiFinder looks for*): its launch only brings MacExtract forward. An
+  archive of MacExtract's own creator is queued since File > Open...;
+  one through a helper is not. System 7 and Mac OS 9 not run.
 - **MacExtract's bundle lacks DiskDoubler's single-file types** (`DDF0`-
   `DDF5`, `DD01`, `DDFL`, `DDf4`, creator `DDAP`; MacStamp's census), so a
   `DDAP` stub would pass them on. Closes by adding the `FREF`s (heap per
