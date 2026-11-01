@@ -54,6 +54,8 @@
 #include <Processes.h>
 #include <SegLoad.h>
 #include <NumberFormatting.h>
+#include <Gestalt.h>
+#include <Traps.h>
 
 QDGlobals qd;
 
@@ -262,6 +264,74 @@ static OSErr LaunchIn(short vol, long dir, Str255 name)
     return err;
 }
 
+/* MULTIFINDER. Under System 6's MultiFinder a _Launch of an application
+ * already running only brings it forward, and the documents are lost.
+ * The Finder instead hands a running application its documents as a
+ * "puppet string" (Technical Note OV17), through MultiFinder's private
+ * _OSDispatch calls, read out of the System 6.0.8 Finder (6.1.8, CODE 4)
+ * and MultiFinder (CODE 2, 'Puppet'); the stub makes the same two calls
+ * (DECISIONS.md 2026-11-01, *the Open item MultiFinder looks for*).
+ * Selector 1 lists the processes, 10 bytes each: number, creator, and
+ * four bytes the stub does not read (0 on 6.0.8 and 7.0.1, measured).
+ * Selector 0 queues the string: the process number, a handle, a long 0
+ * and a word 0. The handle: a long offset to the next event (6), a word
+ * count, that many 16-byte EventRecords, then the Finder's document list
+ * copied whole; one record per document, `what` 15 and `message` $0C in
+ * the high byte with the document's offset in the handle below it, and a
+ * last record of `what` $2000. MultiFinder disposes of it once played,
+ * so it goes in the system heap: the stub's own heap is gone when it
+ * quits. System 7.0.1's Process Manager accepts both calls and plays
+ * nothing (measured), so this is System 6 only: no Apple Event Manager. */
+pascal short MFProcesses(void *list, short max) M68K_INLINE(0x3F3C, 0x0001, 0xA88F);
+pascal void MFPuppet(short process, Handle s, long z1, short z2) M68K_INLINE(0x3F3C, 0x0000, 0xA88F);
+
+/* 1 if a running MacExtract was handed the documents. */
+static int Puppet(void)
+{
+    unsigned char list[32 * 10], *p;
+    Handle ap = LMGetAppParmHandle(), h;
+    ProcPtr none = NGetTrapAddress(_Unimplemented, kToolboxTrapType);
+    short n, i, process = 0;
+    long cnt, size, off, ae;
+
+    if (!ap || NGetTrapAddress(0xA88F, kToolboxTrapType) == none)
+        return 0;                                   /* no MultiFinder */
+    if (NGetTrapAddress(0xA1AD, kOSTrapType) != none
+        && !Gestalt(gestaltAppleEventsAttr, &ae) && (ae & 1))
+        return 0;                                   /* System 7 or later */
+    n = MFProcesses(list, 32);
+    for (i = 0; i < n && i < 32; i++) {
+        p = list + i * 10;
+        if (p[2] == 'M' && p[3] == 'E' && p[4] == 'x' && p[5] == 't')
+            process = (short)(p[0] << 8 | p[1]);
+    }
+    if (!process) return 0;
+
+    size = GetHandleSize(ap);
+    cnt = (*(unsigned char **)ap)[2] << 8 | (*(unsigned char **)ap)[3];
+    off = 6 + (cnt + 1) * 16;
+    h = NewHandleSysClear(off + size);
+    if (!h) return 0;
+    p = *(unsigned char **)h;
+    p[3] = 6;
+    p[4] = (unsigned char)((cnt + 1) >> 8);
+    p[5] = (unsigned char)(cnt + 1);
+    BlockMoveData(*ap, p + off, size);
+    off += 4;                                       /* message and count */
+    for (i = 0; i < cnt; i++) {
+        unsigned char *e = p + 6 + i * 16;
+        e[1] = 15;
+        e[2] = 0x0C;
+        e[3] = (unsigned char)(off >> 16);
+        e[4] = (unsigned char)(off >> 8);
+        e[5] = (unsigned char)off;
+        off += (p[off + 8] + 10) & ~1;
+    }
+    p[6 + cnt * 16] = 0x20;                         /* `what` $2000: the end */
+    MFPuppet(process, h, 0, 0);
+    return 1;
+}
+
 /* An application of creator MExt in that folder, by name. */
 static OSErr FindMacExtract(short vol, long dir, Str255 name)
 {
@@ -332,6 +402,7 @@ int main(void)
             return 0;
         }
     } else if (!err) {
+        if (Puppet()) return 0;
         err = LaunchIn(vol, dir, name);
     }
 
