@@ -1103,6 +1103,16 @@ route, and an item naming the wrong obstacle.
   created"*; measured with `relaunch.py`, bisected to ba8f2d2. `run.py`
   extracts by dirID, so no sweep took that branch (DECISIONS.md 2026-10-22,
   *the working directory the bundle closed*).
+- **"Handed the archive with `LaunchApplication`, kept running 10 s, the
+  helper makes MacExtract stop on an illegal instruction"** — System 7.0.1,
+  DECISIONS.md 2026-11-01, *the Open item MultiFinder looks for*, commit
+  9598218. **Withdrawn the same day**: the probe that stayed running had
+  never initialised the Toolbox; the control, the same probe handing
+  nothing on, stopped the *Finder* on the same illegal instruction, and with
+  the Toolbox initialised the hand-off neither crashed nor arrived. **Cost:
+  one pushed commit naming a crash in MacExtract that a probe made, and two
+  emulator runs read as reproducing it.** A probe that lingers is a
+  process; give it what a process needs before blaming the one it talks to.
 
 ### Corrected figures and superseded write-ups
 

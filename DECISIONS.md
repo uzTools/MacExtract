@@ -19650,15 +19650,28 @@ one run each unless noted).**
 |---|---|
 | puppet string, selectors 1 and 0 | both answered (process numbers `$7FFx`); nothing played; MacExtract was in front, and `SetFrontProcess` to it changed nothing |
 | `AESend` of an odoc to `MExt` | `connectionInvalid` (−609), from a helper `notHighLevelEventAware` and from one `isHighLevelEventAware` |
-| `LaunchApplication`, the odoc as `launchAppParameters` | returns 0; nothing if the helper quits at once; kept running 10 s, MacExtract stops on an illegal instruction within 3 s (two runs) |
+| `AESend`, addressed by process serial number | `protocolErr` (−603) |
+| `PostHighLevelEvent` of the odoc's `'appa'` block, by serial number (what the Finder posts) | −603, from a helper not HLE-aware and from one that is |
+| the same, after `SetFrontProcess` to MacExtract, the Finder's order | MacExtract comes to the front; −603 |
+| the archive restamped `MExt`, the Finder asked to open it (`'FNDR'`/`'sope'`, the folder's alias and an `'fsel'` list), creator put back after 3 s | from a helper not HLE-aware: `noPortErr` (−903), nothing sent. From one that is: **queued and extracted after the first**; the creator stayed `MExt` (that probe was `cannotBackground`, so it is not known to have run again in time; not re-tested) |
+| `LaunchApplication`, the odoc as `launchAppParameters` | returns 0; nothing, whether the helper quits at once, copies the parameters to the system heap first, or stays running 10 s (corrected: an illegal-instruction stop first reported here was the probe's, BLOCKERS.md, *Withdrawn claims*) |
 
-The third is what the 7.0.1 Finder does: its `CODE` 103 builds an odoc and
-calls `_Launch` with an extended block (`'LC'`, length 32, flags `$4900`),
-and no Apple Event Manager trap appears in its code. Its `CODE` resources
+For an application that is NOT running, the 7.0.1 Finder's `CODE` 103
+builds an odoc and calls `_Launch` with an extended block (`'LC'`, length
+32, flags `$4900`); for one that is, it calls `SetFrontProcess` (`CODE`
+160 `$8D4`) and posts the same block with `PostHighLevelEvent` to the
+process's serial number (`CODE` 160 `$644`, `CODE` 10 `$46A`: event at
++0, refcon +16, length +20, buffer +24). No Apple Event Manager trap
+appears in its code. Its `CODE` resources
 are `dcmp` 0 compressed and were read with a scratch transcription of
 python-rsrcfork's `compress/dcmp0.py`, whose output matched the stated
 length on all 186. The control: the same disk with the second archive
 stamped `MExt` and double-clicked, so the Finder hands it on; MacExtract
-extracted it after the first. So the crash comes with the helper's
-hand-off, not with every odoc; why is not known. The helper keeps
-`_Launch` there, which loses the archive as before. Mac OS 9 not run.
+extracted it after the first. So 7.0.1 delivers a document to a running
+application that is not HLE-aware when the FINDER opens it, and refuses
+every event the helper posts itself. The only route measured to work goes
+through the Finder, and needs a helper that is HLE-aware (on System 7 the
+Finder then hands it its own documents as an odoc, not in the Finder
+information) and an archive that briefly carries MacExtract's creator. Not
+built: both are design decisions. The helper keeps `_Launch` there, which
+loses the archive as before. Mac OS 9 not run.
