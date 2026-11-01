@@ -62,7 +62,7 @@ static void put4(OSType t)
 
 int main(void)
 {
-    static const OSType kCreators[] = { 'SITx', 'TQ01', 'MExt' };
+    static const OSType kCreators[] = { 'SITx', 'SIT!', 'TQ07', 'MXst', 'MExt' };
     ProcessSerialNumber me;
     ProcessInfoRec info;
     Str255 myName, name, vname;
@@ -94,7 +94,7 @@ int main(void)
         dt.ioNamePtr = NULL;
         dt.ioVRefNum = v.volumeParam.ioVRefNum;
         if (PBDTGetPath(&dt)) { put("  no desktop database\r"); continue; }
-        for (c = 0; c < 3; c++) {
+        for (c = 0; c < (short)(sizeof(kCreators) / sizeof(kCreators[0])); c++) {
             for (k = 0; k < 8; k++) {
                 OSErr e;
                 dt.ioNamePtr = name;
