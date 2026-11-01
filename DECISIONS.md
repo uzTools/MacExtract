@@ -19994,3 +19994,13 @@ configurations, `run_tiers.py` `TIERS` -336 each, `TIERS_CONTROL` +192,
 `dist/` rebuilt; `ci.sh` green. `dist/README.txt` still advises opening
 MacExtract again for the next archive: release notes, rewritten when a
 version is cut.
+
+**The helpers do not reach the queue (measured, System 6.0.8 MultiFinder,
+Mac Plus 4 MB, 1x, one run, the shipped build and a `SIT!` helper
+registered by opening its folder).** MacExtract extracting a `MExt`
+archive; the Finder brought forward; a `SITD`/`SIT!` archive
+double-clicked: MacExtract came back to the front, still on the first,
+with no alert, and the second was never extracted. The helper's `_Launch`
+of an application already running only brings it forward; the document
+list the Finder gave the helper goes nowhere. Open: OPEN_ITEMS.md, *The
+double-click helpers*.
