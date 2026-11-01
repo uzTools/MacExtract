@@ -1755,8 +1755,8 @@ different refusals:
   this lane PREDICTED before any machine ran it (FORMATS.md, *512 KB
   machines*).
 
-The budgets are `TIERS` (627,832, 198,926 and 103,544 B as of
-2026-10-25, derived from the 2026-10-22 machine re-take); `TIERS_MACHINE`
+The budgets are `TIERS` (627,496, 198,590 and 103,208 B as of
+2026-11-01, derived from the 2026-10-22 machine re-take); `TIERS_MACHINE`
 holds each plus the control it was read against. The keep set is parsed
 from `mac/ovl_load_eager.c`, format names and envelope flags from the
 engine's table, image sizes checked against `build/mac/`

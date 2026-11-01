@@ -55,7 +55,8 @@
 #define kStatusItem     2
 #define kBarItem        3
 #define kDetailItem     4
-#define kFileMENU       128     /* File > Quit, its only item */
+#define kFileMENU       128     /* File > Open..., Quit */
+#define kOpenITEM       1
 #define kAppleMENU      129     /* About MacExtract..., its only item */
 #define kAboutALRT      134
 #define kNoReloadALRT   135     /* the next archive's decoders: no room */
@@ -962,6 +963,10 @@ static void PStrCatNum(Str255 d, long n)
  *
  * Quit is Cancel: the application quits after an archive whose decoders
  * it released, which every extraction that reaches this pump has. */
+#ifndef UNC_MAC_AUTOTEST
+static void QueueAsk(void);
+#endif
+
 static void ProgressPump(Progress *pr)
 {
     ReserveSample();
@@ -983,6 +988,11 @@ static void ProgressPump(Progress *pr)
             if ((short)(r >> 16) == kAppleMENU) {
                 NoteAlert(kAboutALRT, NULL);
                 if (pr->dlg) SetPort((GrafPtr)pr->dlg);
+#ifndef UNC_MAC_AUTOTEST
+            } else if ((short)r == kOpenITEM) {
+                QueueAsk();
+                if (pr->dlg) SetPort((GrafPtr)pr->dlg);
+#endif
             } else
                 pr->cancelled = true;
             return;
@@ -6804,6 +6814,43 @@ static int DropNext(short *vol, Str63 name)
     gDropOff += (8 + 1 + len + 1) & ~1;
     gDropLeft--;
     return 1;
+}
+
+/* File > Open... during an extraction: the archive chosen joins the
+ * Finder's own list, a record in its format appended to AppParmHandle,
+ * so the main loop takes it after the current one exactly as it takes a
+ * second document of one Finder selection. System 6's MultiFinder opens a
+ * document in a running application by choosing this item and answering
+ * SFGetFile itself (Technical Note OV17, *MultiFinder Revisited: The 6.0
+ * System*, "Open Document and Quit"), and System 7 and Mac OS 9 do the
+ * same for an application not aware of Apple events (measured,
+ * DECISIONS.md 2026-11-01, *the Open item MultiFinder looks for*). */
+static void QueueAsk(void)
+{
+    SFReply reply;
+    Handle h = LMGetAppParmHandle();
+    long size, rec;
+    unsigned char *q;
+#ifdef UNC_AT_STACK
+    /* Probe builds: sample inside Standard File's loop, which here runs on
+     * top of a decoder's frames (FORMATS.md, *Stack*). */
+    SFPGetFile(gDestWhere, "\p", NULL, -1, NULL, NewDlgHookProc(SFHook),
+               &reply, getDlgID, NULL);
+#else
+    SFGetFile(gDestWhere, "\p", NULL, -1, NULL, NULL, &reply);
+#endif
+    if (!reply.good || !h) return;
+    size = GetHandleSize(h);          /* message and count at least */
+    rec = (8 + 1 + reply.fName[0] + 1) & ~1;
+    HUnlock(h);                         /* the Segment Loader's may be locked */
+    SetHandleSize(h, size + rec);
+    if (MemError()) return;
+    q = (unsigned char *)*h;
+    q[size] = (unsigned char)(reply.vRefNum >> 8);
+    q[size + 1] = (unsigned char)reply.vRefNum;
+    BlockMoveData(reply.fName, q + size + 8, reply.fName[0] + 1);
+    if (gDropLeft <= 0) gDropOff = size;
+    gDropLeft++;
 }
 
 #ifdef UNC_AT_HEAPLOG

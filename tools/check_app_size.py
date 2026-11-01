@@ -133,9 +133,11 @@ import sys
 # RE-TAKEN 2026-10-25, 48,896 -> 46,336: the encryption check and the
 # MacBinary and AppleDouble readers left the resident link for the
 # sniffer's and BinHex's images (DECISIONS.md 2026-10-25, *the envelopes that left*).
-EXPECT = 46336
+# RE-TAKEN 2026-11-01, 46,336 -> 46,592: the queueing File > Open...
+# (DECISIONS.md 2026-11-01, *the Open item MultiFinder looks for*).
+EXPECT = 46592
 TOLERANCE = 2048
-TAKEN = "2026-10-25"
+TAKEN = "2026-11-01"
 
 # And the BUNDLE, watched from 2026-09-26 for one reason: FORMATS.md quotes it
 # in three places and nothing measured it, so it was wrong by 544 B — the

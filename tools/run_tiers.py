@@ -199,10 +199,16 @@ REPO = os.path.dirname(HERE)
 # **-144 more each the same day, DERIVED**: the review before v0.44.0
 # (DECISIONS.md 2026-10-25, *the review before the release*), the
 # control's CODE +120 and A5 +24; OVL_SAVED +144 offsets it.
+# **-336 each 2026-11-01, DERIVED**: the queueing File > Open..., the
+# control's CODE +192 (OVL_SAVED unmoved, the shipped pair grew the same),
+# and twelve DiskDoubler types in the bundle, map entries outside the CODE
+# + A5 unit: the 1 MB probe's budget fell 742,636 -> 742,492 B, -144
+# (DECISIONS.md 2026-11-01, *the Open item MultiFinder looks for*).
+# TIERS_MACHINE -144 with it.
 TIERS = {
-    "sys3-512K": (198926, "System 3.0, Macintosh 512Ke (222,070 B free)"),
-    "sys6-512K": (103544, "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
-    "floor-1M":  (627832, "System 6.0.8, 1 MB Mac Plus — the floor target"),
+    "sys3-512K": (198590, "System 3.0, Macintosh 512Ke (222,070 B free)"),
+    "sys6-512K": (103208, "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
+    "floor-1M":  (627496, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
 # **-592 more each 2026-10-24, DERIVED**: SUMacC's `.dl`, the control's
 # CODE +584 and A5 +8 (DECISIONS.md 2026-10-24, *the format before
@@ -406,7 +412,8 @@ TIERS = {
 # data + bss -680. The machine gave +4,204, because the jump table, the
 # stub segments and the relocations trimmed at launch are resident bytes
 # this unit never counted — which is why TIERS was measured, not moved.
-TIERS_CONTROL = 214208     # build/mac-resident, CODE + A5, 2026-10-25
+TIERS_CONTROL = 214400     # build/mac-resident, CODE + A5, 2026-11-01
+# +192 on 2026-11-01: the queueing File > Open...; TIERS above -192.
 # +144 on 2026-10-25: the review before v0.44.0; TIERS above -144.
 # +352 on 2026-10-22: the eleven malformed-input fixes, every decoder linked
 # in; TIERS above drops 352 to match (TIERS_MACHINE, physical RAM, unmoved).
@@ -443,12 +450,14 @@ TIERS_CONTROL = 214208     # build/mac-resident, CODE + A5, 2026-10-25
 # trimmed relocations (DECISIONS.md 2026-10-22, *the runtime the application
 # did not need*). Main's own probe the same morning summed 1,288 B below
 # the 2026-10-09 values on all three, so they had already stopped holding.
+# **-144 each 2026-11-01**: twelve DiskDoubler types' map entries, outside
+# the CODE + A5 unit (TIERS above); measured at floor-1M.
 # **-72 each 2026-10-25**: the archive icon's map entries, resident bytes
 # outside the CODE + A5 unit (TIERS above); measured at floor-1M.
 TIERS_MACHINE = {
-    "sys3-512K": 413134,   # 201,590 + 211,616, measured 2026-10-22 (was
-    "sys6-512K": 317752,   # 106,208 + 211,616   413,492 / 318,092 / 842,380
-    "floor-1M":  842040,   # 630,496 + 211,616   from 2026-10-09)
+    "sys3-512K": 412990,   # 201,590 + 211,616, measured 2026-10-22 (was
+    "sys6-512K": 317608,   # 106,208 + 211,616   413,492 / 318,092 / 842,380
+    "floor-1M":  841896,   # 630,496 + 211,616   from 2026-10-09)
 }
 
 # DERIVED, not re-measured, 2026-10-01: all three fell by 2,024 B — the

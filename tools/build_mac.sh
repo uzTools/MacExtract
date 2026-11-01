@@ -662,7 +662,8 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # DiskDoubler walks refuse to step backward, gzip tells a failed read from
 # the end, the StuffIt segment probe exempts part 1, and the shell's two
 # report fixes. In images everywhere but here, bar the shell's +20.
-UNC_MAC_CODE_DEFAULT=177732
+# +192 on 2026-11-01: the queueing File > Open..., as the eager pair.
+UNC_MAC_CODE_DEFAULT=177924
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -1330,7 +1331,12 @@ UNC_MAC_A5_DEFAULT=36476
 # release*): a refused Finder info's line no longer takes the reserve, and
 # the advice after it is said once an operation, not once a layer. The A5
 # is `.data` alignment; the sum, and so every budget, is unmoved.
-UNC_MAC_CODE_EAGER=38588
+# +192 and +0 on 2026-11-01, 38,588 -> 38,780: File > Open... queues an
+# archive during an extraction by appending it to the Finder's own list,
+# which is how MultiFinder, System 7 and Mac OS 9 open a document in a
+# running application (DECISIONS.md 2026-11-01, *the Open item MultiFinder
+# looks for*). 192 B off every budget.
+UNC_MAC_CODE_EAGER=38780
 UNC_MAC_A5_EAGER=16484
 # +8 on 2026-10-02 for the same reason as the eager pair above: the
 # overlay call that now says WHICH of StuffIt 2.x's ciphers an entry
@@ -1439,7 +1445,8 @@ UNC_MAC_A5_EAGER=16484
 # ceiling.
 # +24 code on 2026-10-25, the same review (the eager pair above); data +
 # bss 16,544, under its ceiling.
-UNC_MAC_CODE_LAZY=37824
+# +192 on 2026-11-01: the queueing File > Open..., as the eager pair.
+UNC_MAC_CODE_LAZY=38016
 UNC_MAC_A5_LAZY=19200
 if [ -n "$UNC_OVL_RESIDENT" ]; then
     UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-$UNC_MAC_CODE_DEFAULT}

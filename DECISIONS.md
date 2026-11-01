@@ -19580,4 +19580,20 @@ steps: −4 B of code took A5 from +20 to +0 here.
   so no double-click reaches the Finder; the user chooses there. System
   7 not run.
 
-**Not measured:** the budget tiers and `dist/` with the change.
+**Committed 2026-11-01 with DiskDoubler's types in the bundle.**
+MacStamp's census found DiskDoubler's single compressed files (creator
+`DDAP`) typed `DDF0`-`DDF3`, `DD01`, `DDFL` and `DDf4`, none of which
+MacExtract's bundle claimed, though it opens them by content: so the
+System 7 Finder refused them dropped on it and a `DDAP` helper's triage
+would pass them on. The bundle now claims `DD01`, `DD02`, `DDF0`-`DDF7`,
+`DDFL` and `DDf4` (DiskDoubler's own expanders declare the rest; its other
+declared types are left out, `mac/macextract_icons.r`). **Price: 144 B**
+of budget, map entries outside the CODE + A5 unit: the 1 MB probe
+(`run.py --mem 1M -D UNC_AT_BUDGET`, `derived-ASCbeep.sit`) gave 742,636 B
+before and 742,492 B after, 12 B a type; the File menu's new item moved it
+by nothing. Re-take: `tools/build_mac.sh` ceilings +192 in all three
+configurations, `run_tiers.py` `TIERS` -336 each, `TIERS_CONTROL` +192,
+`TIERS_MACHINE` -144, `OVL_SAVED` unmoved (both builds grew 192);
+`dist/` rebuilt; `ci.sh` green. `dist/README.txt` still advises opening
+MacExtract again for the next archive: release notes, rewritten when a
+version is cut.
