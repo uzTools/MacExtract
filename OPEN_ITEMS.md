@@ -256,17 +256,23 @@ measured, `nm -S`).
 `companion/` works (DECISIONS.md 2026-10-11, *the stub that hands it on*) and
 ships later, on MacExtract's own floppy. Left:
 
-- **Which creators.** `companion/app-bundles.tsv` has 42; the list of stubs
-  is not chosen. `TEXT` stays out, and `SITx`: it is StuffIt Expander's,
-  so also on StuffIt X archives, which MacExtract does not open (the
-  maintainer, 2026-10-31). Archives MacExtract does open that carry `SITx`
+- **Which creators.** MacStamp's list (2026-11-01, from its census) is
+  the source; not yet chosen. `SITx` can have a stub now that a stub
+  passes StuffIt X (`SITX`) back to Expander (DECISIONS.md 2026-10-31,
+  *the stub that sorts*); `TEXT`, `R*ch`, `MSWD`, `MOSS`, `java` stay out,
+  since they also own ordinary documents. Archives MacExtract does open that carry `SITx`
   — Mac OS 9.2's downloads of `.sit`, `.hqx`, `.bin`, `.pit`, `.taz`
   (DECISIONS.md 2026-10-31, *the helper list Expander asks for*), and
   MacStamp's own BinHex, PackIt, btoa and base64 stamps — reach it by
   double-click only after `companion/icsetup`, and the files already on
   disk not even then.
-- **A second double-click while MacExtract runs**, under MultiFinder and
-  System 7. Not run.
+- **A second double-click while MacExtract runs.** MultiFinder refuses it
+  with its own alert (DECISIONS.md 2026-11-01, *the floor, and the second
+  double-click*); System 7 and Mac OS 9 from the Finder are not run.
+- **MacExtract's bundle lacks DiskDoubler's single-file types** (`DDF0`-
+  `DDF5`, `DD01`, `DDFL`, `DDf4`, creator `DDAP`; MacStamp's census), so a
+  `DDAP` stub would pass them on. Closes by adding the `FREF`s (heap per
+  type, unpriced) or a stub that also accepts its own creator's types.
 - **Several archives of different creators opened together.** Not run.
 - **Which of a file's two dates System 7 compares** between two applications
   of one creator. Not separated.
