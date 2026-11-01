@@ -678,7 +678,10 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # table as a block that grows, unc_sit5_extract +38 with its two helpers
 # inlined (DECISIONS.md 2026-11-03, *the folders past the table*); in
 # `ovl_stuffit` everywhere but here, +4 B there.
-UNC_MAC_CODE_DEFAULT=180224
+# +180 on 2026-11-03, 180,224 -> 180,404, A5 +12 below: the queueing File >
+# Open..., rebased onto the day's tree (DECISIONS.md 2026-11-01, *the Open
+# item MultiFinder looks for*; +192 on 2026-11-01's).
+UNC_MAC_CODE_DEFAULT=180404
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -893,7 +896,9 @@ UNC_MAC_CODE_DEFAULT=180224
 # MacBinary layout check (above); no data was added.
 # -4 on 2026-11-03, 36,532 -> 36,528: `.data` alignment under the StuffIt 5
 # folder table (above); no data was added.
-UNC_MAC_A5_DEFAULT=36528
+# +12 on 2026-11-03, 36,528 -> 36,540: `.data` alignment under the
+# queueing File > Open... (above); no data was added.
+UNC_MAC_A5_DEFAULT=36540
 # A CEILING PER CONFIGURATION, because one ceiling measured on another build
 # cannot fire. The figures above are the RESIDENT control build, which carries
 # every decoder; the shipped build's resident code is a third of that, so
@@ -1369,8 +1374,14 @@ UNC_MAC_A5_DEFAULT=36528
 # sniffer +76, ovl_drop +40 and the peek's allocator +24; the A5 is the
 # eleven envelope rows, two more kept slots and `unc_extract_as` in the host
 # vector. 432 B off every budget.
-UNC_MAC_CODE_EAGER=39408
-UNC_MAC_A5_EAGER=16688
+# +180 and +12 on 2026-11-03, 39,408 -> 39,588 and 16,688 -> 16,700: File >
+# Open... queues an archive during an extraction by appending it to the
+# Finder's own list, which is how MultiFinder, System 7 and Mac OS 9 open a
+# document in a running application (DECISIONS.md 2026-11-01, *the Open
+# item MultiFinder looks for*). The A5 is `.data` alignment. 192 B off every
+# budget.
+UNC_MAC_CODE_EAGER=39588
+UNC_MAC_A5_EAGER=16700
 # +8 on 2026-10-02 for the same reason as the eager pair above: the
 # overlay call that now says WHICH of StuffIt 2.x's ciphers an entry
 # wants. A5 fell to 19,096 and its ceiling is left where it was.
@@ -1481,7 +1492,9 @@ UNC_MAC_A5_EAGER=16688
 # +428 code on 2026-11-02, v0.45.0, the dialogs (the eager pair above;
 # here the setup is linked in and Standard File's Save dialog stays); data
 # + bss 16,708, under its ceiling.
-UNC_MAC_CODE_LAZY=38252
+# +176 code on 2026-11-03: the queueing File > Open..., as the eager pair;
+# data + bss 16,692, under its ceiling.
+UNC_MAC_CODE_LAZY=38428
 UNC_MAC_A5_LAZY=19200
 if [ -n "$UNC_OVL_RESIDENT" ]; then
     UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-$UNC_MAC_CODE_DEFAULT}

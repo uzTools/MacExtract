@@ -136,9 +136,12 @@ import sys
 # RE-TAKEN 2026-11-02, 46,336 -> 46,976: v0.45.0, the dialogs — the part
 # dialog, the background wait, the coloured bar, the cheaper part scans
 # (DECISIONS.md 2026-11-02, *the dialogs that became the application*).
-EXPECT = 46976
+# RE-TAKEN 2026-11-03, 46,976 -> 47,616: the day's commits, and the queueing
+# File > Open... (DECISIONS.md 2026-11-01, *the Open item MultiFinder looks
+# for*).
+EXPECT = 47616
 TOLERANCE = 2048
-TAKEN = "2026-11-02"
+TAKEN = "2026-11-03"
 
 # And the BUNDLE, watched from 2026-09-26 for one reason: FORMATS.md quotes it
 # in three places and nothing measured it, so it was wrong by 544 B — the

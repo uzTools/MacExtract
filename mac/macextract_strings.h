@@ -24,6 +24,7 @@
 
 #define S_MENU_ABOUT        "About MacExtract\0xC9"
 #define S_MENU_FILE         "File"
+#define S_MENU_OPEN         "Open\0xC9"
 #define S_MENU_QUIT         "Quit"
 
 #define S_ABOUT             "MacExtract 0.45.0"

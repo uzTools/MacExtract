@@ -3921,13 +3921,15 @@ bundle*.
 
 | build | switch | resident `CODE` | A5 | `MacExtract.code.bin` | `MacExtract.bin` |
 |---|---|---|---|---|---|
-| **eager — SHIPPED** | (default) | **39,408 B** | 16,688 B | **47,360 B** | **244,608 B** |
-| lazy | `UNC_OVL_LAZY=1` | 38,252 B | 16,708 B | 46,080 B | 239,488 B |
-| resident — the control | `UNC_OVL_RESIDENT=1` | **180,224 B** | **36,528 B** | 210,560 B | 218,624 B |
+| **eager — SHIPPED** | (default) | **39,588 B** | 16,700 B | **47,616 B** | **245,248 B** |
+| lazy | `UNC_OVL_LAZY=1` | 38,428 B | 16,692 B | 46,336 B | 240,000 B |
+| resident — the control | `UNC_OVL_RESIDENT=1` | **180,404 B** | **36,540 B** | 210,816 B | 219,136 B |
 
 Read off the builds 2026-11-03
 (DECISIONS.md 2026-11-03, *the symbols no encoder writes*, *the fork that
-padded to nothing*, *the folders past the table*; 2026-11-02, *the
+padded to nothing*, *the folders past the table*; 2026-11-01, *the Open
+item MultiFinder looks for*: +180 B of `CODE` and +12 B of A5 alignment,
+and twelve DiskDoubler types in the bundle; 2026-11-02, *the
 dialogs that became the application*: the lazy and resident instruments link a
 set's setup in and keep Standard File's Save dialog; the `MacExtract.bin`
 column includes the archive document icon, *the archives that drew as
@@ -4387,7 +4389,7 @@ output sections answer what the budget asks.
 630,496 B, measured 2026-10-22** (`-D UNC_OVL_RESIDENT -D UNC_AT_BUDGET`,
 `derived-PCCTS.tar`; `FreeMem()` less a flat 20 KB reserve), with 201,590
 and 106,208 B on the 512Ke tiers (*512 KB machines*). Lowered since by
-derivation to **627,832 B** (2026-10-25), one for one with the control's
+derivation to **624,952 B** (2026-11-03), one for one with the control's
 growth; `tools/run_tiers.py` (`TIERS`, `TIERS_CONTROL`, `TIERS_MACHINE`)
 holds the current figures and each step. Earlier machine figures: 634,364
 (2026-10-09), 653,532 (2026-09-27), 648,250 (2026-09-22), 648,100
@@ -5293,7 +5295,7 @@ build's budget; the shipped build grants 82–105 KB more.
 free heap (`sys30.py --emu mv-512Ke -D UNC_OVL_RESIDENT -D UNC_AT_BUDGET`,
 slots swapped per `tools/vmac/README.md`) less the flat 20,480 B reserve.
 Re-taken on the machine at **201,590 B** on 2026-10-22; `tools/run_tiers.py`
-now asserts **198,926 B**, derived from the control build's growth since
+now asserts **196,046 B**, derived from the control build's growth since
 (CORRECTED 2026-10-25: this read "205,476 B, the figure run_tiers.py
 asserts"). History of the figure: *Budget*.
 
@@ -5468,7 +5470,7 @@ since 2026-10-22's `--mac-single`), read off `dist/MacExtract.bin`'s resource
 map 2026-10-25 (CORRECTED: 48,288 B on 2026-10-22's build). That fits inside
 the 128K's largest block. It is not the `CODE` figure *Three configurations,
 one tree* gives: that is `build/mac/MacExtract.code.bin`, the image
-`tools/build_mac.sh` ratchets (38,588 B ceiling, 2026-10-25), without the
+`tools/build_mac.sh` ratchets (39,588 B ceiling, 2026-11-03), without the
 data and relocations. 63,744 B was measured against 2026-09-01's build;
 *derived, not measured* for this one.
 

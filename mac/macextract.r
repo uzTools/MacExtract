@@ -228,7 +228,8 @@ resource 'MENU' (129) {
 
 resource 'MENU' (128) {
     128, textMenuProc, allEnabled, enabled, S_MENU_FILE,
-    { S_MENU_QUIT, noIcon, noKey, noMark, plain }
+    { S_MENU_OPEN, noIcon, noKey, noMark, plain;
+      S_MENU_QUIT, noIcon, noKey, noMark, plain }
 };
 
 /* About MacExtract. The number is written in (S_ABOUT) rather than read from
