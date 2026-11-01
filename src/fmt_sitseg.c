@@ -221,6 +221,11 @@ int unc_sitseg_emit(UncCtx *c, const UncSegmentDesc *desc, uint32_t base,
      * joiner's, its own verdict is the one the entry should carry: the
      * part whose CRC did not match, not "I/O error". */
     if (err == UNC_ERR_IO && ioerr && *ioerr != UNC_OK) err = *ioerr;
+    /* A missing part reads as the end of the stream. With a size
+     * announced, the short fork says truncated by itself; an open-ended
+     * split announces none, so the joiner's verdict says it. */
+    if (err == UNC_OK && ioerr && *ioerr == UNC_ERR_SEGMENTED)
+        err = UNC_ERR_TRUNCATED;
 
     if (c->sink->end_entry(c->sink->ctx, err) < 0) return UNC_ERR_SINK;
     if (unc_fatal(err))

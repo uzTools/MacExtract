@@ -102,7 +102,7 @@ typedef struct {
     void (*SegScanFamily)(SegHost *, short, long, int, Str63);
     uint32_t (*SegPartLength)(SegHost *, int);
     int  (*SegPartOf)(SegHost *, short, long, ConstStr255Param);
-    UncFormat (*unc_sniff)(UncIO *);
+    UncFormat (*unc_sniff_envelope)(UncIO *);
     int  (*unc_format_is_envelope)(UncFormat);
     int  (*unc_extract_as)(UncFormat, UncIO *, UncSink *, UncAlloc *,
                            UncProgress *, const UncOptions *);

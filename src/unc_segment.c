@@ -220,6 +220,15 @@ int unc_segment_describe(UncIO *io, UncSegmentDesc *desc)
     return UNC_ERR_FORMAT;
 }
 
+int unc_segment_describe_as(UncIO *io, UncFormat scheme,
+                            UncSegmentDesc *desc)
+{
+    const SegScheme *sc = seg_scheme(scheme);
+
+    if (!io || !desc || !sc || !sc->describe) return UNC_ERR_FORMAT;
+    return sc->describe(io, desc) == UNC_OK ? UNC_OK : UNC_ERR_FORMAT;
+}
+
 int unc_segment_match(const UncSegmentDesc *d,
                       const uint8_t *head, int32_t len)
 {

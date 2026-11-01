@@ -96,6 +96,15 @@ UncFormat unc_sniff(UncIO *io)
     return (UncFormat)e(&gOvlHost, OVL_SNIFF, io, NULL);
 }
 
+/* In the same image: the envelope a file would be unwrapped as, for the
+ * scan of a folder for a set's parts inside envelopes. */
+UncFormat unc_sniff_envelope(UncIO *io)
+{
+    OverlayEntry e = ovl_image(OVL_ID_SNIFF);
+    if (!e) return UNC_FORMAT_UNKNOWN;
+    return (UncFormat)e(&gOvlHost, OVL_SNIFF_ENVELOPE, io, NULL);
+}
+
 /* In the same image: does a Compact Pro or zip archive hold an encrypted
  * entry. Asked only by the eager release, with the bundle still whole
  * (mac/ovl_load_eager.c), so the image is always there to ask; without it

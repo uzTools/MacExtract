@@ -1283,7 +1283,7 @@ static int env_run(const char *path, EnvSink *es)
     eio.tell = fio_tell;
     eio.size = fio_size;
 
-    fmt = unc_sniff(&eio);
+    fmt = unc_sniff_envelope(&eio);
     if (!unc_format_is_envelope(fmt)) { fclose(f.f); return 0; }
 
     memset(&ba, 0, sizeof ba);          /* budget 0: no cap */
@@ -1431,8 +1431,8 @@ static int seg_part_of(const SegHost *h, const char *path)
         cio.seek = fio_seek;
         cio.tell = fio_tell;
         cio.size = fio_size;
-        ok = unc_segment_describe(&cio, &cand) == UNC_OK &&
-             cand.scheme == UNC_FORMAT_MIMESEG &&
+        ok = unc_segment_describe_as(&cio, UNC_FORMAT_MIMESEG,
+                                     &cand) == UNC_OK &&
              memcmp(cand.fp, h->desc.fp, UNC_SEG_FP_LEN) == 0;
         fclose(f);
         return ok ? (int)cand.part : 0;

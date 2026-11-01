@@ -159,7 +159,22 @@ static const UncProbe unc_sniff_order[] = {
     unc_b64_probe
 };
 
-UncFormat unc_sniff(UncIO *io)
+/* The probes that can answer an envelope format (unc_format_is_envelope),
+ * in unc_sniff_order's order; every other probe answers only formats that
+ * are not, which each probe's source shows. */
+static const UncProbe unc_sniff_envelope_order[] = {
+    unc_gzip_probe,
+    unc_compressz_probe,
+    unc_pf_probe,
+    unc_macbinary_probe,
+    unc_applesingle_probe,
+    unc_btoa_probe,
+    unc_uu_probe,
+    unc_binhex_probe,
+    unc_b64_probe
+};
+
+static UncFormat sniff_with(UncIO *io, const UncProbe *order, unsigned n)
 {
     uint8_t head[UNC_SNIFF_HEAD];
     int32_t len = 0;
@@ -174,9 +189,22 @@ UncFormat unc_sniff(UncIO *io)
     }
     if (len <= 0) return UNC_FORMAT_UNKNOWN;
 
-    for (i = 0; i < sizeof unc_sniff_order / sizeof unc_sniff_order[0]; i++) {
-        UncFormat f = unc_sniff_order[i](head, len, io);
+    for (i = 0; i < n; i++) {
+        UncFormat f = order[i](head, len, io);
         if (f != UNC_FORMAT_UNKNOWN) return f;
     }
     return UNC_FORMAT_UNKNOWN;
+}
+
+UncFormat unc_sniff(UncIO *io)
+{
+    return sniff_with(io, unc_sniff_order,
+                      sizeof unc_sniff_order / sizeof unc_sniff_order[0]);
+}
+
+UncFormat unc_sniff_envelope(UncIO *io)
+{
+    return sniff_with(io, unc_sniff_envelope_order,
+                      sizeof unc_sniff_envelope_order /
+                      sizeof unc_sniff_envelope_order[0]);
 }

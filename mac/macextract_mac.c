@@ -3146,8 +3146,8 @@ static int SegPartOf(SegHost *h, short vol, long dir, ConstStr255Param name)
         pio.seek = fio_seek;
         pio.tell = fio_tell;
         pio.size = fio_size;
-        ok = unc_segment_describe(&pio, &cand) == UNC_OK &&
-             cand.scheme == UNC_FORMAT_MIMESEG;
+        ok = unc_segment_describe_as(&pio, UNC_FORMAT_MIMESEG,
+                                     &cand) == UNC_OK;
         if (ok)
             for (i = 0; i < UNC_SEG_FP_LEN; i++)
                 if (cand.fp[i] != h->desc.fp[i]) { ok = 0; break; }
@@ -3390,6 +3390,14 @@ static void SegRemember(SegHost *h, int part, short vol, long dir,
 #endif
 }
 
+/* The schemes whose parts say nothing of their set (macextract.h): they are
+ * found by NAME. */
+static int SegByName(SegHost *h)
+{
+    return h->desc.scheme == UNC_FORMAT_ZIPSEG ||
+           h->desc.scheme == UNC_FORMAT_SPLIT;
+}
+
 /* Walk one folder, recording every part of this set that it holds. */
 static void SegScanDir(SegHost *h, short vol, long dir)
 {
@@ -3398,6 +3406,9 @@ static void SegScanDir(SegHost *h, short vol, long dir)
     short idx;
     long z;
 
+    /* By name, the folder's names are what is read (SegScanFamily);
+     * opening each file would find nothing, at a file open apiece. */
+    if (SegByName(h)) return;
     for (idx = 1; idx < 512; idx++) {
         for (z = 0; z < (long)sizeof pb; z++) ((char *)&pb)[z] = 0;
         pb.hFileInfo.ioNamePtr = nm;
@@ -3728,14 +3739,6 @@ static Boolean gSegFound;
  * Standard File takes it on System 6.0.8 and 7.0.1 under Mini vMac and
  * shows the disk (measured), and something else did on the maintainer's
  * 7.6.1, where the list stayed put. */
-
-/* The schemes whose parts say nothing of their set (macextract.h): they are
- * found by NAME. */
-static int SegByName(SegHost *h)
-{
-    return h->desc.scheme == UNC_FORMAT_ZIPSEG ||
-           h->desc.scheme == UNC_FORMAT_SPLIT;
-}
 
 /* A disk put in that holds no part this dialog wants goes straight back
  * out, so that on a one-drive Mac the next one can go in. Never the disk
@@ -4087,7 +4090,7 @@ static int SegAskUser(SegHost *h, int part)
 static const SegSetupFns gSegSetupFns = {
     MyOpenFork, MyHDelete, FSClose, GetEOF, FSWrite, FlushVol,
     SegTmpOpen, SegRemember, SegScanDir, SegScanFamily, SegPartLength,
-    SegPartOf, unc_sniff, unc_format_is_envelope, unc_extract_as,
+    SegPartOf, unc_sniff_envelope, unc_format_is_envelope, unc_extract_as,
     unc_segment_describe, unc_segment_match,
     fio_read, fio_seek, fio_tell, fio_size
 };
