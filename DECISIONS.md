@@ -19905,7 +19905,10 @@ pressed; during the extraction a 3-second press on the Finder's window
 brought the Finder forward; a second `MExt` archive double-clicked:
 MultiFinder's alert *"Some "MacExtract" documents could not be opened or
 printed. Please open the documents from within the application."* No
-second copy starts and the running one is not handed the archive. (A
+second copy starts and the running one is not handed the archive. The
+MacExtract application itself double-clicked the same way (same disk,
+another boot): MultiFinder brings the running copy to the front at its
+progress window, with no second copy and no alert. (A
 plain click did not switch: MacExtract sees a press only at its next
 progress callback, 2026-10-12.) Mac OS 9, sending an event to the
 running copy, drops it silently (2026-10-31, *the hand-off that arrives
