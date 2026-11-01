@@ -474,6 +474,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-31 (the hand-off that arrives once) — a post-processor's Open Documents event launches MacExtract with the archive, and is lost if MacExtract is already open; `companion/icsetup` makes MacExtract the post-processor where Expander was, and stamps downloads as MacExtract's
 - 2026-10-31 (the stub that sorts) — a stub hands MacExtract only the types its bundle claims; on Mac OS 9 the first launch after boot passes over a stub whose file name is 10 characters or more, StuffIt Expander then holds the creator, and a short name keeps it
 - 2026-11-01 (the creators Expander does not open) — on Mac OS 9 StuffIt Expander is registered under `SITx` alone and a `SIT!` archive asks which program to use; a second bundle claims no creator for a stub either; and the boot volume every Mac OS 9 run here used carries StuffIt Deluxe's Finder patches
+- 2026-11-01 (the floor, and the second double-click) — the triaging stub hands a `SIT!` archive to MacExtract on System 3.0 at 1 MB; under MultiFinder a second double-click while MacExtract extracts is refused with MultiFinder's own alert
 
 ---
 
@@ -19487,3 +19488,36 @@ StuffIt product opens them all". Every Mac OS 9 run of 2026-10-31 used
 that volume; the one case re-run without the three add-ons, the 11-
 character `SITx Helper` losing the first launch to Expander, came out the
 same. The rest of *the stub that sorts* is not re-run clean.
+
+## 2026-11-01 (the floor, and the second double-click) — the triaging stub hands a `SIT!` archive to MacExtract on System 3.0 at 1 MB; under MultiFinder a second double-click while MacExtract extracts is refused with MultiFinder's own alert
+
+**The stub on the floor (measured, Mini vMac, Mac Plus 1 MB, System 3.0,
+one boot each; `tools/vmac/mkboot.py --finder`, the stub in `MacExtract
+Helpers`, registered by opening that folder once).** A `SIT!`/`SIT!`
+archive double-clicked: MacExtract opened at *"Extract into this
+folder:"* — the stub's triage (`OpenResFile` on MacExtract, its `FREF`s)
+runs on the floor. The stub opened by itself: *"This helper could not
+register itself (error -50)."* — System 3.0 has no Desktop Manager
+(PBDTGetPath refuses, as measured for MacExtract 2026-10-17); the alert
+is safe, its wording is a programmer's.
+
+**MacExtract opened twice (measured, Mini vMac 1x, Mac Plus 4 MB, System
+6.0.8 under MultiFinder, one boot).** A 150 KB StuffIt 5 archive
+(`derived-a2basic.dmg.sit`, creator `MExt`) double-clicked and Save
+pressed; during the extraction a 3-second press on the Finder's window
+brought the Finder forward; a second `MExt` archive double-clicked:
+MultiFinder's alert *"Some "MacExtract" documents could not be opened or
+printed. Please open the documents from within the application."* No
+second copy starts and the running one is not handed the archive. (A
+plain click did not switch: MacExtract sees a press only at its next
+progress callback, 2026-10-12.) Mac OS 9, sending an event to the
+running copy, drops it silently (2026-10-31, *the hand-off that arrives
+once*); a Finder double-click there is not run.
+
+**Type list (MacStamp, 2026-11-01, from formats.tsv, choices.tsv and its
+142,267-file census).** Every type MacStamp gives a format MacExtract
+extracts is in MacExtract's bundle; but DiskDoubler's own compressed
+single files carry creator `DDAP` and types `DDF0`-`DDF5`, `DD01`,
+`DDFL`, `DDf4` (census DDF2 88, DD01 10, DDFL 8, DDF3 2), which
+MacExtract extracts and its bundle does not claim — so a `DDAP` stub's
+triage would pass them to DiskDoubler.
