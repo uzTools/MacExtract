@@ -19613,7 +19613,8 @@ one run).** Disassembly of the System 6.0.8 Finder (6.1.8, `CODE` 4) and
 MultiFinder (`CODE` 2, named `Puppet`) shows what the Finder does for a
 document whose application is running: it lists the processes with
 `_OSDispatch` selector 1 (a buffer and a maximum; 10-byte entries of
-process number, type, creator), and hands MultiFinder a *puppet string*
+process number, creator and four bytes that were 0 — corrected; first
+written as number, type, creator), and hands MultiFinder a *puppet string*
 with selector 0 (process number, handle, a long 0, a word 0). The handle
 is a long offset to the next event (6), a word count, that many 16-byte
 event records, then the document list copied whole in `AppParmHandle`'s
@@ -19628,3 +19629,36 @@ Not known: whether MultiFinder copies or frees the handle (the probe
 leaks its 60 bytes), and whether System 7's Process Manager keeps
 selectors 0 and 1; selector 23 returns a process's details (name at +46)
 and is not needed.
+
+**The helper sends it, on System 6 only (measured, the same setup, one
+run each).** `companion/stub` lists the processes and, when one has
+creator `MExt`, queues the puppet string instead of `_Launch`ing; the
+handle goes in the system heap because MultiFinder disposes of it once
+played (`_DisposHandle` on its queue's head, read in `CODE` 1, not
+measured), after the helper has quit. 6.0.8 MultiFinder: the second
+archive extracted after the first. 6.0.8 without MultiFinder, where
+`_OSDispatch` is unimplemented: MacExtract launched with the archive, as
+before. The first build matched the list entry at the wrong offset and
+handed nothing on; a log of each test inside the helper found it. 9,344 B,
+from 8,832.
+
+**System 7.0.1 takes none of the helper's routes (measured, Mac Plus
+4 MB, 1x, the dist build, a `SIT!` helper registered by opening it alone,
+one run each unless noted).**
+
+| route, from the helper | result |
+|---|---|
+| puppet string, selectors 1 and 0 | both answered (process numbers `$7FFx`); nothing played; MacExtract was in front, and `SetFrontProcess` to it changed nothing |
+| `AESend` of an odoc to `MExt` | `connectionInvalid` (−609), from a helper `notHighLevelEventAware` and from one `isHighLevelEventAware` |
+| `LaunchApplication`, the odoc as `launchAppParameters` | returns 0; nothing if the helper quits at once; kept running 10 s, MacExtract stops on an illegal instruction within 3 s (two runs) |
+
+The third is what the 7.0.1 Finder does: its `CODE` 103 builds an odoc and
+calls `_Launch` with an extended block (`'LC'`, length 32, flags `$4900`),
+and no Apple Event Manager trap appears in its code. Its `CODE` resources
+are `dcmp` 0 compressed and were read with a scratch transcription of
+python-rsrcfork's `compress/dcmp0.py`, whose output matched the stated
+length on all 186. The control: the same disk with the second archive
+stamped `MExt` and double-clicked, so the Finder hands it on; MacExtract
+extracted it after the first. So the crash comes with the helper's
+hand-off, not with every odoc; why is not known. The helper keeps
+`_Launch` there, which loses the archive as before. Mac OS 9 not run.
