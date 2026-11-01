@@ -19607,3 +19607,24 @@ with no alert, and the second was never extracted. The helper's `_Launch`
 of an application already running only brings it forward; the document
 list the Finder gave the helper goes nowhere. Open: OPEN_ITEMS.md, *The
 double-click helpers*.
+
+**The Finder's own route is open to a helper (measured, the same setup,
+one run).** Disassembly of the System 6.0.8 Finder (6.1.8, `CODE` 4) and
+MultiFinder (`CODE` 2, named `Puppet`) shows what the Finder does for a
+document whose application is running: it lists the processes with
+`_OSDispatch` selector 1 (a buffer and a maximum; 10-byte entries of
+process number, type, creator), and hands MultiFinder a *puppet string*
+with selector 0 (process number, handle, a long 0, a word 0). The handle
+is a long offset to the next event (6), a word count, that many 16-byte
+event records, then the document list copied whole in `AppParmHandle`'s
+layout; one record per document, `what` 15 and `message` `$0C` in the
+high byte and the document's offset in the handle below it, and a last
+record of `what` `$2000`. A probe helper making exactly those calls, the
+handle in the system heap since the helper quits at once, found
+MacExtract by creator in the list, and MacExtract asked where to extract
+the second archive when the first finished and extracted it, as it does
+for its own creator's double-click. The control is the paragraph above.
+Not known: whether MultiFinder copies or frees the handle (the probe
+leaks its 60 bytes), and whether System 7's Process Manager keeps
+selectors 0 and 1; selector 23 returns a process's details (name at +46)
+and is not needed.
