@@ -19562,7 +19562,22 @@ steps: −4 B of code took A5 from +20 to +0 here.
 | Mac OS 9.2 (clean copy), QEMU | the same | both extracted |
 | 6.0.8 Finder, Mac Plus 1 MB, 1x | File > Open... by hand mid-extraction | the Open dialog over the extraction; the choice extracted after it (two earlier runs queued the wrong row, by the harness's coordinates, and were refused *"Unknown format."*) |
 
-**Not measured:** the stack with Standard File called from inside a
-decoder's progress callback (the 4 KB rule; `-D UNC_AT_STACK` not run);
-MultiFinder at 1 MB; Open... while MacExtract sits at its own Open dialog;
-the budget tiers and `dist/` with the change.
+**The three checks after (final build, one run each):**
+
+- **Stack** (`-D UNC_AT_STACK`, its Standard File sampled by `SFHook`
+  here too): System 6.0.8 Finder at 1 MB, `derived-Library_ISBN_Barcoder
+  .sit` (the fixture FORMATS.md's *Stack* was sized on), File > Open...
+  mid-extraction, `Second.sit` queued and extracted. SAMPLE **5,038 B**
+  and PAINT **7,954 / 12,198 B**, the same as the same fixture without the
+  queue: Standard File over the decoder went no deeper than the decoder
+  already does. One moment of one fixture; not the deepest chain forced.
+- **MultiFinder at 1 MB**: MacExtract gets 597 KB (*"not enough memory …
+  2,048K needed, 597K available"*, OK); the second archive double-clicked
+  mid-extraction was queued and both were extracted (`a2basic.dmg` in
+  about 20 minutes at 1x).
+- **MacExtract at its own Open dialog** (MultiFinder, 4 MB): a 3-second
+  press on the Finder's window does not switch out of the modal dialog,
+  so no double-click reaches the Finder; the user chooses there. System
+  7 not run.
+
+**Not measured:** the budget tiers and `dist/` with the change.
