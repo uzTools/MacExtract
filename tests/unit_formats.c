@@ -2118,6 +2118,7 @@ typedef struct {
     uint32_t       len[5];
     int            nparts;
     int            missing;      /* part number to refuse, 0 = none */
+    int            ends;         /* past the last part: UNC_SEG_ENDS */
     MemIO          m;
     int            opens;
 } SegParts;
@@ -2127,6 +2128,7 @@ static int segsrc_need(void *ctx, const UncSegmentDesc *desc, int part,
 {
     SegParts *p = (SegParts *)ctx;
     (void)desc;
+    if (p->ends && part > p->nparts) return UNC_SEG_ENDS;
     if (part < 1 || part > p->nparts || part == p->missing)
         return UNC_ERR_SEGMENTED;
     p->opens++;
@@ -2826,12 +2828,29 @@ static void test_split(void)
     CHECK(cap.dlen[0] == 120);               /* what part 1 held is kept */
     sp.missing = 0;
 
-    /* --- no count either: nobody could tell where the set ends ----- */
+    /* --- no count either: OPEN-ENDED (macextract.h, UNC_SEG_ENDS). The
+     * host is asked for each next part as the walk reaches it and says
+     * where the set ends, so neither a count nor a length is needed. */
     split_desc(&desc, 0, UNC_SIZE_UNKNOWN);
+    sp.ends = 1;
+    sp.opens = 0;
     cap_make(&sk, &cap);
     CHECK(unc_extract_segments(&desc, &vs, scratch, &sk, &al, NULL, NULL)
-          == UNC_ERR_CORRUPT);
-    CHECK(cap.count == 0);
+          == UNC_OK);
+    CHECK(cap.count == 1 && cap.status[0] == UNC_OK);
+    CHECK(cap.dlen[0] == 300 && memcmp(cap.data[0], payload, 300) == 0);
+    CHECK(sp.opens == 3);                    /* part 4 was asked, not opened */
+
+    /* --- open-ended, and a part the host cannot produce: missing, not
+     * the end. What came before it is kept, and the set says so. */
+    sp.missing = 2;
+    cap_make(&sk, &cap);
+    CHECK(unc_extract_segments(&desc, &vs, scratch, &sk, &al, NULL, NULL)
+          == UNC_ERR_SEGMENTED);
+    CHECK(cap.count == 1 && cap.status[0] == UNC_ERR_TRUNCATED);
+    CHECK(cap.dlen[0] == 120);
+    sp.missing = 0;
+    sp.ends = 0;
 
     /* --- one part is a whole set, and a legitimate one -------------- */
     split_desc(&desc, 1, UNC_SIZE_UNKNOWN);

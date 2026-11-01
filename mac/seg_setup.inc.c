@@ -148,7 +148,7 @@ static int EnvRun(short vol, long dir, ConstStr255Param nm, EnvSink *es,
     eio.tell = SS(fio_tell);
     eio.size = SS(fio_size);
 
-    fmt = SS(unc_sniff)(&eio);
+    fmt = SS(unc_sniff_envelope)(&eio);
     if (!SS(unc_format_is_envelope)(fmt)) {
         SS(FSClose)(ref);
         return 0;

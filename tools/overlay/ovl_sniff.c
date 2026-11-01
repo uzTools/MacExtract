@@ -25,6 +25,8 @@ int32_t ovl_main(const OverlayHost *host, int32_t which, void *a, void *b)
         return 0x4F4B;
     case OVL_SNIFF:
         return (int32_t)unc_sniff((UncIO *)a);
+    case OVL_SNIFF_ENVELOPE:
+        return (int32_t)unc_sniff_envelope((UncIO *)a);
     case OVL_ARCHIVE_ENCRYPTED:
         return (int32_t)unc_archive_encrypted((UncFormat)(long)b, (UncIO *)a);
     case OVL_SEG_FIRST_END: {
