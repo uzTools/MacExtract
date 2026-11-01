@@ -475,6 +475,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-31 (the stub that sorts) — a stub hands MacExtract only the types its bundle claims; on Mac OS 9 the first launch after boot passes over a stub whose file name is 10 characters or more, StuffIt Expander then holds the creator, and a short name keeps it
 - 2026-11-01 (the creators Expander does not open) — on Mac OS 9 StuffIt Expander is registered under `SITx` alone and a `SIT!` archive asks which program to use; a second bundle claims no creator for a stub either; and the boot volume every Mac OS 9 run here used carries StuffIt Deluxe's Finder patches
 - 2026-11-01 (the floor, and the second double-click) — the triaging stub hands a `SIT!` archive to MacExtract on System 3.0 at 1 MB; under MultiFinder a second double-click while MacExtract extracts is refused with MultiFinder's own alert
+- 2026-11-01 (the Open item MultiFinder looks for) — a File > Open... that queues during an extraction lets a second double-click wait its turn on System 6 MultiFinder, System 7 and Mac OS 9; 368 B, not yet in the tree
 
 ---
 
@@ -19524,3 +19525,38 @@ single files carry creator `DDAP` and types `DDF0`-`DDF5`, `DD01`,
 `DDFL`, `DDf4` (census DDF2 88, DD01 10, DDFL 8, DDF3 2), which
 MacExtract extracts and its bundle does not claim — so a `DDAP` stub's
 triage would pass them to DiskDoubler.
+
+## 2026-11-01 (the Open item MultiFinder looks for) — a File > Open... that queues during an extraction lets a second double-click wait its turn on System 6 MultiFinder, System 7 and Mac OS 9; 368 B, not yet in the tree
+
+Asked by the maintainer: a second archive opened while MacExtract
+extracts should wait its turn, not be refused.
+
+**The mechanism (Technical Note OV17, *MultiFinder Revisited: The 6.0
+System*, "Open Document and Quit").** In System 6.0 and later MultiFinder
+opens a document in an application already running "by simulating a
+mouse-down event in the application's menu item for opening files", then
+"short circuits" its `_SFGetFile` into returning the document; by default
+it looks for a File menu with Open.... MacExtract's File menu had only
+Quit, hence MultiFinder's *"could not be opened or printed"*.
+
+**The prototype** (`mac/`, uncommitted on `companion-expander55`; the diff
+is kept beside the run's notes): File gets `Open…` above Quit; chosen in
+the progress pump it calls SFGetFile and appends the choice (volume and
+name, 66 B a record) to a handle grown on first use; the main loop takes
+queued archives after the Finder's list and reloads the decoders for them
+as it does for that list. **Price: +348 B code, +20 B A5** (four fixed
+slots in A5 cost +300/+292; the handle saves 272).
+
+**Measured (one run each):**
+
+| System | how the second archive was opened | result |
+|---|---|---|
+| 6.0.8 MultiFinder, Mac Plus 4 MB, 1x | double-clicked in the Finder mid-extraction | no alert; after the first, its destination dialog; both extracted (fixed slots and handle builds) |
+| 7.0.1, Mac Plus 4 MB, 1x | the same | the same: System 7's Finder uses the menu for an application not aware of Apple events |
+| Mac OS 9.2 (clean copy), QEMU | the same | the same |
+| 6.0.8 Finder, Mac Plus 1 MB, 1x | File > Open... by hand mid-extraction | the Open dialog came up during the extraction and the choice was queued and handled after it (the harness picked MacExtract itself, refused *"Unknown format."*); no memory failure |
+
+**Not measured:** the stack with Standard File called from inside a
+decoder's progress callback (the 4 KB rule; `-D UNC_AT_STACK` not run);
+MultiFinder at 1 MB; Open... while MacExtract sits at its own Open dialog;
+the budget tiers and `dist/` with the change.
