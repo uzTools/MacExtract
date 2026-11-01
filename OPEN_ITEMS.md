@@ -270,11 +270,9 @@ ships later, on MacExtract's own floppy. Left:
   (System 6.0.8 MultiFinder; DECISIONS.md 2026-11-01, *the Open item
   MultiFinder looks for*): its launch only brings MacExtract forward. An
   archive of MacExtract's own creator is queued since File > Open...;
-  one through a helper is not. System 7 and Mac OS 9 not run.
-- **MacExtract's bundle lacks DiskDoubler's single-file types** (`DDF0`-
-  `DDF5`, `DD01`, `DDFL`, `DDf4`, creator `DDAP`; MacStamp's census), so a
-  `DDAP` stub would pass them on. Closes by adding the `FREF`s (heap per
-  type, unpriced) or a stub that also accepts its own creator's types.
+  one through a helper is not. Closes on System 6 by the helper sending
+  the Finder's puppet string, measured working from a probe (same entry);
+  System 7 and Mac OS 9 not run.
 - **Several archives of different creators opened together.** Not run.
 - **Which of a file's two dates System 7 compares** between two applications
   of one creator. Not separated.
