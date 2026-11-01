@@ -489,7 +489,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-31 (the stub that sorts) — a stub hands MacExtract only the types its bundle claims; on Mac OS 9 the first launch after boot passes over a stub whose file name is 10 characters or more, StuffIt Expander then holds the creator, and a short name keeps it
 - 2026-11-01 (the creators Expander does not open) — on Mac OS 9 StuffIt Expander is registered under `SITx` alone and a `SIT!` archive asks which program to use; a second bundle claims no creator for a stub either; and the boot volume every Mac OS 9 run here used carries StuffIt Deluxe's Finder patches
 - 2026-11-01 (the floor, and the second double-click) — the triaging stub hands a `SIT!` archive to MacExtract on System 3.0 at 1 MB; under MultiFinder a second double-click while MacExtract extracts is refused with MultiFinder's own alert
-- 2026-11-01 (the Open item MultiFinder looks for) — a File > Open... that queues during an extraction lets a second double-click wait its turn on System 6 MultiFinder, System 7 and Mac OS 9; 368 B, not yet in the tree
+- 2026-11-01 (the Open item MultiFinder looks for) — a File > Open... that queues during an extraction lets a second double-click wait its turn on System 6 MultiFinder, System 7 and Mac OS 9; 192 B, not yet in the tree
 
 ---
 
@@ -19923,7 +19923,7 @@ single files carry creator `DDAP` and types `DDF0`-`DDF5`, `DD01`,
 MacExtract extracts and its bundle does not claim — so a `DDAP` stub's
 triage would pass them to DiskDoubler.
 
-## 2026-11-01 (the Open item MultiFinder looks for) — a File > Open... that queues during an extraction lets a second double-click wait its turn on System 6 MultiFinder, System 7 and Mac OS 9; 368 B, not yet in the tree
+## 2026-11-01 (the Open item MultiFinder looks for) — a File > Open... that queues during an extraction lets a second double-click wait its turn on System 6 MultiFinder, System 7 and Mac OS 9; 192 B, not yet in the tree
 
 Asked by the maintainer: a second archive opened while MacExtract
 extracts should wait its turn, not be refused.
@@ -19938,20 +19938,26 @@ Quit, hence MultiFinder's *"could not be opened or printed"*.
 
 **The prototype** (`mac/`, uncommitted on `companion-expander55`; the diff
 is kept beside the run's notes): File gets `Open…` above Quit; chosen in
-the progress pump it calls SFGetFile and appends the choice (volume and
-name, 66 B a record) to a handle grown on first use; the main loop takes
-queued archives after the Finder's list and reloads the decoders for them
-as it does for that list. **Price: +348 B code, +20 B A5** (four fixed
-slots in A5 cost +300/+292; the handle saves 272).
+the progress pump it calls SFGetFile and APPENDS the choice to the
+Finder's own document list (`AppParmHandle`, a record in its format), so
+the main loop takes it after the current archive exactly as it takes a
+second document of one Finder selection — no queue of its own. **Price:
++192 B code, +0 B A5.** Two heavier versions were measured and dropped:
+four fixed slots in A5 (+300 code, +292 A5) and a handle of our own
+(+348, +20). The first append build lost the queued archive silently on
+System 6 and 7: the Segment Loader's handle is locked and cannot grow in
+place; `HUnlock` before `SetHandleSize` fixed it (the reader goes by
+offsets, so the move is harmless). A5 moves with code size in padding
+steps: −4 B of code took A5 from +20 to +0 here.
 
 **Measured (one run each):**
 
-| System | how the second archive was opened | result |
+| System | how the second archive was opened | result (final build) |
 |---|---|---|
-| 6.0.8 MultiFinder, Mac Plus 4 MB, 1x | double-clicked in the Finder mid-extraction | no alert; after the first, its destination dialog; both extracted (fixed slots and handle builds) |
-| 7.0.1, Mac Plus 4 MB, 1x | the same | the same: System 7's Finder uses the menu for an application not aware of Apple events |
-| Mac OS 9.2 (clean copy), QEMU | the same | the same |
-| 6.0.8 Finder, Mac Plus 1 MB, 1x | File > Open... by hand mid-extraction | the Open dialog came up during the extraction and the choice was queued and handled after it (the harness picked MacExtract itself, refused *"Unknown format."*); no memory failure |
+| 6.0.8 MultiFinder, Mac Plus 4 MB, 1x | double-clicked in the Finder mid-extraction | no alert; after the first, its destination dialog; both extracted |
+| 7.0.1, Mac Plus 4 MB, 1x | the same | both extracted: System 7's Finder uses the menu for an application not aware of Apple events |
+| Mac OS 9.2 (clean copy), QEMU | the same | both extracted |
+| 6.0.8 Finder, Mac Plus 1 MB, 1x | File > Open... by hand mid-extraction | the Open dialog over the extraction; the choice extracted after it (two earlier runs queued the wrong row, by the harness's coordinates, and were refused *"Unknown format."*) |
 
 **Not measured:** the stack with Standard File called from inside a
 decoder's progress callback (the 4 KB rule; `-D UNC_AT_STACK` not run);
