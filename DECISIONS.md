@@ -16904,8 +16904,8 @@ taken; the toolchain here is unpatched. (Superseded: DECISIONS.md
 2026-10-19, *the toolchain that inlined PurgeSpace*.)
 
 **Merged into `main` 2026-10-16**, after the LC 475 (7.6.1) ran it; built
-on branch `rom64k` (`BRANCH_NOTES.md` at `be546af`; the branch deleted
-2026-11-02). Re-measured on `main`: on the
+on branch `rom64k` (`BRANCH_NOTES.md`, on tag `archive/rom64k` since
+the branch was deleted 2026-11-02). Re-measured on `main`: on the
 emulated 512K under MFS System 3.0 it opens Standard File, where the prior
 `dist/` bombs `ID = 03`; no tally moves.
 

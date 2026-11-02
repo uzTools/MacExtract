@@ -17,11 +17,11 @@ outside `main`: `eta-backstep` `2b20a47`, `meta-archives` `87d0f0d`,
 `meta-sitclassic-research` `d32cff8`, `meta-spotlight` `c0be3ab`,
 `no-foreign` `970f1b4`, `overlay-eager` `2836cdb`, `probes-one-place`
 `9be493e`, `runtime-trim` `cb1dc73`. **`selective-loading` DELETED the
-same day** at `2fc0b91`: its 5 commits outside `main` were DART's overlay
+same day**, kept as tag `archive/selective-loading` (`2fc0b91`): its 5 commits outside `main` were DART's overlay
 (DART has left scope), the stale-image fix `main` has from `overlay-eager`,
 and `BRANCH_NOTES.md` figures for the 2026-09-24 lazy build.
-**`rom64k` DELETED the same day** at `be546af`: its code is on `main` since
-2026-10-16 (`73652b2`, `GrowApplZone`); its `BRANCH_NOTES.md` is at that SHA.
+**`rom64k` DELETED the same day**, kept as tag `archive/rom64k` (`be546af`): its code is on `main` since
+2026-10-16 (`73652b2`, `GrowApplZone`); its `BRANCH_NOTES.md` is on the tag.
 
 **`ndif-udif` is DELETED, 2026-09-25**, at `7269acd`: compressed disk images
 left this project's scope with DART (DECISIONS.md 2026-09-25, *the disk images
