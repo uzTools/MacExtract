@@ -10839,6 +10839,13 @@ stored-CRC oracle for all 7 entries arrived 2026-09-22); `fmt_arc.c`'s
 Crunch 5/6/7 is a decision taken and dated (2026-09-22); the
 `selective-extract` branch was genuinely open, never shipped.
 
+**Why the `-lh2-` encoder's source lives in `reference/`, not `build/`**:
+`ci.sh`'s `make clean` once deleted a `build/`-only encoder and the `-lh2-`
+grading went quiet — the suite skipped instead of failing. So
+`tools/build_lha_lh2.sh` fetches the LHa fork at a pinned commit into
+`reference/` (unmodified) and `run_lzh.py` builds it on demand with
+`tools/lha-lh2/lh2-encoder.patch` (moved from TESTING.md, *LZH's -lh2-*).
+
 ## 2026-09-25 (the parked decision that outlived its numbers) — a scope answer re-read as settled while its evidence grew seventeenfold
 
 **Claim: the overlay decision of 2026-08-31 still landed the same way,

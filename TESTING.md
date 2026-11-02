@@ -15,11 +15,9 @@
    so any violation is fatal and caught.
 4. **Progress-callback coverage** (`tools/tick_probe.c` +
    `tools/run_ticks.py`): every fixture the engine extracts must call
-   back at least once, and no gap between calls may exceed 32 KB (a
-   decoder that never yields freezes the Mac's progress dialog with both
-   Cancel routes out of reach). **What it cannot see:** how long a gap
-   TAKES — it counts input bytes, not time, so a decoder that spends a
-   minute on 8 KB passes. The Mac OS 9 tier is where that would show
+   back at least once, and no gap between calls may exceed 32 KB. Rules
+   and what it cannot see (how long a gap TAKES): *The progress
+   callback*, below; the Mac OS 9 tier is where time would show
    (`os9.py --cancel`).
 5. **The Mac shell's sink, allocator and I/O through a mock Toolbox**
    (`tests/run_mac_sink.sh` + `tests/mac_sink_test.c`, `ci.sh` variant
@@ -45,23 +43,22 @@
    half a thousand); the number of smells BLOCKERS.md claims, counted
    from the list; and:
 
-   - **Figures derived from `tools/run_tiers.py`'s model** (since
-     2026-10-02): FORMATS.md's three `OVL_SAVED` sentences and the
-     bundle's own three terms (images + index = bundle) are held against
-     the constants, and the run refuses to pass unless bending two of
-     them is caught. It was also failed from outside once (one `123,776`
-     changed by hand to `123,777`). **Cannot see:** the twelve
+   - **Figures derived from `tools/run_tiers.py`'s model**: FORMATS.md's
+     three `OVL_SAVED` sentences and the bundle's own three terms
+     (images + index = bundle) are held against the constants, and the
+     run refuses to pass unless bending two of them is caught; it was
+     also failed from outside once (one `123,776` changed by hand to
+     `123,777`). **Cannot see:** the twelve
      per-format rows of *What each format is granted* — those are
      `run_tiers.gain()` of a set of images; re-take them from that
      function rather than by hand.
-   - **Figures derived from the corpus** (since 2026-10-06): the
+   - **Figures derived from the corpus**: the
      differential suite's size (the manifests), the robustness suite's
      (`run_robustness.variants`, ten per manifest whose format is
      implemented and whose fixture is present — four truncations and six
      bit-flips), and the sniff sweeps' population (every non-`.md` file in
-     `fixtures/`). Seven named sentences are held — two had said
-     *"9,490 robustness variants"* and three *"955 corpus files"* — and,
-     since 2026-10-07, the same three counts are scanned as a CLASS:
+     `fixtures/`). Seven named sentences are held, and the same three
+     counts are scanned as a CLASS:
      any figure in a per-kind window next to "fixtures", "robustness
      variants" or "corpus files", in the five files a session reads as
      current, must be today's count or be DECLARED historical in
@@ -73,9 +70,8 @@
      words, or BLOCKERS.md, excluded on purpose (its rows quote the corpus
      a withdrawn claim was measured against). A reworded named sentence
      reports *"this check has stopped checking"*.
-   - **DECISIONS.md's entry dates** (since 2026-10-07): non-decreasing in
-     file order and none in the future (22 references across ten files
-     had been written a day ahead). Bending one date each way must be
+   - **DECISIONS.md's entry dates**: non-decreasing in file order and
+     none in the future. Bending one date each way must be
      caught. **Cannot see:** a date that is wrong but neither in the
      future nor out of order; and it takes the machine's clock as the
      authority.
@@ -85,8 +81,8 @@
    whether a paragraph re-narrates one that lives elsewhere — the failure
    mode these documents actually have (CLAUDE.md, *Writing things down*).
 
-0b. **Tuple truth** (`tools/check_tuple_truth.py`, in `ci.sh` since
-   2026-09-25, beside check 0; no build, about a second): a Python
+0b. **Tuple truth** (`tools/check_tuple_truth.py`, in `ci.sh` beside
+   check 0; no build, about a second): a Python
    function whose every `return` carries a tuple of two or more must
    never be tested for truthiness, because a tuple is never falsy.
    `--selftest` alone runs the case it was written for; the full run does
@@ -110,11 +106,9 @@ cannot read — see "A second oracle" below.
 
 `unar --help` documents `-forks (-k) <visible|hidden|skip>`. Both
 non-skip modes write an **AppleDouble container** beside the data fork;
-manifests are built from `-k hidden` (`._<file>`) rather than the default
-`-k visible` (`<file>.rsrc`), because the suffix form is ambiguous (an
-archive holding both `X` and `X.rsrc` — every THINK C project — cannot be
-represented) and hits a GNUstep bug on a leading `~` that writes the
-container into the data-fork filename (DECISIONS.md 2026-08-08, *the
+manifests are built from `-k hidden` (`._<file>`), never the default
+`-k visible` (`<file>.rsrc`), which cannot represent `X` beside `X.rsrc`
+and mis-writes a leading `~` (DECISIONS.md 2026-08-08, *the
 undecidability was the oracle's fork convention, not the archives*).
 
 Manifest building parses the AppleDouble (magic `0x00051607`; entry
@@ -167,7 +161,7 @@ Plus `comment`, for an archive that carries one
 looked for". `tools/run_diff.py` requires `<fixture>.comment.txt` to hold
 exactly those bytes in MacRoman and `macextract l` to print the line; an
 archive with no `comment` key may write no such file (the "unexpected
-output" check, which found five of the seven). **Seven fixtures in the
+output" check). **Seven fixtures in the
 corpus carry a comment** (measured by sweeping all 928 with `lsar`): six
 Compact Pro archives (`derived-DigSim_RAM_Circuit.cpt` and the five
 Compact Pro Package installers) and `derived-MUSFMT10.ZIP`'s 495-byte
@@ -296,8 +290,8 @@ was brought in because `unar` decodes ARC/PAK method 0x0b (Distilled)
 `sh tools/build_deark.sh` copies `reference/deark` to `build/deark/` and
 builds it; nothing is patched and it needs only a C compiler.
 
-**It also cross-checks the 23 forks macunpack alone had graded**
-(since 2026-09-21) and agrees with every one; such a fork records both
+**It also cross-checks the 23 forks macunpack alone had graded** and
+agrees with every one; such a fork records both
 (`"macunpack (…) + deark (…)"`), and a DISAGREEMENT is printed and
 nothing is rewritten. It reads both forks (via its AppleDouble `.adf`
 sidecar), Zip (including Implode entries `unar` fails), Gzip, Compress and
@@ -317,8 +311,7 @@ Rules in `make_manifests.py`'s deark path, all in `deark_forks`
   is still carried, its unnamed forks **unknown** (2,324 forks across the
   corpus). Error names are MAKE_PRINTABLE (`Icon<\r>`), so
   `deark_err_name()` reverses the escapes first
-  (`reference/deark/src/deark-ucstring.c`, `ucstring_to_sz`); 382
-  declined forks across 35 fixtures had been mis-keyed, none of them live.
+  (`reference/deark/src/deark-ucstring.c`, `ucstring_to_sz`).
 - **It does not fail on a damaged file — it PADS** (`sitdoc.sit`: 286
   bytes whose last 52 are invented zeros, where the file ends 52 short).
   So deark fills a gap only when the fork is **empty**, or when the
@@ -341,9 +334,8 @@ whole-archive far more often than `unar`.
   since been agreed by the second oracle.)
 - **An entry the oracle names as out of v1 scope is graded on its name and
   on anything the engine did write — not on its forks.** That tolerance
-  is **unused as of 2026-10-07**: `ORACLE_OUT_OF_SCOPE` held only
-  `Implode`, now implemented; Shrink and Reduce went to deark through
-  `DEARK_METHODS` instead. The mechanism stays.
+  is **unused as of 2026-10-07** (`ORACLE_OUT_OF_SCOPE` is empty); the
+  mechanism stays.
 - Do not read "unadjudicated: 9 forks" as 9 defects. It is **9
   forks across 4 fixtures**, measured 2026-10-07, where two
   implementations cannot be compared: 2 in `arcplus712.zip`, a stored
@@ -439,11 +431,9 @@ eligibility.
 
 Anything else fails the fixture, including a non-zero exit with no
 per-entry report and every whole-archive error. An adjudicated fork is
-compared or missing — absence is excused only for out-of-scope entries.
-Anchoring the excuse in our own output had discarded ground truth and
-could not fail (a stub binary passed `derived-Export.sit` as a skip; it
-fails now) — DECISIONS.md 2026-08-08, *an excuse must be anchored
-outside our own output*.
+compared or missing — absence is excused only for out-of-scope entries
+(DECISIONS.md 2026-08-08, *an excuse must be anchored outside our own
+output*).
 
 ### Comparison normalization
 
@@ -508,8 +498,8 @@ anything about the suite.**
    corpus under `--budget 409600` (a small Mac). Everything verifies
    fully except part of StuffIt 5/Arsenic — **25 of 32** fixtures (2026-10-25), the
    rest giving a clean per-entry "out of memory". Results in FORMATS.md.
-5b. **Application size** (`tools/check_app_size.py`, in `ci.sh` since
-   2026-09-23): fails when the linked `MacExtract.code.bin` moves more
+5b. **Application size** (`tools/check_app_size.py`, in `ci.sh`): fails
+   when the linked `MacExtract.code.bin` moves more
    than 2,048 B from a committed figure (every byte is resident heap on
    the target). **What it cannot see**: whether the move MATTERS — only
    `tools/run_tiers.py` can say whether a fixture flipped, which is why
@@ -526,19 +516,19 @@ anything about the suite.**
    compressed. Nonzero exits are fine, signals/sanitizer aborts/hangs
    fail. Every CI run does a 150-case smoke (`-n 150 --seed 7`), a
    quarter of it the ciphers, in ~3 s. A failing case is moved to
-   `--keep-dir` with `shutil.move` (an `os.replace` across filesystems
-   once swallowed the FUZZ FAIL line; DECISIONS.md 2026-10-06, *the sort
-   that dropped what it could not hold*). **A mutant is graded by
+   `--keep-dir` with `shutil.move`, never `os.replace` (DECISIONS.md
+   2026-10-06, *the sort that dropped what it could not hold*). **A
+   mutant is graded by
    nothing**, here as everywhere in this file; what is graded is the seed.
 
    **Ciphers: one seed per shape, every one reached.** `synth_crypt.py`
    writes ten shapes in pure Python — StuffIt classic's DES, StuffIt 5's
    RC4, PackIt's XOR and DES, Compact Pro's, ARC's garble, PKWARE's zip
    cipher, WinZip AES at 256 and 128 bits, and Private File's MD5-keyed
-   RC4 (`tools/synth_pf.py`). `zip -P`, `7z` and `arc` cannot be the
-   encoder (clock-seeded headers, random salts, not installed). Every
-   shape is checked by somebody else's reader (*Decryption*, below;
-   DECISIONS.md 2026-09-26). Seeds are taken **round robin**, and half
+   RC4 (`tools/synth_pf.py`), not `zip -P`, `7z` or `arc`. Every shape
+   is checked by somebody else's reader (*Decryption*, below;
+   DECISIONS.md 2026-09-26, *the guard that was on the other side*).
+   Seeds are taken **round robin**, and half
    the flips land inside the bytes the reader hands to a cipher
    (`synth_crypt.py --ranges`).
 
@@ -567,8 +557,7 @@ anything about the suite.**
 
    "Flips anywhere" is `fuzz_reach.py --untargeted`. The last `zip-aes`
    row is the site past the password verifier, which `unc_crypt_winzip_aes`
-   is not. The 2026-09-23 PackIt 0 is withdrawn (BLOCKERS.md, *Withdrawn
-   claims*). **3,000 crypt-only cases and 2,000 mixed ones, clean** (seeds
+   is not. **3,000 crypt-only cases and 2,000 mixed ones, clean** (seeds
    101 and 202, 2026-09-26, all nine shapes).
 
    **Decoders: `tools/fuzz_cover.py`** (gcov, every decoder at once).
@@ -687,8 +676,7 @@ anything about the suite.**
 
    `fuzz_cover.py` reports how many engine functions fall in NO family —
    **385 of 586**, re-read 2026-10-06 — so a prefix nobody adds a row for
-   is visible. Two family regexes that could not report (method 14 inside
-   "StuffIt classic"; BinHex's `bh_`) are withdrawn in BLOCKERS.md.
+   is visible.
 
    **How much of this table to believe.** Per-family counts are noisy:
    seeds 11 and 12 over an identical build differ by up to **thirteen**
@@ -933,15 +921,13 @@ trip.
 
 ### The sort that dropped what it could not hold
 
-The fifth entry (112 bytes, a complete code with ascending lengths)
-failed on the engine the day it was written: `sit14_build`'s transcribed
-sort deferred the SMALLER half of each partition onto a 16-deep stack and
-silently dropped what did not fit. Fixed by deferring the LARGER half —
-**7 at the format's largest, 308, against 16 available**, measured over
-4,000 random length vectors and every shaped one (DECISIONS.md
-2026-10-06, *the sort that dropped what it could not hold*). **-4 B of
-`ovl_stuffit`, and every stack frame unchanged** — `sit14_build` 172 B
-before and after.
+The fifth entry (112 bytes, a complete code with ascending lengths) is
+the regression case for `sit14_build`'s sort, which defers the LARGER
+half of each partition — **7 at the format's largest, 308, against 16
+available**, measured over 4,000 random length vectors and every shaped
+one (DECISIONS.md 2026-10-06, *the sort that dropped what it could not
+hold*). **-4 B of `ovl_stuffit`, and every stack frame unchanged** —
+`sit14_build` 172 B before and after.
 
 **A full stack is now an error**, which `ci.sh`'s variant 1d exercises:
 a build at `-DSIT14_SORTSTACK=4` must REFUSE the fixture — measured, 5 of
@@ -1050,8 +1036,7 @@ fixture run under ASan, UBSan and the alignment sanitizer every run.
   grades the format is `ddencode.py --expand`, which hands the same
   encodings to Salient's own 1991 DiskDoubler under Mini vMac — not in
   `ci.sh`, needs an emulator, and is the only check of `build()` and the
-  verification half of `expand()` (only `--emit` runs in `ci.sh`; the
-  other modes once raised `NameError` unnoticed, repaired 2026-08-28).
+  verification half of `expand()` (only `--emit` runs in `ci.sh`).
 - **It only covers encodings our encoder emits.** `--expand` writes
   twelve forks: method 5 at all four counts its validator allows, a
   method 4 tree with leaves at depth 1 and 10, and method 3 at run length
@@ -1094,12 +1079,10 @@ sampled occurrence index **by trying to allocate the table and failing**
 (DECISIONS.md). CI forces the fallback three ways:
 
 - `-DUNC_ARS_FORCE_SAMPLED` compiles the fast path out; the whole diff
-  suite (the 933-fixture suite when this was written up) and the
-  robustness variants (9,320 then) run through the fallback under
+  suite and the robustness variants run through the fallback under
   ASan+UBSan and must be byte-exact.
 - `--budget 615348` on the StuffIt 5 fixtures with the normal adaptive
-  build (the figure `ci.sh` passes; it was written up as `597036`, the
-  1 MB Mac Plus budget of its day). The only step that exercises
+  build (the figure `ci.sh` passes). The only step that exercises
   *choosing*, and the halving of `target`.
 - `-DARS_INDEX_TARGET=1` forces the deep end of the dial; byte-exactness
   is checked on StuffIt 5 fixtures up to 100 KB (`--max-size`), without
@@ -1159,10 +1142,7 @@ under-estimated bound never runs normally, so it is exercised by hand
 Steps 1 and 3 are one-line local edits, deliberately NOT build flags (each
 makes the engine wrong on purpose). **Step 3 is the point**: steps 1 and 2
 report a full pass, which alone distinguishes nothing. "Expect" counts
-are the suite of their day: step 2 was **778/778** on 2026-08-08; step 3
-was **675/769** — 94 failures — on 2026-08-03, when 94 fixtures reached
-the LZW path (4 `.Z`, the rest StuffIt classic method 2). What matters is
-that step 3 fails at all.
+are the suite of their day; what matters is that step 3 fails at all.
 
 ## BinHex before 4.0 and `.dl` (`tools/run_hecx.py`, in `ci.sh`)
 
@@ -1194,10 +1174,9 @@ runs (System 6.0.8 and System 3.0, 1 MB) are `tools/vmac/run.py` and
 
 ## ARC and uuencode (`tools/run_arc.py`, `tools/run_uu.py`, in `ci.sh`)
 
-Neither format occurred in the corpus when these were written (measured
-2026-08-15), so both suites write their own archives and hand them to a
-second implementation, because a generator this repository wrote cannot
-grade a decoder this repository wrote.
+Both suites write their own archives and hand them to a second
+implementation, because a generator this repository wrote cannot grade a
+decoder this repository wrote.
 
 **ARC.** `tools/synth_arc.py` builds one archive per method (1-9) plus one
 holding all nine; each must agree three ways: the bytes that went in,
@@ -1323,8 +1302,7 @@ control — an injected line of twenty hyphens.
 **(ARC and uuencode suites) What these cannot see.** Neither reads a real
 ArcMac archive: `ci.sh` covers the two-fork split with one synthetic
 stored entry in `tests/unit_formats.c` — a regression guard, not evidence
-about the format (it once encoded the fork lengths big-endian exactly as
-the buggy decoder read them). The order is measured by
+about the format. The order is measured by
 `tools/vmac/arcmac.py`, which reads the wild archives too; not in
 `ci.sh`.
 
@@ -1491,12 +1469,12 @@ fixtures with oracle manifests).
 
 | grader | what it is | what it can catch |
 |---|---|---|
-| `unar` | XADMaster, which `src/fmt_lzh.c`'s HEADER WALK is transcribed from — but not its decoders, which have been lhasa's since 2026-09-19 | on the walk, a transcription error and nothing else; on `-lh4-` .. `-lh7-` and LArc, a wrong reading that lhasa shares |
-| `lhasa` | an independent implementation, compiled out of `reference/lhasa` — and, since 2026-09-19, the source the decoders are written from | on the walk, a wrong reading that XADMaster shares; on the decoders, a transcription error and nothing else |
+| `unar` | XADMaster, which `src/fmt_lzh.c`'s HEADER WALK is transcribed from — but not its decoders, which are lhasa's | on the walk, a transcription error and nothing else; on `-lh4-` .. `-lh7-` and LArc, a wrong reading that lhasa shares |
+| `lhasa` | an independent implementation, compiled out of `reference/lhasa` — and the source the decoders are written from | on the walk, a wrong reading that XADMaster shares; on the decoders, a transcription error and nothing else |
 | LHa for UNIX 1.14i | the ORIGINAL program, compiled out of `reference/lha` and used as an **encoder** | a decoder that agrees with both readers and still cannot read what the format's own writer emits |
 
-The run reports how many archives each grader adjudicated (137 and 142
-of 182 when written up) plus 12 generated sets — `-lh0-`, `-lh5-`,
+The run reports how many archives each grader adjudicated, plus 12
+generated sets — `-lh0-`, `-lh5-`,
 `-lh6-`, `-lh7-` at three header levels over five subjects (long runs,
 text, incompressible bytes, one byte, none).
 
@@ -1658,10 +1636,9 @@ caps a fork at 2 GB). Skips where there is no `tar` or no sparse files.
 
 `unc_off_t` is 64-bit in the host build and 32-bit in the Macintosh one.
 Variant 5 builds the **32-bit** configuration — `make OFFDEFS=` — under the
-same sanitizers as variant 1 and runs the unit tests, the whole diff suite
-(all 933 fixtures when written up), the robustness variants (9,320 then)
-and the size limits through it (DECISIONS.md 2026-08-28, *what a width
-costs*).
+same sanitizers as variant 1 and runs the unit tests, the whole diff
+suite, the robustness variants and the size limits through it
+(DECISIONS.md 2026-08-28, *what a width costs*).
 
 **Established that it can fail**: the lane asserts `--version` reports
 `offsets: 32-bit` first, because `make` tracks timestamps and not flags.
@@ -1838,9 +1815,7 @@ to cover one.
 STRING has no room left (`UNC_NAME_MAX`), the same five walks reaching the
 same refusal by a different route, so every case still grades what it
 graded. **Nothing on this disk nests deeper than 4** (FORMATS.md, *How deep
-anything actually nests*, measured with `tools/measure_depth.py`); three
-of the five walks had been misfiling entries (BLOCKERS.md, *what ignoring
-a refused push cost*).
+anything actually nests*, measured with `tools/measure_depth.py`).
 
 The rule: an entry the walk could not descend to is still OFFERED, with
 the path it could represent, carrying `path_too_deep` and failing per
@@ -1867,12 +1842,10 @@ in words.
 
 `deep-dd-long.dd` is the same tree with 31-character folder names, so a
 path passes `UNC_NAME_MAX` around the eighth level and an entry past 24 is
-name-cut AND unplaceable — where the engine claimed a whole name it did
-not have (BLOCKERS.md). **Its assertion is `test_path_depth` in
+name-cut AND unplaceable. **Its assertion is `test_path_depth` in
 `tests/unit_formats.c`**, because at the CLI every deep entry reports the
 same 255-byte string and no note can be attributed; this suite only checks
-the subject still reaches both limits. (The unit test's first version
-passed with the fix reverted and was rewritten.)
+the subject still reaches both limits.
 
 ### And on a Macintosh — run 2026-10-07
 
@@ -1884,8 +1857,7 @@ deepest entry is `D01/../D30/f30.txt`. **The control is the same archive
 through the two builds before it** (one misfiled five folders, the other
 wrote 49 files and 25 folders and refused 17 entries); `checkdisk.py`
 fails both by name. `checkdisk.py --fixture` is what lets a generated
-subject be checked at all; its volume walk's old depth caps are withdrawn
-(BLOCKERS.md).
+subject be checked at all.
 
 Run against a build of the previous commit: **28 problems across the five
 formats**, discriminating all three old behaviours.
@@ -1961,7 +1933,7 @@ noted. Cases:
 - **102 alike names**, and one file after them whose survival is the
   assertion;
 - **the same two folders in a ZIP** (folders existing only inside file
-  paths — the shape that used to merge in silence);
+  paths);
 - **the same archive extracted TWICE into one destination**: the existing
   top-level folder's twin is numbered `~1` (the maintainer's rule since
   2026-10-11);
@@ -1986,8 +1958,8 @@ empty-name fallback removed fails one, the extension cut the other way
 fails four, the numbering restored to its `~9` limit fails four; treating
 a directory this run did not make as another folder's (one line in
 `EnsureDir`) fails the twice-extracted case. The mock's `PBDirCreateSync`
-and `PBGetCatInfoSync` were made honest first (2026-08-29), so
-`EnsureDir`'s `dupFNErr` branch is exercised.
+and `PBGetCatInfoSync` are honest, so `EnsureDir`'s `dupFNErr` branch is
+exercised.
 
 **What it cannot see.** A name holding a '/' (the mock builds a Linux
 path). Nor the BOX those lines are drawn in: legibility, scrolling and
@@ -2093,8 +2065,7 @@ hands over the entries before the cut and reports success passes it,
 two fixtures of each format (`--per-format 2`) are cut to 25, 50 and 75 % —
 **111 archives across 19 formats** on 2026-10-17's `ci.sh` — and a
 fixture where `lsar` reports a parse failure and `macextract t` exits 0 is
-a failure. AppleSingle joined by failing it (DECISIONS.md 2026-10-17, *the
-metadata, carried to the disk*).
+a failure.
 
 **Established that it can fail**: the DiskDoubler walk's clean-end rule
 put back fails it on `ddtf-*.dd`; removing StuffIt's clamp report fails it
@@ -2121,8 +2092,7 @@ archives, none silent (2026-08-29).
 
 `UncProgress.tick` is the engine's only cooperative yield; on classic Mac
 OS a format that does not call it freezes the progress dialog and disables
-Cmd-. and Cancel (Now Compress never called it until 2026-08-28;
-DECISIONS.md 2026-08-28).
+Cmd-. and Cancel.
 
 `tick_probe.c` extracts with a counting callback and a sink that keeps
 nothing, printing `ret`, the call count, the widest gap in `bytes_done`,
@@ -2360,8 +2330,8 @@ in `reference/` never selects it; the maintained LHa fork decodes it and
 cannot write one. So `sh tools/build_lha_lh2.sh` fetches that fork at a
 pinned commit into `reference/` (unmodified), and `run_lzh.py` builds it on
 demand with `tools/lha-lh2/lh2-encoder.patch` (the mirror of its
-`decode_p_dyn`). The source lives in `reference/` because `ci.sh`'s `make
-clean` once deleted a `build/`-only encoder and the grading went quiet.
+`decode_p_dyn`). The source lives in `reference/`, not `build/`, which
+`ci.sh`'s `make clean` deletes.
 **The data is the reference implementation's**, and each archive is
 verified by that program's own decoder before this engine sees it.
 
@@ -2423,15 +2393,12 @@ everything from offset 128 on — the resource fork; the data fork is 0
 bytes — with `dist/MacExtract.bin`'s. The first 128 bytes (MacBinary,
 carrying dates) are not compared. The failure names the fix — `sh
 tools/make_dist.sh`, in the same commit as the change to `mac/` or `src/`.
-(Before the check, `0aa9101` had shipped a download 591 B of resource fork
-behind its tree.)
 
 ## The three Macintosh configurations (`ci.sh` variants 4, 4b, 4c, 4d)
 
 The application is three builds from one tree, and `ci.sh` compiles all
 three, because a configuration nothing builds rots (DECISIONS.md
-2026-09-25, *two branches that were one file apart*; the control joined
-2026-09-26 after drifting 4 B over its ratchet unbuilt — DECISIONS.md
+2026-09-25, *two branches that were one file apart*; DECISIONS.md
 2026-09-26, *the numbers DART left behind*).
 
 | variant | build | what it is |
@@ -2439,11 +2406,11 @@ three, because a configuration nothing builds rots (DECISIONS.md
 | 4 | `build/mac` | the SHIPPED application — nineteen images (the seventeen below and, since v0.45.0, the shell's destination dialog and a set's setup), **eager**: one bundle read at launch, everything the sniffed format cannot want released before the engine takes its budget. `dist/` is compared against this one |
 | 4c | `build/mac-lazy` | `UNC_OVL_LAZY=1` — the same images, one resource each, read when a format turns out to want one. Not shipped |
 | 4d | `build/mac-resident` | `UNC_OVL_RESIDENT=1` — every decoder linked in. The CONTROL for budget measurements (FORMATS.md, *Overlays*), with its own ceiling in `tools/build_mac.sh` |
-| 4e | `build/mac-autotest-ci` | `UNC_MAC_AUTOTEST=1` — the application every emulator tier runs (`tools/vmac/run.py`), built as `run.py` builds it, without the shipped ceilings. Added 2026-11-02, when v0.45.0's merge left it unbuildable under a green CI (DECISIONS.md 2026-11-02, *the dialogs that became the application*) |
+| 4e | `build/mac-autotest-ci` | `UNC_MAC_AUTOTEST=1` — the application every emulator tier runs (`tools/vmac/run.py`), built as `run.py` builds it, without the shipped ceilings (DECISIONS.md 2026-11-02, *the dialogs that became the application*) |
 
 Variant 4b (`UNC_AT_OVERLAY=1 sh tools/build_mac.sh`) rebuilds the eager
-configuration with the variable set explicitly — it has been the default
-since 2026-09-25 (`mac/CMakeLists.txt`) — and is followed by `run_tiers.py
+configuration with the variable set explicitly — the default
+(`mac/CMakeLists.txt`) — and is followed by `run_tiers.py
 --check-images`; 4d is followed by `--check-saved`. All of them skip
 without a Retro68 toolchain.
 
@@ -2503,8 +2470,7 @@ gone, the next `GetResource` counted as a fresh read.
 requires each to be caught: the delta dropped, the trailer's table
 mislocated, a kept copy relocated by its own address, the bundle fixup not
 flushing, the lazy loader not locking, the codecs image not kept.
-`tests/ovlbox/mutate.py` FAILS when its pattern is absent (a `sed` version
-had reported unapplied mutations as uncaught defects).
+`tests/ovlbox/mutate.py` FAILS when its pattern is absent.
 
 **What it CANNOT see** (the list is `tests/ovlbox/ovlbox.c`'s header; the
 emulator tiers cover these):
@@ -2532,8 +2498,8 @@ Plus, 5 forks, all identical — and this suite replays that verdict offline:
 per-fork size and SHA-256, the sniff, and the file count from `l`.
 
 **It runs on the PAYLOAD** (unwrapped with `x -nr` first): to
-`run_robustness.sh` and `fuzz.py` these fixtures are BinHex files, and all
-9,320 of the suite's variants exercise the BinHex layer. So **116 corrupted
+`run_robustness.sh` and `fuzz.py` these fixtures are BinHex files, and every
+one of the suite's variants exercises the BinHex layer. So **116 corrupted
 variants** — ten truncations and forty-eight bit-flips per archive — live
 here, FORCED with `-f "SuperDisk!"` (a truncated archive loses the trailing
 `0x27` record and sniffs as *unknown*). **A budget run per archive** checks
@@ -2571,8 +2537,7 @@ fixture. Skips cleanly without qemu-m68k or the cross-compiler.
 3. **Synthetic blocks for methods 1..9**, through both readers, no case
    excused: every method agrees 12/12.
 4. **Method 10 three ways**: a stream this harness encodes, decoded by this
-   engine and by SlowFastA's module — its only grading (it caught a
-   match-length misreading on the first run).
+   engine and by SlowFastA's module — its only grading.
 5. **Tennessee**, method 20's module, is an ENCODER: five blocks it writes
    must declare method 11 and decode back to their input — the only
    method-11 compressor in reach.
@@ -3347,8 +3312,7 @@ floor of one per part with no backward crossing.
 asked of the engine, like `py_parts()`'s StuffIt match rule. Both directions
 are demonstrated: the record-at-a-time directory walk gives 16/6 against a
 floor of 6/1, a measure-every-part-first pass 10/1, and both fail. **A floor
-that is too low reads as a defect in the thing being measured** (the model
-once accused `zmany` of two opens the format requires). The last case also
+that is too low reads as a defect in the thing being measured**. The last case also
 runs one byte below its own high-water mark, on all-STORED cases only,
 forcing the fallback walk: identical bytes, strictly more opens.
 
@@ -3473,8 +3437,7 @@ an hour. All skip cleanly with a message when what they need is absent.
   *The archive layer*, *A fork is a sequence of blocks*, *Every block is an
   even number of bytes*). An archive can be ACCEPTED and still be wrong
   (`no-word`), so the fork comparison grades a rung, not the verdict line.
-  None of the three was on any list of differences; they came from diffing
-  an encoder-written archive field by field. `derive_now.py` reads 4 of
+  `derive_now.py` reads 4 of
   `synth-now-mixed.now`'s 15 blocks and every block of every archive Now
   Compress wrote (docs/formats/now-compress.md).
 
@@ -3485,7 +3448,7 @@ an hour. All skip cleanly with a message when what they need is absent.
   *The header*).
 - **A degenerate match.** A single-leaf Huffman tree decodes copies of one
   byte from nine bits found in almost any file; `derive_huffman_tree.py`
-  refuses such matches (one was reported as a confirmation on 2026-09-20).
+  refuses such matches.
 
 ## What a SNIFF costs in reads (`tools/sniff_io_probe.c`, not in `ci.sh`)
 
@@ -3633,10 +3596,7 @@ DECISIONS.md, *the character that was touched three times*).
 
 **What each layer can see is not the same.** Layer 7 compares a count, two
 summed CRC-32s and two summed lengths, so it has never checked an output
-NAME and cannot fail on one; layer 8 compares names by reading a directory,
-and on its first sweep failed two fixtures layer 7 had passed for weeks
-(the gzip/.Z fallback name; BLOCKERS.md, DECISIONS.md). **An aggregate check
+NAME and cannot fail on one; layer 8 compares names by reading a directory
+(the gzip/.Z fallback name it caught: BLOCKERS.md). **An aggregate check
 cannot fail on a property it never aggregates. When adding a harness, write
-down what it is blind to.** Layer 9 exists because the claim that Mini
-vMac's write-back could not be read off the Out volume did not reproduce
-and is withdrawn (BLOCKERS.md).
+down what it is blind to.**
