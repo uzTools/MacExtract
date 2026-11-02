@@ -49,6 +49,7 @@ refusal — the brief has grown before, on request.
 | SuperDisk! method 13 | **not implemented, no specimen wanted** | its module refuses to decompress, so nothing could grade a decoder (FORMATS.md, *Module 13*) |
 | A MIME part's `Content-MD5` | **not checked**; a `message/partial` anchor that is not a part comes out wrong with exit 0, as from munpack | priced at **+1,446 B** of `ovl_text`, declined 2026-10-11 (DECISIONS.md 2026-10-11, *the digest our own oracle could not compute*) |
 | Zip64 past 4 GB | **counts and the per-entry escape read; over-4-GB fields refused** (`UNC_ERR_UNSUPPORTED` per archive, `UNC_ERR_TOOLARGE` per entry) | a format change, not a type change (DECISIONS.md 2026-08-28, *what a width costs*; FORMATS.md, *Size limits*) |
+| More archives opened in a quick burst while MacExtract is busy — a second double-click during a helper's stay, archives of several creators at once | **dropped silently** (two `SIT!` archives 2 s apart: both lost, 7.0.1, one run; several creators: not run) | the maintainer, 2026-11-02: a limitation of the application. One more archive at a time is queued: File > Open... on every System, a double-click under MultiFinder and System 7 (DECISIONS.md 2026-11-01, *the Open item MultiFinder looks for*) |
 
 Nothing is detect-only since 2026-10-18: an unextractable file is
 `UNC_FORMAT_UNKNOWN` (DECISIONS.md 2026-10-18, *the formats it only named*).
@@ -266,18 +267,10 @@ ships later, on MacExtract's own floppy. Left:
   MacStamp's own BinHex, PackIt, btoa and base64 stamps — reach it by
   double-click only after `companion/icsetup`, and the files already on
   disk not even then.
-- **A helper opened while MacExtract runs loses the archive**, silently
-  (System 6.0.8 MultiFinder; DECISIONS.md 2026-11-01, *the Open item
-  MultiFinder looks for*): its launch only brings MacExtract forward. An
-  archive of MacExtract's own creator is queued since File > Open...;
-  one through a helper is not. Closed on System 6 MultiFinder (the helper
-  sends the Finder's puppet string) and on System 7.0.1 (the same call,
-  settled; same entry). Mac OS 9 not run.
-- **Two archives of a helper's creator double-clicked within its stay are
-  both lost** (7.0.1, one run; DECISIONS.md 2026-11-01, *the Open item
-  MultiFinder looks for*): the helper must stay until MacExtract's next
-  event call, and a second double-click meanwhile goes to the helper.
-- **Several archives of different creators opened together.** Not run.
+- **A helper opened while MacExtract runs, on Mac OS 9.** It hands the
+  archive to a running MacExtract with MultiFinder's puppet string on
+  System 6.0.8 and 7.0.1 (DECISIONS.md 2026-11-01, *the Open item
+  MultiFinder looks for*); Mac OS 9 not run.
 - **Which of a file's two dates System 7 compares** between two applications
   of one creator. Not separated.
 - **A download finishing while MacExtract is open is lost** once

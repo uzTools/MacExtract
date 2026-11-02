@@ -20158,5 +20158,15 @@ Arsenic busy, one run).** Other.sit, then 2 s later Third.sit, both
 `SIT!`: **neither was extracted**, and the helper was still open in the
 last frame. The Finder hands a second document to a running helper by
 bringing it forward, which the helper does not read, and the first
-string's switch is presumably undone with it. Open: OPEN_ITEMS.md, *The
-double-click helpers*.
+string's switch is presumably undone with it.
+
+**Where it stops (the maintainer, 2026-11-02).** One more archive at a
+time is what is promised: File > Open... on every System, a double-click
+under MultiFinder and System 7, through a helper or straight to MacExtract
+for its own creator. More archives opened in a burst short enough to fall
+inside a helper's stay are dropped silently, a limitation of the
+application (OPEN_ITEMS.md, Part 1). Weighed and not taken: the helper
+answering its own File > Open... during the stay (bytes in every helper,
+and twenty helpers), a mailbox on disk (a single-floppy Mac would be
+asked for MacExtract's disk at every check), and a mailbox in the system
+heap behind a Gestalt selector (declined).
