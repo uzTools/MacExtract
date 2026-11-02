@@ -19698,22 +19698,24 @@ probe that posted and stayed 3 s in `WaitNextEvent` got its archive
 extracted; the helper that posted and quit got nothing, with the same
 log. That the string goes with its poster is the hypothesis.
 
-**One mechanism, System 6 and System 7 (measured, same setups, one run
-each).** The translation hands its string to `−16464 $28A`, which brings
-the target forward and queues it through the routine MultiFinder's
-selector 0 reaches, with the same arguments (process, handle, a long 0, a
-word 0). So the first 7.0.1 test of selector 0 failed for the reason the
-posts did: the helper called it mid-switch, and quit at once. Called
-after 60 ticks of `WaitNextEvent`, the helper then staying 3 s, the
-MultiFinder call queued the second archive on 7.0.1 too. `companion/stub`
-therefore makes the System 6 Finder's two calls everywhere they exist,
-settled and staying (`SIZE`: `canBackground`); an odoc posted as the
-7.0.1 Finder posts it, with alias documents, also arrived (one run) and
-is not used. The final build, 9,472 B (8,832 before any of this), one run each:
-6.0.8 MultiFinder and 7.0.1, MacExtract busy: the second archive
-extracted after the first; 7.0.1 with MacExtract not running, and 6.0.8
-without MultiFinder (no `_OSDispatch`): MacExtract launched with the
-archive and extracted it. Mac OS 9 not run.
+**One mechanism for System 6 and 7, then two again for Mac OS 9
+(measured, same setups, one run each unless noted).** The translation
+hands its string to `−16464 $28A`, which brings the target forward and
+queues it through the routine MultiFinder's selector 0 reaches, with the
+same arguments (process, handle, a long 0, a word 0). So the first 7.0.1
+test of selector 0 failed for the reason the posts did: the helper called
+it mid-switch, and quit at once. Called after 60 ticks of `WaitNextEvent`,
+the helper then staying, the MultiFinder call queued the second archive on
+7.0.1 too, and for a day the helper made only those two calls (9,472 B;
+corrected: "one mechanism" was the conclusion first written here). Mac OS
+9.2 does not take the string (below), so `companion/stub` is back to the
+two routes of 91cdd48: the MultiFinder string where there is no Apple
+Event Manager (System 6), the odoc where there is (System 7, Mac OS 9).
+10,112 B (8,832 before any of this), its forks byte-identical to the
+builds measured: 6.0.8 MultiFinder, 7.0.1 and Mac OS 9.2 (two runs) with
+MacExtract busy, the second archive extracted after the first; 7.0.1
+with MacExtract not running, and 6.0.8 without MultiFinder: MacExtract
+launched with the archive and extracted it.
 
 **How long the helper must stay (measured, 7.0.1, the final build with
 only the stay changed, one run each).** The maintainer asked whether the
