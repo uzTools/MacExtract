@@ -48,7 +48,16 @@
 #include "macextract.h"
 #include "macextract_strings.h"   /* every word the user reads */
 
-#define kProgressDLOG   128
+/* The destination dialog and a set's setup run as images read with the
+ * bundle at launch (tools/overlay/ovl_destdlg.c, ovl_segsetup.c), so that
+ * neither is resident while the engine extracts. Only the eager lifetime
+ * has the bundle then; the lazy and resident instruments link the setup
+ * in and keep Standard File's own Save dialog. */
+#if defined(UNC_AT_OVERLAY) && !defined(UNC_OVL_LAZY)
+#define UNC_SHELL_IMAGES 1
+#endif
+
+#define kProgressDLOG   146     /* the Finder's Copy layout */
 #define kDoneALRT       129
 #define kErrorALRT      130
 #define kCancelItem     1
@@ -400,11 +409,7 @@ static unc_off_t xio_size(void *ctx) { return ((MemIO *)ctx)->size; }
 /* Build with UNC_MAC_SLURP_ARCHIVE to get the old path back.          */
 /* ------------------------------------------------------------------ */
 
-typedef struct {
-    short    refNum;
-    uint32_t size;
-    uint32_t pos;
-} FileIO;
+#include "seg_types.h"     /* FileIO, SegHost, EnvSink: shared with ovl_segsetup */
 
 static int32_t fio_read(void *ctx, void *buf, int32_t len)
 {
@@ -456,6 +461,10 @@ static unc_off_t fio_size(void *ctx) { return ((FileIO *)ctx)->size; }
  * NOT inside UNC_AT_BUDGET: that build is a diagnostic and these two are
  * the shipped message. */
 static long gShortBy;      /* largest budget shortfall, in bytes; 0 = none */
+/* A segmented set went on without one of its parts: one never found, or
+ * one the user cancelled in the part dialog. A run that then fails did
+ * so because a part is missing, and says that, not "damaged". */
+static Boolean gSegShort;
 static int  gShortPiece;   /* NewPtr failed though the budget allowed it   */
 /* Entries whose METHOD this build cannot read, for the alert that asks
  * for the file rather than blaming the machine. Run-level like the two
@@ -909,6 +918,17 @@ static short ProgressReading(long elapsed, uint32_t done, uint32_t total,
  * is an ENGINE rule; the shell already keeps gBarPct and friends.) */
 static short gBarPct = 0;
 
+/* The System 7 Finder's copy bar: done in dark grey, the rest lavender,
+ * inside a black frame. Measured on screen (System 7.5.5, Mac II, 256
+ * colours) and the same two values the Finder's own barber-pole PICTs
+ * 11000-11003 carry, in its 7.0.1 and 7.5.5 versions; neither the window
+ * nor the control colour table changes them. Only with Color QuickDraw:
+ * ROM85 bit 14 is clear where it is present. A colour Mac at one bit per
+ * pixel maps the two to black and white, as before. */
+static const RGBColor kBarDone = { 0x4444, 0x4444, 0x4444 };
+static const RGBColor kBarLeft = { 0xCCCC, 0xCCCC, 0xFFFF };
+#define BarInColour() ((LMGetROM85() & 0x4000) == 0)
+
 static void BarDraw(const Rect *box)
 {
     Rect r = *box, fill;
@@ -920,10 +940,18 @@ static void BarDraw(const Rect *box)
     w = (short)((long)(r.right - r.left) * gBarPct / 100);
     fill = r;
     fill.right = (short)(r.left + w);
-    if (fill.right > fill.left) PaintRect(&fill);
-    fill.left = fill.right;
-    fill.right = r.right;
-    if (fill.right > fill.left) EraseRect(&fill);
+    {   Boolean c = BarInColour();
+        if (c) RGBForeColor(&kBarDone);
+        if (fill.right > fill.left) PaintRect(&fill);
+        fill.left = fill.right;
+        fill.right = r.right;
+        if (c) {
+            RGBForeColor(&kBarLeft);
+            PaintRect(&fill);
+            ForeColor(blackColor);
+        } else
+            EraseRect(&fill);
+    }
 }
 
 static pascal void BarUserItem(WindowPtr w, short item)
@@ -962,6 +990,14 @@ static void PStrCatNum(Str255 d, long n)
  *
  * Quit is Cancel: the application quits after an archive whose decoders
  * it released, which every extraction that reaches this pump has. */
+/* In the background: the Finder, say, brought forward while extracting.
+ * A dialog put up then lands behind the front application's windows and
+ * never draws (the maintainer's LC 475, 2026-10-30), so WaitForFront asks
+ * the user to come back first. Set from the suspend and resume events the
+ * SIZE resource asks for; only MultiFinder and System 7 on send them, so
+ * on System 3.0 and a System 6 without MultiFinder this stays false. */
+static Boolean gBackground;
+
 static void ProgressPump(Progress *pr)
 {
     ReserveSample();
@@ -971,6 +1007,10 @@ static void ProgressPump(Progress *pr)
 
     SystemTask();
     if (GetNextEvent(everyEvent, &ev)) {
+        if (ev.what == osEvt && (ev.message & 0xFF000000) == SUSPENDRESUMEBITS) {
+            gBackground = (ev.message & RESUME) == 0;
+            return;
+        }
         if (ev.what == keyDown &&
             (ev.modifiers & cmdKey) &&
             (char)(ev.message & charCodeMask) == '.') {
@@ -1432,6 +1472,7 @@ static void RepFailed(const uint8_t *orig, int olen, int status)
         RepCat(S_REP_CRC);
         break;
     case UNC_ERR_TRUNCATED:
+    case UNC_ERR_SEGMENTED:     /* its data was in a part that is missing */
         RepCat(S_REP_TRUNCATED);
         break;
     case UNC_ERR_ENCRYPTED:
@@ -3060,45 +3101,14 @@ static int sink_comment(void *ctx, const uint8_t *buf, uint16_t len)
 /* System 6 counts its FCBs.                                           */
 /* ------------------------------------------------------------------ */
 
-#define kSegMaxKnown 64      /* parts we can remember where to find */
-
 static void ShowNote(short alrtID, const unsigned char *msg);
+static void WaitForFront(void);
 #ifdef UNC_AT_HEAPLOG
 static void HeapLog(const char *tag);
 static void HeapLogFlush(void);
 static short gHeapLogN;
 #endif
 
-typedef struct {
-    short vRefNum;
-    long  dirID;
-    Str63 name;
-} SegLoc;
-
-typedef struct {
-    UncSegmentDesc desc;
-    SegLoc  loc[kSegMaxKnown + 1];   /* loc[p].name[0] == 0 => unknown */
-    /* Payload bytes of each part actually opened, so that "how much is
-     * left" is a sum over what has been SEEN rather than a running
-     * total. Indexed by part, so a part opened twice counts once. */
-    uint32_t psize[kSegMaxKnown + 1];
-    FileIO  fio;                     /* the one open part */
-    short   refNum;                  /* 0 = nothing open */
-    DialogPtr hide;                  /* progress dialog to hide while asking */
-    int     asked;                   /* nonzero once the user was involved */
-    int     cancelled;               /* user chose Cancel in the alert */
-    /* Name-placed schemes only: the stem the family shares, and the
-     * highest member number seen — which is how a set missing a part in
-     * the middle is told from one that simply ends there. */
-    unsigned char stem[64];
-    short   stemlen;
-    int     highest;
-    /* Where a part that arrived inside an envelope is decoded to, and
-     * whether any was. */
-    short   tmpVol;
-    long    tmpDir;
-    int     peeled;
-} SegHost;
 
 /* Read a candidate file's header and return its part number, or 0. */
 static int SegPartOf(SegHost *h, short vol, long dir, ConstStr255Param name)
@@ -3130,8 +3140,8 @@ static int SegPartOf(SegHost *h, short vol, long dir, ConstStr255Param name)
         pio.seek = fio_seek;
         pio.tell = fio_tell;
         pio.size = fio_size;
-        ok = unc_segment_describe(&pio, &cand) == UNC_OK &&
-             cand.scheme == UNC_FORMAT_MIMESEG;
+        ok = unc_segment_describe_as(&pio, UNC_FORMAT_MIMESEG,
+                                     &cand) == UNC_OK;
         if (ok)
             for (i = 0; i < UNC_SEG_FP_LEN; i++)
                 if (cand.fp[i] != h->desc.fp[i]) { ok = 0; break; }
@@ -3167,6 +3177,7 @@ static int SegPartOf(SegHost *h, short vol, long dir, ConstStr255Param name)
 
 static void SegRemember(SegHost *h, int part, short vol, long dir,
                         ConstStr255Param name);
+static short SegDriveOf(short vol);
 
 static short PLowerByte(short c)
 {
@@ -3267,6 +3278,11 @@ static void SegScanFamily(SegHost *h, short vol, long dir, int split,
                              : ZipFamPartOf(h->stem, h->stemlen, nm);
             if (part == kZipFamLast) {
                 for (z = 0; z <= (long)nm[0]; z++) lastName[z] = nm[z];
+                /* Once its count is known, the ".zip" is that part: one
+                 * found on a disk inserted later is the last part back
+                 * (one drive: 3, 1, 2, then 3 again for its tail). */
+                if (!split && h->desc.nparts)
+                    SegRemember(h, (int)h->desc.nparts, vol, dir, nm);
                 continue;
             }
             if (part >= 1) {
@@ -3290,8 +3306,12 @@ static uint32_t SegPartLength(SegHost *h, int part)
     long z;
     short i;
 
-    if (part < 1 || part > kSegMaxKnown || !h->loc[part].name[0])
-        return UNC_SIZE_UNKNOWN;
+    if (part < 1 || part > kSegMaxKnown) return UNC_SIZE_UNKNOWN;
+    /* Measured when the part was found and kept: a split's total is the sum
+     * of its parts, and on floppies a part's disk is ejected (and its
+     * location forgotten) before the next is asked for. */
+    if (h->plen[part]) return h->plen[part];
+    if (!h->loc[part].name[0]) return UNC_SIZE_UNKNOWN;
     for (z = 0; z < (long)sizeof pb; z++) ((char *)&pb)[z] = 0;
     for (i = 0; i <= (short)h->loc[part].name[0]; i++)
         nm[i] = h->loc[part].name[i];
@@ -3300,252 +3320,25 @@ static uint32_t SegPartLength(SegHost *h, int part)
     pb.hFileInfo.ioDirID = h->loc[part].dirID;
     pb.hFileInfo.ioFDirIndex = 0;
     if (PBGetCatInfoSync(&pb) != noErr) return UNC_SIZE_UNKNOWN;
+    h->plen[part] = (uint32_t)pb.hFileInfo.ioFlLgLen;
     return (uint32_t)pb.hFileInfo.ioFlLgLen;
 }
 
-/* Read the part count out of the one file that has it — the ".zip"
- * member of a spanned set. Returns nonzero on success, having filled in
- * the descriptor and recorded that file as the last part. */
-static int SegDescribeLast(SegHost *h, short vol, long dir,
-                           ConstStr255Param nm)
+
+/* "MacExtract part N", created empty and open for writing — on the
+ * output volume, which is the one place this application knows it may
+ * write. A stale one is removed first. */
+static int SegTmpOpen(SegHost *h, int part, Str255 tmp, short *ref)
 {
-    UncSegmentDesc cand;
-    FileIO probe;
-    UncIO pio;
-    short ref;
-    long eof = 0;
-    int ok;
-
-    if (MyOpenFork(vol, dir, nm, fsRdPerm, 0, &ref) != noErr) return 0;
-    GetEOF(ref, &eof);
-    probe.refNum = ref;
-    probe.size = (uint32_t)eof;
-    probe.pos = 0;
-    pio.ctx = &probe;
-    pio.read = fio_read;
-    pio.seek = fio_seek;
-    pio.tell = fio_tell;
-    pio.size = fio_size;
-    ok = unc_segment_describe(&pio, &cand) == UNC_OK && cand.nparts;
-    FSClose(ref);
-    if (!ok) return 0;
-    h->desc = cand;
-    SegRemember(h, (int)cand.nparts, vol, dir, nm);
-    if ((int)cand.nparts > h->highest) h->highest = (int)cand.nparts;
-    return 1;
-}
-
-/* ------------------------------------------------------------------ */
-/* Parts that arrived inside an envelope                               */
-/*                                                                    */
-/* A real download is per-part wrapped — Archive.sit.1.hqx — so the    */
-/* envelope has to come off each part BEFORE the join. On this side    */
-/* that means writing the decoded part somewhere, which is the whole   */
-/* difference from the Linux CLI: it peeks ~100 bytes and decodes to a */
-/* file, and so does this, but here the file lands on the output       */
-/* volume and is deleted when the join is over.                        */
-/*                                                                    */
-/* StuffIt only, for the reason the CLI gives: its header is IN the    */
-/* payload, so unwrapping is all that stands between a wrapped part    */
-/* and the fingerprint check every other part gets. A spanned zip or a */
-/* .NNN part is placed by FILENAME, and the filename of a wrapped part */
-/* is the wrapper's.                                                   */
-/* ------------------------------------------------------------------ */
-
-typedef struct {
-    short    outRef;         /* PEEL: fork being written, 0 in peek mode */
-    uint8_t *head;           /* PEEK: where the first bytes go           */
-    int32_t  cap, len;
-    int      entries;
-    int      err;
-} EnvSink;
-
-static int env_begin(void *ctx, const UncEntryInfo *info)
-{
-    EnvSink *e = (EnvSink *)ctx;
-    if (info->is_dir) { e->entries++; return 1; }
-    return e->entries++ ? 1 : 0;         /* the first file is the payload */
-}
-
-static int env_write(void *ctx, UncFork fork, const void *buf, int32_t len)
-{
-    EnvSink *e = (EnvSink *)ctx;
-
-    if (fork != UNC_FORK_DATA || len <= 0) return 0;
-    if (e->outRef) {
-        long count = (long)len;
-        if (FSWrite(e->outRef, &count, (const void *)buf) != noErr ||
-            count != (long)len) { e->err = 1; return -1; }
-        return 0;
-    }
-    if (e->len < e->cap) {
-        int32_t n = e->cap - e->len, i;
-        const uint8_t *sp = (const uint8_t *)buf;
-        if (n > len) n = len;
-        for (i = 0; i < n; i++) e->head[e->len + i] = sp[i];
-        e->len += n;
-    }
-    /* Enough to decide on; the abort is reported as a per-entry failure,
-     * which is why a peek is judged by what it collected. */
-    return e->len >= e->cap ? -1 : 0;
-}
-
-static int env_end(void *ctx, int status)
-{
-    EnvSink *e = (EnvSink *)ctx;
-    if (e->outRef && status != UNC_OK) e->err = 1;
-    return 0;
-}
-
-/* The allocator a peek runs on: plain NewPtr and DisposePtr, outside the
- * engine's budget. SegScanWrapped unwraps envelopes beside a set before
- * RunExtract has built `al`, and must not take the budget early either:
- * mal_alloc fixes it at its first call, and that is meant to come after
- * the overlay release. Until 2026-10-18 the peek was handed `al` still
- * uninitialised, harmless while no envelope reader allocated; AppleSingle's
- * comment then did, and a split set beside an AppleSingle with a comment
- * crashed the application (the maintainer's LC 475; DECISIONS.md
- * 2026-10-18, *the allocator nobody had built yet*). */
-static void *peek_alloc(void *ctx, uint32_t size)
-{
-    (void)ctx;
-    return NewPtr((Size)size);
-}
-
-static void peek_free(void *ctx, void *ptr)
-{
-    (void)ctx;
-    if (ptr) DisposePtr((Ptr)ptr);
-}
-
-/* Run one envelope layer of a file into `es`. 0 if it is not one. */
-static int EnvRun(short vol, long dir, ConstStr255Param nm, EnvSink *es,
-                  UncAlloc *al)
-{
-    FileIO fio;
-    UncIO eio;
-    UncSink sk;
-    UncProgress prog;
-    UncFormat fmt;
-    short ref;
-    long eof = 0;
-    int rc;
-
-    if (MyOpenFork(vol, dir, nm, fsRdPerm, 0, &ref) != noErr) return 0;
-    GetEOF(ref, &eof);
-    fio.refNum = ref;
-    fio.size = (uint32_t)eof;
-    fio.pos = 0;
-    eio.ctx = &fio;
-    eio.read = fio_read;
-    eio.seek = fio_seek;
-    eio.tell = fio_tell;
-    eio.size = fio_size;
-
-    fmt = unc_sniff(&eio);
-    if (!unc_format_is_envelope(fmt)) {
-        FSClose(ref);
-        return 0;
-    }
-    sk.ctx = es;
-    sk.begin_entry = env_begin;
-    sk.write = env_write;
-    sk.end_entry = env_end;
-    sk.comment = NULL;    /* an envelope layer carries none */
-    prog.ctx = NULL;
-    prog.tick = NULL;
-    rc = unc_extract_as(fmt, &eio, &sk, al, NULL, NULL);
-    FSClose(ref);
-    if (es->outRef && rc != UNC_OK) es->err = 1;
-    return 1;
-}
-
-/* Do the parts found so far account for the whole set? StuffIt states
- * the payload total in every part, so this is the same sum that ends the
- * joiner's walk — and it is the only question that decides whether
- * opening envelopes is worth anything. */
-static int SegHaveAll(SegHost *h)
-{
-    uint32_t sum = 0;
-    int p;
-
-    if (h->desc.total == UNC_SIZE_UNKNOWN) return 0;
-    for (p = 1; p <= kSegMaxKnown && h->loc[p].name[0]; p++) {
-        uint32_t len = SegPartLength(h, p);
-        if (len == UNC_SIZE_UNKNOWN || len <= h->desc.head_len) return 0;
-        sum += len - h->desc.head_len;
-        if (sum >= h->desc.total) return 1;
-    }
-    return 0;
-}
-
-/* Is this file an envelope holding a part of the set? If so it is
- * decoded whole, next to the output, and recorded. */
-static int SegWrappedPartOf(SegHost *h, short vol, long dir,
-                            ConstStr255Param nm, UncAlloc *al)
-{
-    uint8_t head[UNC_SEG_HEAD];
-    EnvSink es;
-    Str255 tmp;              /* PStrCat's contract is Str255, not Str63 */
-    int part;
-    short ref;
-    long z;
-
-    for (z = 0; z < (long)sizeof es; z++) ((char *)&es)[z] = 0;
-    es.head = head;
-    es.cap = (int32_t)sizeof head;
-    if (!EnvRun(vol, dir, nm, &es, al)) return 0;
-    part = es.len > 0 ? unc_segment_match(&h->desc, head, es.len) : 0;
-    if (part < 1) return 0;
-    if (h->loc[part].name[0]) return part;      /* already have that one */
-
-    /* "MacExtract part N" — on the output volume, which is the one place
-     * this application knows it may write. */
     tmp[0] = 0;
     PStrCat(tmp, S_FILE_PART);
     PStrCatNum(tmp, (long)part);
-    MyHDelete(h->tmpVol, h->tmpDir, tmp);        /* a stale one, if any */
-    if (MyHCreate(h->tmpVol, h->tmpDir, tmp) != noErr) return 0;
-    if (MyOpenFork(h->tmpVol, h->tmpDir, tmp, fsWrPerm, 0, &ref) != noErr) {
-        MyHDelete(h->tmpVol, h->tmpDir, tmp);
-        return 0;
-    }
-    for (z = 0; z < (long)sizeof es; z++) ((char *)&es)[z] = 0;
-    es.outRef = ref;
-    if (!EnvRun(vol, dir, nm, &es, al) || es.err) {
-        FSClose(ref);
-        MyHDelete(h->tmpVol, h->tmpDir, tmp);
-        return 0;
-    }
-    FSClose(ref);
-    FlushVol(NULL, h->tmpVol);
-    SegRemember(h, part, h->tmpVol, h->tmpDir, tmp);
-    h->peeled = 1;
-    return part;
-}
-
-/* Walk a folder looking INSIDE envelopes. Only ever called when the set
- * is short of a part: a complete one opens nothing. */
-static void SegScanWrapped(SegHost *h, short vol, long dir, UncAlloc *al)
-{
-    CInfoPBRec pb;
-    Str63 nm;
-    short idx;
-    long z;
-
-    for (idx = 1; idx < 32767; idx++) {
-        for (z = 0; z < (long)sizeof pb; z++) ((char *)&pb)[z] = 0;
-        nm[0] = 0;
-        pb.hFileInfo.ioNamePtr = nm;
-        pb.hFileInfo.ioVRefNum = vol;
-        pb.hFileInfo.ioDirID = dir;
-        pb.hFileInfo.ioFDirIndex = idx;
-        if (PBGetCatInfoSync(&pb) != noErr) break;
-        if (pb.hFileInfo.ioFlAttrib & 0x10) continue;          /* a folder */
-        if (SegPartOf(h, vol, dir, nm)) continue;      /* a part in its own right */
-        SegWrappedPartOf(h, vol, dir, nm, al);
-        if (SegHaveAll(h)) break;
-    }
+    MyHDelete(h->tmpVol, h->tmpDir, tmp);
+    if (MyHCreate(h->tmpVol, h->tmpDir, tmp) == noErr &&
+        MyOpenFork(h->tmpVol, h->tmpDir, tmp, fsWrPerm, 0, ref) == noErr)
+        return 1;
+    MyHDelete(h->tmpVol, h->tmpDir, tmp);
+    return 0;
 }
 
 /* Remove the decoded parts: this application's own litter, and a join
@@ -3565,54 +3358,7 @@ static void SegPeelClean(SegHost *h)
     h->peeled = 0;
 }
 
-/* Which of these parts knows how many there are?
- *
- * Two schemes need this and for the same reason — Compact Pro, where
- * only the last segment carries the index, and message/partial, where
- * only the last part must carry `total`.
- *
- * Only the last one carries the index, and only the index says how many
- * segments there are — so a set opened at any other segment has no
- * count, and neither the joiner nor the "part N of M" arithmetic can
- * start. Every segment identifies itself (a 16-bit set identity in its
- * header), so the answer is here on the disk; it just has to be asked
- * for, one 8-byte header at a time. The CLI does exactly this.
- *
- * Leaves h->desc alone if no part answers, and the caller then reports
- * the set as incomplete, which it is: without the final segment there
- * is no directory anywhere. */
-static void SegFindLast(SegHost *h)
-{
-    int p;
-
-    for (p = 1; p <= kSegMaxKnown; p++) {
-        UncSegmentDesc cand;
-        FileIO probe;
-        UncIO pio;
-        short ref;
-        long eof = 0;
-
-        if (!h->loc[p].name[0]) continue;
-        if (MyOpenFork(h->loc[p].vRefNum, h->loc[p].dirID, h->loc[p].name,
-                       fsRdPerm, 0, &ref) != noErr) continue;
-        GetEOF(ref, &eof);
-        probe.refNum = ref;
-        probe.size = (uint32_t)eof;
-        probe.pos = 0;
-        pio.ctx = &probe;
-        pio.read = fio_read;
-        pio.seek = fio_seek;
-        pio.tell = fio_tell;
-        pio.size = fio_size;
-        if (unc_segment_describe(&pio, &cand) == UNC_OK && cand.nparts) {
-            h->desc = cand;
-            FSClose(ref);
-            return;
-        }
-        FSClose(ref);
-    }
-}
-
+static uint32_t SegPartLength(SegHost *h, int part);
 static void SegRemember(SegHost *h, int part, short vol, long dir,
                         ConstStr255Param name)
 {
@@ -3622,6 +3368,16 @@ static void SegRemember(SegHost *h, int part, short vol, long dir,
     h->loc[part].vRefNum = vol;
     h->loc[part].dirID = dir;
     for (i = 0; i <= (short)name[0]; i++) h->loc[part].name[i] = name[i];
+    h->loc[part].drive = SegDriveOf(vol);
+    (void)SegPartLength(h, part);        /* kept while the disk is here */
+}
+
+/* The schemes whose parts say nothing of their set (macextract.h): they are
+ * found by NAME. */
+static int SegByName(SegHost *h)
+{
+    return h->desc.scheme == UNC_FORMAT_ZIPSEG ||
+           h->desc.scheme == UNC_FORMAT_SPLIT;
 }
 
 /* Walk one folder, recording every part of this set that it holds. */
@@ -3632,6 +3388,9 @@ static void SegScanDir(SegHost *h, short vol, long dir)
     short idx;
     long z;
 
+    /* By name, the folder's names are what is read (SegScanFamily);
+     * opening each file would find nothing, at a file open apiece. */
+    if (SegByName(h)) return;
     for (idx = 1; idx < 512; idx++) {
         for (z = 0; z < (long)sizeof pb; z++) ((char *)&pb)[z] = 0;
         pb.hFileInfo.ioNamePtr = nm;
@@ -3774,6 +3533,11 @@ static uint32_t SegRemaining(SegHost *h)
     short p;
 
     if (h->desc.total == 0) return 0;
+    /* A spanned zip states a part COUNT and no size: "about 4194251K still
+     * to read" was this subtracting from UNC_SIZE_UNKNOWN (measured, the
+     * part dialog on System 6.0.8 and 7.0.1; the old alert built the same
+     * message). Nothing is said instead. */
+    if (h->desc.total == UNC_SIZE_UNKNOWN) return 0;
     for (p = 1; p <= kSegMaxKnown; p++) seen += h->psize[p];
     return seen < h->desc.total ? h->desc.total - seen : 0;
 }
@@ -3835,6 +3599,7 @@ static short SegDriveOfFile(short ref)
  * is "0 if no disk in drive; 1 or 2 if disk in drive; 8 if nonejectable
  * disk in drive; $FC-$FF if disk was ejected within last 1.5 seconds;
  * $48 if disk in drive is nonejectable but driver wants a call". */
+static void SegCopyIn(SegHost *h, int part);
 static int SegEjectPrevious(SegHost *h, int part)
 {
     DrvQEl *q;
@@ -3842,8 +3607,12 @@ static int SegEjectPrevious(SegHost *h, int part)
     short drive;
     unsigned char f;
 
-    if (part < 2 || !h->loc[part - 1].name[0]) return 0;
-    drive = SegDriveOf(h->loc[part - 1].vRefNum);
+    /* The disk the part read LAST came off, whatever its number: a Compact
+     * Pro or spanned zip set reads its last part first, for the directory,
+     * and then asks for part 1 (the LC 475, 2026-10-29). A part copied to
+     * the output volume (SegCopyIn) still came off that floppy. */
+    (void)part;
+    drive = h->lastDrive;
     if (drive <= 0 || drive == SegDriveOfFile(LMGetCurApRefNum()) ||
         drive == SegDriveOfFile(LMGetSysMap())) return 0;
     for (q = (DrvQEl *)LMGetDrvQHdr().qHead; q; q = (DrvQEl *)q->qLink)
@@ -3862,11 +3631,20 @@ static int SegEjectPrevious(SegHost *h, int part)
      * for again. Both calls take a drive number. */
     { int p;
       for (p = 1; p <= kSegMaxKnown; p++)
-          if (h->loc[p].name[0] && SegDriveOf(h->loc[p].vRefNum) == drive)
-              h->loc[p].name[0] = 0; }
+          if (h->loc[p].name[0] && SegDriveOf(h->loc[p].vRefNum) == drive) {
+              /* A MIME part on it is copied off first, as when it is
+               * needed: the part opened, say 3, is needed last, and the
+               * disk would go in twice (the LC 475, 2026-10-31). */
+              if (h->desc.scheme == UNC_FORMAT_MIMESEG) {
+                  SegCopyIn(h, p);
+                  if (SegDriveOf(h->loc[p].vRefNum) != drive) continue;
+              }
+              h->loc[p].name[0] = 0;
+          }
+      pb.volumeParam.ioNamePtr = NULL;
+      pb.volumeParam.ioVRefNum = drive;
+      (void)PBUnmountVol(&pb); }
     pb.volumeParam.ioNamePtr = NULL;
-    pb.volumeParam.ioVRefNum = drive;
-    (void)PBUnmountVol(&pb);
     pb.volumeParam.ioVRefNum = drive;
     return PBEject(&pb) == noErr;
 }
@@ -3898,107 +3676,320 @@ static void SegStartIn(SegHost *h)
 /* Ask the user to point at part `part`. Returns nonzero once it has been
  * located. The autotest build has no user, so this is not compiled there
  * and a part that was not found beside the archive is simply missing. */
+/* The part is asked for in ONE dialog, Standard File's Open with a
+ * prompt (DLOG/DITL 142, or 143 after an eject; mac/macextract_partdlg.r):
+ * the alert and its Find..., Skip and Cancel go. Cancel means "go on
+ * without this part", which is what Skip did, and the part is not asked
+ * for again: on a set addressed by (part, offset), a spanned zip or
+ * Compact Pro, the other parts still give up their files (measured with
+ * the CLI: 10 of 12 against Cancel's 1); on a joined set Skip and Cancel
+ * gave the same, nothing. Stopping the whole extraction is the progress
+ * window's Cancel, as it always was.
+ *
+ * The disk watch is SegDiskFilter's, unchanged in what it does, as this
+ * dialog's filter: when the disk put in holds the part, it closes the
+ * dialog through Cancel (item 3) and says so in gSegFound. */
+#define kPartDLOG       142
+#define kPartEjectDLOG  143
+static Boolean gSegFound;
+
+/* SegHost's volRef/volDrv: a volume that comes online after the dialog
+ * opened was put in while it was up, whoever took the disk event:
+ * Standard File takes it on System 6.0.8 and 7.0.1 under Mini vMac and
+ * shows the disk (measured), and something else did on the maintainer's
+ * 7.6.1, where the list stayed put. */
+
+/* A disk put in that holds no part this dialog wants goes straight back
+ * out, so that on a one-drive Mac the next one can go in. Never the disk
+ * of this application or of the System (SegEjectPrevious says why). The
+ * parts it did hold are forgotten with it: asked for again when needed. */
+static void SegEjectInserted(SegHost *h, short drive)
+{
+    ParamBlockRec pb;
+    int p;
+    if (drive <= 0 || drive == SegDriveOfFile(LMGetCurApRefNum()) ||
+        drive == SegDriveOfFile(LMGetSysMap())) return;
+    for (p = 1; p <= kSegMaxKnown; p++)
+        if (h->loc[p].name[0] && SegDriveOf(h->loc[p].vRefNum) == drive)
+            h->loc[p].name[0] = 0;
+    SysBeep(1);
+    pb.volumeParam.ioNamePtr = NULL;
+    pb.volumeParam.ioVRefNum = drive;
+    (void)PBUnmountVol(&pb);
+    pb.volumeParam.ioVRefNum = drive;
+    (void)PBEject(&pb);
+    /* The next disk in this drive may be given the same volume reference
+     * number (hypothesis, from a System 6.0.8 run where the next disk went
+     * unscanned), so the number is marked out of its drive and the shown
+     * folder forgotten. */
+    for (p = 0; p < h->volN; p++)
+        if (h->volDrv[p] == drive) h->volDrv[p] = 0;
+    h->shownVol = 0;
+}
+
+
+/* Each online volume that was not online at the last look, by vRefNum and
+ * drive, in turn; 0 when there is none left. Records it as seen. */
+static short SegNextNewVolume(SegHost *h, short *drive)
+{
+    HParamBlockRec pb;
+    short idx, k;
+    long z;
+    for (idx = 1; idx < 64; idx++) {
+        for (z = 0; z < (long)sizeof pb; z++) ((char *)&pb)[z] = 0;
+        pb.volumeParam.ioVolIndex = idx;
+        if (PBHGetVInfoSync(&pb) != noErr) return 0;
+        for (k = 0; k < h->volN; k++)
+            if (h->volRef[k] == pb.volumeParam.ioVRefNum) break;
+        if (pb.volumeParam.ioVDrvInfo <= 0) {                  /* offline */
+            if (k < h->volN) h->volDrv[k] = 0;    /* back online = put in */
+            continue;
+        }
+        if (k < h->volN && h->volDrv[k] == pb.volumeParam.ioVDrvInfo)
+            continue;                                           /* known */
+        if (k == h->volN) {
+            if (h->volN == kSegVols) return 0;
+            h->volN++;
+        }
+        h->volRef[k] = pb.volumeParam.ioVRefNum;
+        h->volDrv[k] = pb.volumeParam.ioVDrvInfo;
+        *drive = pb.volumeParam.ioVDrvInfo;
+        return pb.volumeParam.ioVRefNum;
+    }
+    return 0;
+}
+
+/* Called when the dialog opens: every volume online now is known. An
+ * offline one is not, so it counts as put in when it comes back. */
+static void SegKnowVolumes(SegHost *h)
+{
+    short drive;
+    h->volN = 0;
+    while (SegNextNewVolume(h, &drive) != 0) ;
+}
+
+/* A folder, then its family by name for a name scheme. */
+static void SegScanHere(SegHost *h, short v, long d)
+{
+    SegScanDir(h, v, d);
+    if (SegByName(h)) {
+        Str63 last;
+        SegScanFamily(h, v, d, h->desc.scheme == UNC_FORMAT_SPLIT, last);
+    }
+}
+
+/* Standard File's Open lists invisible items when given no type list
+ * (Desktop DB, Move&Rename; measured on Mac OS 9.2), where its Save dialog,
+ * our destination picker, does not. A folder's frFlags sit where a file's
+ * fdFlags do, so one test hides both, wherever the filter is called. */
+static pascal Boolean HideInvisible(CInfoPBPtr pb)
+{
+    return (pb->hFileInfo.ioFlFndrInfo.fdFlags & fInvisible) != 0;
+}
+
+/* The disks put in since the last look, each scanned; one without the
+ * wanted part goes back out, whatever the scheme. A part renamed on a
+ * floppy is then found only once copied off it (the maintainer's call,
+ * 2026-10-31: one drive, and the disk is out of the way). True if one
+ * was ejected. */
+static Boolean SegTakeNewDisks(SegHost *h)
+{
+    short v, drive;
+    Boolean out = false;
+    while ((v = SegNextNewVolume(h, &drive)) != 0) {
+        SegScanHere(h, v, kSegRootDirID);
+        if (h->loc[gSegWantPart].name[0]) break;
+        SegEjectInserted(h, drive);
+        out = true;
+    }
+    return out;
+}
+
+static pascal Boolean SegPartFilter(DialogPtr dlg, EventRecord *evt,
+                                    short *itemHit)
+{
+    EventRecord de;
+    SegHost *h = gSegAsking;
+    StackSample();
+    /* Back in front: drawn whole, not just where the System thinks it was
+     * covered (the maintainer's LC 475, 2026-10-31: after clicks in the
+     * Finder, the buttons came back part-erased). */
+    if (evt->what == osEvt &&
+        (evt->message & 0xFF000000) == SUSPENDRESUMEBITS &&
+        !(gBackground = (evt->message & RESUME) == 0)) {
+        SetPort((GrafPtr)dlg);
+        InvalRect(&dlg->portRect);
+    }
+    if (h == NULL) return false;
+    /* A disk put in: its event is taken here, at once, which mounts it
+     * before Standard File can switch to it (measured: acting on the event
+     * passed in, or every 30 ticks, came after Standard File had shown the
+     * disk, even one then ejected). */
+    if (GetNextEvent(diskMask, &de))
+        (void)SegTakeNewDisks(h);
+    if (TickCount() < gSegNextPoll) return false;
+    gSegNextPoll = TickCount() + 30;
+    /* The folder Standard File shows is scanned whenever it changes: a part
+     * merely navigated to is found, and so is one on a disk Standard File
+     * switched to by itself. SFSaveDisk and CurDirStore are kept up to
+     * date by 6.0.8 and 9.2; System 3.0 keeps its own copy, so there only
+     * a disk's root is seen. */
+    {
+        short v = -LMGetSFSaveDisk();
+        long d = LMGetCurDirStore();
+        if (v != h->shownVol || d != h->shownDir) {
+            h->shownVol = v;
+            h->shownDir = d;
+            SegScanHere(h, v, d);
+        }
+    }
+    (void)SegTakeNewDisks(h);      /* a disk whose event another took */
+    if (h->loc[gSegWantPart].name[0]) {   /* 1..kSegMaxKnown: seg_need's */
+        gSegFound = true;
+        *itemHit = 3;              /* getCancel: closes the dialog */
+        return true;
+    }
+    return false;
+}
+
 static int SegAskUser(SegHost *h, int part)
 {
     Str255 msg;
-    Str63 left;                  /* " About 12345K still to read." */
+    Str63 left;
     SFReply reply;
     Point where;
-    short hit;
     short savedMask;
-    /* Which alert: the two differ only in their wording, which lives in
-     * the DITLs so that neither costs the A5 world a byte. */
-    short alrt = SegEjectPrevious(h, part) ? kSegEjectALRT : kSegALRT;
+    short dlg = SegEjectPrevious(h, part) ? kPartEjectDLOG : kPartDLOG;
+
+    WaitForFront();
 
     for (;;) {
         msg[0] = 0;
         PStrCat(msg, S_SEG_PART);
         PStrCatNum(msg, (long)part);
         PStrCat(msg, S_SEG_OF);
-        { short i; for (i = 0; i < (short)h->desc.name_len && msg[0] < 200; i++)
-                       msg[++msg[0]] = h->desc.name[i]; }
+        /* The set's own name; a spanned zip states none, and then it is
+         * the name of the file that was opened ("" before). */
+        {   const unsigned char *nm = h->desc.name;
+            short n = (short)h->desc.name_len, i;
+            if (!n) { nm = h->opened + 1; n = h->opened[0]; }
+            for (i = 0; i < n && msg[0] < 200; i++) msg[++msg[0]] = nm[i];
+        }
         PStrCat(msg, S_SEG_CLOSE_QUOTE);
         left[0] = 0;
-        SegCatRemaining(left, SegRemaining(h));     /* 30 bytes at most */
+        if (h->askLast) {          /* a split's next part, maybe none */
+            PStrCat(left, S_SEG_NO_PART);
+            PStrCatNum(left, (long)part);
+            PStrCat(left, S_SEG_NO_PART_END);
+        } else
+            SegCatRemaining(left, SegRemaining(h));
         ParamText(msg, left, "\p", "\p");
 
         if (h->hide) HideWindow((WindowPtr)h->hide);
         gSegAsking = h;
         gSegWantPart = part;
-        /* Disk-inserted events reach the queue only if the system event
-         * mask lets them; saved and put back rather than restored to an
-         * assumed default, because the default is not ours to know. */
+        gSegFound = false;
+        h->shownVol = 0;
+        h->shownDir = -1;
+        SegKnowVolumes(h);
         savedMask = LMGetSysEvtMask();
         LMSetSysEvtMask(savedMask | diskMask);
         gSegNextPoll = 0;
-        ContigSample();
-        hit = CautionAlert(alrt, NewModalFilterUPP(SegDiskFilter));
+        SetPt(&where, 90, 90);
+        reply.good = false;
+        SegStartIn(h);
+        SFPGetFile(where, "\p", NewFileFilterUPP(HideInvisible), -1, NULL,
+                   NULL, &reply, dlg, NewModalFilterUPP(SegPartFilter));
         LMSetSysEvtMask(savedMask);
         gSegAsking = NULL;
         h->asked = 1;
 
-        /* The filter found it on a disk that was put in while the alert
-         * was up; nothing was clicked. */
-        if (hit == kSegDiskItem) {
-            if (h->hide) ShowWindow((WindowPtr)h->hide);
-            return 1;
+        if (gSegFound) break;      /* the disk put in had it */
+        if (!reply.good) {         /* Cancel: go on without this part */
+            h->skipped[part] = 1;
+            gSegShort = true;
+            break;
         }
-
-        if (hit == kSegFindItem) {
-            SetPt(&where, 90, 90);
-            reply.good = false;
-            SegStartIn(h);
-    #ifdef UNC_AT_STACK
-        SFPGetFile(where, "\p", NULL, -1, NULL, NewDlgHookProc(SFHook),
-                   &reply, getDlgID, NULL);
-#else
-        SFGetFile(where, "\p", NULL, -1, NULL, NULL, &reply);
-#endif
-            if (reply.good) {
-                int got;
-                /* A spanned zip part and a split part cannot prove
-                 * which part they are, so an offer of one is taken at
-                 * face value and the engine's check on the assembled
-                 * set is what catches a wrong file. Said out loud,
-                 * because everywhere else here a part is verified
-                 * before it is used. */
-                if (h->desc.scheme == UNC_FORMAT_ZIPSEG ||
-                    h->desc.scheme == UNC_FORMAT_SPLIT)
-                    got = part;
-                else
-                    got = SegPartOf(h, reply.vRefNum, 0, reply.fName);
-                if (got == part) {
-                    SegRemember(h, part, reply.vRefNum, 0, reply.fName);
-                    /* The rest of the set is often beside it. */
-                    SegScanDir(h, reply.vRefNum, 0);
-                    if (h->hide) ShowWindow((WindowPtr)h->hide);
-                    return 1;
-                }
-                if (got) {
-                    Str255 s;
-                    s[0] = 0;
-                    PStrCat(s, S_SEG_OTHER_PART);
-                    PStrCatNum(s, (long)got);
-                    PStrCat(s, S_SEG_OTHER_SAME);
-                    PStrCatNum(s, (long)part);
-                    PStrCat(s, S_SEG_OTHER_NEEDED);
-                    ShowNote(kErrorALRT, s);
-                    /* Keep it: a later part will want it. */
-                    SegRemember(h, got, reply.vRefNum, 0, reply.fName);
-                } else {
-                    ShowNote(kErrorALRT,
-                             "\p" S_SEG_NOT_PART);
-                }
+        {
+            int got = SegByName(h) ? part
+                    : SegPartOf(h, reply.vRefNum, 0, reply.fName);
+            if (got == part) {
+                SegRemember(h, part, reply.vRefNum, 0, reply.fName);
+                SegScanDir(h, reply.vRefNum, 0);
+                break;
             }
-            continue;             /* ask again */
+            if (got) {
+                Str255 t;
+                t[0] = 0;
+                PStrCat(t, S_SEG_THAT_PART);
+                PStrCatNum(t, (long)got);
+                PStrCat(t, S_SEG_NOT_PART_N);
+                PStrCatNum(t, (long)part);
+                PStrCat(t, ".");
+                ShowNote(kErrorALRT, t);
+                SegRemember(h, got, reply.vRefNum, 0, reply.fName);
+            } else {
+                ShowNote(kErrorALRT, "\p" S_SEG_NOT_PART);
+            }
         }
-
-        if (hit == kSegCancelItem) h->cancelled = 1;
-        if (h->hide) ShowWindow((WindowPtr)h->hide);
-        return 0;                 /* Skip or Cancel */
     }
+    if (h->hide) ShowWindow((WindowPtr)h->hide);
+    return h->loc[part].name[0] != 0;
 }
 #endif  /* !UNC_MAC_AUTOTEST */
+
+#ifdef UNC_SHELL_IMAGES
+/* The setup is an image (ovl_segsetup.c); this is what it calls back. */
+static const SegSetupFns gSegSetupFns = {
+    MyOpenFork, MyHDelete, FSClose, GetEOF, FSWrite, FlushVol,
+    SegTmpOpen, SegRemember, SegScanDir, SegScanFamily, SegPartLength,
+    SegPartOf, unc_sniff_envelope, unc_format_is_envelope, unc_extract_as,
+    unc_segment_describe, unc_segment_match,
+    fio_read, fio_seek, fio_tell, fio_size
+};
+#else
+#define SS(f) f
+#include "seg_setup.inc.c"
+#endif
+
+/* A message/partial set is read three times over (fmt_mime.c: the walk,
+ * each entry's sizing pass, its writing pass), which on floppies is
+ * every disk three times. So a part on another disk than the output is
+ * copied beside the output the first time it is needed, as an envelope's
+ * part is (SegWrappedPartOf), and read from there; SegPeelClean removes
+ * it. A copy that fails is deleted, and the part is read where it is. */
+static void SegCopyIn(SegHost *h, int part)
+{
+    SegLoc *l = &h->loc[part];
+    Str255 tmp;
+    short in, out, drive = l->drive;
+    long n;
+    OSErr e;
+    Ptr buf;
+
+    if (drive <= 0 || SegDriveOf(l->vRefNum) == SegDriveOf(h->tmpVol))
+        return;
+    if (MyOpenFork(l->vRefNum, l->dirID, l->name, fsRdPerm, 0, &in) != noErr)
+        return;
+    if ((buf = NewPtr(1024)) != NULL && SegTmpOpen(h, part, tmp, &out)) {
+        do {
+            n = 1024;
+            e = FSRead(in, &n, buf);
+            if (n > 0 && FSWrite(out, &n, buf) != noErr) e = ioErr;
+        } while (e == noErr);
+        FSClose(out);
+        if (e == eofErr) {
+            FlushVol(NULL, h->tmpVol);
+            l->name[0] = 0;
+            SegRemember(h, part, h->tmpVol, h->tmpDir, tmp);
+            l->drive = drive;            /* still the floppy it came off */
+            h->peeled = 1;
+        } else
+            MyHDelete(h->tmpVol, h->tmpDir, tmp);
+    }
+    if (buf) DisposePtr(buf);
+    FSClose(in);
+}
 
 static int seg_need(void *ctx, const UncSegmentDesc *desc, int part, UncIO *io)
 {
@@ -4009,10 +4000,47 @@ static int seg_need(void *ctx, const UncSegmentDesc *desc, int part, UncIO *io)
 
     if (part < 1 || part > kSegMaxKnown) return UNC_ERR_SEGMENTED;
 #ifndef UNC_MAC_AUTOTEST
-    if (!h->loc[part].name[0] && !h->cancelled) SegAskUser(h, part);
+    /* A part remembered on a disk that has since left its drive (ejected,
+     * still mounted) is forgotten, so this dialog asks for it rather than
+     * the System's alert, which names a disk and whose Cancel fails the
+     * read. A server volume never had a drive and is left alone. */
+    {   SegLoc *l = &h->loc[part];
+        /* An open-ended split (nparts 0): nothing says how many parts
+         * there are, so whether to ask for one not found by name is
+         * decided here, as the joiner reaches it. Below the highest
+         * number seen, it is a gap and missing. Past it, the set may go
+         * on after .001, or after a part as long as the one before it (a
+         * cutter cuts fixed pieces and the remainder goes last): then it
+         * is asked for, and Cancel says the set ends there. After a
+         * shorter part it ends without a question. */
+        Boolean split = h->desc.scheme == UNC_FORMAT_SPLIT &&
+                        h->desc.nparts == 0;
+        Boolean open = split && part > h->highest;
+        if (l->name[0] && l->drive > 0 && SegDriveOf(l->vRefNum) == 0)
+            l->name[0] = 0;
+        if (!l->name[0] && !h->cancelled) {
+            if (open && (h->skipped[part] || !(part == 2 ||
+                    SegPartLength(h, part - 1) == SegPartLength(h, part - 2))))
+                return UNC_SEG_ENDS;
+            if (!h->skipped[part]) {
+                h->askLast = open;
+                SegAskUser(h, part);
+                h->askLast = 0;
+                if (open && !h->cancelled && !l->name[0]) return UNC_SEG_ENDS;
+                if (split && l->name[0]) {     /* and its neighbours by name */
+                    Str63 last;
+                    SegScanFamily(h, l->vRefNum, l->dirID, 1, last);
+                }
+            }
+        }
+    }
     if (h->cancelled) return UNC_ERR_ABORTED;
 #endif
-    if (!h->loc[part].name[0]) return UNC_ERR_SEGMENTED;
+    if (!h->loc[part].name[0]) {
+        gSegShort = true;
+        return UNC_ERR_SEGMENTED;
+    }
+    if (h->desc.scheme == UNC_FORMAT_MIMESEG) SegCopyIn(h, part);
 
     /* A fat installer's part 1 goes on past its segment, and its resource
      * fork says where the segment stops (unc_segment_first_end): for part
@@ -4049,9 +4077,25 @@ static int seg_need(void *ctx, const UncSegmentDesc *desc, int part, UncIO *io)
     /* What this part contributes to the whole, for the "still to read"
      * line in the alert. Every part carries the same header, which is
      * not payload. */
+    h->lastDrive = h->loc[part].drive;
     h->psize[part] = h->fio.size > h->desc.head_len
                    ? h->fio.size - h->desc.head_len : 0;
     return UNC_OK;
+}
+
+/* A part's size, for the progress bar's total only (macextract.h,
+ * UncVolumeSource.size): the length recorded when the part was found,
+ * else unknown. Never by looking, as a disk that is out would be asked
+ * for. Without this the bar of a spanned zip or a Compact Pro set never
+ * had a total, from a hard disk or from floppies (the LC 475,
+ * 2026-10-30); the joiner estimates the parts not seen yet. */
+static uint32_t seg_part_size(void *ctx, const UncSegmentDesc *desc, int part)
+{
+    SegHost *h = (SegHost *)ctx;
+    (void)desc;
+    if (part < 1 || part > kSegMaxKnown || !h->plen[part])
+        return UNC_SIZE_UNKNOWN;
+    return h->plen[part];
 }
 
 static void seg_release(void *ctx, UncIO *io)
@@ -4179,6 +4223,7 @@ static int MacAskPassword(void *ctx, uint8_t *buf, uint16_t cap,
     PStrCat(msg, S_PASS_ENTER_END);
     ParamText(msg, attempt > 0 ? "\p" S_PASS_REFUSED : "\p", "\p", "\p");
 
+    WaitForFront();
     if (ph->hide) HideWindow(ph->hide);
     ContigSample();
     dlg = GetNewDialog(kPassDLOG, NULL, (WindowPtr)-1);
@@ -4271,6 +4316,21 @@ static short gDestVol;
 static Point gDestWhere;
 static void ProgOpen(Progress *pr, ConstStr255Param name);
 
+#ifdef UNC_SHELL_IMAGES
+/* The destination dialog, with a New Folder button on every System, is
+ * the image OVL_ID_DESTDLG (tools/overlay/ovl_destdlg.c), run from the
+ * bundle and given back with it, so none of it is resident while the engine
+ * extracts. Only the eager lifetime keeps the bundle until after the
+ * dialog. */
+#include "ovl_load.h"
+static void DestIconLoad(void)
+{
+    OverlayEntry e = ovl_image(OVL_ID_DESTDLG);
+    if (e) e(NULL, OVL_DEST_LOADICON, NULL, NULL);
+}
+#endif
+
+
 static int AskDest(short *vol)
 {
     SFReply dest;
@@ -4302,6 +4362,20 @@ static int AskDest(short *vol)
      * "Extract the files into this folder:" was photographed on
      * System 6 rendering as "Extract the files into this", with
      * the word that carried the meaning cut off. */
+#ifdef UNC_SHELL_IMAGES
+    {
+        OverlayEntry e = ovl_image(OVL_ID_DESTDLG);
+        if (e) {
+            OvlDestArgs a;
+            a.v = gDestWhere.v;
+            a.h = gDestWhere.h;
+            if (!e(NULL, OVL_DEST_ASK, &a, NULL)) return 0;
+            *vol = a.vol;
+            return 1;
+        }
+    }
+    /* No image (the bundle could not be read): the dialog without New. */
+#endif
     SFPutFile(gDestWhere, "\p" S_SF_DEST_PROMPT,
               "\p" S_SF_DEST_NAME, NULL, &dest);
     if (!dest.good) return 0;
@@ -4450,132 +4524,43 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
             }
             { long z; for (z = 0; z < (long)sizeof(SegHost); z++)
                           ((char *)sh)[z] = 0; }
-            if (famSplit || famZip) {
-                short i;
-                Str63 lastName;
-                for (i = 0; i < famStemLen; i++) sh->stem[i] = famStem[i];
-                sh->stemlen = famStemLen;
-                SegScanFamily(sh, inVol, inDir, famSplit, lastName);
-                if (famZip) {
-                    /* Only the ".zip" member carries the part count, so
-                     * it has to be read before anything else can be. */
-                    if (!lastName[0] ||
-                        !SegDescribeLast(sh, inVol, inDir, lastName)) {
-                        DisposePtr((Ptr)sh);
-                        DisposePtr(segScratch);
-                        FSClose(refNum);
-                        return UNC_ERR_SEGMENTED;
-                    }
-                } else {
-                    /* Nothing in a split says anything, so the whole
-                     * descriptor is built here: the set is the
-                     * consecutive run of NAME.NNN, the joined file is
-                     * called NAME, and its length is the sum of the
-                     * parts' — which is why every one is measured now
-                     * rather than disk by disk. */
-                    int p, run = 0;
-                    uint32_t total = 0;
-                    long z;
-                    for (z = 0; z < (long)sizeof sh->desc; z++)
-                        ((char *)&sh->desc)[z] = 0;
-                    sh->desc.scheme = UNC_FORMAT_SPLIT;
-                    sh->desc.part = 1;
-                    sh->desc.head_len = 0;
-                    for (i = 0; i < famStemLen && i < UNC_NAME_MAX; i++)
-                        sh->desc.name[i] = famStem[i];
-                    sh->desc.name[i] = 0;
-                    sh->desc.name_len = (uint16_t)i;
-                    while (run < kSegMaxKnown && sh->loc[run + 1].name[0])
-                        run++;
-                    if (run < 1 || run < sh->highest) {
-                        /* A member numbered past the end of the run says
-                         * the gap is a missing part, not the end. */
-                        DisposePtr((Ptr)sh);
-                        DisposePtr(segScratch);
-                        FSClose(refNum);
-                        return UNC_ERR_SEGMENTED;
-                    }
-                    for (p = 1; p <= run; p++) {
-                        uint32_t len = SegPartLength(sh, p);
-                        if (len == UNC_SIZE_UNKNOWN) { total = UNC_SIZE_UNKNOWN; break; }
-                        total += len;
-                    }
-                    if (total == UNC_SIZE_UNKNOWN) {
-                        DisposePtr((Ptr)sh);
-                        DisposePtr(segScratch);
-                        FSClose(refNum);
-                        return UNC_ERR_SEGMENTED;
-                    }
-                    sh->desc.nparts = (uint16_t)run;
-                    sh->desc.total = total;
-                    sh->desc.data_size = total;
+            { short i; for (i = 0; i <= (short)name[0] && i < 64; i++)
+                           sh->opened[i] = name[i]; }
+            {   SegSetupArgs sa;
+                int r;
+                sa.sh = sh;
+                sa.desc = &desc;
+                sa.name = name;
+                sa.famStem = famStem;
+                sa.famStemLen = famStemLen;
+                sa.famSplit = famSplit;
+                sa.famZip = famZip;
+                sa.inVol = inVol;
+                sa.inDir = inDir;
+                sa.origVol = origVol;
+                sa.origDir = origDir;
+                sa.outVol = outVol;
+                sa.outDir = outDir;
+                /* The file opened came off this disk: it is the one ejected
+                 * at the first ask, before any part is read (a MIME set
+                 * opened from part 3 asks for part 1 first; the LC 475,
+                 * 2026-10-31). */
+                sh->lastDrive = SegDriveOf(origVol);
+#ifdef UNC_SHELL_IMAGES
+                /* The setup is read from the bundle at launch and given
+                 * back with it before the budget (ovl_segsetup.c). */
+                {   OverlayEntry e = ovl_image(OVL_ID_SEGSETUP);
+                    r = e ? (int)e(NULL, OVL_SEGSETUP_RUN, &sa,
+                                   (void *)&gSegSetupFns) : UNC_ERR_MEM; }
+#else
+                r = SegSetup(&sa);
+#endif
+                if (r != UNC_OK) {
+                    DisposePtr((Ptr)sh);
+                    DisposePtr(segScratch);
+                    FSClose(refNum);
+                    return r;
                 }
-            } else {
-            sh->desc = desc;
-            /* A `SPLT` set stores no name for the file it joins into.
-             * The opened part's is all there is, minus the ".N" that
-             * numbers it — for the output file, never for matching:
-             * the parts are found by content like a StuffIt set's. */
-            if (desc.scheme == UNC_FORMAT_DDSEG ||
-                desc.scheme == UNC_FORMAT_MIMESEG) {
-                short n = name[0], d, i;
-                if (n > UNC_NAME_MAX) n = UNC_NAME_MAX;
-                d = n;
-                while (d >= 1 && name[d] >= '0' && name[d] <= '9') d--;
-                if (d < n && d >= 2 && name[d] == '.') n = (short)(d - 1);
-                for (i = 0; i < n; i++) sh->desc.name[i] = name[i + 1];
-                sh->desc.name[n] = 0;
-                sh->desc.name_len = (uint16_t)n;
-            }
-            sh->tmpVol = outVol;
-            sh->tmpDir = outDir;
-            /* The file we were opened on is a part, at the number its
-             * own header states — so opening part 3 of a set works. */
-            SegRemember(sh, (int)sh->desc.part, inVol, inDir, name);
-            SegScanDir(sh, inVol, inDir);
-            /* A part that arrived wrapped was unwrapped into the OUTPUT
-             * folder, so the rest of the set is not there: it is still
-             * where the user left it. */
-            if (origVol != inVol || origDir != inDir)
-                SegScanDir(sh, origVol, origDir);
-            /* Only now, and only if something is still missing, is it
-             * worth taking envelopes off to look — which is how a real
-             * download arrives, and also how a half-unstuffed one does.
-             * A complete set opens nothing beside it. */
-            if (sh->desc.scheme == UNC_FORMAT_SITSEG && !SegHaveAll(sh)) {
-                UncAlloc pal;
-                pal.ctx = NULL;
-                pal.alloc = peek_alloc;
-                pal.free = peek_free;
-                if (origVol != inVol || origDir != inDir)
-                    SegScanWrapped(sh, origVol, origDir, &pal);
-                SegScanWrapped(sh, inVol, inDir, &pal);
-            }
-            /* A message/partial set is required to state its part
-             * count only on the LAST part (RFC 2046 5.2.2), so a set
-             * opened anywhere else asks the parts it found — the same
-             * question SegFindLast answers for Compact Pro, and the
-             * same answer: the desc of whichever part knows. */
-            if (sh->desc.nparts == 0 &&
-                sh->desc.scheme == UNC_FORMAT_MIMESEG)
-                SegFindLast(sh);
-            /* A Compact Pro set opened anywhere but its last segment
-             * does not yet know how many segments it has. */
-            if (sh->desc.nparts == 0 &&
-                sh->desc.scheme == UNC_FORMAT_CPTSEG) {
-                SegFindLast(sh);
-                if (sh->desc.nparts) {
-                    /* With a count in hand the match rule is stricter —
-                     * a middle segment must not carry an index and the
-                     * last one must — so everything found under the
-                     * looser one is looked at again. Two bytes of
-                     * identity is not much to let a file in on. */
-                    long z;
-                    for (z = 0; z < (long)sizeof sh->loc; z++)
-                        ((char *)sh->loc)[z] = 0;
-                    SegScanDir(sh, inVol, inDir);
-                }
-            }
             }
         }
     }
@@ -4741,6 +4726,7 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
         vs.ctx = sh;
         vs.need = seg_need;
         vs.release = seg_release;
+        vs.size = seg_part_size;
 #ifdef UNC_AT_OVERLAY
         /* The other release site. A segmented set never came through here
          * until 2026-09-02, so the bundle was read at launch and held for the
@@ -5951,8 +5937,56 @@ int main(void)
 /* ================================================================== */
 #if !defined(UNC_SINK_TEST) && !defined(UNC_MAC_AUTOTEST)
 
+/* Before a dialog that needs the user: if this application is in the
+ * background, a notification (a mark in the Application menu, the alert
+ * sound, and the System's alert saying so) and nothing else until the
+ * user brings it forward. Apple's rule for a background application
+ * (Inside Macintosh: Processes, Notification Manager). qType 8 is nmType,
+ * the one value NMInstall accepts. If it cannot be posted, the dialog
+ * comes up anyway, as it always did. */
+static void WaitForFront(void)
+{
+    NMRec nm;
+    EventRecord ev;
+    long z;
+    Boolean posted = false;
+
+    /* The events waiting are read first, until none is left: a click in
+     * the Finder since the last progress pump becomes the suspend event
+     * here, never after the dialog has opened behind it (measured on Mac
+     * OS 9.2: a dialog opened in the background stays blank and deaf even
+     * once brought forward). Applications switch only inside an event
+     * call, so none can happen between this loop and the dialog's own. */
+    for (;;) {
+        SystemTask();
+        if (GetNextEvent(everyEvent, &ev)) {
+            if (ev.what == osEvt &&
+                (ev.message & 0xFF000000) == SUSPENDRESUMEBITS)
+                gBackground = (ev.message & RESUME) == 0;
+            else if (IsDialogEvent(&ev)) {  /* the progress window's updates */
+                DialogPtr d;
+                short i;
+                (void)DialogSelect(&ev, &d, &i);
+            }
+            continue;
+        }
+        if (!gBackground) break;
+        if (!posted) {
+            for (z = 0; z < (long)sizeof nm; z++) ((char *)&nm)[z] = 0;
+            nm.qType = 8;
+            nm.nmMark = 1;
+            nm.nmSound = (Handle)-1;
+            nm.nmStr = (StringPtr)"\p" S_NM_ATTENTION;
+            if (NMInstall(&nm) != noErr) return;
+            posted = true;
+        }
+    }
+    if (posted) NMRemove(&nm);
+}
+
 static void ShowNote(short alrtID, const unsigned char *msg)
 {
+    WaitForFront();
     ParamText(msg, "\p", "\p", "\p");
     ContigSample();
     NoteAlert(alrtID, NULL);
@@ -6298,6 +6332,7 @@ static void ShowReport(const unsigned char *outcome)
     ModalFilterUPP filter;
 
     BlockMoveData(outcome, gRepOutcome, outcome[0] + 1);
+    WaitForFront();
     ContigSample();
     dlg = GetNewDialog(kReportDLOG, NULL, (WindowPtr)-1);
     if (!dlg) {                       /* no room for it: the line still gets said */
@@ -6363,7 +6398,6 @@ static void ProgOpen(Progress *pr, ConstStr255Param name)
                       (Handle)NewUserItemUPP(BarUserItem), &box);
 
         s[0] = 0;
-        PStrCat(s, S_PROG_EXTRACTING);
         { short i; for (i = 1; i <= (short)name[0] && s[0] < 255; i++)
                        s[++s[0]] = name[i]; }
         GetDialogItem(pr->dlg, kStatusItem, &kind, &h, &box);
@@ -6436,6 +6470,7 @@ static void ExtractOne(short vRefNum, long dirID, ConstStr255Param name,
         gVetoed = 0;
         gShortBy = 0;
         gShortPiece = 0;
+        gSegShort = false;
 
         for (depth = 0; depth < 8; depth++) {
             /* Each layer counts its own bytes from zero, so the rate is
@@ -6535,7 +6570,9 @@ static void ExtractOne(short vRefNum, long dirID, ConstStr255Param name,
         PStrCat(outcome, S_OUT_CANCELLED);
         alrt = kDoneALRT;
     }
-    else if (ret == UNC_ERR_SEGMENTED)
+    else if (ret == UNC_ERR_SEGMENTED
+             || (gSegShort && (ret != UNC_OK || errors > 0))
+             )
         /* A part of a segmented set was never located. Whatever the parts
          * on hand did decode has been written and is worth saying so. */
         PStrCat(outcome, S_OUT_MORE_PARTS);
@@ -6613,6 +6650,10 @@ static void ExtractOne(short vRefNum, long dirID, ConstStr255Param name,
     else {
         PStrCat(outcome, S_OUT_COMPLETE);
         alrt = kDoneALRT;
+        /* A run with nothing to report says nothing. The report
+         * window, with its listing, still ends any run that has a line in
+         * it; only the plain "Extraction complete." alert goes. */
+        if (!gRepN) return;
     }
 
 #ifdef UNC_AT_STACK
@@ -6981,6 +7022,9 @@ int main(void)
      * worth asking of every launch-time call. */
     { extern void ovl_preload(void); ovl_preload(); }
 #endif
+#ifdef UNC_SHELL_IMAGES
+    DestIconLoad();             /* the Finder file is on the startup disk */
+#endif
     FlushEvents(everyEvent, 0);
 
     DropInit();
@@ -7025,7 +7069,8 @@ int main(void)
             SFPGetFile(where, "\p", NULL, -1, NULL, NewDlgHookProc(SFHook),
                        &reply, getDlgID, NULL);
 #else
-            SFGetFile(where, "\p", NULL, -1, NULL, NULL, &reply);
+            SFGetFile(where, "\p", NewFileFilterUPP(HideInvisible), -1, NULL,
+                      NULL, &reply);
 #endif
             if (!reply.good) break;
         }
@@ -7062,6 +7107,9 @@ int main(void)
                   if (ovl_reload()) {
 #ifdef UNC_AT_HEAPLOG
                       HeapLog("after-reload");
+#endif
+#ifdef UNC_SHELL_IMAGES
+                      DestIconLoad();     /* the reload started it afresh */
 #endif
                       continue;
                   }

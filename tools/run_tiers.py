@@ -199,10 +199,14 @@ REPO = os.path.dirname(HERE)
 # **-144 more each the same day, DERIVED**: the review before v0.44.0
 # (DECISIONS.md 2026-10-25, *the review before the release*), the
 # control's CODE +120 and A5 +24; OVL_SAVED +144 offsets it.
+# **-2,480 more each 2026-11-02, DERIVED**: v0.45.0, the dialogs
+# (DECISIONS.md 2026-11-02, *the dialogs that became the application*),
+# the control's CODE +2,416 and A5 +64; OVL_SAVED +1,888 offsets all but
+# the shipped pair's 592.
 TIERS = {
-    "sys3-512K": (198926, "System 3.0, Macintosh 512Ke (222,070 B free)"),
-    "sys6-512K": (103544, "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
-    "floor-1M":  (627832, "System 6.0.8, 1 MB Mac Plus — the floor target"),
+    "sys3-512K": (196446, "System 3.0, Macintosh 512Ke (222,070 B free)"),
+    "sys6-512K": (101064, "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
+    "floor-1M":  (625352, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
 # **-592 more each 2026-10-24, DERIVED**: SUMacC's `.dl`, the control's
 # CODE +584 and A5 +8 (DECISIONS.md 2026-10-24, *the format before
@@ -406,7 +410,8 @@ TIERS = {
 # data + bss -680. The machine gave +4,204, because the jump table, the
 # stub segments and the relocations trimmed at launch are resident bytes
 # this unit never counted — which is why TIERS was measured, not moved.
-TIERS_CONTROL = 214208     # build/mac-resident, CODE + A5, 2026-10-25
+TIERS_CONTROL = 216688     # build/mac-resident, CODE + A5, 2026-11-02
+# +2,480 on 2026-11-02: v0.45.0, the dialogs; TIERS above -2,480.
 # +144 on 2026-10-25: the review before v0.44.0; TIERS above -144.
 # +352 on 2026-10-22: the eleven malformed-input fixes, every decoder linked
 # in; TIERS above drops 352 to match (TIERS_MACHINE, physical RAM, unmoved).
@@ -523,6 +528,8 @@ SHORT = re.compile(r"at least (\d+) bytes more memory")
 # puts `derived-DD_Expand.sea` 436 B short, where it had 268 B to spare.
 # The shipped lanes do not move: the material is all in `ovl_stuffit`
 # (DECISIONS.md 2026-10-11, *the constant was a square*).
+# 64 -> 63 at sys6-512K on 2026-11-02, DERIVED: `derived-PuzzleGetter_0.8.sit`
+# (below).
 EXPECT = {
     "floor-1M": (),
     "sys3-512K": ("derived-Cool_Tools__.sit",
@@ -532,6 +539,14 @@ EXPECT = {
                   "derived-Expand_Now_1.0.1.sea",
                   "derived-LHA_Expander_1.0.3.sea",
                   "derived-Library_ISBN_Barcoder.sit",
+                  # Joined 2026-11-02, DERIVED: the control's +2,480 B for
+                  # v0.45.0's dialogs leaves 101,064 B, and this one needs
+                  # 101,582 (bisected; the "at least" a refusal prints is
+                  # StuffIt 5's first block, not its need). The engine's
+                  # demand is the same as v0.44.0's to the byte; the
+                  # shipped lane does not move (DECISIONS.md 2026-11-02,
+                  # *the dialogs that became the application*).
+                  "derived-PuzzleGetter_0.8.sit",
                   "derived-Terrainman_2.0__.sea",
                   "derived-Troi-ClipSave-Plug-in1.1.sit",
                   # Joined 2026-10-17: the control grew 4,592 B with the
@@ -850,7 +865,12 @@ EXPECT = {
 # against the shipped pair's 0 (DECISIONS.md 2026-10-25, *the archive Symantec shipped*). TIERS -256.
 # +144 on 2026-10-25: the review before v0.44.0 grows the control's CODE +
 # A5 by 144 and the shipped pair's not at all (CODE +20, A5 -20).
-OVL_SAVED = 159136
+# **+1,888 2026-11-02, -> 161,024**: v0.45.0, the dialogs — the control's
+# +2,480 (CODE +2,416, A5 +64), which links the part dialog and a set's
+# setup in, against the shipped pair's +592 (CODE +428, A5 +164), which
+# runs the setup and the destination dialog as images (DECISIONS.md
+# 2026-11-02, *the dialogs that became the application*). TIERS -2,480.
+OVL_SAVED = 161024
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
 # every kept image is one — as is the bundle an envelope holds on to.
@@ -1000,7 +1020,9 @@ IMAGES = {
     "OVL_ID_SUPERDISK":   6634,
     "OVL_ID_TEXT":        11438,
     "OVL_ID_ZIPOLD":      10832,
-    "OVL_ID_SNIFF":       13220,
+    "OVL_ID_SNIFF":       13392,
+    "OVL_ID_DESTDLG":     1682,
+    "OVL_ID_SEGSETUP":    2364,
 }
 # **ZIPOLD +3,374 B and EXO +972 B, the bundle +4,344 B, 2026-10-17**:
 # Mac OS X's sidecars, the shared code in ZIPOLD and zip's half in EXO,
@@ -1064,7 +1086,13 @@ IMAGES = {
 # **CPTDD +72, EXO +32, SNIFF +12, the bundle +116 B, 2026-10-25**: the
 # review before v0.44.0 — the DiskDoubler walks' forward check, gzip's
 # failed read after a member, the segment probe's part-1 exemption.
-BUNDLE = 184160
+# **SNIFF +172, DESTDLG 1,682 and SEGSETUP 2,364 new, the bundle +4,244 B,
+# 2026-11-02**: v0.45.0 — the envelope-only sniff beside the full one, and
+# the destination dialog and a set's setup as images of their own, in no
+# keep set: released with the rest, kept only by a layer that keeps the
+# whole bundle (DECISIONS.md 2026-11-02, *the dialogs that became the
+# application*).
+BUNDLE = 188404
 
 # What the SHIPPED lane asserts, and it is the refused fixtures BY NAME
 # rather than a tally: a tier that refuses two different fixtures and still

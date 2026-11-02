@@ -1,7 +1,7 @@
 # PROGRESS.md — milestone status
 
 Every milestone is **DONE** and nothing is in flight; the current release is
-v0.44.0. One line each: what it delivered, and where the detail lives. Numbers
+v0.45.0. One line each: what it delivered, and where the detail lives. Numbers
 are in FORMATS.md, reasoning in DECISIONS.md, how a suite runs in TESTING.md,
 what is still missing in OPEN_ITEMS.md. A row is one sentence and a citation.
 
@@ -83,3 +83,4 @@ their tallies are BLOCKERS.md's (*Status*); per-tier tables are FORMATS.md's.
 | M70 Every reader's own Finder info | Each reader delivers what its format holds, StuffIt classic and DiskDoubler what their expanders restore; graded by `tools/run_meta.py`; +1,008 B resident | FORMATS.md (*Finder info in the archive*), DECISIONS.md 2026-10-17 (*the archives' own Finder info*) |
 | M71 Nothing named that is not extracted | Formats only named become `UNC_FORMAT_UNKNOWN`; `tools/run_foreign.py` holds 26 specimens to it; −2,032 B resident | DECISIONS.md 2026-10-18 (*the formats it only named*) |
 | M72 The format before BinHex | SUMacC's `.dl`, byte-exact against hexbin and SUMacC's `fromhex`; +32 B resident | DECISIONS.md 2026-10-24 (*the format before BinHex*) |
+| M73 The dialogs | A destination dialog with New Folder on every System, one dialog for a missing part that ejects a wrong disk, the Finder's progress window, no dialog behind the Finder; +592 B resident, the dialog and a set's setup as images | DECISIONS.md 2026-11-02 (*the dialogs that became the application*) |

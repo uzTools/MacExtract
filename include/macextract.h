@@ -28,7 +28,7 @@ extern "C" {
  * tools/make_dist.sh do now, and tools/check_docs.py fails the build if
  * this, README.md and dist/README.txt disagree. A constant nobody reads
  * is a constant that is wrong. */
-#define UNC_VERSION "0.44.0"
+#define UNC_VERSION "0.45.0"
 
 /* ------------------------------------------------------------------ */
 /* Formats                                                            */
@@ -642,6 +642,14 @@ int unc_resfork_find(const uint8_t *fork, uint32_t forklen,
  * undefined. Returns UNC_FORMAT_UNKNOWN if nothing matches. */
 UncFormat unc_sniff(UncIO *io);
 
+/* The envelope this file would be unwrapped as, or UNC_FORMAT_UNKNOWN:
+ * unc_sniff with only the probes that can answer an envelope format, for
+ * a host asking that of every file in a folder. Every other probe is
+ * skipped, so a file unc_sniff would call something else (a MIME
+ * message, say) may come back as the envelope a later probe sees in it:
+ * unwrapping that finds nothing, at the cost of the attempt. */
+UncFormat unc_sniff_envelope(UncIO *io);
+
 /* Extract (or list/test, per opt) every entry of the archive at io.
  * Per-entry failures are reported through end_entry(status) and do not
  * abort the archive. Returns UNC_OK if the container was walked to the
@@ -795,6 +803,15 @@ typedef struct UncSegmentDesc {
  * for that scheme it can only do by name. */
 int unc_segment_describe(UncIO *io, UncSegmentDesc *desc);
 
+/* The same, trying `scheme` alone: for a host that already knows the set
+ * it is matching candidates against. Every scheme's describe is tried by
+ * unc_segment_describe, and ZIPSEG's reads back from a file's end, which
+ * a folder of ordinary files pays for on every one; a scheme whose parts
+ * unc_segment_match cannot judge (MIMESEG) is checked with this. Returns
+ * UNC_OK, or UNC_ERR_FORMAT, as unc_segment_describe. */
+int unc_segment_describe_as(UncIO *io, UncFormat scheme,
+                            UncSegmentDesc *desc);
+
 /* Test a candidate file's first bytes against a known set. Returns its
  * part number (>= 1) if it belongs, or 0. `len` under UNC_SEG_HEAD
  * always answers 0: a candidate too short to prove itself is not one.
@@ -852,6 +869,14 @@ typedef struct UncVolumeSource {
      * changes. Never answer by opening the part. */
     uint32_t (*size)(void *ctx, const UncSegmentDesc *desc, int part);
 } UncVolumeSource;
+
+/* What need() answers, for an OPEN-ENDED split only (desc->nparts == 0,
+ * which a split otherwise refuses), when part `part` does not exist: the
+ * set ended with the part before it. The joined file is then as long as
+ * what was read, which is not an error. A split states no length, so only
+ * the host can say where it ends, and only when the joiner gets there.
+ * Positive, so that no error code can be mistaken for it. */
+#define UNC_SEG_ENDS 1
 
 /* Joins the parts of `desc` and extracts the result.
  *

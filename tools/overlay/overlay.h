@@ -125,6 +125,13 @@ typedef int32_t (*OverlayEntry)(const OverlayHost *host, int32_t which,
                                     * no keep set: a probe decides which
                                     * image is kept, and is not that image
                                     * (DECISIONS.md 2026-10-21) */
+#define OVL_ID_DESTDLG       145   /* the destination
+                                    * dialog with its New Folder button.
+                                    * Shell code, the only image that calls
+                                    * the Toolbox; run from the bundle
+                                    * before the release, in no keep set */
+#define OVL_ID_SEGSETUP      146   /* a segmented set's
+                                   * setup, before the join (seg_setup.inc.c). */
 #define OVL_IMAGE_MAX         20
 
 #define OVL_SPACESAVER_EXTRACT 30
@@ -154,6 +161,17 @@ typedef int32_t (*OverlayEntry)(const OverlayHost *host, int32_t which,
 #define OVL_ARCHIVE_ENCRYPTED  54  /* unc_archive_encrypted: a = UncIO*, b = the UncFormat */
 #define OVL_MACBINARY_EXTRACT  55
 #define OVL_APPLEDOUBLE_EXTRACT 56
+#define OVL_DEST_LOADICON      57  /* read the New button's folder; launch, and after a reload */
+#define OVL_DEST_ASK           58  /* the destination dialog; a = OvlDestArgs*, returns 1 if chosen */
+#define OVL_SEGSETUP_RUN       59  /* a set's setup; a = SegSetupArgs*, b = SegSetupFns* */
+#define OVL_SNIFF_ENVELOPE     60  /* unc_sniff_envelope: a = UncIO*; returns the UncFormat */
+
+/* OVL_DEST_ASK's argument. Plain integers, so this header needs no Mac
+ * one: `v`/`h` are the dialog's top left, `vol` is the reply's vRefNum. */
+typedef struct {
+    int16_t v, h;
+    int16_t vol;
+} OvlDestArgs;
 
 /* One struct for every entry, because the entry signature is fixed. Fields
  * are named for their role rather than their type so a reader can follow a

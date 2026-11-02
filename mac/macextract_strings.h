@@ -26,7 +26,7 @@
 #define S_MENU_FILE         "File"
 #define S_MENU_QUIT         "Quit"
 
-#define S_ABOUT             "MacExtract 0.44.0"
+#define S_ABOUT             "MacExtract 0.45.0"
 
 #define S_BTN_OK            "OK"
 #define S_BTN_CANCEL        "Cancel"
@@ -34,6 +34,9 @@
 /* The progress window. Its status line is replaced before it is drawn. */
 #define S_PROGRESS_TITLE    "MacExtract"
 #define S_PROGRESS_STATUS   "Extracting"
+/* Rez: the progress window's title, named for the action, as the Finder's
+ * "Copy" and "Move" windows are. */
+#define S_BAR_TITLE         "Extract"
 
 /* The decoders could not be read again for the next archive. */
 #define S_NO_RELOAD         "MacExtract could not get ready for the next " \
@@ -47,6 +50,8 @@
 #define S_SEG_EJECTED       "Please insert the disk containing ^0.^1"
 
 #define S_REPORT_SAVE       "Save as Text\0xC9"
+/* The System's alert when a dialog waits for MacExtract to come forward. */
+#define S_NM_ATTENTION      "MacExtract needs your attention."
 
 /* ---- C: progress window (macextract_mac.c) -------------------------- */
 
@@ -79,7 +84,18 @@
 #define S_SEG_LEFT_ABOUT    " About "
 #define S_SEG_LEFT_K        "K"
 #define S_SEG_LEFT_BYTES    " bytes"
-#define S_SEG_LEFT_END      " still to read."
+#define S_SEG_LEFT_END      " left."
+/* The part dialog. After an eject it says S_SEG_INSERT, else
+ * S_SEG_MISSING; ^1 is " About <n>K left." or, for a plain split's next
+ * part, which may not exist, " No part <N>? Click Cancel." Each fits the
+ * dialog's two lines with a 31-character name (Chicago 12's widths). */
+#define S_SEG_INSERT        "Insert the disk with ^0.^1"
+#define S_SEG_NO_PART       " No part "
+#define S_SEG_NO_PART_END   "? Click Cancel."
+/* Find... picked another part of the set: "That is part <N>, not
+ * part <M>." */
+#define S_SEG_THAT_PART     "That is part "
+#define S_SEG_NOT_PART_N    ", not part "
 /* Find... picked the wrong part: "This is part <N>. Please choose Part <M>." */
 #define S_SEG_OTHER_PART    "This is part "
 #define S_SEG_OTHER_SAME    ". Please choose Part "
@@ -91,6 +107,17 @@
 /* Standard File's prompt does not wrap: about 200 points, then it is cut. */
 #define S_SF_DEST_PROMPT    "Extract into this folder:"
 #define S_SF_DEST_NAME      "Extract here"
+/* Rez: the destination dialog's own layout, and its
+ * New Folder window, whose words are System 7's (DITL -6046). */
+#define S_DEST_PROMPT       "Extract into this folder."
+#define S_DEST_EXTRACT      "Extract"
+#define S_DEST_EJECT        "Eject"
+#define S_DEST_DRIVE        "Drive"         /* System 7 on relabels it Desktop */
+#define S_NF_ASK            "Name of new folder:"
+#define S_NF_UNTITLED       "untitled folder"
+#define S_NF_CREATE         "Create"
+/* C: drawn over the New button (DrawNewButton), not its title */
+#define S_NF_NEW            "New"
 #define S_SF_REPORT_PROMPT  "Save the report as:"
 #define S_SF_REPORT_NAME    "Extraction Report"
 

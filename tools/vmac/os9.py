@@ -712,6 +712,25 @@ def launch_by_keyboard(q, outdir, wait=240.0, cancel=False, click=False,
     q.key("ret")                                 # open the selected archive
     step(sfg, "destination dialog opened", wait)
     dest = shot("14-destination")
+    if os.environ.get("POC_NEWFOLDER"):          # PoC: New, "Games", Create
+        if os.environ.get("POC_CLICKNEW"):       # the pointer, not Cmd-N
+            sys.path.insert(0, HERE)
+            import os9mouse
+            ptr = os9mouse.Pointer(q.burst, lambda t: q.frame(t, outdir))
+            cx, cy = map(int, os.environ.get("POC_CLICKAT", "404,218").split(","))
+            got = ptr.goto(cx, cy)
+            print(f"os9: pointer at {got} for the New button")
+            ptr.press(hold=0.9)
+        else:
+            q.key("meta_l-n")
+        time.sleep(4)
+        shot("14n-name")
+        q.key("shift-g", "a", "m", "e", "s")
+        time.sleep(1)
+        shot("14n-typed")
+        q.key("ret")
+        time.sleep(5)
+        dest = shot("14n-inside")
 
     ptr = None
     if click:
@@ -2189,7 +2208,7 @@ def main():
             ap.error("--autotest runs the autotest build on its own volumes; "
                      "it does not combine with --launch, --hfsplus, either "
                      "cancel route or --encrypted")
-    elif args.defines:
+    elif args.defines and not args.launch:
         ap.error("-D is a build switch for the autotest application, so it "
                  "means nothing without --autotest")
     if (args.cancel or args.cancel_click) and not args.launch:
@@ -2242,7 +2261,7 @@ def main():
     appbin = None
     if not (args.hfsplus or args.autotest):   # both build the autotest app
         from interactive import build_interactive_app
-        appbin = build_interactive_app()
+        appbin = build_interactive_app(tuple(args.defines))
 
     results = []
     for fixture in fixtures:

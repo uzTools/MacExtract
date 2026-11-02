@@ -35,6 +35,8 @@ refusal — the brief has grown before, on request.
 | Compression | not implemented | this is an extractor |
 | Get Info comments on a disk without a Desktop Manager — System 6 and 3.0 volumes (unless AppleShare's Desktop Mgr INIT is installed, DECISIONS.md 2026-10-21), floppies under System 7 | **not written; nothing says so** | the maintainer, 2026-10-17: a second write path on some Systems only (DECISIONS.md 2026-10-17, *the metadata, carried to the disk*) |
 | Extracting onto an MFS disk | **out of scope, decided 2026-10-15; what happens is not documented** | a second write path (DECISIONS.md 2026-10-15, *the File Manager a 64K ROM has*) |
+| Invisible folders in the Open dialogs (`Move&Rename`, `TheVolumeSettingsFolder`) | **listed; invisible files are not** since v0.45.0 | Standard File's Open does not pass folders to the file filter (measured on Mac OS 9.2); only System 7's CustomGetFile does, and one dialog serves every System (DECISIONS.md 2026-11-02, *the dialogs that became the application*) |
+| A split or spanned-zip part renamed on a floppy | **ejected with the wrong disks** since v0.45.0 | the maintainer's call, one drive in mind: found once copied off the floppy (DECISIONS.md 2026-10-31, *the disk Standard File took first*) |
 | Choosing which entries come out, in the Macintosh application | **not implemented; the CLI's `--only` ships** | decided 2026-09-26; branch `selective-extract` kept (DECISIONS.md 2026-09-26, *the feature that was parked, and is now out*) |
 | Hardware decoding — FPU, coprocessor, NuBus card | **not implemented** | every codec is integer work; Arsenic's divides are 0.72 % of a run (DECISIONS.md 2026-09-23, *hardware decoding*) |
 | The Macintosh 512K — 64 KB of ROM | **the interface runs; extraction needs HFS** | since 2026-10-16 it reaches Standard File; only a Hard Disk 20 supplies HFS, not run (FORMATS.md, *A true Macintosh 512K*; MANUAL_TESTS.md §6). A **128K** is out on the heap total (FORMATS.md, *A Macintosh 128K*) |
@@ -206,7 +208,7 @@ costs the engine*).
 | what | resident | what would close it |
 |---|---|---|
 | segment joining: `unc_segment.c`, the five `fmt_*seg.c`, their shared parsers | 6,498 B of code | an image kept by the release for every set scheme; how much can move is not measured |
-| the shell's set code (`SegAskUser`, `SegScanWrapped`, `SegPartOf`, …) | 3,166 B of code | needs Toolbox entries in the host vector first; not priced |
+| the shell's set code (`SegAskUser`, `SegPartOf`, the part dialog's scans) | 3,166 B of code on 2026-10-22, not re-measured since the setup half (`SegScanWrapped` and the rest of `mac/seg_setup.inc.c`) left as `ovl_segsetup` in v0.45.0 | the same table of function pointers the setup image is given (DECISIONS.md 2026-11-02, *the dialogs that became the application*); not priced |
 | the report window's buffers, `gRepBuf` and the row arrays | 8,730 B of bss, 1,568 B of code | a handle grown as lines arrive; `interactive.py` must still read the same box |
 | the overlay shims, `mac/ovl_shim.c` | 2,462 B of code | ~25 dispatchers of one shape; a table might be a third of that |
 | the relocator, `Retro68Relocate` and `Retro68ApplyRelocations` | 1,656 B of code | Elf2Mac places it at the start of `.text`; needs a layout Elf2Mac does not offer |
