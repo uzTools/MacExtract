@@ -54,7 +54,9 @@
 #include <Processes.h>
 #include <SegLoad.h>
 #include <NumberFormatting.h>
+#include <Gestalt.h>
 #include <Traps.h>
+#include <AppleEvents.h>
 
 QDGlobals qd;
 
@@ -267,15 +269,12 @@ static OSErr LaunchIn(short vol, long dir, Str255 name)
     return err;
 }
 
-/* A RUNNING MACEXTRACT. Under MultiFinder or System 7 a _Launch of an
- * application already running only brings it forward, and the documents
- * are lost. The System 6 Finder instead hands a running application its
- * documents as a "puppet string" (Technical Note OV17): MultiFinder picks
- * File > Open... in it and answers the dialog. It does so through
- * MultiFinder's private _OSDispatch calls, read out of the 6.0.8 Finder
- * (6.1.8, CODE 4) and MultiFinder (CODE 2, 'Puppet'); the stub makes the
- * same two, and System 7.0.1's Process Manager answers them too: its own
- * translation of an odoc ends in the same queue (scod -16464 $28A)
+/* MULTIFINDER. Under System 6's MultiFinder a _Launch of an application
+ * already running only brings it forward, and the documents are lost.
+ * The Finder instead hands a running application its documents as a
+ * "puppet string" (Technical Note OV17), through MultiFinder's private
+ * _OSDispatch calls, read out of the System 6.0.8 Finder (6.1.8, CODE 4)
+ * and MultiFinder (CODE 2, 'Puppet'); the stub makes the same two calls
  * (DECISIONS.md 2026-11-01, *the Open item MultiFinder looks for*).
  * Selector 1 lists the processes, 10 bytes each: number, creator, and
  * four bytes the stub does not read (0 on 6.0.8 and 7.0.1, measured).
@@ -286,25 +285,14 @@ static OSErr LaunchIn(short vol, long dir, Str255 name)
  * the high byte with the document's offset in the handle below it, and a
  * last record of `what` $2000. MultiFinder disposes of it once played,
  * so it goes in the system heap: the stub's own heap is gone when it
- * quits. Two conditions, both measured on 7.0.1: the call is made only
- * after the stub's own switch-in has finished (the Process Manager will
- * not start a puppet string while a switch is in progress, scod -16464
- * $5DC), so a second of WaitNextEvent first; and the stub stays a few
- * seconds after, since one that quits at once hands nothing on, while
- * one that makes even one WaitNextEvent call does (measured; why is open,
- * DECISIONS.md, *How long the helper must stay*); hence canBackground in
- * 'SIZE'. */
+ * quits. System 6 only, where there is no Apple Event Manager; under
+ * System 7 and Mac OS 9 the stub posts an odoc instead (Odoc, below):
+ * 7.0.1 plays this string too, but Mac OS 9.2 answers MacExtract's dialog
+ * from somewhere other than the document records, and MacExtract cannot
+ * open what it is given (measured; DECISIONS.md 2026-11-01, *the Open
+ * item MultiFinder looks for*). */
 pascal short MFProcesses(void *list, short max) M68K_INLINE(0x3F3C, 0x0001, 0xA88F);
 pascal void MFPuppet(short process, Handle s, long z1, short z2) M68K_INLINE(0x3F3C, 0x0000, 0xA88F);
-
-static void Settle(long ticks)
-{
-    EventRecord ev;
-    long until = TickCount() + ticks;
-
-    while (TickCount() < until)
-        WaitNextEvent(everyEvent, &ev, 10, NULL);
-}
 
 /* 1 if a running MacExtract was handed the documents. */
 static int Puppet(void)
@@ -313,10 +301,13 @@ static int Puppet(void)
     Handle ap = LMGetAppParmHandle(), h;
     ProcPtr none = NGetTrapAddress(_Unimplemented, kToolboxTrapType);
     short n, i, process = 0;
-    long cnt, size, off;
+    long cnt, size, off, ae;
 
     if (!ap || NGetTrapAddress(0xA88F, kToolboxTrapType) == none)
         return 0;                                   /* no MultiFinder */
+    if (NGetTrapAddress(0xA1AD, kOSTrapType) != none
+        && !Gestalt(gestaltAppleEventsAttr, &ae) && (ae & 1))
+        return 0;                                   /* System 7 or later */
     n = MFProcesses(list, 32);
     for (i = 0; i < n && i < 32; i++) {
         p = list + i * 10;
@@ -346,11 +337,115 @@ static int Puppet(void)
         off += (p[off + 8] + 10) & ~1;
     }
     p[6 + cnt * 16] = 0x20;                         /* `what` $2000: the end */
-    Toolbox();
-    Settle(60);                                     /* the switch-in */
     MFPuppet(process, h, 0, 0);
-    Settle(180);                                    /* and stay */
     return 1;
+}
+
+/* SYSTEM 7. The 7.0.1 Finder hands a running application its documents
+ * by PostHighLevelEvent of an odoc to its process serial number, after
+ * SetFrontProcess (Finder 7.0.1 CODE 160 $644, $8D4; CODE 10 $46A). For a
+ * process with no high-level event port, as MacExtract, the Process
+ * Manager turns the event into a puppet string itself (scod -16462 $1802
+ * picks that path, -16464 $5BC builds it), on two conditions read there
+ * and measured: no process switch in progress (else protocolErr, -603;
+ * a helper just launched is in one, so it lets its own switch finish in
+ * WaitNextEvent first and asks again on -603), and every document an
+ * alias ('alis'; anything else is paramErr, and nothing arrives); and
+ * the stub stays running after posting until the string has played,
+ * which is MacExtract's next event call (one that quits at once hands
+ * nothing on; measured). Mac OS 9.2 takes the same event. The
+ * event goes out as its Process Manager form, the AppParameters block an
+ * odoc coerces to: the EventRecord at +0, refcon +16, length +20, the
+ * message at +24 (the Finder's own call reads the same offsets). AESend
+ * would not do: a sender that is not high-level-event aware may not use
+ * it (noPortErr, -903), and the stub stays unaware so that the Finder
+ * keeps handing it the documents in the Finder information
+ * (DECISIONS.md 2026-11-01, *the Open item MultiFinder looks for*). */
+#define typeAppParameters 'appa'
+/* Retro68's headers lack these. Source: Inside Macintosh — Interapplication
+ * Communication, PostHighLevelEvent's posting options (receiverIDisPSN
+ * $8000, which the 7.0.1 Finder passes) and Processes (protocolErr -603,
+ * which the 7.0.1 Process Manager returns at scod -16464 $5E6). */
+#define receiverIDisPSN 0x8000
+#define protocolErr (-603)
+
+static void Settle(long ticks)
+{
+    EventRecord ev;
+    long until = TickCount() + ticks;
+
+    while (TickCount() < until)
+        WaitNextEvent(everyEvent, &ev, 10, NULL);
+}
+
+/* 1 if a running MacExtract was handed the documents. */
+static int Odoc(void)
+{
+    Handle ap = LMGetAppParmHandle();
+    ProcessSerialNumber psn = { 0, kNoProcess };
+    ProcessInfoRec pi;
+    AEAddressDesc target;
+    AppleEvent ev;
+    AEDescList docs;
+    AEDesc parm;
+    AliasHandle al;
+    FSSpec fs;
+    unsigned char *p, *a;
+    long cnt, i, off, ae;
+    OSErr err;
+    short k;
+
+    if (!ap || NGetTrapAddress(0xA1AD, kOSTrapType)
+               == NGetTrapAddress(_Unimplemented, kToolboxTrapType)
+        || Gestalt(gestaltAppleEventsAttr, &ae) || !(ae & 1))
+        return 0;
+    for (;;) {
+        if (GetNextProcess(&psn)) return 0;         /* not running */
+        pi.processInfoLength = sizeof pi;
+        pi.processName = NULL;
+        pi.processAppSpec = NULL;
+        if (!GetProcessInformation(&psn, &pi) && pi.processSignature == 'MExt')
+            break;
+    }
+    if (AECreateDesc(typeProcessSerialNumber, &psn, sizeof psn, &target)
+        || AECreateAppleEvent(kCoreEventClass, kAEOpenDocuments, &target,
+                              kAutoGenerateReturnID, kAnyTransactionID, &ev)
+        || AECreateList(NULL, 0, false, &docs))
+        return 0;
+    HLock(ap);
+    p = *(unsigned char **)ap;
+    cnt = p[2] << 8 | p[3];
+    err = 0;
+    for (i = 0, off = 4; i < cnt && !err; i++) {
+        al = NULL;
+        err = FSMakeFSSpec((short)(p[off] << 8 | p[off + 1]), 0, p + off + 8, &fs);
+        if (!err) err = NewAlias(NULL, &fs, &al);
+        if (!err) {
+            HLock((Handle)al);
+            err = AEPutPtr(&docs, 0, typeAlias, *al, GetHandleSize((Handle)al));
+        }
+        off += (p[off + 8] + 10) & ~1;
+    }
+    HUnlock(ap);
+    if (err || AEPutParamDesc(&ev, keyDirectObject, &docs)
+        || AECoerceDesc(&ev, typeAppParameters, &parm))
+        return 0;
+    HLock(parm.dataHandle);
+    a = *(unsigned char **)parm.dataHandle;
+    Toolbox();
+    for (k = 0; k < 10; k++) {
+        Settle(k ? 30 : 60);
+        err = PostHighLevelEvent((EventRecord *)a, (Ptr)&psn,
+                                 *(long *)(a + 16), (Ptr)(a + 24),
+                                 *(long *)(a + 20), receiverIDisPSN);
+        if (err != protocolErr) break;
+    }
+    /* Then stay: the WaitNextEvent that blocks returns once MacExtract
+     * has made its next event call and the string has played (DECISIONS.md
+     * 2026-11-01, *How long the helper must stay*). MacExtract has the
+     * front by then, hence canBackground in 'SIZE'. */
+    if (!err) Settle(180);
+    return !err;
 }
 
 /* An application of creator MExt in that folder, by name. */
@@ -423,7 +518,7 @@ int main(void)
             return 0;
         }
     } else if (!err) {
-        if (Puppet()) return 0;
+        if (Puppet() || Odoc()) return 0;
         err = LaunchIn(vol, dir, name);
     }
 

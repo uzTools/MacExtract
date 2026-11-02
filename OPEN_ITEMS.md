@@ -267,11 +267,6 @@ ships later, on MacExtract's own floppy. Left:
   MacStamp's own BinHex, PackIt, btoa and base64 stamps — reach it by
   double-click only after `companion/icsetup`, and the files already on
   disk not even then.
-- **A helper opened while MacExtract runs, on Mac OS 9.** The committed
-  helper's puppet string leaves MacExtract an archive it "could not open"
-  (three runs); 91cdd48's odoc route works there (one run; DECISIONS.md
-  2026-11-01, *the Open item MultiFinder looks for*). Closes by going back
-  to that route where Apple events exist.
 - **Which of a file's two dates System 7 compares** between two applications
   of one creator. Not separated.
 - **A download finishing while MacExtract is open is lost** once

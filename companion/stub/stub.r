@@ -91,9 +91,9 @@ resource 'DITL' (132, purgeable) {
 
 /* Small, and not aware of high-level events: the Finder then hands it the
    document the way it hands one to MacExtract, in the application's Finder
-   information, which is what the stub passes on. canBackground: it
-   stays a few seconds behind a running MacExtract after handing it an
-   archive (stub.c, Puppet). */
+   information, which is what the stub passes on. canBackground: under
+   System 7 it stays a few seconds behind MacExtract after handing an
+   archive on (stub.c, Odoc). */
 resource 'SIZE' (-1) {
     reserved, ignoreSuspendResumeEvents, reserved,
     canBackground, needsActivateOnFGSwitch, backgroundAndForeground,
