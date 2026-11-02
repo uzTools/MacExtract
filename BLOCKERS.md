@@ -1117,6 +1117,20 @@ route, and an item naming the wrong obstacle.
   one pushed commit naming a crash in MacExtract that a probe made, and two
   emulator runs read as reproducing it.** A probe that lingers is a
   process; give it what a process needs before blaming the one it talks to.
+- **"System 7.0.1 refuses every hand-off a helper posts; only the Finder
+  can reach a running application that is not HLE-aware"** — DECISIONS.md
+  2026-11-01, *the Open item MultiFinder looks for*, commit fc00bb3, with
+  "the only route goes through the Finder, restamping the archive" put to
+  the maintainer as the way forward. **Withdrawn 2026-11-02**: the
+  Process Manager's own code translates any poster's odoc into a puppet
+  string; the helper had posted while still being switched in (−603) and
+  with `FSSpec`s where it reads aliases. Read in `scod` −16462/−16464,
+  then measured: posted settled, with aliases, the archive arrived.
+  **Cost: one pushed conclusion and a design question to the maintainer
+  (make the helper HLE-aware, rewrite the user's archive) that neither
+  was needed.** Seven failed variants were evidence about the sender's
+  STATE as much as about its permissions, and the code that returned the
+  error was one decompression away.
 
 ### Corrected figures and superseded write-ups
 

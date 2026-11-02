@@ -25,7 +25,7 @@ StuffIt*). What is left is OPEN_ITEMS.md, *The double-click helpers*.
 
 | file | what |
 |---|---|
-| `stub/stub.c`, `stub/stub.r` | the stub: find MacExtract, launch it, or under System 6's MultiFinder hand a running one the archive |
+| `stub/stub.c`, `stub/stub.r` | the stub: find MacExtract, launch it, or hand a running one the archive (System 6 MultiFinder, System 7) |
 | `make_stub.py` | the stub for one creator: creator, bundle, icons |
 | `../tools/icon/make_archive_icon.py` | the archive icon the stubs carry |
 | `app-bundles.tsv` | the creator and bundles of 42 creators' programs, read off the programs |
