@@ -19714,3 +19714,25 @@ is not used. The final build, 9,472 B (8,832 before any of this), one run each:
 extracted after the first; 7.0.1 with MacExtract not running, and 6.0.8
 without MultiFinder (no `_OSDispatch`): MacExtract launched with the
 archive and extracted it. Mac OS 9 not run.
+
+**How long the helper must stay is not MacExtract's pump (measured,
+7.0.1, the final build with only the stay changed, one run each).** The
+maintainer asked whether the stay was the ticks between MacExtract's
+event pumps, the gaps that also leave a click unanswered (FORMATS.md,
+*How long a click waits*: Arsenic 0.8 s at most, Compact Pro 4.8 s). It
+is not:
+
+| MacExtract busy with | helper stays | second archive |
+|---|---|---|
+| `derived-a2basic.dmg.sit`, Arsenic | 0 s | lost |
+| the same | 0.5 s | extracted |
+| `derived-XferIt_1.5b4.sea`, Compact Pro, double-clicked at 20 % | 3 s | extracted |
+| the same | 12 s | extracted |
+| the same, twice (20 % → 28 %) | 0.5 s | extracted, both |
+
+Half a second is enough behind gaps of three, so the string, once queued,
+waits for MacExtract's next pump however late; what it needs from the
+helper is at least one event call after the queueing. *Hypothesis*: the
+queueing step brings the target forward (`SetFrontProcess`, `−16464
+$2AE`), and a switch happens in the caller's next event call, which a
+helper that quits at once never makes. The 3 s stays, as margin.
