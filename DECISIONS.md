@@ -7918,59 +7918,36 @@ lhasa, LHa, mpack, btoa, CiderPress2, XADMaster).
 DECISIONS.md 2026-09-25, *the disk images that found another home*; the
 `--only` and sampling findings stand.)*
 
-**Claim (measured).** The two A/UX 3.0.1 floppies Apple's DART 1.5.3
-compressed in 1993 became fixtures graded by `ci.sh`:
-`AUX301_ReadMe_MacSE.dart` (381,699 B, 800K, 40 slots) and
-`AUX301_BootDisk_Quadra.dart` (978,283 B, 1440K, **72 slots** — the only
-72-slot archive this project has held). `tools/run_dart.py` went from 37 to
-53 cases; six synthetic cases no longer needed `reference/ciderpress2`.
+**Decision (measured).** The two A/UX 3.0.1 floppies Apple's DART 1.5.3
+compressed in 1993 became `ci.sh` fixtures: `AUX301_ReadMe_MacSE.dart`
+(381,699 B, 800K, 40 slots) and `AUX301_BootDisk_Quadra.dart` (978,283 B,
+1440K, **72 slots**); `tools/run_dart.py` went from 37 to 53 cases.
 
-**The oracle came with the disks.** OPEN_ITEMS.md asked for MacMount's
-derived Disk Copy 4.2 checksums; both members carry Apple's own in a
-411-byte resource fork ('CKSM' 1 tags, 'CKSM' 2 data, and a 'DART' 0 string:
-*"1.5, tag checksum=$AC4AA5C3, data checksum=$E257EF53"*). The data halves
-agree with the derived numbers (`E257EF53`, `3DF12BA6`); the addition is the
-TAG side, `AC4AA5C3` over 19,200 B of real GCR tags.
+**Evidence at the time.** Each member carried Apple's own checksums in a
+411-byte resource fork (*"1.5, tag checksum=$AC4AA5C3, data
+checksum=$E257EF53"*); the data halves agreed with MacMount's derived
+`E257EF53`, `3DF12BA6`. The 72-entry table was chosen by requiring the
+lengths to sum to the file (a 40-entry reading falls 407,486 B short).
+FORMATS.md's DART peaks (40,301–40,624 B "best", 15,568 B tree) had gone
+stale since *the tree that was Yoshizaki's*: re-measured 27,967–34,056 B;
+the Mac row re-run, **PASS at 4 MB and at the 1 MB floor**, peak
+**33,765 B**; the worst *Read Me* chunk (14,871 B) saved **6,089** B by
+sizing the input buffer off the block table. **A format's numbers live in
+the format's section, not the coder's**, and nothing checks that.
 
-**The 72-entry table was checked from the specimen.** Both table lengths
-were tried, requiring the one `srcSize` calls for to sum to the file (4 + 2n
-+ Σ lengths, 0xFFFF counted as 20,960); a 40-entry reading of the boot disk
-falls 407,486 B short. Source: `reference/ciderpress2/DART-notes.md`.
+**What overtook it.** DART left the engine (DECISIONS.md 2026-09-25, *the
+disk images that found another home*); its fixtures, harness and peak rows
+went with it.
 
-**Unpacked by this engine's own CLI** from a StuffIt on Macintosh Garden's
-FTP, graded on the way in against the SHA-256s MacMount pinned from `unar`;
-all four members byte-identical. `fixtures/SOURCES.md` names the generator.
-
-**A number that should have moved and did not** (the converse of the
-constant-in-a-matrix smell). FORMATS.md's DART table still read
-40,301–40,624 B for "best" and 15,568 B for the tree, stale since *the tree
-that was Yoshizaki's*. Measured on all seven specimens: 27,967–34,056 B,
-each exactly longest chunk + 9,000 + 4,096. The Macintosh row, stale by the
-same 6,568 B, was re-run: **PASS at 4 MB and at the 1 MB floor**, 838,484 B
-out, peak **33,765 B** (Linux + 32 B allocator overhead). **A format's
-numbers live in the format's section, not the coder's**, and nothing checks
-that. The new specimens also disproved "between 0 and 474 B" saved by
-sizing the input buffer off the block table: the *Read Me* disk's worst
-chunk is 14,871 B and saves **6,089**; the hypothesis that mostly empty
-disks are where it pays survived.
-
-**A sampling stride shifted.** `tools/run_only.py` sweeps every SIXTEENTH
-fixture by name; two new files moved the stride and the sample found
+**What stands: a sampling stride shifted.** `tools/run_only.py` sweeps every
+SIXTEENTH fixture by name; two new files moved the stride and the sample met
 `compact-pro-151.hqx`, whose comment `--only` had never met in three weeks.
-A selective extraction wrote `Compact Pro Package (English).comment.txt` —
-designed behaviour (a comment belongs to the archive; `--no-comment`
-declines it; cli/main.c, `sink_comment`). No `src/` change: `run_only.py`
-permits it, and a fifth generated case asserts written under `--only`,
-absent under `--no-comment`, not selectable — each checked by mutation. The
-comment's name is discovered, not guessed (it follows the archive inside
-the BinHex). **A sweep of every Nth fixture by name can only meet a
-property, never cover one**, and adding a fixture reshuffles what several
-suites see.
-
-**Not claimed.** Any `src/` change. That a Macintosh expanded either A/UX
-disk (the boot disk's 1,509,268 B does not fit the 1,440 KB Out volume
-without `--out-kb`; `test1-best` was re-run). Anything about the StuffIt's
-other two members, MS-DOS or Apple II disks, or a real 400K disk.
+Writing `Compact Pro Package (English).comment.txt` under `--only` is
+designed behaviour (cli/main.c, `sink_comment`; `--no-comment` declines it);
+a fifth generated case asserts written under `--only`, absent under
+`--no-comment`, not selectable — each checked by mutation. **A sweep of every
+Nth fixture by name can only meet a property, never cover one**, and adding
+a fixture reshuffles what several suites see.
 
 ## 2026-09-20 (the character that was touched three times) — BinHex's line read, judged and decoded in one pass, and four characters at once
 
@@ -8335,33 +8312,25 @@ method 6 and the RLE90 filter; OPEN_ITEMS.md lists the rest.
 
 ## 2026-09-20 (thirty-two of thirty-four) — DiskDoubler's DD coder from its published description, and the two forks that refuse
 
-**Item 6, half.** **`tools/derive_dd.py` reads 32 of the corpus's 34 DDn
-forks** from the wiki page alone, byte for byte against the oracle. It has
-**no container parser** (the wiki says "see XADDiskDoublerParser.m"): **every
-DD block header ends with the XOR of its first twenty-one bytes**, so
-scanning for valid headers locates the blocks — a trick for any format whose
-blocks self-check.
+**Decision (Item 6, half).** `tools/derive_dd.py` read **32 of the
+corpus's 34 DDn forks** from the wiki page alone, byte for byte against the
+oracle, so `fmt_dd.c` kept its XADMaster citation for the two that refused.
 
-Five corrections, in `docs/formats/diskdoubler-dd.md`; the two worth
-repeating:
+**Evidence at the time.** With **no container parser**, blocks are located
+because **every DD block header ends with the XOR of its first twenty-one
+bytes** — a trick for any format whose blocks self-check, still how
+`derive_dd.py` works. Five corrections went into
+`docs/formats/diskdoubler-dd.md`; the two worth repeating: **streams are in
+the page's order — offset, literal, run length — not the header's**, and
+**the window spans blocks** (per-block buffers get every fork over ~12 KB
+wrong, *slowly*). `ADn` (methods 6 and 9): all five AD forks read, flag bit 0
+set for an UNcompressed block. Tally **37 of 39**. The two refusals were
+`derived-Terrainman_2.0__.sea`'s 19,240 B and 16,524 B method-10 data forks:
+a transcription can be 94 % right and nobody can tell.
 
-- **streams are in the page's order — offset, literal, run length — not the
-  header's**, which lists sizes the other way (fails immediately);
-- **the window spans blocks**; per-block buffers get every fork over ~12 KB
-  wrong — failing *slowly*, the dangerous kind.
-
-**Two forks refuse:** `derived-Terrainman_2.0__.sea`'s 19,240 B and 16,524 B
-data forks — method 10, right length, no error, diverging a few hundred bytes
-in, all three code tables Kraft-exact; the neighbouring block is perfect. Not
-the XADMaster DDn input-bound defect. So `fmt_dd.c` kept its citation: a
-transcription can be 94 % right and nobody can tell.
-
-**`ADn` (methods 6 and 9; LZSS over the block, no Huffman): all five AD forks
-read**, with one correction — flag bit 0 is set for an UNcompressed block.
-Tally **37 of 39 DD and AD forks**.
-
-**Not claimed:** anything about the containers; code changed (`derive_dd.py`
-is a probe).
+**What overtook it.** Those two forks are method 10's delta form, and with
+it 39 of 39 read (DECISIONS.md 2026-09-21, *the two forks that were never
+about their literals*).
 
 (superseded: DECISIONS.md 2026-09-21, *the two forks that were never about their literals*)
 
@@ -8401,56 +8370,35 @@ NULL.
 
 ## 2026-09-21 (the one that had to be asked) — Now Compress's two coders and its blocks, measured off the application
 
-**Item 5, the one row where nothing could be fetched**: no wiki page, spec or
-second implementation — `XADNowCompressHandle.m` is the only account.
+**Decision.** With no wiki page, spec or second implementation of Now
+Compress (`XADNowCompressHandle.m` the only account), the application was
+ASKED: `tools/vmac/nowcompress.py` drives Now Compress under the emulator
+over chosen inputs and keeps input beside output.
 
-**So it was asked.** `tools/vmac/nowcompress.py` drives Now Compress under
-the emulator over chosen inputs and keeps input beside output (a corpus made
-2026-08-16 for another purpose). Four pairs give shape 1 whole:
-
-> a flag byte, eight tokens, bits most significant first; a 1 is a
-> literal byte; a 0 is a match of `length - 2` then distance, one byte
-> each — unless the length byte is zero, which is an escape, and then
-> the token is zero, distance, `length - 2`.
-
-Payload 164 bytes in, a four-byte trailer, and the caller's byte count stops
-it (as StuffIt method 8 and ARC squeeze). *Faster* and *Smaller* give
+**Evidence at the time (measured).** Four pairs gave shape 1 (a flag byte
+over eight tokens, MSB first, 1 a literal); *Faster* and *Smaller* give
 **byte-identical streams** (mode `0x0010` vs `0x003f`); *Archive* mode
-**stores** members and compresses the `.sea` around them (49,000 in, 49,000
-out).
+**stores** members (49,000 in, 49,000 out). `half.bin` (8,000 random bytes,
+8,000 `'A'`s) gave the second coder: a **256-symbol Huffman code** of 256
+four-bit lengths, located by **Kraft's equality** (exactly 1.000000 at one
+offset only), coding shape 1's own stream — read off ONE match whose
+distance had to be 4,237 (`0x81 0x8d`). A fork is **32,768-byte blocks,
+each coded its own way**; all eight specimens read, seven from the fork's
+block table.
 
-**The shape of the search is the transferable part.** Five formats fell to
-*reading a document and correcting it*; this one to *choosing an input and
-looking at what came back*. The tell is whether anybody wrote the format
-down — yes five times where the inventory said no.
+**What overtook it.** The shape-1 match rule (a length byte then a distance
+byte) is a 3-bit length and a **13-bit** distance, and `0x20` is Huffman
+ALONE, not "the coder" (DECISIONS.md 2026-09-21, *the pair that never
+repeats*); the block table has one layout, and `src/fmt_now.c`'s coders were
+rewritten from the note (DECISIONS.md 2026-09-21, *asking the program that
+wrote it*). The description now lives in `docs/formats/now-compress.md`.
 
-**Same day: the second coder and the blocks**, from `half.bin` (8,000 random
-bytes then 8,000 `'A'`s):
-
-- a **256-symbol Huffman code**, 256 four-bit lengths, found by **Kraft's
-  equality** — exactly 1.000000 at one offset only;
-- it codes **shape 1's own stream, flag bytes and all** (why symbol 255 is
-  shortest in random data: eight literals' flag is `0xff`);
-- a **match is two symbols**, `length = (S & 7) + 2`,
-  `distance = ((S >> 3) << 8) | D`, length 2 escaping to a third symbol —
-  read off ONE match whose distance had to be 4,237: `0x81 0x8d` gives it
-  exactly, and length 3;
-- a fork is **32,768-byte blocks, each coded its own way** (`mixed.bin`:
-  stored then Huffman).
-
-**All eight specimens read** byte for byte, seven **from the fork's own block
-table**: eight-byte records from offset 144, u16 offset + u16 mode, ending on
-a record whose offset is the fork's size; stored, shape 1 and shape 2 blocks
-begin 0, 2 and 1 bytes past it. The two `runs.bin` forks differ **only in the
-mode word** (`0x0010` Faster, `0x001f` Smaller): low bits are the user's
-setting, **bit `0x20` is the coder** — four data points, and it predicted the
-other two forks.
-
-**Left:** the corpus's two archives are not bare forks (one is
-self-extracting), so the fork inside the wrapper. `src/fmt_now.c` still cited
-XADMaster for all of it. **Two habits did the work:** choosing the input so
-literal and match paths are told apart by eye, and Kraft's equality — one
-line, three formats' tables found and one guess refuted.
+**The method stands.** Five formats fell to *reading a document and
+correcting it*; this one to *choosing an input and looking at what came
+back* — the tell is whether anybody wrote the format down. **Two habits did
+the work:** choosing the input so literal and match paths are told apart by
+eye, and Kraft's equality — one line, three formats' tables found and one
+guess refuted.
 
 ## 2026-09-21 (the two forks that were never about their literals) — DiskDoubler method 10's second form, and 39 of 39
 
@@ -8955,63 +8903,41 @@ negative is what each was for.**
 ### Where in the window a block starts changes byte 2 by nothing
 
 **Claim withdrawn.** A shape-3 header's byte 2 was said to track which
-half of a 65,536-byte window its block begins in, on a correlation in
-the 1995 archive: 41 of its 43 values above 200 are in low-half blocks.
-`nowcompress.py --case wpos` chooses the offset instead: four 65,536-byte
-members, each preceded by a 16,384-byte spacer, put two full blocks at
-each quarter of the window. **Eight full blocks, byte 2 = 0 in all
-eight.** Only the archive's first block differs, at 236.
+half of a 65,536-byte window its block begins in (41 of the 1995
+archive's 43 values above 200 in low-half blocks). `nowcompress.py --case
+wpos` chooses the offset instead — four 65,536-byte members, each after a
+16,384-byte spacer, two full blocks at each quarter of the window: **eight
+full blocks, byte 2 = 0 in all eight** (the archive's first block, 236).
+The 1995 archive's 306 full blocks alternate halves by construction, so
+anything drifting through it correlates. **Nothing had ever chosen the
+offset — a correlation you only ever observe is one you have not tested.**
 
-**Why the correlation looked real.** The 1995 archive's 306 blocks are
-all full and all in one member, so they alternate low/high half by
-construction; anything drifting through that file correlates with it.
-Every earlier byte-2 experiment varied CONTENT and read the offset off
-the result. **Nothing had ever chosen the offset** — and a correlation
-you only ever observe is one you have not tested.
-
-**What replaced it (hypothesis).** `tokdist`'s forty mutually
-unmatchable members walk byte 2 191 → 224 → 240 → 248 → 252 → 254 →
-255, each step exactly `b2 + ((255 − b2) >> 1) + 1` — **101 transitions
-take it, 31 more sit at the cap**. `reach`'s five near-identical members
-go 224 then 0, 0, 0, 0, and `wpos` does the same. Half of this was
-withdrawn the same day: byte 2 falls as more of a block can be matched,
-but is computed from its own block, and the climb describes a ladder
-ordered one way: *2026-09-21, (the ladder that was walked back down)*.
+The replacement this entry proposed (hypothesis: a running state climbing
+by `b2 + ((255 − b2) >> 1) + 1`, 101 transitions) was withdrawn the same
+day: byte 2 is computed from its own block (DECISIONS.md 2026-09-21, *the
+ladder that was walked back down*).
 
 ### The archives this project writes are refused, and not for the reasons listed
 
-**Thirteen archives graded by `unar` since M12, never once put to Now
-Compress.** `synth_now.py --ladder` builds rungs, each spliced into a
-real self-extractor's data fork by `mutate_now.py` so the decoder Now
-Software shipped reads it.
+**Measured.** The thirteen `synth_now.py` archives `unar` had graded since
+M12 were put to Now Compress for the first time, spliced into a real
+self-extractor's data fork by `mutate_now.py`: the control (`probe`'s
+3,830-byte archive in `tree`'s self-extractor) read **all four members
+byte-exact**; rungs `both` and `arch` were **refused**. The suspect list
+was wrong; the answers (a 16-byte trailer, 32,768-byte blocks, word
+alignment) came from a field-by-field diff (DECISIONS.md 2026-09-21,
+*sixteen bytes nobody had read*).
 
-| rung | what it adds | Now Compress |
-|---|---|---|
-| control | `probe`'s 3,830-byte archive in `tree`'s self-extractor, built around one half that size | **all four members byte-exact** |
-| `both` | the header's setting, window and byte sum, every block trailer, and the fork-boundary record | **refused** |
-| `arch` | plus the `0x0100` bit every archive mode word carries | **refused** |
+**The instrument lied twice, and the guard stays.** `--adjudicate`
+printed *"the original extractor agrees with us on every fork"* for both
+refused rungs because an empty volume compares zero forks; it now fails
+when it graded nothing, and `--dearchive` counts only new files. **An
+aggregate over an empty set is the purest form of the failure this
+repository keeps rediscovering.**
 
-The control shows the route works and length is not the obstacle. The
-LZSS prefix, the first guess, is not a candidate: every block there is
-shape 3 or Huffman-only, and only shapes 1 and 2 carry `00 03`.
-TESTING.md had listed five differences; two more (the `0x0100` bit and
-the header's window word) were found before running anything. The
-remaining list of three suspects was also wrong — the answers are a
-16-byte trailer, the 32,768-byte block size and word alignment:
-*2026-09-21, (sixteen bytes nobody had read)*.
-
-**The instrument lied twice.** `--adjudicate` printed *"the original
-extractor agrees with us on every fork"* for both refused rungs, because
-an empty volume compares zero forks. It now fails when it graded
-nothing, and `--dearchive` counts only new files. **An aggregate over an
-empty set is the purest form of the failure this repository keeps
-rediscovering.**
-
-**Cost.** Five emulator runs. One went on `--dearchive`, a new route:
-QuickFiler offers Dearchive for a file typed `NCar`/`NCdc` (type read
-from Expand Now's `FREF`s), yet it expanded nothing, not even the
-control. That route is unexplained and the results above do not rest on
-it.
+**Cost.** Five emulator runs, one on `--dearchive` (QuickFiler offers
+Dearchive for a file typed `NCar`/`NCdc`, yet it expanded nothing, not even
+the control) — unexplained, and nothing above rests on it.
 
 ## 2026-09-21 (sixteen bytes nobody had read) — what a Now Compress archive needs, and where the three answers were
 
