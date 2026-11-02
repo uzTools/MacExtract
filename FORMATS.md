@@ -179,11 +179,10 @@ What the 1991 expander accepts, twelve forks in one boot, 2026-08-29
 | method 3 with `ESC 1`, at offset 0 and 1,800 bytes in | **refused, both times** — so it is the token and not an escape with nothing to repeat |
 | a fork whose compressed size EXCEEDS its original | **refused** — the control, using no token the accepted case does not |
 
-The control separates a size check from a codec rule: both `ESC` forks
-were first refused because they had grown. **`ESC 1` cost a divergence**:
-`dd_rle` was the only one of six RLE90 call sites passing `strict = 0`;
-it now refuses as Salient's expander does, and all 91 DiskDoubler
-fixtures stay byte-exact (BLOCKERS.md; DECISIONS.md 2026-08-29).
+**`ESC 1` cost a divergence**: `dd_rle` now refuses it as Salient's
+expander does, and all 91 DiskDoubler fixtures stay byte-exact
+(BLOCKERS.md; DECISIONS.md 2026-08-29, *methods 3, 4 and 5, graded across
+the format*).
 
 Method 2 is order-1 adaptive: 256 splay trees selected by the previous
 byte, each starting complete over 256 leaves and rotating the emitted
@@ -378,12 +377,10 @@ the corpus fixture and run under `qemu-m68k` by `tools/sdmodule/`, in
 | method 10, against its module and the bytes behind it | equal three ways |
 | method 11 blocks written by Alysis's own encoder (module 20) | 5, byte-exact |
 
-**The one disagreement was this engine's defect, fixed 2026-08-28**: when
-the coded flag bitmap ends exactly on a 32-bit refill, the literals were
-read four bytes early. Graded on blocks Alysis's 1991 panel wrote at 160
-and 256 flag bits (`sdcompress.py --boundary`): wrong from byte 0 before,
-byte-exact after. It reaches about one block in 32 of any method 2, 4, 6
-or 8 fork; the corpus's archives use 7 and 11 (BLOCKERS.md;
+**The one disagreement was this engine's defect, fixed 2026-08-28**
+(literals read four bytes early when the coded flag bitmap ends on a
+32-bit refill); graded on blocks Alysis's 1991 panel wrote at 160 and 256
+flag bits (`sdcompress.py --boundary`), byte-exact (BLOCKERS.md;
 DECISIONS.md 2026-08-28, *the refill boundary*).
 
 **The single-file container** (2026-08-22): "Make File" output — a
@@ -401,8 +398,7 @@ Landed 2026-08-25; nothing in reach writes one. Transcribed from `Cmpr`
 21 of Disk Expander 1.2 and graded by that module under `qemu-m68k`: 20
 cases equal three ways. The module settled the match length as
 `nibble + 2` (the DBF's target is the second MOVEB) and the wide-offset
-escape as sixteen bits (`ASL.W #8` shifts the marker nibble out); our
-first reading of both matched only our own test encoder.
+escape as sixteen bits (`ASL.W #8` shifts the marker nibble out).
 
 #### Module 20
 
@@ -470,8 +466,7 @@ Peak heap **74,220 B** for `SD! Utilities.x` and **85,943 B** for
 `Disk Expander .X` (`macextract t --stats`); both extract fully under a
 400 KB budget. The 64 KB wide context table is allocated only for
 methods 5-8, and SlowFastB's window only for a method-11 block, sized
-from the fork since 2026-08-24 (was a flat 98,304 B; `Disk Expander .X`
-was 117,294 B).
+from the fork (*Budget*, below).
 
 ### StuffIt SpaceSaver ✦✦
 
@@ -527,15 +522,13 @@ In the corpus once: the 34,818-byte resource fork of `INITLoader` in
 SHAPE is a constant of the format; only each leaf's byte is declared per
 segment.
 
-**The tree is 26 bytes, built per fork, since 2026-09-21** (was 1,028 B
-of tables from macutils in `src/sit6_tables.h`; now deark's thirteen
-(count, length) pairs plus an assignment rule, `sit6_build`). Measured
-with `tools/build_mac.sh`: **code +408 B, A5 −1,000 B**, so **−592 B off
-every extraction's budget on a 1 MB Mac Plus**; **+1,028 B transient heap**
-while a method-6 fork is read; engine ticks 3 → 3; `run_tiers.py` still
-69/69 at 1 MB and 66/69 at 512 KB (the tallies of that day). Peak on the
-fixture **40,982 → 42,010 B**; the segment buffer is sized from the
-segment (31,806 B here), capped at 64 KB. `tools/check_sit6_tree.py`
+**The tree is 26 bytes, built per fork** (deark's thirteen (count,
+length) pairs plus an assignment rule, `sit6_build`; DECISIONS.md
+2026-09-21, *the table that was twenty-six bytes*): **code +408 B, A5
+−1,000 B** against the 1,028 B static tables it replaced, **+1,028 B
+transient heap** while a method-6 fork is read. Peak on the fixture
+**42,010 B**; the segment buffer is sized from the segment (31,806 B
+here), capped at 64 KB. `tools/check_sit6_tree.py`
 holds the two trees against each other over **all 8,192 bit paths of
 depth 13**, and the synthetic fixture regenerates byte-identical.
 
@@ -544,8 +537,7 @@ fillers, longest and shortest runs, a one-byte alphabet, twelve segments
 in a fork — are covered by `synth-sit-fixhuf.sit` (`tools/synth_sit6.py`),
 oracle-adjudicated, 10 forks over 5 entries.
 
-**The framing is `docs/formats/stuffit-method-6.md`'s since 2026-09-22**,
-at 0 B and 0 ticks: nothing executable changed. Across the corpus's 11
+**The framing is `docs/formats/stuffit-method-6.md`'s.** Across the corpus's 11
 forks: **27 segments — 13 Huffman and 14 stored**; the largest PackBits
 stream declared is **31,806 B**; code counts 1, 10, 11, 17, 129, 191,
 254, 255 and 256; **97 distinct PackBits control bytes**, a one-byte to a
@@ -593,26 +585,22 @@ Peak heap is modelled by
 Only the block is allocated at its declared size; the inverse-BWT vector
 is sized to the entry's fill (`transform = numbytes * 3`, in
 `ars_bwt_prepare`), so peak heap cannot recover the declared block size
-(the inferred "128 KB (14) / 256 KB (9) / 512 KB (8)" figures are
-withdrawn, BLOCKERS.md, *Withdrawn claims*). The parser state lost
-**4,572 B** on 2026-09-18 (a symbol field the nine models dropped) and
-the vector went from four bytes an entry to three on 2026-09-19
-(DECISIONS.md 2026-09-19). At the 1 MB budget of 648,100 B that puts
-`derived-Troi-ClipSave-Plug-in1.1.sit` (531,968 B) and
-`derived-AuthoRize_2.0.sit` (612,943 B) on the vector instead of the
-sampled index and takes 16-20 % off the nineteen already there; the ten
-wanting 1.4-2.1 MB stay on the index. Price: **+4.4 % of instructions on
-the ISBN fixture and +1.9 % on `derived-a2basic.dmg.sit`** (Linux, fast
-path only). **The Mac tiers were not re-run for either change**: an on-Mac
+(BLOCKERS.md, *Withdrawn claims*). The vector is three bytes an entry
+(DECISIONS.md 2026-09-19, *three bytes hold a position*): at the 1 MB
+budget of 648,100 B, `derived-Troi-ClipSave-Plug-in1.1.sit` (531,968 B)
+and `derived-AuthoRize_2.0.sit` (612,943 B) take the vector, and the ten
+wanting 1.4-2.1 MB stay on the sampled index; price **+4.4 % of
+instructions on the ISBN fixture and +1.9 % on `derived-a2basic.dmg.sit`**
+(Linux, fast path only). The parser state lost **4,572 B** on 2026-09-18
+(DECISIONS.md 2026-09-18, *the byte that left through a pointer*).
+**The Mac tiers were not re-run for either change**: an on-Mac
 StuffIt 5 peak in this file older than 2026-09-18 is 4,572 B high, and a
 fast-path one older than 2026-09-19 a further block-fill high.
 
 Measured peak over the corpus (`macextract t --stats`, 2026-09-19): **min
 0.13 MB / median 0.47 MB / mean 0.74 MB / max 2.03 MB**, the maximum
 being entries that fill a 512 KB block (30 KB + 512 KB + 1536 KB);
-**exactly two fixtures reach 524,257 B of fill** (that figure was once
-applied to three fixtures it did not describe — BLOCKERS.md, *Withdrawn
-claims*). These are fast-inverse-BWT peaks; under a cap the decoder takes
+**exactly two fixtures reach 524,257 B of fill**. These are fast-inverse-BWT peaks; under a cap the decoder takes
 a sampled occurrence index (DECISIONS.md 2026-08-07) and the table below
 applies.
 
@@ -631,20 +619,16 @@ what the cap allows — so the figure is the bisected minimum:
 | `derived-EasyFind.dmg.sit` | 2,657,700 | 565,062 | 561,441 |
 
 The last column is the model table's 4,572 B less the sampled index's
-granularity: 3,569 to 3,755 B per fixture, bisected on Linux. Before
-2026-08-02 the peak was min 0.63 / median 0.97 / mean 1.23 MB with
-**every** entry over a 400 KB budget; four allocation changes
-(2026-08-02, -03, -06, -07, one DECISIONS.md entry each) brought it to
-the floor. Per-fixture outcomes on the Mac: the Mini vMac sections below.
+granularity: 3,569 to 3,755 B per fixture, bisected on Linux. The
+allocation history is DECISIONS.md 2026-08-03, 2026-08-06 and 2026-08-07.
+Per-fixture outcomes on the Mac: the Mini vMac sections below.
 
 ### Unix compress: the `.Z` peak §
 
-**Sized from the input, not a flat 274,432 B** — measured 2026-08-03 and
-2026-08-30. `compress(1)` writes `maxbits=16` whatever it compressed. The
-first bound was `symbols <= 256 + reserved + insize * 8 / 9`
-(DECISIONS.md 2026-08-03); the second walks the code-width schedule
-(DECISIONS.md 2026-08-30, *a byte buys fewer symbols the further in it
-sits*):
+**Sized from the input, not a flat 274,432 B** — `compress(1)` writes
+`maxbits=16` whatever it compressed; the bound walks the code-width
+schedule (DECISIONS.md 2026-08-03; 2026-08-30, *a byte buys fewer symbols
+the further in it sits*):
 
 | fixture | in | flat | 8/9 bound | width schedule |
 |---|---|---|---|---|
@@ -656,9 +640,8 @@ sits*):
 The last column is the on-Mac peak: `popper-1.7.tar.Z` went from a
 refusal to byte-exact on a 512 KB Macintosh (*512 KB machines*). StuffIt
 classic method 2 is bounded the same way from the entry's compressed
-size: 50 fixtures improved, none regressed. On-Mac figures agree with
-Linux to a constant 32 B of shell overhead. Why the table is sized once
-rather than grown: DECISIONS.md 2026-08-03.
+size. On-Mac figures agree with Linux to a constant 32 B of shell
+overhead.
 
 ### Zip: the peak's lost floor ¶
 
@@ -685,10 +668,9 @@ budget one byte under the run's own peak (TESTING.md).
 
 **Sized from the entry, not the format's 64 KB**, measured 2026-08-06: an
 instrumented corpus run counted **0 back-references past produced
-output** (DECISIONS.md 2026-08-06). 34 fixtures improved, none regressed;
-the corpus maximum stays 76,944 B (some forks exceed 64 KB) —
-`derived-MacGzip.sit` 76,944 → 13,456 B, on-Mac `derived-Export.sit`
-76,984 → 19,640 B.
+output** (DECISIONS.md 2026-08-06). The corpus maximum stays 76,944 B
+(some forks exceed 64 KB); `derived-MacGzip.sit` 13,456 B, on-Mac
+`derived-Export.sit` 19,640 B.
 
 ### uuencode: three alphabets, two of them not the standard one ✦
 
@@ -831,10 +813,8 @@ recognise the format, so the encoder is the oracle.
 
 ### AppleLink packages ★★★★
 
-In scope since 2026-10-05 (M56); everything — directories, folder levels,
-stored bits, codec, grading — is *AppleLink packages: SqueezePlay*,
-below. Every path the format has is reached by a real package since
-2026-10-06.
+Everything — directories, folder levels, stored bits, codec, grading —
+is *AppleLink packages: SqueezePlay*, below.
 
 Peak heap **8,576 B** on the one package whose only fork is stored, and
 **41,344 B at the ceiling** (41,360 B on a Mac Plus, the shell's 16 B
@@ -901,10 +881,9 @@ index 4 below a 68030, 3 from a 68030 up; the decompress-only modules
 accept every CPU. **The 142 real files found on 2026-09-26 bear that
 out**: version-3 headers carry method 0, 3 or 4 only, and the two method-4
 files are the only two from a hard-disk backup rather than a pressed
-CD-ROM; version-2 headers carry 1 and 2. Methods 1, 2 and 3 were
-implemented on 2026-08-25, graded by `tools/ssmodule/` running Aladdin's
-own compressors and expanders under `qemu-m68k` (71 round trips in 3
-seconds; 44 forks read back byte-exact; TESTING.md).
+CD-ROM; version-2 headers carry 1 and 2. Methods 1, 2 and 3 are graded by
+`tools/ssmodule/` running Aladdin's own compressors and expanders under
+`qemu-m68k` (44 forks read back byte-exact; TESTING.md).
 
 **Methods 1 and 2 share a framing and nothing else.** Both read an 8-byte
 block header — a "stored" byte and a 32-bit big-endian payload length —
@@ -972,7 +951,7 @@ overrides it. The resource is byte-identical in the control panel and
 | method 2 "Original Slow" | the same | 76,800 B | **86,064 B** (64 KB window, 16 KB table, input buffer) |
 | method 3 "Alg 3" | the same | 76,800 B | **42,112 B** (32 KB window, ~5 KB tables, input buffer) |
 
-The first three re-measured 2026-08-23, the last three 2026-08-25. A
+Measured 2026-08-23 (first three) and 2026-08-25. A
 SpaceSaver file that has travelled alone needs nothing else — no
 SpaceSaver, no flag — on Linux or the Macintosh application.
 
@@ -986,8 +965,8 @@ LHarc 1.13, LArc 3.33, LHMelt, LHArk, UNLHA32 — and `reference/lha`,
 LHa for UNIX 1.14i, compiled here as an ENCODER. Header walk:
 `docs/formats/lzh-header.md`.
 
-**Three graders, not interchangeable** (TESTING.md), and since 2026-09-19
-which is independent depends on the method: `-lh4-`..`-lh7-` and LArc's
+**Three graders, not interchangeable** (TESTING.md); which is
+independent depends on the method: `-lh4-`..`-lh7-` and LArc's
 `-lz5-`/`-lzs-` are written FROM lhasa, so `unar` is the independent one;
 the header walk, `-lh1-` and `-lh2-`/`-lh3-` follow `XADLZHParser.m`, so
 lhasa is. LHa 1.14i is independent of both and writes archives of known
@@ -1019,8 +998,7 @@ heuristic and lhasa both refuse, handing back the whole 2,304-byte
 stream. This engine accepts on arithmetic: the Mac header's name must be
 the entry's, and the two fork lengths padded to 128 plus the header must
 equal the uncompressed size. Both forks then come back byte-exact (1,760 B
-and 333 B, `tools/run_lzh.py`); all 182 archives and 8 fixtures are
-unchanged.
+and 333 B, `tools/run_lzh.py`).
 
 **Dates are not converted** (MS-DOS at levels 0 and 1, Unix at 2 and 3;
 reported as none, as zip's reader does); a MacBinary payload's dates are
@@ -1075,9 +1053,8 @@ four spaces. The declared length ends the file: `(len - 1) & 3` says how
 many bytes of the last five-character group are real.
 
 **CR, LF and CRLF all end a line** (a file saved on a Mac is
-CR-terminated; CRLF's LF reads as an allowed blank line). Skipping CR, as
-the code did until 2026-08-23, made such a file one unmatched line
-(BLOCKERS.md, *Withdrawn claims*).
+CR-terminated; CRLF's LF reads as an allowed blank line; BLOCKERS.md,
+*Withdrawn claims*).
 
 **No graded corpus file, and no second reader.** Re-measured 2026-10-11
 over all 983 corpus files: one sniffs as btoa, `synth-os9-btoa.btoa`,
@@ -1384,8 +1361,7 @@ answer, and what says how to read the other two:
 | **-6** | NULL | NULL | `COMP` only: rewinds its output |
 | **> 0** | that many bytes | **a `ProcPtr`** | processes them — a `COMP` FILLS the buffer and answers with the count, a `DCMP` consumes it and answers with an `OSErr` |
 
-(-2 was read as "its kind" until 2026-09-29; BLOCKERS.md, withdrawn
-claims.) At the setup selectors `third` is a `{ long; long; }` the
+At the setup selectors `third` is a `{ long; long; }` the
 application fills — the LOW WORD of the first is a flag, zero making the
 module accept and do nothing — and the module answers in it. At
 `*selector > 0` it is a jump-table entry a `COMP` calls with the buffer
@@ -1447,9 +1423,8 @@ temp file (which cannot be opened while the module holds it, -49
 
 ### What an Optimizer did to the fork, and what this engine undoes
 
-**All four reversible Optimizers are undone in `src/fmt_sit.c`** — three
-since 2026-09-29, `JPEG Lossy` since 2026-10-02 — each read out of its own
-`'DCMP'` and graded against archives StuffIt Deluxe 2.0.1 wrote
+**All four reversible Optimizers are undone in `src/fmt_sit.c`**, each
+read out of its own `'DCMP'` and graded against archives StuffIt Deluxe 2.0.1 wrote
 (`tools/run_sitopt.py`):
 
 | module | id | what it does to the fork | undone | checked by |
@@ -1552,10 +1527,6 @@ subject and `Sound 1`'s 8,192-byte one come back byte for byte.
 | what `JPEG Lossy` stored | **14,127 B**, method nibble 0 — STORED, so the module's output is in the archive verbatim |
 | what 2.0.1 gave back | 196,608 B and the same resource fork, **10.1 % of the pixel bytes changed** — 58 distinct values where the document had 2 |
 
-The earlier refusal was our synthetic subject: the 80-byte header read
-**channels 0, height 0, width 0** where the real document's reads **3,
-256, 256**, and the module's own `DCMP` refused the 0x0 image.
-
 **The payload is a TIFF** (`MM\0*`, 22 IFD entries) after the 80-byte
 header:
 
@@ -1615,8 +1586,8 @@ on both subjects:
 | this decoder against 2.0.1's own output | **0 bytes differ** | **0 bytes differ** |
 | output bytes the correction gets wrong (`decode.py --rtz`) | 2,127 of 196,608 — **709** of them luma | **9,645** of 196,608 |
 
-The last row is why the output stage does **not** round toward zero; that
-attribution to +0x3826 is withdrawn (BLOCKERS.md, *Withdrawn claims*).
+The last row is why the output stage does **not** round toward zero
+(BLOCKERS.md, *Withdrawn claims*).
 
 **Everything else 2.0.1 writes, measured 2026-10-02**: `guess` (Best
 Guess) is **method 5**, `none` 0, `fast` 2, `faster` 6, `better` 5,
@@ -1650,14 +1621,12 @@ to the ORIGINAL document's (2.0.1 rewrites 30 bytes of its map);
 
 ### Every other document 2.0.1 will optimize — measured 2026-10-11
 
-Until this date every `JPEG Lossy` specimen was a 256x256 RGB document of
-grey content (chroma flat 128). `tools/vmac/sitcombo.py` asked 2.0.1 for
-33 more, each unstuffed by 2.0.1 in the same boot: twelve drawn by
-Photoshop 1.0.7 (`--psnew`), 21 coloured ones in its layout (`cdocs/`).
-`src/sit_ccube.c` had been right on 2 (the two the module declined),
-silently wrong on 5 (exit 0) and refused 26; **it is byte-exact on all 39
-`JPEG Lossy` entries on this machine now** (`tools/run_sitcombo.py`;
-DECISIONS.md 2026-10-11, *the constant was a square*):
+`tools/vmac/sitcombo.py` asked 2.0.1 for 33 more documents, each
+unstuffed by 2.0.1 in the same boot: twelve drawn by Photoshop 1.0.7
+(`--psnew`), 21 coloured ones in its layout (`cdocs/`). **`src/sit_ccube.c`
+is byte-exact on all 39 `JPEG Lossy` entries on this machine**
+(`tools/run_sitcombo.py`; DECISIONS.md 2026-10-11, *the constant was a
+square*):
 
 | what the documents were | the engine before | why |
 |---|---|---|
@@ -1760,11 +1729,9 @@ rest.
 
 **A fixture that needs neither**: `synth-sit14.sit`, 2,149 B, written by
 `tools/synth_sit14.py` (an encoder from the same reading), graded against
-`unar` on all **five** entries in every `ci.sh` run. The fifth (since
-2026-10-06) found a defect: a 112-byte entry whose literal tree is a
-complete code with ascending lengths, decoded wrong from its 26th byte
-(TESTING.md, *The sort that dropped what it could not hold*; the fix is
--4 B of `ovl_stuffit`, +0 of stack).
+`unar` on all **five** entries in every `ci.sh` run; the fifth, a literal
+tree that is a complete code with ascending lengths, is TESTING.md's *The
+sort that dropped what it could not hold*.
 
 **`synth_sit14.py --wrap`**, outside the fixture: a fork of **278,896 B
 for 458 B of stream** (seventeen maximum matches), the only shape that
@@ -1799,7 +1766,7 @@ against the 32 the assignment can represent.
 | peak heap, 7.0.3's payload | **276,088 B** — the 256 KB window, 4.7 KB of trees and ladders, and the I/O buffers |
 | peak heap, `synth-sit14.sit` | 65,152 B (its longest fork is 17,799 B, so the window is 32 KB) |
 | peak heap, `synth_sit14.py --wrap` | **294,528 B** (a 278,896 B fork, so the window is the whole 256 KB). Passes at a 409,600 B budget; refused per entry at both 512 KB tiers' StuffIt 5 grants, 293,264 and 197,864 B, short by 1,264 and 96,664 (corrected 2026-10-10 after 2026-10-09's re-take) |
-| `ovl_stuffit` image | 23,670 → **26,274 B** (26,278 until the sort fix of 2026-10-06, which is -4 B), read at launch and released for every archive that is not a StuffIt one |
+| `ovl_stuffit` image | 23,670 → **26,274 B**, read at launch and released for every archive that is not a StuffIt one |
 | resident `CODE`, SHIPPED build | **+0 B**, A5 +0 |
 | resident `CODE`, the control | 158,972 → 161,596 B (+2,624; `src/sit14.c` is 2,613 B of text and no data or bss at all) |
 | deepest stack chain | **360 B** — `unc_sit14_decode` 104, `sit14_tree` 84, `sit14_build` 172 — against the engine's deepest 3,350 B (*Stack*) |
@@ -2050,9 +2017,9 @@ fork is stored as 408) — a salt, found from 96→104, 100→108, 103→111.
 
 ### PackIt's two ciphers: read out of PackIt III 1.3, and run out of it
 
-Measured 2026-10-05 (`tools/derive_pitcrypt.py`). Before it, `unar -p` —
-XADMaster, the implementation both were transcribed from — was the only
-grader. The writer is in the corpus: `Packit III 1.3`, APPL/`'PIT '`,
+Measured 2026-10-05 (`tools/derive_pitcrypt.py`; DECISIONS.md 2026-10-05,
+*the reference implementation was the fixture's payload*). The writer is in
+the corpus: `Packit III 1.3`, APPL/`'PIT '`,
 "PackIt III - Version 1.3 (6/14/87)", inside `packit.pit_.bin`; `CODE` 1
 (19,058 B) carries both ciphers, `CODE` 256 (1,960 B) DES's tables.
 
@@ -2097,12 +2064,9 @@ What the application settles:
   `addq.l #7` / `and.l #-8` whenever the mode is nonzero (@0x1942), so the
   resync looks every eight bytes.
 
-**What the grid cost**: `fmt_packit.c` 2,142 -> 2,160 B of m68k text at
-`-Os`, but sharing the magic test with the archive walk made **`ovl_packit`
-fall 4 B**, 2,648 -> 2,644; in the resident control code rose 20 B and A5
-fell 20, so `OVL_SAVED` does not move (ceilings re-taken in
-`tools/build_mac.sh`); the shipped resident size did not move. Graded:
-the third specimen's ciphertext carries a false `'PMag'` five bytes in,
+**What the grid cost**: `ovl_packit` **−4 B** (2,644 B), the shipped
+resident size unmoved (`tools/build_mac.sh`). Graded: the third specimen's
+ciphertext carries a false `'PMag'` five bytes in,
 off the grid, and the old scan lost the entry after it. A constructed
 worst case — a real `PMa5` ciphertext carries a false magic off the grid
 with probability about 2^-32 per candidate offset.
@@ -2142,9 +2106,8 @@ decoder, `src/fmt_sqp_probe.c` the sniffer, `tools/run_sqp.py` the suite
 `compress` code stream, decoded identically by **`gzip`** (*The codec*).
 The sniffer answers
 *AppleLink package* for **exactly the 7 of 996 corpus files that are
-packages and for nothing else** (re-measured 2026-10-17, when
-`synth-sqp-meta.pkg` made the seventh; no file's answer changed in any
-format), a sweep that can fail both ways (BLOCKERS.md).
+packages and for nothing else** (re-measured 2026-10-17), a sweep that
+can fail both ways (BLOCKERS.md).
 
 **The reference is `AppleLink Package Translator` 3.0.3, "Copyright ©
 1990-1992 Aladdin Systems, Inc."** — `'Othe' 1`, 33,300 bytes of 68k with
@@ -2200,8 +2163,7 @@ An SQP record:
 The stored flag is a bit of the BYTE at +84 (a `u16` reading would test
 bit 9); both original specimens carry `0x8000` there — the high bit set by
 `InitSqp` @0x5d56 and tested nowhere, bits 3 to 6 the list's own state,
-cleared on read (@0x312c). These readings corrected the section on
-2026-10-05.
+cleared on read (@0x312c).
 
 **The tolerance to question first, if a real package is reported
 unrecognised, is the exact tiling**: the probe requires the forks to cover
@@ -2238,11 +2200,10 @@ suffix and stack buffers (34,396 / 17,198 / 8,599 bytes).
 | packing | LSB-first, in blocks of *n_bits* bytes; a width change discards the rest of the block |
 
 **`src/unc_lzw.c` reads it unchanged** — `unc_lzw_init(&z, al, in, 13, 1,
-clen)`, ARC method 9's configuration. The claimed deviation (next free code
-256 after a clear) is **withdrawn**: 256 is `compress`'s own value
-(`reference/macutils/macunpack/de_compress.c`, `free_ent = FIRST - 1`),
-257 deark's, differing in a slot no valid stream names (BLOCKERS.md;
-DECISIONS.md 2026-10-05, *the deviation that was the reference*).
+clen)`, ARC method 9's configuration. Next free code 256 after a clear is
+`compress`'s own value (`reference/macutils/macunpack/de_compress.c`,
+`free_ent = FIRST - 1`), 257 deark's, differing in a slot no valid stream
+names (DECISIONS.md 2026-10-05, *the deviation that was the reference*).
 
 **The proof**: with `1f 9d` and a 13-bit block-mode byte in front, a
 SqueezePlay fork is decoded **byte-identically by `gzip`**, on all **59**
@@ -2378,8 +2339,7 @@ call sites, a complete 7 × 2 table):
 | @0x3920 | `.Z` | `'Eng ' 5` | Unix compress — it holds `1f 9d` |
 | @0x3962 | `.UU`, `.UUE` | `'Eng ' 6` | uuencode |
 
-The claim that `'Eng ' 2` holds the AppleLink expander is **withdrawn**
-(BLOCKERS.md). Over the whole 504,902-byte engine fork, `.pkg` is two
+Over the whole 504,902-byte engine fork, `.pkg` is two
 strings and no code: `STR# 1002` (*"Triggers"*: `.sit`, `big`, `.sea`,
 `.cpt`, `.pkg`) and `PICT` 4001, the About picture; every other hit is
 *"AppleLink: ALADDIN"*. The 3.5 translator expands into `NAME Folder`
@@ -2459,8 +2419,8 @@ we cannot read"*). PF Encrypt refuses passwords under six characters
 | deepest stack chain | **678 B**: `unc_pf_extract` 412 → `unc_crypt_pf` 42 → `unc_md5` 120 → `md5_block` 104 |
 | sniffing a file that is not one | six header bytes already read; a file that passes them pays one 4-byte read for the footer. **no file in `fixtures/` and none of 4,342 cached specimens** changed its answer |
 
-The reader cost **+1,652 B** resident, so it lives in `ovl_stuffit`; byte
-compares took the probe from 222 B to 186 (`tools/build_mac.sh`).
+The reader would cost **+1,652 B** resident, so it lives in `ovl_stuffit`
+(`tools/build_mac.sh`).
 
 ## Finder info in the archive: what each format's own expander puts back
 
@@ -2860,8 +2820,7 @@ python3 tools/vmac/interactive.py fixtures/derived-Cal.sit --segments -o DIR
 | finish | *Extraction complete.* |
 
 **It ends on a byte comparison**: the joined file read back off the
-volume, 50,205 B, byte-exact (two harness bugs here each produced a
-plausible wrong screenshot; DECISIONS.md). A disk inserted mid-run is
+volume, 50,205 B, byte-exact. A disk inserted mid-run is
 `interactive.py --diskswap`; what no emulator can settle (Mini vMac gives
 every insertion a new drive) is MANUAL_TESTS.md, "A disk swap in ONE
 drive".
@@ -2993,9 +2952,7 @@ a terminator, in a struct that is
 2026-10-17, *the metadata, carried to the disk*); one byte of struct costs
 two of size, because 292..300 are packed and `name_full_len` then needs a
 pad. It travels on a 4 KB call stack. The FILESYSTEM takes what `pathconf`
-says (255 bytes per component, 4,096 per path on ext4). Before this date
-the first cut names silently (a 457-byte zip path became 255 bytes, exit
-0).
+says (255 bytes per component, 4,096 per path on ext4).
 
 | cap | value | what meets it |
 |---|---|---|
@@ -3004,7 +2961,7 @@ the first cut names silently (a 457-byte zip path became 255 bytes, exit
 | uuencode line buffer | 96 | a `begin` line's name is cut here first, before the cap above |
 | btoa line buffer | 256 | `xbtoa5 N name Begin` — the name is inside the line |
 | one MIME header | 512 | a `Content-Type` `name=` or `Content-Disposition` `filename=` |
-| AppleSingle real name | 255 | was 64 until 2026-08-27 |
+| AppleSingle real name | 255 | entry 3 |
 | `pathconf(_PC_NAME_MAX)` | 255 on ext4 | one component: 255 MacRoman bytes are up to 765 of UTF-8 |
 | `pathconf(_PC_PATH_MAX)` | 4,096 on ext4 | `outdir/name`, and the only one of these that refuses |
 
@@ -3029,11 +2986,8 @@ the limit that was deleted*).
 Every subject reaching 24 is generated (`tools/synth_deep.py`), and three
 walks were misfiling entries there (BLOCKERS.md, *what ignoring a refused
 push cost*). **Removing the limit gave back 64 B** on a 1 MB Mac Plus
-(−68 B `CODE`, +4 A5): the walker now writes the uncut path straight into
-the host's `long_name` buffer, ONE path with ONE length. Per function,
-against the build before: `path_full_add` 152 → **0**, `unc_path_push` 194
-→ 160, `unc_path_pop` 62 → 78, `unc_path_init` 30 → 78, `unc_path_leaf`
-246 → 318 — **net −50 in the walker**; all six ceilings came down.
+(−68 B `CODE`, +4 A5): the walker writes the uncut path straight into
+the host's `long_name` buffer, ONE path with ONE length.
 
 #### What the DESTINATION actually allows — measured 2026-10-07
 
@@ -3057,14 +3011,8 @@ double-free at 97).
 an emulated Mac Plus at 4 MB, System 6.0.8, comes off the Out volume as
 **61 files, 61 forks byte-exact, names included** (`checkdisk.py
 --fixture`), in **30 folders**, deepest `D01/../D30/f30.txt`, all where
-the archive put them (the 2026-10-06 application had misplaced five
-folders; TESTING.md, *Folder nesting, and the limit that was deleted*).
-
-Stack, `-Os -fstack-usage`, against the build before: `unc_dd_extract`
-1,028 → 952 B, `unc_now_extract` 1,064 → 892, `unc_superdisk_extract`
-1,428 → 1,344, `unc_sqp_extract` 516 → 516; `dd_fork` unchanged at 1,828;
-the deepest chain, through `unc_dd_extract`, **3,386 → 3,310 B** against
-the 4 KB budget (*Stack*).
+the archive put them (TESTING.md, *Folder nesting, and the limit that
+was deleted*). Stack: *Stack*.
 
 ### A name in the wrong encoding is not a name
 
@@ -3652,11 +3600,11 @@ No fuzzer has a Shrink seed.
 | | |
 |---|---|
 | resident `CODE` and A5, SHIPPED | **+0 and +0** |
-| the images | `ovl_codecs` 6,404 → 7,520 → 7,628 B, and since 2026-10-11 `ovl_zipold`, with Reduce (*Reduce*); `ovl_exo` 31,936 → 32,036 → 32,056 → **32,084 B** for the method guard and adapter, the tick per partial clear (+76 B) and the peek's Cancel (+20), and the dry passes' progress (+28) (DECISIONS.md 2026-10-08, *the writer a zip is allowed to have twice*) |
-| resident CONTROL | `CODE` 167,036 → 168,200 B, A5 −12; **+96 on 2026-10-09** for the tick and the Cancel, 169,784 → 169,880 B, A5 +0; **+28 and +4** the same day when zip's dry passes stopped counting progress, → **169,908 B** (*the bar that counted the peek*, DECISIONS.md 2026-10-09) |
-| the download | 228,096 → 229,248 B; 231,424 → 231,552 B on 2026-10-09 (the download today is FORMATS' *Three configurations, one tree*) |
+| the images | `ovl_codecs` 6,404 → 7,628 B, and since 2026-10-11 `ovl_zipold`, with Reduce (*Reduce*); `ovl_exo` 31,936 → **32,084 B** for the method guard and adapter, the tick per partial clear (+76 B), the peek's Cancel (+20) and the dry passes' progress (+28) (DECISIONS.md 2026-10-08, *the writer a zip is allowed to have twice*) |
+| resident CONTROL | `CODE` 167,036 → 168,200 B, A5 −12; +96 for the tick and the Cancel and +28 / +4 A5 for the dry passes' progress, 2026-10-09 (*the bar that counted the peek*, DECISIONS.md 2026-10-09) |
+| the download | 228,096 → 229,248 B (today's: *Three configurations, one tree*) |
 | peak heap per Shrink ENTRY | **3 B per table slot**, sized from the compressed length — 257 + bits/9, at most 8,192 slots, **24,576 B**. `shrink-wild-BBA.zip` peaks at 18,474 B, `dream` at **39,094 B**, `titanic` at 38,777: above deflate's 24,863, inside zip's 12–54 KB row. A separate kind byte made it 4 B a slot and 47,286 B |
-| stack | `unc_shrink_decode` is a **120 B** frame since 2026-10-09's tick (116 before) and the Shrink chain **1,672 B**, under the Implode probe's 1,896 (*Stack*). Written in `src/fmt_exo.c` first, it was inlined into `zip_decode` and took that frame 56 → 140 B, which every deflate and Implode chain runs through |
+| stack | `unc_shrink_decode` is a **120 B** frame and the Shrink chain **1,672 B**, under the Implode probe's 1,896 (*Stack*). Written in `src/fmt_exo.c` first, it was inlined into `zip_decode` and took that frame 56 → 140 B, which every deflate and Implode chain runs through |
 | tier tallies | `run_tiers.py --check` moves none: 71/71, 67/71, 64/71 resident and 71/71, 69/71, 66/71 shipped. **Nor on 2026-10-09** for the tick: 72/72, 68/72, 63/72 resident and 72/72, 70/72, 66/72 shipped, the same fixtures by name; every grant falls 12 B and the three holding `ovl_exo` 32 |
 | heap | **+0** for the tick: it allocates nothing |
 | speed | the tick costs ~33 68000 instructions a clear: **+0.007 %** on `titanic`, +0.017 % on `dream` |
@@ -3923,55 +3871,23 @@ bundle*.
 | resident — the control | `UNC_OVL_RESIDENT=1` | **180,148 B** | **36,540 B** | 210,560 B | 218,496 B |
 
 Read off the builds 2026-11-02 (DECISIONS.md 2026-11-02, *the dialogs
-that became the application*: the lazy and resident instruments link a
-set's setup in and keep Standard File's Save dialog; the `MacExtract.bin`
-column includes the archive document icon, *the archives that drew as
-the application*). `CODE`
-excludes the MacsBug names, stripped since 2026-10-22 (*the names in the
-code*); A5 is data + bss in the heap since 2026-10-22's runtime trim (*the
-runtime the application did not need*). The ceilings, and what each
-change cost them entry by entry, are `tools/build_mac.sh`'s ratchet
-records; this table has gone stale behind them several times, so read the
-builds, not this table, before quoting it.
-
-Re-takes that measured something beyond the ratchet deltas:
-
-- **2026-10-22, the runtime the application did not need**: eager −2,552 B
-  `CODE` and −1,304 A5. The machine gave more, **+4,980 B to every shipped
-  budget and +4,204 B to the control's** (+4,186 on System 3.0), read off
-  the budget probe on both builds on all three tiers: the 816-byte jump
-  table, six 80-byte stub segments and 1,368 B of relocations were resident
-  and never in this table. `OVL_RESIDUE` −666 → −322.
-- **2026-10-22, the names in the code**: eager −4,416 B `CODE`, the
-  control −10,180; the seventeen images sum 192,066 → 179,276 B. A
-  format's layer gained between **+5,076 B** (AppleLink package) and
-  **+7,552 B** (an encrypted zip), **+17,176 B** for an envelope. Shipped
-  74/74, 72/74, 68/74, the same by name on the machine.
-- **2026-10-21, the probes that left with the bundle**: eager −9,284 B
-  `CODE`, −364 A5; `ovl_sniff` **13,384 B**. A format's layer **+9,616 B**
-  where the release keeps images, **−3,780 B** where it keeps the bundle
-  whole (an envelope, a split set's first layer). On the machine 74/74,
-  72/74, 68/74, the same fixtures by name. `synth-dd-m5.dd` read "98 B
-  short" at System 6.0.8 / 512Ke; **CORRECTED 2026-10-22: a lower bound,
-  not a distance** — the lane reports the FIRST refused allocation; the
-  machine's peak for it is 401,408 B (*512 KB machines*) against a 235,142
-  B grant.
-- **2026-10-05, AppleLink packages**: the first format since the overlays
-  whose shipped column moved by more than eight bytes, **+788 `CODE` and
-  +60 A5**, for its 666-byte resident PROBE (the decoder, 1,474 B, is in
-  `ovl_sqp`) (DECISIONS.md 2026-10-05, *the probe that had to be a file
-  test*). The probe moved to `ovl_sniff` on 2026-10-21.
-- **2026-10-06**: a 4 B text change cost the lazy build **+28 B of A5**,
-  `*fill*` under `. = ALIGN (0x20)` at the head of `.data` — the
-  rodata-alignment step recorded in `tools/build_mac.sh`, stepping the
-  wrong way in one configuration (DECISIONS.md 2026-10-06, *the directory
-  of empty records*).
+that became the application*; the `MacExtract.bin` column includes the
+archive document icon, *the archives that drew as the application*).
+`CODE` excludes the MacsBug names; A5 is data + bss in the heap
+(DECISIONS.md 2026-10-22, *the names in the code*, *the runtime the
+application did not need*). The ceilings, and what each change cost them,
+are `tools/build_mac.sh`'s ratchet records: read the builds, not this
+table, before quoting it. Re-takes that measured more than a ratchet
+delta (budgets gained per tier, image sums) are in those two entries and
+DECISIONS.md 2026-10-21, *the probes that left with the bundle*: `ovl_sniff` **13,384 B**; the runtime trim gave **+4,980 B to
+every shipped budget and +4,204 B to the control's** (+4,186 on System
+3.0). `synth-dd-m5.dd`'s "98 B short" at System 6.0.8 / 512Ke is **a
+lower bound, not a distance** (CORRECTED 2026-10-22; *512 KB machines*).
 
 **What a FORMAT's own code costs the shipped build: measured 2026-09-29,
 and it is nothing.** A 5,166-byte blob added to `src/fmt_sit.c` moved the
 eager build's `CODE` and A5 by **0 and 0**; it landed in `ovl_stuffit.bin`
-(18,582 → 23,754 B) and the bundle; only the control grew (152,068 →
-157,252), and `run_tiers.py --check` held every tally by name. **Decoder
+and only the control grew. **Decoder
 code inside one format's overlay is free to every archive not of that
 format**; to price the next one, compile a blob of its size into the
 format's file and read the six numbers off. Zip's Macintosh extra fields
@@ -4015,7 +3931,7 @@ bundle is not `ovl_bundle.r.rsrc.bin`, the Rez'd resource fork around it
 (DECISIONS.md 2026-09-26, *the fork that was mistaken for its contents*).
 It is not resident while an archive is extracted, so
 `tools/check_app_size.py` watches `MacExtract.code.bin` (`EXPECT`
-**46,336 B**) and only warns on the bundle.
+**46,976 B**; CORRECTED 2026-11-02 from 46,336, read off the script) and only warns on the bundle.
 
 **The launch READ is not a new cost** (DECISIONS.md 2026-09-26, *the fork
 that was mistaken for its contents*). Figures of 2026-10-06, not
@@ -4075,19 +3991,13 @@ per format, and one per layer*).
 The model's `.Z` budget lands within 40 B of the machine's own — ONE data
 point, `a2ps.V4.3.tar.Z` on System 6.0.8 / 512Ke, itself derived: 81,938 B
 (a2ps's 86,080 B peak less the 4,142 B shortfall it was refused by) against the
-model's 81,978. **"It decides nothing at a narrowest margin of 16,490 B" —
-WITHDRAWN 2026-10-09**: the bases were the CONTROL build's, 16,888 B stale, and
-a fixture was refused (*Budget*; DECISIONS.md 2026-10-09, *the base nobody
-re-took*).
+model's 81,978 (DECISIONS.md 2026-10-09, *the base nobody re-took*).
 
 The table equals `run_tiers.gain()` to the byte (checked 2026-11-02). Rows
 marked *(measured)* are formats whose TALLY the machine confirmed at that
 budget (a fixture is in the Mac sample); the rest are the same sum with no
-fixture. Every row has since moved by arithmetic only — each application or
-image change since 2026-10-09 shifts `OVL_SAVED`, the images and `TIERS` by
-amounts recorded in its DECISIONS.md entry and in `tools/run_tiers.py`'s
-comments, last on 2026-11-02 (*the dialogs that became the application*), with
-`run_tiers.py --check` moving no tally.
+fixture. Rows have moved by arithmetic only since 2026-10-09, each move
+recorded in its DECISIONS.md entry and `tools/run_tiers.py`'s comments.
 
 | sniffed format | images kept | granted, against the control |
 |---|---|---|
@@ -4160,28 +4070,22 @@ sets), summed per object, **re-measured 2026-09-23**:
 | **total** | **142,380** | **27,461** |
 
 Summing per object overstates what ships, because `--gc-sections` drops what
-nothing calls; the linked figure is `tools/code_map.py`'s, below. (The rodata
-half was wrong 2026-09-19 to 09-23: it still counted `unc_crypt.c`'s three
-2,048-byte tables after they moved to key setup — *Where the code is*.)
+nothing calls; the linked figure is `tools/code_map.py`'s, below.
 
 The application ships as **243,328 B** of MacBinary (`dist/MacExtract.bin`,
-`ls -l` 2026-11-02; it read 237,568 B on 2026-10-25). **46,976 B** is
+`ls -l` 2026-11-02). **46,976 B** is
 `MacExtract.code.bin`, read at launch and never purged, and **188,404 B** is
 the `'OVLY'` bundle, read at launch and mostly given back before the engine
 takes its budget (*Overlays*). What stays costs the heap one for one: the
 link produces a single `MacExtract.code.bin`, and `Elf2Mac/LdScript.cc`
 emits `*(.rodata*)` inside `.data`, so it is never purgeable.
 
-**A month of growth (+10,112 B, 2026-08-28 → 09-23, all still resident)
-cost no tally** — measured by moving the budget in `tools/run_tiers.py`
-rather than the binary: 10,112 B larger gives the same **71, 67 and 64**;
-10,112 B smaller drops System 6.0.8 / 512 KB to 63. The narrowest passing
-fixture then, `derived-LHA_Expander_1.0.3.sea`, needed **116,784 B**
-(bisected 2026-09-27) against that tier's 129,244 — **12,460 B of
-headroom**, which is why `tools/check_app_size.py` fails CI on a 2 KB move.
-At 2026-10-09's re-taken 110,332 the resident lane refuses it, 6,452 B short
-(*Budget*). Formats added that month peak at 5 KB (base64) and 8 KB (MIME)
-(DECISIONS.md 2026-09-23, *the ten kilobytes nothing watched*).
+**Why `tools/check_app_size.py` fails CI on a 2 KB move**: the narrowest
+passing fixture at System 6.0.8 / 512 KB, `derived-LHA_Expander_1.0.3.sea`,
+needed **116,784 B** (bisected 2026-09-27) against that tier's 129,244 —
+**12,460 B of headroom**; at 2026-10-09's re-taken 110,332 the resident
+lane refuses it, 6,452 B short (*Budget*; DECISIONS.md 2026-09-23, *the
+ten kilobytes nothing watched*).
 
 The five largest objects (2026-09-23): `macextract_mac.c` (17,066 + 2,183),
 `fmt_spacesaver.c` (6,292 + 9,712, its rodata almost all `ss_dict.h`),
@@ -4300,10 +4204,8 @@ above its bisected Linux minimum of 561,441 B:
 The 40 B is the Mac allocator's 16 B per live block less what 32-bit
 pointers save in the engine's structs — a constant, the same one *Floor
 target verification* reports. At the 648,100 B budget of the day XMenu read
-631,644 against 631,684 B. The earlier claim of a 16–62 KB, non-constant gap
-is withdrawn: it read the run's first (expected) refusal and a full 1,440 KB
-Out floppy (BLOCKERS.md, *Withdrawn claims*; DECISIONS.md 2026-09-18, *the
-floppy that was full*).
+631,644 against 631,684 B (DECISIONS.md 2026-09-18, *the floppy that was
+full*).
 
 **The proxy cannot predict TIME.** A fixture capped near its minimum sits on
 a low rung of the sampled index: EasyFind at 562,000 B is 17 s on Linux and
@@ -4325,10 +4227,7 @@ free.** MEASURED 2026-09-02:
 `--mac-single` puts data inside `CODE` 1 and bss in a heap block, which
 costs the same bytes by another road (DECISIONS.md 2026-10-22, *the runtime
 the application did not need*). What is free is a resource that is not
-loaded — a `DITL`, an `ICN#`, an `OVLY` blob nobody has asked for. The
-2026-08-30 measurement that said data was free is withdrawn (BLOCKERS.md):
-`--gc-sections` had dropped its ballast. **`nm` the binary that actually
-ran.**
+loaded — a `DITL`, an `ICN#`, an `OVLY` blob nobody has asked for.
 
     budget ≈ 708,100 - code - A5      (autotest build, 1 MB, System 6.0.8)
 
@@ -4378,22 +4277,15 @@ output sections answer what the budget asks.
 and 106,208 B on the 512Ke tiers (*512 KB machines*). Lowered since by
 derivation to **627,832 B** (2026-10-25), one for one with the control's
 growth; `tools/run_tiers.py` (`TIERS`, `TIERS_CONTROL`, `TIERS_MACHINE`)
-holds the current figures and each step. Earlier machine figures: 634,364
-(2026-10-09), 653,532 (2026-09-27), 648,250 (2026-09-22), 648,100
-(2026-08-31). Every re-take has moved all three tiers by the identical
-amount — the control build's `CODE` + A5 change. `-D UNC_AT_BUDGET` itself
+holds the current figures and each earlier re-take. Every re-take has
+moved all three tiers by the identical amount — the control build's
+`CODE` + A5 change. `-D UNC_AT_BUDGET` itself
 costs the control ~300 B (*Three configurations, one tree*). The shipped
 build's per-format budget is this plus what the overlay release gives back
 (*Overlays*).
 
-**Withdrawn on this figure** (BLOCKERS.md, *Withdrawn claims*): `TIERS`
-16,888 B above the machine 2026-10-02 → 10-09, so the shipped lane
-over-granted every format (DECISIONS.md 2026-10-09, *the base nobody
-re-took*); "647,204 B, arithmetic", a correct subtraction from a three-week
-stale base — the machine had gone UP 182 B. A constant derived from a
-measurement is only as current as the measurement. The 2026-09-22 change
-was predicted at −64 B and measured −32 (DECISIONS.md 2026-09-22, *the
-header that was a length*): the measurement is the number.
+**Withdrawn on this figure**: BLOCKERS.md, *Withdrawn claims*
+(DECISIONS.md 2026-10-09, *the base nobody re-took*).
 
 **Re-pricing unmeasured constants bought 81,936 B in two days**, at no cost
 in speed: 566,164 → 615,348 B when the reserve went flat (49,184 B), →
@@ -4403,12 +4295,9 @@ a day of size flags bought 780 B for 0.82 % of every extraction (*Size flags,
 priced in both currencies*). The stack cut's revert and re-make is in
 BLOCKERS.md, *Withdrawn claims*.
 
-**The reserve** (`kMemReserveMax` = `kMemReserveMin` = 20 KB): a flat 80 KB
-until 2026-08-24, a quarter of free clamped to [32 KB, 80 KB], a flat 32 KB
-2026-08-30, 20 KB since 2026-08-31 (DECISIONS.md 2026-08-24, *the reserve*).
-Each step went entirely to the engine; 80 KB → the quarter rule took Now
-Compress from none of its fixtures to all three in the minimum partition
-(*Budget sweep*). `-D UNC_AT_RESERVE` measured the shell and Toolbox at
+**The reserve** (`kMemReserveMax` = `kMemReserveMin` = 20 KB, since
+2026-08-31; its history is DECISIONS.md 2026-08-24, *the reserve*). Each
+step down went entirely to the engine. `-D UNC_AT_RESERVE` measured the shell and Toolbox at
 **13,242 B** (559,136 B low-water against 647,096 free, engine peak 74,718)
 and **22,508 B** of total heap on the password path, the most dialog-heavy
 moment. Pricing it needs a fixture that fits and is heavy: an archive too
@@ -4423,11 +4312,8 @@ peak.
 `target` rung for the slowest fixture needs a 650,222 B peak, and a 1 MB
 Mac Plus had **648,084 B** free before any reserve.
 
-**The three heaviest archives**, each needing 566,009 B, stopped fitting when
-the budget fell from 597,036 B (2026-08-24) as the application grew 31,860 B;
-they were refused per entry and none is in the on-Mac sample. Replayed on
-the machine at 1 MB on 2026-08-31 (a Linux-proxy claim that they fit was
-withdrawn first — BLOCKERS.md, *Withdrawn claims*):
+**The three heaviest archives**, each needing 566,009 B (none is in the
+on-Mac sample), replayed on the machine at 1 MB on 2026-08-31:
 
 | fixture | on a 1 MB Mac Plus | peak |
 |---|---|---|
@@ -4435,26 +4321,21 @@ withdrawn first — BLOCKERS.md, *Withdrawn claims*):
 | `derived-XMenu.dmg.sit` | **extracts**, 1 file byte-exact | 600,692 B |
 | `derived-EasyFind.dmg.sit` | **extracts**, 1 file byte-exact — since 2026-09-18, capped at 562,000 B with a 2,400 KB destination; the 2026-08-31 "refusal" was the harness's 1,440 KB Out floppy | 561,919 B |
 
-"What EasyFind would take is 2,031,101 B more" is withdrawn: it was the
-transform vector's expected refusal (DECISIONS.md 2026-08-31, *the message
-that failed a successful extraction*). The whole corpus is inside a 1 MB Mac
-Plus since 2026-09-18; Domino cleared a 627,620 B budget by
+The whole corpus is inside a 1 MB Mac Plus since 2026-09-18 (DECISIONS.md
+2026-08-31, *the message that failed a successful extraction*); Domino cleared a 627,620 B budget by
 13,602 B. Run at 615,348 and 627,620 B, all three peaks were identical to
 the byte (614,018, 600,500, 600,692).
 
-**The budget was 678,392 B until 2026-08-24, 91 KB too generous**: it went
-stale silently because it is `FreeMem()` when extraction begins and falls
-whenever the application grows, and nothing re-measured it for seventeen
-days. The index's halving `target` hid it — a budget error smaller than the
-gap between two rungs changes nothing observable. A cross-validation that
-agrees is not evidence when the thing it drives is quantised.
+**The budget is `FreeMem()` when extraction begins, so it falls whenever
+the application grows**; it once sat 91 KB too generous for seventeen days
+(BLOCKERS.md, *Withdrawn claims*).
 
 **Two budgets, three and a half times apart.** Under MultiFinder and System 7
 the application gets a PARTITION; `macextract.r` declares a 400 KB minimum.
 
 | | free | reserve | budget |
 |---|---|---|---|
-| System 6.0.8, 1 MB, no MultiFinder (whole machine), resident control | 650,976 B | 20 KB | **630,496 B** (measured 2026-10-22; 634,364 on 2026-10-09) |
+| System 6.0.8, 1 MB, no MultiFinder (whole machine), resident control | 650,976 B | 20 KB | **630,496 B** (measured 2026-10-22) |
 | System 7 / MultiFinder at the declared 400 KB minimum, **shipped overlay build** | 285,812 B | 20 KB | **265,332 B** |
 | the same partition, resident control build | 202,126 B | 20 KB | **181,646 B** |
 
@@ -4483,10 +4364,6 @@ about 800 KB in Get Info extracts the whole corpus; at the 400 KB minimum
 every archive opens and lists, and 16 of 31 StuffIt 5 fixtures and two
 others fail per entry with a message.
 
-The opens-floor was 137,264 B until 2026-08-24: Now Compress's block buffers,
-the engine's only per-ARCHIVE allocation, refused the whole archive. It
-fails per entry now.
-
 ### Budget sweep: the corpus at both budgets
 
 `tools/run_budget.py` at the MultiFinder figure of the day (*Budget*), the
@@ -4504,10 +4381,8 @@ one a user can choose:
 | Unix compress | 4 | 1 | 120,880 B |
 | StuffIt 5 | 31 | **16** | 158,165 B |
 
-Before 2026-08-24 the same sweep at 130,136 B had Now Compress at 2 of 3
-limited with a peak of zero (refused whole) and StuffIt 5 at 21. At the
-roomy 597,036 B budget only StuffIt 5 refuses anything (8 of 31), hence its
-memory-for-time path. Windows sized from the entry (2026-08-24):
+At the roomy 597,036 B budget only StuffIt 5 refuses anything (8 of 31),
+hence its memory-for-time path. Windows sized from the entry (2026-08-24):
 
 - **Now Compress** allocated 131,072 B per ARCHIVE before an entry was read;
   sized from the largest fork the small fixture is 84,248 B, and listing
@@ -4607,8 +4482,7 @@ correctly down to 10 KB.
 **So `kStackBump` is 4 KB, a 12 KB stack** — 2.1x the deepest write observed
 — and **20,464 B** went to the engine (*Budget*). Verified byte-exact at that
 size on **69/69 at 1 MB**, 512 KB and System 7, and on Mac OS 9.2 on
-2026-09-04 (21/21 plus six DiskDoubler archives); that tier had been named as
-verified four days before it was run (BLOCKERS.md, *Withdrawn claims*). The
+2026-09-04 (21/21 plus six DiskDoubler archives). The
 Mac OS 9 bomb of the time was a field nobody assigned, not the stack size
 (DECISIONS.md 2026-09-04).
 
@@ -5053,8 +4927,7 @@ Macintosh; 4 files, 103,043 data bytes, 22,740 B peak) alone the same day, and
 `synth-sqp-clear.pkg` (the first AppleLink package; 2 files, 36,300 data
 bytes, 41,274 B) on 2026-10-11. Resource forks exact bar the OS-stamped
 reserved header (bytes 16–127). `n/44`, `n/55`… figures elsewhere are earlier,
-smaller samples, left as measured; four names listed twice until 2026-08-21
-are BLOCKERS.md's. The nine THINK C / leading-`~` fixtures added 2026-08-08
+smaller samples, left as measured. The nine THINK C / leading-`~` fixtures added 2026-08-08
 are the only ones that distinguish a fork-naming mistake (DECISIONS.md
 2026-08-08, *the Mac-side checkers stopped guessing at sidecars*).
 
@@ -5067,8 +4940,7 @@ not in the sample.
     tools/vmac/run.py --list tools/vmac/sample.txt   # 4 MB
 
 `EMUDIED` is a harness event, not a Mac-side failure (`tools/vmac/README.md`).
-An earlier 39/44 record is withdrawn (BLOCKERS.md, *Withdrawn claims*). This
-emulator runs **all out**: correctness only, **no timing claim about a 7 MHz
+This emulator runs **all out**: correctness only, **no timing claim about a 7 MHz
 68000 can be drawn from it**.
 
 On-Mac engine peak heap by format, matching Linux `--stats`:
@@ -5078,7 +4950,7 @@ On-Mac engine peak heap by format, matching Linux `--stats`:
 | MacBinary / BinHex / Tar | 8 KB |
 | PackIt | 9 KB |
 | Compact Pro | 24 KB |
-| Zip | 12–53 KB (re-measured 2026-08-09, was 12–65: see ¶) |
+| Zip | 12–53 KB (see ¶) |
 | Gzip | 51 KB |
 | StuffIt classic | 19–72 KB‖ |
 | Unix compress (.Z) | 15–219 KB§ |
@@ -5123,18 +4995,17 @@ System 6**, and it is demonstrated by the 74/74 run below.
 
 The seven fixtures M12 added. **Identical numbers at 4 MB and at 1 MB**; the
 on-Mac peak exceeds Linux by the shell's 16 B. **Peaks re-measured
-2026-08-24** after the Huffman lookup tables (the 3–6 KB each row gained;
-previous figure in brackets):
+2026-08-24**, after the Huffman lookup tables:
 
 | Fixture | Format / method | Files | Peak heap on the Mac | Data | Rsrc |
 |---|---|---|---|---|---|
 | `derived-DandStoQIF2.sea` | DiskDoubler AD1 (9) | 3 | 16,400 B | 20,918 B | 24,562 B |
-| `derived-MAZv143.sea` | DiskDoubler Compact Pro (8) | 2 | 22,594 B (was 19,318) | 57,078 B | 40,079 B |
-| `derived-MacPass390.sea` | DiskDoubler Compact Pro (8) | 3 | 22,594 B (was 19,318) | 0 B | 351,825 B |
-| `derived-DD_Expand.sea` | DiskDoubler DDn (10) | 1 | 108,610 B (was 102,432) | 0 B | 270,362 B |
-| `derived-LHA_Expander_1.0.3.sea` | DiskDoubler DDn, folders | 5 | 116,802 B (was 110,624) | 69,776 B | 82,778 B |
-| `derived-Terrainman_2.0__.sea` | DiskDoubler DDn + delta-1 | 12 | 112,706 B (was 106,528) | 95,860 B | 245,265 B |
-| `derived-Expand_Now_1.0.1.sea` | Now Compress | 1 | 137,250 B (was 131,088; 235,568 B on Linux with four block slots since 2026-09-19, not re-run) | 0 B | 88,942 B |
+| `derived-MAZv143.sea` | DiskDoubler Compact Pro (8) | 2 | 22,594 B | 57,078 B | 40,079 B |
+| `derived-MacPass390.sea` | DiskDoubler Compact Pro (8) | 3 | 22,594 B | 0 B | 351,825 B |
+| `derived-DD_Expand.sea` | DiskDoubler DDn (10) | 1 | 108,610 B | 0 B | 270,362 B |
+| `derived-LHA_Expander_1.0.3.sea` | DiskDoubler DDn, folders | 5 | 116,802 B | 69,776 B | 82,778 B |
+| `derived-Terrainman_2.0__.sea` | DiskDoubler DDn + delta-1 | 12 | 112,706 B | 95,860 B | 245,265 B |
+| `derived-Expand_Now_1.0.1.sea` | Now Compress | 1 | 137,250 B (235,568 B on Linux with four block slots since 2026-09-19, not re-run) | 0 B | 88,942 B |
 
 **Multi-document BinHex was checked here too**: `export-hc.hqx`, a mail
 separator and `mac-rot13.hqx` concatenated, 2 files byte-exact at 4 MB and
@@ -5176,10 +5047,8 @@ report took ~8 KB of static RAM and 5.6 KB of application (*Name limits*):
 Library_ISBN, a2basic). That the peaks fall with the budget is a
 **hypothesis, not measured**: Arsenic picks its transform strategy from what
 the allocator will give it, so a smaller budget moving a peak down a doubling
-step is what the design does. The 2026-08-26 rows (160,766, 181,774, 269,084,
-560,589, 614,134 and 660,262 B) all moved by 2026-10-09, three down and three
-up, across a budget that grew with the overlays — consistent with the
-hypothesis, not a test of it.
+step is what the design does (DECISIONS.md 2026-08-07, *the inverse BWT
+falls back to a sampled occurrence index*).
 
 | Fixture | Format | Outcome at 1 MB | Peak heap |
 |---|---|---|---|
@@ -5194,8 +5063,7 @@ hypothesis, not a test of it.
 inverse BWT, chosen automatically when the per-byte table's allocation fails.
 
 **What those three entries hold**, measured 2026-08-03 by instrumenting
-`numbytes` where `sit_arsenic.c` sizes the transform vector (the withdrawn
-"each fills a 512 KB block" is in BLOCKERS.md, *Withdrawn claims*):
+`numbytes` where `sit_arsenic.c` sizes the transform vector:
 
 | fixture | largest block fill | capacity by doubling | peak |
 |---|---|---|---|
@@ -5319,36 +5187,28 @@ System 6's, and the difference is the SYSTEM HEAP: free heap at extraction
 **225,956 B** under System 3.0 against **130,556 B** under System 6.0.8 (both
 2026-10-09), a gap of 95,400 B — the same to the byte the sixth time taken —
 against System files of 181,913 B and 1,221,287 B. The reserve is the same
-constant on both, so the budget gap is the same 95,400 B. (It read "~74 KB"
-until 2026-09-22: the difference between two peaks on one fixture.)
+constant on both, so the budget gap is the same 95,400 B.
 
 **The shipped System 6 tier was PREDICTED before it was run**:
 `tools/run_tiers.py --tier sys6-512K --shipped` said 66/71 on 2026-09-27 and
-named five; the machine refused those five and no others. On 2026-10-09 the
-model was wrong — it passed `a2ps.V4.3.tar.Z`, which the machine refused
-(granted 81,938 B, needs 86,080) — because its bases were 16,888 B stale;
-re-taken, it names all six (BLOCKERS.md, *Withdrawn claims*). The six:
+named five; the machine refused those five and no others. Re-taken after
+2026-10-09's stale bases (BLOCKERS.md, *Withdrawn claims*), it names all
+six:
 `a2ps.V4.3.tar.Z`, `derived-Cool_Tools__.sit`,
 `derived-Library_ISBN_Barcoder.sit`, `derived-a2basic.dmg.sit`,
 `popper-1.7.tar.Z` and `synth-dd-m5.dd`; the two `.Z` files are envelopes and
-keep the whole bundle (*What each format is granted*). A 2,926 B discrepancy
-under that model was the stale base (DECISIONS.md 2026-09-27, *the residue
-that was two numbers*).
+keep the whole bundle (*What each format is granted*).
 
 **The reserve is a flat 20 KB on every tier**: `budget = FreeMem() - 20,480`,
 reproduced to the byte by the 2026-09-22 and 2026-09-27 probes on all three
-machines. Replacing the quarter rule recovered
-`derived-Troi-ClipSave-Plug-in1.1.sit` here (65/69 → 66/69); under System
-6.0.8 the quarter always fell under the old 32 KB floor, so only the stack cut
-moved that tier (BLOCKERS.md, *Withdrawn claims*). **A kilobyte of
+machines. **A kilobyte of
 application costs the engine a kilobyte here too.** On
 `derived-Troi-ClipSave-Plug-in1.1.sit` with every decoder resident the two
 systems wrote 11 entries at 163,332 B against 6 entries at 89,613 B.
 
 ### A true Macintosh 512K: the machine boots, the application bombs
 
-**A 64 KB ROM cannot boot HFS** (MEASURED; "cannot be reached at all" was
-withdrawn 2026-08-31, BLOCKERS.md). On HFS the machine dies at startup, **Sad
+**A 64 KB ROM cannot boot HFS** (MEASURED). On HFS the machine dies at startup, **Sad
 Mac `0F0064`**, with the 128K ROM image (`28BA61CE`) and the 512K's own
 `28BA4E50` alike; a blank HFS volume with no boot blocks is declined, not
 fatal, so what fails is the boot code. On **MFS** it boots:
@@ -5497,10 +5357,8 @@ row: the autotest extracts one layer, so `export-hc.hqx` gives the 1,615-byte
 same 22 (`tools/vmac/README.md`, *Why an entry is refused*): `e1`, `wa`, `kf`,
 the shortfall and the refusal reason 0 on all 22, and `fc=1` — the 68LC040
 emulator offers `_HWPriv`, called once for the bundle and once per kept image.
-The `UncOptions`-zeroing fix (2026-09-04) cost **147,548 B of code before,
-147,544 B after**, 4 B moving to the A5 world; before it every DiskDoubler
-archive bombed (DECISIONS.md 2026-09-04, *the field nobody assigned*;
-BLOCKERS.md, *Withdrawn claims*). The five off-sample DiskDoubler archives:
+DiskDoubler bombed here until the `UncOptions`-zeroing fix (DECISIONS.md
+2026-09-04, *the field nobody assigned*). The five off-sample DiskDoubler archives:
 **5/5 byte-exact** (2026-09-04). `tools/vmac/os9sample.txt`, one fixture per
 format, each in its own boot from a pristine copy of the master image:
 
@@ -5519,7 +5377,7 @@ format, each in its own boot from a pristine copy of the master image:
 | `derived-DDT.sit` | StuffIt with a resource fork | 2 | 1,473 | 3,504 | ✅ byte-exact |
 | `derived-KeyGraphics.sit` | StuffIt 5 / Arsenic | 1 | 0 | 33,484 | ✅ byte-exact |
 | `derived-XferIt_1.5b4.sea` | Compact Pro self-extracting | 10 | 679,423 | 268,752 | ✅ byte-exact |
-| `derived-DandStoQIF2.sea` | DiskDoubler | 3 | 20,918 | 24,562 | ✅ byte-exact; this tier's refusal case until 2026-08-27 |
+| `derived-DandStoQIF2.sea` | DiskDoubler | 3 | 20,918 | 24,562 | ✅ byte-exact |
 | `synth-exo-tar.tar` | tar | 4 | 7,808 | 0 | ✅ byte-exact |
 | `synth-exo-zip-deflate.zip` | zip | 4 | 7,808 | 0 | ✅ byte-exact |
 | `synth-arc-mixed.arc` | ARC, all nine methods | 9 | 16,200 | 0 | ✅ byte-exact |
@@ -5536,10 +5394,8 @@ format, each in its own boot from a pristine copy of the master image:
 compared in one `--launch` sweep on 2026-10-10.
 
 `derived-800saywhat301j.sit` found two defects in the HARNESS and none in
-the application: `mac_leaf` folded the composed spelling, and `_walk_volume`
-(`hls` without `-a`, `rstrip()` on `Icon\r`) could not see invisible entries
-on any fixture this tier had run (DECISIONS.md 2026-09-22, *the fold, on a
-Macintosh*). The colour icon members and the refusal alert are photographed
+the application (DECISIONS.md 2026-09-22, *the fold, on a Macintosh*). The
+colour icon members and the refusal alert are photographed
 (DECISIONS.md 2026-08-24, *the icon*).
 
 This tier reads its result **off the disk**: both forks of every file lifted
@@ -5554,8 +5410,7 @@ a 2 GB image copy) against Mini vMac's ~5 s, so it samples for breadth of
 format; memory-budget spread is a 1 MB question.
 
 **The Finder is driven from the keyboard.** The pointer works only stepped,
-never through `usb-tablet` (`tools/vmac/os9mouse.py`); the "five primitives at
-zero effect" reading is withdrawn, BLOCKERS.md.
+never through `usb-tablet` (`tools/vmac/os9mouse.py`).
 
 ### Cancelling, and an 8-bit name, on Mac OS 9 (2026-08-28)
 
@@ -5588,11 +5443,10 @@ The pointer is parked on the button while the destination dialog is still up,
 because positioning costs ~40 s (DECISIONS.md 2026-08-28, *clicking a dialog
 that does not exist yet*).
 
-**The test found a defect on its first outing**: Now Compress never called the
-progress callback, so the application pumped no events for the whole
-extraction. Fixed the same day (BLOCKERS.md, *withdrawn claims*; TESTING.md,
-*The progress callback*); `derived-SyntheticReferences2.0.sea` then cancels on
-the FIRST chord, 1 of 2 entries written and byte-exact.
+**Now Compress**, whose missing progress callback this test found
+(BLOCKERS.md, *Withdrawn claims*; TESTING.md, *The progress callback*):
+`derived-SyntheticReferences2.0.sea` cancels on the FIRST chord, 1 of 2
+entries written and byte-exact.
 
 **`19-names.png` photographs an 8-bit name**: `synth-packit-2.pit` carries
 `App` + MacRoman `CC A9`, and Mac OS 9 draws it as `AppÃ©` in the Finder's
@@ -5635,10 +5489,9 @@ cannot be committed; they run by path:
 | output | **76,800 B byte-exact** against `macextract x`, one boot |
 | the name | the Mac writes **`archive.sit~1`**: SpaceSaver compressed a file in place, so the output is named after the archive, and the archive is still sitting in the destination folder |
 
-**The first run found a shell defect**: `mac/macextract_mac.c` stripped the
-last extension where `cli/main.c` exempts SpaceSaver, so `Report.txt` came
-out as `Report` on the Mac only. Fixed the same day; this tier is the
-regression test (DECISIONS.md 2026-08-28, *the exception one front end had*).
+This tier is the regression test for the shell's SpaceSaver name
+exemption (`Report.txt` came out as `Report` on the Mac only; DECISIONS.md
+2026-08-28, *the exception one front end had*).
 
 ### Onto HFS+ (the same machine, the boot volume instead of the transfer disk)
 
@@ -5875,11 +5728,8 @@ Expander adds disk images and btoa. **PackIt, SpaceSaver, AppleLink `.pkg`
 and DiskDoubler appear nowhere.** It does not do those four, Compact Pro
 encryption, mail-split archives or non-StuffIt segments (*"does not currently
 support segmented or spanned Zip archives"*); the middle two and StuffIt 2.0's
-archives are measured in *Run over the hard cases*.
-
-**It found StuffIt 5 method 14 missing from this engine** (84 of the
-installer's 258 entries refused on v0.34.0); **closed 2026-10-03**, all 258
-extract (*StuffIt 5's method 14*, above).
+archives are measured in *Run over the hard cases*. Its installer's 258
+entries all extract (*StuffIt 5's method 14*, above).
 
 ### Run over the hard cases: 4.0.2, 5.5.1 and 7.0.3 (2026-10-11)
 
@@ -6027,11 +5877,9 @@ Expander, and opening with it wrote `Kept Whole` byte-exact (DECISIONS.md
 claimed types**, `FREF`s 130–158 in `mac/macextract_icons.r`, the types
 MacStamp offers MacExtract for: `BINA`, `ApSi`, `TEXT`, `TARF`, `PIT `, `SITD`,
 `SIT!`, `SIT5`, `PACT`, `DDA2`, `DDAR`, `Gzip`, `ZIP `, `ZIVU`, `LHA `,
-`NCar`, `mArc` (+459 B, 232,513 → 232,972), `ZIVM`, `HBSF`, `CSIT`, `SPSV`
-(+108 B, 232,130 → 232,238), and on 2026-10-24 `SDar`, `Seg1`, `Seg2`,
-`Seg3`, `SegN`, `SegM`, `DDSP` and `ARC7` (+216 B, 232,238 → 232,454; `Part`
-added and dropped the same day, as an unfinished expansion rather than a
-segment) — no code in any of them. Measured with the shipped binary
+`NCar`, `mArc`, `ZIVM`, `HBSF`, `CSIT`, `SPSV`, `SDar`, `Seg1`, `Seg2`,
+`Seg3`, `SegN`, `SegM`, `DDSP` and `ARC7` (`Part` is not claimed: an
+unfinished expansion rather than a segment) — no code in any of them. Measured with the shipped binary
 (`as703.py --set claims`): the `BINA/TIGR` file lists MacExtract above the
 Expander; `derived-Export.sit` typed `SITD/SIT!` on a volume with no StuffIt
 application lists MacExtract alone and wrote `Export` (`STAK/WILD`, 6,944 B,
@@ -6043,8 +5891,7 @@ dialog: its second `BNDL` (129) carries signature `SIT!`. The price of `TEXT`
 archive icon (`ICN#` 129, `mac/macextract_archive_icons.r`), not the
 application's — +2,336 B of resource fork, +72 B of resource map, no code
 (DECISIONS.md 2026-10-25, *the archives that drew as the application*).
-Measured 2026-10-23 (`as703.py --set icons`): before the claims named a mapped
-icon, `Single.as` typed `ApSi/MExt` drew a blank document; MacCompress's own
+Measured 2026-10-23 (`as703.py --set icons`): MacCompress's own
 `ZIVM/LZIV` file offers MacExtract alone and extracts with both forks
 byte-exact (renamed `Alpha~1`). `as703.py --set sdar`:
 `derived-SD__Utilities.x`'s data fork alone, typed `SDar/MExt`, launches
@@ -6072,9 +5919,8 @@ instrument and what it cannot see are in `tools/vmac/README.md`.
 25,483/25,483 ticks; host ÷ Mac seconds 0.994–1.001 on all sixteen. **Ours is
 faster on all four.**
 
-**Corrected 2026-10-19:** the earlier screenshot-poll figures were upper
-bounds, not lower bounds; the StuffIt row's "1.00x" is withdrawn (BLOCKERS.md,
-*Corrected figures*; DECISIONS.md 2026-10-19, *the clock inside the Mac*).
+**Corrected 2026-10-19** (BLOCKERS.md, *Corrected figures*; DECISIONS.md
+2026-10-19, *the clock inside the Mac*).
 
 **Not comparable with *Measured on a 7 MHz Mac Plus***, which times the
 autotest build (`RunExtract` once, CRC read-back): for `macburger-helper.hqx`

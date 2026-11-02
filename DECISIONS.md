@@ -1377,6 +1377,13 @@ already-consumed input into output. `unc_progress_poll` fires the tick
 without moving the byte count, every `UNC_PROGRESS_STEP` output bytes, on
 the sampled path only.
 
+Evidence formerly in FORMATS.md, *Floor target verification*, for the
+hypothesis that the StuffIt 5 peaks at 1 MB fall with the budget: the
+2026-08-26 rows of the six StuffIt 5 fixtures (160,766, 181,774, 269,084,
+560,589, 614,134 and 660,262 B) had all moved by 2026-10-09, three down and
+three up, across a budget that grew with the overlays — consistent with the
+hypothesis, not a test of it.
+
 ## 2026-08-07 — the progress dialog gets a bar, a percentage and a time left
 
 A 15-minute Arsenic extraction wants a time estimate, and the text
@@ -4284,6 +4291,12 @@ AppleShare volume with an extension loaded, and MultiFinder at the declared
 minimum.
 
 ---
+
+The reserve's history, formerly in FORMATS.md, *Budget*: a flat 80 KB until
+2026-08-24, then a quarter of free clamped to [32 KB, 80 KB], a flat 32 KB
+on 2026-08-30, 20 KB since 2026-08-31. Each step went entirely to the
+engine; 80 KB → the quarter rule took Now Compress from none of its fixtures
+to all three in the minimum partition (FORMATS.md, *Budget sweep*).
 
 ## 2026-08-24 (the icon) — four things the resources alone do not do
 
@@ -7286,6 +7299,11 @@ already written two functions away, for `hcopy` (`tools/vmac/README.md`,
 Cost in BLOCKERS.md, *Withdrawn claims*; numbers in FORMATS.md, *Mac OS 9.2*.
 
 ---
+
+What the `UncOptions`-zeroing fix cost (measured on the build of that day,
+formerly in FORMATS.md, *Mac OS 9 tier*): **147,548 B of code before,
+147,544 B after**, 4 B moving to the A5 world; before it every DiskDoubler
+archive bombed on the Mac OS 9 tier.
 
 ## 2026-09-09 (the disk image that is expanded and not opened) — DART, and an error code for a file with nothing wrong with it
 
