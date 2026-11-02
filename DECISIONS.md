@@ -19747,10 +19747,14 @@ question is whether the quick calls are enough. **They are not**
 (behind Compact Pro, double-clicked at 20 %, one run each): one
 `WaitNextEvent` then quit, lost; five, lost. The helper has to last until
 the call that blocks, whose return waits on MacExtract's next event call:
-the maintainer's ticks. *Hypothesis*: the queueing's `SetFrontProcess`
-is carried out when the helper next gives the processor up while in
-front, which the quick calls do not; quit before that and the Finder,
-not MacExtract, is in front, and a puppet string plays only in front.
+the maintainer's ticks. Not because MacExtract must be in front: a helper
+that queued the string, called `SetFrontProcess` to MacExtract and quit
+at once lost the archive behind Compact Pro and behind Arsenic, MacExtract
+in front throughout (one run each; corrected: a front-process
+explanation was first written here). *Hypothesis*: the helper is the
+string's puppeteer (Technical Note OV17's word), the string is abandoned
+if it quits before the string has played, and the blocking call returns
+when it has.
 
 **A second archive double-clicked during the stay (measured, 7.0.1,
 Arsenic busy, one run).** Other.sit, then 2 s later Third.sit, both
