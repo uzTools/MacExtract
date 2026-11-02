@@ -757,19 +757,15 @@ back with hfsutils.
   navigation, dialogs, Cancel), `unc_sniff`, and the decoders: test-only
   mode (full decode + in-engine CRC, no writes) on a real `.sit` reports
   "Extraction complete". File creation and `PBSetCatInfo` metadata work.
-- **[SUPERSEDED — the whole bisection was confounded: every File Manager
-  open was silently failing (BLOCKERS.md, "Earlier 'root causes' that turned
-  out to be confounded"). The write path works byte-exact on-Mac.]**
-  Recorded then: enabling `FSWrite` gave a layout-sensitive heap corruption
-  (Sad Mac dsMemFullErr=25 on 4 MB, F-line bomb, or a spurious error);
-  ruled out engine overrun (guard-byte allocator), stack (256 KB
-  SetApplLimit bump), FSWrite signature, floppy-specific (5 MB HD image
-  identical); any NoteAlert or padding change masked it.
+- **[SUPERSEDED] The write-path bisection, and the conclusion "shell
+  compile-only + engine-verified".** Enabling `FSWrite` gave a
+  layout-sensitive heap corruption (Sad Mac dsMemFullErr=25 on 4 MB, F-line
+  bomb, or a spurious error). Confounded: every File Manager open was
+  silently failing, and the shell is byte-exact on-Mac since the param-block
+  rewrite (M10 (real Mini vMac), below; BLOCKERS.md, *Withdrawn claims*,
+  Retro68's `HOpen` glue).
 - **`FlushVol` after extraction** — a genuine durability fix (writes were
   lost on non-clean exit).
-- **Conclusion then:** engine verified on Mac Plus; shell "compile-only +
-  engine-verified". **[SUPERSEDED — the shell is verified byte-exact
-  on-Mac; see below.]**
 
 ## M10 deep debugging (max-effort session)
 
@@ -795,22 +791,18 @@ The "disk-write crash" was a stack of bugs (BLOCKERS.md). Decisions:
 - **`mio_seek` tolerates `eofErr`:** `SetFPos` to/past EOF returns `eofErr`
   on a real Mac while positioning at EOF; treating it as an error gave
   spurious `UNC_ERR_IO`. The mock's `SetFPos` now reproduces it.
-- **[SUPERSEDED 2026-08-02 — the archive is read straight off the file; see
-  "the archive is no longer slurped into RAM" below. The interleaving claim
-  does NOT reproduce: `UNC_AT_INTERLEAVE` reads a file three ways with 67
-  file creations in between and gets the same CRC every time.]**
-  ~~Slurp the whole archive into RAM (`MemIO`/`xio_*`), because interleaved
-  File Manager reads and writes on one volume return zeros.~~
-- **[SUPERSEDED — streaming is the shipped sink; see "The Mac sink writes
-  each chunk straight to the File Manager" below. The volume corruption is
-  from the confounded period.]** ~~Staging, not streaming, because deep
-  writes corrupt the volume.~~
-- **[SUPERSEDED — "three blocks bomb the Memory Manager" is FALSE; with the
-  opens fixed, `UNC_AT_SEPARATE_BLOCKS` extracts a two-fork file byte-exact
-  with three blocks (BLOCKERS.md).]** Two-fork staging uses ONE shared block
-  (`sharedBuf`, data region then resource region; proven off-Mac via
-  `UNC_MAC_FORCE_SHAREBUF` in `tests/run_mac_sink.sh`). It is harmless and
-  marginally more heap-friendly; the block-count justification is not why.
+- **[SUPERSEDED] Three decisions from the confounded period**, each
+  justified by a claim since withdrawn (BLOCKERS.md, *Withdrawn claims*):
+  ~~slurp the whole archive into RAM, because interleaved reads and writes
+  on one volume return zeros~~ (does not reproduce under
+  `UNC_AT_INTERLEAVE`; DECISIONS.md 2026-08-02, *the archive is no longer
+  slurped into RAM*); ~~stage, not stream, because deep writes corrupt the
+  volume~~ (streaming ships; "The Mac sink writes each chunk straight to the
+  File Manager", below); and two-fork staging in ONE shared block
+  (`sharedBuf`, proven off-Mac via `UNC_MAC_FORCE_SHAREBUF` in
+  `tests/run_mac_sink.sh`) because three blocks bomb the Memory Manager —
+  false, `UNC_AT_SEPARATE_BLOCKS` extracts byte-exact with three. The shared
+  block is kept as harmless; its justification is not why.
 - **Reserved-header diff is expected:** resource forks come out byte-exact
   except offsets 16–127, which the Resource Manager stamps per session; the
   autotest treats an all-in-16..127 diff as a pass (see the mask bullet in
@@ -818,15 +810,14 @@ The "disk-write crash" was a stack of bugs (BLOCKERS.md). Decisions:
 
 ## M10 (real Mini vMac) — the decisions that actually made it run
 
-- **[WITHDRAWN 2026-07-25 — explanation only; the fix ships.]**
-  ~~Retro68's HOpen glue is broken on System 6.~~ Observed: `HOpen()` gave
-  `noErr` but the refNum was garbage, so the archive slurped as 0 bytes and
-  extraction failed silently as `UNC_ERR_FORMAT`; `HOpenDF` gave `paramErr`.
-  Invisible off-Mac (the mock never touches the glue). **Fix:** explicit HFS
-  param blocks (`PBHOpenSync`/`PBHOpenRFSync`/`PBHCreateSync`/
-  `PBHDeleteSync` via `MyOpenFork`/`MyHCreate`/`MyHDelete`), reading
-  `pb.ioParam.ioRefNum` ourselves. This unblocked everything; the "two-fork
-  crash" investigation was confounded by it (BLOCKERS.md).
+- **The file opens are explicit HFS param blocks** (`PBHOpenSync`/
+  `PBHOpenRFSync`/`PBHCreateSync`/`PBHDeleteSync` via `MyOpenFork`/
+  `MyHCreate`/`MyHDelete`), reading `pb.ioParam.ioRefNum` ourselves.
+  Observed: `HOpen()` gave `noErr` with a garbage refNum (archive read as
+  0 bytes, silent `UNC_ERR_FORMAT`), `HOpenDF` gave `paramErr`; invisible
+  off-Mac (the mock never touches the glue). This unblocked everything and
+  confounded the "two-fork crash" investigation. The explanation went
+  "glue broken" → withdrawn 2026-07-25 → `ioMisc` (two bullets down).
 - **On-screen result channel.** [Justification WITHDRAWN 2026-08-02 — see
   "the Out volume can be read after all"; the channel ships.] The app
   CRC-32s both forks on-Mac (resource header 16..127 masked) and paints an
@@ -839,51 +830,42 @@ The "disk-write crash" was a stack of bugs (BLOCKERS.md). Decisions:
   cannot be trusted. `HideCursor()` first so the cursor's saved background
   cannot stamp over the grid.
 - **[WITHDRAWN 2026-08-01]** ~~Arsenic blocks are 128 KB (dominant) / 256 KB
-  / 512 KB, from `--stats` peak heap: 14 / 9 / 8 of 31; peak ≈ 5× block =
-  0.64–2.6 MB.~~ All 484 Arsenic streams declare **512 KB**; the M7 entry
-  was right. Peak is `~35 KB parser state + 512 KB block + 4 × actual block
-  fill`, not `5 × block`, so dividing by five reads a small payload as a
-  small block (0.64 MB is a 512 KB block holding ~24 KB). Peak heap cannot
-  recover the declared size; the field must be read where `sit_arsenic.c`
-  reads it. What survives: every Arsenic entry exceeds 400 KB, so Arsenic is
-  a ≥4 MB tier, and on a 1 MB Plus the boundary was the *archive's* size
-  (slurped into RAM first).
+  / 512 KB, from `--stats` peak heap: 14 / 9 / 8 of 31; peak ≈ 5× block.~~
+  All 484 Arsenic streams declare **512 KB**; the M7 entry was right. Peak
+  was `~35 KB parser state + 512 KB block + 4 × actual block fill`, so
+  dividing by five read a small payload as a small block (0.64 MB is a
+  512 KB block holding ~24 KB). **Peak heap cannot recover a declared size;
+  read the field where the decoder reads it.** The "≥4 MB tier" conclusion
+  fell with the block and transform-vector changes (DECISIONS.md 2026-08-03,
+  2026-08-06 and 2026-08-07 below).
 - **'SIZE' resource: 4 MB preferred / 400 KB minimum.** The engine budget
   comes from `FreeMem()` at runtime, so one binary adapts from a 1 MB Plus
   to a G3; System 6 without MultiFinder ignores SIZE.
 - **Cancel/error removes the partial file:** `sink_end` `MyHDelete`s the
   file created in `sink_begin` on Cmd-. or per-entry failure.
-- **DiskCopy 4.2 stays detect-not-implemented** (no reference offline; rule
-  #3 forbids inventing the header). **[SUPERSEDED 2026-07-25]:** with
-  `reference/notes/DiskCopy42.md` the probe became real, matching a
-  synthetic and a real 800K GCR image, 0 false positives across 803
-  fixtures. **[RETIRED 2026-08-26]** with the other disk-image probes, to
-  `attic/` (`UNC_FORMAT_DISKCOPY_RETIRED`; DECISIONS.md 2026-08-26, *a name
-  is only worth something inside the frame the user came with*).
-- **The "broken Retro68 `HOpen` glue" root cause is WITHDRAWN.** The minimal
-  reproduction meant for upstream (`tools/retro68-hopen-repro/`) disproved
-  it: on the same System 6.0.8 / Mac Plus / Mini vMac / Retro68 `335fa54f6d`
-  setup, ten cases pass — `HOpen` writes the refNum every time and matches a
-  hand-filled `PBHOpenSync`, with a poisoned stack, real vRefNum and
-  non-zero dirID, `fsWrPerm`, `HOpenRF`, and across volumes. Poisoning
-  `ioMisc` with `0xA3A3A3A2` still opened correctly. **Corrected
-  2026-10-13:** that address is outside a Mac Plus's RAM; one inside it is
-  written through (*the bug was the footnote*), so this disproof does not
-  hold. The param-block rewrite is kept because it works ("it zeroes the
-  whole param block"). **The true root cause was left unestablished
-  [corrected 2026-10-13: it is `ioMisc` — *the bug was the footnote*].**
-  Rule: a root cause never reduced to a minimal reproduction is a
-  hypothesis, not a finding.
-- **No upstream issue was filed:** the headline finding was false, and this
-  environment had no `gh` or credentials. What survived — **both `OpenDF`
-  and `HOpenDF`** return `paramErr` on System 6 (the `_OpenDF` trap is
-  System 7 and neither falls back as `FSOpen` does), plus the uninitialised
-  `ioMisc` in the three H-variants — was written up in
-  `tools/retro68-hopen-repro/ISSUE.md`. **Corrected 2026-08-01**: the
-  write-up first named only `HOpenDF`; settled by running it (case 11), not
-  re-reading `glue.c`. **Corrected 2026-10-13:** the `paramErr` is Apple's
-  documented contract; the `ioMisc` point is the bug (*the bug was the
-  footnote*).
+- **DiskCopy 4.2 stays detect-not-implemented** (no reference offline).
+  **[SUPERSEDED 2026-07-25]:** with `reference/notes/DiskCopy42.md` the
+  probe became real (a synthetic and a real 800K GCR image, 0 false
+  positives across 803 fixtures). **[RETIRED 2026-08-26]** with the other
+  disk-image probes, to `attic/` (`UNC_FORMAT_DISKCOPY_RETIRED`;
+  DECISIONS.md 2026-08-26, *a name is only worth something inside the frame
+  the user came with*).
+- **The "broken Retro68 `HOpen` glue" root cause is WITHDRAWN** — and the
+  withdrawal was itself wrong. `tools/retro68-hopen-repro/` (System 6.0.8 /
+  Mac Plus / Retro68 `335fa54f6d`) passed ten cases, including `ioMisc`
+  poisoned with `0xA3A3A3A2`; that address is outside a Mac Plus's RAM, and
+  one inside it is written through, so the true cause is `ioMisc`
+  (corrected 2026-10-13, *the bug was the footnote*). The param-block
+  rewrite ships because it zeroes the whole param block. Rule: a root cause
+  never reduced to a minimal reproduction is a hypothesis, not a finding.
+- **No upstream issue was filed then.** `tools/retro68-hopen-repro/ISSUE.md`
+  led with **both `OpenDF` and `HOpenDF`** returning `paramErr` on System 6
+  (corrected 2026-08-01 by running it, case 11, not re-reading `glue.c`),
+  with the uninitialised `ioMisc` last. Overtaken 2026-10-13: the `paramErr`
+  is Apple's documented contract and `ioMisc` the bug (*the bug was the
+  footnote*), filed and fixed upstream (BLOCKERS.md, *Status*). Cost (BLOCKERS.md,
+  *Withdrawn claims*): two and a half months of a report led by a
+  non-bug.
 - **The on-Mac resource-fork mask is bytes 16..127, and it is header
   padding, not a fudge:** exactly the 112-byte "reserved for system use"
   area of the 256-byte resource FILE header (Inside Macintosh: More
@@ -1657,21 +1639,16 @@ is method 6.
 
 ## 2026-08-08 — StuffIt method 6: the tree is generated, not built
 
-Method 6's Huffman tree SHAPE is a format constant: macunpack derives it per
-fork from a fixed weight table (`code6[258]`) by recursively splitting the
-leaf range at half the remaining weight (`sit_dosplit`); only each leaf's
-byte is declared per segment. `tools/gen_sit6_tables.py` computed it once
-into `src/sit6_tables.h`: 514 nodes, depth 13, two `uint16_t` tables with
-leaf rows dropped.
-
-**The generated table is gone since 2026-09-21** — 26 bytes and a
-builder state the same code book, and `tools/check_sit6_tree.py`
-is what that generator became: *2026-09-21, (the table that was
-twenty-six bytes)*.
-
-Generating it bought no recursion, no per-fork 68000 cycles, and a generator
-that checks itself (a tree, all 258 leaves reachable once, no dangling
-node) — *a tree that agrees only with itself proves nothing*.
+Method 6's Huffman tree SHAPE is a format constant (macunpack derives it per
+fork from `code6[258]` via `sit_dosplit`; only each leaf's byte is declared
+per segment), so `tools/gen_sit6_tables.py` generated it once into
+`src/sit6_tables.h`: 514 nodes,
+depth 13 — no recursion, no per-fork 68000 cycles, and a generator that
+checked itself (a tree, all 258 leaves reachable once, no dangling node;
+*a tree that agrees only with itself proves nothing*). **Overtaken
+2026-09-21**: 26 bytes and a builder state the same code book, and
+`tools/check_sit6_tree.py` is what the generator became (DECISIONS.md
+2026-09-21, *the table that was twenty-six bytes*).
 
 The segment buffer is freed and reallocated when a segment needs more, never
 grown by copying: the old contents are dead at a boundary. Same shape as the
