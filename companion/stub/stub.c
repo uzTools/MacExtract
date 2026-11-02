@@ -290,11 +290,10 @@ static OSErr LaunchIn(short vol, long dir, Str255 name)
  * after the stub's own switch-in has finished (the Process Manager will
  * not start a puppet string while a switch is in progress, scod -16464
  * $5DC), so a second of WaitNextEvent first; and the stub stays a few
- * seconds after, since one that quits at once hands nothing on. Half a
- * second was enough even behind MacExtract's 3-second gaps between event
- * pumps, so it is not waiting for MacExtract; that the queueing's switch
- * to MacExtract needs an event call from the stub is the hypothesis. The
- * 3 s is margin; hence canBackground in 'SIZE'. */
+ * seconds after, since one that quits at once hands nothing on, while
+ * one that makes even one WaitNextEvent call does (measured; why is open,
+ * DECISIONS.md, *How long the helper must stay*); hence canBackground in
+ * 'SIZE'. */
 pascal short MFProcesses(void *list, short max) M68K_INLINE(0x3F3C, 0x0001, 0xA88F);
 pascal void MFPuppet(short process, Handle s, long z1, short z2) M68K_INLINE(0x3F3C, 0x0000, 0xA88F);
 

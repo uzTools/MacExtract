@@ -256,6 +256,10 @@ ships later, on MacExtract's own floppy. Left:
   one through a helper is not. Closed on System 6 MultiFinder (the helper
   sends the Finder's puppet string) and on System 7.0.1 (the same call,
   settled; same entry). Mac OS 9 not run.
+- **Two archives of a helper's creator double-clicked within its stay are
+  both lost** (7.0.1, one run; DECISIONS.md 2026-11-01, *the Open item
+  MultiFinder looks for*): the helper must stay until MacExtract's next
+  event call, and a second double-click meanwhile goes to the helper.
 - **Several archives of different creators opened together.** Not run.
 - **Which of a file's two dates System 7 compares** between two applications
   of one creator. Not separated.
