@@ -190,7 +190,7 @@ overlay images' sizes are re-taken.
 
 | what | evidence |
 |---|---|
-| **the tree walk with the bit reader inside it, no call in the loop**: bits left-aligned in a register, each a test of bit 7 and a shift by one | MEASURED by MacMount on the same tree: ~150 → ~106 cycles a level read off its listing, and 6.1 → 3.9 minutes for a disk at Mini vMac 1x (macmount VERIFIED.md, *The decoders rewritten*). Ours: 230 instructions an output byte against its 178 (its harness, not our flags). An inline fast path with an out-of-line refill measured 3.1–6.6 % WORSE here (DECISIONS.md 2026-08-24); FORMATS.md, *Suggestions* (the header's "inline" helpers) |
+| **the tree walk with the bit reader inside it, no call in the loop**: bits left-aligned in a register, each a test of bit 7 and a shift by one | MEASURED by MacMount on the same tree: ~150 → ~106 cycles a level read off its listing, and 6.1 → 3.9 minutes for a disk at Mini vMac 1x (macmount VERIFIED.md, *The decoders rewritten*). Ours: 230 instructions an output byte against its 178 (its harness, not our flags). An inline fast path with an out-of-line refill measured 3.1–6.6 % WORSE here (DECISIONS.md 2026-08-24); FORMATS.md, *Hand-written 68000 assembly*, its suggestions (the header's "inline" helpers) |
 | **the update scan on the `0xFFFF` sentinel** | FORMATS.md's row *`-lh1-`'s tree-update search* |
 | **match copies in pieces that do not wrap** | FORMATS.md's row *The masked match copies* (`unc_lzah.c` named, not counted) |
 
@@ -253,7 +253,7 @@ measured, `nm -S`).
 
 ## The double-click helpers: what is left before they ship
 
-`companion/` works (DECISIONS.md 2026-10-12, *the stub that hands it on*) and
+`companion/` works (DECISIONS.md 2026-10-11, *the stub that hands it on*) and
 ships later, on MacExtract's own floppy. Left:
 
 - **Which creators.** `companion/app-bundles.tsv` has 42; the list of stubs
