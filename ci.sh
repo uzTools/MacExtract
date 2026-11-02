@@ -520,4 +520,20 @@ UNC_AT_OVERLAY=1 UNC_OVL_RESIDENT=1 UNC_MAC_BUILD_DIR=build/mac-resident \
 python3 tools/run_tiers.py --check-saved \
     || fail "OVL_SAVED or TIERS_CONTROL no longer matches build/mac and build/mac-resident"
 
+# variant 4e, added 2026-11-02: the AUTOTEST application, which every
+# emulator tier runs (tools/vmac/run.py, sys30.py). v0.45.0's merge passed
+# every check above and left it unlinkable — a set's setup, compiled into
+# every build since, called a helper only the interactive build had — and the
+# first sweep found it, not this file (DECISIONS.md 2026-11-02, *the dialogs
+# that became the application*). Built the way run.py builds it, without the
+# shipped build's ceilings, which are not this build's.
+AT_CMAKE="${RETRO68:-/opt/Retro68-build/toolchain}/m68k-apple-macos/cmake/retro68.toolchain.cmake"
+if [ -f "$AT_CMAKE" ]; then
+    echo "=== variant 4e: the autotest application, as the emulator tiers build it ==="
+    UNC_MAC_AUTOTEST=1 cmake -B build/mac-autotest-ci -S mac \
+        -DCMAKE_TOOLCHAIN_FILE="$AT_CMAKE" -DCMAKE_BUILD_TYPE=Release >/dev/null \
+        && UNC_MAC_AUTOTEST=1 cmake --build build/mac-autotest-ci -- -j"$(nproc)" >/dev/null \
+        || fail "autotest application build"
+fi
+
 echo "CI: all green"

@@ -2439,6 +2439,7 @@ three, because a configuration nothing builds rots (DECISIONS.md
 | 4 | `build/mac` | the SHIPPED application — nineteen images (the seventeen below and, since v0.45.0, the shell's destination dialog and a set's setup), **eager**: one bundle read at launch, everything the sniffed format cannot want released before the engine takes its budget. `dist/` is compared against this one |
 | 4c | `build/mac-lazy` | `UNC_OVL_LAZY=1` — the same images, one resource each, read when a format turns out to want one. Not shipped |
 | 4d | `build/mac-resident` | `UNC_OVL_RESIDENT=1` — every decoder linked in. The CONTROL for budget measurements (FORMATS.md, *Overlays*), with its own ceiling in `tools/build_mac.sh` |
+| 4e | `build/mac-autotest-ci` | `UNC_MAC_AUTOTEST=1` — the application every emulator tier runs (`tools/vmac/run.py`), built as `run.py` builds it, without the shipped ceilings. Added 2026-11-02, when v0.45.0's merge left it unbuildable under a green CI (DECISIONS.md 2026-11-02, *the dialogs that became the application*) |
 
 Variant 4b (`UNC_AT_OVERLAY=1 sh tools/build_mac.sh`) rebuilds the eager
 configuration with the variable set explicitly — it has been the default

@@ -55,6 +55,7 @@
  * in and keep Standard File's own Save dialog. */
 #if defined(UNC_AT_OVERLAY) && !defined(UNC_OVL_LAZY)
 #define UNC_SHELL_IMAGES 1
+#include "ovl_load.h"     /* ovl_image: the autotest build runs the setup too */
 #endif
 
 #define kProgressDLOG   146     /* the Finder's Copy layout */
@@ -3557,8 +3558,11 @@ static void SegCatRemaining(Str255 msg, uint32_t left)
     PStrCat(msg, S_SEG_LEFT_END);
 }
 
+#endif  /* !UNC_MAC_AUTOTEST, opened again below */
+
 /* The drive the volume `vol` is in, or 0 for none: a server volume, or
- * one already ejected. `vol` may be a working directory. */
+ * one already ejected. `vol` may be a working directory. The autotest
+ * build's too: a set's setup and the parts it remembers ask it. */
 static short SegDriveOf(short vol)
 {
     HParamBlockRec pb;
@@ -3568,6 +3572,8 @@ static short SegDriveOf(short vol)
     if (PBHGetVInfoSync(&pb) != noErr) return 0;
     return pb.volumeParam.ioVDrvInfo;
 }
+
+#ifndef UNC_MAC_AUTOTEST
 
 /* The drive holding the file `ref` is open on, or 0. */
 static short SegDriveOfFile(short ref)
@@ -4322,7 +4328,6 @@ static void ProgOpen(Progress *pr, ConstStr255Param name);
  * bundle and given back with it, so none of it is resident while the engine
  * extracts. Only the eager lifetime keeps the bundle until after the
  * dialog. */
-#include "ovl_load.h"
 static void DestIconLoad(void)
 {
     OverlayEntry e = ovl_image(OVL_ID_DESTDLG);

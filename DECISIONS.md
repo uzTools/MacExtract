@@ -19379,3 +19379,13 @@ budget except by a layer that keeps the whole bundle. Every shipped tally
 in `run_tiers.py --check` is unchanged; the resident control's +2,480 B
 costs it `derived-PuzzleGetter_0.8.sit` at System 6.0.8 / 512 KB (needs
 101,582 B of 101,064), DERIVED rather than re-taken on the machine.
+
+**The configuration nothing built (measured).** Pushed with `./ci.sh` green,
+the merge left the AUTOTEST application — the one every emulator tier runs —
+unbuildable: a set's setup, in every build now, called `ovl_image` and
+`SegDriveOf`, which only the interactive build declared and defined. The
+first sweep failed every tier in seconds. Fixed without moving a byte of
+the shipped code (bar the MacBinary header's dates), and `ci.sh` builds the
+autotest application since (variant 4e). **A green CI covers the
+configurations it builds**; this one had been built only by the harnesses
+that needed it.

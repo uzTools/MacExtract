@@ -820,12 +820,17 @@ def launch_by_keyboard(q, outdir, wait=240.0, cancel=False, click=False,
         still("extraction finished", wait)
     alert = shot("16-result")
 
-    q.key("ret")                                 # dismiss the alert
-    step(alert, "SFGetFile repainted", 120.0)
+    # Since v0.45.0 a run with nothing to report says nothing and the
+    # application quits to the Finder on its own; these two only find
+    # something to act on when the report window is up, so they wait 20 s
+    # rather than 120 (DECISIONS.md 2026-11-02, *the dialogs that became
+    # the application*).
+    q.key("ret")                                 # dismiss the report, if any
+    step(alert, "SFGetFile repainted", 20.0)
     back = shot("17-back")
 
     chord("meta_l-dot")                          # Standard File Cancel: quit
-    step(back, "application quit", 120.0)
+    step(back, "application quit", 20.0)
     fin = shot("18-finder")
 
     # The names the Mac wrote, as the Finder draws them. Every tier checks the
