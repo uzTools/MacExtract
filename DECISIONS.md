@@ -471,6 +471,12 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-25 (the review before the release) — the 38 commits since v0.43.0 read before tagging: a DiskDoubler walk that could step backward for ever, and four smaller faults
 - 2026-10-25 (the archives that drew as the application) — the documents MacExtract's bundle claims draw the archive icon, not the application's: MacStamp writes our creator, so the Finder shows them
 - 2026-10-30 (the middle part that was refused) — a spanned zip opened from a middle part, NAME.zNN, joins its set as the Mac shell's always did: every part of the family is placed by name, so refusing the middle ones protected nothing
+- 2026-10-31 (the dialog that opened behind the Finder) — a dialog put up while MacExtract is in the background stays blank and deaf even once brought forward, so the application waits to be brought forward first, and reads its waiting events before deciding it is
+- 2026-10-31 (the disk Standard File took first) — the part dialog takes the disk-inserted event on every call of its filter, because Standard File acts on it before the filter is shown it, and ejects any disk without the wanted part
+- 2026-11-01 (the scan that read every file's end) — a MIME set's candidates are described as MIME alone, and the envelope scan sniffs envelopes alone: both had run every scheme's or format's check on every file of a folder
+- 2026-11-01 (the set opened from its last floppy) — a MIME set opened from a later part ejects that disk at the first ask and needs it once
+- 2026-11-01 (the split that called a short file whole) — an open-ended split with a missing part reported its truncated file as complete
+- 2026-11-02 (the dialogs that became the application) — v0.45.0 ships the dialog redesign the PoC switches held, resolved rather than switched on, and the application is byte for byte the one tested
 
 ---
 
@@ -19266,3 +19272,110 @@ of a spanned zip: the set opens from it byte-exact, and alone it says the
 `.zip` is not beside it. The suite checks both on its five multi-part zip
 cases, and they fail against the CLI that refused (all five, measured);
 the oracle's refusal is still checked, to notice a change there.
+
+## 2026-10-31 (the dialog that opened behind the Finder) — a dialog put up while MacExtract is in the background stays blank and deaf even once brought forward, so the application waits to be brought forward first, and reads its waiting events before deciding it is
+
+**Claim (measured, Mac OS 9.2 under QEMU).** A three-part zip, Cmd-Tab to
+the Finder straight after Extract: v0.44.0's part dialog opens behind the
+Finder's window as a blank box, stays blank after Cmd-Tab back, and a disk
+put in does nothing — the maintainer's LC 475 report, reproduced. A build
+that redraws the dialog on the resume event changes nothing: it is not
+undrawn, its loop is not running. So before any dialog the shell posts a
+Notification Manager alert ("MacExtract needs your attention.") and waits
+for the resume event; then the same run draws the dialog and finishes
+byte-exact. **+320 B.**
+
+**The race (hypothesis, then a fix the maintainer confirmed).** Clicks in
+the Finder during a fast decode still left a blank box: a click queued
+since the last progress pump is not a suspend until an event call reads
+it. Applications switch only inside an event call, so the shell now drains
+its queue before deciding (+64 B). Neither gap reproduces under emulation —
+a click on the desktop never switches, and Mac OS 9 refuses to switch away
+from the open dialog — and the last symptom on the LC 475, buttons back
+part-erased after spam-clicking a Finder window, went with a whole-dialog
+redraw on resume (+32 B).
+
+**Consequence.** A dialog the shell needs is never created while it is in
+the background; on Systems without MultiFinder no suspend event comes and
+nothing changes.
+
+## 2026-10-31 (the disk Standard File took first) — the part dialog takes the disk-inserted event on every call of its filter, because Standard File acts on it before the filter is shown it, and ejects any disk without the wanted part
+
+**Claim (measured, System 7.0.1 under Mini vMac).** A split's part 3 put in
+for part 2: polling every 30 ticks, and acting on the disk event the
+filter is passed, both came after Standard File had switched to the disk,
+which the shell then ejected under it — a list of a disk that was out.
+Taking the event with `GetNextEvent(diskMask)` on every filter call mounts
+the disk before Standard File sees it; the dialog stays where it was.
+Handing the event back with `_PostEvent` for a disk worth showing was
+ignored by Standard File (it stayed put).
+
+**So any disk without the wanted part goes back out**, for the
+name-placed sets too (the maintainer's call: on one drive the disk is in
+the way). A part renamed on a floppy is found once copied off it. Measured
+on 7.0.1 and 6.0.8: the wrong part, then the right ones, byte-exact; an
+unrelated disk on a one-drive Mac, then parts 2 and 3, byte-exact.
+
+## 2026-11-01 (the scan that read every file's end) — a MIME set's candidates are described as MIME alone, and the envelope scan sniffs envelopes alone: both had run every scheme's or format's check on every file of a folder
+
+**Claim (measured).** The part dialog was blank for ~5 s on the LC 475,
+for MIME only: its first filter call — before the dialog's first update —
+scans the folder shown, and a MIME candidate went through
+`unc_segment_describe`, every scheme, ZIPSEG's backward hunt for its
+directory included. Over 60 ordinary files: **1.3 MB read and 1,425
+seeks, against 49 KB and 100** for MIMESEG's describe alone
+(`unc_segment_describe_as`). The setup's envelope scan sniffed every file
+in full: **1.86 MB and 1,716 seeks over 59, against 277 KB and 107** with
+only the nine probes that can answer an envelope (`unc_sniff_envelope`),
+which gives the same answer on all 464 envelopes among 1,978 fixtures and
+calls nothing else one. A zip or split set skips the content read: it is
+placed by name. Shown to fail: either call broken, the MIME suite fails 6
+cases and the segment suite 28.
+
+## 2026-11-01 (the set opened from its last floppy) — a MIME set opened from a later part ejects that disk at the first ask and needs it once
+
+**Claim (measured, System 7.0.1, one drive).** The first ask ejects the
+disk the last part read came off; a MIME set reads part 1 first, so opened
+from part 3 nothing had been read and nothing was ejected (the maintainer's
+report). The opened file's drive is now recorded before the setup, and a
+MIME part on a disk about to be ejected is copied off first (the copy that
+already spared its three passes), so part 3, needed last, is not asked for
+again. Opened from disk 3: disks 1 and 2 once each, byte-exact. +46 B.
+
+## 2026-11-01 (the split that called a short file whole) — an open-ended split with a missing part reported its truncated file as complete
+
+**Claim (measured).** A split with no part count is OPEN-ENDED since the
+dialog work (`UNC_SEG_ENDS`): the host says where it ends. The unit test
+still required such a set to be refused, and failed on the branch from its
+first commit; rewritten to the contract, it found that with part 2 missing
+the engine returned `UNC_ERR_SEGMENTED` while the entry, 120 B of 300,
+ended `UNC_OK` — no size is announced, so the short stream read as a clean
+end. `unc_sitseg_emit` now ends it `UNC_ERR_TRUNCATED` when the joiner met
+a missing part. The checks: whole, with a gap, and a counted split without
+a length still refused.
+
+## 2026-11-02 (the dialogs that became the application) — v0.45.0 ships the dialog redesign the PoC switches held, resolved rather than switched on, and the application is byte for byte the one tested
+
+**What a user sees.** The destination asked for in a dialog with a New
+Folder button on every System; a missing part asked for in Standard File's
+Open with a prompt, the wrong disk ejected, an absent one reported "Parts
+missing."; the progress bar in the Finder's colours and its Copy layout,
+titled "Extract", with a total for a set on floppies; no "Extraction
+complete." alert; invisible files out of the Open lists (folders stay:
+Standard File's Open does not pass them to the filter, measured on Mac OS
+9.2).
+
+**How it was merged.** The switches were resolved with a small `unifdef`
+(the four that shipped kept, three dropped), not defaulted on: built with
+no switch, the application is the tested PoC build byte for byte, bar the
+MacBinary header's dates. The destination dialog and a set's setup run as
+images from the bundle, which only the eager lifetime has
+(`UNC_SHELL_IMAGES`); the lazy and resident instruments link the setup in
+and keep Standard File's Save dialog.
+
+**What it costs, measured.** Resident CODE + A5 +592 B (39,016 + 16,648);
+the bundle +4,244 B, two images and the envelope sniff, released before the
+budget except by a layer that keeps the whole bundle. Every shipped tally
+in `run_tiers.py --check` is unchanged; the resident control's +2,480 B
+costs it `derived-PuzzleGetter_0.8.sit` at System 6.0.8 / 512 KB (needs
+101,582 B of 101,064), DERIVED rather than re-taken on the machine.

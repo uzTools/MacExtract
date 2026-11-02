@@ -2436,7 +2436,7 @@ three, because a configuration nothing builds rots (DECISIONS.md
 
 | variant | build | what it is |
 |---|---|---|
-| 4 | `build/mac` | the SHIPPED application — seventeen images, **eager**: one bundle read at launch, everything the sniffed format cannot want released before the engine takes its budget. `dist/` is compared against this one |
+| 4 | `build/mac` | the SHIPPED application — nineteen images (the seventeen below and, since v0.45.0, the shell's destination dialog and a set's setup), **eager**: one bundle read at launch, everything the sniffed format cannot want released before the engine takes its budget. `dist/` is compared against this one |
 | 4c | `build/mac-lazy` | `UNC_OVL_LAZY=1` — the same images, one resource each, read when a format turns out to want one. Not shipped |
 | 4d | `build/mac-resident` | `UNC_OVL_RESIDENT=1` — every decoder linked in. The CONTROL for budget measurements (FORMATS.md, *Overlays*), with its own ceiling in `tools/build_mac.sh` |
 
@@ -2487,7 +2487,7 @@ Four lanes, in one script, ~65 s, plus `--shipped-only` as variant 3d:
 
 | lane | what it grades |
 |---|---|
-| the images | seventeen of them, from `tools/overlay/images.py`'s inventory — PARSED out of `mac/CMakeLists.txt`, so an image cannot exist in the build and be missing here; the asserted count has to be raised with each new image (`ovl_sniff` was the seventeenth; DECISIONS.md, *the probes that left with the bundle*) |
+| the images | seventeen of them, from `tools/overlay/images.py`'s inventory — the shell's two since v0.45.0 are Toolbox code, Retro68's only, and counted by the shipped lane alone — PARSED out of `mac/CMakeLists.txt`, so an image cannot exist in the build and be missing here; the asserted count has to be raised with each new image (`ovl_sniff` was the seventeenth; DECISIONS.md, *the probes that left with the bundle*) |
 | the loader | both lifetimes, natively under ASan+UBSan and big-endian under `qemu-m68k`: read counts, keep and release per format (including that a StuffIt release gives `ovl_zipold` back), the `wa`/`kf`/`rf`/`fc`/`fn` probe fields, and **every relocation in every image checked against the raw file's own trailer at the address the image runs at** — including a kept copy, relocated by the difference of two addresses |
 | extraction | the sink suite's fixture list, extracted THROUGH the images under `qemu-m68k` and compared with the oracle manifests by `tools/check_mac_sink.py`: **20 fixtures, byte-exact, in both lifetimes**, including `synth-exo-zip-implode.zip` (the only run zip method 6 gets through its own image). **The only check that zip KEEPS `ovl_zipold`**: with that keep removed, the eager lane fails on `derived-MUSFMT10.ZIP` (bent by hand once; not a `--mutate` break) |
 | one per image | twenty fixtures reaching sixteen of the seventeen images (every one runs the sniffer's, released before the decoder's is called; `shrink-wild-BBA.zip` and `reduce-wild-fractlan.zip` for `ovl_zipold`), each compared with the RESIDENT build of the same engine — the only oracle for an image no manifest covers (SuperDisk!, btoa, MIME, AppleLink). Exit status is compared too |

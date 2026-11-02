@@ -2,7 +2,7 @@
 
 ## Status
 
-**No open blocker** at v0.44.0. The last one — the application bombing on
+**No open blocker** at v0.45.0. The last one — the application bombing on
 Mac OS 9.2 on every DiskDoubler archive and on SuperDisk! — was an
 `UncOptions` field the shell never assigned (DECISIONS.md 2026-09-04, *the
 field nobody assigned*). The engine and CLI were never affected by anything

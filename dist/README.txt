@@ -1,4 +1,4 @@
-MacExtract v0.44.0 — bootstrap distribution
+MacExtract v0.45.0 — bootstrap distribution
 ==========================================
 
 A bare Classic Mac has no way to open a .sit/.cpt/.hqx until it HAS an
@@ -46,6 +46,23 @@ are the same story for the same reason: that method looks back over as much as
 256 KB, and the room has to be there. Those entries are skipped with a message
 and the rest of the archive still comes out. Every other format fits in
 512 KB, and with 1 MB the question does not arise.
+
+v0.45.0 changes how MacExtract asks you things. Where the files go is
+asked in a window with a New Folder button, on every System. A missing
+part of a split archive is asked for in one window, the Open dialog with
+the question under it: put the disk in and it is picked up, a disk that
+does not hold the part comes straight back out, and a set that is short
+of a part says "Parts missing." and names what it could not finish. The
+progress window is the Finder's own shape, in the Finder's colours on a
+colour Mac, and on floppies it says how long is left from the first one.
+"Extraction complete." is gone when there is nothing else to say. If you
+switch to the Finder while it works, MacExtract waits for you to come
+back instead of opening a window behind yours that could not be used.
+
+A set split into mail messages, opened from a later part, now ejects that
+disk and needs each floppy once, and the window asking for a part no
+longer takes seconds to draw in a busy folder. The Open dialog no longer
+lists invisible files. MacExtract takes about 600 bytes more memory.
 
 v0.44.0 makes split StuffIt archives work. Every set StuffIt itself
 cut -- with StuffIt Lite, Deluxe, DropSegment or InstallerMaker -- was
