@@ -2991,6 +2991,14 @@ tree it is in):
   skipped and the run reported "0 forks compared", which reads as *the
   application wrote nothing*. `hcd`/`hcopy` take raw bytes.
 
+**A harness written twice learns once.** All three hfsutils traps — `hls`
+hides an invisible file without `-a`, `rstrip()` eats the CR of `Icon\r`,
+and every path argument must be MacRoman, not UTF-8 — were already right in
+`checkdisk.py` before `os9.py` learned them (`_walk_volume` listed
+`Terrainman 2.0 ƒ` as empty until 2026-09-04). A second harness that walks
+volumes inherits none of the first one's lessons unless they live in shared
+code.
+
 ## 2026-08-21 (later still) — running DiskDoubler Pro, and what its own Split will not say yet
 
 `ddpro.py` drives DiskDoubler Pro 4.1 (writes `DDA2`; its Split makes
@@ -6968,6 +6976,10 @@ recorded — **seven boots**. **An empty list is evidence about nothing until
 something has filled the same list**; the control cost four minutes and
 arrived two boots late.
 
+**Every field of a package written here is read from the writer, not from
+output**: the five one-line packages `spacesaver.py --pkg*` writes (`Decode
+<item> to <destination>`, one per Finder type) take their vocabulary from the
+translator's own resources, never from an archive some other tool produced.
 
 ## 2026-09-01 (the tier that needed no Macintosh) — a budget sweep, a ceiling, and a number that was an artefact
 
