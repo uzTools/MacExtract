@@ -2227,28 +2227,20 @@ matching the Linux CLI.
 
 ## 2026-08-14 — the detect-only claim had no test, and LZH stays out of scope
 
-**Superseded 2026-10-18** (*the formats it only named*): nothing is
-detect-only any more, and `run_diff.py` grades a fixture of a format the
-engine does not have as not an archive.
+**Superseded twice.** The decision: LZH out of scope (**the corpus contained
+no `.lzh` at all**, measured over every fixture; Compact Pro's LZH is a
+different algorithm, macutils `cpt.c` + `huffman.h` vs `de_lzh.c`; ~550 new
+lines), and detect-only formats graded on what they promised — the name
+agrees with the oracle's and extraction writes nothing — where `run_diff.py`
+had SKIPPED them ("format pending"): 8 fixtures (6 DiskDoubler, 1 Now
+Compress, and one Amiga `-lh5-` archive from Aminet). LZH was taken in by
+DECISIONS.md 2026-08-23, *LZH*; detect-only ended with DECISIONS.md
+2026-10-18, *the formats it only named*, after which `run_diff.py` grades a
+fixture of a format the engine does not have as not an archive.
 
-**LZH out of scope, with the evidence written down:** **the corpus contains
-no `.lzh` at all**, measured over every fixture; LHA belonged to Japanese PCs
-and the Amiga. Compact Pro's LZH is a different algorithm (macutils `cpt.c` +
-`huffman.h` vs `de_lzh.c`; XADMaster likewise). ~550 new lines for a format
-the platform did not use. (superseded: DECISIONS.md 2026-08-23 (LZH), *the
-format the corpus could not grade, graded by somebody else's corpus*)
-
-**The detect-only promise was untested:** `run_diff.py` SKIPPED fixtures of
-formats it did not extract ("format pending"), so the 6 DiskDoubler and 1 Now
-Compress fixtures were asserted on in no way. Now graded on what the claim
-promises — the name agrees with the oracle's and extraction writes nothing:
-8 fixtures, "formats pending" 0. One Amiga `-lh5-` archive from Aminet was
-added, the only non-Macintosh fixture, because the platform had none
-(`fixtures/SOURCES.md` says so).
-
-**Limit:** the refusal is guarded twice (`unc_format_extractable` in the CLI,
-the engine dispatch's `default:`), so mutating either alone changes nothing
-visible; both together fail the test.
+**A guard duplicated hides a mutation:** the refusal was checked twice
+(`unc_format_extractable` in the CLI, the engine dispatch's `default:`), so
+mutating either alone changed nothing visible; both together failed.
 
 ## 2026-08-14 — one command to replay the segment work, and what it caught
 
@@ -2432,31 +2424,23 @@ and our decoder agreeing against the generator. **A generator written from
 the same reading as the decoder tests the reading, not the format.** Neither
 format entered the suite without an oracle.
 
-**Declined, for two different reasons:**
+**Declined, all three since overtaken:**
 
-- ~~ARC methods 0x0a (Crushed) and 0x0b (Distilled) are PKARC's. Nothing
-  reachable writes them, so an implementation could not be graded — the
-  DiskDoubler rule (2026-08-15), unchanged.~~ **Both halves of that were
-  wrong and both were withdrawn on 2026-08-25**: the methods are PAK's,
-  from NoGate Consulting, and PAK 2.51 writes them here under DOSBox.
-  They extract. See 2026-08-25 (*ARC 0x0a and 0x0b*), which is also
-  where the reasoning lives.
-- **ArcMac:** entries ARE walked (header offsets in
-  `reference/macutils/macunpack/arc.h`: name, type, creator, fork lengths),
-  but the payload is refused: one stream holds both forks and no source says
-  which comes first — **`arc.c` is absent from the macutils distribution,
-  upstream tarball included** (checked 2026-08-15), and Now Compress stores
-  resource before data, opposite to its header's order, so analogy is a coin
-  flip. (superseded: *ArcMac's fork order, measured rather than guessed*,
-  below.)
-- **AppleLink `.pkg` and SpaceSaver:** the only published AppleLink layout is
-  the Apple II `.acu` ("fZink", CiderPress2's notes), which that
-  documentation distinguishes from the Macintosh Package format; SpaceSaver
-  has no specification or open implementation, and later Expanders dropped
-  it. Neither could be SNIFFED without inventing a magic. The workable route
-  is the Compact Pro one (drive the original application), needing a
-  specimen and the tool. (superseded: DECISIONS.md 2026-08-22
-  (SpaceSaver, …) entries and 2026-08-23, *AppleLink `.pkg`, named at last*.)
+- ~~ARC methods 0x0a (Crushed) and 0x0b (Distilled) are PKARC's; nothing
+  reachable writes them.~~ **Both halves withdrawn on 2026-08-25**: they are
+  PAK's, from NoGate Consulting, PAK 2.51 writes them here under DOSBox, and
+  they extract (DECISIONS.md 2026-08-25, *ARC 0x0a and 0x0b*, where the
+  reasoning lives).
+- **ArcMac:** entries walked (offsets in
+  `reference/macutils/macunpack/arc.h`), payload refused because no source
+  said which fork comes first — **`arc.c` is absent from the macutils
+  distribution, upstream tarball included** (checked 2026-08-15). Settled by
+  *ArcMac's fork order, measured rather than guessed*, below.
+- **AppleLink `.pkg` and SpaceSaver:** no published layout (the only
+  AppleLink one is the Apple II `.acu`, "fZink"), so neither could be
+  SNIFFED without inventing a magic; the route named was the Compact Pro one,
+  driving the original application. Overtaken by the DECISIONS.md 2026-08-22
+  (SpaceSaver, …) entries and 2026-08-23, *AppleLink `.pkg`, named at last*.
 
 **`unc_bufin_tell()` again:** fmt_uu.c re-initialises a buffer per document
 (it reads each twice, since the Finder info sits at the END and the sink
@@ -3366,30 +3350,22 @@ tested path and an untested path is a place to look.**
 ## 2026-08-22 (SpaceSaver) — reachable, not yet runnable, and a licence question
 
 StuffIt SpaceSaver could not be NAMED (no reference, layout or specimen).
-**The application is reachable:** it ships inside StuffIt Deluxe, every era
-on Macintosh Garden — **3.5.1** and **4.0** two-floppy InstallerMaker sets,
-and **5.0.1's CD-ROM** (a 224 MB Apple-partitioned ISO `hmount` opens) with a
-**standalone `SpaceSaver 5.0 Installer`** and a User's Guide PDF.
-`tools/vmac/spacesaver.py` lifts and drives that installer.
-
-**It does not run on System 7.0.1, measured:** after the licence it warns
-*requires system software version 7.5.3* and *requires 8000K of physical
-memory*; answering Yes to both bombs with **"'SpaceSaver™ 5.0 Installer'
-unimplemented trap."**
+**The application is reachable:** it ships inside StuffIt Deluxe on
+Macintosh Garden — **3.5.1** and **4.0** two-floppy InstallerMaker sets, and
+**5.0.1's CD-ROM** (a 224 MB Apple-partitioned ISO `hmount` opens) with a
+**standalone `SpaceSaver 5.0 Installer`** and a User's Guide PDF;
+`tools/vmac/spacesaver.py` lifts and drives that installer. Measured: on
+System 7.0.1 it asks for 7.5.3 and 8000K and bombs with **"unimplemented
+trap."**
 
 ### The licence, which is the maintainer's call and not this session's
 
-The licence says *"You may not modify, adapt, translate, reverse engineer,
-decompile, or disassemble the Software."* SuperDisk! was derived by
-disassembling `CODE 2`; for SpaceSaver that route is what the licence names.
-Black-box derivation (compress known input, compare outputs — SuperDisk!'s
-single-file container, 2026-08-22) is not reverse engineering the program.
-Position taken pending the maintainer: **specimens yes, disassembly no.**
-
-**Answered 2026-08-22: the maintainer waived it and took responsibility**,
-so the disassembly route is open for SpaceSaver as it was for SuperDisk!.
-This entry stays because the reasoning is still the reasoning — and
-because one thing was NOT waived and was not attempted: see below.
+It forbids reverse engineering, decompiling or disassembling;
+the position taken was **specimens yes, disassembly no**, black-box
+derivation not being reverse engineering. **The maintainer waived it on
+2026-08-22 and took responsibility**, which opened the SuperDisk! route
+(DECISIONS.md 2026-08-22, *SpaceSaver, the layout*). One thing was NOT
+waived and was not attempted: the registration wall, next entry.
 
 ## 2026-08-22 (SpaceSaver, later) — both installers, and the wall that is not a licence clause
 
@@ -3622,122 +3598,85 @@ compressor*.)
 
 ## 2026-08-22 (SpaceSaver, what will not compress) — twelve runs, one thing that fired
 
-The format is implemented; a file SpaceSaver wrote is still missing. Twelve
-runs, every one on a machine that booted and was **flushed** (Special ▸ Shut
-Down, whose absence voided three earlier runs, BLOCKERS.md):
+**The decision:** after twelve runs, every one on a machine that booted and
+was **flushed** (Special ▸ Shut Down, whose absence voided three earlier
+runs, BLOCKERS.md), stop trying to make SpaceSaver compress a file on demand
+and write down why. The reader did not wait on it: container and both
+implemented methods were graded by an encoder written from the same
+disassembly, a limit TESTING.md states.
 
-| driven | result |
-|---|---|
-| rename to end in `small`, the panel's compression rule | nothing |
-| the same, with the startup disk enrolled and 18 minutes idle | nothing |
-| Magic Menu ▸ *SpaceSaver Compress* on the selected file | nothing |
-| the same, disk enrolled first | the selection was wrong — void |
-| rename to add `.SIT`, the panel's OTHER rename rule | **a 228-byte StuffIt archive** |
-| `DropCompress™` launched with no document | no window at all, then it quits |
-| a subject dragged onto `DropCompress™` | the app highlights, nothing happens |
-| `~Magic Menu™` deleted, to get SpaceSaver's own menu | **no icon menu in the menu bar at all** |
-| the Compression page OK'd first, then the rename | nothing |
-| the preferences written, the machine REBOOTED, then the rename | nothing |
-| the installer re-run and shut down cleanly, so nothing is torn | the image has no preferences either — the installer does not write them |
-| `StuffIt Deluxe™` itself, menus photographed | no SpaceSaver command in either of its menus |
-
-**The `.SIT` result disproves the harness explanation:** renaming `Forked` to
-`Forked.SIT` replaced it with a StuffIt archive, so a rename reaches an
-extension and its output survives to the image. The `.SIT` rule is Magic
-Menu's — the only extension here ever seen to act.
+**The evidence then (measured):** renames to end in `small` (with the startup
+disk enrolled and 18 minutes idle, too), Magic Menu ▸ *SpaceSaver Compress*,
+`DropCompress™` (no window; a dropped subject does nothing), `~Magic Menu™`
+deleted (**no icon menu in the menu bar at all**), the Compression page OK'd
+first, `--twoboot` (the panel writes `Pref/SMKR`, 10,496 B; reboot; rename),
+a re-install ending in Shut Down (the installer writes no preferences), and
+`StuffIt Deluxe™`'s own menus — nothing. **One thing fired:** renaming
+`Forked` to `Forked.SIT` gave **a 228-byte StuffIt archive** (Magic Menu's
+rule), which disproved the harness explanation. The panel's Finder flags
+(`0x2000`) were ruled out; the question left was **whether `INIT 0`
+installs at all** (`STR# 1001` lists seven refusals; `--parade`, 30 shots at
+0.15 s, could not photograph the icon parade).
 
 ### Why this is written down rather than left as "still trying"
 
-Each harness hypothesis was true once and repaired; the remaining candidates
-then were about the software:
+Each harness hypothesis had been true once and repaired; what remained was
+about the software. **What overtook it:** it installs, and always did — no named refusal ever
+happened (DECISIONS.md 2026-08-25, *SpaceSaver's INIT*); specimens came from
+Aladdin's own `CMod` modules under `qemu-m68k` (DECISIONS.md 2026-08-25,
+*SpaceSaver's codecs, off the Macintosh*) and real files from a byte query
+on somebody else's index (DECISIONS.md 2026-09-26, *the magic in somebody
+else's index*).
 
-- **the compression rule may not be a rename hook** — its wording is a
-  property ("files … whose Name begins or ends with"), not an event;
-- **`Idle Now`** in `STR# 1024`, SpaceSaver's own menu (*Turn Idle-Time On*,
-  **Idle Now**, *Open Control Panel*), absent while Magic Menu is installed;
-- **the registration state**, unchecked in *About SpaceSaver*.
-
-**The preferences hypothesis is disproved:** `ssinstalled.hfv` had no
-`System Folder:Preferences:SpaceSaver Preferences` (`STR# -4064`: *"could
-neither be found nor created"*); `--twoboot` (boot, OK the panel, which writes
-`Pref/SMKR`, 10,496 B, shut down, boot, rename) still left the subject
-byte-identical, as did a re-install ending in Shut Down.
-
-**The application is no way round:** `StuffIt Deluxe™` shares `SSEn 1` in
-`StuffIt Engine™`, but its *Archive* and *Translate* menus
-(`specimens/spacesaver/deluxe/`) offer no SpaceSaver compression.
-
-**Ruled out by measurement:** the panel's Finder flags are `0x2000`
-(`hasBundle`, `hasNoINITs` clear), byte-identical to `~Magic Menu™`'s.
-
-**Pointer then:** with Magic Menu deleted no icon menu appeared, so *Show
-Menu*'s `STR# 1024` menu was never installed; every "SpaceSaver is running"
-reading came from the `cdev` drawing. The question became **whether `INIT 0`
-installs at all** (`STR# 1001` lists seven refusals, incl. *"This copy of
-SpaceSaver has not been correctly installed"*); the startup icon parade could
-not be photographed (`--parade`, 30 shots at 0.15 s, all the settled
-desktop). (superseded: it installs — DECISIONS.md 2026-08-25 (SpaceSaver's
-INIT), *it installs, and it always did*.)
-
-Nothing here blocks the reader: container and both implemented methods are
-graded by an encoder written from the same disassembly, a limit TESTING.md
-states. A specimen would raise it from *self-consistent* to *right*.
+**Cost:** twelve emulator runs, and an INIT question carried three days that
+the INIT and a `STR#` on the disk answered.
 
 ## 2026-08-23 — AppleLink `.pkg`, named at last, and what a recogniser is
 
-The `PKG Expand Translator` (found 2026-08-22) is Aladdin's reader for the
-format.
+**The decision:** name AppleLink `.pkg` by copying the recogniser in
+Aladdin's `PKG Expand Translator` (found 2026-08-22), as rule #1 asks.
 
 ### Where the format's identity actually lives
 
-The translator does no file I/O (no `_Read`, no `_Open`, 23 `_HFSDispatch`
-calls): it gets the file as a HANDLE. `main(pb, selector)`; selector bit 1 is
-"can you take this?" — @0xec6 runs @0x2952 over `pb@(4)` and answers `-1` or
-`0` in `pb@(8)`. @0x2952 uses no magic: a TOKENIZER (@0xf18; skips space,
-tab, CR; honours double quotes with backslash escapes) and accepts when
-
-    token 1 == "Decode"        (@0x2996, `_CmpString`, case-insensitive)
-    token 3 == "to" or "into"  (@0x2a04, @0x2a24)
-
-**An AppleLink package is a text script.** `STR# 129` holds `convert`,
-`noConvert`, ` Folder`, *"Destination not found: "* and *"No items matching:
-"*.
+The translator gets the file as a HANDLE (no `_Read`, no `_Open`);
+`main(pb, selector)` selector bit 1 runs @0x2952 over `pb@(4)`, which uses
+no magic but a TOKENIZER (@0xf18) and accepts when token 1 is `Decode`
+(@0x2996, `_CmpString`, case-insensitive) and token 3 `to` or `into`
+(@0x2a04, @0x2a24).
 
 ### The claim this disproves, and the assumption under it
 
-"`.pkg` cannot even be sniffed without inventing a magic number" rested on
-the unstated assumption **that recognising a format means matching bytes at a
-fixed offset.** The real recogniser could be COPIED, as rule #1 asks.
-`macextract sniff` implements those three tokens and nothing more — exactly
-as strong as Aladdin's (a text file beginning *"Decode this to that"* is a
-package to both). 928 fixtures, 0 false positives.
+"`.pkg` cannot be sniffed without inventing a magic" assumed that
+recognising a format means matching bytes at a fixed offset — still true as
+a lesson; today's probe tests the container's own arithmetic
+(`src/fmt_sqp_probe.c`). The copied tokens were measured at 928 fixtures, 0
+false positives.
 
 ### What a `Decode` line refers to — and why that may end the item
 
-- **The operand is looked up in the FILE SYSTEM:** token 2 goes to the engine
-  (@0xdb4, callback selector 13, 38-byte records), then @0x1266 / @0x128c
-  fill a `CInfoPBRec` and call `_HFSDispatch` **selector 9, `PBGetCatInfo`**.
-- **Its errors are file-system errors** (*"No items matching"*, *"Destination
-  not found"*).
-- **It carries recognisers for eight other formats** (`.HQX`, `.TGZ`, `.GZ`,
-  `.ZIP`, `.ARC`, `.Z`, `.UUE`, `.UU`, plus type `PACT`, creator `EXTR`, type
-  `HBSF`), each over an FSSpec — a driver's needs.
-
-**Hypothesis, on those three:** a package is a transfer MANIFEST naming files
-beside it, not a container. **What would settle it:** one `.pkg` file —
-reading further is not cheap: the expander opens the package (@0x2e00,
-`HOpen` permission 3 falling back to 1) and calls `GetResource('Eng ', 2)` /
-`('Eng ', 3)` (@0x334c), 25 KB code resources in `StuffIt Engine™` without
-MacsBug symbols. Measured on the way (@0x2e5c): the destination folder is the
-name with `.pkg` stripped plus `STR# 129` item 2 (`Report.pkg` →
-`Report Folder`), the only use of item 3, `".pkg"`.
+Token 2 is looked up with `_HFSDispatch` selector 9, `PBGetCatInfo`
+(@0x1266 / @0x128c), whose errors are file-system errors (*"No items
+matching"*, *"Destination not found"*), so the entry's **hypothesis** was
+that a package is a transfer MANIFEST naming files beside it. Measured on
+the way (@0x2e5c): the destination folder is the name with `.pkg` stripped
+plus `STR# 129` item 2 (`Report.pkg` → `Report Folder`); expansion goes
+through `GetResource('Eng ', 2)` / `('Eng ', 3)` (@0x334c) in
+`StuffIt Engine™`.
 
 ### Why it stops at detect-only
 
-No `.pkg` to grade a decoder against — the LZH / DiskDoubler 2-5 / SpaceSaver
-1-3 bargain. Naming it turns *unknown* into a format. (superseded: packages
-carry their forks and extract — FORMATS.md, *AppleLink packages*; and nothing
-is detect-only since DECISIONS.md 2026-10-18, *the formats it only named*.)
+No `.pkg` to grade a decoder against. **What overtook it:** withdrawn —
+@0x2952 is the StuffIt translator API's COMMAND parser
+(`Decode "X" to "Y"`), the same routine in every translator on the disk,
+and it named neither real package; the probe was removed (DECISIONS.md
+2026-09-27, *the recogniser that was a command line*; BLOCKERS.md,
+*Withdrawn claims*). The manifest hypothesis fell too: packages carry their
+forks and extract (DECISIONS.md 2026-10-05, *the deviation that was the
+reference*; FORMATS.md, *AppleLink packages*), and nothing is detect-only
+since DECISIONS.md 2026-10-18, *the formats it only named*.
+
+**Cost:** 35 days of a format counted as named that named no file, and a
+supporting measurement ("0 false positives") that could not fail.
 
 ## 2026-08-23 (SpaceSaver, the encoder agrees) — the cross-check that replaced a specimen
 
