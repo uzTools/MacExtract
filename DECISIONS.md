@@ -10607,42 +10607,29 @@ grading went quiet — the suite skipped instead of failing. So
 **Claim: the overlay decision of 2026-08-31 still landed the same way,
 and none of its three premises survived.** Asked because somebody proposed
 making `overlay-eager` the default; answered by reading the branch.
-(superseded the same day: DECISIONS.md 2026-09-25, *two branches that
-were one file apart*.)
+**Superseded the same day**: the overlays became the build (DECISIONS.md
+2026-09-25, *two branches that were one file apart*).
 
-- **The prize was 5,988 B and is 84–103 KB.** That was the ciphers as one
-  image; the branch had **fifteen** since 2026-09-24. At 1 MB on System
-  6.0.8 it grants 734,656 B for a StuffIt 5, 752,898 B for an LZH and
-  746,682 B for a Compact Pro, against 650,692 B all-resident; the
-  resident column does not move with the archive.
-- **"Neither branch OPENS anything new" is withdrawn.** System 3.0 at
-  512 KB is **69/71 against main's 67/71**: `derived-a2basic.dmg.sit` and
-  `derived-Cool_Tools__.sit` (needing `MoveHHi` and twelve more images).
-- **"StuffIt can never be one of the formats it helps"** was a fact about
-  the CIPHER image: a StuffIt 5 gains 84 KB too; what it cannot release is
-  the ciphers, **10,702 B** (down from 15,748 B after 2026-09-19, the
-  transient tables).
-- **The download grows more than recorded**: `MacExtract.bin` **189,312 B
-  against 214,528 B, +25,216 B** (not +2,304 B).
-
-**Consequence then:** answer unchanged for new reasons — nothing in the
-corpus had been out of a 1 MB Mac Plus's reach since 2026-09-18, no tier
-above a 68000 had run the configuration, no Linux suite exercised the
-loader, and it cost 13 % of the download. OPEN_ITEMS.md, Part 1,
-*Overlays*.
+**Evidence at the time (measured, on the branch's fifteen images):** the
+prize was **84–103 KB**, not 5,988 B (at 1 MB on System 6.0.8, 734,656 B
+for a StuffIt 5, 752,898 B for an LZH, 746,682 B for a Compact Pro,
+against 650,692 B all-resident). "Neither branch OPENS anything new" is
+withdrawn: System 3.0 at 512 KB went **69/71 against main's 67/71**
+(`derived-a2basic.dmg.sit`, `derived-Cool_Tools__.sit`). StuffIt gains
+too; what it cannot release is the ciphers, **10,702 B** (from 15,748 B).
+Download `MacExtract.bin` **189,312 B against 214,528 B, +25,216 B** (not
++2,304 B). The answer was left unchanged that morning for new reasons
+(untested above a 68000, no Linux suite on the loader, 13 % of the
+download). BLOCKERS.md, *Withdrawn claims*, holds the cost.
 
 ### The transferable part: parking a decision does not park the work it was about
 
-The 2026-08-31 entry's own line — *"a figure that cannot change the
-conclusion is a figure nothing checks"* — held for three weeks as the
-prize grew seventeenfold. **A decision parks and a BRANCH does not**:
-sessions wrote findings to the branch's `BRANCH_NOTES.md`, correctly, and
-nothing reached `main`, whose status file kept quoting the parking number.
-
-**Caught by the cheapest smell: three files, three numbers** — BRANCHES.md
-18,116 B, OPEN_ITEMS.md 5,988 B, the branch neither; readable on `main`
-since 2026-09-02. **A parked decision needs its re-read trigger where the
-NUMBER lives**: BRANCHES.md rows now carry the figure and its date.
+**A decision parks and a BRANCH does not**: findings went to the branch's
+`BRANCH_NOTES.md` while `main` kept quoting the parking number for three
+weeks as the prize grew seventeenfold. Caught by **three files, three
+numbers** (BRANCHES.md 18,116 B, OPEN_ITEMS.md 5,988 B, the branch
+neither). **A parked decision needs its re-read trigger where the NUMBER
+lives**: BRANCHES.md rows carry the figure and its date.
 
 ## 2026-09-25 (the skip that could not fire, again) — `./ci.sh` deleted what its first check needs, and the guard for that was a tuple
 
@@ -10871,32 +10858,26 @@ to be checked.**
 
 ## 2026-09-26 (the numbers DART left behind) — the ratchet was lowered and the prose quoting it was not, and the control nothing built went 4 B over
 
-**What was wrong.** FORMATS.md's *Overlays* gave the shipped build as
-54,028 B resident `CODE`, 19,124 B A5, a 214,784 B download and a
-146,176 B bundle of fifteen images — all from BEFORE DART left on
-2026-09-25. Measured: 53,332 / 18,988 / 211,328, a 143,616 B bundle,
-**fourteen** images.
+**What was wrong.** FORMATS.md's *Overlays* still gave the pre-DART
+shipped build (54,028 B resident `CODE`, 19,124 B A5, 214,784 B download,
+146,176 B bundle of fifteen images) after DART left on 2026-09-25.
+Measured then: 53,332 / 18,988 / 211,328, a 143,616 B bundle, **fourteen**
+images.
 
-**The tool was right.** DART's commit lowered all three ratchets in
-`tools/build_mac.sh` (*"eager 54,028 -> 53,332, lazy 52,600 -> 51,956,
-resident 153,804 -> 151,584"*), the file that ENFORCES the number; the
-prose was not touched and could not complain. **When a commit lowers a
-limit, grep for the number it lowered from**: here FORMATS.md twice (one
-updated, one not, 60 lines apart), `check_app_size.py`'s docstring, and
-an image count in six files including CLAUDE.md.
+**The tool was right, the prose was not.** DART's commit lowered all three
+ratchets in `tools/build_mac.sh`, the file that ENFORCES the number. **When
+a commit lowers a limit, grep for the number it lowered from**: here
+FORMATS.md twice, `check_app_size.py`'s docstring, and an image count in
+six files.
 
 ### The launch read: two numbers that were written as one
 
-The section said the launch read grows by *"26,368 B, which is the
-download delta and not a second term"*. Measured: the read grows by
-**24,960 B** (183,552 B control against 64,896 + 143,616 = 208,512 B),
-the download by **24,448 B** (211,328 against 186,880). *"X, which is
-also Y"* is two claims, and the second was never measured.
-
-**Corrected later the same day: the bundle is 143,072 B, not 143,616 B**,
-so the read grows by 24,416 B and the deltas are 32 B apart (*the fork
-that was mistaken for its contents*, below). The 512 B left unaccounted
-was the whole of the error.
+FORMATS.md said the launch read grows by *"26,368 B, which is the download
+delta and not a second term"*. Measured: the read grew **24,960 B**, the
+download **24,448 B**; with the bundle **corrected the same day to
+143,072 B** (*the fork that was mistaken for its contents*, below), the
+read grew 24,416 B. *"X, which is also Y"* is two claims, and the second
+was never measured.
 
 ### A control that is not built is not a control
 
@@ -10904,11 +10885,9 @@ Building the resident configuration by hand came out **4 B over its own
 ratchet** while `ci.sh` was green: `arc_retryable()` (*the guard that was
 on the other side*) lives in an OVERLAY in both shipped lifetimes, so only
 the all-linked build pays. `ci.sh` compiled variants 4, 4b, 4c and left
-out the control, while TESTING.md said all were built. The ratchet rises
-4 B with its reason, the A5 ratchet falls 4 B, and `ci.sh` gains
-**variant 4d**. Of three configurations, the one a suite skips is the
-unshipped one — exactly the fixed reference. **A control earns its name
-by being rebuilt.**
+out the control, while TESTING.md said all were built. The ratchet rose
+4 B with its reason, the A5 ratchet fell 4 B, and `ci.sh` gained
+**variant 4d**. **A control earns its name by being rebuilt.**
 
 ## 2026-09-26 (the feature that was parked, and is now out) — choosing entries in the Macintosh application leaves the brief
 
@@ -11406,46 +11385,30 @@ an image installed since August.
 ## 2026-09-27 (the signatures that were already on the disk) — a row said its replacements were not on this machine, and eight of the ten were compiled by ci.sh every run
 
 **Superseded 2026-10-18** for `src/fmt_foreign.c` and StuffIt X's probe
-(*the formats it only named*): that code is gone. PackIt's recogniser is
-unaffected.
+(*the formats it only named*): that code is gone. PackIt's recogniser and
+the classic StuffIt probe are unaffected.
 
-The XADMaster inventory row for `src/fmt_foreign.c`, `src/fmt_sit_probe.c`
-and `src/fmt_packit_probe.c` said: *deark for Zoo, already cited; the rest
-are in each format's own published description, none of which is on this
-disk.* **That asked about descriptions and answered for implementations.**
-deark, compiled by `tools/build_deark.sh` every `ci.sh` run, states eight
-of the ten:
-
-| signature | where deark states it |
-|---|---|
-| ARJ `60 ea`, the 30..2600 header bounds, the basic-header CRC-32 | `modules/arj.c` — `g_arj_hdr_id`, `de_identify_arj`, `arj_read_member` |
-| RAR 5.x, 1.5–4.x, and "RE~^" | `modules/rar.c`, `rar_get_fmtver` |
-| Cabinet `MSCF` | `modules/cab.c` |
-| Zoo, four bytes at 0x14 | `modules/zoo.c` (already cited) |
-| bzip2 `BZh` + the block header | `modules/unsupported.c`, `get_fmt` |
-| 7-Zip, xz | the same function |
-| PackIt's recogniser | `modules/packit.c`, `de_identify_packit` |
-
-The other two: bzip2's EMPTY form is `bzip2 -c < /dev/null` (`42 5a 68 39
-17 72 45 38 50 90`, the branch byte for byte); StuffIt's recogniser is the
-wiki page `fmt_sit.c` already uses (`0x724c6175` at offset 10; `SIT!`,
+**Claim.** The XADMaster inventory row for `src/fmt_foreign.c`,
+`src/fmt_sit_probe.c` and `src/fmt_packit_probe.c` said the replacements
+were *in each format's own published description, none of which is on
+this disk* — asking about descriptions, answering for implementations.
+deark, compiled by `tools/build_deark.sh` every `ci.sh` run, states
+**eight of the ten** (ARJ, RAR, Cabinet, Zoo, bzip2, 7-Zip/xz in
+`modules/arj.c`, `rar.c`, `cab.c`, `zoo.c`, `unsupported.c`'s `get_fmt`;
+PackIt in `modules/packit.c`, `de_identify_packit`). The other two:
+bzip2's empty form from `bzip2 -c < /dev/null`; StuffIt's recogniser from
+the wiki page `fmt_sit.c` already uses (`0x724c6175` at offset 10; `SIT!`,
 `ST46`, `ST50`, `ST60`, `ST65`, `STin`).
 
-**Labelled, not free.** The probe's superset (`ST` + two digits, `STi` + a
-digit) is XADMaster's in origin, kept as this project's: `rLau` must match
-too, and all 336 corpus archives with `rLau` at offset 10 carry `SIT!`.
-ARJ's lower bound moved from XADMaster's 32 to deark's 30 (length guard 40
-to 38), deark citing the ARJ TECHNOTE; no fixture exercises ARJ.
+**Labelled, not free.** The StuffIt probe's superset (`ST` + two digits,
+`STi` + a digit) is XADMaster's in origin, kept as this project's: `rLau`
+must match too, and all 336 corpus archives with `rLau` at offset 10 carry
+`SIT!`.
 
 **Lesson already on BLOCKERS' list: an oracle that was never asked.**
 Method 6 cost four weeks of "macutils is the only reference" while deark
 implemented it; this row cost five. Ask *"does anything here READ this
-format?"*
-
-**Consequence then:** the row left (12 rows over 18 files), the first to
-leave for a reason other than a rewrite; the licence does not move
-(`unc_lzdyn.c`, `unc_crypt.c`, `unc_lzah.c`, the tolerance row
-measured-unclosable); only two ARJ constants changed.
+format?"* The row left the inventory; the licence did not move.
 
 
 ## 2026-09-27 (the tables that said they were generated) — a comment claimed the tables were the polynomials' for months and nothing checked it, and the pad byte beside them turned out to be unobservable
