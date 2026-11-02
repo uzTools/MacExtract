@@ -56,6 +56,7 @@
 #include <NumberFormatting.h>
 #include <Gestalt.h>
 #include <Traps.h>
+#include <AppleEvents.h>
 
 QDGlobals qd;
 
@@ -64,6 +65,10 @@ enum { kNotFoundAlert = 128, kLaunchAlert = 129, kNoOwnerAlert = 130,
 
 static void Toolbox(void)
 {
+    static char done;
+
+    if (done) return;
+    done = 1;
     InitGraf(&qd.thePort);
     InitFonts();
     InitWindows();
@@ -281,7 +286,8 @@ static OSErr LaunchIn(short vol, long dir, Str255 name)
  * last record of `what` $2000. MultiFinder disposes of it once played,
  * so it goes in the system heap: the stub's own heap is gone when it
  * quits. System 7.0.1's Process Manager accepts both calls and plays
- * nothing (measured), so this is System 6 only: no Apple Event Manager. */
+ * nothing (measured), so this is System 6 only: no Apple Event Manager;
+ * System 7 is Odoc's, below. */
 pascal short MFProcesses(void *list, short max) M68K_INLINE(0x3F3C, 0x0001, 0xA88F);
 pascal void MFPuppet(short process, Handle s, long z1, short z2) M68K_INLINE(0x3F3C, 0x0000, 0xA88F);
 
@@ -330,6 +336,111 @@ static int Puppet(void)
     p[6 + cnt * 16] = 0x20;                         /* `what` $2000: the end */
     MFPuppet(process, h, 0, 0);
     return 1;
+}
+
+/* SYSTEM 7. The 7.0.1 Finder hands a running application its documents
+ * by PostHighLevelEvent of an odoc to its process serial number, after
+ * SetFrontProcess (Finder 7.0.1 CODE 160 $644, $8D4; CODE 10 $46A). For a
+ * process with no high-level event port, as MacExtract, the Process
+ * Manager turns the event into a puppet string itself (scod -16462 $1802
+ * picks that path, -16464 $5BC builds it), on two conditions read there
+ * and measured: no process switch in progress (else protocolErr, -603;
+ * a helper just launched is in one, so it lets its own switch finish in
+ * WaitNextEvent first and asks again on -603), and every document an
+ * alias ('alis'; anything else is paramErr, and nothing arrives); and
+ * the helper stays running a few seconds after posting. The
+ * event goes out as its Process Manager form, the AppParameters block an
+ * odoc coerces to: the EventRecord at +0, refcon +16, length +20, the
+ * message at +24 (the Finder's own call reads the same offsets). AESend
+ * would not do: a sender that is not high-level-event aware may not use
+ * it (noPortErr, -903), and the stub stays unaware so that the Finder
+ * keeps handing it the documents in the Finder information
+ * (DECISIONS.md 2026-11-01, *the Open item MultiFinder looks for*). */
+#define typeAppParameters 'appa'
+/* Retro68's headers lack these. Source: Inside Macintosh — Interapplication
+ * Communication, PostHighLevelEvent's posting options (receiverIDisPSN
+ * $8000, which the 7.0.1 Finder passes) and Processes (protocolErr -603,
+ * which the 7.0.1 Process Manager returns at scod -16464 $5E6). */
+#define receiverIDisPSN 0x8000
+#define protocolErr (-603)
+
+static void Settle(long ticks)
+{
+    EventRecord ev;
+    long until = TickCount() + ticks;
+
+    while (TickCount() < until)
+        WaitNextEvent(everyEvent, &ev, 10, NULL);
+}
+
+/* 1 if a running MacExtract was handed the documents. */
+static int Odoc(void)
+{
+    Handle ap = LMGetAppParmHandle();
+    ProcessSerialNumber psn = { 0, kNoProcess };
+    ProcessInfoRec pi;
+    AEAddressDesc target;
+    AppleEvent ev;
+    AEDescList docs;
+    AEDesc parm;
+    AliasHandle al;
+    FSSpec fs;
+    unsigned char *p, *a;
+    long cnt, i, off, ae;
+    OSErr err;
+    short k;
+
+    if (!ap || NGetTrapAddress(0xA1AD, kOSTrapType)
+               == NGetTrapAddress(_Unimplemented, kToolboxTrapType)
+        || Gestalt(gestaltAppleEventsAttr, &ae) || !(ae & 1))
+        return 0;
+    for (;;) {
+        if (GetNextProcess(&psn)) return 0;         /* not running */
+        pi.processInfoLength = sizeof pi;
+        pi.processName = NULL;
+        pi.processAppSpec = NULL;
+        if (!GetProcessInformation(&psn, &pi) && pi.processSignature == 'MExt')
+            break;
+    }
+    if (AECreateDesc(typeProcessSerialNumber, &psn, sizeof psn, &target)
+        || AECreateAppleEvent(kCoreEventClass, kAEOpenDocuments, &target,
+                              kAutoGenerateReturnID, kAnyTransactionID, &ev)
+        || AECreateList(NULL, 0, false, &docs))
+        return 0;
+    HLock(ap);
+    p = *(unsigned char **)ap;
+    cnt = p[2] << 8 | p[3];
+    err = 0;
+    for (i = 0, off = 4; i < cnt && !err; i++) {
+        al = NULL;
+        err = FSMakeFSSpec((short)(p[off] << 8 | p[off + 1]), 0, p + off + 8, &fs);
+        if (!err) err = NewAlias(NULL, &fs, &al);
+        if (!err) {
+            HLock((Handle)al);
+            err = AEPutPtr(&docs, 0, typeAlias, *al, GetHandleSize((Handle)al));
+        }
+        off += (p[off + 8] + 10) & ~1;
+    }
+    HUnlock(ap);
+    if (err || AEPutParamDesc(&ev, keyDirectObject, &docs)
+        || AECoerceDesc(&ev, typeAppParameters, &parm))
+        return 0;
+    HLock(parm.dataHandle);
+    a = *(unsigned char **)parm.dataHandle;
+    Toolbox();
+    for (k = 0; k < 10; k++) {
+        Settle(k ? 30 : 60);
+        err = PostHighLevelEvent((EventRecord *)a, (Ptr)&psn,
+                                 *(long *)(a + 16), (Ptr)(a + 24),
+                                 *(long *)(a + 20), receiverIDisPSN);
+        if (err != protocolErr) break;
+    }
+    /* Then stay a while: a helper that quits as soon as it has posted
+     * hands nothing on, one that stays 3 s in WaitNextEvent does
+     * (measured; that the string goes with its poster is a hypothesis).
+     * MacExtract has the front by then, hence canBackground in 'SIZE'. */
+    if (!err) Settle(180);
+    return !err;
 }
 
 /* An application of creator MExt in that folder, by name. */
@@ -402,7 +513,7 @@ int main(void)
             return 0;
         }
     } else if (!err) {
-        if (Puppet()) return 0;
+        if (Puppet() || Odoc()) return 0;
         err = LaunchIn(vol, dir, name);
     }
 

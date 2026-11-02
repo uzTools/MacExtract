@@ -19667,11 +19667,46 @@ are `dcmp` 0 compressed and were read with a scratch transcription of
 python-rsrcfork's `compress/dcmp0.py`, whose output matched the stated
 length on all 186. The control: the same disk with the second archive
 stamped `MExt` and double-clicked, so the Finder hands it on; MacExtract
-extracted it after the first. So 7.0.1 delivers a document to a running
-application that is not HLE-aware when the FINDER opens it, and refuses
-every event the helper posts itself. The only route measured to work goes
-through the Finder, and needs a helper that is HLE-aware (on System 7 the
-Finder then hands it its own documents as an odoc, not in the Finder
-information) and an archive that briefly carries MacExtract's creator. Not
-built: both are design decisions. The helper keeps `_Launch` there, which
-loses the archive as before. Mac OS 9 not run.
+extracted it after the first. (Corrected: the conclusion first written
+here, that 7.0.1 refuses every event a helper posts, was withdrawn the
+same day; BLOCKERS.md, *Withdrawn claims*.)
+
+**Why every post above failed, and the one that works (read in the
+7.0.1 Process Manager, then measured, same setup, one run each).** The
+Process Manager is the System file's `scod` resources −16479 to −16461,
+`dcmp` 2 compressed, read with a scratch transcription of
+python-rsrcfork's `compress/dcmp2.py` (every one to its stated length).
+Its `PostHighLevelEvent` (`scod` −16462 `$8BA`) sorts the receiver at
+`$1802`: a process addressed by serial number that has no high-level
+event port, as MacExtract, is sent down a fourth path, which calls
+`−16464 $5BC`, the Process Manager's own translation of an `'aevt'` odoc
+or quit into a puppet string (`$0C` per document, `$2000` last: the
+MultiFinder format above). That translation has two conditions:
+
+- **no process switch in progress**: it returns `protocolErr` (−603)
+  while the word at A5−870, which the switching code (`−16464
+  $37A0`–`$42AA`) steps through 13, 12, 11, 6, is not zero. A helper just
+  launched is still being switched in, so every post above came back
+  −603. Settled first, 60 ticks of `WaitNextEvent`, the first post returns
+  0;
+- **every document an alias**: it compares each descriptor's type with
+  `'alis'` (`$430`) and gives up otherwise; with `FSSpec`s the post
+  returned 0 and nothing arrived.
+
+And a third, measured but not read: the helper must not quit at once. A
+probe that posted and stayed 3 s in `WaitNextEvent` got its archive
+extracted; the helper that posted and quit got nothing, with the same
+log. That the string goes with its poster is the hypothesis.
+
+So `companion/stub`, on a System with the Apple Event Manager and
+MacExtract running: an odoc to its serial number with the documents as
+aliases, coerced to its `'appa'` form and posted with
+`PostHighLevelEvent` exactly as the Finder posts it, after 60 ticks of
+`WaitNextEvent` and again every 30 on −603, up to ten times; then 3 s
+more before quitting, so its `SIZE` says `canBackground`. Measured on
+7.0.1: the second archive extracted after the first; the archive's own
+Finder information untouched, and the helper still not HLE-aware, so the
+Finder keeps handing it its documents in the Finder information. The
+same build: on 6.0.8 MultiFinder the puppet string still queued the
+second archive, and on 7.0.1 with MacExtract not running it launched it
+with the archive as before. 10,112 B, from 9,344. Mac OS 9 not run.
