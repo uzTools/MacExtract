@@ -135,10 +135,11 @@ withdrawn claim, filed with what it cost.
 
 ## 8. A release
 
-`v0.44.0` (2026-10-25) is the newest tag; `main`'s `dist/` is **v0.45.0**,
-built 2026-11-02 and not tagged. Left: the maintainer's last run on the LC
-475 (a MIME set from floppies), then the go-ahead; whether to cut it is the
-maintainer's call (CLAUDE.md, *Cutting a release*).
+`v0.45.0` (2026-11-02) is the newest tag and is `main`'s `dist/`, released
+after the maintainer's run on the LC 475; the API lists its three assets,
+and the published `MacExtract.bin` is byte for byte `dist/`'s. Whether to
+cut the next is the maintainer's call (CLAUDE.md, *Cutting a release*).
+Nothing is left in this section.
 
 ## 9. The 1.44 MB image, written with a USB floppy drive
 
