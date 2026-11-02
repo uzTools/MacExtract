@@ -20160,6 +20160,20 @@ last frame. The Finder hands a second document to a running helper by
 bringing it forward, which the helper does not read, and the first
 string's switch is presumably undone with it.
 
+**Mac OS 9.2 takes the Apple event, not the puppet string (measured,
+QEMU, a fresh transfer disk each run, the helper registered by opening it
+alone, `derived-Library_ISBN_Barcoder.sit` busy and `Other.sit` opened at
+0–39 %).** The current helper's MultiFinder string arrives: when the
+first archive is done MacExtract takes a second one, and says **"Could
+not open the archive."** Three runs: as committed; with each document's
+working directory reopened under `'ERIK'` (MultiFinder's own, 6.0.8
+`CODE` 1 `$9FC`); with the volume's own reference number, the archive
+being at the root. So it is not the working directory; what Mac OS 9 does
+with the records is not known. The helper of 91cdd48, which posts an
+odoc settled and with aliases where Apple events exist, got the archive
+extracted on Mac OS 9 (one run). So one mechanism cannot cover the three:
+the string fails on 9, the event does not exist on 6.
+
 **Where it stops (the maintainer, 2026-11-02).** One more archive at a
 time is what is promised: File > Open... on every System, a double-click
 under MultiFinder and System 7, through a helper or straight to MacExtract
