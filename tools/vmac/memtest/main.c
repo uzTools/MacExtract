@@ -11,7 +11,7 @@
  * a CODE resource has to fit in, since CODE resources are handles in this
  * heap (FORMATS.md, *What the application costs the engine*).
  *
- * MaxApplZone is guarded exactly as the `rom64k` branch guards it: it is
+ * MaxApplZone is guarded exactly as commit dffe84d guarded it: it is
  * [Not in ROM] on a 64K ROM (Inside Macintosh II-30) and Retro68 emits it as
  * a trap, so calling it unguarded is itself a bomb and would measure nothing.
  *

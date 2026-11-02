@@ -8,7 +8,6 @@ taken; an undated figure here cannot be told stale (DECISIONS.md 2026-09-25,
 | branch | what it explores | state |
 |---|---|---|
 | `companion-expander55` | StuffIt Expander 5.5 handing its downloads to MacExtract through Internet Config | **open**, 28 commits ahead of `main` (2026-11-02) |
-| `rom64k` | `GrowApplZone()` in place of `MaxApplZone`, so the application starts on a 64K ROM | **merged 2026-10-16**; kept for its `BRANCH_NOTES.md`, 11 commits not reachable from `main` (DECISIONS.md 2026-10-15, *the purge MaxApplZone never did*) |
 | `selective-extract` | choosing entries in the Macintosh application | **PARKED BY DECISION 2026-09-26**, out of scope (OPEN_ITEMS.md, *Out by the brief*; DECISIONS.md 2026-09-26, *the feature that was parked, and is now out*). 3 commits ahead of `main`; its notes predate the overlays: no current figure. Do not start work on it |
 
 **Thirteen merged branches DELETED, 2026-11-02**, none with a commit
@@ -21,6 +20,8 @@ outside `main`: `eta-backstep` `2b20a47`, `meta-archives` `87d0f0d`,
 same day** at `2fc0b91`: its 5 commits outside `main` were DART's overlay
 (DART has left scope), the stale-image fix `main` has from `overlay-eager`,
 and `BRANCH_NOTES.md` figures for the 2026-09-24 lazy build.
+**`rom64k` DELETED the same day** at `be546af`: its code is on `main` since
+2026-10-16 (`73652b2`, `GrowApplZone`); its `BRANCH_NOTES.md` is at that SHA.
 
 **`ndif-udif` is DELETED, 2026-09-25**, at `7269acd`: compressed disk images
 left this project's scope with DART (DECISIONS.md 2026-09-25, *the disk images
