@@ -14345,21 +14345,21 @@ decryption.
 
 ## 2026-10-07 (the pop that outlived its push) — one rule for a path too deep to represent, and why the contract that said ignoring it was safe was only true of one of the five walks
 
-(Superseded the same day: DECISIONS.md 2026-10-07, *the limit that was
-three transcriptions*, deleted `UNC_PATH_MAXDEPTH`, `UNC_ERR_TOODEEP` and
-`path_too_deep`; what survives is the reasoning below.)
+**Decision (superseded the same day).** An entry nested past
+`UNC_PATH_MAXDEPTH` (24) was offered at the path the engine could
+represent and failed per entry (`path_too_deep`, `UNC_ERR_TOODEEP`),
+instead of refusing the archive or being misfiled. **Overtaken**:
+DECISIONS.md 2026-10-07, *the limit that was three transcriptions*,
+deleted the constant, the flag and the error code; nesting is now bounded
+by the path string alone. What survives is below.
 
-`unc_path_push` refused to descend past `UNC_PATH_MAXDEPTH` (24), and its
-five callers did three different things about it, under a header that
-said a refused push changed NOTHING and could be ignored.
-
-**The claim was about the PUSH, and the bug is in the POP.** Four walks
-come back up by a COUNT — an `enddir` record (DDAR), a level counter
+`unc_path_push`'s header said a refused push changed NOTHING and could be
+ignored. **The claim was about the PUSH, and the bug is in the POP.** Four
+walks come back up by a COUNT — an `enddir` record (DDAR), a level counter
 (DDA2), `SD_TAG_UPDIR` (SuperDisk!), a per-directory entry count (Now
-Compress) — so a refused push still got its pop, which took a real level:
-*every entry after the deep folder was reported inside a real folder it
-is not in*. Only AppleLink packages escaped (`while (depth >= level)`,
-absolute and self-correcting). BLOCKERS.md has the cost.
+Compress) — so a refused push still got its pop, which took a real level.
+Only AppleLink packages escaped (`while (depth >= level)`, absolute and
+self-correcting). BLOCKERS.md has the cost.
 
 **Invisible to every suite here**: the path is plausible and every byte
 correct, so a names-and-CRCs differential and an aggregate both pass.
@@ -14367,85 +14367,63 @@ What sees it is asking "is this entry where the archive put it".
 
 ### The rule, argued on what comes out of the archive
 
-Measured on a generated 30-deep archive of 91 entries
-(`tools/synth_deep.py`; nothing in the corpus nests past 4 — FORMATS.md,
-*How deep anything actually nests*):
-
-| rule | what the user gets |
-|---|---|
-| refuse the archive (DiskDoubler's) | **48 of 91 entries**, and a correct archive called corrupt; 24 representable entries after the deep folder never offered |
-| emit, do not descend (Now Compress's intent) | all 91, and **24 of them silently in the wrong folder**, 12 files written where nobody asked and 5 folders created inside a sibling branch |
-| emit, do not descend, and FAIL the ones it cannot place | all 91 offered, **49 at their own paths**, 17 refused out loud, nothing written anywhere wrong |
-
-The third shipped: an unrepresentable path is a per-entry error, as
-`truncdepth` already treats an overlong name. **Losing entries is better
-than misfiling them, and both are worse than saying so** — a misfiled
-file is one the user cannot find nor know is misplaced.
+On a generated 30-deep archive of 91 entries (`tools/synth_deep.py`;
+nothing in the corpus nests past 4 — FORMATS.md, *How deep anything
+actually nests*): refusing the archive (DiskDoubler's) gave **48 of 91
+entries**; emit-and-do-not-descend gave all 91 with **24 of them silently
+in the wrong folder**; failing the unplaceable ones gave all 91 offered,
+**49 at their own paths**, 17 refused out loud. The third shipped. **Losing
+entries is better than misfiling them, and both are worse than saying
+so.**
 
 ### Why the walker counts refusals instead of flagging them
 
 A counter of refused descents (`UncPath.lost`), not a flag, because
-refusals nest; Now Compress summed the refused levels' entry counts in one
-accumulator (kept after the limit went, keyed on the string filling).
+refusals nest; Now Compress's accumulator stayed after the limit went,
+keyed on the string filling.
 
 ### The field, and the host that never hears the error
 
 **A host may decline an entry at `begin_entry` and then never hear its
 status** (the CLI declines every directory), so such a fact travels on an
-`UncEntryInfo` field read at `begin_entry`, beside `name_truncated`. Also
-found: `fmt_superdisk.c` called `end_entry` for an entry `begin_entry` had
-declined, a six-week-old contract violation.
+`UncEntryInfo` field read at `begin_entry`, beside `name_truncated`.
+`fmt_superdisk.c` had called `end_entry` for a declined entry, a
+six-week-old contract violation.
 
 ### What it cost
 
 **160 B resident on a 1 MB Mac Plus**; deepest chain 3,386 → 3,406 B;
-`UncEntryInfo` 302 → **304** bytes.
+`UncEntryInfo` 302 → **304** bytes. Re-measured when the limit went:
+deepest chain 3,386 → 3,310 B (*the limit that was three
+transcriptions*).
 
 ### Run on a Macintosh, 2026-10-07
 
-Both routes (4 MB, System 6.0.8; numbers FORMATS.md's) had negative
-controls: the 2026-10-06 application writes 61 files and 30 folders where
-the new one writes 49 and 25, and `checkdisk.py` fails it by name; the
-sentence *"nested too deep to place"* is not in that binary at all. The
-report phase asserts the document, not the volume, because `hls` will not
-list the root of a volume the interactive build leaves behind; the output
-goes to a floppy because a report saved onto a just-written boot volume
-is not in its catalog (the 2026-09-22 finding, different cause).
-
-**Two harness defects read as application defects**: `checkdisk.py`'s
-walk returned `[]` past eight levels, and it could only identify a
-COMMITTED fixture, so a generated subject skipped silently — **an
-instrument that skips rather than fails is one nobody notices has stopped
-measuring**; `--fixture` now matches by content.
+Both routes (4 MB, System 6.0.8) had negative controls. **Two harness
+defects read as application defects**: `checkdisk.py`'s walk returned
+`[]` past eight levels, and it could only identify a COMMITTED fixture, so
+a generated subject skipped silently — **an instrument that skips rather
+than fails is one nobody notices has stopped measuring**; `--fixture` now
+matches by content.
 
 ### The two limits at once, and the whole name that was not one
 
-**Shorten where the DESTINATION cannot hold it; refuse where only the
-ENGINE cannot.** An overlong name is shortened and reported, and its
-whole is handed over via `UncOptions.long_name`.
-
-**Where both fired, the engine claimed a whole name it did not have**:
-`unc_path_leaf` set `name_truncated` 2 from the uncut path past the depth
-limit, and the CLI printed `.../D24.../f30.txt` as the archive's name for
-an entry six folders deeper; it now reports `name_full_len` 0. The CLI
-also recorded the cut note before the refusal. **Found by one question,
-and by no suite**: three suites were green because they compare what the
-engine WRITES, not what it SAYS. The first `test_path_depth` used
-one-character names, never set `truncdepth`, and passed with the fix
-reverted; with 31-character names it fails.
+**Where both fired, the engine claimed a whole name it did not have**
+(`name_truncated` 2 from the uncut path; the CLI printed
+`.../D24.../f30.txt` for an entry six folders deeper). **Found by one
+question, and by no suite**: three suites compare what the engine WRITES,
+not what it SAYS. The first `test_path_depth` used one-character names
+and passed with the fix reverted; with 31-character names it fails.
 
 ### What the generator is for, and the one it broke
 
-`tools/synth_deep.py` writes the same tree for all five formats: a file at
-every level going down, a TRAILER at every level coming up (catches the
-unbalanced pop), a root sentinel. Trailers exist because `unc_path_pop`
-clamps at depth 0, so a sentinel-only assertion passed on all five broken
-walks.
-
-Two function-like macros beside `UncPath` broke
-`tools/overlay/mkforwards.py`, which matched the leftmost `unc_name(` and
-dropped `unc_path_push` from the host vector; it now takes the rightmost
-name in `SYMBOLS`. It failed the build loudly, as designed.
+`tools/synth_deep.py` writes the same tree for all five formats, with a
+TRAILER at every level coming up (catches the unbalanced pop), because
+`unc_path_pop` clamps at depth 0 and a sentinel-only assertion passed on
+all five broken walks. Two function-like macros beside `UncPath` broke
+`tools/overlay/mkforwards.py`, which matched the leftmost `unc_name(`; it
+now takes the rightmost name in `SYMBOLS`. It failed the build loudly, as
+designed.
 
 
 ## 2026-10-07 (the limit that was three transcriptions) — `UNC_PATH_MAXDEPTH` is deleted, nesting is bounded by the path string and by nothing else, and popping re-scans instead of remembering
@@ -15241,42 +15219,30 @@ whole story.
 
 ## 2026-10-09 (the key is folded at decrypt time, not at launch) — the Shortcut updater's archive key is recoverable from a decrypt-time RAM dump by an 8-byte oracle, but its install UI never reached decrypt here
 
-**Status: WITHDRAWN 2026-10-10.** The 45 dumps were taken while the
-installer had no target; once it accepts one, the key is in memory before
-any file is written (2026-10-10, *the installer's own key*; BLOCKERS.md).
+**Status: WITHDRAWN 2026-10-10.** The reading was that the Shortcut 1.5.3
+Update's archive key is computed lazily at extraction, because **45
+dumps** of `/proc/<pid>/mem` under Mini vMac (InstallerMaker 1.0.3 splash,
+license, SFGetFile picker) held nothing. The picker was Standard File
+asking for the installed Shortcut: the dumps were taken while the
+installer had no target, and once it accepts one the key is in memory
+before any file is written (2026-10-10, *the installer's own key*;
+BLOCKERS.md, *Withdrawn claims*). The question had been `sit_scheme()`
+reading bytes 107/109 as encryptor ids on the updater's two forks with
+5/3 and 6/5 at 106/109, beside eleven method-13, id-0 forks (FORMATS.md,
+*Where an archive names the module*).
 
-**The question.** `sit_scheme()` read bytes 107/109 as encryptor ids, and
-on two forks of Aladdin's *Shortcut 1.5.3 Update* (5/3 and 6/5 at 106/109,
-empty data forks) routed one to `NewDEx` and refused the other, while the
-other eleven forks (method 13, id 0) asked for a built-in-scheme password
-(FORMATS.md, *Where an archive names the module*). Hypothesis: the bytes
-are installer-private and all thirteen share one password the installer
-carries.
-
-**The oracle needs no password guess.** An encrypted StuffIt classic
-archive's eight-byte `'MKey'` verifies the key before any fork (that every
-scheme shares the archive key is not established; the self-test grades
-the 3.5.1 built-in scheme on three Aladdin archives since 2026-10-10). It
-decides a candidate eight-byte **archive key**, so recovery is a
-fixed-width search: slide an 8-byte window over anything.
-`tools/sit_mkey_oracle.py` is the self-testing oracle; the C hot loop,
-committed 2026-10-10 as `tools/sit_akscan.c`, scans a 12 MB dump in a few
-seconds (Python ~1 ms a window). The updater's MKey is
-`4d87bcb0c49abe53`.
-
-**Where the key is not.** Under Mini vMac (boot-shell build, `mkboot.py
---app-name`) the updater shows the InstallerMaker 1.0.3 splash, a license,
-and an SFGetFile picker; **45 dumps** of `/proc/<pid>/mem` across them
-held **nothing**, nor did the uncompressed resources (the engine is in
-`ADCR` resources nothing here decodes). **The reading drawn, WITHDRAWN the
-next day**: that the key is computed lazily at extraction. The picker was
-Standard File asking for the installed Shortcut.
+**The method held and is still in use.** An encrypted StuffIt classic
+archive's eight-byte `'MKey'` verifies a candidate eight-byte **archive
+key** before any fork, so recovery is a fixed-width search: slide an
+8-byte window over a memory image, no password guess (that every scheme shares the archive key is
+not established). `tools/sit_mkey_oracle.py` is the self-testing oracle; `tools/sit_akscan.c`
+(committed 2026-10-10) scans a 12 MB dump in a few seconds (Python ~1 ms
+a window). The updater's MKey is `4d87bcb0c49abe53`.
 
 **Transferable.** A verifier of the derived key rather than the password
-lets a memory image answer, and it held. The inference from 45 empty
-dumps did not: an absence said the program had not reached the key, not
-WHEN it would — the shape of a timeout read as a measurement (BLOCKERS.md,
-*Withdrawn claims*).
+lets a memory image answer. An absence in 45 dumps said the program had
+not reached the key, not WHEN it would — the shape of a timeout read as a
+measurement.
 
 ## 2026-10-10 (the header that checks its own CRC) — a search of unread bytes is a count only when the thing searched for can fail a checksum
 
