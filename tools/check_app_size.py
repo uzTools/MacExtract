@@ -133,9 +133,12 @@ import sys
 # RE-TAKEN 2026-10-25, 48,896 -> 46,336: the encryption check and the
 # MacBinary and AppleDouble readers left the resident link for the
 # sniffer's and BinHex's images (DECISIONS.md 2026-10-25, *the envelopes that left*).
-EXPECT = 46336
+# RE-TAKEN 2026-11-02, 46,336 -> 46,976: v0.45.0, the dialogs — the part
+# dialog, the background wait, the coloured bar, the cheaper part scans
+# (DECISIONS.md 2026-11-02, *the dialogs that became the application*).
+EXPECT = 46976
 TOLERANCE = 2048
-TAKEN = "2026-10-25"
+TAKEN = "2026-11-02"
 
 # And the BUNDLE, watched from 2026-09-26 for one reason: FORMATS.md quotes it
 # in three places and nothing measured it, so it was wrong by 544 B — the
@@ -263,9 +266,13 @@ TAKEN = "2026-10-25"
 # MIME depth report), then the MacBinary and AppleDouble readers into
 # `ovl_binhex` (+2,076) and the encryption check into `ovl_sniff` (+652)
 # (DECISIONS.md 2026-10-25, *the envelopes that left*).
-EXPECT_BUNDLE = 183804
+# -> 188,404 2026-11-02: v0.45.0 — the destination dialog (`ovl_destdlg`,
+# 1,682 B) and a set's setup (`ovl_segsetup`, 2,364 B) as images, and the
+# envelope-only sniff in `ovl_sniff` (+172), with two directory entries
+# (DECISIONS.md 2026-11-02, *the dialogs that became the application*).
+EXPECT_BUNDLE = 188404
 TOLERANCE_BUNDLE = 2048
-TAKEN_BUNDLE = "2026-10-25"
+TAKEN_BUNDLE = "2026-11-02"
 
 
 def main():

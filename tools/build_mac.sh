@@ -662,7 +662,11 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # DiskDoubler walks refuse to step backward, gzip tells a failed read from
 # the end, the StuffIt segment probe exempts part 1, and the shell's two
 # report fixes. In images everywhere but here, bar the shell's +20.
-UNC_MAC_CODE_DEFAULT=177732
+# +2,416 on 2026-11-02, 177,732 -> 180,148, A5 +64 below: v0.45.0, the
+# dialogs (DECISIONS.md 2026-11-02, *the dialogs that became the
+# application*). Here the part dialog and a set's setup are linked in and
+# Standard File's Save dialog stays; the shipped pair runs both as images.
+UNC_MAC_CODE_DEFAULT=180148
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -870,7 +874,8 @@ UNC_MAC_CODE_DEFAULT=177732
 # -8 on 2026-10-25, 36,444 -> 36,436, `.data` alignment (above).
 # +16 on 2026-10-25, 36,436 -> 36,452, `.data` alignment (above).
 # +24 on 2026-10-25, 36,452 -> 36,476, `.data` alignment (above).
-UNC_MAC_A5_DEFAULT=36476
+# +64 on 2026-11-02, 36,476 -> 36,540: v0.45.0, the dialogs (above).
+UNC_MAC_A5_DEFAULT=36540
 # A CEILING PER CONFIGURATION, because one ceiling measured on another build
 # cannot fire. The figures above are the RESIDENT control build, which carries
 # every decoder; the shipped build's resident code is a third of that, so
@@ -1330,8 +1335,14 @@ UNC_MAC_A5_DEFAULT=36476
 # release*): a refused Finder info's line no longer takes the reserve, and
 # the advice after it is said once an operation, not once a layer. The A5
 # is `.data` alignment; the sum, and so every budget, is unmoved.
-UNC_MAC_CODE_EAGER=38588
-UNC_MAC_A5_EAGER=16484
+# +428 and +164 on 2026-11-02, 38,588 -> 39,016 and 16,484 -> 16,648:
+# v0.45.0, the dialogs (DECISIONS.md 2026-11-02, *the dialogs that became
+# the application*) — the part dialog, the background wait, the coloured
+# bar, the cheaper part scans and the open-ended split's verdict. The
+# destination dialog and a set's setup are images, given back with the
+# bundle before the budget.
+UNC_MAC_CODE_EAGER=39016
+UNC_MAC_A5_EAGER=16648
 # +8 on 2026-10-02 for the same reason as the eager pair above: the
 # overlay call that now says WHICH of StuffIt 2.x's ciphers an entry
 # wants. A5 fell to 19,096 and its ceiling is left where it was.
@@ -1439,7 +1450,10 @@ UNC_MAC_A5_EAGER=16484
 # ceiling.
 # +24 code on 2026-10-25, the same review (the eager pair above); data +
 # bss 16,544, under its ceiling.
-UNC_MAC_CODE_LAZY=37824
+# +428 code on 2026-11-02, v0.45.0, the dialogs (the eager pair above;
+# here the setup is linked in and Standard File's Save dialog stays); data
+# + bss 16,708, under its ceiling.
+UNC_MAC_CODE_LAZY=38252
 UNC_MAC_A5_LAZY=19200
 if [ -n "$UNC_OVL_RESIDENT" ]; then
     UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-$UNC_MAC_CODE_DEFAULT}

@@ -1,8 +1,8 @@
 /*
- * macextract_partdlg.r — PoC (UNC_POC_PARTDLG): the part of a segmented set
- * that was not found is asked for in ONE dialog, Standard File's Open with
- * a prompt, instead of an alert whose Find... opened it. Built only with
- * UNC_POC_PARTDLG set (mac/CMakeLists.txt). License: LGPL-2.1-or-later.
+ * macextract_partdlg.r — the part of a segmented set that was not found is
+ * asked for in ONE dialog, Standard File's Open with a prompt, instead of
+ * an alert whose Find... opened it (until v0.45.0). License:
+ * LGPL-2.1-or-later.
  *
  * Items 1-10 are Apple's own Open dialog, DITL -4000, as read out of System
  * 3.0's and 6.0.8's System files (identical in both), numbered as Standard

@@ -1,14 +1,13 @@
 /*
- * ovl_segsetup.c — PoC (UNC_POC_PARTDLG): a segmented set's setup as an
- * image of its own, bundled so that it is read at launch and given back
- * with the bundle before the engine takes its budget. The code is
- * mac/seg_setup.inc.c, which the application compiles in itself without
- * the switch; here every resident call goes through the SegSetupFns the
- * application passes as `b`.
+ * ovl_segsetup.c — a segmented set's setup as an image of its own,
+ * bundled so that it is read at launch and given back with the bundle
+ * before the engine takes its budget. The code is mac/seg_setup.inc.c,
+ * which the lazy and resident instruments compile into the application
+ * (mac/macextract_mac.c, UNC_SHELL_IMAGES); here every resident call goes
+ * through the SegSetupFns the application passes as `b`.
  *
  * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
  */
-#define UNC_POC_PARTDLG 1        /* an image is built without -D */
 #include "overlay.h"
 #include <Files.h>
 #include <Memory.h>

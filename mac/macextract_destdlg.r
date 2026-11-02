@@ -1,12 +1,13 @@
 /*
  * macextract_destdlg.r — the destination dialog with a New Folder button on
- * every System. A proof of concept, built only with UNC_POC_DESTDLG set
- * (mac/CMakeLists.txt). License: LGPL-2.1-or-later.
+ * every System, run by the image tools/overlay/ovl_destdlg.c (the eager
+ * build's; mac/macextract_mac.c, UNC_SHELL_IMAGES). In a file of its own
+ * because Retro68's Rez rule takes no -D. License: LGPL-2.1-or-later.
  */
 #include "Dialogs.r"
 #include "macextract_strings.h"
 
-/* PoC (UNC_POC_DESTDLG): the destination dialog. Standard File's Save
+/* The destination dialog. Standard File's Save
  * dialog for SFPPutFile, items 1-8 numbered as Standard File numbers them,
  * each placed where System 7.0.1's own Save dialog puts it (measured on
  * screen: content at 112,120, 344x188). Item 3, the prompt Standard File

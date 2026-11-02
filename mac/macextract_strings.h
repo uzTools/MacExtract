@@ -26,7 +26,7 @@
 #define S_MENU_FILE         "File"
 #define S_MENU_QUIT         "Quit"
 
-#define S_ABOUT             "MacExtract 0.44.0"
+#define S_ABOUT             "MacExtract 0.45.0"
 
 #define S_BTN_OK            "OK"
 #define S_BTN_CANCEL        "Cancel"
@@ -34,7 +34,7 @@
 /* The progress window. Its status line is replaced before it is drawn. */
 #define S_PROGRESS_TITLE    "MacExtract"
 #define S_PROGRESS_STATUS   "Extracting"
-/* PoC (UNC_POC_COLORBAR), Rez: named for the action, as the Finder's
+/* Rez: the progress window's title, named for the action, as the Finder's
  * "Copy" and "Move" windows are. */
 #define S_BAR_TITLE         "Extract"
 
@@ -84,19 +84,15 @@
 #define S_SEG_LEFT_ABOUT    " About "
 #define S_SEG_LEFT_K        "K"
 #define S_SEG_LEFT_BYTES    " bytes"
-#ifdef UNC_POC_PARTDLG          /* both part dialogs share it; it fits */
 #define S_SEG_LEFT_END      " left."
-#else
-#define S_SEG_LEFT_END      " still to read."
-#endif
-/* PoC, the part dialog. After an eject it says S_SEG_INSERT, else
+/* The part dialog. After an eject it says S_SEG_INSERT, else
  * S_SEG_MISSING; ^1 is " About <n>K left." or, for a plain split's next
  * part, which may not exist, " No part <N>? Click Cancel." Each fits the
  * dialog's two lines with a 31-character name (Chicago 12's widths). */
 #define S_SEG_INSERT        "Insert the disk with ^0.^1"
 #define S_SEG_NO_PART       " No part "
 #define S_SEG_NO_PART_END   "? Click Cancel."
-/* PoC, Find... picked another part of the set: "That is part <N>, not
+/* Find... picked another part of the set: "That is part <N>, not
  * part <M>." */
 #define S_SEG_THAT_PART     "That is part "
 #define S_SEG_NOT_PART_N    ", not part "
@@ -111,7 +107,7 @@
 /* Standard File's prompt does not wrap: about 200 points, then it is cut. */
 #define S_SF_DEST_PROMPT    "Extract into this folder:"
 #define S_SF_DEST_NAME      "Extract here"
-/* PoC (UNC_POC_DESTDLG), Rez: the destination dialog's own layout, and its
+/* Rez: the destination dialog's own layout, and its
  * New Folder window, whose words are System 7's (DITL -6046). */
 #define S_DEST_PROMPT       "Extract into this folder."
 #define S_DEST_EXTRACT      "Extract"

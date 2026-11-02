@@ -1,9 +1,10 @@
 /*
  * seg_setup.inc.c — a segmented set's setup, before the join: finding its
  * parts (beside the opened one, inside envelopes, by name), counting them
- * and building the joiner's descriptor. Included by macextract_mac.c, and
- * with UNC_POC_PARTDLG by tools/overlay/ovl_segsetup.c instead, so that it
- * costs the heap nothing once the bundle is given back.
+ * and building the joiner's descriptor. Included by
+ * tools/overlay/ovl_segsetup.c, so that it costs the heap nothing once the
+ * bundle is given back, and by macextract_mac.c in the builds without the
+ * bundle (UNC_SHELL_IMAGES).
  *
  * SS(f) is how this file reaches anything resident: the function itself
  * when it is compiled into the application, the entry in SegSetupFns when
@@ -345,8 +346,7 @@ static int SegSetup(const SegSetupArgs *A)
                     sh->desc.name_len = (uint16_t)i;
                     while (run < kSegMaxKnown && sh->loc[run + 1].name[0])
                         run++;
-#ifdef UNC_POC_PARTDLG
-                    /* PoC: OPEN-ENDED (macextract.h, UNC_SEG_ENDS). The
+                    /* OPEN-ENDED (macextract.h, UNC_SEG_ENDS). The
                      * joiner asks for each next part as it gets there,
                      * and seg_need decides there whether the set may go
                      * on; a gap is asked for like any missing part. */
@@ -356,7 +356,6 @@ static int SegSetup(const SegSetupArgs *A)
                         sh->desc.data_size = UNC_SIZE_UNKNOWN;
                         goto split_ready;
                     }
-#endif
                     if (run < 1 || run < sh->highest) {
                         /* A member numbered past the end of the run says
                          * the gap is a missing part, not the end. */
@@ -373,9 +372,7 @@ static int SegSetup(const SegSetupArgs *A)
                     sh->desc.nparts = (uint16_t)run;
                     sh->desc.total = total;
                     sh->desc.data_size = total;
-#ifdef UNC_POC_PARTDLG
                 split_ready: ;
-#endif
                 }
             } else {
             sh->desc = *A->desc;
@@ -431,13 +428,11 @@ static int SegSetup(const SegSetupArgs *A)
             if (sh->desc.nparts == 0 &&
                 sh->desc.scheme == UNC_FORMAT_CPTSEG) {
                 SegFindLast(sh);
-#ifdef UNC_POC_PARTDLG
                 /* No index anywhere: the set is short of its last part,
                  * and reading on would only report it as damaged. */
                 if (sh->desc.nparts == 0) {
                     return UNC_ERR_SEGMENTED;
                 }
-#endif
                 if (sh->desc.nparts) {
                     /* With a count in hand the match rule is stricter —
                      * a middle segment must not carry an index and the

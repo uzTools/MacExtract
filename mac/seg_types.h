@@ -1,8 +1,8 @@
 /*
  * seg_types.h — the segment host's types, shared by macextract_mac.c and
- * the image that sets a set up (tools/overlay/ovl_segsetup.c, with
- * UNC_POC_PARTDLG). Both must see the same layout: the image defines
- * UNC_POC_PARTDLG itself, as an image is built without -D.
+ * the image that sets a set up (tools/overlay/ovl_segsetup.c). Both must
+ * see the same layout, so nothing in it depends on a -D: an image is
+ * built without one.
  *
  * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
  */
@@ -22,9 +22,7 @@ typedef struct {
     short vRefNum;
     long  dirID;
     Str63 name;
-#ifdef UNC_POC_PARTDLG
     short drive;        /* its disk's drive when remembered; 0 for none */
-#endif
 } SegLoc;
 
 typedef struct {
@@ -50,7 +48,6 @@ typedef struct {
     short   tmpVol;
     long    tmpDir;
     int     peeled;
-#ifdef UNC_POC_PARTDLG
     unsigned char skipped[kSegMaxKnown + 1];   /* Cancel: go on without it */
     Str63   opened;      /* the file opened: the set's name where it has none */
     unsigned char askLast;   /* the part asked for may not exist (a split) */
@@ -63,7 +60,6 @@ typedef struct {
     short   shownVol;
     long    shownDir;
     short   volRef[kSegVols], volDrv[kSegVols], volN;
-#endif
 } SegHost;
 
 typedef struct {
@@ -88,7 +84,9 @@ typedef struct {
 
 /* What the image calls back: the application's own helpers, the engine's
  * entry points, and the File Manager calls Retro68 provides as library
- * glue rather than inline traps. */
+ * glue rather than inline traps. Not in the Linux sink tests, whose mocks
+ * have no `pascal` and which never run the image. */
+#ifndef UNC_SINK_TEST
 typedef struct {
     OSErr (*MyOpenFork)(short, long, ConstStr255Param, SignedByte, int, short *);
     OSErr (*MyHDelete)(short, long, ConstStr255Param);
@@ -113,5 +111,6 @@ typedef struct {
     unc_off_t (*fio_tell)(void *);
     unc_off_t (*fio_size)(void *);
 } SegSetupFns;
+#endif
 
 #endif

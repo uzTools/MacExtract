@@ -142,8 +142,12 @@ if [ "$MODE" = "--shipped-only" ]; then
         cp "$f" $IMG/$id.bin
         printf '%s %s/%s.bin\n' "$id" "$IMG" "$id" >> $B/manifest_lazy.txt
     done
-    [ "$(wc -l < $B/manifest_lazy.txt)" = 17 ] \
-        || fail "not seventeen shipped images"
+    # Nineteen since v0.45.0: the seventeen above and the shell's two, the
+    # destination dialog and a set's setup (mac/macextract_mac.c,
+    # UNC_SHELL_IMAGES), which only the Retro68 build makes — they are
+    # Toolbox code, so tools/overlay/images.py does not list them.
+    [ "$(wc -l < $B/manifest_lazy.txt)" = 19 ] \
+        || fail "not nineteen shipped images"
     cp build/mac/ovl_bundle.bin $IMG/bundle.bin
     printf '128 %s/bundle.bin\n' "$IMG" > $B/manifest_eager.txt
     echo "overlay-host: the SHIPPED images (Retro68), $(stat -c%s $IMG/bundle.bin) B of bundle"

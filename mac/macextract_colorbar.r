@@ -1,10 +1,9 @@
-/* UNC_POC_COLORBAR's resources: the progress window laid out as the
+/* The progress window, laid out as the
  * System 7 Finder's "Copy" window, measured on its frames (System 7.5.5,
  * Mac II): inside 286 x 82; the bar 188 x 11 at (13, 58); the button
  * 59 x 20 at (214, 54), on the bar's line; two lines of text above.
  * The first says the archive's name alone, as the title already says
- * MacExtract. A window of its own (146) rather than a change to 128, so
- * the switch leaves the shipped one alone. */
+ * Extract. Window 146: 128 was the progress window until v0.45.0. */
 #include "Dialogs.r"
 #include "macextract_strings.h"
 

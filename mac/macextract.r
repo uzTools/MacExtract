@@ -30,8 +30,7 @@
  * back for the progress window and again for "Extraction complete."
  * Purgeable still, so the budget, taken with PurgeSpace, is the same
  * (DECISIONS.md 2026-10-14, *the disk the dialogs were on*). */
-/* The progress window, DLOG/DITL/'dlgx' 128, is in macextract_progress.r:
- * left out of the build when UNC_POC_COLORBAR replaces it (146). */
+/* The progress window is 146, in macextract_colorbar.r. */
 
 resource 'ALRT' (129, purgeable, preload) {
     { 90, 100, 190, 412 }, 129, {

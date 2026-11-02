@@ -1,4 +1,4 @@
-/* ovl_destdlg.c — PoC (UNC_POC_DESTDLG): the destination dialog with a New
+/* ovl_destdlg.c — the destination dialog with a New
  * Folder button on every System, looking like System 7.0.1's and Mac OS
  * 9.2's own Save dialogs (DLOG/DITL 140 and 141, mac/macextract_destdlg.r).
  * Standard File before System 7 has no New Folder at all: neither 3.0's nor
@@ -182,10 +182,8 @@ static int AskFolderName(Str255 name)
     /* Create is the default: from System 7 on, the Dialog Manager is told
      * so and draws the System's own ring around it. */
     {   long v;
-#ifndef UNC_POC_RINGTEST
         if (GestaltOK('sysv', &v) && v >= 0x0700) SetDialogDefaultItem(d, 1);
         else
-#endif
         {   GetDialogItem(d, 5, &type, &h, &r);
             SetDialogItem(d, 5, type, (Handle)NewUserItemUPP(RingItem), &r); } }
     SelectDialogItemText(d, 3, 0, 32767);
@@ -242,7 +240,7 @@ static pascal short DestHook(short item, DialogPtr dlg)
     pb.fileParam.ioVRefNum = -LMGetSFSaveDisk();
     pb.fileParam.ioDirID = LMGetCurDirStore();
     if (PBDirCreateSync(&pb) != noErr) {
-        SysBeep(1);             /* PoC: a name already taken only beeps */
+        SysBeep(1);             /* a name already taken only beeps */
         return item;
     }
     S.dir = pb.fileParam.ioDirID;
