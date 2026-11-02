@@ -20112,12 +20112,11 @@ extracted after the first; 7.0.1 with MacExtract not running, and 6.0.8
 without MultiFinder (no `_OSDispatch`): MacExtract launched with the
 archive and extracted it. Mac OS 9 not run.
 
-**How long the helper must stay is not MacExtract's pump (measured,
-7.0.1, the final build with only the stay changed, one run each).** The
-maintainer asked whether the stay was the ticks between MacExtract's
-event pumps, the gaps that also leave a click unanswered (FORMATS.md,
-*How long a click waits*: Arsenic 0.8 s at most, Compact Pro 4.8 s). It
-is not:
+**How long the helper must stay (measured, 7.0.1, the final build with
+only the stay changed, one run each).** The maintainer asked whether the
+stay was the ticks between MacExtract's event pumps, the gaps that also
+leave a click unanswered (FORMATS.md, *How long a click waits*: Arsenic
+0.8 s at most, Compact Pro 4.8 s).
 
 | MacExtract busy with | helper stays | second archive |
 |---|---|---|
@@ -20127,9 +20126,33 @@ is not:
 | the same | 12 s | extracted |
 | the same, twice (20 % → 28 %) | 0.5 s | extracted, both |
 
-Half a second is enough behind gaps of three, so the string, once queued,
-waits for MacExtract's next pump however late; what it needs from the
-helper is at least one event call after the queueing. *Hypothesis*: the
-queueing step brings the target forward (`SetFrontProcess`, `−16464
-$2AE`), and a switch happens in the caller's next event call, which a
-helper that quits at once never makes. The 3 s stays, as margin.
+These do not answer the question (corrected: first written here as "it is
+not the pump"). The stay is a loop of `WaitNextEvent` until so many ticks
+have passed, and on a cooperative Mac the helper's call does not return
+until it is given time again, which, MacExtract being in front, may be at
+MacExtract's next pump; so "0.5 s" may have been one call lasting a
+pump's gap. What the table does show: no call at all loses the archive,
+and some call is enough.
+
+The helper's ticks after the call, logged (TickCount before the call,
+after it, after each `WaitNextEvent`; one run each): behind Compact Pro
+0, 1, 4, 4, 4, 4, 4, **1,830**; behind Arsenic 0, 0, 4, 4, 4, 4, 4,
+**227**. The first five calls return at once, the helper still in front;
+the sixth waits until the helper is given time in the background, 30 s
+and 3.8 s later. So every stay above was in fact that long, and the
+question is whether the quick calls are enough. **They are not**
+(behind Compact Pro, double-clicked at 20 %, one run each): one
+`WaitNextEvent` then quit, lost; five, lost. The helper has to last until
+the call that blocks, whose return waits on MacExtract's next event call:
+the maintainer's ticks. *Hypothesis*: the queueing's `SetFrontProcess`
+is carried out when the helper next gives the processor up while in
+front, which the quick calls do not; quit before that and the Finder,
+not MacExtract, is in front, and a puppet string plays only in front.
+
+**A second archive double-clicked during the stay (measured, 7.0.1,
+Arsenic busy, one run).** Other.sit, then 2 s later Third.sit, both
+`SIT!`: **neither was extracted**, and the helper was still open in the
+last frame. The Finder hands a second document to a running helper by
+bringing it forward, which the helper does not read, and the first
+string's switch is presumably undone with it. Open: OPEN_ITEMS.md, *The
+double-click helpers*.
