@@ -254,8 +254,8 @@ ships later, on MacExtract's own floppy. Left:
   MultiFinder looks for*): its launch only brings MacExtract forward. An
   archive of MacExtract's own creator is queued since File > Open...;
   one through a helper is not. Closed on System 6 MultiFinder (the helper
-  sends the Finder's puppet string) and on System 7.0.1 (it posts the
-  Finder's odoc, settled, with aliases; same entry). Mac OS 9 not run.
+  sends the Finder's puppet string) and on System 7.0.1 (the same call,
+  settled; same entry). Mac OS 9 not run.
 - **Several archives of different creators opened together.** Not run.
 - **Which of a file's two dates System 7 compares** between two applications
   of one creator. Not separated.

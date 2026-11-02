@@ -19698,15 +19698,19 @@ probe that posted and stayed 3 s in `WaitNextEvent` got its archive
 extracted; the helper that posted and quit got nothing, with the same
 log. That the string goes with its poster is the hypothesis.
 
-So `companion/stub`, on a System with the Apple Event Manager and
-MacExtract running: an odoc to its serial number with the documents as
-aliases, coerced to its `'appa'` form and posted with
-`PostHighLevelEvent` exactly as the Finder posts it, after 60 ticks of
-`WaitNextEvent` and again every 30 on −603, up to ten times; then 3 s
-more before quitting, so its `SIZE` says `canBackground`. Measured on
-7.0.1: the second archive extracted after the first; the archive's own
-Finder information untouched, and the helper still not HLE-aware, so the
-Finder keeps handing it its documents in the Finder information. The
-same build: on 6.0.8 MultiFinder the puppet string still queued the
-second archive, and on 7.0.1 with MacExtract not running it launched it
-with the archive as before. 10,112 B, from 9,344. Mac OS 9 not run.
+**One mechanism, System 6 and System 7 (measured, same setups, one run
+each).** The translation hands its string to `−16464 $28A`, which brings
+the target forward and queues it through the routine MultiFinder's
+selector 0 reaches, with the same arguments (process, handle, a long 0, a
+word 0). So the first 7.0.1 test of selector 0 failed for the reason the
+posts did: the helper called it mid-switch, and quit at once. Called
+after 60 ticks of `WaitNextEvent`, the helper then staying 3 s, the
+MultiFinder call queued the second archive on 7.0.1 too. `companion/stub`
+therefore makes the System 6 Finder's two calls everywhere they exist,
+settled and staying (`SIZE`: `canBackground`); an odoc posted as the
+7.0.1 Finder posts it, with alias documents, also arrived (one run) and
+is not used. The final build, 9,472 B (8,832 before any of this), one run each:
+6.0.8 MultiFinder and 7.0.1, MacExtract busy: the second archive
+extracted after the first; 7.0.1 with MacExtract not running, and 6.0.8
+without MultiFinder (no `_OSDispatch`): MacExtract launched with the
+archive and extracted it. Mac OS 9 not run.
