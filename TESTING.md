@@ -3602,10 +3602,11 @@ DECISIONS.md, *the character that was touched three times*).
 10. **Driving the real UI** (`tools/vmac/interactive.py`): the interactive
     application, clicked the way a person clicks it.
 
-    - `--segments` covers the "locate part N" alert (the autotest build
-      does not compile `SegAskUser`): part 1 on the boot volume, the others
-      on a second floppy, the WRONG part offered first, and it **ends on a
-      byte comparison** of the joined file read off the volume — a
+    - `--segments` covers the part dialog (the autotest build does not
+      compile `SegAskUser`): part 1 on the boot volume, the others on a
+      second floppy; since v0.45.0 the dialog is switched to the floppy,
+      which it scans, and both parts are found there by content. It **ends
+      on a byte comparison** of the joined file read off the volume — a
       screenshot fails identically whether the application or the harness
       is wrong (DECISIONS.md, 2026-08-09).
     - `--dest`: the DESTINATION dialog switched to an empty floppy; every

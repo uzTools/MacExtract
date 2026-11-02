@@ -14,7 +14,7 @@ A Linux command-line version is built from the same engine.
 </tr>
 <tr>
 <td><img src="docs/screens/4b-report.png" width="400" alt="Report of renamed and failed entries"></td>
-<td><img src="docs/screens/5-locate-part.png" width="400" alt="Alert asking for a missing part"></td>
+<td><img src="docs/screens/5-locate-part.png" width="400" alt="Dialog asking for a missing part"></td>
 </tr>
 </table>
 

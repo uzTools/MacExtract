@@ -40,7 +40,8 @@ harness here does) and concentrates on cancelling:
     3-cancelled.png   the alert after the Cancel button
     4-back.png        back at SFGetFile, ready for another file
     6-cmd-period.png  the same cancel reached by Cmd-. instead
-    5-complete.png    a second run allowed to finish: the success alert
+    5-complete.png    a second run allowed to finish: back at Standard File, as
+                      a run with nothing to report says nothing since v0.45.0
 
 `--e2e` keeps the FINDER instead, and follows the user's whole story — which
 needs a Finder at both ends, to launch the application and then to launch what
@@ -412,7 +413,10 @@ def wait_for_alert(mac, scratch, timeout=240.0):
 # moved down with it. Derive it from the resources rather than guessing:
 # DLOG 128 is at (top 80, left 80) and the Cancel item's DITL rect is
 # {78, 220, 98, 300}, so the centre is (80+260, 80+88).
-PROGRESS_CANCEL = (340, 168)
+# Since v0.45.0 the window is DLOG 146 at (top 80, left 80), the Finder's
+# Copy layout, and Cancel's DITL rect is {51, 211, 71, 270}: the centre is
+# (80+240, 80+61) (mac/macextract_colorbar.r).
+PROGRESS_CANCEL = (320, 141)
 
 # Standard File's Drive button, one row above Open — the row that a mis-aimed
 # click once landed on by accident (see above). With two volumes mounted it
@@ -420,6 +424,10 @@ PROGRESS_CANCEL = (340, 168)
 # Measured off e2e-3-sfgetfile.png; the dialog is placed by the application at
 # SFGetFile's `where` (82, 90), so this moves if that does.
 SF_DRIVE = (377, 192)
+
+# The part dialog's Drive (v0.45.0): its items 1-10 are Apple's own Open
+# dialog, placed where SFGetFile's are, so the button is SFGetFile's.
+PART_DRIVE = SF_DRIVE
 
 # The Finder, in --e2e mode. Coordinates measured off the numbered screenshots
 # that mode writes; they are stable because the boot image is rebuilt
@@ -506,13 +514,17 @@ def accept_destination(mac, pause=3.0):
 # dialog visibly moves rather than looking like the first one redrawn.
 # Measured off 1b-destination.png; if that offset changes in
 # `mac/macextract_mac.c`, this moves with it.
-SFPUT_DRIVE = (337 + 30, 181 + 30)
+# Since v0.45.0 the destination dialog is the application's own (DLOG 140
+# and 141, mac/macextract_destdlg.r), laid out as System 7.0.1's Save dialog
+# on every System: Drive, which System 7 relabels Desktop, measured off the
+# PoC's frames on 3.0, 6.0.8 and 7.0.1 alike.
+SFPUT_DRIVE = (404, 190)
 
 
 # System 7's SFPutFile, as this application places it: the Desktop button
 # and the list's second row. Measured off --diskeject's eject-2 frame.
-SFPUT7_DESKTOP = (410, 189)
-SFPUT7_SECOND_ROW = (230, 173)
+SFPUT7_DESKTOP = (404, 190)
+SFPUT7_SECOND_ROW = (200, 173)
 
 def volume_names(img, dirs=False):
     """Every file on an HFS image, as checkdisk.py's component tuples.
@@ -1937,10 +1949,9 @@ def phase_segments(args, appbin, workdir, shot):
     alone on the boot volume and the rest are on a second floppy, so the
     scan must fail and the alert must come up.
 
-    The walk is deliberately the awkward one. The wrong part is offered
-    first, to see whether it is refused BY FINGERPRINT and named for what
-    it actually is, and only then the right one — which should also drag
-    in the part beside it, because locating one part rescans its folder.
+    Since v0.45.0 the walk is the one a person takes: the part dialog
+    (Standard File's Open with a prompt) is switched to the floppy, which
+    it scans, and finds both missing parts there by content.
 
     Unlike the other phases this one does not end at a screenshot: the
     boot volume is read back afterwards and the joined file compared,
@@ -1998,38 +2009,23 @@ def phase_segments(args, appbin, workdir, shot):
         mac.key("Return")
         accept_destination(mac)              # onto the boot volume
         time.sleep(10.0)
-        shot(mac, "seg-3-locate.png")        # part 2 is not beside part 1
+        shot(mac, "seg-3-asked.png")         # part 2 is not beside part 1
 
-        mac.key("Return")                    # default button: Find…
-        time.sleep(3.0)
-        # Which volume Standard File lands on here is NOT ours to assume:
-        # it depends on what has consumed the disk-inserted event for the
-        # parts floppy, which changes with what the alert is doing. So it
-        # is photographed before anything is clicked, and the Drive click
-        # below is aimed using that frame.
-        shot(mac, "seg-3b-find-opens-on.png")
-        mac.click(*SF_DRIVE)                 # over to the Parts floppy
-        time.sleep(2.0)
-        shot(mac, "seg-4-parts-volume.png")
-
-        mac.click(*SF_SECOND_ROW)            # "zzz" — part THREE, on purpose
-        mac.key("Return")
-        time.sleep(4.0)
-        shot(mac, "seg-5-wrong-part.png")    # refused, and named as part 3
-
-        mac.key("Return")                    # dismiss; back to the alert
-        time.sleep(2.0)
-        mac.key("Return")                    # Find… again
-        time.sleep(3.0)
-        shot(mac, "seg-6-sfgetfile-again.png")
-
-        # Standard File reopens on the volume it was last left on, so no
-        # second Drive click here; seg-6 is what says whether that held.
-        mac.click(*SF_FIRST_ROW)             # "part-two" — the right one
-        mac.key("Return")
+        # Since v0.45.0 the part is asked for in Standard File's Open with a
+        # prompt (mac/macextract_partdlg.r), and the dialog scans whatever
+        # folder it is shown: switching it to the Parts floppy is the whole
+        # answer. Part 2 is found there and the dialog closes by itself,
+        # and part 3 with it, from the same scan — so the wrong part this
+        # phase used to offer first is never asked for. Drive sits where
+        # Standard File's own Open dialog has it; System 7 relabels it
+        # Desktop, which this walk does not take.
+        if args.system == "Sys7.img":
+            raise SystemExit("interactive: --segments walks Drive, which System 7 "
+                             "relabels Desktop; run it on System 3.0 or 6.0.8")
+        mac.click(*PART_DRIVE)               # over to the Parts floppy
         elapsed = mac.settle(scratch, interval=5.0, quiet=EXTRACT_QUIET,
                              timeout=args.complete_timeout)
-        shot(mac, "seg-7-complete.png")
+        shot(mac, "seg-4-complete.png")
     finally:
         mac.close()
         if os.path.exists(scratch):
@@ -2923,7 +2919,10 @@ def main():
         sf_to_volume_root(mac, args.system)  # System 7 opens in the System Folder
         mac.click(*SF_FIRST_ROW)            # select the archive
         mac.key("Return")                   # Open
-        shot(mac, "1b-destination.png")     # "Extract the files into..."
+        # Since v0.45.0 the destination dialog opens once the archive has
+        # been sniffed, a moment after Return, not with it.
+        time.sleep(4.0)
+        shot(mac, "1b-destination.png")     # "Extract into this folder."
         accept_destination(mac)             # Return: beside the archive
         time.sleep(args.extract_wait)
         shot(mac, "2-extracting.png")

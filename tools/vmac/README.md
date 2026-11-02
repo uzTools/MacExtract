@@ -2307,7 +2307,7 @@ Saving a SECOND time puts both records in the catalog: the first was
     interactive.py --report-utf8 --utf8-to-boot --utf8-second
                                     # ...and save it TWICE: both entries land,
                                     # so the first was unflushed, not lost
-    interactive.py --segments       # the "locate part N" alert for a split archive
+    interactive.py --segments       # the part dialog, for a split archive
     interactive.py --named zip      # a spanned zip set, opened through Standard File
                                     # — needs a fixture OVER 64 KB, below
     interactive.py --named split    # a plain .NNN split, likewise
@@ -2386,8 +2386,11 @@ cancel SFGetFile must list exactly `Demo Manual V1.6`, no `EB Sounds`.
 
 `--segments` cuts the fixture into three, leaves part 1 alone on the boot
 volume and the other two on a second floppy, so the folder scan fails and the
-alert appears; it then offers the WRONG part on purpose, to see it refused by
-fingerprint, and **ends on a byte comparison** of the joined file.
+part dialog appears; since v0.45.0 Drive to the floppy is the whole answer —
+the dialog scans the folder it is shown and finds both parts by content — so
+the wrong part it used to offer first is never asked for. It **ends on a byte
+comparison** of the joined file. System 3.0 and 6.0.8 only: System 7 relabels
+Drive as Desktop.
 **Standard File opens on the last-inserted volume** — click Drive and
 photograph before clicking a row — and **`Mac()` boots a private copy**: read
 results from `<workdir>/boot.hfv`.
