@@ -4195,32 +4195,23 @@ ever: a raw-only inflate keeping a table-driven fast path.
 
 ## 2026-08-24 (the reserve) — a constant that suited one machine of the two
 
-`kMemReserve`, a flat 80 KB since M10 with no recorded reason, is now a
+`kMemReserve`, a flat 80 KB since M10 with no recorded reason, became a
 quarter of `FreeMem()` clamped to [32 KB, 80 KB].
 
-**Claim (measured).** The two configurations are 678,956 B free (1 MB Plus to
-itself) and 211,960 B (the 400 KB minimum partition); 80 KB is 12 % and
-**38 %** of them. **Evidence:** the lowest `FreeMem()` during writes across all
-67 fixtures of the 1 MB sample left 121,124 B; Toolbox and File Manager took
-**under 1 KB** at the engine's peak. **Consequence:** unchanged on the tier
-FORMATS.md was measured on (a quarter exceeds the cap); the minimum partition
-gets 158,970 B instead of 130,136, taking Now Compress from none of three
-fixtures to all three and StuffIt 5 from 10 to 15.
+**Evidence at the time (measured).** 678,956 B free on a 1 MB Plus to itself,
+211,960 B in the 400 KB minimum partition: 80 KB is 12 % and **38 %** of them.
+The lowest `FreeMem()` during writes across all 67 fixtures of the 1 MB
+sample left 121,124 B, Toolbox and File Manager under 1 KB at the engine's
+peak. Unchanged on the 1 MB tier (a quarter exceeds the cap); the minimum
+partition got 158,970 B instead of 130,136, taking Now Compress from none of
+three fixtures to all three and StuffIt 5 from 10 to 15. The 32 KB floor, not
+the kilobyte measured, because **measuring how much of a safety margin is
+used tells you what it costs, not what it is for.**
 
-**Why a 32 KB floor and not the kilobyte measured:** the measurement is the
-best case and the reserve exists for the worst. **Measuring how much of a
-safety margin is used tells you what it costs, not what it is for.**
-MANUAL_TESTS.md carries what only hardware settles: a floppy and an
-AppleShare volume with an extension loaded, and MultiFinder at the declared
-minimum.
-
----
-
-The reserve's history, formerly in FORMATS.md, *Budget*: a flat 80 KB until
-2026-08-24, then a quarter of free clamped to [32 KB, 80 KB], a flat 32 KB
-on 2026-08-30, 20 KB since 2026-08-31. Each step went entirely to the
-engine; 80 KB → the quarter rule took Now Compress from none of its fixtures
-to all three in the minimum partition (FORMATS.md, *Budget sweep*).
+**What overtook it:** a flat 32 KB on 2026-08-30 and 20 KB since 2026-08-31,
+once what the reserve is for was measured (FORMATS.md, *What the reserve is
+for, measured at last* and *Budget*); each step went entirely to the engine.
+What only hardware settles is in MANUAL_TESTS.md.
 
 ## 2026-08-24 (the icon) — four things the resources alone do not do
 
@@ -4871,50 +4862,45 @@ btoa and uuencode both being envelopes now (2026-08-27).
 
 ## 2026-08-26 (disk images) — read the volume, not the extension
 
-Seven extensions were asked for (`.dmg`, `.iso`, `.cdr`, `.toast`, `.img`,
-`.smi`, `.cpgz`); six name a byte image of a volume, so the probe reads the
-volume: an HFS MDB, an HFS+/HFSX header, an Apple Partition Map, and an ISO 9660
-descriptor pair in any of four sector layouts (FORMATS.md, *Disk images*).
+**Retired the next day** (DECISIONS.md 2026-08-26, *a name is only worth
+something inside the frame the user came with*): disk images are out of
+scope and the probes sit unbuilt in `attic/` (OPEN_ITEMS.md, part 1).
 
-**All four came from `reference/deark`** (`hfs`, `apm`, `iso9660`), the ARC
-oracle since M33 — "a reference this project does not yet have" was an
-ungrepped directory, the second time this month. **The item reasoned backwards
-about names:** `.cpgz` is gzip (already named), `.smi` is NDIF with no data-fork
-signature, and the raw images are the ones with structure.
+**The decision.** Of seven extensions asked for (`.dmg`, `.iso`, `.cdr`,
+`.toast`, `.img`, `.smi`, `.cpgz`), six name a byte image of a volume, so the
+probe read the volume: an HFS MDB, an HFS+/HFSX header, an Apple Partition
+Map, an ISO 9660 descriptor pair in any of four sector layouts, all from
+`reference/deark` (`hfs`, `apm`, `iso9660`) — "a reference this project does
+not yet have" was an ungrepped directory. `.cpgz` is gzip; `.smi` is NDIF
+with no data-fork signature.
 
 ### What is corroborated, and what a 16-bit signature is worth
 
-HFS wants an allocation block size that is a nonzero multiple of 512; APM a
-map entry in sector 1 *and* 2; ISO 9660 a descriptor at sector 16 *and* 17 (as
-deark's identify functions do). HFS+ has only `"H+"` in deark, and rule #1
-forbids inventing offset 40, so it is corroborated by **the file being a whole
-number of 512-byte sectors** — a claim about images, labelled ours in the source.
+HFS wanted an allocation block size a nonzero multiple of 512, APM a map
+entry in sector 1 *and* 2, ISO 9660 a descriptor at 16 *and* 17; HFS+ (only
+`"H+"` in deark) was corroborated by the file being a whole number of
+512-byte sectors, labelled ours.
 
 ### The negative case has to be written the way the probe is entered
 
-`run_diskimage.py`'s APM negative zeroed the block at 1024 — where the branch
-*starts* — so a mutant without the sector-1 read passed. Zeroing 512 kills it;
-all four corroborations were mutation-tested. **A negative test proves nothing
-about a check the input never reaches.**
+`run_diskimage.py`'s APM negative zeroed the block at 1024, where the branch
+*starts*, so a mutant without the sector-1 read passed; zeroing 512 kills it.
+All four corroborations were mutation-tested. **A negative test proves
+nothing about a check the input never reaches.**
 
 ### The specimens were already on the machine
 
-138 real images: Retro68's 800K test volumes, every emulator tier's disks up to
-the 2 GB Mac OS 9 image, two 1.44 MB Garden floppies, a 224 MB Toast hybrid
-(Apple-partitioned, not ISO 9660). Only ISO positives are generated
-(`reference/pycdlib`, confirmed by deark and `lsar`).
+138 real images (Retro68's 800K volumes, every tier's disks up to the 2 GB
+Mac OS 9 image, two 1.44 MB Garden floppies, a 224 MB Toast hybrid); only ISO
+positives were generated (`reference/pycdlib`, confirmed by deark and
+`lsar`).
 
 ### The tier figures were describing a smaller sample than the file held
 
-A routine re-run returned **69/69** where every status file said 67/67: M33 and
-M34 added two ARC fixtures to `sample.txt` on 2026-08-25 and ran only those.
-Corrected in place (BLOCKERS.md tier table; FORMATS.md tier sections). **A sample
-list is a number two places carry**; the sweep prints its denominator, so run the
-whole list.
-
-Compressed images stayed unnamed (the NDIF file opens into compressed data,
-chunk map a `bcem` resource, fork not a whole number of sectors); the next entry
-took disk images out of scope (OPEN_ITEMS.md, part 1).
+A re-run returned **69/69** where every status file said 67/67 (M33 and M34
+added two ARC fixtures to `sample.txt` on 2026-08-25 and ran only those);
+corrected in place. **A sample list is a number two places carry**; the
+sweep prints its denominator, so run the whole list.
 
 ## 2026-08-26 — a name is only worth something inside the frame the user came with
 
@@ -4923,43 +4909,33 @@ the look*): it no longer names the format. **Superseded 2026-10-18** for
 the engine and the CLI too: nothing is named that is not extracted (*the
 formats it only named*).
 
-The disk-image probe was removed the day after it shipped, and nine PC archive
-formats named instead, from one observation: *a known format that is not
-extracted is treated exactly like an unknown one.* Measured: on the Mac both
-gave no output and *"This file could not be extracted."*; the unwrap chain breaks
-the same way (`!unc_format_extractable(inner)`); the difference was one CLI line
-and `UNC_ERR_UNSUPPORTED` vs `UNC_ERR_FORMAT` — 640 bytes of 68000 code.
-
-**It stops being true in the user's frame:** opening an unarchiver says they
-believe they have an archive; *"MacExtract cannot open RAR files"* sends them to
-another program, *"not recognized"* to re-download. A disk image is not an
-archive, so naming it changes nothing. **Detect-only is justified when the user
-is already in the frame where the name is an instruction** — archives yes, disk
-images no. Disk Copy 4.2 (detect-only since M9) went out the same day.
+**The decision.** The disk-image probe was removed the day after it shipped
+and nine PC archive formats named instead. *A known format that is not
+extracted is treated exactly like an unknown one* (measured: the same Mac
+alert, the same unwrap break, `!unc_format_extractable(inner)`; the
+difference was one CLI line and `UNC_ERR_UNSUPPORTED` vs `UNC_ERR_FORMAT` —
+640 bytes of 68000 code) — except in the user's frame: opening an unarchiver
+says they believe they have an archive, so *"MacExtract cannot open RAR
+files"* is an instruction, and naming a disk image changes nothing. Disk Copy
+4.2 (detect-only since M9) went out the same day.
 
 ### Naming the archives is nine `if`s, and the references were already here
 
-`reference/XADMaster` recognises RAR (three generations), 7-Zip, xz, bzip2,
-Cabinet, Zoo, ARJ; `reference/deark` ar, cpio, Zoo, ARJ; every constant in
-`src/fmt_foreign.c` cites its function. zstd, lzip, brotli, lrzip, WIM stayed
-out with no reference in the tree (OPEN_ITEMS.md, part 2). bzip2, xz, 7z, cpio,
-ar are written by their own tools and the suite requires **p7zip to open each**
-before trusting the probe; Zoo, ARJ, Cabinet are hand-built headers deark must
-identify; RAR and RAR 5 have no oracle in `ci.sh` and were measured once against
-libarchive's test archives (decoded by our uuencode reader), as the docs say.
+`src/fmt_foreign.c` named RAR (three generations), 7-Zip, xz, bzip2, Cabinet,
+Zoo, ARJ (`reference/XADMaster`), ar and cpio (`reference/deark`); p7zip had
+to open each bzip2, xz, 7z, cpio and ar subject, deark to identify hand-built
+Zoo, ARJ and Cabinet headers, and RAR and RAR 5 were measured once against
+libarchive's test archives. Both the file and the suite left on 2026-10-18;
+`tools/run_foreign.py` keeps the probe's safety as a negative test.
 
 ### The alert is what makes any of this real
 
-The Mac shell had never named a detect-only file since M9; now photographed on
-System 6.0.8: **"MacExtract cannot open RAR files."** Built from
-`unc_format_name`; the longest name draws 46 characters against the ~60 the alert
-wraps at.
-
-**Moved, not deleted:** `attic/` keeps the disk-image probes, tests and suite
-with a README (135 real images named, 0 false positives, four branches
-mutation-tested); the change was whether they belonged in the product.
-`UNC_FORMAT_DISKCOPY_RETIRED` stays in the public enum so no later enumerator
-moves.
+Photographed on System 6.0.8: **"MacExtract cannot open RAR files."**, the
+longest name 46 characters against the ~60 it wraps at; retired 2026-10-18.
+**What stays:** `attic/` keeps the disk-image probes, tests and suite with a
+README (135 real images named, 0 false positives, four branches
+mutation-tested), and `UNC_FORMAT_DISKCOPY_RETIRED` stays in the public enum
+so no later enumerator moves.
 
 ## 2026-08-26 — the project is renamed MacExtract, and the API is not
 
