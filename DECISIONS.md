@@ -19771,8 +19771,18 @@ first archive is done MacExtract takes a second one, and says **"Could
 not open the archive."** Three runs: as committed; with each document's
 working directory reopened under `'ERIK'` (MultiFinder's own, 6.0.8
 `CODE` 1 `$9FC`); with the volume's own reference number, the archive
-being at the root. So it is not the working directory; what Mac OS 9 does
-with the records is not known. The helper of 91cdd48, which posts an
+being at the root. So it is not the working directory. **What it does
+with them (measured, one run, a scratch MacExtract that appended Standard
+File's reply to a file before queueing, never committed):** the helper's
+string came back as volume 7999, type `D3C44FB8` and a 64-byte name of
+binary noise; in the same session the Finder's own hand-over of a `MExt`
+archive came back as volume −2, `SITD`, `Third.sit`. So Mac OS 9 plays the
+string and answers MacExtract's dialog from somewhere other than the
+helper's record: it does not resolve a `$0C` message's offset as 6.0.8 and
+7.0.1 do. Where it reads instead is not known (*hypothesis*: the 24 bits
+as an address, or from another base); its Process Manager is not in the
+System file's `scod`s any more but a `ProcessMgrLib` fragment, apparently
+in the compressed NewWorld ROM, and was not read. The helper of 91cdd48, which posts an
 odoc settled and with aliases where Apple events exist, got the archive
 extracted on Mac OS 9 (one run). So one mechanism cannot cover the three:
 the string fails on 9, the event does not exist on 6.
