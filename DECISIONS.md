@@ -11815,38 +11815,33 @@ grade yourself by does with a field nobody had read.**
 ## 2026-09-28 (the two walls between here and one archive) — went after the specimen and met a licence and a submenu, and the run disproved what the harness beside it was thought to be driving
 
 **Claim.** The optimized specimen, filed as one session away, is not
-reachable from this machine: six boots, and something else disproved.
-(Withdrawn next entry: *the page the codes were not on*.)
+reachable from this machine: six boots. (Withdrawn next entry: *the page
+the codes were not on* — the serial codes came from the wrong version's
+page, and `A 12345` was accepted first try.)
 
-**Evidence.** `tools/vmac/sitopt.py`: StuffIt Deluxe 2.0.1 installs by
-copying the payload and launches on System 6, then wants a name, a
-**signature drawn in a box**, and a **serial number it checks** (*"You must
-type in and sign your name"*; *"The serial number you have entered is
-invalid"* for every code tried). Magic Menu runs without one; its
-`StuffIt Options ▸` submenu holds method and Leave/Delete Originals, not an
-Optimizer.
-
-**"Installs" is not "runs"**: when the plan is to drive somebody's
-application, first ask whether it will start; the same wall was recorded
-for 3.5.1 and 4.0 next door.
+**Evidence at the time.** `tools/vmac/sitopt.py`: StuffIt Deluxe 2.0.1
+installs by copying the payload and launches on System 6, then wants a
+name, a **signature drawn in a box**, and a **serial number it checks**
+(*"The serial number you have entered is invalid"* for every code tried).
+Magic Menu's `StuffIt Options ▸` submenu holds method and Leave/Delete
+Originals, not an Optimizer.
 
 **`sitcrypt.py` does not drive StuffIt Deluxe 3.5.1**: every dialog in
 its runs is **Magic Menu's** over a Finder menu bar. "Nothing in this
 project has ever launched a StuffIt Deluxe application" — WITHDRAWN
 2026-10-10: those attempts were ⌘O, and a double-click launched it that
-day (BLOCKERS.md). **A description of how a WORKING harness works is the
-least-read sentence in any file**; the menu bar had been photographed
-twenty times.
+day (BLOCKERS.md). The menu bar had been photographed twenty times.
 
-**Run the control before the interesting explanation**: "3.5.1 will not
-launch with a 2.0 Optimizer installed" — the image without them did not
-launch either.
+**Lessons still in use:**
 
-**A trap narrower than its wording**: README said submenu items *"never
-highlight and cannot be selected"*; under System 6 with Magic Menu 2.0 the
-parent highlights and the submenu draws. The failure is System 7's
-Translate menu. **A trap written from one measurement should name what it
-was measured on.**
+- **"Installs" is not "runs"**: when the plan is to drive somebody's
+  application, first ask whether it will start.
+- **Run the control before the interesting explanation**: "3.5.1 will not
+  launch with a 2.0 Optimizer installed" — the image without them did not
+  launch either.
+- **A trap written from one measurement should name what it was measured
+  on**: under System 6 with Magic Menu 2.0 the submenu's parent highlights
+  and the submenu draws; the failure is System 7's Translate menu.
 
 ## 2026-09-28 (the page the codes were not on) — one question from the maintainer turned a registration wall back into a boot, and the archive that came out corrected the reading it was meant to confirm
 
@@ -12111,55 +12106,46 @@ instructions.**
 
 ## 2026-09-29 (a measured zero, declined — then reversed) — `JPEG Lossy` was put out of scope and put back the same day
 
-**Decision.** StuffIt 2.0's `Photoshop/JPEG Lossy` Optimizer (module 3) is
-out of scope for v1; entries named and refused per entry. OPEN_ITEMS.md,
-Part 1.
+**Decision.** StuffIt 2.0's `Photoshop/JPEG Lossy` Optimizer (module 3)
+was put out of scope for v1, entries named and refused per entry — and
+**reversed the same day**: the maintainer put it back once the premises
+were shown not to hold, to land as `module_restored = 2`, named and
+flagged like `MacPaint 1`. It shipped in DECISIONS.md 2026-10-02, *a 1990
+approximation, reproduced on purpose*.
 
-**Not decided on difficulty or budget**: a 5,166-byte blob compiled into
-`src/fmt_sit.c` moved resident `CODE` and A5 by **0 and 0**, landed in
-`ovl_stuffit.bin`, moved no tally. **The price was zero and the answer is
-still no.**
+**Evidence at the time.** Not decided on budget: a 5,166-byte blob
+compiled into `src/fmt_sit.c` moved resident `CODE` and A5 by **0 and 0**,
+landed in `ovl_stuffit.bin`, moved no tally. Declined as **lossy by
+construction** (10.1 % of pixel bytes change in Aladdin's own round trip)
+and never seen in an archive this project did not write. Two offered
+premises failed: forging TIFF `Compression` 32865 → 6 gets it past
+`libtiff`, which returns a **solid black 256x256 frame**; and an upscaler
+cannot read a format.
 
-**Decided on**: **lossy by construction** (10.1 % of pixel bytes change in
-Aladdin's own round trip); nobody has seen such an archive this project
-did not write; and naming the module and skipping is already the right
-answer.
-
-**Two offered premises fail**: forging TIFF `Compression` 32865 → 6 gets
-it past `libtiff`, which returns a **solid black 256x256 frame**; and an
-upscaler cannot read a format. A decision can be right on other grounds —
-first case where the wrong reason was corrected before being written.
-
-**Reversed the same day.** The maintainer put it back once the premises
-were shown not to hold: it will land as `module_restored = 2`, named and
-flagged like `MacPaint 1`, because the format is described and costs the
-shipped build nothing. Both halves kept as a record of how the arguments
-moved. **Cost is a veto, not a reason.**
+**Cost is a veto, not a reason.**
 
 ## 2026-10-01 (a page comment found what 947 fixtures could not) — zip's Macintosh extra fields are unread, and the corpus had no subject to say so with
 
 **Found, not decided.** A Macintosh zip carries type, creator, Finder
 flags and Mac dates in an extra field; `zip_extra_scan` knew Zip64 and
 WinZip AES and passed the six Macintosh ids as unknown. Filed in
-OPEN_ITEMS.md Part 2, *Zip's Macintosh extra fields*. (Implemented next
-entry: *the field that was published all along*.)
+OPEN_ITEMS.md Part 2; implemented next entry (*the field that was
+published all along*), and the archive became corpus fixture 935
+(DECISIONS.md 2026-10-04, *the tolerance that had to be written down
+first*).
 
-**Evidence from a user's download page**: Macintosh Garden's Rex Nebular
-entry has a 2022 comment that the disk images lose type and creator. On
-`rexnebular_1_0_0.zip` data forks are perfect (21 of 21 identical to
-`unzip`, ten disk images matching the archive's `checksum.md5`), `l` prints
-empty type/creator for all 22 entries, `lsar` reads them. The page's `.sit`
-gives all four metadata, 15 of 15 forks identical to `unar`.
+**Evidence at the time**: Macintosh Garden's Rex Nebular entry has a 2022
+comment that the disk images lose type and creator. On
+`rexnebular_1_0_0.zip` data forks were perfect (21 of 21 identical to
+`unzip`), `l` printed empty type/creator for all 22 entries, `lsar` read
+them. None of the seven zips among 947 fixtures carried a Macintosh extra
+field (`derived-MUSFMT10.ZIP`: host 0x07, no extra fields).
 
-**Why no suite caught it**: the differential suite grades type/creator
-wherever `lsar` reads them, but none of the seven zips among 947 fixtures
-carries a Macintosh extra field (`derived-MUSFMT10.ZIP`: host 0x07, no
-extra fields). **A property the suite DOES grade is still ungraded if no
-fixture exhibits it**: ask **"which fixture would fail if it broke?"**
-
-**A corpus inherits its blind spots from the query that built it**: Mac
-indexes hold `.sit`, `.cpt`, `.hqx`, `.bin`; the zips came from PC indexes
-and a generator.
+**Still in use** (`tools/run_diff.py` cites it): **a property the suite
+DOES grade is still ungraded if no fixture exhibits it** — ask **"which
+fixture would fail if it broke?"** And **a corpus inherits its blind spots
+from the query that built it**: Mac indexes hold `.sit`, `.cpt`, `.hqx`,
+`.bin`; the zips came from PC indexes and a generator.
 
 ## 2026-10-01 (the field that was published all along) — zip's Macintosh extra fields cost 2,000 B of overlay and no licence
 
@@ -12984,27 +12970,25 @@ straddling the scan window edge) never depended on it. Corrected.
 
 ## 2026-10-05 (a leaf is not a path, and a version is not a preference) — the `0x2605` FileName measured before it was read, and the tolerance that could only fail one way
 
-The brief: extract under ZipIt's `0x2605` FileName (`READ ME` comes out as
-`README`). Gate first: **is it observable on anything this build decodes?**
-No.
-
-**Measured.** All `0x2605` fields on this disk (the nine specimens' 22 and
-`NPWritersKit.zip`'s) are **23**: three on directories, three method 6,
-seventeen MacBinary. The FileName differs from the leaf on **3**, all
-method 6 in `zipit-Psycho_1.0b1.zip`, refused per entry. **0 of the 23
-divergences sit on a method this build reads** (FORMATS.md, *ZipIt's own
-archives*). The row stays in OPEN_ITEMS.md, coupled to the Implode
-decision.
+**Decision.** Do not yet extract under ZipIt's `0x2605` FileName. Gate
+first — is it observable on anything this build decodes? No: all
+`0x2605` fields on this disk (the nine specimens' 22 and
+`NPWritersKit.zip`'s) are **23**, three on directories, three method 6,
+seventeen MacBinary; the FileName differs from the leaf on **3**, all
+method 6 in `zipit-Psycho_1.0b1.zip`. **0 of the 23 divergences sat on a
+method this build read**, so the row stayed coupled to the Implode
+decision. **Overtaken** by DECISIONS.md 2026-10-07, *the method that was
+out for a premise with no halves left*: Implode landed, the FileName is
+the leaf an entry comes out under, and the gate's criterion was inverted.
 
 ### A version was a preference
 
-"ZipIt 1.x upper-cased the names" — three 1.x writers here, one did:
-`macextract l` on 1.4's own distribution zip and the Japanese 1.x's prints
-`Read me`, `Mac SEA`, `Drop files here to zip`. ZipIt 1.4's resource fork
-has a `DOSN` boolean "dosify filenames" (*"Convert filenames to MS-DOS
-compatible format (8.3, uppercase)"*). **Both halves of the disproof were
-in one archive the suite already extracts byte-exact** (BLOCKERS.md,
-*Withdrawn claims*). As a checkbox the population is unbounded.
+"ZipIt 1.x upper-cased the names" — three 1.x writers here, one did: 1.4's
+own distribution zip and the Japanese 1.x's list `Read me`, `Mac SEA`,
+`Drop files here to zip`. ZipIt 1.4's resource fork has a `DOSN` boolean
+"dosify filenames" (*"Convert filenames to MS-DOS compatible format (8.3,
+uppercase)"*). **Both halves of the disproof were in one archive the suite
+already extracts byte-exact** (BLOCKERS.md, *Withdrawn claims*).
 
 ### A leaf is not a path
 
@@ -13016,16 +13000,12 @@ in all 20" was true of the field, not the path.
 
 ### The tolerance that could only fail one way
 
-Committed: `grade_name_coupling` in `tools/run_zipit.py` sweeps the nine
-specimens and corpus zips and fails if a FileName divergence lands on
-method 0 or 8 — no `unar`, no engine; shown to fail on a `zipit-1.4` copy
-with one name dosified.
-
-That copy also showed `alias_of` (the existing tolerance) fails on a
-dosified MacBinary entry, two rows, but on an entry with **no reachable
-MacBinary payload** takes the field's name as `unar`'s alias and passes —
-the three Implode entries' shape (measured: green, all three names wrong)
-and a stored non-MacBinary `0x2605` entry's (hypothesis; none here). **The
+`grade_name_coupling` in `tools/run_zipit.py` then failed if a FileName
+divergence landed on method 0 or 8. A `zipit-1.4` copy with one name
+dosified showed that `alias_of` (the existing tolerance) fails on a
+dosified MacBinary entry, but on an entry with **no reachable MacBinary
+payload** takes the field's name as `unar`'s alias and passes — the three
+Implode entries' shape (measured: green, all three names wrong). **The
 tolerance could fail on the case the engine gets right and not on the case
 it gets wrong.** Ask which direction a tolerance can fail in.
 
@@ -13296,21 +13276,17 @@ with the number.
 
 ## 2026-10-06 (the media that was one download away) — the last StuffIt 5 item was blocked on a file that `archive.org` has thirty-three of
 
-`fmt_sit5.c`'s bit 5 was filed as needing something off this machine:
-StuffIt Deluxe 5.0.1 refuses Mac OS 9.2, the file-system theory disproved
-(2026-09-27), **and "this machine has no Mac OS install media."**
+`fmt_sit5.c`'s bit 5 was filed as needing something off this machine,
+partly because **"this machine has no Mac OS install media."** Never
+tested: `archive.org`'s search API answers **33 items for Mac OS 8 and 23
+for 8.5/8.6**; `mac-os-8.6-working-iso` is a 304 MB `7z` holding the
+bootable retail CD (665,600,000 bytes, HFS, volume `Mac OS 8.6` created
+1999-04-16). The fetch is four commands in `tools/vmac/README.md`.
 
-Never tested. `archive.org`'s search API (from this machine, where
-`tools/vmac/os9.py --setup` already downloads a 2 GB image) answers **33
-items for Mac OS 8 and 23 for 8.5/8.6**. `mac-os-8.6-working-iso` is a
-304 MB `7z` holding the retail CD: 665,600,000 bytes, *Macintosh HFS data
-(bootable)*, `LK` boot blocks, volume `Mac OS 8.6` created 1999-04-16,
-`System Folder`, `Install Mac OS 8.6`, `Utilities`. On this disk; the fetch
-is four commands in `tools/vmac/README.md`.
-
-**Still open**, three things unmeasured in order: whether `qemu-system-ppc
--M mac99` boots 8.6, whether 5.0.1 runs, and whether its comment UI sets
-bit 5 (a hypothesis). None needs anybody outside this machine.
+**Overtaken the same day**: 8.6 does not boot under `qemu-system-ppc`
+(*the platform the ROM would not admit to*), the row never needed it (*the
+comment UI that was two boxes later*), and the specimen was already on
+this disk (*the archive that came with the application*).
 
 **Third time that day** (AppleLink paths, method 8's block size, this): a
 route column names an ARTEFACT and asserts its absence in one sentence.
@@ -13742,49 +13718,34 @@ figure is at risk exactly where it is quoted rather than derived.**
 
 ## 2026-10-06 (the gate that had never fired) — a guard proved on built bytes, and a cost priced against a wall it does not hit
 
-**Nothing should be written.** Re-run, not quoted: **23 `0x2605` fields, 3
-whose FileName differs from the leaf, all 3 Zip method 6, 0 on a method
-this build decodes** (FORMATS.md, *ZipIt's own archives*). The row stays
-parked.
+**Nothing was written for the FileName.** Re-run, not quoted: **23
+`0x2605` fields, 3 whose FileName differs from the leaf, all 3 Zip method
+6, 0 on a method this build decodes**. The row stayed parked.
 
-**But its gate had never fired**: it returns 0 by construction on every
-real run. `selftest_coupling` in `tools/run_zipit.py` now builds four
-one-entry zips with `tools/synth_crypt.py`'s writer and asserts what it
-discriminates on, before any specimen is read (TESTING.md, *ZipIt's own
-archives*). A hand mutation is evidence about one afternoon; a built case,
-every run.
+**But its gate had never fired** (it returned 0 by construction on every
+real run). `selftest_coupling` in `tools/run_zipit.py` now builds
+one-entry zips with `tools/synth_crypt.py`'s writer and asserts what the
+gate discriminates on, before any specimen is read. Building them found
+the hole: the gate asked `method in (0, 8)`, but **method 99 means "read
+the method from WinZip's `0x9901` field"**, and this engine decodes 0 and 8
+there too; 99 counts as reachable, so the gate errs LOUD — **for a guard, a
+false alarm costs one look and a miss costs the guard.** The hole was a
+docstring ("Method 0 and 8 are the two it reads") against FORMATS.md's Zip
+row: **a guard's criterion is a claim about the code.**
 
-**Building the cases found the hole**: the gate asked `method in (0, 8)`,
-but **method 99 means "read the method from WinZip's `0x9901` field"**, and
-this engine decodes 0 and 8 there too. No sweep entry is at 99 (18
-archives, 170 entries), so nothing moves; 99 now counts as reachable, so
-the gate errs LOUD: **for a guard, a false alarm costs one look and a miss
-costs the guard.** Recorded in what the suite cannot see.
+**The Implode cost beside it was priced against the wrong wall**: ~1.5–2
+KB of `CODE`, estimated, against 12,460 B of tightest-tier headroom — a
+*resident* margin, while `src/fmt_exo.c` builds into `ovl_exo`, and zip's
+Macintosh extra fields had gone **+2,024 B into that same image** on
+2026-10-01 for +0 resident `CODE`, +0 A5 (BLOCKERS.md, *Withdrawn
+claims*). Second pre-overlay figure in a live row that day (after *the
+wall the overlays had already moved*): **ask of any number handed to a
+decision which budget it is drawn from** — since 2026-09-25 there are two.
 
-**Where the hole was**: a docstring ("Method 0 and 8 are the two it
-reads") against FORMATS.md's Zip row (store, deflate, PKWARE's cipher *and
-WinZip's AES*). **A guard's criterion is a claim about the code** and
-belongs in the cross-file contradiction sweep.
-
-**The cost beside it was priced against the wrong wall.** Part 1's Implode
-row: ~1.5–2 KB of `CODE`, estimated, against 12,460 B of tightest-tier
-headroom. That headroom is *resident* (`check_app_size.py` does not watch
-the bundle); `src/fmt_exo.c` is outside resident `ENGINE_SRC`, built into
-`ovl_exo` by `mac/CMakeLists.txt`; the 12,460 B fixture is a DiskDoubler
-archive, which releases that image. And "a removal delta can be built and
-an addition cannot" is false: zip's Macintosh extra fields were **+2,024 B
-into that same image** on 2026-10-01 for +0 resident `CODE`, +0 A5, no
-tally moved. Corrected in place (OPEN_ITEMS.md Part 1; BLOCKERS.md,
-*Withdrawn claims*).
-
-**Second pre-overlay figure in a live row that day** (after *the wall the
-overlays had already moved*): **ask of any number handed to a decision
-which budget it is drawn from** — since 2026-09-25 there are two.
-
-**Deliberately not done**: no Implode decoder (shipping is the
-maintainer's call), no re-estimate (the 2026-10-01 delta is a better
-number), no substitution (`namebuf`'s 256 B of stack and the
-leaf-is-not-a-path bound unchanged).
+**Overtaken** by DECISIONS.md 2026-10-07, *the method that was out for a
+premise with no halves left*: Implode was built (control `CODE` +1,856 B,
+shipped `CODE` and A5 +0, `ovl_exo` +1,924 B) and the gate's criterion
+inverted and re-proved.
 
 ## 2026-10-06 (the fix the download page did not mention) — a repair to a release's headline format is release-notes material, and three paragraphs of additions had crowded it out
 
@@ -13865,22 +13826,21 @@ spent on the 1.65 GB pre-installed image or the 8.5 CD.
 
 ## 2026-10-06 (the comment UI that was two boxes later) — the row's blocking application was not the only one with the feature, and the other two already run here
 
-**Claim.** *"The only software that can set bit 5 is StuffIt Deluxe 5.0.1's
-comment UI"* is withdrawn: StuffIt Deluxe **5.5** and **7.0.3 Classic**
-both carry `Edit Comment…` in their Archive menu and declare `comment` as a
-scriptable archive property, read from their resource forks
-(`sitcomment.py --read`). The row never needed Mac OS 8.6; both boxes are
+**Claim.** *"The only software that can set bit 5 is StuffIt Deluxe
+5.0.1's comment UI"* is withdrawn: StuffIt Deluxe **5.5** and **7.0.3
+Classic** both carry `Edit Comment…` in their Archive menu and declare
+`comment` as a scriptable archive property, read from their resource forks
+(`sitcomment.py --read`). The row never needed Mac OS 8.6; both boxes were
 already assembled into a Mac OS 9 System Folder by `sitzip.py`.
 
 ### What the row asserted, and where the answer was
 
-Every clause of the route but the first was sound; the first was about
-which PROGRAMS have a feature, and they had been extracted onto a boot
-volume on 2026-10-04 for a zip question. `StuffIt Deluxe™.rsrc` (1.2 MB,
-cached): `MENU` 131 is `Archive`, last item `Edit Comment...`. Both
-mechanisms on BLOCKERS.md's list: *a route column that asserts an absence
-in the same sentence as the artefact it wants*, and *a claim that no
-specimen exists is a claim about the last search*.
+The route's first clause was about which PROGRAMS have a feature, and they
+had been extracted onto a boot volume on 2026-10-04 for a zip question
+(`StuffIt Deluxe™.rsrc`: `MENU` 131 is `Archive`, last item `Edit
+Comment...`). Both mechanisms on BLOCKERS.md's list: *a route column that
+asserts an absence in the same sentence as the artefact it wants*, and *a
+claim that no specimen exists is a claim about the last search*.
 
 ### What the later boxes actually offer, and which of it is reachable
 
@@ -13890,30 +13850,21 @@ specimen exists is a claim about the last search*.
 | a comments AREA in the archive window | `STR# 30000` #13, *"Click here to display (and possibly edit) the comments attached to this archive"* | — |
 | `aete` | `comment`, `password` on the archive | `comment` on archive and item, `password` on the archive and on the `stuff` event |
 
-**The keyless menu item is the route already measured dead** (2026-09-27,
-under QEMU and Mini vMac); left are the comments AREA (a click) and an
-Apple event (`tools/aetran/`, written for the same obstacle).
+The keyless menu item is the route already measured dead (2026-09-27);
+left were the comments AREA and an Apple event (`tools/aetran/`).
 
 ### The first of those questions was then measured, and it moved the obstacle again
 
 `sitcomment.py --probe`, two boots: **StuffIt Deluxe 5.5 launches on Mac OS
-9.2** (its splash and own menu bar, `Archive` included) — 9.2 refuses
-5.0.1, not Deluxe. Then `STR# 269` #30, *"This copy of StuffIt Deluxe™ has
-not been properly installed"*: a **wall, not a nag** (OK is default, Return
-reaches it, dismissing quits; ⌘S afterwards does nothing).
+9.2** (9.2 refuses 5.0.1, not Deluxe), then stops at `STR# 269` #30,
+*"This copy of StuffIt Deluxe™ has not been properly installed"* — a wall,
+not a nag. Put down to `sitzip.py`'s partial assembly (`STR# 269` #34
+names a `Text Encoding Converter` as required).
 
-**The obstacle is our own assembly, and local.** `sitzip.py` places the
-engine, its PowerPlug and seventeen translators (enough for the expander);
-the payload also carries `Aladdin Compression™`, `Compression Extension`,
-`True Finder Integration™`, `Magic Menu™` and a `Text Encoding Converter`,
-and `STR# 269` #34 names the last as required. Either place what the check
-wants, or drive the installer with a published 5.x code from
-`spacesaver.CODES`. **Neither needs anything off this machine.**
-
-**Still unmeasured, in order:** which piece #30 wants; whether Stuff
-encrypts without a Return-unreachable dialog; whether a comment set through
-the comments area lands in the ARCHIVE header. Bit 5's reading stays a
-**hypothesis** until an archive sets it.
+**Overtaken** by DECISIONS.md 2026-10-06, *the archive that came with the
+application*: the specimen was inside 5.5's own installer, and the
+archives setting both bits came from 7.0.3 by Apple event, which has no
+"properly installed" check.
 
 **Cost: nine days filed as blocked on an operating system**, plus the
 withdrawn file-system theory's ninety minutes, all from one sentence about
