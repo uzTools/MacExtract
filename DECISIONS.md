@@ -6000,30 +6000,20 @@ engine now refuses; 91/91 DiskDoubler fixtures are unchanged.
 recognised any more; their references grade `tools/run_foreign.py`'s
 specimens.
 
-OPEN_ITEMS.md carried *"Five archive formats are still unnamed for want of a
-reference: zstd, lzip, brotli, lrzip and WIM"*. Four were named; the fifth
-never can be.
+**Decision:** name four of the five formats OPEN_ITEMS.md listed as "unnamed
+for want of a reference" (zstd, lzip, lrzip, WIM); brotli moved to part 1,
+since RFC 7932 section 9.1 gives it no magic and no length.
 
-**lzip's reference was in `reference/deark` the whole time** — `unsupported.c`
-tests `LZIP` at offset 0, and deark had been here since 2026-08-25. **A "we
-have no reference for X" list is a search, and a search is a claim about
-somebody's looking** (BLOCKERS.md; the fourth time here).
-
-**brotli cannot be identified, and that is a finding.** RFC 7932 section 9.1:
-the stream header is one to seven bits of WBITS — no magic, no length. It
-moves to part 1 with the RFC as evidence for a negative.
+**Evidence:** lzip's reference was in `reference/deark` since 2026-08-25
+(`unsupported.c` tests `LZIP` at offset 0). **A "we have no reference for X"
+list is a search, and a search is a claim about somebody's looking**
+(BLOCKERS.md; the fourth time here).
 
 ### What the weakest probe is allowed to be
 
-lzip's magic is four ASCII bytes (deark rates it 50 against xz's 90). A sniff
-returns one answer, so the confidence is spent on ORDER: lzip is tested after
-every corroborated magic. The false positive is measured: a text file opening
-with LZIPPER is claimed as lzip — worth it to somebody holding a `.lz`.
-
-The other three are corroborated, each tested by removing it: zstd's
-skippable-frame range (one value above and below), lrzip's `MAGIC_LEN`
-(rejects a 23-byte file starting `LRZI`), WIM's header size (rejects 207,
-wimlib accepts only 208).
+lzip's four-byte magic was tested last, its false positive measured (a text
+file opening LZIPPER); the other three were corroborated, each check tested
+by removing it.
 
 
 ## 2026-08-29 (the end-of-run report) — what the run cost, on a screen with no scrollback
@@ -6414,34 +6404,22 @@ oldest a Plus boots. Older means a 64K ROM: no HFS, no `NGetTrapAddress`.
 
 ## 2026-08-30 (512 KB, and the machine that cannot be reached) — the RAM was never the boundary
 
-**Claim: 512 KB of RAM is enough, and a 64 KB ROM is not.** A Macintosh 512Ke
-runs the application under System 3.0, 65/69 of the sample byte-exact, the rest
-refused per entry (FORMATS.md, *512 KB machines*). A true 512K never reaches
-the application.
+**Claim, reversed the next day: 512 KB of RAM is enough, a 64 KB ROM is not,
+and a true Macintosh 512K never reaches the application.** A 512Ke ran it
+under System 3.0, 65/69 of the sample byte-exact (later 66/69, 2026-09-01,
+*the tier that needed no Macintosh*); the 512K gave Sad Mac `0F0064` on our
+System 3.0 floppy, with ROM revision (`28BA61CE`, `28BA4E50`), RAM and disk
+presence varied but never the volume. The 512K boots from an MFS volume
+(DECISIONS.md 2026-08-31, *the medium, not the machine*).
 
-**The interesting number is which SYSTEM.** Same machine: System 3.0 passes 65,
-System 6.0.8 passes 58 (a strict superset of failures). Free heap at start is
-218,208 B against 122,808 B, a 95,400 B gap, against System files of 181,913 B
-and 1,221,287 B. **The floor was set by the system, not by the machine**, and
-nobody had varied the system.
-
-**The negative was attributed before it was reported.** The 512K gives Sad Mac
-`0F0064` on our System 3.0 floppy. A/Bs: same ROM, no disk → blinking floppy,
-framebuffer identical to the Mac Plus control (machine healthy); 128K ROM
-(`28BA61CE`) and 512K ROM (`28BA4E50`) fail identically (not the revision); a
-blank 800 KB HFS volume without boot blocks gives the no-disk frame (added
-2026-08-31), so the boot code dies — and that ROM predates HFS.
-
-**Which codecs survive is decided by adaptivity, not appetite.**
-`derived-PuzzleGetter_0.8.sit` asks 270,043 B and fits by renegotiating its
-block; `derived-a2basic.dmg.sit` asks 247,687 B and does not, having reached
-37,372 B (2026-08-03's finding, on a smaller machine). *(First made with
-`popper-1.7.tar.Z`, refused at 224,264 B; no longer refused — next entry.)*
-
-**Not claimed**: that the Sad Mac's cause is reduced to a minimal repro; the
-trap-level explanation is a hypothesis in FORMATS.md. It does not change the
-outcome: `TrapAvailable` calls `NGetTrapAddress` and every file operation uses
-an HFS parameter block, neither present in a 64K ROM.
+**Still current, measured: the floor is set by the system, not the machine.**
+System 3.0 passes 65, System 6.0.8 58 (a strict superset of failures); free
+heap at start 218,208 B against 122,808 B, a 95,400 B gap, against System
+files of 181,913 B and 1,221,287 B. Which codecs survive is decided by
+adaptivity: `derived-PuzzleGetter_0.8.sit` asks 270,043 B and fits by
+renegotiating its block; `derived-a2basic.dmg.sit` asks 247,687 B and does
+not, having reached 37,372 B. *(`popper-1.7.tar.Z`, first refused at
+224,264 B, no longer is.)*
 
 ## 2026-08-30 (a byte buys fewer symbols the further in it sits) — a third off the LZW table, and a fixture back
 
@@ -6502,41 +6480,23 @@ it between 2026-08-24 and 2026-08-30.
 
 **Claim: loading part of the engine on demand works, and buys about one
 archive.** Two branches, both run on a 1 MB Mac Plus: `selective-loading`
-makes the ciphers an overlay fetched when a format wants them; `overlay-eager`
-loads it at launch. **Parked, neither merged**, kept as a working mechanism.
+(ciphers fetched when a format wants them) and `overlay-eager` (loaded at
+launch). **Parked, neither merged.**
 
-**Its prize figure, its "StuffIt can never be one of the formats it helps"
-and its "neither branch OPENS anything new" are superseded — 2026-09-25, *the
-parked decision that outlived its numbers*.** What follows is the reasoning of
-2026-08-31 and the cipher-only measurements it rested on, both correct for the
-overlay that existed that day. The three later entries that cite 5,988 B as a
-scale are left alone; the number is corrected here, where it lives.
+**Evidence at the time (cipher-only overlay):** a prize of **5,988 B** for six
+formats (first given as 6,140 B from two non-identical builds; 5,720 B for two
+autotest builds; corrected 2026-08-31), against `MacExtract.bin` growing
+191,104 B against 188,800 B — **2,304 B bigger**. StuffIt was disqualified
+(its encryption is signalled per entry, too late), and a lazy `GetResource`
+touches the application's floppy after the archive is chosen. **A figure that
+cannot change the conclusion is a figure nothing checks.**
 
-- **The prize is 5,988 B**, for six formats, not StuffIt — about one archive
-  in 922 at roughly one archive per 6–7 KB of budget, and not
-  `derived-EasyFind.dmg.sit`. For scale, re-pricing one memory-reserve
-  constant the same week was worth 49 KB (FORMATS.md, *Budget*).
-- **It stood at 6,140 B for a day, from two builds that were not the same
-  build**; one build at one commit gives 5,988 B, or 5,720 B for two autotest
-  builds (corrected 2026-08-31). **A figure that cannot change the conclusion
-  is a figure nothing checks.**
-- **The download grows**: the `OVLY` ships inside the application, so
-  `MacExtract.bin` is 191,104 B against 188,800 B — **2,304 B bigger**, not
-  "7,016 B off". Resident heap is bought with disk.
-- **StuffIt cannot be one of the six**: a format is disqualified if it may
-  carry an encrypted entry (StuffIt's is per entry, signalled only by
-  `UNC_ERR_PASSWORD`, too late) or is an envelope with unknown contents (a
-  `.sit.hqx` sniffs as BinHex).
-- **The disk dependency can only be moved.** A lazy `GetResource` touches the
-  application's floppy after the archive is chosen, when a one-drive Plus may
-  have swapped it; loading at launch still reloads per later archive.
-  `selective-loading` pays on the first encrypted archive, `overlay-eager` on
-  the second.
-
-**Consequence: a disk swap or stall for one archive's worth of memory** — the
-wrong side of this project's trade (FORMATS.md, *Size flags, priced in both
-currencies*), since neither branch OPENS anything new. Scope status:
-OPEN_ITEMS.md, Part 1.
+**Overtaken:** the prize, "StuffIt can never be one of the formats it helps"
+and "neither branch OPENS anything new" — 2026-09-25, *the parked decision
+that outlived its numbers*; both branches merged and the overlays became the
+build (DECISIONS.md 2026-09-25, *two branches that were one file apart*).
+Three later entries cite 5,988 B as a scale; it is correct for that day's
+overlay.
 
 ### The transferable part: a release lifetime is an argument about scope, and it can be wrong silently
 
@@ -6545,12 +6505,6 @@ sniff while the "already tried" flag was session-global, so after an LZH an
 encrypted `.sit` in the same session found no ciphers — **a capability lost
 because of what was opened before it**. *"If it was released the format
 cannot want it"* is true within one archive, false across a session.
-
-**If something later needs tens of kilobytes, the loader exists**: `-mpcrel`,
-`.bss`/`.data`, the three dispatch tables and the `--gc-sections` correction
-are in the code, indexed by FORMATS.md, *Where the traps are written down*.
-(Written when both were branches; they merged on 2026-09-25 and the notes
-went with them.)
 
 ## 2026-08-31 (the message that failed a successful extraction) — the allocator cannot know which refusals matter
 
@@ -6751,42 +6705,31 @@ exits erases its own evidence. `for (;;)` is the fix.
 
 ## 2026-09-01 (the second Toolbox call) — what bombs a 64K ROM, and three instruments that lied on the way to it
 
-**Claim: `MaxApplZone` bombs a true Macintosh 512K, and Apple says so.**
-Inside Macintosh II-30 marks it `[Not in ROM]`; the trap arrived with the 128K
-ROM and Retro68 emits it unconditionally. Measured with `tools/vmac/traptest`
-and by bisecting the real application: `SetApplLimit` returns, `MaxApplZone`
-does not (FORMATS.md, *A true Macintosh 512K*).
+**Claim: `MaxApplZone` bombs a true Macintosh 512K, and Apple says so**
+(Inside Macintosh II-30, `[Not in ROM]`; Retro68 emits it unconditionally).
+Measured with `tools/vmac/traptest` and by bisecting the application:
+`SetApplLimit` returns, `MaxApplZone` does not (FORMATS.md, *A true Macintosh
+512K*). The application was left unchanged; **overtaken** by `GrowApplZone()`
+on every ROM (DECISIONS.md 2026-10-15, *the purge MaxApplZone never did*).
 
-Three instruments misled on the way:
+**Still in use — three instruments that misled on the way:**
 
-- **The bomb ID.** `ID = 03` from the application, `10` from the probe, `28`
-  from an instrumented build: a missing trap dispatches into whatever is at
-  that address, which moves with the binary. **An error code is evidence about
-  the aftermath; the call before the first missing mark is the evidence.**
-- **A mark nobody could see.** The marks sat mid-screen, under the system
-  error dialog, so the run that "proved" `SetApplLimit` fatal had painted its
-  survival mark beneath the bomb box. The grid is now eight to a row in the
-  top 75 points.
+- **The bomb ID** (`03`, `10`, `28` across three builds): a missing trap
+  dispatches into whatever is at that address. **An error code is evidence
+  about the aftermath; the call before the first missing mark is the
+  evidence.**
+- **A mark nobody could see**, under the system error dialog; the grid is now
+  eight to a row in the top 75 points.
 - **`--gc-sections`, again.** A `for (;;)` after a readout made the rest dead
-  code; 188,928 B became 10,368 B — a different memory map. The fix is a
-  condition the compiler cannot fold (`while (LMGetScrnBase() != (Ptr)-1L)`);
-  check the binary's size after any change meant to freeze it (BLOCKERS.md
-  records the same trap eating three of four ballast runs).
+  code; 188,928 B became 10,368 B. Freeze with a condition the compiler cannot
+  fold (`while (LMGetScrnBase() != (Ptr)-1L)`) and check the binary's size
+  after any change meant to freeze it.
 
-**Writing to screen memory made the bisect possible**: marks before `InitGraf`
-need nothing initialised. The same trick painted 24-bit values as bars to read
-the trap addresses in FORMATS.md, with `ScrnBase` painted alongside as a known
-value; the decode drifted twice and was caught.
-
-**A guard built on `TrapAvailable` does not fire.** On a 64K ROM it reports
-`MaxApplZone` PRESENT: the table entry is neither `_Unimplemented` nor a
-routine. **A trap-availability test cannot see a `[Not in ROM]` routine**;
-these machines need a machine test. Skipping the call in a throwaway build
-reached the whole UI, a file sniffed, and an extraction stopping at `ID = 12`
-on an HFS call.
-
-**No change to the application.** A 64K-ROM Macintosh is out of scope
-(OPEN_ITEMS.md); `MaxApplZone` is correct on every machine the project claims.
+**Writing to screen memory made the bisect possible** (marks before `InitGraf`
+need nothing initialised; 24-bit values painted as bars, `ScrnBase` alongside
+as a known value). **A trap-availability test cannot see a `[Not in ROM]`
+routine**: on a 64K ROM `TrapAvailable` reports `MaxApplZone` present; these
+machines need a machine test.
 
 
 ## 2026-09-01 (two byte reads) — the guard that lets a 64K-ROM Macintosh start, and why it is not a trap test
@@ -6794,84 +6737,57 @@ on an HFS call.
 **Superseded 2026-10-15** by `GrowApplZone()`, which runs on every ROM
 alike and is on `main` since 2026-10-16 (*the purge MaxApplZone never did*).
 
-**Claim: one guard makes the application start on a 64K ROM at no cost
-elsewhere.** Kept on branch `rom64k`, not `main`: neutral on every claimed
-tier, but no real machine had run what it enables, and an unexercised
-capability does not belong in the download. `Has128KROM()` reads the ROM
-version word at `ROMBase+8` and skips `MaxApplZone` when it positively reads
-as a 64K ROM. Measured: the build reaches Standard File on the emulated 512K
-under MFS System 3.0; **69/69 at 1 MB on System 6.0.8** and **66/69 on System
-3.0 at 512 KB** unchanged.
+**Decision (kept on branch `rom64k`, never on `main`):** `Has128KROM()` read
+the ROM version word at `ROMBase+8` and skipped `MaxApplZone` on a 64K ROM.
+Measured: Standard File on the emulated 512K under MFS System 3.0; **69/69 at
+1 MB on System 6.0.8** and **66/69 on System 3.0 at 512 KB** unchanged. Sources:
+Inside Macintosh II, `Environs` ("$00xx for the Macintosh 128K or 512K"), and
+IV, Preface (version ≥ 117, $75); low memory rather than `Environs`, itself
+`[Not in ROM]` glue — a test must not depend on what it tests for. Written as
+a negative (`!(rom[8] == 0 && rom[9] < 0x75)`) so an unsurveyed version word
+changes nothing.
 
-**Not `TrapAvailable`**, for the reason in the entry above.
+**Still cited: composing a constant beat storing one.** 8 B over
+`UNC_MAC_MAX_CODE`; comparing the low byte instead of composing the word
+saved exactly those 8 B (FORMATS.md, *What the application costs the
+engine*).
 
-**Sources, both Apple's.** Inside Macintosh II, `Environs`: the ROM version is
-the word at `ROMBase+8`, "$00xx for the Macintosh 128K or 512K"; Inside
-Macintosh IV, Preface: version ≥ 117 ($75) is safe for that volume's routines.
-`Environs` is itself `[Not in ROM]` glue, hence the low-memory route: a test
-must not depend on what it tests for.
-
-**Written as a negative on purpose**: `!(rom[8] == 0 && rom[9] < 0x75)`, so
-any unsurveyed version word (a Macintosh XL reads `$xxFF`) leaves behaviour as
-before. The first draft asked "is this a 128K ROM?" and would have skipped
-`MaxApplZone` on every non-`$00xx` machine — a regression the two 128K-ROM
-tiers run would not have shown.
-
-**The size ceiling did its job**: 8 B over `UNC_MAC_MAX_CODE`; comparing the
-low byte instead of composing the word saved exactly those 8 B, so **0 B of
-the engine's budget** (FORMATS.md, *What the application costs the engine*).
-
-**Not claimed**: that the application works on a 64K-ROM machine. Extraction
-needs HFS, which those machines only have with a `Hard Disk 20` Mini vMac does
-not emulate. The rest is MANUAL_TESTS.md §6, askable because the branch's
-download does it — a test that needs the tester to own Retro68 is one nobody
-runs.
+**What overtook the guard's purpose too:** extraction needs HFS, absent on a
+64K ROM without a Hard Disk 20, and that is out of scope (DECISIONS.md
+2026-10-15, *the File Manager a 64K ROM has*).
 
 
 ## 2026-09-01 (the package that cannot be handed over) — three routes into Aladdin's AppleLink expander, and the control that made an empty list mean something
 
-OPEN_ITEMS.md filed AppleLink `.pkg` as waiting on a gradeable specimen — an
-assumption: the grammar was transcribed out of `PKG Expand Translator` on
-2026-08-23, so a package can be WRITTEN here, and that translator is a second
-reader on the same disk image (the technique of `tools/sdmodule/`,
-`tools/ssmodule/`). Seven boots say Aladdin's software will not take one.
+**Claim:** OPEN_ITEMS.md filed AppleLink `.pkg` as waiting on a gradeable
+specimen; packages written here from the grammar transcribed on 2026-08-23
+were offered to Aladdin's own software as a second reader. **Seven boots say
+it will not take one.**
 
 ### Three routes, three controls
 
-| route | what it did with a package | its control, same boot |
-|---|---|---|
-| `Translate ▸ PKG Expand…`, StuffIt Deluxe 3.5.1 | Standard File lists **only folders** | `CPT Expand…` lists the type-`PACT` files |
-| StuffIt Expander 4.0.2, `Expand… ⌘E` | lists every package, expands **nothing**, no error | `Payload.hqx` → `Widget`, byte-exact, 1,256 B |
-| `DropConvert™`, `Convert… ⌘C` | `Convert` produces **nothing** | `Payload.hqx` → `Widget.sit`, 532 B, `SITD/SIT!` |
-
-Two boots of empty lists, and four Finder typings (`TEXT/ttxt`, `PACT/EXTR`,
-`PACT/ttxt`, `TEXT/EXTR`), read as a fact about the packages; one Compact Pro
-archive in the same dialog made it a fact about the command.
+`Translate ▸ PKG Expand…` (StuffIt Deluxe 3.5.1) lists **only folders**
+while `CPT Expand…` lists the `PACT` files; StuffIt Expander 4.0.2 lists every package and expands **nothing**
+while `Payload.hqx` → `Widget` is byte-exact, 1,256 B; `DropConvert™`
+produces nothing while `Payload.hqx` → `Widget.sit` gives 532 B,
+`SITD/SIT!`. Four Finder typings were tried first.
 
 ### What that dialog is actually asking for
 
-A folder. The filter proc `PKG Expand` hands `_SFPGetFile` tests `ioFlAttrib`
-bit 4 (*is a directory*) (`Othe` 0 @0x215e), where the CompactPro
-translator's tests type `PACT` (@0x2e1c). `DITL 2051` reads **"Expand into
-selected folder"**, `DITL 2052` is *"Name of new folder:"*, and its `Help`
-says it extracts "archives created by AppleLink ... usually [with] a suffix
-'.pkg'". That fits 2026-08-23's manifest hypothesis without settling it: this
-build puts up `DLOG 2050`, which has no such button, and Open on a folder
-descends into it, so nothing here can complete the command.
+A folder: the filter proc tests `ioFlAttrib` bit 4 (@0x215e), and `DITL 2051`
+reads "Expand into selected folder" (FORMATS.md, *AppleLink packages*).
+
+**Overtaken:** real packages were found and AppleLink packages extract
+(DECISIONS.md 2026-10-05, *the deviation that was the reference*).
 
 ### What this cannot see, and the lesson
 
-**A null result from somebody's user interface is not a fact about a
-format**: nothing separates "will not take this input" from "this is not a
-package"; one real `.pkg` settles both. The open item is unchanged, its cost
-recorded — **seven boots**. **An empty list is evidence about nothing until
+**A null result from somebody's user interface is
+not a fact about a format.** **An empty list is evidence about nothing until
 something has filled the same list**; the control cost four minutes and
-arrived two boots late.
-
-**Every field of a package written here is read from the writer, not from
-output**: the five one-line packages `spacesaver.py --pkg*` writes (`Decode
-<item> to <destination>`, one per Finder type) take their vocabulary from the
-translator's own resources, never from an archive some other tool produced.
+arrived two boots late. Every field of a package written here
+(`spacesaver.py --pkg*`) is read from the translator's own resources, never
+from another tool's output.
 
 ## 2026-09-01 (the tier that needed no Macintosh) — a budget sweep, a ceiling, and a number that was an artefact
 
@@ -6915,35 +6831,17 @@ the user reads, and no byte-comparison suite can fail on it.
 not recognised any more; libNeoAppleArchive writes the specimens that must
 not be.
 
-**The claim was about a search.** OPEN_ITEMS.md said Apple Archive was unnamed
-"for want of a reference". One query found `0xilis/libNeoAppleArchive` (MIT, a
-from-scratch reading of the format: `AAR_MAGIC`/`YAA_MAGIC`, the `pbz*` set,
-the six-byte prologue, sixteen field subtypes). Withdrawn in BLOCKERS.md with
-its cost.
+**Decision:** name Apple Archive, after one query found
+`0xilis/libNeoAppleArchive` (MIT) — OPEN_ITEMS.md's "for want of a reference"
+was a claim about a search, withdrawn in BLOCKERS.md with its cost.
+`tools/build_neoaa.sh` and `tools/neoaa_write.c` made it an oracle.
 
-**It is an oracle, not just a spec.** `tools/build_neoaa.sh` compiles the three
-core sources with `gcc` and `EXCLUDE_AEA_SUPPORT=1` (its Makefile wants
-`clang`, Homebrew OpenSSL and an install step); `tools/neoaa_write.c` writes
-each of the four shapes the probe recognises and reads it back. That moves
-Apple Archive from RAR's "signature only" grade to bzip2's and 7z's.
-
-**Two sources disagree usefully.** The library defines codecs `e` LZFSE, `z`
-zlib, `b` LZBITMAP; the archiveteam wiki (`reference/notes/Apple_Archive.md`)
-adds lzma `x` and lz4 `4`, and the library's own `docs/NeoAAArchiveGeneric.md`
-says both belong to the format, "not yet added". All five are claimed; the two
-nothing here can write are marked untestable in TESTING.md. `pbzx` is also the
-payload inside an Apple flat package, so those now name as Apple Archive.
-
-**The Macintosh ratchet refused it — the useful part.** 196 B over a ceiling
-with 20 B headroom. Two rewrites (subtypes as a string walked by `in_set()`,
-since on a 68000 data is free and comparisons are code; three length tests
-made one) bought 52 B — **12 %**. Code shape is worth little; what the code
-*is* is worth everything (same as *Size flags, priced in both currencies*,
-where a day of flags bought 780 B). The remaining 164 B was paid on the
-named-only set's existing terms (OPEN_ITEMS.md, part 1): 1.2 % of the
-13,602 B by which `derived-Domino_v1.4.sit` clears the 1 MB Mac Plus budget
-(FORMATS.md, *Budget*) — paid in the open, unlike the 31,860 B that quietly
-moved the budget on 2026-08-24.
+**Still cited — what rewriting a probe buys:** 196 B over a Macintosh ceiling
+with 20 B headroom; two rewrites bought 52 B — **12 %**. Code shape is worth
+little; what the code *is* is worth everything. The remaining 164 B was paid
+in the open: 1.2 % of the 13,602 B by which `derived-Domino_v1.4.sit` cleared
+the 1 MB Mac Plus budget (FORMATS.md, *Budget*), unlike the 31,860 B that
+quietly moved the budget on 2026-08-24.
 
 ## 2026-09-01 (the reader was in the sentence) — feeding SuperDisk!'s own extractor a stream we wrote, and one hypothesis that did not survive it
 
@@ -7211,94 +7109,30 @@ archive bombed on the Mac OS 9 tier.
 
 ## 2026-09-09 (the disk image that is expanded and not opened) — DART, and an error code for a file with nothing wrong with it
 
-**Asked for**: expand a compressed DART to an uncompressed DART, and say so
-plainly when the file is already uncompressed. MacMount mounts an UNCOMPRESSED
-DART and refuses a compressed one, because unpacking is this program's job.
+**Decision:** expand a compressed DART to an uncompressed one (what MacMount
+mounts), with `UNC_ERR_NOTCOMPRESSED` for one already uncompressed. **Removed
+2026-09-25** with the format (DECISIONS.md 2026-09-25, *the disk images that
+found another home*); this describes v0.9 through v0.32.0 and nothing since.
 
-**The scope line moved by one method, not by a principle.** Disk images stay
-out of scope (a filesystem, not a codec). But DART's third method is *no
-compression*, so what a mounter reads is a DART with a 2 in its first byte —
-expanding one is a codec with a sink-writable output and no volume involved.
+**Evidence at the time:** no signature, so the probe required the
+chunk-length table to add up to the rest of the file, to the byte (as bytes
+`Studio8_Program.dart` was 300,951 short; as WORDS, 811,586 exactly). The
+codec was `unc_lzah.c`'s `-lh1-` with a 0x00 window (`UNC_LZAH_DART`). Graded
+against CiderPress2's two DART 1.5.3 disks and their source images, plus
+DART's own 'CKSM' 2 = `183F8B19`; each assertion made to fail first. A
+compressed chunk was capped at its expansion (20,962 bytes for 20,960 was
+correctly refused). Peak sized from the table: 24,582 B vs 25,056 B. Cost
++2,168 B of code, +164 B of A5; the type table held a DIGIT per row, not the
+OSType — 8 B of code to save 24 B of data (2026-09-01, *two byte reads*).
 
-**The refusal needed its own code.** An already-uncompressed DART is neither
-`UNC_ERR_FORMAT` (it is valid) nor `UNC_ERR_UNSUPPORTED` (the opposite of the
-truth). It is `UNC_ERR_NOTCOMPRESSED`: the shell says "This DART disk image is
-already uncompressed.", the CLI "already uncompressed: there is nothing to
-expand", where it would have said "This file could not be extracted". **An
-error enum is a vocabulary, and a verdict it cannot express becomes the
-nearest wrong word.**
-
-**Identification without a signature.** Three weak fields (a byte in {0,1,2},
-one of six, a size); what makes the probe safe is that **the chunk-length
-table must add up to the rest of the file, to the byte** — the test that
-settled the format for MacMount (lengths as bytes leave
-`Studio8_Program.dart` 300,951 short; as WORDS, 811,586 exactly). A cut DART
-is therefore not recognized at all rather than half-read. The type/size
-pairing is **tighter than CiderPress2's** `FormatToKind` (eleven combinations)
-— Apple's `DartIntf.h` names a file type for seven; the other four (Lisa 800K,
-Apple II 400K, 720K Mac, 1440K MS-DOS low-density) DART could not have
-written. **Where two references disagree about what is legal, obey the one
-that names a constant.**
-
-**The codec was already here.** DART's "best" is LZHUF, i.e. `-lh1-`, run by
-`unc_lzah.c` since M5 (StuffIt method 5) and M28 (LZH). Apple dropped the
-leading length word and fills the window with 0x00 instead of 0x20: one mode,
-`UNC_LZAH_DART`, eight lines. LZHUF's start position `N - F` versus this
-decoder's 0 does not matter: with a UNIFORM fill, a back-reference before the
-first byte reads the fill byte either way.
-
-**Graded against the encoder's input.** Neither `unar` nor `macunpack` parses
-DART; CiderPress2 publishes two 800K disks DART 1.5.3 compressed under MAME,
-both methods, **with the source images**. Four assertions: data halves equal
-the source images; tag halves equal the source Disk Copy tags; the methods
-agree; and one specimen's resource fork carries DART's own 1993 checksums
-('CKSM' 2 = `183F8B19`), checked against a Disk Copy 4.2 checksum of the
-output. Each was made to fail first (0x20 window, byte-length reading, dropped
-slot rule, off-by-one run count), each on a different assertion.
-
-**A cap from a format's fallback is worth asserting.** The first synthetic
-encoded a chunk as all literals — 20,962 bytes for 20,960 — and was refused,
-correctly: DART stores such a chunk as 0xFFFF, so "a compressed chunk may not
-exceed its expansion" is a format rule and bounds the read buffer. When such a
-cap is wrong the failure is "not recognized" and nobody looks.
-
-**The peak that was a constant.** A fixed 20,960-byte chunk buffer made peak
-RAM identical for every DART — CLAUDE.md's smell, real here. Sizing it from
-the table's longest entry makes it vary (24,582 B vs 25,056 B on the two
-"fast" archives); the saving is 0–474 B on all five specimens, since every
-real 800K disk has a barely-compressible chunk, kept for mostly-empty 400K
-disks on small machines. (It also cost a heap overrun from a stale
-`chunk + 20960`, caught on the next suite run.)
-
-**Cost on the Macintosh**: +2,168 B of code, +164 B of A5, both ratchets in
-`tools/build_mac.sh` raised with attribution. The A5 figure came from diffing
-`.data` symbols: 28 B type table, 20 B format row, 4 B probe pointer, 4 B on
-`unc_strerror`'s switch, ~100 B text. Rows hold the DIGIT of the file type,
-not the OSType — 8 B of code to save 24 B of data, the second time composing a
-constant beat storing one (2026-09-01, *two byte reads*).
-
-**A bug in `tools/fetch_references.sh`**: the wiki block's `cd
-reference/notes` never returned, so on a fresh tree the script died at the
-zstd fetch under `set -e` and zstd, brotli, lrzip, wimlib, libNeoAppleArchive
-and the Apple Archive page never arrived — unseen because each block is
-guarded by its own output. `cd` removed; the banner moved to the end. **A
-script whose steps are each guarded by their own output is never run end to
-end.**
-
-**Not done**: no resource fork in the output, so DART's checksums are not
-written; nothing reads them and no reference says what they should be for an
-uncompressed DART (OPEN_ITEMS.md, part 2).
-
-**Run on the target**: both methods byte-exact through the shell on an
-emulated Mac Plus at 4 MB and at the 1 MB floor, peak matching Linux plus
-per-block overhead; the refusal photographed on System 6.0.8. The harness
-floppies are 1440 KB, so an 838 KB output fits — the assumption that it could
-not was about an 800K floppy.
-
-Numbers and per-specimen results were FORMATS.md, *DART*, and the suite
-TESTING.md, *DART*; **both left with the format on 2026-09-25** (*the disk
-images that found another home*). What this entry describes is v0.9 through
-v0.32.0 and nothing since.
+**Lessons still in use:** **an error enum is a vocabulary, and a verdict it
+cannot express becomes the nearest wrong word**; **where two references
+disagree about what is legal, obey the one that names a constant** (Apple's
+`DartIntf.h`, seven types, against CiderPress2's eleven); a constant peak
+was CLAUDE.md's smell, real here. **A script whose steps are each guarded by
+their own output is never run end to end**: `tools/fetch_references.sh`'s
+`cd reference/notes` never returned, so on a fresh tree zstd, brotli, lrzip,
+wimlib, libNeoAppleArchive and the Apple Archive page never arrived (fixed).
 
 ---
 
