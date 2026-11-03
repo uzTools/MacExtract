@@ -721,6 +721,26 @@ that format's suite does (TESTING.md), and the run says so on every line.
   `ARCMAC.DOC`). `--cmd` (repeatable) runs anything else at that prompt.
 - **The run ends with Special ▸ Shut Down**, the general rule above.
 
+## mar 0.2.0 writes MAR — `marenc.py`
+
+    tools/vmac/marenc.py --make      boot System 6.0.8, Encode and Compress
+    tools/vmac/marenc.py --list      what it wrote, with Finder types
+
+Hampa Hug's mar 0.2.0, `mar-0.2.0-mpw-3.5.68k` out of
+`fixtures/mar-twin-mar020.sit`, on a volume with a two-fork file and a
+folder of `tools/mar_unix.py`'s subjects. File ▸ *Encode…* (⌘E) and
+*Compress…* (⌘Z, LZW) on the folder and on the file write `Subject.mar`
+(`MARd`), `Subject.mar.Z` (`ZIVU`), `Two Forks.mac` (`MARf`) and
+`Two Forks.mac.Z` (`ZIVU`), all creator `MARc`, into
+`$UNC_VMAC_HOME/specimens/mar/mac/` with `written.json`; `run_mar.py`
+grades them.
+
+On System 6 its own Open dialog's **Folder** button takes the folder the
+dialog is IN, not the row selected: from the root it offered `MAR.mar`, the
+volume. So a folder is opened first, then Folder. Save then opens inside
+that folder, where the next run would archive the first archive too: the
+pop-up over the list takes it up a level before Return.
+
 ## BinHex 2.0 writes `.hex` and `.hcx` — `binhex2.py`
 
     tools/vmac/binhex2.py --make     boot System 6.0.8, encode four times

@@ -20365,9 +20365,9 @@ bytes are vouched for by hampa's CRC alone;
 
 **The licence.** mac-utils and mar 0.2.0 are GPL-2.0-only, which cannot
 become LGPL-2.1-or-later. So, as for btoa (2026-08-23, *btoa's licence*),
-they are read for facts and not copied, and they are never run: the reader
-is this repository's own, each fact cited to the file it came from
-(NOTICE). The test generator's LZW encoder was first written as a port of
+they are read for facts and not copied: the reader is this repository's
+own, each fact cited to the file it came from (NOTICE). Their two WRITERS
+were later run, at the maintainer's request (below). The test generator's LZW encoder was first written as a port of
 mar 0.2.0's `lzw.c`. It was rewritten from a description of what that
 encoder does before anything was committed, and the rewrite's output is
 byte-identical to the port's at 9, 12, 13 and 16 bits on two archives.
@@ -20421,6 +20421,21 @@ A5 crossing a 32-byte step). `ovl_zipold` 10,832 -> 12,564, `ovl_sniff`
 rises 76 B, a peeked `.tar.Z` and the whole-bundle row fall 284, every
 other row rises 1,808. `run_tiers.py --check` moves no tally.
 `unc_mar_extract`'s frame is 568 B and `mar_block`'s 60.
+
+**The author's writers, run (the maintainer, 2026-11-03).** mac-utils'
+`mar -c` (`tools/mar_unix.py`) and mar 0.2.0 on System 6.0.8
+(`tools/vmac/marenc.py`), from MacBinary II subjects whose every byte is
+set; only their output is kept, in the specimen cache. The Unix writer's
+folder and `.mac`: every field the subjects carry comes back, the lock and
+a folder's view included, and a plain file's Unix date as a Macintosh date
+with no zone applied. mar 0.2.0's Encode and Compress on a folder and a
+file: typed `MARd`, `MARf` and `ZIVU` (twice), creator `MARc`, as its
+source says; the two compressed ones are 16-bit LZW (`1F 9D 90`) and come
+out through the `.Z` envelope; every fork byte-exact. On System 6 its Folder
+button takes the folder the dialog is IN, and Save opens in it, so a folder
+archived with defaults lands inside itself. The engine mutants that keep
+inited or drop the lock now fail on the Unix writer's archives too, where
+before only on this repository's own.
 
 **Evidence.** `tools/run_mar.py` (TESTING.md, *MAR*). Four engine mutants
 fail it: CRC never checked, inited kept on the top item, lock ignored, and

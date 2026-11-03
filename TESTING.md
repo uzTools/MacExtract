@@ -3086,17 +3086,25 @@ GPL-2.0-only and are not run (NOTICE), so **what wrote it is the grader**
 4. **LZW-wrapped**, at 9, 12 and 16 bits, the tree and `mar-wild-mar020`:
    the same forks through the `.Z` envelope, and `gzip -dc` gives back the
    archive.
+5. **The author's writers**, from the specimen cache: mac-utils' `mar -c`
+   (`tools/mar_unix.py`), every field of each subject; mar 0.2.0 on System
+   6.0.8 (`tools/vmac/marenc.py`), every fork and each archive's Finder
+   type. Skipped, and said so, where absent; a partial set fails.
 
 **Controls**: five fields of the expectation bent, one at a time, on each
 synthetic case; an LZW stream with a byte of padding after its first
 clear. **Made to fail** (measured 2026-11-03): an engine that never
 compares a CRC, one that keeps inited on the top item, one that ignores the
-lock, one that does not count headers as progress — each fails the lane.
+lock, one that does not count headers as progress — each fails the lane;
+the first two fail lane 5 as well.
 
 **What it cannot see**: the synthetic cases are this repository's reading
 of the format, so they grade the engine against that reading; the two real
 archives grade the reading, and have no lock, comment, empty folder or
-`.mac`. No real LZW-compressed archive, no LZ4 frame (OPEN_ITEMS.md). What
+`.mac`, which lane 5's writers supply; but a comment comes from no writer
+(mac-utils' cannot be given one), and mar 0.2.0's Finder fields are
+whatever the Finder had set on the volume, so they are not graded. No LZ4
+frame (OPEN_ITEMS.md). What
 the shell writes from these rows is `tests/run_mac_sink.sh` (two MAR
 fixtures) and the emulator tiers.
 

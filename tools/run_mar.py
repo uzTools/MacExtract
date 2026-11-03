@@ -5,7 +5,7 @@
     run_mar.py --manifests            (re)write the four MAR manifests
 
 Nothing else reads MAR here: `unar`, deark and macutils have never heard
-of it, and the author's own readers are GPL-2.0-only and are not run
+of it, and the author's own READERS are GPL-2.0-only and are not run
 (NOTICE). What grades the engine instead:
 
   mar-wild-mar020.mar,    hampa's own two archives (mar 0.2.0 and its
@@ -46,6 +46,19 @@ Then variants, each with what must happen:
   LZW-wrapped, 9, 12 and 16 bits the same forks, through the .Z envelope;
     (mar 0.2.0's encoder,        gzip -dc gives back the archive byte for
     synth_mar.py --lzw)          byte
+
+And the author's own writers, where their output is in the specimen
+cache (skipped, and said so, where it is not):
+
+  ~/.cache/macextract/vmac/specimens/mar/unix/   `mar -c` from mac-utils
+      (tools/mar_unix.py): every field of each subject — both forks, type,
+      creator, Finder flags (inited cleared on the first item), location,
+      a folder's view, the lock, both dates.
+  ~/.cache/macextract/vmac/specimens/mar/mac/    mar 0.2.0 on System 6.0.8
+      (tools/vmac/marenc.py): Encode and Compress, a folder and a file;
+      both forks of every subject file, and the Finder type each archive
+      was given (written.json). Its Finder fields are what the Finder had
+      set on the volume, so they are not graded.
 
 And a CONTROL for each comparison: an expectation changed in one field,
 or an LZW stream padded after a clear, must fail, or the comparison was
@@ -274,6 +287,93 @@ def main():
         shutil.rmtree(work, ignore_errors=True)
 
 
+SPEC = os.path.join(os.environ.get("UNC_VMAC_HOME", os.path.expanduser(
+    "~/.cache/macextract/vmac")), "specimens", "mar")
+
+
+def writers(cli, work):
+    """The author's two writers' output, against their subjects."""
+    import mar_unix as U
+    n = 0
+    unix = os.path.join(SPEC, "unix")
+    for name in ("tree.mar", "single.mac"):
+        p = os.path.join(unix, name)
+        jp = os.path.splitext(p)[0] + ".json"
+        if not (os.path.exists(p) and os.path.exists(jp)):
+            print(f"run_mar: no {p} — mac-utils' writer not graded "
+                  f"(tools/mar_unix.py makes it)")
+            continue
+        want = json.load(open(jp))
+        rc, rows = meta(cli, p)
+        xrc, forks = extract(cli, p, os.path.join(work, "u-" + name))
+        if rc or xrc:
+            fail(f"unix {name}: exit {rc}/{xrc}")
+        top = min(want, key=len)
+        for path, w in want.items():
+            m = rows.get(path)
+            if m is None:
+                fail(f"unix {name}: {path!r} not listed")
+                continue
+            fi = bytes.fromhex(m["fi"])
+            fl = fi[8] << 8 | fi[9]
+            if "flags" in w:
+                wf = w["flags"] & (0xFEFE if path == top else 0xFFFF)
+                if fl != wf:
+                    fail(f"unix {name}: {path!r} flags {fl:#06x} != {wf:#06x}")
+                v, h = int.from_bytes(fi[10:12], "big", signed=True), \
+                    int.from_bytes(fi[12:14], "big", signed=True)
+                if (v, h) != (w["v"], w["h"]):
+                    fail(f"unix {name}: {path!r} location {(v, h)}")
+            for k in ("ctime", "mtime"):
+                if k in w and m.get("ct" if k == "ctime" else "mt") != "%08x" % w[k]:
+                    fail(f"unix {name}: {path!r} {k}")
+            if "unix_mtime" in w and m.get("mt") != "%08x" % (
+                    w["unix_mtime"] + 2082844800):
+                fail(f"unix {name}: {path!r} the Unix date")
+            if w.get("is_dir"):
+                if "view" in w and int.from_bytes(fi[14:16], "big") != w["view"]:
+                    fail(f"unix {name}: {path!r} view")
+                continue
+            if "type" in w and fi[:8].decode("mac_roman") != w["type"] + w["creator"]:
+                fail(f"unix {name}: {path!r} type/creator")
+            if "locked" in w and m.get("lock") != ("L" if w["locked"] else "n"):
+                fail(f"unix {name}: {path!r} lock {m.get('lock')}")
+            got = forks.get(path)
+            if got is None or got[0].hex() != w["data"] or got[1].hex() != w["rsrc"]:
+                fail(f"unix {name}: {path!r} forks differ")
+            n += 1
+        print(f"run_mar: mac-utils' writer, {name}: {len(want)} items, every field")
+    mac = os.path.join(SPEC, "mac")
+    wj = os.path.join(mac, "written.json")
+    if not os.path.exists(wj):
+        print(f"run_mar: no {wj} — mar 0.2.0's own archives not graded "
+              f"(tools/vmac/marenc.py --make writes them)")
+        return n
+    written = json.load(open(wj))
+    want_type = {"Subject.mar": "MARd", "Subject.mar.Z": "ZIVU",
+                 "Two Forks.mac": "MARf", "Two Forks.mac.Z": "ZIVU"}
+    files = {"Subject/Locked": (U.FILES["locked"]["data"], b""),
+             "Subject/Inner/Rsrc Only": (b"", U.FILES["rsrconly"]["rsrc"]),
+             "Two Forks": (U.FILES["both"]["data"], U.FILES["both"]["rsrc"])}
+    for name, typ in want_type.items():
+        p = os.path.join(mac, name)
+        if name not in written or not os.path.exists(p):
+            fail(f"mar 0.2.0: {name} missing — a partial set")
+            continue
+        if (written[name]["type"], written[name]["creator"]) != (typ, "MARc"):
+            fail(f"mar 0.2.0: {name} typed {written[name]}")
+        rc, forks = extract(cli, p, os.path.join(work, "m-" + name))
+        mine = {k: v for k, v in files.items()
+                if k.split("/")[0] == name.split(".")[0]}
+        if rc or {k: tuple(forks.get(k, [None, None])) for k in mine} != mine \
+                or len(forks) != len(mine):
+            fail(f"mar 0.2.0: {name}: exit {rc}, forks differ")
+        n += len(mine)
+    print(f"run_mar: mar 0.2.0's own archives: {len(want_type)} "
+          f"(MARd, MARf, two ZIVU), every fork, every type")
+    return n
+
+
 def lanes(cli, work):
     graded = 0
 
@@ -468,6 +568,8 @@ def lanes(cli, work):
     if rc == 0 and f == plain:
         fail("LZW control (padding after a clear) was not noticed")
     print(f"run_mar: {lz} LZW-wrapped archives, gzip agreeing; control fails")
+
+    graded += writers(cli, work)
 
     print(f"run_mar: {'FAIL' if FAILS else 'OK'} — {graded} items graded, "
           f"{len(FAILS)} problems")

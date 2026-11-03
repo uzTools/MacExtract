@@ -247,9 +247,6 @@ grade against.
   (`mar_dec.c`, `mar_is_lz4`), and the engine has no LZ4. No such archive
   has been seen; closes with one, then a reader graded against the `lz4`
   tool.
-- **No real LZW-compressed archive** (mar 0.2.0, Command at encode): what
-  is graded is a re-implementation of that encoder's behaviour
-  (`tools/synth_mar.py --lzw`). Closes with one written by mar 0.2.0.
 - **Mac OS 9.2 not run on MAR**: `~/.cache/macextract/qemu-ppc/MacOS9.img`
   fails its published SHA-1 (written to 2026-11-02, 18:12); `os9.py
   --setup --force` re-fetches it. Every 68k tier passes 4/4 (DECISIONS.md
