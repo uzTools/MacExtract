@@ -2489,12 +2489,13 @@ up to 9 bytes; every data fork is identical (`tools/run_mar.py`). Bytes
 114..117 read 2019-05-31 in every `.mar` fork and 2021-09-22 in every `.sit`
 fork (measured; why they differ is a hypothesis, DECISIONS.md, same entry).
 
-**The Finder info stated is what mar 0.2.0's expander writes**, read from
+**The Finder info stated is what mar 0.2.0's expander writes, but for one
+bit**, read from
 `mar_dec.c`, not measured on a Macintosh:
 
 | record | becomes |
 |---|---|
-| @96..111 | FInfo (a file) or DInfo (a folder), whole; on the FIRST item, inited (0x0100) and on-desk (0x0001) cleared |
+| @96..111 | FInfo (a file) or DInfo (a folder), whole; on the FIRST item, on-desk (0x0001) cleared and inited KEPT, where mar clears both: the shell writes that item's location (−1, −1), and the Finder places it and keeps its window (DECISIONS.md 2026-11-03, same entry) |
 | @112..115 | a folder's `frScroll`, v then h; the rest of DXInfo 0 |
 | @84 bit 0 | a file **locked** |
 | @88, @92 | created, modified: wall clock |

@@ -25,8 +25,8 @@ of it, and the author's own READERS are GPL-2.0-only and are not run
                           that is printed.
   synth-mar-single.mac,   tools/synth_mar.py's items, field for field:
   synth-mar-tree.mar      names, both forks, the 16 bytes of Finder info
-                          (inited and on-desk cleared on the first item, as
-                          mar 0.2.0's expander does), a folder's scroll, the
+                          (on-desk cleared on the first item, inited kept),
+                          a folder's scroll, the
                           lock, the comment cut at 255 bytes and both dates
                           (`l --meta`).
 
@@ -122,8 +122,7 @@ def walk(blob):
         dl, rl, cl, fl, ct, mt = struct.unpack(">IIIIII", h[72:96])
         fi = bytearray(h[96:112])
         if not items:
-            fi[8] &= 0xFE
-            fi[9] &= 0xFE
+            fi[9] &= 0xFE              # on-desk; inited is kept
         row = {"name": path, "finder_flags": struct.unpack(">H", h[104:106])[0],
                "finfo": fi.hex(), "ctime": ct, "mtime": mt}
         if kind == b"fold":
@@ -317,7 +316,7 @@ def writers(cli, work):
             fi = bytes.fromhex(m["fi"])
             fl = fi[8] << 8 | fi[9]
             if "flags" in w:
-                wf = w["flags"] & (0xFEFE if path == top else 0xFFFF)
+                wf = w["flags"] & (0xFFFE if path == top else 0xFFFF)
                 if fl != wf:
                     fail(f"unix {name}: {path!r} flags {fl:#06x} != {wf:#06x}")
                 v, h = int.from_bytes(fi[10:12], "big", signed=True), \

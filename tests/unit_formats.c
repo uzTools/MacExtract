@@ -5536,8 +5536,8 @@ static void test_mar(void)
     memcpy(a + 9, "Note", 4);
     mar_put32(a + 72, 10);              /* data fork */
     memcpy(a + 96, "TEXTttxt", 8);
-    a[104] = 0x01;                      /* inited: cleared on the first item */
-    a[105] = 0x01;                      /* on desk: likewise */
+    a[104] = 0x01;                      /* inited: kept on the first item */
+    a[105] = 0x01;                      /* on desk: cleared there */
     mar_put32(a + 124, unc_mar_crc(0, a, 124));
     memcpy(a + 128, "0123456789", 10);
     mar_put32(a + 138, unc_mar_crc(0, a + 128, 10));
@@ -5553,7 +5553,8 @@ static void test_mar(void)
     CHECK(cap.info[0].name_len == 4 && memcmp(cap.info[0].name, "Note", 4) == 0);
     CHECK(cap.info[0].type == 0x54455854u && cap.info[0].finder_flags == 0x0101);
     CHECK((cap.info[0].meta & UNC_META_FINFO) &&
-          cap.info[0].finder_info[8] == 0 && cap.info[0].finder_info[9] == 0);
+          cap.info[0].finder_info[8] == 0x01 &&
+          cap.info[0].finder_info[9] == 0);
     CHECK(cap.info[0].locked == UNC_LOCK_NO);
 
     /* A data byte changed: the entry fails its CRC. */

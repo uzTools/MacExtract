@@ -37,8 +37,8 @@
  * src/mar_dec.c for what its expander writes back — the 16 bytes of Finder
  * info whole, a folder's scroll into DXInfo, the lock from bit 0 of the
  * flags — and for the two Finder flags it clears on the first item by
- * default, inited and on-desk (mar_decode_fd, par_clear_first), which
- * are cleared here too. Its comment block it skips; this reader hands it
+ * default, inited and on-desk (mar_decode_fd, par_clear_first), of
+ * which only on-desk is cleared here (below). Its comment block it skips; this reader hands it
  * on. Graded against both archives hampa published alongside StuffIt
  * copies of the same files (FORMATS.md, *MAR*).
  *
@@ -156,12 +156,13 @@ int unc_mar_extract(UncCtx *c)
         e.finder_flags = unc_get_u16be(h + 104);
         for (k = 0; k < 16; k++) e.finder_info[k] = h[96 + k];
         e.meta = UNC_META_FINFO;
-        /* mar 0.2.0's default: inited and on-desk cleared on the first
-         * item, so the Finder places it (mar_dec.c, par_clear_first). */
-        if (top) {
-            e.finder_info[8] &= 0xFEu;
-            e.finder_info[9] &= 0xFEu;
-        }
+        /* On-desk cleared on the first item, as mar 0.2.0's expander
+         * does (mar_dec.c, par_clear_first). Inited is KEPT, where that
+         * expander clears it by default: the shell writes the top item's
+         * location as (-1, -1), and the Finder then places its icon and
+         * still opens its window as stored (DECISIONS.md 2026-10-19, *the
+         * place outside the archive*), which clearing inited loses. */
+        if (top) e.finder_info[9] &= 0xFEu;
 
         if (id == MAR_FOLDER) {
             /* frScroll, and the rest of DXInfo zero: what the expander's

@@ -3094,7 +3094,7 @@ GPL-2.0-only and are not run (NOTICE), so **what wrote it is the grader**
 **Controls**: five fields of the expectation bent, one at a time, on each
 synthetic case; an LZW stream with a byte of padding after its first
 clear. **Made to fail** (measured 2026-11-03): an engine that never
-compares a CRC, one that keeps inited on the top item, one that ignores the
+compares a CRC, one that clears inited on the top item, one that ignores the
 lock, one that does not count headers as progress — each fails the lane;
 the first two fail lane 5 as well.
 

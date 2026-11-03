@@ -20383,12 +20383,23 @@ of padding after a clear fails both. LZ4 is not read (OPEN_ITEMS.md).
 
 **What the reader states is what mar 0.2.0's expander writes**
 (`mar_dec.c`): the 16 bytes of FInfo or DInfo whole, a folder's scroll
-into DXInfo, the lock from bit 0 of the flags. By default it clears inited
-and on-desk on the first item, so the Finder places it, and so does this
-reader. The shell's own top-level rule (2026-10-19, *the place outside the
-archive*) keeps inited, so a folder keeps its window's scroll. Following
-the format's own expander gives that up for MAR's top item only. The
-comment block, which the expander skips, is handed on, cut at 255.
+into DXInfo, the lock from bit 0 of the flags, on-desk cleared on the
+first item. **Except inited, which it also clears there by default, and
+this reader keeps** (the maintainer, 2026-11-03). Clearing it is how mar
+gets the Finder to place the extracted folder; its author answers a
+report of the window reset that follows by pointing to Command at launch,
+which keeps every window and leaves the icon where it was (Macintosh
+Garden, *MAR archive*, comment #10). The shell's top-level rule gives
+both: inited kept, the location written (-1, -1) (2026-10-19, *the place
+outside the archive*). Measured for MAR on emulated System 7.0.1:
+`synth-mar-tree.mar`'s top folder on disk with flags 0x0100, location
+(-1, -1), its rectangle and scroll as stored (the same on 6.0.8, read
+with `hfscat.py`); opened in the Finder, the folder sat at the first free
+spot and its window opened at the stored rectangle, icons at their stored
+places. So a MAR folder comes out in a different SHAPE from mar's own
+default, not with different files. Shipped and control sizes, and
+`ovl_zipold`, unmoved (the AND it drops fits alignment). The comment
+block, which the expander skips, is handed on, cut at 255.
 
 **Where it lives.** In `ovl_zipold` beside tar, the other reader that
 calls no codec, not in an image of its own: the image count is stated in
@@ -20433,12 +20444,12 @@ file: typed `MARd`, `MARf` and `ZIVU` (twice), creator `MARc`, as its
 source says; the two compressed ones are 16-bit LZW (`1F 9D 90`) and come
 out through the `.Z` envelope; every fork byte-exact. On System 6 its Folder
 button takes the folder the dialog is IN, and Save opens in it, so a folder
-archived with defaults lands inside itself. The engine mutants that keep
-inited or drop the lock now fail on the Unix writer's archives too, where
+archived with defaults lands inside itself. The engine mutants that get inited
+wrong or drop the lock now fail on the Unix writer's archives too, where
 before only on this repository's own.
 
 **Evidence.** `tools/run_mar.py` (TESTING.md, *MAR*). Four engine mutants
-fail it: CRC never checked, inited kept on the top item, lock ignored, and
+fail it: CRC never checked, inited cleared on the top item, lock ignored, and
 headers not counted as progress — which the first version of the reader
 did, so 2,000 empty files never called back; found reading the code
 before the first commit, and measured (0 ticks, then 31). The
