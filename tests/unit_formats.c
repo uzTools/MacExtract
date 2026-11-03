@@ -3454,6 +3454,103 @@ static void test_dd_methods345(void)
     dd_one_method(5, m5_stream, (uint32_t)sizeof m5_stream);
 }
 
+/* Method 10 (DDn) with symbols its shifts cannot take. A code of up to
+ * 256 symbols drives `(2 + (slot & 1)) << (slot / 2 - 1)` for an
+ * offset slot and `1 << (code - 128)` for a literal run; slot 255 and
+ * length code 200 shift by 126 and 72, which is undefined behaviour
+ * the sanitizer build stops on. Each block is one symbol, coded as the
+ * only length-1 entry of a zero-coded table (the code head is
+ * docs/formats/diskdoubler-dd.md's; the block header's last byte is
+ * the XOR of the 21 before it). */
+static int dd_ddn_status(const uint8_t *stream, uint32_t slen)
+{
+    uint8_t one[160];
+    uint32_t n;
+    MemIO m;
+    UncIO io;
+    UncAlloc al;
+    UncSink sk;
+    CapSink cap;
+    UncOptions opt;
+    static const uint8_t hint[] = "DDN";
+
+    for (n = 0; n < 84; n++) one[n] = 0;
+    one[0] = 0xAB; one[1] = 0xCD; one[2] = 0x00; one[3] = 0x54;
+    put32(one + 4, 1);                         /* one byte out */
+    put32(one + 8, slen);
+    one[20] = 10;
+    memcpy(one + 32, "TEXT", 4);
+    memcpy(one + 36, "ttxt", 4);
+    memcpy(one + 84, stream, slen);
+    n = 84 + slen;
+
+    memset(&opt, 0, sizeof opt);
+    opt.name_hint = hint;
+    opt.name_hint_len = (uint16_t)(sizeof hint - 1);
+    test_make_alloc(&al);
+    test_make_memio(&io, &m, one, n);
+    cap_make(&sk, &cap);
+    CHECK(unc_extract_as(UNC_FORMAT_DISKDOUBLER, &io, &sk, &al, NULL,
+                         &opt) == UNC_OK);
+    CHECK(cap.count == 1);
+    return cap.status[0];
+}
+
+static void ddn_block_header(uint8_t *h, uint32_t nlit, uint32_t noff,
+                             uint32_t lenc, uint32_t litc, uint32_t offc)
+{
+    int i;
+    for (i = 0; i < 22; i++) h[i] = 0;
+    put32(h, 1);                               /* uncompsize */
+    put16be(h + 4, nlit);
+    put16be(h + 6, noff);
+    put16be(h + 8, lenc);
+    put16be(h + 10, litc);
+    put16be(h + 12, offc);
+    for (i = 0; i < 21; i++) h[21] ^= h[i];
+}
+
+static void test_dd_ddn_shifts(void)
+{
+    uint8_t s[96];
+    uint32_t i;
+
+    /* Offset slot 255: 256 codes, zero-coded, 1-bit lengths; 255 absent
+     * bits then present-and-1 for the last; then the symbol (bit 0) and
+     * the 126 extra bits it asks for. */
+    for (i = 0; i < sizeof s; i++) s[i] = 0;
+    ddn_block_header(s, 0, 1, 0, 0, 4 + 33 + 16);
+    put32(s + 22, 0xFF04210Cu);   /* 256 codes, 33 B, max 1, 1 bit, zero-coded */
+    s[22 + 4 + 31] = 0x01;        /* bit 255: symbol 255 present */
+    s[22 + 4 + 32] = 0x80;        /* bit 256: its length, 1 */
+    CHECK(dd_ddn_status(s, 22 + 4 + 33 + 16) == UNC_ERR_CORRUPT);
+
+    /* Length code 200, a literal run of 1 << 72. The offset code is one
+     * symbol and is never used; one raw literal; then the length code,
+     * 201 codes with only the last present. */
+    for (i = 0; i < sizeof s; i++) s[i] = 0;
+    ddn_block_header(s, 1, 0, 4 + 26 + 1, 1, 4 + 1);
+    put32(s + 22, 0x00002108u);   /* 1 code, 1 B, max 1, 1 bit */
+    s[26] = 0x80;                 /* its length, 1 */
+    s[27] = 'A';                  /* the literal */
+    put32(s + 28, 0xC803410Cu);   /* 201 codes, 26 B, max 1, 1 bit, zero-coded */
+    s[28 + 4 + 25] = 0xC0;        /* bits 200, 201: symbol 200, length 1 */
+    CHECK(dd_ddn_status(s, 22 + 5 + 1 + 31) == UNC_ERR_CORRUPT);
+
+    /* Offset slot 31 with all fourteen extra bits set is 65,536, which
+     * offs[] stores as 0; then a match (length code 1) that uses it. A
+     * zero distance copied the window byte about to be written. */
+    for (i = 0; i < sizeof s; i++) s[i] = 0;
+    ddn_block_header(s, 0, 1, 4 + 1 + 1, 0, 4 + 5 + 2);
+    put32(s + 22, 0x1F00A10Cu);   /* 32 codes, 5 B, max 1, 1 bit, zero-coded */
+    s[26 + 3] = 0x01;             /* bit 31: symbol 31 present */
+    s[26 + 4] = 0x80;             /* bit 32: its length, 1 */
+    s[31] = 0x7F; s[32] = 0xFE;   /* symbol 31 (bit 0), then 14 ones */
+    put32(s + 33, 0x0100210Cu);   /* 2 codes, 1 B, max 1, 1 bit, zero-coded */
+    s[37] = 0x60;                 /* 0 absent; 1 present, length 1 */
+    CHECK(dd_ddn_status(s, 22 + 11 + 6) == UNC_ERR_CORRUPT);
+}
+
 
 /* ------------------------------------------------------------------ */
 /* The 'DDA2' archive walk: a folder, a file with its own 0xABCD0054   */
@@ -3849,6 +3946,7 @@ static void test_diskdoubler(void)
     test_dd_stac();
     test_dd_method2();
     test_dd_methods345();
+    test_dd_ddn_shifts();
     test_dd_archive2();
     test_ddseg();
 }
@@ -4700,6 +4798,64 @@ static void test_nowcompress(void)
     CHECK(cap.dlen[1] == 6 && memcmp(cap.data[1], "datadd", 6) == 0);
     CHECK(cap.status[2] == UNC_OK);
     CHECK(cap.dlen[2] == 4 && memcmp(cap.data[2], "tail", 4) == 0);
+}
+
+/* A shape-3 (new LZSS) block whose one match names distance symbol 0,
+ * whose base and extra bits are both 0. Shape 1 has always refused a
+ * zero distance; shape 3 copied dst[out] onto itself, and the file came
+ * out "abcd" and eight bytes the block never wrote, with no error and
+ * nothing to catch it (the format carries no CRC). Written by
+ * tools/synth_now.py with find_matches patched to give every match
+ * distance 0; the two bytes at 206 are the only difference from the
+ * archive it writes unpatched, which the control below restores. */
+static const uint8_t now_dist0[] = {
+    0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x01, 0x66, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x54, 0x45, 0x58, 0x54, 0x55, 0x4E, 0x43, 0x4C, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x9E, 0x7C, 0x00, 0x00, 0x9E, 0x7C,
+    0x0E, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x0C, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x86, 0x00, 0x00, 0x00, 0xDF, 0x00, 0x00,
+    0x06, 0xA1, 0x00, 0x00, 0x00, 0x9A, 0x00, 0x40, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0xDF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0xB9, 0x2F, 0x92,
+    0x00, 0x05, 0x08, 0x10, 0x22, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x7D, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x20,
+    0x00, 0x00, 0x01, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0xDC, 0x60, 0x00, 0x00, 0x00, 0x00, 0x00
+};
+
+static void test_now_distance0(void)
+{
+    uint8_t arc[sizeof now_dist0];
+    MemIO m;
+    UncIO io;
+    UncAlloc al;
+    UncSink sk;
+    CapSink cap;
+
+    /* The control: the distances the encoder chose, 4 and 4. */
+    memcpy(arc, now_dist0, sizeof arc);
+    arc[206] = 0x00; arc[207] = 0x18;
+    test_make_alloc(&al);
+    test_make_memio(&io, &m, arc, sizeof arc);
+    cap_make(&sk, &cap);
+    CHECK(unc_extract_as(UNC_FORMAT_NOWCOMPRESS, &io, &sk, &al, NULL, NULL)
+          == UNC_OK);
+    CHECK(cap.count == 1 && cap.status[0] == UNC_OK);
+    CHECK(cap.dlen[0] == 12 && memcmp(cap.data[0], "abcdabcdabcd", 12) == 0);
+
+    memcpy(arc, now_dist0, sizeof arc);
+    test_make_memio(&io, &m, arc, sizeof arc);
+    cap_make(&sk, &cap);
+    CHECK(unc_extract_as(UNC_FORMAT_NOWCOMPRESS, &io, &sk, &al, NULL, NULL)
+          == UNC_OK);
+    CHECK(cap.count == 1 && cap.status[0] == UNC_ERR_CORRUPT);
 }
 
 /* ------------------------------------------------------------------ */
@@ -5775,6 +5931,7 @@ void run_format_tests(void)
     test_binhex_multi();
     test_diskdoubler();
     test_nowcompress();
+    test_now_distance0();
     test_applelink();
     test_sqp();
     test_foreign();

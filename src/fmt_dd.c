@@ -826,6 +826,10 @@ static int dd_ddn_run(DdFork *o, UncCtx *c, DdnState *st, UncBufIn *in,
             if (slot < 0) return bi.err ? bi.err : UNC_ERR_CORRUPT;
             if (slot < 4) offs[i] = (uint16_t)(slot + 1);
             else {
+                /* Slot 32 starts at 65,537, past what offs[] holds; a code
+                 * has up to 256 symbols, and a larger slot shifts past
+                 * the int (XADDiskDoublerDDnHandle checks neither). */
+                if (slot > 31) return UNC_ERR_CORRUPT;
                 int bits = slot / 2 - 1;
                 int32_t start = ((2 + (slot & 1)) << bits) + 1;
                 int32_t extra = unc_bitin_bits(&bi, bits);
@@ -879,7 +883,8 @@ static int dd_ddn_run(DdFork *o, UncCtx *c, DdnState *st, UncBufIn *in,
                 length = (uint32_t)code + 2u;
                 if (offpos >= numoffsets) return UNC_ERR_CORRUPT;
                 offset = offs[offpos++];
-                if (offset > wpos) return UNC_ERR_CORRUPT;
+                /* Slot 31 reaches 65,536, which is 0 in offs[]. */
+                if (offset == 0 || offset > wpos) return UNC_ERR_CORRUPT;
                 if (produced + length > uncompsize) length = uncompsize - produced;
                 for (k = 0; k < length; k++) {
                     uint8_t v = st->win[(wpos - offset) & st->wmask];
@@ -890,6 +895,7 @@ static int dd_ddn_run(DdFork *o, UncCtx *c, DdnState *st, UncBufIn *in,
                 produced += length;
                 continue;
             }
+            if (code >= 128 + 32) return UNC_ERR_CORRUPT;  /* 1 << 32+ */
             length = 1u << (code - 128);
             if (produced + length > uncompsize) length = uncompsize - produced;
             for (k = 0; k < length; k++) {

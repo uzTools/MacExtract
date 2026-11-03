@@ -374,7 +374,13 @@ static int32_t now_newlzss(const uint8_t *src, uint32_t srclen,
         }
 
         if ((uint32_t)out + length > dstcap) { *err = UNC_ERR_CORRUPT; return -1; }
-        if (dst + out - offset < base) { *err = UNC_ERR_CORRUPT; return -1; }
+        /* A zero distance names no byte; shape 1 has always refused it.
+         * XADNowCompressHandle (UnpackNewLZSS) did not, and compared the
+         * pointer dst + out - offset, which is undefined once it leaves
+         * the buffer; this compares the distance with the bytes behind. */
+        if (offset == 0 || offset > (uint32_t)(dst - base) + (uint32_t)out) {
+            *err = UNC_ERR_CORRUPT; return -1;
+        }
         for (k = 0; k < length; k++) {
             dst[out] = dst[out - (int32_t)offset];
             out++;

@@ -12,7 +12,11 @@
    bit-flipped fixture variants must produce clean per-entry errors —
    never a crash, hang, or sanitizer trip. Run under
    ASan+UBSan+`-fsanitize=alignment` with `-fno-sanitize-recover=all`,
-   so any violation is fatal and caught.
+   so any violation is fatal and caught. **What it cannot see:** a value
+   a random flip cannot build — a code table that gives a large
+   alphabet's rare symbol a codeword (four of those were found by review,
+   DECISIONS.md 2026-11-03, *the symbols no encoder writes*) — and a wrong
+   byte that exits 0, in a format with no CRC to refuse it.
 4. **Progress-callback coverage** (`tools/tick_probe.c` +
    `tools/run_ticks.py`): every fixture the engine extracts must call
    back at least once, and no gap between calls may exceed 32 KB (a

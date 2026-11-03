@@ -203,10 +203,14 @@ REPO = os.path.dirname(HERE)
 # (DECISIONS.md 2026-11-02, *the dialogs that became the application*),
 # the control's CODE +2,416 and A5 +64; OVL_SAVED +1,888 offsets all but
 # the shipped pair's 592.
+# **-32 more each 2026-11-03, DERIVED**: DiskDoubler method 10 and Now
+# Compress shape 3 refuse the symbols their arithmetic cannot take
+# (DECISIONS.md 2026-11-03, *the symbols no encoder writes*), the control's
+# CODE +28 and A5 +4 (alignment); they were 196,446 / 101,064 / 625,352.
 TIERS = {
-    "sys3-512K": (196446, "System 3.0, Macintosh 512Ke (222,070 B free)"),
-    "sys6-512K": (101064, "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
-    "floor-1M":  (625352, "System 6.0.8, 1 MB Mac Plus — the floor target"),
+    "sys3-512K": (196414, "System 3.0, Macintosh 512Ke (222,070 B free)"),
+    "sys6-512K": (101032, "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
+    "floor-1M":  (625320, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
 # **-592 more each 2026-10-24, DERIVED**: SUMacC's `.dl`, the control's
 # CODE +584 and A5 +8 (DECISIONS.md 2026-10-24, *the format before
@@ -410,7 +414,8 @@ TIERS = {
 # data + bss -680. The machine gave +4,204, because the jump table, the
 # stub segments and the relocations trimmed at launch are resident bytes
 # this unit never counted — which is why TIERS was measured, not moved.
-TIERS_CONTROL = 216688     # build/mac-resident, CODE + A5, 2026-11-02
+TIERS_CONTROL = 216720     # build/mac-resident, CODE + A5, 2026-11-03
+# +32 on 2026-11-03: method 10's and shape 3's refused symbols; TIERS -32.
 # +2,480 on 2026-11-02: v0.45.0, the dialogs; TIERS above -2,480.
 # +144 on 2026-10-25: the review before v0.44.0; TIERS above -144.
 # +352 on 2026-10-22: the eleven malformed-input fixes, every decoder linked
@@ -870,7 +875,11 @@ EXPECT = {
 # setup in, against the shipped pair's +592 (CODE +428, A5 +164), which
 # runs the setup and the destination dialog as images (DECISIONS.md
 # 2026-11-02, *the dialogs that became the application*). TIERS -2,480.
-OVL_SAVED = 161024
+# **+32 2026-11-03, -> 161,056**: the control's +32 (CODE +28, A5 +4,
+# alignment) against the shipped pair's 0: method 10's and shape 3's
+# refused symbols are in `ovl_cptdd` and `ovl_now` everywhere but there
+# (DECISIONS.md 2026-11-03, *the symbols no encoder writes*). TIERS -32.
+OVL_SAVED = 161056
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
 # every kept image is one — as is the bundle an envelope holds on to.
@@ -1008,11 +1017,11 @@ IMAGES = {
     "OVL_ID_BINHEX":      7158,
     "OVL_ID_BTOA":        2496,
     "OVL_ID_CODECS":      6016,
-    "OVL_ID_CPTDD":       15144,
+    "OVL_ID_CPTDD":       15156,
     "OVL_ID_CRYPT":       9604,
     "OVL_ID_EXO":         30200,
     "OVL_ID_LZH":         10458,
-    "OVL_ID_NOW":         4768,
+    "OVL_ID_NOW":         4762,
     "OVL_ID_PACKIT":      2180,
     "OVL_ID_SPACESAVER":  16168,
     "OVL_ID_STUFFIT":     28194,
@@ -1092,7 +1101,12 @@ IMAGES = {
 # keep set: released with the rest, kept only by a layer that keeps the
 # whole bundle (DECISIONS.md 2026-11-02, *the dialogs that became the
 # application*).
-BUNDLE = 188404
+# **CPTDD +12, NOW -6, the bundle +8 B, 2026-11-03**: method 10's slot,
+# zero-distance and run-length checks; shape 3's zero distance, and its
+# reach compared as integers, which came out smaller than the pointer
+# compare it replaced (DECISIONS.md 2026-11-03, *the symbols no encoder
+# writes*).
+BUNDLE = 188412
 
 # What the SHIPPED lane asserts, and it is the refused fixtures BY NAME
 # rather than a tally: a tier that refuses two different fixtures and still

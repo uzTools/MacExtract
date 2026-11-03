@@ -477,6 +477,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-01 (the set opened from its last floppy) — a MIME set opened from a later part ejects that disk at the first ask and needs it once
 - 2026-11-01 (the split that called a short file whole) — an open-ended split with a missing part reported its truncated file as complete
 - 2026-11-02 (the dialogs that became the application) — v0.45.0 ships the dialog redesign the PoC switches held, resolved rather than switched on, and the application is byte for byte the one tested
+- 2026-11-03 (the symbols no encoder writes) — DiskDoubler method 10 and Now Compress shape 3 refuse the symbols their arithmetic cannot take
 
 ---
 
@@ -19391,3 +19392,41 @@ the shipped code (bar the MacBinary header's dates), and `ci.sh` builds the
 autotest application since (variant 4e). **A green CI covers the
 configurations it builds**; this one had been built only by the harnesses
 that needed it.
+
+## 2026-11-03 (the symbols no encoder writes) — DiskDoubler method 10 and Now Compress shape 3 refuse the symbols their arithmetic cannot take
+
+**Claim (measured).** Four inputs no encoder writes were read rather than
+refused, all transcribed from the reference, which has each of them:
+
+| where | input | what happened | now |
+|---|---|---|---|
+| `fmt_dd.c`, method 10's offsets | a slot past 31 (a code has up to 256 symbols) | `(2 + (slot & 1)) << (slot / 2 - 1)` shifted by up to 126, and `unc_bitin_bits` assembled up to 126 bits in an `int32_t`; UBSan stops on slot 255 | `UNC_ERR_CORRUPT`: slot 32 starts at 65,537, past what `offs[]` holds |
+| the same, slot 31 | all fourteen extra bits set | 65,536, stored in `offs[]` as **0**; the walk's `offset > wpos` let 0 through and copied the window byte about to be written | the walk refuses a zero distance |
+| method 10's lengths | a run code of 160 or more | `1u << (code - 128)` shifted by 32 or more; UBSan stops on code 200 | `UNC_ERR_CORRUPT` |
+| `fmt_now.c`, shape 3 | distance symbol 0 (base 0, no extra bits) | `dst[out] = dst[out]`: the file came out `abcd` and eight bytes the block never wrote, **exit 0** — Now Compress carries no CRC | refused, as shape 1 always has |
+
+The same line compared the pointer `dst + out - offset` with `base`,
+undefined once it leaves the buffer (`XADNowCompressHandle.m`
+`UnpackNewLZSS`); it compares the distance with the bytes behind as
+integers now. No reachable failure was shown for that one.
+
+**Evidence.** Three unit tests, each failing without its own fix and
+passing with it (`test_dd_ddn_shifts`, `test_now_distance0`); the Now one
+also decodes the archive with the encoder's own distances restored, so
+the two bytes changed are the only difference. Found by an outside code
+review; the 65,536 → 0 case was found while bounding the slot.
+
+**Why 9,800 robustness variants never reached them.** A random bit flip
+lands in a Huffman stream and makes a different stream; it does not make
+a code table that gives a 256-symbol alphabet's last symbol a codeword,
+and a silent wrong byte with exit 0 is a pass to that suite in a format
+with no CRC (TESTING.md, *Layers*).
+
+**Cost (measured).** Shipped CODE + A5 unmoved (39,016 + 16,648).
+`ovl_cptdd` +12 B (`dd_fork` +34 in the object), `ovl_now` **-6 B** (the
+integer compare is shorter than the pointer one), the bundle +8 B, the
+download +128 B (one MacBinary block). The resident control +32 B (CODE
++28, A5 +4 of `.data` alignment, no object's data moved), so `OVL_SAVED`
++32 and `TIERS` -32 each, DERIVED; every row of FORMATS.md's *What each
+format is granted* rises 20-38 B, the envelope row 24 B. `run_tiers.py
+--check`: no tally moves.
