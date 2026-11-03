@@ -205,8 +205,8 @@ def skewed_lengths(nsyms, maxlen=16):
     A complete 64-symbol code has an average length near 6, so a
     16-bit code in one is not a thing a compressor would write — which
     is the point: two of the 24 trees in reach state a length-16 code
-    and none of the 256-value ones does (FORMATS.md, *Implode, and what
-    the corpus cannot reach*)."""
+    and none of the 256-value ones does (FORMATS.md, *Implode: zip method
+    6, PKZIP 1.x*)."""
     lengths = list(range(1, maxlen)) + [maxlen, maxlen]
     if len(lengths) > nsyms:
         raise ValueError("%d symbols cannot carry a %d-bit code"
@@ -506,8 +506,8 @@ def decode(data, pos, clen, usize, flag8k, flag3trees, mml=None,
 # 5.3.4's). All four combinations, because the point of writing them is
 # that a fixture reaches only some: the two PKZIP 1.x fixtures are
 # 4K/2-tree and 8K/3-tree, and 8K/2-tree and 4K/3-tree come only from a
-# ZipIt specimen that cannot be committed (FORMATS.md, *Implode, and
-# what the corpus cannot reach*).
+# ZipIt specimen that cannot be committed (FORMATS.md, *Implode: zip method 6,
+# PKZIP 1.x*).
 SHAPES = (
     ("4k-2trees", 4096, False, None),
     ("4k-3trees", 4096, True, None),

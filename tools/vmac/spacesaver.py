@@ -15,7 +15,7 @@ distributions are two-floppy InstallerMaker sets.
 
 **`--layout` is the one that pays**, and it boots nothing: the container
 was read out of Aladdin's own engine on 2026-08-22 (FORMATS.md, *StuffIt
-SpaceSaver's container*), the route SuperDisk! and DiskDoubler Pro both
+SpaceSaver*), the route SuperDisk! and DiskDoubler Pro both
 took. What is still wanted is a specimen — ten emulator runs have not
 produced one — and the two codecs, which sit in the same resource fork.
 

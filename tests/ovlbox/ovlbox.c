@@ -6,7 +6,8 @@
  * Retro68 build, so every Linux suite exercises the decoders as ordinary
  * linked code, and whether an image is found, relocated, kept, released or
  * re-read was answered by emulator tiers, by hand, at minutes per fixture
- * (OPEN_ITEMS.md, *The overlay loader*). Three defects have lived there.
+ * (DECISIONS.md 2026-09-26, *the loader that could be run after all*). Three
+ * defects have lived there.
  *
  * So the real loaders — mac/ovl_load_eager.c, mac/ovl_load_lazy.c,
  * mac/ovl_reloc.c, mac/ovl_shim.c, unmodified — are compiled against the stub

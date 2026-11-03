@@ -733,8 +733,8 @@ typedef struct UncPath {
      * by a COUNT — a marker record, or a level counter — so a push that
      * wrote nothing and a pop that still happened left the walk
      * SHALLOWER than it went down and misfiled every entry after it into
-     * a real folder it was not in (BLOCKERS.md, *what ignoring a refused
-     * push cost*). They nest, so one counter is enough. */
+     * a real folder it was not in (DECISIONS.md 2026-10-07, *the pop
+     * that outlived its push*). They nest, so one counter is enough. */
     int      lost;
     struct UncCtx *c;
 } UncPath;
@@ -893,7 +893,8 @@ int unc_copy_fork(UncCtx *c, UncFork fork, uint32_t size,
 /* flag above, named as an open question by the description and        */
 /* settled here by measuring five implementations. Re-cited from       */
 /* XADRLE90Handle.m on 2026-09-21: the page was in reference/notes/    */
-/* the whole time (OPEN_ITEMS.md, *What is still XADMaster's*).        */
+/* the whole time (DECISIONS.md 2026-09-27, *the inventory that was    */
+/* kept twice*).                                                       */
 /* ------------------------------------------------------------------ */
 
 #define UNC_RLE90_ESC  0x90

@@ -5,7 +5,8 @@ until 2026-09-26: they exist only in a Retro68 build, so the 932-fixture
 corpus, the robustness variants and the sanitiser builds all exercise the
 decoders as ordinary linked code, and whether an image is FOUND, RELOCATED,
 KEPT, RELEASED or RE-READ was answered only by emulator tiers, by hand
-(OPEN_ITEMS.md, *The overlay loader*). Three defects lived in that gap.
+(DECISIONS.md 2026-09-26, *the loader that could be run after all*). Three
+defects lived in that gap.
 
 This box closes the Linux-side half of it. `mac/ovl_load_eager.c`,
 `mac/ovl_load_lazy.c`, `mac/ovl_reloc.c` and `mac/ovl_shim.c` are compiled

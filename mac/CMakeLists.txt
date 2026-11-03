@@ -451,7 +451,8 @@ target_compile_options(MacExtract PRIVATE -mcpu=68000 -Os -Wno-multichar
                        # UNC_AT_CONTIG: MaxBlock() at the moment each dialog
                        # is created — the reserve's real job is one contiguous
                        # block, and every other reserve figure measures volume.
-                       # FORMATS.md, *What the reserve is NOT proven against*.
+                       # FORMATS.md, *What the reserve is for, measured at
+                       # last*.
                        $<$<BOOL:$ENV{UNC_AT_CONTIG}>:-DUNC_AT_CONTIG>
                        # UNC_STACK_BUMP_KB: kStackBump in KB, so the stack
                        # size can be SWEPT without editing source. A

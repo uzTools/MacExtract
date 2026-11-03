@@ -532,9 +532,9 @@ def build_archive(tree, delta=0, lead=False, sums=False, arch=False,
     `lead` and `sums` exist to ask **Now Compress** about these archives,
     which nothing had until 2026-09-21: they are graded by `unar`, which
     accepts them, and they differ from what the encoder writes in ways
-    nothing here checks (TESTING.md, *what the derivation tools cannot
-    see*). Each is one rung of that ladder and both default OFF, so the
-    fourteen archives and the committed fixture are unchanged:
+    nothing here checks (TESTING.md, *The derivation tools*). Each is one rung
+    of that ladder and both default OFF, so the fourteen archives and the
+    committed fixture are unchanged:
 
     - `lead` writes the **fork-boundary record** in front of each
       member's first block. Every member of every file the encoder wrote

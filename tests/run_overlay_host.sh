@@ -7,7 +7,8 @@
 # exercise the decoders as ordinary linked code. Whether an image is FOUND,
 # RELOCATED, KEPT, RELEASED or RE-READ was answered by emulator tiers, by hand,
 # at minutes per fixture — and three defects lived in that gap, each found by
-# something other than a test (OPEN_ITEMS.md, *The overlay loader*).
+# something other than a test (DECISIONS.md 2026-09-26, *the loader that could
+# be run after all*).
 #
 # What this does about it, in four lanes:
 #

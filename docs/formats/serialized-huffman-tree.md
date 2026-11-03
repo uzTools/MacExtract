@@ -16,8 +16,9 @@ takes about a minute per fork.
 
 This note exists so the decoder can be written from a description of
 the FORMAT rather than transcribed from somebody else's program
-(OPEN_ITEMS.md, *What is still XADMaster's*). It is in `docs/` and not
-in `reference/notes/` for one reason: `reference/` is fetched material
+(DECISIONS.md 2026-09-27, *the inventory that was kept twice*). It is in
+`docs/` and not in `reference/notes/` for one reason: `reference/` is fetched
+material
 and is not committed, and a description nobody can read is not one.
 
 ## The rule

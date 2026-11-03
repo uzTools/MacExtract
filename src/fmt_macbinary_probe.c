@@ -88,8 +88,8 @@ int mb_version(const uint8_t *b, int32_t len)
     /* MacBinary I: no checksum, so the structural tests are all the
      * evidence there is (see file comment). */
     for (i = 99; i <= 125; i++) if (b[i] != 0) return 0;
-    /* Bytes, not longs (DECISIONS.md 2026-10-09, *the probe was the
-     * outlier*): a fork size over UNC_MAC_MAX is one with its top bit
+    /* Bytes, not longs (DECISIONS.md 2026-10-09, *the specimen was one
+     * search away*): a fork size over UNC_MAC_MAX is one with its top bit
      * set, and a date is zero when its four bytes are. */
     if (b[83] & 0x80) return 0;                        /* data fork size */
     if (b[87] & 0x80) return 0;                        /* rsrc fork size */

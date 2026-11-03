@@ -363,7 +363,7 @@ def pair_up(ents, ours, theirs):
 def ours_list(exe, path):
     """`l --finder`, parsed. Type, creator and flags come out as hex so
     a four-character code holding a space cannot move the name column
-    (TESTING.md, *The Finder metadata...*).
+    (TESTING.md, *The Finder metadata, and the one field no oracle settles*).
 
     Nothing is forced: since 2026-10-05 a self-extracting archive is
     sniffed like any other, so the format is the sniffer's answer and

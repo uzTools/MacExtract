@@ -44,7 +44,7 @@ UncFormat unc_diskdoubler_probe(const uint8_t *head, int32_t len, UncIO *io)
 {
     (void)io;
     /* The four magics as bytes, not longs (DECISIONS.md 2026-10-09,
-     * *the probe was the outlier*): AB CD 00 54, AB CD 00 30, 'DDAR',
+     * *the specimen was one search away*): AB CD 00 54, AB CD 00 30, 'DDAR',
      * 'DDA2'. */
     if (len >= 48 && head[0] == 0xAB && head[1] == 0xCD && head[2] == 0x00) {
         if (head[3] == 0x54 && len >= 84) {

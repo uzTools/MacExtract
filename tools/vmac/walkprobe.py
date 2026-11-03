@@ -84,8 +84,8 @@ the Finder's own invisible bookkeeping (`Desktop`, `Desktop DB`,
 caller compares fork SETS needs a filter as well as a flag. Nor can it
 see what `-a` BREAKS: making `Icon\r` reachable is what exposed a
 `text=True` universal-newline bug in two walks, and only re-running the
-harness finds that. OPEN_ITEMS.md, *One volume walk that cannot see an
-invisible file*.
+harness finds that. DECISIONS.md 2026-09-22, *the last walk, and the
+exit code nobody could get*.
 
 Nor can it see a walk it does not know about. **Its own inventory is the
 thing most likely to be wrong here, and it has been wrong twice in one

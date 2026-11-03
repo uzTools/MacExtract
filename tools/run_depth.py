@@ -25,7 +25,7 @@ teeth — four of the five walks pop by a COUNT, so a push that wrote
 nothing and a pop that still happened leaves the walk shallower than it
 went down and misfiles every entry after it into a real folder it was not
 in, silently, because the path is plausible and nothing in it looks cut
-(BLOCKERS.md, *what ignoring a refused push cost*).
+(DECISIONS.md 2026-10-07, *the pop that outlived its push*).
 
 How to re-run it:
 

@@ -639,7 +639,7 @@ is one of these with a count of 1**, so this section describes both.
   Twenty-four of the twenty-five files here carry that sum. The
   twenty-fifth is this project's own `synth-now-mixed.now`, which
   differs from the encoder's output in five ways nothing checks
-  (TESTING.md, *what the derivation tools cannot see*).
+  (TESTING.md, *The derivation tools*).
 
   **+2 is the setting and not a version**, which is what this note
   called it until 2026-09-21: `runs.bin` and `prose.txt` asked for

@@ -1595,8 +1595,8 @@ def verify_hfsplus(xfer, fixture, workdir, wrapper=None, expect_refusal=False):
 
 # ---- The AUTOTEST build with BOTH volumes plain HFS ----------------------
 #
-# The one cell the Mac OS 9 DiskDoubler evidence is missing (BLOCKERS.md,
-# *Mac OS 9.2 bombs on every DiskDoubler archive*). `--launch` runs the
+# The one cell the Mac OS 9 DiskDoubler evidence is missing (DECISIONS.md
+# 2026-09-04, *the field nobody assigned*). `--launch` runs the
 # INTERACTIVE build onto a plain-HFS transfer volume and bombs; `--hfsplus`
 # runs the AUTOTEST build onto the HFS+ boot volume and passes. Those two runs
 # differ in the BUILD and in the VOLUME at once, so the pair convicts neither.

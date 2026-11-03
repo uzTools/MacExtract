@@ -215,7 +215,7 @@ static Boolean gHasWNE;     /* at_idle only; the application has one path */
  * marks, appetite in bytes. But GetNewDialog needs ONE BLOCK, and a heap with
  * 100 KB free in scraps cannot open a dialog that wants 4 KB contiguous. The
  * reserve exists for that, and until now nothing had measured it: FORMATS.md,
- * *What the reserve is NOT proven against*.
+ * *What the reserve is for, measured at last*.
  *
  * MaxBlock() is the answer — the largest contiguous block the Memory Manager
  * could hand out — sampled at the moment each dialog and alert is created,

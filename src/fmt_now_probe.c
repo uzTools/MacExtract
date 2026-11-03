@@ -31,8 +31,8 @@ UncFormat unc_nowcompress_probe(const uint8_t *head, int32_t len, UncIO *io)
     if (len < 134) return UNC_FORMAT_UNKNOWN;
     if (head[0] != 0x00 || head[1] != 0x02) return UNC_FORMAT_UNKNOWN;
     /* The u32 count at +8 is 1..0xFFFF: its high word zero, its low
-     * word not. Bytes, not a long (DECISIONS.md 2026-10-09, *the probe
-     * was the outlier*). */
+     * word not. Bytes, not a long (DECISIONS.md 2026-10-09, *the specimen
+     * was one search away*). */
     if (head[8] != 0 || head[9] != 0 || (head[10] == 0 && head[11] == 0))
         return UNC_FORMAT_UNKNOWN;
     if (head[24] == 0 || head[24] > 31) return UNC_FORMAT_UNKNOWN;

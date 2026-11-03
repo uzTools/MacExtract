@@ -104,7 +104,7 @@ ITEM_DECOMPRESS_Y = 300
 # ------------------------------------------------------------------
 # And the SECOND encoder, which is the only instrument that can say
 # whether something this format does is the format's or one program's
-# (OPEN_ITEMS.md, *A second Now Compress*).
+# (DECISIONS.md 2026-09-21, *the other program*).
 #
 # Now Utilities **6.0**, March 1996, against 5.0.1's 1994. Its installer
 # is a StuffIt archive of finished files rather than an application, so

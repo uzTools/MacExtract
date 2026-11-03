@@ -374,12 +374,12 @@ DEARK_ID = "deark"
 # another implementation already graded, where agreement is the whole
 # point and disagreement is reported rather than written down.
 # Implode joined on 2026-10-07, when the scope decision brought PKZIP
-# 1.x's method 6 in (DECISIONS.md 2026-10-07, *the oracle that was one
-# line away*). deark decodes all 7 Implode entries of the two PKZIP 1.x
-# fixtures and every one matches the CRC-32 PKZIP ITSELF stored — a
-# check no decoder here can influence, and one that CAN fail: bending a
-# byte of `4acalc.zip` makes deark print "CRC check failed" for that
-# entry and write the bytes anyway. `unar` adjudicates 5 of the 7; the
+# 1.x's method 6 in (DECISIONS.md 2026-10-07, *the method that was out
+# for a premise with no halves left*). deark decodes all 7 Implode entries
+# of the two PKZIP 1.x fixtures and every one matches the CRC-32 PKZIP
+# ITSELF stored — a check no decoder here can influence, and one that CAN
+# fail: bending a byte of `4acalc.zip` makes deark print "CRC check
+# failed" for that entry and write the bytes anyway. `unar` adjudicates 5 of the 7; the
 # other 2 are the forks it fails with "Attempted to read more data than
 # was available", and they are what this adds.
 # Shrink joined on 2026-10-08 for the same reason and a sharper one:

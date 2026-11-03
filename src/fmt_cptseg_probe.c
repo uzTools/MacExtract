@@ -34,7 +34,7 @@
  * identities, none is 0; `tools/synth_cptsplit.py` already refused to
  * draw one (`return h or 1`). The FINAL segment is unaffected — it is
  * adjudicated by unc_cpt_probe's walk, which is strictly stronger
- * (OPEN_ITEMS.md, *AppleLink `.pkg`*). */
+ * (FORMATS.md, *AppleLink packages*). */
 UncFormat unc_cptseg_probe(const uint8_t *head, int32_t len, UncIO *io)
 {
     uint32_t idx;

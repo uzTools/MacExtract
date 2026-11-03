@@ -9,7 +9,7 @@ Six generators, seeded and reproducible:
   4. crypt: an archive tools/synth_crypt.py wrote under a known password,
      flipped in one to four bits — a quarter of the run, because the
      ciphers are unreachable without both a password and a container that
-     survives (TESTING.md, *What the fuzzer cannot see*). Half of those
+     survives (TESTING.md, *Decryption*). Half of those
      flips land anywhere in the file and half inside the bytes the reader
      hands to a cipher, which synth_crypt.py reports as ranges: a flip
      anywhere has to get through whatever the container checks first, and
@@ -54,7 +54,7 @@ MAGICS = [
 # fixture can reach src/unc_crypt.c. tools/synth_crypt.py writes one shape
 # per cipher the engine has, all of them from scratch and in Python, so
 # nothing copyrighted and nothing installed is needed: the coverage is the
-# same wherever this runs. TESTING.md, *What the fuzzer cannot see*.
+# same wherever this runs. TESTING.md, *Decryption*.
 CRYPT_KINDS = ["sit-des", "sit5-rc4", "packit-xor", "packit-des", "cpt",
                "arc-garble", "zip-crypt", "zip-aes", "zip-aes128", "pf"]
 CRYPT_PW = "swordfish"

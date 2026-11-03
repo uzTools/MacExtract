@@ -2334,8 +2334,8 @@ def phase_drop(args, appbin, workdir, shot):
     rather than of anything in this repository.
 
     Get Info is photographed in the same boot, because the 'vers' resources
-    have never been seen displayed either (OPEN_ITEMS.md, *No Finder has been
-    seen displaying the version*).
+    have never been seen displayed either (DECISIONS.md 2026-08-31, *the drop
+    the Finder does not make, and the version it does show*).
 
         drop-1-desktop.png    booted to the Finder
         drop-2-volume.png     boot volume open: the archive and the application

@@ -1465,7 +1465,7 @@ int unc_zip_extract(UncCtx *c)
                          * could put a separator inside a leaf and
                          * invent a folder. UNEXERCISED: not one of the
                          * 23 fields in reach holds a '/' (FORMATS.md,
-                         * *Implode, and what the corpus cannot reach*). */
+                         * *Implode: zip method 6, PKZIP 1.x*). */
                         namebuf[dir + k] = ch == '/' ? (uint8_t)':' : ch;
                     }
                     namep = namebuf;

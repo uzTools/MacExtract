@@ -28,8 +28,8 @@
  * here by the same script with the m68k-linux toolchain, loaded by the REAL
  * loader through the mock Resource Manager in tests/ovlbox/ovlbox.c, and
  * CALLED. Everything below is unchanged, so the same fixtures and the same
- * oracle manifests grade both configurations (OPEN_ITEMS.md, *The overlay
- * loader*). */
+ * oracle manifests grade both configurations (DECISIONS.md 2026-09-26,
+ * *the loader that could be run after all*). */
 #include "ovlbox.h"
 extern void ovl_preload(void);
 extern void ovl_release_if_unwanted(UncFormat fmt, UncIO *io);

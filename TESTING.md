@@ -182,7 +182,7 @@ this machine can adjudicate, with the reason beside each (next section).
 creator and Finder flags as hex; the padded columns misplace the name
 when a code holds a space or NUL, and **200 of the corpus's 5,539
 type/creator codes hold a space** (measured 2026-10-04; DECISIONS.md
-2026-10-04, *the column that moved the name*).
+2026-10-04, *the tolerance that had to be written down first*).
 
 The flags are graded wherever the ORACLE recorded them — AppleDouble's
 `fdFlags` where `unar` wrote a sidecar, `lsar`'s `XADFinderFlags`
@@ -1839,8 +1839,8 @@ STRING has no room left (`UNC_NAME_MAX`), the same five walks reaching the
 same refusal by a different route, so every case still grades what it
 graded. **Nothing on this disk nests deeper than 4** (FORMATS.md, *How deep
 anything actually nests*, measured with `tools/measure_depth.py`); three
-of the five walks had been misfiling entries (BLOCKERS.md, *what ignoring
-a refused push cost*).
+of the five walks had been misfiling entries (DECISIONS.md 2026-10-07,
+*the pop that outlived its push*).
 
 The rule: an entry the walk could not descend to is still OFFERED, with
 the path it could represent, carrying `path_too_deep` and failing per
@@ -3079,7 +3079,7 @@ checked against the corpus before being pointed at a stranger's disk:
 |---|---|---|
 | `pkg` | an AppleLink package: item count, version, eight zero bytes, then the whole directory validated against the file's size and tiling | **exactly the 6 synthesised `.pkg` fixtures out of 956 files in `fixtures/`**, and both real packages — fails in both directions |
 | `sit` | a classic StuffIt archive, reported when a fork's method byte carries the Optimizer bit `0x40`, the encrypted bit `0x80` or the `NewDE` bit `0x10`, NAMING the module (Optimizer id at 106/108, Encryptor id at 107/109, read only for a fork that carries the flag and has a length). A walk records WHY it stopped; `--resync` searches the unread bytes for a header whose own CRC checks | the **340** `rLau` archives out of 1,915 files in `fixtures/`, **1,710 file headers**, of which it flags exactly **4** (the two wild optimized archives in both forms); over StuffIt Deluxe 2.0.1's specimens it names all five ciphers and all five Optimizer ids, each on the right archive |
-| `dd` | a DiskDoubler compressed file, with both forks' methods and lengths | the 67 DiskDoubler headers in `fixtures/`, reproducing FORMATS.md's *the biggest method-8 fork in reach is 44,549 B and compresses to 1,230* |
+| `dd` | a DiskDoubler compressed file, with both forks' methods and lengths | the 67 DiskDoubler headers in `fixtures/`, reproducing DECISIONS.md 2026-10-06's *the biggest in reach is 44,549 B, compressing to 1,230* (*the other half of that citation*) |
 | `implode` | a zip's Implode entries, each decoded BOTH ways (5.3.4's minimum match length and 1.01/1.02's) and graded by the stored CRC-32; reported only when an entry needs the 1.01/1.02 rule. Wants the whole file; the decoder is `tools/synth_implode.py`'s. Reads a zip BEHIND CODE (`zip_start()`); `--vermade` filters by the central directory's writer version over two `Range`s first (`central_vermade()`), `--host` adds the host byte; every decoded archive records the local headers it walked | the 10 wild Implode entries on this disk: **7 where the two rules COINCIDE** (CRC-OK either way), and the 3 bug-capable ones in the ZipIt specimen (CRC-OK under 5.3.4 only); the three `tools/specimens/implode.tsv` self-extractors: **3 flagged in `PKZ101.EXE` and 0 in `PKZ102.EXE` and `PKZ110.EXE`**; `central_vermade()` checked against those files' own directories |
 | `pit` | a PackIt archive walked to the end of its block chain, reported only when a block is `PMa5` or `PMa6`. Wants the WHOLE file (a `PMa4` block can only be stepped over by decoding it, with `tools/derive_packit.py`'s decoder) | **exactly the 5 PackIt archives out of 962 files in `fixtures/`**, each walking to `PEnd`, and all 3 encrypted specimens in `specimens/pitcrypt/`, each stopping at its encrypted block |
 
@@ -3098,7 +3098,7 @@ checked against the corpus before being pointed at a stranger's disk:
 | 2026-10-06 | the same, `tsMax=19921231`, at `--bytes 8192` | 8,000 | 7,929 archives, **12,987 entry headers**, **5 Optimizer bits** in 3 archives, all `Text 1`, two now fixtures (FORMATS.md, *Two optimized archives nobody here made*); with the in-step tests the pair's 21,767 headers became **21,733** |
 | 2026-10-06 | `detection=626567696e2030*`, `...2036*`, `...2037*` — a uuencode `begin` line, then each candidate's TAIL read for ` .finfo` | 939 | **1** UUTool MU-layout posting, `uu-wild-dictcol.uu`, now a fixture (a second, `uu-wild-terrainman.uu`, came off the same key by eye) |
 | 2026-10-07 | `detection=504b0304????02000600*` and `...04000600*` — a zip whose FIRST local header is Implode at a disagreeing combination | **800** probed of 8,943 named (of 1,125,083 zips whose first entry is method 6, and 6,805,790 zips) | **19,107 bug-capable Implode entries: 19,105 follow APPNOTE.TXT 5.3.4, 0 need the 1.01/1.02 rule, 2 decode under neither** (a truncated `synchro.zip`) (FORMATS.md, *Implode*) |
-| 2026-10-08 | `detection=4d5a98001f000b002000c10affff0a0e*` — **the PKSFX 1.01/1.02 stub's own DOS EXE header** | **1,323** probed of 5,576 named | **12 bug-capable entries, every one written by the bug**, in the 4 copies of `PKZ101.EXE` (FORMATS.md, *The specimen that carries the bug*) |
+| 2026-10-08 | `detection=4d5a98001f000b002000c10affff0a0e*` — **the PKSFX 1.01/1.02 stub's own DOS EXE header** | **1,323** probed of 5,576 named | **12 bug-capable entries, every one written by the bug**, in the 4 copies of `PKZ101.EXE` (DECISIONS.md 2026-10-08, *the second attempt that had nowhere to go*) |
 | 2026-10-08 | the two flag tokens, deduplicated to 3,821, every central directory read (`--vermade 10`), spec-1.0 writers fetched whole | 3,821 read, **1,537** decoded | **29,799 bug-capable entries: 29,795 by 5.3.4, 0 by the bug, 4 by neither**; only **10 of 3,821** say MS-DOS + spec 1.0 (FORMATS.md, *Implode*) |
 | 2026-10-08 | the same tokens with `tsMin=1989&tsMax=1990` | 975 | **3,543 bug-capable entries, 3,543 by 5.3.4, 0 by the bug.** A date is not a writer |
 | 2026-10-08 | `detection=504b0304????????MM00*` for MM = 01…05 (Shrink, Reduce 1–4), listed with `size_shards` and classified by `idMeta` and path | **109,207** (96,193 Shrink; 117 / 143 / 43 / 12,711 Reduce 1–4) | **146 distinct in a Macintosh context, 1 written on one** (`BBA.zip`, now a fixture); 2,246 entries decoded, all CRC-correct under deark, 270 failed by `unar` (FORMATS.md, *Shrink*). Kept under `~/.cache/macextract/discmaster/shrink/2026-10-08/` |

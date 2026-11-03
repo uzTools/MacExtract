@@ -253,7 +253,7 @@ measured, `nm -S`).
 
 ## The double-click helpers: what is left before they ship
 
-`companion/` works (DECISIONS.md 2026-10-12, *the stub that hands it on*) and
+`companion/` works (DECISIONS.md 2026-10-11, *the stub that hands it on*) and
 ships later, on MacExtract's own floppy. Left:
 
 - **Which creators.** `companion/app-bundles.tsv` has 42; the list of stubs

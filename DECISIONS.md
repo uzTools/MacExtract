@@ -11237,8 +11237,8 @@ DATA or the download: 544 B of fork overhead.
   directory per image (`tools/overlay/mkbundle.py`), 8 bytes padding;
   172 + 8 = 180;
 - the launch read, 208,512 B / **+24,960 B**, is 207,968 B / **+24,416 B**;
-- the **512 B** gap of DECISIONS.md 2026-09-25 (*the overlay launch read
-  was counted as a cost twice*) is **32 B**, inside MacBinary's 128 B
+- the **512 B** gap of DECISIONS.md 2026-09-26 (*the numbers DART left
+  behind*, above) is **32 B**, inside MacBinary's 128 B
   per-fork quantum.
 
 **Findable because** adding `--bin` to `mkbundle.py`, so
@@ -13276,7 +13276,7 @@ reject** (FORMATS.md, *What the zip pair claims, and what it costs*).
 Actual cost: **316 B of resident `CODE` and 4 B of A5, in all three
 configurations** — 320 B off every 1 MB extraction budget; it cannot go in
 an `'OVLY'` (called for every file, like the 666-byte AppleLink probe,
-2026-10-05, *the probe that had to be a file test*). Instructions: 0.003 %
+2026-10-05, *the deviation that was the reference*). Instructions: 0.003 %
 of an extraction, no tick probe (four orders of magnitude is not a close
 call).
 
@@ -15029,8 +15029,9 @@ refetches only on `"more"`, and 30 bytes of an `MZ` file hold no local
 header. **The probe had been controlled for its ability to FAIL, not its
 ability to RUN inside the harness** — two controls; the tell was a sweep
 over 1,151 files (150 KB mean) as fast as a directory-only one. Status:
-FORMATS.md, *The specimen that carries the bug*; sweeps: TESTING.md,
-*Searching somebody else's index by content*; cost: BLOCKERS.md.
+DECISIONS.md 2026-10-08, *the second attempt that had nowhere to go*;
+sweeps: TESTING.md, *Searching somebody else's index by content*; cost:
+BLOCKERS.md.
 
 
 ## 2026-10-08 (the second attempt that had nowhere to go) — PKZIP 1.01/1.02's minimum match length lands, and a streaming engine cannot keep a pass it has to throw away
@@ -18260,7 +18261,7 @@ than once gets its own 42-byte copy, or an inline expansion
 224 B off every budget for a move, so it went to a branch
 (`probes-one-place`) first.
 
-**Brought to zero by 2026-10-09's lesson** (*the probe was the outlier*):
+**Brought to zero by 2026-10-09's lesson** (*the specimen was one search away*):
 compare bytes. AppleSingle's magics and versions, MacBinary's 'mBIN',
 fork-size and date tests, DiskDoubler's magics and Now Compress's count are
 bytes; Now's checksum a word (106 bytes cannot sum past 27,030); the

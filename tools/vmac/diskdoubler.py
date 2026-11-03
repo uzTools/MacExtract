@@ -184,8 +184,8 @@ def volume_files(img, invisible=True):
     `FINDER_OWN` drops, and all six callers select by DiskDoubler header,
     by exact name, or by a magic number — not one of them compares fork
     SETS, which is the thing that makes the same flag expensive for
-    `superdisk.read_forks` (OPEN_ITEMS.md, *Volume walks that cannot see
-    an invisible file*).
+    `superdisk.read_forks` (DECISIONS.md 2026-09-22, *the last walk, and
+    the exit code nobody could get*).
     """
     env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
     out, dropped = {}, []

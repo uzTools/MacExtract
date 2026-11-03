@@ -167,8 +167,8 @@ def strip_system_folder(hfs, drop_desktop):
     `interactive.py --password`: the encrypted archive's resource-only entry
     stops reaching the volume. Bisected to the commit that introduced it and
     isolated by holding the application constant and reverting this file
-    alone — five runs, both ways (BLOCKERS.md, *the Desktop file the password
-    phase needed*).
+    alone — five runs, both ways (DECISIONS.md 2026-08-30, *the Desktop file
+    the password phase needed*).
 
     **The mechanism is not understood.** No Finder runs under that
     arrangement, so why its cache should matter at all is the open question.

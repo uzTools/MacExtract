@@ -1057,8 +1057,7 @@ that rule, does not boot.
 prints the compression header, the fork record, the compressor table from
 each `CMod` module and the engine's MacsBug symbols, ending with **nine
 witnesses** — byte patterns that must be in `SSEn 1` and `ACMP 1` — so a
-different build says MISSING and exits 1 (FORMATS.md, *StuffIt SpaceSaver's
-container*).
+different build says MISSING and exits 1 (FORMATS.md, *StuffIt SpaceSaver*).
 
 **`--pkg`** prints the AppleLink translator's `Name`, vocabulary and
 recogniser (four witnesses); the recogniser parses the translator API's

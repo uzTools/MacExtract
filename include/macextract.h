@@ -595,8 +595,8 @@ typedef struct UncOptions {
      * `long_name_cap` above 65,536 is NOT supported: the walk's length
      * is 16-bit, so a larger buffer is filled correctly to 64 KB and
      * then silently rewritten from its start. The Linux CLI passes
-     * exactly 65,536 (DECISIONS.md 2026-10-07, *what the header was
-     * still promising*).
+     * exactly 65,536 (DECISIONS.md 2026-10-07, *the seven sentences
+     * that were not the class*).
      * A NON-NULL pointer is WRITTEN in the formats that walk folders
      * (DiskDoubler, SuperDisk!, Now Compress) for every path component,
      * cut or not — the uncut path accumulates here. So a host that has

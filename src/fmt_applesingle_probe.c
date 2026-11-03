@@ -17,8 +17,8 @@
 
 /* The magics and versions of fmt_applesingle_priv.h, compared as the
  * bytes they are: a probe that compares fields with small constants
- * should compare bytes (DECISIONS.md 2026-10-09, *the probe was the
- * outlier*). Either byte order of the magic goes with either of the
+ * should compare bytes (DECISIONS.md 2026-10-09, *the specimen was one
+ * search away*). Either byte order of the magic goes with either of the
  * version, exactly as the word compares before 2026-10-20 had it. */
 UncFormat unc_applesingle_probe(const uint8_t *head, int32_t len, UncIO *io)
 {

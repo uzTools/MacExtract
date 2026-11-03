@@ -1843,8 +1843,7 @@ g<password>`) and graded by `unar -p` where a second implementation
 exists; four ciphers are also graded on archives the original software
 wrote, kept in the cache — StuffIt classic (`tools/vmac/sitcrypt.py`),
 StuffIt 5 (`os9mouse.py`), Compact Pro (`cptcrypt.py --make`) and both of
-PackIt's (`tools/derive_pitcrypt.py --make`) (TESTING.md, *the decryption
-suite*).
+PackIt's (`tools/derive_pitcrypt.py --make`) (TESTING.md, *Decryption*).
 
 **`PassLock` is not a cipher.** Two archives StuffIt Deluxe 2.0.1 wrote
 with it armed, against unprotected archives of the same subjects
@@ -1926,8 +1925,8 @@ and `.Z` have nowhere to put one). What a user meets:
 ### StuffIt 5's RC4: graded by Aladdin's own writer
 
 Measured 2026-08-26: three archives written by **DropStuff 5.0.1** on Mac
-OS 9.2 under QEMU (`tools/vmac/os9mouse.py`; TESTING.md, *the decryption
-suite*), kept in the cache:
+OS 9.2 under QEMU (`tools/vmac/os9mouse.py`; TESTING.md, *Decryption*), kept
+in the cache:
 
 | specimen | password | forks | what this engine returns |
 |---|---|---|---|
@@ -2982,7 +2981,7 @@ did not read. On a 3.4 GB archive of 23,400 entries written by CPython's
 (`big/02047.bin` at 0x7FF157D5 passing, `big/02048.bin` at 0x80015800
 failing); it now verifies whole. A set high half refuses that entry alone
 (`UNC_ERR_TOOLARGE`). BLOCKERS.md has the cost; DECISIONS.md 2026-08-27
-(*the escape that arrives at 2 GB*) why the two Zip64 refusals differ.
+(*the Zip64 escape at 2 GB*) why the two Zip64 refusals differ.
 
 ## Name limits
 
@@ -3027,9 +3026,9 @@ the limit that was deleted*).
 | StuffIt classic | no — the same | 528 | 3,572 | 4 | `derived-OTCFM68KGlue.sit` |
 
 Every subject reaching 24 is generated (`tools/synth_deep.py`), and three
-walks were misfiling entries there (BLOCKERS.md, *what ignoring a refused
-push cost*). **Removing the limit gave back 64 B** on a 1 MB Mac Plus
-(−68 B `CODE`, +4 A5): the walker now writes the uncut path straight into
+walks were misfiling entries there (DECISIONS.md 2026-10-07, *the pop
+that outlived its push*). **Removing the limit gave back 64 B** on a 1 MB Mac
+Plus (−68 B `CODE`, +4 A5): the walker now writes the uncut path straight into
 the host's `long_name` buffer, ONE path with ONE length. Per function,
 against the build before: `path_full_add` 152 → **0**, `unc_path_push` 194
 → 160, `unc_path_pop` 62 → 78, `unc_path_init` 30 → 78, `unc_path_leaf`
@@ -3959,8 +3958,8 @@ Re-takes that measured something beyond the ratchet deltas:
 - **2026-10-05, AppleLink packages**: the first format since the overlays
   whose shipped column moved by more than eight bytes, **+788 `CODE` and
   +60 A5**, for its 666-byte resident PROBE (the decoder, 1,474 B, is in
-  `ovl_sqp`) (DECISIONS.md 2026-10-05, *the probe that had to be a file
-  test*). The probe moved to `ovl_sniff` on 2026-10-21.
+  `ovl_sqp`) (DECISIONS.md 2026-10-05, *the deviation that was the
+  reference*). The probe moved to `ovl_sniff` on 2026-10-21.
 - **2026-10-06**: a 4 B text change cost the lazy build **+28 B of A5**,
   `*fill*` under `. = ALIGN (0x20)` at the head of `.data` — the
   rodata-alignment step recorded in `tools/build_mac.sh`, stepping the
@@ -4554,7 +4553,7 @@ and the call graph comes from the relocations in the linked objects
 | | before 2026-08-24 | now |
 |---|---|---|
 | deepest chain in the engine | 6,664 B (`unc_dd_extract` → `dd_fork` → `dd_ddn`) | **3,350 B**, derived 2026-10-17: 3,310 B since 2026-10-07, +44 B for `UncEntryInfo` (`unc_dd_extract` 952 → 996), −4 for DiskDoubler's FInfo (996 → 992) |
-| Now Compress chain | 5,632 B | ~1,400 B; −616 B since 2026-09-21 (a shape-3 block's table staging moved to the per-archive allocation; OPEN_ITEMS.md, *What is still XADMaster's*) |
+| Now Compress chain | 5,632 B | ~1,400 B; −616 B since 2026-09-21 (a shape-3 block's table staging moved to the per-archive allocation; DECISIONS.md 2026-09-27, *the inventory that was kept twice*) |
 | largest single frame | 3,740 B (`dd_fork`) | **2,352 B** (`ars_index_build`) |
 | largest frame in the SHELL | — | **1,544 B** (`ExtractOne`, whose `MacSink` holds an entry), measured 2026-10-17; `StampCat` 272 → **320 B** 2026-10-21 (DECISIONS.md 2026-10-21, *the Desktop Manager System 6 can have*) |
 
