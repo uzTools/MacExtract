@@ -260,8 +260,12 @@ ships later, on MacExtract's own floppy. Left:
 - **Which creators.** MacStamp's list (2026-11-01, from its census) is
   the source; not yet chosen. `SITx` can have a stub now that a stub
   passes StuffIt X (`SITX`) back to Expander (DECISIONS.md 2026-10-31,
-  *the stub that sorts*); `TEXT`, `R*ch`, `MSWD`, `MOSS`, `java` stay out,
-  since they also own ordinary documents. Archives MacExtract does open that carry `SITx`
+  *the stub that sorts*); `ttxt`, `R*ch`, `MSWD`, `MOSS`, `java` stay out
+  (the maintainer, 2026-11-03): in MacStamp's census the only archive type
+  they carry is `TEXT` (`ttxt` 7,317 files, `R*ch` 4,046, `MSWD` 822, `MOSS`
+  154) bar four `ZIP `/`java`, and a stub sorts by type, which cannot tell a
+  `.hqx` from a text document (CORRECTED 2026-11-03: the list read `TEXT`, a
+  type, for `ttxt`). Archives MacExtract does open that carry `SITx`
   — Mac OS 9.2's downloads of `.sit`, `.hqx`, `.bin`, `.pit`, `.taz`
   (DECISIONS.md 2026-10-31, *the helper list Expander asks for*), and
   MacStamp's own BinHex, PackIt, btoa and base64 stamps — reach it by
