@@ -493,6 +493,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-03 (the gate a helper commit has) — `ci.sh` built nothing in `companion/`; `tools/check_helpers.py` builds a helper and reads what the Finder needs off it, and a commit touching only `companion/` and docs is gated by it and `tools/check_docs.py`
 - 2026-11-03 (the creators that get a helper) — sixteen, each owning archives alone: MacStamp's own pair for every format MacExtract extracts, and MacZip and PackIt from its census; the editors and HexEdit, whose files a type cannot sort, stay out
 - 2026-11-03 (the helper that asks the desktop) — a helper finds MacExtract wherever the Finder has seen it, through the desktop database on System 7 and Mac OS 9 and the Desktop file on System 6 and 3.0; +128 B
+- 2026-11-03 (the archive that carries its own CRCs) — MAR comes in, graded by what its author wrote, read from GPL-2.0-only sources for their facts alone
 
 ---
 
@@ -20332,3 +20333,100 @@ through the Desktop file.
 volume; what a user must do is what the Finder needs anyway, open
 MacExtract's folder and the helpers' once. The "could not be found" alert
 now says that.
+
+## 2026-11-03 (the archive that carries its own CRCs) — MAR comes in, graded by what its author wrote, read from GPL-2.0-only sources for their facts alone
+
+**The maintainer's call, 2026-11-03: add it.** MAR is Hampa Hug's (PCE's
+author): "a cross between MacBinary and Unix tar", every Finder field kept,
+writable and readable off the Mac (Macintosh Garden, *MAR archive*, comment
+83867). The Garden's uploader of System 1-7 software said there in 2023
+that he keeps using it. Nothing here knew the format.
+
+**Claim (measured).** `src/fmt_mar.c` reads it: 128-byte records, `'file'`,
+`'fold'` and `'----'`, stored blocks each with a CRC-32 over 0x1EDC6F41 (MSB
+first, from 0, not inverted) and zero padding to 128. Both of hampa's
+published archives come out with every one of their 288 CRCs verifying,
+and every fork equal to `unar`'s reading of the StuffIt copies he published
+of the same two folders, with one exception that follows. Through the
+application: byte-exact on System 6.0.8 at 1 MB and 512 KB, System 3.0 at
+1 MB and 512 KB, and System 7.0.1 (four fixtures each). Mac OS 9.2 was not
+run: the boot image in the cache no longer matches its SHA-1.
+
+**The twins differ, and only where a Macintosh writes on its own.** All 77
+resource forks match the `.sit`'s except inside bytes 16..255, the
+header's reserved area, in up to 9 bytes (offsets 61 and 76-79 in the
+source's forks, 114-117 in all of them). 114-117 read as Macintosh dates:
+2019-05-31 in every `.mar` fork, mar 0.2.0's date in its ChangeLog, and
+2021-09-22 in every `.sit` fork, two days before the forum post. A
+hypothesis, not tested: the system stamps that area when a resource file is
+written, and the two archives were made from copies two years apart. Those
+bytes are vouched for by hampa's CRC alone;
+`tools/run_mar.py` counts the forks that rely on it rather than hiding them.
+
+**The licence.** mac-utils and mar 0.2.0 are GPL-2.0-only, which cannot
+become LGPL-2.1-or-later. So, as for btoa (2026-08-23, *btoa's licence*),
+they are read for facts and not copied, and they are never run: the reader
+is this repository's own, each fact cited to the file it came from
+(NOTICE). The test generator's LZW encoder was first written as a port of
+mar 0.2.0's `lzw.c`. It was rewritten from a description of what that
+encoder does before anything was committed, and the rewrite's output is
+byte-identical to the port's at 9, 12, 13 and 16 bits on two archives.
+
+**The compressed form needed no codec.** mar 0.2.0 compresses a whole
+archive (Command at encode) with an LZW behind compress(1)'s header and
+reads LZ4 frames too. Its encoder never pads, where compress(1) pads to a
+group of eight codes. That matters only after a clear, and the encoder
+clears exactly when the table fills, which is always on a group boundary.
+So `gzip -dc` and the engine's `.Z` envelope read its output byte for byte
+at 9, 12 and 16 bits, through hundreds of clears. A control with one byte
+of padding after a clear fails both. LZ4 is not read (OPEN_ITEMS.md).
+
+**What the reader states is what mar 0.2.0's expander writes**
+(`mar_dec.c`): the 16 bytes of FInfo or DInfo whole, a folder's scroll
+into DXInfo, the lock from bit 0 of the flags. By default it clears inited
+and on-desk on the first item, so the Finder places it, and so does this
+reader. The shell's own top-level rule (2026-10-19, *the place outside the
+archive*) keeps inited, so a folder keeps its window's scroll. Following
+the format's own expander gives that up for MAR's top item only. The
+comment block, which the expander skips, is handed on, cut at 255.
+
+**Where it lives.** In `ovl_zipold` beside tar, the other reader that
+calls no codec, not in an image of its own: the image count is stated in
+a dozen places (2026-10-17, *dates in the Macintosh's own zone*, which
+declined one for Unix compress on the same grounds). A MAR keeps zipold
+and the codecs, so its grant is tar's. The peak heap is 8,744 B, so
+nothing it reads is refused for memory on any tier.
+
+**The bundle claims its two types (the maintainer, 2026-11-03).** mar
+0.2.0 types a folder's archive `MARd` and a file's `MARf`, creator `MARc`
+(`mar_io.c`); its LZW form is `ZIVU`, already claimed. Without them the
+System 7 Finder refuses a `.mar` dropped on MacExtract and Mac OS 9 does
+not offer it; File > Open lists every type either way. Same terms as
+DiskDoubler's types (2026-11-01, *the Open item MultiFinder looks for*).
+
+**An LZW-compressed MAR is peeked.** Rebased onto the envelope peek
+(*the envelope that said what it held*): its payload sniffs as MAR, which
+is in the keep table, so the `.Z` layer keeps `ovl_exo`, the sniffer and
+`ovl_zipold`, as a `.tar.Z` does. Not run through the application's chain.
+
+**Cost (measured, on 1dd2f6b).** Shipped CODE +16 and A5 0 (the shim, the
+table row and its name, the keep set's two bytes). Lazy CODE +20. Resident
+control CODE +1,724 and A5 +100. The two bundle types: the 1 MB probe
+(`run.py --mem 1M -D UNC_AT_BUDGET`, `derived-ASCbeep.sit`) gave 742,600 B
+without them and 742,576 B with, 12 B a type; MAR as a whole 742,648 ->
+742,576, -72, where the unit says 16 + 24 (hypothesis: the probe build's
+A5 crossing a 32-byte step). `ovl_zipold` 10,832 -> 12,564, `ovl_sniff`
+14,204 -> 14,564, the bundle 189,236 -> 191,328. `OVL_SAVED` +1,808,
+`TIERS` -1,848 and `TIERS_MACHINE` -24, DERIVED. A zip's and a tar's grant
+rises 76 B, a peeked `.tar.Z` and the whole-bundle row fall 284, every
+other row rises 1,808. `run_tiers.py --check` moves no tally.
+`unc_mar_extract`'s frame is 568 B and `mar_block`'s 60.
+
+**Evidence.** `tools/run_mar.py` (TESTING.md, *MAR*). Four engine mutants
+fail it: CRC never checked, inited kept on the top item, lock ignored, and
+headers not counted as progress — which the first version of the reader
+did, so 2,000 empty files never called back; found reading the code
+before the first commit, and measured (0 ticks, then 31). The
+sniffer's answer changes for the four MAR fixtures and no other of 1,002
+corpus files. None of 4,880 non-archives (reference/, this tree) sniffs as
+MAR.

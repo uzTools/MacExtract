@@ -92,6 +92,22 @@ if [ ! -d reference/sumacc ]; then
     rm -f /tmp/43new.tar.gz
 fi
 
+# MAR (Hampa Hug, 2011-2021) — the format's author's two implementations:
+# mac-utils, whose `mar` is the Unix reader and writer, and mar 0.2.0's own
+# Macintosh source, published as a StuffIt archive and unpacked with `unar`.
+# Both GPL-2.0-only, so READ for the format's facts and neither transcribed
+# nor run (NOTICE); src/fmt_mar.c says which file gave which fact.
+if [ ! -d reference/mar ]; then
+    mkdir -p reference/mar/mac-utils
+    curl -sL -o /tmp/mac-utils.tar.gz \
+        "http://www.hampa.ch/pub/pce/misc/mac-utils-20210820-08c01f11.tar.gz"
+    tar xzf /tmp/mac-utils.tar.gz -C reference/mar/mac-utils --strip-components=1
+    rm -f /tmp/mac-utils.tar.gz
+    curl -sL -o reference/mar/mar-0.2.0-src.sit \
+        "http://www.hampa.ch/pub/pce/misc/mar-0.2.0-src.sit"
+    unar -q -o reference/mar reference/mar/mar-0.2.0-src.sit >/dev/null
+fi
+
 # NOT `cd reference/notes`, which is what these blocks used to open with.
 # Every block BELOW them names its file from the repository root, so the
 # cd made all of those write into reference/notes/reference/notes/ — a

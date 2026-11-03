@@ -308,6 +308,14 @@ python3 tools/run_shortread.py --macextract build/san/macextract \
 # its negative controls are.
 python3 tools/run_sqp.py --macextract build/san/macextract \
     || fail "AppleLink package (SqueezePlay) tests"
+# MAR. Nothing here reads it but the engine, and its author's readers are
+# GPL-2.0-only and not run, so what grades it is what wrote it: every CRC
+# his writer stored, walked by a second reading; his StuffIt twins of the
+# same two folders, which run_diff.py holds to `unar`; and tools/synth_mar.py's
+# items field for field. Then damaged, cut and LZW-wrapped variants, the
+# last decoded by gzip too, each comparison with a control that must fail.
+python3 tools/run_mar.py --macextract build/san/macextract \
+    || fail "MAR tests"
 # The Finder metadata beyond type, creator and flags (`l --meta`): FInfo
 # and FXInfo whole, the backup date, the lock and the Get Info comment,
 # held to lsar where it reads them and to the synthesizers' own input where

@@ -347,3 +347,5 @@ DECODER(unc_gzip_extract,       OVL_ID_EXO,        OVL_GZIP_EXTRACT,       RUN_C
 DECODER(unc_compressz_extract,  OVL_ID_EXO,        OVL_COMPRESSZ_EXTRACT,  RUN_CODECS)
 /* Tar is in zip's old-methods image; src/fmt_tar.c says why. */
 DECODER(unc_tar_extract,        OVL_ID_ZIPOLD,     OVL_TAR_EXTRACT,        RUN_CODECS)
+/* MAR beside it: stored forks, no codec (src/fmt_mar.c). */
+DECODER(unc_mar_extract,        OVL_ID_ZIPOLD,     OVL_MAR_EXTRACT,        0)

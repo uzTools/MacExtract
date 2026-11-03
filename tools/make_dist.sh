@@ -396,7 +396,8 @@ Private File (.pf), DiskDoubler (.dd, DDAR, DDA2), Now Compress,
 StuffIt SpaceSaver, Alysis SuperDisk! (.X), ARC (.arc), LZH/LHA (.lzh, .lha,
 MacLHA's included), uuencoded files (.uu), btoa (.ascii), base64 and files
 mailed as MIME attachments (.b64, .mim -- both forks, where the message
-carried them), AppleSingle/AppleDouble, zip, gzip, tar and Unix compress (.Z).
+carried them), AppleSingle/AppleDouble, MAR (.mar, .mac), zip, gzip, tar and
+Unix compress (.Z).
 Nested files like .sit.hqx or .tar.Z are unwrapped automatically, by looking
 inside them
 rather than trusting the name, and a .hqx holding several files -- one

@@ -61,6 +61,9 @@ static const UncFormatDesc unc_formats[] = {
     { UNC_FORMAT_GZIP,        "Gzip",                1, unc_gzip_extract },
     { UNC_FORMAT_COMPRESS_Z,  "Unix compress",       1, unc_compressz_extract },
     { UNC_FORMAT_TAR,         "Tar",                 0, unc_tar_extract },
+    /* Not an envelope even as a `.mac`, which holds one file: the
+     * format is the same when it holds a folder (fmt_mar.c). */
+    { UNC_FORMAT_MAR,         "MAR",                 0, unc_mar_extract },
     { UNC_FORMAT_DISKDOUBLER, "DiskDoubler",         0, unc_dd_extract },
     { UNC_FORMAT_NOWCOMPRESS, "Now Compress",        0, unc_now_extract },
     { UNC_FORMAT_LZH,         "LZH",                 0, unc_lzh_extract },

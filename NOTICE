@@ -660,6 +660,29 @@ This project's decoders are transcriptions/ports of algorithms from:
     compiles it and decodes what it encodes). The names are mentioned,
     here and in the source. DECISIONS.md 2026-08-23 (btoa's licence).
 
+  * MAR, by Hampa Hug — mac-utils (2011-2021) and mar 0.2.0 (2011-2019),
+    http://www.hampa.ch/pub/pce/misc/ — and this one is a REFERENCE ONLY
+    as well, because both are released under the GNU General Public
+    License version 2 alone, with no "or later", which cannot be relicensed
+    as this project's LGPL-2.1-or-later.
+
+    So `src/fmt_mar.c`, `src/fmt_mar_probe.c` and `src/fmt_mar_priv.h`
+    implement the FORMAT — the 128-byte record, its three ids and its field
+    offsets, the CRC's polynomial and parameters, the block and its
+    padding, and which Finder flags the author's expander clears — and are
+    not a copy of his code: no function, buffer or control structure is
+    carried over, and the files say which of his files was read for which
+    fact. The CRC is computed four bits at a time from a table derived from
+    the polynomial, where his is bit by bit and table-driven by turns.
+    `tools/synth_mar.py` writes what mar 0.2.0's LZW encoder writes, from
+    a description of its behaviour (when the code width grows, when the
+    table is cleared, that nothing is padded) and not from its code; it
+    generates test inputs and is in neither the engine nor `dist/`.
+    `reference/mar` is fetched by
+    `tools/fetch_references.sh`, never committed, never linked into
+    anything and never run. DECISIONS.md 2026-11-03 (*the archive that
+    carries its own CRCs*).
+
   * lhasa 0.4.0, by Simon Howard — https://github.com/fragglet/lhasa,
     ISC licence. Since 2026-09-19 `src/fmt_lzh.c`'s decoders follow it
     rather than XADMaster: `lh_new_decoder.c` and `tree_decode.c` for

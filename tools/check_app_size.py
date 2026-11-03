@@ -273,9 +273,14 @@ TAKEN = "2026-11-03"
 # 1,682 B) and a set's setup (`ovl_segsetup`, 2,364 B) as images, and the
 # envelope-only sniff in `ovl_sniff` (+172), with two directory entries
 # (DECISIONS.md 2026-11-02, *the dialogs that became the application*).
-EXPECT_BUNDLE = 188404
+# -> 191,328 2026-11-03: +832 inside the tolerance (DiskDoubler method 10
+# and MacBinary's layout +16, StuffIt 5's folder table +4, its cipher answer
+# +52, the envelope peek +760), then MAR — its reader in `ovl_zipold`
+# (+1,732) and its probe and CRC in `ovl_sniff` (+360) (DECISIONS.md
+# 2026-11-03, *the archive that carries its own CRCs*).
+EXPECT_BUNDLE = 191328
 TOLERANCE_BUNDLE = 2048
-TAKEN_BUNDLE = "2026-11-02"
+TAKEN_BUNDLE = "2026-11-03"
 
 
 def main():

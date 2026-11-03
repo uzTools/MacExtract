@@ -1,0 +1,19 @@
+{
+ "entries": [
+  {
+   "creator": "ttxt",
+   "data_sha256": "ab63888eadcedf5a67c76af1eaf8da005b15eb0873800869e0718ceaa7766a76",
+   "data_size": 3000,
+   "finder_flags": 1281,
+   "name": "Read Me First",
+   "rsrc_sha256": "f62500781bfae66b5ae4348da07fd1e3b4d0411fed329e57e799cd90694a9177",
+   "rsrc_size": 700,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "synth-mar-single.mac",
+ "format": "MAR",
+ "oracle": "tools/synth_mar.py --case single's items, every CRC checked by tools/run_mar.py walk",
+ "sha256": "6abf81aac73cb19ac756c52e911ac4524bb29e07a5657f8bf082e57f4a378ab0",
+ "size": 4096
+}

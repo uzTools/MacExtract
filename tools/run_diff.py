@@ -62,6 +62,9 @@ IMPLEMENTED = {
     "BinHex hex/hcx": "BinHex hex/hcx",
     # Nor SUMacC's `.dl`: hexbin's reading, its sum verifying.
     "SUMacC dl": "SUMacC dl",
+    # Nor MAR: every block's CRC-32 as its author's writer stored it, and
+    # hampa's StuffIt twins of the same folders (tools/run_mar.py).
+    "MAR": "MAR",
 }
 
 # A fixture whose oracle names a format this engine does not have. Until

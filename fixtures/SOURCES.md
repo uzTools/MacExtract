@@ -16,8 +16,10 @@ ten other fixtures have no manifest — the six `.1`/`.2` parts,
 cannot produce a manifest for any of them anyway. Each is graded by the
 suite that owns it (TESTING.md).
 
-**Two fixtures are a step from their URL.** `libarchive-zip-mac-metadata.zip`
-is libarchive's test file, uuencoded there: `uudecode` it. And the Mac OS X
+**Four fixtures are a step from their URL.** `libarchive-zip-mac-metadata.zip`
+is libarchive's test file, uuencoded there: `uudecode` it. The two
+`mar-wild-*` archives are lzip-compressed there; an `lzip+` URL tells
+`tools/harvest.py --restore` to decompress what it fetched. And the Mac OS X
 sidecar specimens (`Aqua_Candy_Two.zip`, a Finder zip from a 2006 Macworld
 UK disc; `synth-macosx*`) are graded by `tools/run_meta.py` as well as by
 the manifests, which cannot state the `-edge` pair at all (DECISIONS.md
@@ -1025,3 +1027,9 @@ a comment was found.
 | derived-bh2-XF.hex | ec6d579a3d1fd1fdb8313acc3cd6ebeebfdf8ab14e3789293d027e02a9f5256f | 5237 | derived:hfsvol:specimens/binhex2/volume.img:r:Hex:XF.hex |
 | derived-bh2-XFlf.hex | 799cc4f55bb463afa6772dc4e5ecf5e5c5adf350046d90c6618f6558936e7455 | 5323 | derived:hfsvol:specimens/binhex2/volume.img:r:Hex:XFlf.hex |
 | derived-bh2-YN.hex | 895dd0a0b8e836d71f71457b2664b1666475371f8bf7ceab0e3cb22f10725fde | 7699 | derived:hfsvol:specimens/binhex2/volume.img:r:Hex:YN.hex |
+| mar-wild-mar020.mar | be3cdc10f87e1fd15acc4d8faee46d3268c669ce99d38e0d7f74a8763b63bf8e | 192896 | lzip+http://www.hampa.ch/pub/pce/misc/mar-0.2.0.mar.lz |
+| mar-wild-mar020src.mar | 322edb3fcbeb8162f858d510ab8c359dff3a00d613bd2eff478571e45a8112c6 | 715264 | lzip+http://www.hampa.ch/pub/pce/misc/mar-0.2.0-src.mar.lz |
+| mar-twin-mar020.sit | bbc462d45ed4171ef0321d92f72b1245ee2bdad73bbd0f9adf6f7c77ecaaf6c6 | 129689 | http://www.hampa.ch/pub/pce/misc/mar-0.2.0.sit |
+| mar-twin-mar020src.sit | 77c24ddfc7c41c8e2e23b8a95f69cad29782a8893cf9955800bcbb5ef4d2f9ed | 247671 | http://www.hampa.ch/pub/pce/misc/mar-0.2.0-src.sit |
+| synth-mar-single.mac | 6abf81aac73cb19ac756c52e911ac4524bb29e07a5657f8bf082e57f4a378ab0 | 4096 | synthetic:tools/synth_mar.py --case single |
+| synth-mar-tree.mar | b6778539e451046f863288ddb18b72a4c1fc738015c58ff7bd4fcef50bbc4946 | 9856 | synthetic:tools/synth_mar.py --case tree |

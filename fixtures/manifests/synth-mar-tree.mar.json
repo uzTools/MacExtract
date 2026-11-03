@@ -1,0 +1,91 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "Top Folder"
+  },
+  {
+   "creator": "TEST",
+   "data_sha256": "0f5645995105c445fde617dd0ff7a2224e83eb6e4b3b03310e3c110270535619",
+   "data_size": 5000,
+   "finder_flags": 8448,
+   "name": "Top Folder/Both Forks",
+   "rsrc_sha256": "1f0eb3ff7a6d7ce587008e82e0a433b65b73421c2350d455e1d9b9ba5a1b0ba3",
+   "rsrc_size": 1234,
+   "type": "APPL"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "52cdc19c1b328ddbd689d454ef4fe8287472efe01fafa4081bfd66367f2465a8",
+   "data_size": 127,
+   "finder_flags": 256,
+   "name": "Top Folder/Data Only",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "RSED",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 0,
+   "name": "Top Folder/Rsrc Only",
+   "rsrc_sha256": "42504b739ecfca8aab221c13fee7d9ba4b7b468cbceca8e00fc1d5ee969757eb",
+   "rsrc_size": 124,
+   "type": "rsrc"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 0,
+   "name": "Top Folder/Empty",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "is_dir": true,
+   "name": "Top Folder/Inner"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "5c0a639a06657310b40ead0b2abb1862ed8415ba6d3c5bf4de2af7e5b34533b4",
+   "data_size": 129,
+   "finder_flags": 256,
+   "name": "Top Folder/Inner/A:B slash",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "56f331d99cebb02a1995087d1cdfa38f361b475d4adc53bd49665d6a12c5893e",
+   "data_size": 600,
+   "finder_flags": 256,
+   "name": "Top Folder/Inner/Locked",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "is_dir": true,
+   "name": "Top Folder/Inner/Empty Folder"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "b65e71beeb746dfddeadf1b2441d937cd869bb9a8c2bc662490790df4f79bd0f",
+   "data_size": 10,
+   "finder_flags": 256,
+   "name": "Top Folder/A name of forty-one characters, too long",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "synth-mar-tree.mar",
+ "format": "MAR",
+ "oracle": "tools/synth_mar.py --case tree's items, every CRC checked by tools/run_mar.py walk",
+ "sha256": "b6778539e451046f863288ddb18b72a4c1fc738015c58ff7bd4fcef50bbc4946",
+ "size": 9856
+}

@@ -681,7 +681,12 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # +180 on 2026-11-03, 180,224 -> 180,404, A5 +12 below: the queueing File >
 # Open..., rebased onto the day's tree (DECISIONS.md 2026-11-01, *the Open
 # item MultiFinder looks for*; +192 on 2026-11-01's).
-UNC_MAC_CODE_DEFAULT=180404
+# +1,724 on 2026-11-03, 180,404 -> 182,128, A5 +100 below: MAR
+# (DECISIONS.md 2026-11-03, *the archive that carries its own CRCs*):
+# unc_mar_extract 1,100, mar_block 270, unc_mar_hdr_ok 108, unc_mar_probe
+# 90, unc_mar_crc 88, and the out-of-line unc_get_u32be its file keeps.
+# The shipped pair is CODE +16 and A5 0 (the eager pair below).
+UNC_MAC_CODE_DEFAULT=182128
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -898,7 +903,9 @@ UNC_MAC_CODE_DEFAULT=180404
 # folder table (above); no data was added.
 # +12 on 2026-11-03, 36,528 -> 36,540: `.data` alignment under the
 # queueing File > Open... (above); no data was added.
-UNC_MAC_A5_DEFAULT=36540
+# +100 on 2026-11-03, 36,540 -> 36,640: MAR (above) — its 64-byte CRC
+# table, the engine table's row and its name, and alignment.
+UNC_MAC_A5_DEFAULT=36640
 # A CEILING PER CONFIGURATION, because one ceiling measured on another build
 # cannot fire. The figures above are the RESIDENT control build, which carries
 # every decoder; the shipped build's resident code is a third of that, so
@@ -1380,7 +1387,12 @@ UNC_MAC_A5_DEFAULT=36540
 # document in a running application (DECISIONS.md 2026-11-01, *the Open
 # item MultiFinder looks for*). The A5 is `.data` alignment. 192 B off every
 # budget.
-UNC_MAC_CODE_EAGER=39588
+# +16 and 0 on 2026-11-03, 39,588 -> 39,604: MAR (DECISIONS.md 2026-11-03,
+# *the archive that carries its own CRCs*). Its reader is in `ovl_zipold`
+# and its probe in the sniffer's image; resident are the shim, the engine
+# table's row and its name, and the keep set's two bytes. Its two bundle
+# types are map entries outside this unit, 24 B more off every budget.
+UNC_MAC_CODE_EAGER=39604
 UNC_MAC_A5_EAGER=16700
 # +8 on 2026-10-02 for the same reason as the eager pair above: the
 # overlay call that now says WHICH of StuffIt 2.x's ciphers an entry
@@ -1494,7 +1506,9 @@ UNC_MAC_A5_EAGER=16700
 # + bss 16,708, under its ceiling.
 # +176 code on 2026-11-03: the queueing File > Open..., as the eager pair;
 # data + bss 16,692, under its ceiling.
-UNC_MAC_CODE_LAZY=38428
+# +20 code on 2026-11-03, MAR's shim (the eager pair above); data + bss
+# 16,720, under its ceiling.
+UNC_MAC_CODE_LAZY=38448
 UNC_MAC_A5_LAZY=19200
 if [ -n "$UNC_OVL_RESIDENT" ]; then
     UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-$UNC_MAC_CODE_DEFAULT}

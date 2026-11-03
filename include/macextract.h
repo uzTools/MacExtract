@@ -120,6 +120,9 @@ typedef enum UncFormat {
     /* Brought in scope 2026-10-24; appended for the same ABI reason. */
     UNC_FORMAT_DL,            /* .dl — SUMacC's, before BinHex        */
 
+    /* Brought in scope 2026-11-03; appended for the same ABI reason. */
+    UNC_FORMAT_MAR,           /* .mar/.mac — Hampa Hug's MAR          */
+
     UNC_FORMAT__COUNT
 } UncFormat;
 

@@ -1,0 +1,83 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "mar-0.2.0"
+  },
+  {
+   "creator": "MARc",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 8448,
+   "name": "mar-0.2.0/mar-0.2.0-mpw-3.2.68k",
+   "rsrc_sha256": "1718a98cdb89db2169d387ac04ac777276d6e1b7bdde8cd8ab98a06f00e70055",
+   "rsrc_size": 27110,
+   "type": "APPL"
+  },
+  {
+   "creator": "MARc",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 8448,
+   "name": "mar-0.2.0/mar-0.2.0-mpw-3.5.68k",
+   "rsrc_sha256": "a252939da9a195b5817deb3572d71e267cc59ababbd9cdbfb66df70a3aa5b852",
+   "rsrc_size": 26881,
+   "type": "APPL"
+  },
+  {
+   "creator": "MARc",
+   "data_sha256": "37fada867ed102552a754a604fba13df0bb0d8295fd86143ae20057f1beff9d3",
+   "data_size": 29420,
+   "finder_flags": 8448,
+   "name": "mar-0.2.0/mar-0.2.0-mpw-3.5.fat",
+   "rsrc_sha256": "1b0a48025b42e1c5fcb70feb74c304eddf6569bf4df31f6f138f1fac8ce395fc",
+   "rsrc_size": 26989,
+   "type": "APPL"
+  },
+  {
+   "creator": "MARc",
+   "data_sha256": "37fada867ed102552a754a604fba13df0bb0d8295fd86143ae20057f1beff9d3",
+   "data_size": 29420,
+   "finder_flags": 8448,
+   "name": "mar-0.2.0/mar-0.2.0-mpw-3.5.ppc",
+   "rsrc_sha256": "a8854ae24c1b2ab9b0610730626a80cdd00c2a4e1a1c3abb0569b8409bf41050",
+   "rsrc_size": 3376,
+   "type": "APPL"
+  },
+  {
+   "creator": "MARc",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 8448,
+   "name": "mar-0.2.0/mar-0.2.0-tc5.68k",
+   "rsrc_sha256": "37573976f90a4f0380e085030c8c1e7f8a6dcb2fa93326249bb4a494ca969230",
+   "rsrc_size": 23900,
+   "type": "APPL"
+  },
+  {
+   "creator": "MARc",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 8448,
+   "name": "mar-0.2.0/mar-0.2.0-tc6.68k",
+   "rsrc_sha256": "f0b7112f7d88f86221d91a3d044b0af174c8e14d4c79dfb7ab560c2a58072045",
+   "rsrc_size": 23920,
+   "type": "APPL"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "46235ba8735a8c181d8d443256d3f62204f641045f6aa7413bc7901de4748d94",
+   "data_size": 350,
+   "finder_flags": 256,
+   "name": "mar-0.2.0/README",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "ttro"
+  }
+ ],
+ "fixture": "mar-wild-mar020.mar",
+ "format": "MAR",
+ "oracle": "every block's CRC-32 as hampa's writer stored it (tools/run_mar.py walk), and the forks of its StuffIt twin mar-twin-mar020.sit",
+ "sha256": "be3cdc10f87e1fd15acc4d8faee46d3268c669ce99d38e0d7f74a8763b63bf8e",
+ "size": 192896
+}

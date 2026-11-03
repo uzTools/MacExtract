@@ -28,7 +28,15 @@ FIXTURES="derived-ASCbeep.sit derived-apple.art.sit alpha401.cpt \
           derived-BootTime.cpt derived-DigSim_RAM_Circuit.cpt \
           derived-MUSFMT10.ZIP ddtf-dd377ad.dd derived-800saywhat301j.sit \
           synth-sit14.sit synth-sqp-forks.pkg \
-          synth-exo-zip-implode.zip"
+          synth-exo-zip-implode.zip mar-wild-mar020.mar \
+          synth-mar-single.mac"
+
+# `mar-wild-mar020.mar` and `synth-mar-single.mac` were added 2026-11-03
+# with MAR: hampa's own archive, a folder of two-fork applications, and a
+# `.mac` holding one locked file with a comment, read through `ovl_zipold`
+# by the shell's own writer, big-endian. Not `synth-mar-tree.mar`: its
+# "A/B slash" is a name the shell writes back with its '/', which the
+# mock's Linux filesystem cannot hold.
 
 # `synth-exo-zip-implode.zip` was added 2026-10-07 with zip method 6, and
 # it is the only big-endian run that decoder gets: the two wild Implode

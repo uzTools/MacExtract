@@ -9,7 +9,8 @@
  * keeps it for zip alone.
  *
  * Tar's reader too, since 2026-10-17 (src/fmt_tar.c says why): the eager
- * release keeps this image, and only this one, for a tar.
+ * release keeps this image, and only this one, for a tar. And MAR's, since
+ * 2026-11-03, on the same terms: a reader that calls no codec.
  *
  * Implode too (src/unc_implode.c), since 2026-10-17, when `ovl_exo` reached
  * the 32 KB it can span (DECISIONS.md 2026-10-17, *dates in the Macintosh's
@@ -41,6 +42,8 @@ int32_t ovl_main(const OverlayHost *host, int32_t which, void *a, void *b)
         return 0;
     case OVL_TAR_EXTRACT:
         return (int32_t)unc_tar_extract((UncCtx *)a);
+    case OVL_MAR_EXTRACT:
+        return (int32_t)unc_mar_extract((UncCtx *)a);
     default:
         return -1;
     }

@@ -1,0 +1,100 @@
+{
+ "entries": [
+  {
+   "creator": "ttxt",
+   "data_sha256": "46235ba8735a8c181d8d443256d3f62204f641045f6aa7413bc7901de4748d94",
+   "data_size": 350,
+   "finder_flags": 256,
+   "name": "README",
+   "oracle_methods": [
+    "Huffman"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "ttro"
+  },
+  {
+   "creator": "MARc",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 8448,
+   "name": "mar-0.2.0-mpw-3.2.68k",
+   "oracle_methods": [
+    "Compress"
+   ],
+   "rsrc_sha256": "d8bb65aaac60aeca3e6e059882e0a72e3c2e8d1e0558e29ec04757e56723d758",
+   "rsrc_size": 27110,
+   "type": "APPL"
+  },
+  {
+   "creator": "MARc",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 8448,
+   "name": "mar-0.2.0-mpw-3.5.68k",
+   "oracle_methods": [
+    "Compress"
+   ],
+   "rsrc_sha256": "f8aac87d535e802badc5c2c600af4dc7980c5d813505590390225a6ef17174eb",
+   "rsrc_size": 26881,
+   "type": "APPL"
+  },
+  {
+   "creator": "MARc",
+   "data_sha256": "37fada867ed102552a754a604fba13df0bb0d8295fd86143ae20057f1beff9d3",
+   "data_size": 29420,
+   "finder_flags": 8448,
+   "name": "mar-0.2.0-mpw-3.5.fat",
+   "oracle_methods": [
+    "Compress"
+   ],
+   "rsrc_sha256": "797796409fa55c05c91f88218b9d8d3f7d6e5452e389fea809abbf160d9a97bf",
+   "rsrc_size": 26989,
+   "type": "APPL"
+  },
+  {
+   "creator": "MARc",
+   "data_sha256": "37fada867ed102552a754a604fba13df0bb0d8295fd86143ae20057f1beff9d3",
+   "data_size": 29420,
+   "finder_flags": 8448,
+   "name": "mar-0.2.0-mpw-3.5.ppc",
+   "oracle_methods": [
+    "Compress"
+   ],
+   "rsrc_sha256": "6fbc9df5760cf47d16ed3b6b77d48214f4b09966ddf906bf9de7e95f32f5d88d",
+   "rsrc_size": 3376,
+   "type": "APPL"
+  },
+  {
+   "creator": "MARc",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 8448,
+   "name": "mar-0.2.0-tc5.68k",
+   "oracle_methods": [
+    "Compress"
+   ],
+   "rsrc_sha256": "f5d51d28dcd1326b9eb3b10b95eb64399c7b9b957b940dfe0e3246c7f8851049",
+   "rsrc_size": 23900,
+   "type": "APPL"
+  },
+  {
+   "creator": "MARc",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 8448,
+   "name": "mar-0.2.0-tc6.68k",
+   "oracle_methods": [
+    "Compress"
+   ],
+   "rsrc_sha256": "1acfa233154b266db02c9f0097cb9f67b11d0a4b8030a7e130a50f8a77554a55",
+   "rsrc_size": 23920,
+   "type": "APPL"
+  }
+ ],
+ "fixture": "mar-twin-mar020.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "sha256": "bbc462d45ed4171ef0321d92f72b1245ee2bdad73bbd0f9adf6f7c77ecaaf6c6",
+ "size": 129689
+}

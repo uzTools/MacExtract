@@ -3059,6 +3059,47 @@ set fails**, and so does a specimen with no subject.
 6.0.8, answering its password dialog wrongly once, and both forks are read
 back off the volume.
 
+## MAR (`tools/run_mar.py`, in `ci.sh`)
+
+Nothing here reads MAR but the engine, and its author's readers are
+GPL-2.0-only and are not run (NOTICE), so **what wrote it is the grader**
+(FORMATS.md, *MAR*):
+
+    python3 tools/run_mar.py --macextract build/macextract
+    python3 tools/run_mar.py --manifests      the four MAR manifests
+
+1. **The synthetic cases** against `tools/synth_mar.py`'s items, field for
+   field through `l --meta` and `x`: names, both forks, the 16 bytes of
+   Finder info, a folder's scroll, the lock, the comment, both dates. The
+   committed fixtures must be what the generator writes.
+2. **hampa's two archives**: every header and block CRC (288) walked by a
+   second reading of the layout in the script; then every fork against the
+   engine's reading of their StuffIt twins, which `run_diff.py` holds to
+   `unar`. A resource fork may differ only inside bytes 16..255, and the
+   number that do is printed (77).
+3. **Variants of the tree**: a header byte (refused), a fork, CRC and
+   comment byte (that entry fails, the rest come out), cuts at every
+   record and inside every block (never exit 0), trailing bytes (ignored),
+   `'----'` first (not MAR); 2,000 empty files in a folder must call back
+   at least every 16 KB (`tick_probe` beside the CLI; skipped, and said
+   so, without one).
+4. **LZW-wrapped**, at 9, 12 and 16 bits, the tree and `mar-wild-mar020`:
+   the same forks through the `.Z` envelope, and `gzip -dc` gives back the
+   archive.
+
+**Controls**: five fields of the expectation bent, one at a time, on each
+synthetic case; an LZW stream with a byte of padding after its first
+clear. **Made to fail** (measured 2026-11-03): an engine that never
+compares a CRC, one that keeps inited on the top item, one that ignores the
+lock, one that does not count headers as progress — each fails the lane.
+
+**What it cannot see**: the synthetic cases are this repository's reading
+of the format, so they grade the engine against that reading; the two real
+archives grade the reading, and have no lock, comment, empty folder or
+`.mac`. No real LZW-compressed archive, no LZ4 frame (OPEN_ITEMS.md). What
+the shell writes from these rows is `tests/run_mac_sink.sh` (two MAR
+fixtures) and the emulator tiers.
+
 ## MacGzip's own output (`tools/run_macgzip.py`, in `ci.sh`)
 
 Eleven files **MacGzip 1.1.3 68K** wrote on emulated Mac OS 8.1 from one
@@ -3567,7 +3608,7 @@ short-circuited and subtract — the instrument sees only the total.
   instructions use `tools/m68kprof.py`; for real cost, the tick probe on an
   emulated Mac.
 - **The Macintosh's own I/O** (stdio is not the File Manager).
-- **Any file it is not handed**: the corpus is 996 files, and the
+- **Any file it is not handed**: the corpus is 1,002 files, and the
   population that matters for REJECTION cost is non-archives —
   `reference/`, this repository's trees, the specimen cache; 8,364 were
   swept on 2026-10-05 (BLOCKERS.md, *Withdrawn claims*).

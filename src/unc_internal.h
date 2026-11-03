@@ -1465,6 +1465,8 @@ UncFormat unc_compressz_probe(const uint8_t *head, int32_t len, UncIO *io);
 int unc_compressz_extract(UncCtx *c);
 UncFormat unc_tar_probe(const uint8_t *head, int32_t len, UncIO *io);
 int unc_tar_extract(UncCtx *c);
+UncFormat unc_mar_probe(const uint8_t *head, int32_t len, UncIO *io);
+int unc_mar_extract(UncCtx *c);
 int unc_dd_extract(UncCtx *c);
 int unc_now_extract(UncCtx *c);
 int unc_superdisk_extract(UncCtx *c);

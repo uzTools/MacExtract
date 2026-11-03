@@ -23,7 +23,7 @@ fixtures/SOURCES.md (URL + SHA-256 per file) is. Modes:
 SOURCES.md line format (one per fixture):
   | name | sha256 | size | url |
 """
-import argparse, hashlib, os, re, shutil, subprocess, sys, tempfile
+import argparse, hashlib, os, re, shutil, struct, subprocess, sys, tempfile
 import urllib.request, urllib.parse
 
 ROOT = os.path.join(os.path.dirname(__file__), "..")
@@ -41,9 +41,32 @@ def sha256_bytes(blob):
 
 
 def fetch(url, timeout=120):
+    # `lzip+<url>`: the file is published lzip-compressed and the fixture
+    # is what is inside (fixtures/SOURCES.md says which).
+    if url.startswith("lzip+"):
+        return unlzip(fetch(url[5:], timeout))
     req = urllib.request.Request(url, headers={"User-Agent": "macextract-harvest/1.0"})
     with urllib.request.urlopen(req, timeout=timeout) as r:
         return r.read()
+
+
+def unlzip(blob):
+    """One lzip member: "LZIP", version 1, the coded dictionary size, a
+    raw LZMA stream (lc 3, lp 0, pb 2) and a trailer of the CRC-32, the
+    data size and the member size, little-endian. Source: lzip's manual,
+    *File format* (https://www.nongnu.org/lzip/manual/lzip_manual.html)."""
+    import lzma, zlib
+    if blob[:5] != b"LZIP\x01":
+        raise ValueError("not an lzip member")
+    ds = 1 << (blob[5] & 31)
+    ds -= (ds // 16) * ((blob[5] >> 5) & 7)
+    dec = lzma.LZMADecompressor(lzma.FORMAT_RAW, filters=[{
+        "id": lzma.FILTER_LZMA1, "dict_size": ds, "lc": 3, "lp": 0, "pb": 2}])
+    out = dec.decompress(blob[6:])
+    crc, size = struct.unpack("<IQ", dec.unused_data[:12])
+    if size != len(out) or zlib.crc32(out) != crc:
+        raise ValueError("lzip trailer does not match")
+    return out
 
 
 def oracle_ok(path):

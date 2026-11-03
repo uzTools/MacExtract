@@ -4497,6 +4497,7 @@ static void test_foreign(void)
     CHECK(UNC_FORMAT_MIMESEG == 45);
     CHECK(UNC_FORMAT_BINHEX_OLD == 48);
     CHECK(UNC_FORMAT_DL == 49);
+    CHECK(UNC_FORMAT_MAR == 50);
     CHECK(!unc_format_extractable(UNC_FORMAT_SITX_RETIRED));
     for (i = 30; i <= 44; i++)
         CHECK(!unc_format_extractable((UncFormat)i));
@@ -5504,6 +5505,78 @@ static void test_winzip_aes_pieces(void)
  * differ in more than the header: v5 carries a per-line checksum
  * character and sums the ENCODED characters, v4 sums the decoded
  * bytes, so the two End lines disagree on a four-byte file. */
+/* MAR (src/fmt_mar.c): the CRC's check value, then a one-file archive built
+ * here, and the three ways it must be refused. */
+#include "fmt_mar_priv.h"
+
+static void mar_put32(uint8_t *p, uint32_t v)
+{
+    p[0] = (uint8_t)(v >> 24); p[1] = (uint8_t)(v >> 16);
+    p[2] = (uint8_t)(v >> 8);  p[3] = (uint8_t)v;
+}
+
+static void test_mar(void)
+{
+    /* 128 header + 10 data, 4 CRC, 114 padding: 256 B. */
+    uint8_t a[256];
+    MemIO m;
+    UncIO io;
+    UncAlloc al;
+    UncSink sk;
+    CapSink cap;
+
+    /* CRC-32 over 0x1EDC6F41, MSB first, from 0, not inverted: the check
+     * value of "123456789" (tools/synth_mar.py's bitwise crc32 agrees). */
+    CHECK(unc_mar_crc(0, (const uint8_t *)"123456789", 9) == 0xC052A8C8u);
+
+    memset(a, 0, sizeof a);
+    mar_put32(a, MAR_MAGIC);
+    mar_put32(a + 4, MAR_FILE);
+    a[8] = 4;
+    memcpy(a + 9, "Note", 4);
+    mar_put32(a + 72, 10);              /* data fork */
+    memcpy(a + 96, "TEXTttxt", 8);
+    a[104] = 0x01;                      /* inited: cleared on the first item */
+    a[105] = 0x01;                      /* on desk: likewise */
+    mar_put32(a + 124, unc_mar_crc(0, a, 124));
+    memcpy(a + 128, "0123456789", 10);
+    mar_put32(a + 138, unc_mar_crc(0, a + 128, 10));
+
+    test_make_alloc(&al);
+    test_make_memio(&io, &m, a, sizeof a);
+    CHECK(unc_sniff(&io) == UNC_FORMAT_MAR);
+    cap_make(&sk, &cap);
+    CHECK(unc_extract_as(UNC_FORMAT_MAR, &io, &sk, &al, NULL, NULL) == UNC_OK);
+    CHECK(cap.count == 1 && cap.status[0] == UNC_OK);
+    CHECK(cap.dlen[0] == 10 && memcmp(cap.data[0], "0123456789", 10) == 0);
+    CHECK(cap.rlen[0] == 0);
+    CHECK(cap.info[0].name_len == 4 && memcmp(cap.info[0].name, "Note", 4) == 0);
+    CHECK(cap.info[0].type == 0x54455854u && cap.info[0].finder_flags == 0x0101);
+    CHECK((cap.info[0].meta & UNC_META_FINFO) &&
+          cap.info[0].finder_info[8] == 0 && cap.info[0].finder_info[9] == 0);
+    CHECK(cap.info[0].locked == UNC_LOCK_NO);
+
+    /* A data byte changed: the entry fails its CRC. */
+    a[130] ^= 1;
+    test_make_memio(&io, &m, a, sizeof a);
+    cap_make(&sk, &cap);
+    (void)unc_extract_as(UNC_FORMAT_MAR, &io, &sk, &al, NULL, NULL);
+    CHECK(cap.count == 1 && cap.status[0] == UNC_ERR_CRC);
+    a[130] ^= 1;
+
+    /* A header byte changed: not MAR. */
+    a[20] ^= 1;
+    test_make_memio(&io, &m, a, sizeof a);
+    CHECK(unc_sniff(&io) != UNC_FORMAT_MAR);
+    a[20] ^= 1;
+
+    /* '----' as the first record: not MAR either. */
+    mar_put32(a + 4, MAR_END);
+    mar_put32(a + 124, unc_mar_crc(0, a, 124));
+    test_make_memio(&io, &m, a, sizeof a);
+    CHECK(unc_sniff(&io) != UNC_FORMAT_MAR);
+}
+
 static void test_btoa(void)
 {
     static const char v5[] =
@@ -6007,6 +6080,7 @@ void run_format_tests(void)
     test_cpt_cipher();
     test_winzip_aes_pieces();
     test_btoa();
+    test_mar();
     test_base64_mime();
     test_resfork_find();
 }

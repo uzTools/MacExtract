@@ -44,6 +44,10 @@ static const UncProbe unc_sniff_order[] = {
      * bytes from the end. Neither StuffIt probe above can take one: their
      * magics are 'SIT!' and the StuffIt 5 banner (fmt_pf.c). */
     unc_pf_probe,
+    /* "MAR" 0x80 and a CRC-32 of the 124 bytes before the one it ends
+     * the record with (fmt_mar.c). Its byte 0 is 'M', so MacBinary
+     * below could not take one either. */
+    unc_mar_probe,
     /* MacBinary has no magic number, only a header CRC and structural
      * constraints, which is why it used to sit LAST — the weakest test
      * claims a file only when nothing stronger has. It is here instead

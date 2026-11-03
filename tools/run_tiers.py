@@ -215,10 +215,15 @@ REPO = os.path.dirname(HERE)
 # the CODE + A5 unit: the 1 MB probe's budget fell 742,636 -> 742,492 B,
 # -144, measured 2026-11-01 (DECISIONS.md 2026-11-01, *the Open item
 # MultiFinder looks for*). TIERS_MACHINE -144 with it.
+# **-1,848 more each 2026-11-03, DERIVED**: MAR (DECISIONS.md 2026-11-03,
+# *the archive that carries its own CRCs*), the control's CODE +1,724 and A5
+# +100, and its two types in the bundle, -24 measured on the 1 MB probe
+# (742,600 -> 742,576 B, `derived-ASCbeep.sit`). TIERS_MACHINE -24 with it.
+# They were 196,046 / 100,664 / 624,952.
 TIERS = {
-    "sys3-512K": (196046, "System 3.0, Macintosh 512Ke (222,070 B free)"),
-    "sys6-512K": (100664, "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
-    "floor-1M":  (624952, "System 6.0.8, 1 MB Mac Plus — the floor target"),
+    "sys3-512K": (194198, "System 3.0, Macintosh 512Ke (222,070 B free)"),
+    "sys6-512K": (98816,  "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
+    "floor-1M":  (623104, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
 # **-592 more each 2026-10-24, DERIVED**: SUMacC's `.dl`, the control's
 # CODE +584 and A5 +8 (DECISIONS.md 2026-10-24, *the format before
@@ -422,7 +427,8 @@ TIERS = {
 # data + bss -680. The machine gave +4,204, because the jump table, the
 # stub segments and the relocations trimmed at launch are resident bytes
 # this unit never counted — which is why TIERS was measured, not moved.
-TIERS_CONTROL = 216944     # build/mac-resident, CODE + A5, 2026-11-03
+TIERS_CONTROL = 218768     # build/mac-resident, CODE + A5, 2026-11-03
+# +1,824 the same day: MAR, its reader linked in; TIERS -1,824 (and -24).
 # +192 the same day: the queueing File > Open...; TIERS -192 (and -144).
 # +32 more the same day: StuffIt 5's folder table that grows; TIERS -32.
 # +32 on 2026-11-03: method 10's and shape 3's refused symbols; TIERS -32.
@@ -468,9 +474,9 @@ TIERS_CONTROL = 216944     # build/mac-resident, CODE + A5, 2026-11-03
 # **-72 each 2026-10-25**: the archive icon's map entries, resident bytes
 # outside the CODE + A5 unit (TIERS above); measured at floor-1M.
 TIERS_MACHINE = {
-    "sys3-512K": 412990,   # 201,590 + 211,616, measured 2026-10-22 (was
-    "sys6-512K": 317608,   # 106,208 + 211,616   413,492 / 318,092 / 842,380
-    "floor-1M":  841896,   # 630,496 + 211,616   from 2026-10-09)
+    "sys3-512K": 412966,   # 201,590 + 211,616, measured 2026-10-22 (was
+    "sys6-512K": 317584,   # 106,208 + 211,616   413,492 / 318,092 / 842,380
+    "floor-1M":  841872,   # 630,496 + 211,616   from 2026-10-09)
 }
 
 # DERIVED, not re-measured, 2026-10-01: all three fell by 2,024 B — the
@@ -897,7 +903,12 @@ EXPECT = {
 # +44), the envelope peek before the release, against the control's 0
 # (DECISIONS.md 2026-11-03, *the envelope that said what it held*). TIERS
 # unmoved; every shipped budget 432 B lower.
-OVL_SAVED = 160656
+# **+1,808 2026-11-03, -> 162,464**: MAR, the control's +1,824 (CODE
+# +1,724, A5 +100) against the shipped pair's +16 (CODE +16, A5 0): the
+# reader is in `ovl_zipold` and the probe in the sniffer's image
+# (DECISIONS.md 2026-11-03, *the archive that carries its own CRCs*). TIERS
+# -1,824; its two bundle types are outside the unit (TIERS -24 more).
+OVL_SAVED = 162464
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
 # every kept image is one — as is the bundle an envelope holds on to.
@@ -1046,8 +1057,8 @@ IMAGES = {
     "OVL_ID_SQP":         1736,
     "OVL_ID_SUPERDISK":   6634,
     "OVL_ID_TEXT":        11438,
-    "OVL_ID_ZIPOLD":      10832,
-    "OVL_ID_SNIFF":       14204,
+    "OVL_ID_ZIPOLD":      12564,
+    "OVL_ID_SNIFF":       14564,
     "OVL_ID_DESTDLG":     1682,
     "OVL_ID_SEGSETUP":    2364,
 }
@@ -1136,7 +1147,10 @@ IMAGES = {
 # **SNIFF +760, the bundle +760 B, 2026-11-03**: unc_envelope_peek, and an
 # envelope it names the contents of keeps the sniffer for the layer under it
 # (DECISIONS.md 2026-11-03, *the envelope that said what it held*).
-BUNDLE = 189236
+# **ZIPOLD +1,732, SNIFF +360, the bundle +2,092 B, 2026-11-03**: MAR's
+# reader beside tar's, and its probe and CRC beside the others (DECISIONS.md
+# 2026-11-03, *the archive that carries its own CRCs*).
+BUNDLE = 191328
 
 # What the SHIPPED lane asserts, and it is the refused fixtures BY NAME
 # rather than a tally: a tier that refuses two different fixtures and still

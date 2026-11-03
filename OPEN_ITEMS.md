@@ -7,7 +7,7 @@
    withdrawn claim to BLOCKERS.md, numbers to FORMATS.md).
 
 Nothing here stops the engine or the CLI, which are byte-exact against the
-oracle across 980 fixtures in `./ci.sh`.
+oracle across 986 fixtures in `./ci.sh`.
 
 **Filing something here is a decision to stop looking, so ask first.** Each
 of these questions has emptied a row at least once (BLOCKERS.md, *Withdrawn
@@ -240,6 +240,23 @@ grade against.
 - **`src/fmt_hecx.c` is hexbin's.** BinHex 2.0's own `CODE` (5.6 KB) is the
   writer, and reading the layout out of it is the route Packit III 1.3 gave
   PackIt's ciphers (NOTICE).
+
+## MAR: what is not read or not run
+
+- **An archive inside an LZ4 frame** (`04 22 4D 18`): mar 0.2.0 reads one
+  (`mar_dec.c`, `mar_is_lz4`), and the engine has no LZ4. No such archive
+  has been seen; closes with one, then a reader graded against the `lz4`
+  tool.
+- **No real LZW-compressed archive** (mar 0.2.0, Command at encode): what
+  is graded is a re-implementation of that encoder's behaviour
+  (`tools/synth_mar.py --lzw`). Closes with one written by mar 0.2.0.
+- **Mac OS 9.2 not run on MAR**: `~/.cache/macextract/qemu-ppc/MacOS9.img`
+  fails its published SHA-1 (written to 2026-11-02, 18:12); `os9.py
+  --setup --force` re-fetches it. Every 68k tier passes 4/4 (DECISIONS.md
+  2026-11-03, *the archive that carries its own CRCs*).
+- **mar 0.2.0's expander has not been run**: the Finder info stated is read
+  from its source (FORMATS.md, *MAR*). Closes with its output read back
+  (`tools/vmac/hfscat.py`).
 
 ## The shell's own File Manager blocks, until multiversal's glue is inline
 

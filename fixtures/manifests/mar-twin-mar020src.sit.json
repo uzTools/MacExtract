@@ -1,0 +1,1268 @@
+{
+ "entries": [
+  {
+   "finder_flags": 256,
+   "is_dir": true,
+   "name": "mar-0.2.0-src"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "70f0333fd91570df4d0a6589b190891829b17b4e0cfa174470336fd5d3ab2c2d",
+   "data_size": 17988,
+   "finder_flags": 256,
+   "name": "mar-0.2.0-src/COPYING",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "ttro"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "8dbff0b343da69aad608e20ebbe065a549ff0d435b5a1692f64e7b8804321438",
+   "data_size": 1013,
+   "finder_flags": 256,
+   "name": "mar-0.2.0-src/ChangeLog",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
+   "rsrc_sha256": "9e6ba4c2dbeacb971ac855452dad846d0629a70c150a005e7534c696cde92532",
+   "rsrc_size": 428,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "3199c0baedf4a1bd85f6754772edb943b2d4c0d25f2ba23167bbc45265188d15",
+   "data_size": 4766,
+   "finder_flags": 256,
+   "name": "mar-0.2.0-src/Makefile",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
+   "rsrc_sha256": "c2aeab5272e35eac4f37e8adc350c3c7e3970f28b85a0c9feb6f1b7cdf9c7d3a",
+   "rsrc_size": 428,
+   "type": "TEXT"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "46235ba8735a8c181d8d443256d3f62204f641045f6aa7413bc7901de4748d94",
+   "data_size": 350,
+   "finder_flags": 256,
+   "name": "mar-0.2.0-src/README",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "ttro"
+  },
+  {
+   "finder_flags": 256,
+   "is_dir": true,
+   "name": "mar-0.2.0-src/core"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "4f4e1c9e3f6f8446202e13250729cd5924f0986260de23e3ff306009096cb86a",
+   "data_size": 10140,
+   "finder_flags": 256,
+   "name": "mar-0.2.0-src/core/Makefile",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
+   "rsrc_sha256": "6ed98b64586401bd0ec11317874850329a454b22abff4cbee44127aea3d9e301",
+   "rsrc_size": 428,
+   "type": "TEXT"
+  },
+  {
+   "finder_flags": 256,
+   "is_dir": true,
+   "name": "mar-0.2.0-src/core/app"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "b3a2c3bd3422ed7e729210e419a3d86d294f5fcd2b932986649835b1f11904e2",
+   "data_size": 14390,
+   "finder_flags": 256,
+   "name": "mar-0.2.0-src/core/app/core_ae.c",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
+   "rsrc_sha256": "e9a34cc4e728b8197f6e265961db73c1a7b4225846bf9703af5b687c94874ba3",
+   "rsrc_size": 632,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "e487f9b409bac70bb5a649ab77f3b9960db09f46a2bfe032b24ef3d8f998b2a1",
+   "data_size": 6990,
+   "finder_flags": 256,
+   "name": "mar-0.2.0-src/core/app/core_app.c",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
+   "rsrc_sha256": "0b4fbdadaa1788e0ae2ccb5236e6c1c9765eea968eb8ae2baf9d53dac7763ca9",
+   "rsrc_size": 630,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "e8e2982f15bfc647cd3b432f582103d868cd3a21c32e922675f6df0a55a8b91b",
+   "data_size": 10756,
+   "finder_flags": 256,
+   "name": "mar-0.2.0-src/core/app/core_doc.c",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
+   "rsrc_sha256": "93e5d4b0b1f28483836b0131ae99d1cf5c8f033d4f35b7d7f82f380470391644",
+   "rsrc_size": 630,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "3385988073f4cfc23ec7c9f2f8f3a875e8eb3029370c440da79ea328e23d0a37",
+   "data_size": 1574,
+   "finder_flags": 256,
+   "name": "mar-0.2.0-src/core/app/core_init.c",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
+   "rsrc_sha256": "d66c6057d1da86916094a51ef3a6c7a568193dd72751cd7f016be1e5879c3b56",
+   "rsrc_size": 630,
+   "type": "TEXT"
+  },
+  {
+   "creator": "KAHL",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 256,
+   "name": "mar-0.2.0-src/core/core π",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
+   "rsrc_sha256": "aae769c9a2414a4c513ebb0b98c53ca079f525d2d344288705a24a6cc30df181",
+   "rsrc_size": 48584,
+   "type": "PROJ"
+  },
+  {
+   "creator": "KAHL",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 256,
+   "name": "mar-0.2.0-src/core/core.prj",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
+   "rsrc_sha256": "e7ced4a80e245b9ab8d393be73aafcca28f2e829bb1a3008724e43f13e4e581e",
+   "rsrc_size": 48177,
+   "type": "PROJ"
+  },
+  {
+   "finder_flags": 256,
+   "is_dir": true,
+   "name": "mar-0.2.0-src/core/file"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "05cfdda1c6908d71c91d664f6ca3c21a85431cf2faf8503b14d275300cacaf73",
+   "data_size": 744,
+   "finder_flags": 256,
+   "name": "mar-0.2.0-src/core/file/file_close.c",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
+   "rsrc_sha256": "c3724318b3a2adc0dbb64d87baecd59a91c9ab16a2a435b34a8bb01986c5c3ac",
+   "rsrc_size": 472,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "b4fc479a88fc091a1acb829aef7045d8ec3139516c0e885b2d3679b7afa7413b",
+   "data_size": 853,
+   "finder_flags": 256,
+   "name": "mar-0.2.0-src/core/file/file_create.c",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
+   "rsrc_sha256": "46036dc47fb65774560ee16a9b12a7354e6c8fd61ead813786f346c29271ae7e",
+   "rsrc_size": 472,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "15403a9742d56ef35d7e0f94e905930460f953cb6e04eab29afece2bdc20669d",
+   "data_size": 795,
+   "finder_flags": 256,
+   "name": "mar-0.2.0-src/core/file/file_delete.c",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
+   "rsrc_sha256": "49f15f746ba999cdbc18505c4a37fa2ed355741f49e12c70ea7f25ce5c0235ac",
+   "rsrc_size": 472,
+   "type": "TEXT"
+  },
+  {
+   "creator": "KAHL",
+   "data_sha256": "4cf1fa9c059c3a5ebff23f9d5e9b9b32cdd37fa2df4d27fcc0029109af478499",
+   "data_size": 828,
+   "finder_flags": 256,
+   "name": "mar-0.2.0-src/core/file/file_get_pos.c",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
+   "rsrc_sha256": "571e54c565be41a21e4110209c560468f275734210478847f7fada03d2823ac7",
+   "rsrc_size": 330,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "711053152811decdc7d01aa5e67db82b578dc0844c6032dd1f8cbe6a3b54d56e",
+   "data_size": 1028,
+   "finder_flags": 256,
+   "name": "mar-0.2.0-src/core/file/file_open_data.c",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
+   "rsrc_sha256": "70b23518682645e1e89ce558471dc747f7ea1398dc03c2a3aca0112a394819e2",
+   "rsrc_size": 472,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "4de26ee58d25fbca6dce277ea3e2be2fb47a2a453ad5cad693026d90ed6871c8",
+   "data_size": 916,
+   "finder_flags": 256,
+   "name": "mar-0.2.0-src/core/file/file_open_rsrc.c",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
+   "rsrc_sha256": "817f3ac5b38c1da732aeda7f559bb234a516065d6e81fb28195cfba4a2d933fa",
+   "rsrc_size": 472,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "375028e164f43cd84c5dfa7263a70cfd24e33991100c7e08e3a6c71b0dfe0fa9",
+   "data_size": 954,
+   "finder_flags": 256,
+   "name": "mar-0.2.0-src/core/file/file_read.c",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
+   "rsrc_sha256": "bf46a36a0d90d1018e8de7c4fc5949138f2295d926ce22e226275627c3efe5a0",
+   "rsrc_size": 472,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "84a7f39fae78fcc5bc9b275e28daa3a443fdbf55b190db31bc94c1f0deda1bf0",
+   "data_size": 887,
+   "finder_flags": 256,
+   "name": "mar-0.2.0-src/core/file/file_read_block.c",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
+   "rsrc_sha256": "43ce88569dfa8e964e7aa8dcecebe56edbda160c7ab3fda497bc3b9ac37e9472",
+   "rsrc_size": 472,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "505e23ad0f8a0523cc743034717d1bafec411dec2767f5d784e75e43c28d6ae0",
+   "data_size": 820,
+   "finder_flags": 256,
+   "name": "mar-0.2.0-src/core/file/file_set_pos.c",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
+   "rsrc_sha256": "3a161b098bab4759ae4039e4951eb42b9684545392072211e7eff8011e24d2c5",
+   "rsrc_size": 472,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "b13d5118e78ac455439ec4afd6cd129d5caa9687ddfe2e2ae1f4d42a2c40c6ba",
+   "data_size": 904,
+   "finder_flags": 256,
+   "name": "mar-0.2.0-src/core/file/file_write.c",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
+   "rsrc_sha256": "a3c67ac4b095233c00d7261fb7a0d0a68fc2efc0710a2b1e20c1bf5a725a2119",
+   "rsrc_size": 472,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "3d6b4d610b1a66cab675f1b46a7850293d7ad2c61bcbab19ae0c55cecd5c204e",
+   "data_size": 895,
+   "finder_flags": 256,
+   "name": "mar-0.2.0-src/core/file/file_write_block.c",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
+   "rsrc_sha256": "0441c18e42c56bf96826a3bbf1b73ec21e84590510f8fc71135a91fab0446317",
+   "rsrc_size": 472,
+   "type": "TEXT"
+  },
+  {
+   "finder_flags": 256,
+   "is_dir": true,
+   "name": "mar-0.2.0-src/core/gui"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "7cbf5097edab50ad72801673ac76d6d05a25df5eb5c0551a36d3561439437af4",
+   "data_size": 1349,
+   "finder_flags": 256,
+   "name": "mar-0.2.0-src/core/gui/core_dlog.c",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
+   "rsrc_sha256": "05755d7699ef3d0b30a63f4d0138599961c544d37ccd86806632aa9839a1f2d8",
+   "rsrc_size": 462,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "b998b219a078a0a6ee767ce97c37fd1babb5fb9bfcec1942f116dd2df4eb9291",
+   "data_size": 2415,
+   "finder_flags": 256,
+   "name": "mar-0.2.0-src/core/gui/core_port.c",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
+   "rsrc_sha256": "0a92ac76961b4ce25a3cdc138f2c9a1291cd53bb6ddf87a41673f132cd29d150",
+   "rsrc_size": 630,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "2f72a64f90c1cda63064ef3bc2d81d670d69c8986d2953612dcf9fbd1274fa8e",
+   "data_size": 2879,
+   "finder_flags": 256,
+   "name": "mar-0.2.0-src/core/gui/core_sfget.c",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
+   "rsrc_sha256": "d790e08f847484b1859e6e751584d3212518854dc2d84afc3aaaa9478c6ed825",
+   "rsrc_size": 462,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "39bb744b30846b0fe9150fab2089da5050645323e94de033d48e561fd25931fc",
+   "data_size": 1450,
+   "finder_flags": 256,
+   "name": "mar-0.2.0-src/core/gui/core_sfput.c",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
+   "rsrc_sha256": "5cad985f4c07afcd64958dc78bd97dfd658613a70b31fe8b04bd5d6787163444",
+   "rsrc_size": 462,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "f1295c877e2b1121149c4d01b8d4dbf771ea02eec690a419849940ba85187899",
+   "data_size": 1033,
+   "finder_flags": 256,
+   "name": "mar-0.2.0-src/core/gui/dlog_get_ulong.c",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
+   "rsrc_sha256": "26f0c82ab47501f4c573984de797322cb1cf441e9b0c165c042fe56de475f9d5",
+   "rsrc_size": 462,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "f453617ba37381c167cb021fc77e2a9f1aa964d1b3ac60efede7df302698d534",
+   "data_size": 900,
+   "finder_flags": 256,
+   "name": "mar-0.2.0-src/core/gui/dlog_set_pstr.c",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
+   "rsrc_sha256": "23d7728979ab9ed045492ee3f04a3a2be2c82600cca3a79c7d813784e5ad1ed9",
+   "rsrc_size": 462,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "35622f2f7b7a468bc817fbbe0192a5a43e9700e374cdb75d922687ee17636460",
+   "data_size": 1009,
+   "finder_flags": 256,
+   "name": "mar-0.2.0-src/core/gui/dlog_set_ulong.c",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
+   "rsrc_sha256": "06beb78fafc798a55abe4e5c9025fc720433fa5c904d99ff51b43e88aa741392",
+   "rsrc_size": 462,
+   "type": "TEXT"
+  },
+  {
+   "finder_flags": 256,
+   "is_dir": true,
+   "name": "mar-0.2.0-src/core/include"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "e6f769a89e03b41730ddc8c396a2ecdbc4084eba27882fb1f9a788f59f269334",
+   "data_size": 1503,
+   "finder_flags": 256,
+   "name": "mar-0.2.0-src/core/include/core.h",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
+   "rsrc_sha256": "488cd71b77c05468c30e7dbce77d29fc80f4ab8a788e8d4e862647e637f193ba",
+   "rsrc_size": 428,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "c2d59d08d0c39a0321817561fbacdbb0e42cffef1de8e1ce8659f1300a215f14",
+   "data_size": 3901,
+   "finder_flags": 256,
+   "name": "mar-0.2.0-src/core/include/core_app.h",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
+   "rsrc_sha256": "76db27dbc0e3dc54d9f42471d11ff186fd9edfc43db031ca21fb3e98395140e0",
+   "rsrc_size": 428,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "eb87fe699d904fb6f8c0e503f5ba77a1a687ed1060f8d86c3e7a9291e0a8a25b",
+   "data_size": 11501,
+   "finder_flags": 256,
+   "name": "mar-0.2.0-src/core/include/core_crc.h",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
+   "rsrc_sha256": "970e8773dc80a10cb4f4c9a375fd98577f620df67a60e6f7b5b2837351e88a47",
+   "rsrc_size": 428,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "31acf9ee54eef8b785170ab4bf917a0a48d7e1e017ea039b64dde39fdd828fc6",
+   "data_size": 1493,
+   "finder_flags": 256,
+   "name": "mar-0.2.0-src/core/include/core_file.h",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
+   "rsrc_sha256": "da79cdb3f80559128e588d51e5c88fdc13684a36ef42f84c0c6344f04a800eac",
+   "rsrc_size": 428,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "127482963d0c958dff81997abd6e1958d6ace9caeb85b1ea5b102ded0ba37abf",
+   "data_size": 695,
+   "finder_flags": 256,
+   "name": "mar-0.2.0-src/core/include/core_internal.h",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
+   "rsrc_sha256": "40cf6d3da5a6bdaf3cda261398c6162cfa380cbbf4a4389dbb4c2ad36f2bd293",
+   "rsrc_size": 382,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "6b7896e58b13f0d19157d571c0acb6f4a37972366aa6440a0fa7f4534db69661",
+   "data_size": 4183,
+   "finder_flags": 256,
+   "name": "mar-0.2.0-src/core/include/core_md5.h",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
+   "rsrc_sha256": "e5d4770a5f3773d2790baec5abac7d8d80b917810898335b61ecce607fc5c9c0",
+   "rsrc_size": 428,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "8ab4324d9f96b003202eb62af7e27a97385557cfe4282df2f3bcef17acf952dd",
+   "data_size": 823,
+   "finder_flags": 256,
+   "name": "mar-0.2.0-src/core/include/core_mem.h",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
+   "rsrc_sha256": "2691ab166c470d048fe9e2464442324c6797a5cc0aa52a36d73591e1c567d2d3",
+   "rsrc_size": 428,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "7dd9c751400f033cce6910416bb52705f3f20000df95678c2409b613b686fd9e",
+   "data_size": 4260,
+   "finder_flags": 256,
+   "name": "mar-0.2.0-src/core/include/core_sha256.h",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
+   "rsrc_sha256": "1254e210a9f214ad5eec965bdb035095f4f513c5cce5a10bb8ab893ad964662c",
+   "rsrc_size": 428,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "754fe21af5a000b6fba7cb255f66b3ef8bca66bc2a0a7afb202b2a1dd1545f43",
+   "data_size": 2115,
+   "finder_flags": 256,
+   "name": "mar-0.2.0-src/core/include/core_string.h",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
+   "rsrc_sha256": "303e2dfc53bbd6b3edf50ac7ae671a697d4bb454046f78b2bd4600aa79c69731",
+   "rsrc_size": 428,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "1de1beb755e65075844c3eb01c39f7b584c935d17a7f20d8589fd9f6098f52d1",
+   "data_size": 8028,
+   "finder_flags": 256,
+   "name": "mar-0.2.0-src/core/make-mpw-3.2.log",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
+   "rsrc_sha256": "80f5886c2ad69dd8faee5d95ee43e2572c9a54b6b1546fd49d4d136c5194d9eb",
+   "rsrc_size": 428,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "bfd545ebba95c0f348d8c2f9454f46ab1fe18d9583269e1b6aad24fbefc34ffd",
+   "data_size": 14295,
+   "finder_flags": 256,
+   "name": "mar-0.2.0-src/core/make-mpw-3.5.log",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
+   "rsrc_sha256": "dde87246aa0a3ee4a5e566d49fcc6f4b09d1b1a60462ec671948951c98039495",
+   "rsrc_size": 430,
+   "type": "TEXT"
+  },
+  {
+   "finder_flags": 256,
+   "is_dir": true,
+   "name": "mar-0.2.0-src/core/memory"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "791203f785b4d3e577543793fccad16eeaaf139c87dd2cd25dac90cdbc08b77d",
+   "data_size": 747,
+   "finder_flags": 256,
+   "name": "mar-0.2.0-src/core/memory/mem_free.c",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
+   "rsrc_sha256": "81f538e48619379767f22d8d57f724f070b0594c2e82060f5a2f1028bf1fc8ad",
+   "rsrc_size": 472,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "5fc847e4124cf17622a35a70d4aa39dde5e63ce34b7db0539ce8cb815cea5a38",
+   "data_size": 775,
+   "finder_flags": 256,
+   "name": "mar-0.2.0-src/core/memory/mem_malloc.c",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
+   "rsrc_sha256": "5d05593b0e84bbebdaace0ba907b33ec1c8bbbc6640c009e872a96037a3f5726",
+   "rsrc_size": 472,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "cfe667b9efc5315cd3f08ebfe1eeb2adae514af62329dfdb89954705474e1225",
+   "data_size": 829,
+   "finder_flags": 256,
+   "name": "mar-0.2.0-src/core/memory/mem_memset.c",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
+   "rsrc_sha256": "4518aa89ff95be95e3f8fb676905ba809edf1dc2b15ef2222b0b7b9ae083ec20",
+   "rsrc_size": 472,
+   "type": "TEXT"
+  },
+  {
+   "finder_flags": 256,
+   "is_dir": true,
+   "name": "mar-0.2.0-src/core/misc"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "57ab6bb8799f2b99dc2c8eec4fe5b2f97000085de929cf21c85483c5860ef71d",
+   "data_size": 4763,
+   "finder_flags": 256,
+   "name": "mar-0.2.0-src/core/misc/core_crc12.c",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
+   "rsrc_sha256": "d68172247b6c233888149b90cbc39edf1dfec98c87def278b2eeb3dd063ae8c7",
+   "rsrc_size": 428,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "60a5061fd57a6e435a667086a09c1a66d11be79b54699a1ace9976ad8110862d",
+   "data_size": 4763,
+   "finder_flags": 256,
+   "name": "mar-0.2.0-src/core/misc/core_crc16.c",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
+   "rsrc_sha256": "cc0f9a60e863bb7772b0fa12ea2ed05d3cc95a67990517de63a1e47f5bffcd21",
+   "rsrc_size": 428,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "15a2025ab220048ac72f2af9f767f60893b3de7e049a5a703e472da2d599a2ef",
+   "data_size": 4877,
+   "finder_flags": 256,
+   "name": "mar-0.2.0-src/core/misc/core_crc32.c",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
+   "rsrc_sha256": "b9eb0beeb30953be47f464b341256e66490d0142eb7a3a224c7caa94da0f552b",
+   "rsrc_size": 428,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "e5769a0a0f1f3b96fc0a80e92180b259ba67442be0146ab6c8489b2d2a6fb8cc",
+   "data_size": 1191,
+   "finder_flags": 256,
+   "name": "mar-0.2.0-src/core/misc/core_lcg.c",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
+   "rsrc_sha256": "d7d70ad9f70e8818641529d21548f27b1166b37fffe85a2f8f0b874e3df3472d",
+   "rsrc_size": 462,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "8f0cdd2818fe7f922deeac241d1c0ef0f6371004a8ff37f29070e4d05bc6a1b8",
+   "data_size": 8326,
+   "finder_flags": 256,
+   "name": "mar-0.2.0-src/core/misc/core_md5.c",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
+   "rsrc_sha256": "ca8b09aee37e0e51bc832d1076fc3afd0f0f832ce1e89dc9d024203c54c827ff",
+   "rsrc_size": 428,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "2f2f4f324a7146599a99dee2974b87f182c5914a5525527363aa594eb6242603",
+   "data_size": 7035,
+   "finder_flags": 256,
+   "name": "mar-0.2.0-src/core/misc/core_sha256.c",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
+   "rsrc_sha256": "c0ffd9c1ad40d81c6e167413f74633b904a8c4708c567e1abba3ad3aa12d16c2",
+   "rsrc_size": 428,
+   "type": "TEXT"
+  },
+  {
+   "finder_flags": 256,
+   "is_dir": true,
+   "name": "mar-0.2.0-src/core/string"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "5a03643433159a058b322d12344d697609d394bed68e0f8a79ea787ce6a0df28",
+   "data_size": 748,
+   "finder_flags": 256,
+   "name": "mar-0.2.0-src/core/string/cstr_copy.c",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
+   "rsrc_sha256": "11b7ce0c135f6edf95af1849f8cd2dc076926cf0bea82887d4ca8f3f28d0b558",
+   "rsrc_size": 472,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "34dec2cd2ddc6b6656f658752eaae5ae781dc02cdf033116c8ff9b938d80c947",
+   "data_size": 841,
+   "finder_flags": 256,
+   "name": "mar-0.2.0-src/core/string/cstr_copy_cstr.c",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
+   "rsrc_sha256": "f2a4fd97983df87d62dbd4306a686d626c69e1fe28a35da887c95b3a19565a62",
+   "rsrc_size": 472,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "db5cfccdd26ccf64f7c940f9b31d1411035ac794e2d43bfd57d58c9d1e1b2f6e",
+   "data_size": 911,
+   "finder_flags": 256,
+   "name": "mar-0.2.0-src/core/string/cstr_copy_pstr.c",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
+   "rsrc_sha256": "f4ab6a9f9570377e89e841d3cedbc053a3815b32b12f4768fc323f6892eb696d",
+   "rsrc_size": 472,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "97f8569355b656d02a7508a8e454803a852decdfeb757292fa2546a0218435ec",
+   "data_size": 744,
+   "finder_flags": 256,
+   "name": "mar-0.2.0-src/core/string/cstr_from_pstr.c",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
+   "rsrc_sha256": "0bffad903e3be79a885a0e3aa734cd64fd622dfc775efd2301dacf03d01d6669",
+   "rsrc_size": 630,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "7401f56907e0ae82dcfa90ab2174597d657722c3566ef13b9b7d1f1c691c7cad",
+   "data_size": 839,
+   "finder_flags": 256,
+   "name": "mar-0.2.0-src/core/string/pstr_add_char.c",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
+   "rsrc_sha256": "f7ea2427001caec3bd5daffa05d1eedcf014e2cd849b7ebcaeb38557e13b21cc",
+   "rsrc_size": 472,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "46096045b1eb4a3fec0e5edaf042425ecbf0699e30c75353148d401bf9fc4d71",
+   "data_size": 985,
+   "finder_flags": 256,
+   "name": "mar-0.2.0-src/core/string/pstr_add_cstr.c",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
+   "rsrc_sha256": "2e663ade68e2a955c9879f2ddb6f2ef28ccf94eaf2deff0fa56360e8fbfbc07f",
+   "rsrc_size": 472,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "b61fa4045db9c4267df2b6f42926cb51b2c334d55e82d6fac40c0b5462f5869d",
+   "data_size": 963,
+   "finder_flags": 256,
+   "name": "mar-0.2.0-src/core/string/pstr_add_pstr.c",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
+   "rsrc_sha256": "b40f624e5cec9e41c1c05b25e5e6f334c6fc88ed4b65f30c3820c3852b121665",
+   "rsrc_size": 472,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "4afca53aa984118b6f56f7d8473e4ac323ef8c4721cca34a5c7b4f4777c15242",
+   "data_size": 806,
+   "finder_flags": 256,
+   "name": "mar-0.2.0-src/core/string/pstr_copy.c",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
+   "rsrc_sha256": "1d6e2f681d2b45763b816869cd3612d07b12306c876ce2b82ff6f6c8b369d236",
+   "rsrc_size": 472,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "4592a60ef835ea4a1da166a07bce75a0ca01f405d4262a1f47f76d7498588ed9",
+   "data_size": 909,
+   "finder_flags": 256,
+   "name": "mar-0.2.0-src/core/string/pstr_copy_cstr.c",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
+   "rsrc_sha256": "35c898b78c620c82e2bdc87d58ee3e75d16b4978b5b16af59fc064d11272c43a",
+   "rsrc_size": 472,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "7ceae28d8ec5643c17499076e47e9bb3a84a12b3d151bbe683a8cda5c957fdd7",
+   "data_size": 875,
+   "finder_flags": 256,
+   "name": "mar-0.2.0-src/core/string/pstr_copy_pstr.c",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
+   "rsrc_sha256": "0c8030f9aaea5444ac8dc439640697410beaf7437c1fcbce212d67ddffd9fa0d",
+   "rsrc_size": 472,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "335bfb054bd988dea8ee723d2f8faadda1971e15251be19cf8df4f648eba155d",
+   "data_size": 868,
+   "finder_flags": 256,
+   "name": "mar-0.2.0-src/core/string/pstr_from_cstr.c",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
+   "rsrc_sha256": "8c99a314074dfa8ed40648b26dbff140807f7289683fd0870a4d73f54313cf58",
+   "rsrc_size": 630,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "7c6c457ed0c166db61982ef3d734486911182c01cb4a862bf55c6b1871cfa008",
+   "data_size": 1367,
+   "finder_flags": 256,
+   "name": "mar-0.2.0-src/core/string/pstr_from_float.c",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
+   "rsrc_sha256": "2e299529bf2d68501137b6be4d98b5226868d338308ae7b786846b1b2ae29d2c",
+   "rsrc_size": 630,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "b6c631bef99ad7b0d34cc382b91a13264822e9c98c2aec4802c3f92401242eee",
+   "data_size": 1497,
+   "finder_flags": 256,
+   "name": "mar-0.2.0-src/core/string/pstr_from_int.c",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
+   "rsrc_sha256": "5d428fe5c87d42bb8ecdc7574742eaa0ad03ed4c126a79aef6be3352fd06fd2e",
+   "rsrc_size": 630,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "a715cab1017b13e3d7c27aeba8f9852ee5741c296e30b9a383fd9a355cb01388",
+   "data_size": 1606,
+   "finder_flags": 256,
+   "name": "mar-0.2.0-src/core/string/pstr_to_float.c",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
+   "rsrc_sha256": "803030481e6d0c2ab46b3b274f2f7ec8ddfbe444a6ef351759ebf179354a2218",
+   "rsrc_size": 630,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "d78b59aa8f3f883160e957616d7198a84bb6065ba8f29a8c5b1f7128a1b7f521",
+   "data_size": 2573,
+   "finder_flags": 256,
+   "name": "mar-0.2.0-src/core/string/pstr_to_int.c",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
+   "rsrc_sha256": "c3f56674c1ceacd3402bd2d37d298ed19a1f238b5318f28868f2a20a5ab59ce2",
+   "rsrc_size": 630,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "f8872fd517c2aece51bb7a35b6863aaf5ba63502a036f68efef69804f26ca3da",
+   "data_size": 1942,
+   "finder_flags": 256,
+   "name": "mar-0.2.0-src/make-mpw-3.2.log",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
+   "rsrc_sha256": "5c5896b6bb21eb0383d6c24e8c69d086274a9ac19f209bb4497ab59ca09a3c9c",
+   "rsrc_size": 428,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "fe3842919d08f8a5a5829be3f61f5c2b6d2d884174bdb7beabdc1f32404dc0e2",
+   "data_size": 3673,
+   "finder_flags": 256,
+   "name": "mar-0.2.0-src/make-mpw-3.5.log",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
+   "rsrc_sha256": "37086813cb8b7ba0b6053df4a715ed9c7a5566714af7839ff7a5d70e97860f70",
+   "rsrc_size": 430,
+   "type": "TEXT"
+  },
+  {
+   "creator": "KAHL",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 256,
+   "name": "mar-0.2.0-src/mar π",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
+   "rsrc_sha256": "076d04a135a5ef89822d2d23a622de1655e294e376437fa2417c5194e3c55d49",
+   "rsrc_size": 131519,
+   "type": "PROJ"
+  },
+  {
+   "creator": "RSED",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 256,
+   "name": "mar-0.2.0-src/mar π.rsrc",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
+   "rsrc_sha256": "f7035b1376202298babe3f131e6c60857bc5893c662ac04b98500e521ceca561",
+   "rsrc_size": 3268,
+   "type": "rsrc"
+  },
+  {
+   "creator": "KAHL",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 256,
+   "name": "mar-0.2.0-src/mar.prj",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
+   "rsrc_sha256": "38f512adb44e9ca1df24399eba6acc1dd25f29429f00b818e687acb9a6e05ef9",
+   "rsrc_size": 143007,
+   "type": "PROJ"
+  },
+  {
+   "creator": "RSED",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 256,
+   "name": "mar-0.2.0-src/mar.prj.rsrc",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
+   "rsrc_sha256": "0e0bbd94cc3e53ec07b62c24ef2528d0c35bf95a47cd086fd2b17a1f925fce68",
+   "rsrc_size": 3268,
+   "type": "rsrc"
+  },
+  {
+   "creator": "RSED",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 256,
+   "name": "mar-0.2.0-src/mar.rsrc",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
+   "rsrc_sha256": "98ef7d93cbdef5033a257867e6830f5d72e7b8cb69d3e627abfe64a27789abc6",
+   "rsrc_size": 3268,
+   "type": "rsrc"
+  },
+  {
+   "finder_flags": 256,
+   "is_dir": true,
+   "name": "mar-0.2.0-src/src"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "af3a2028be61f63431cfbe003b759cb1b016be7813540a559c85670f40b0ff0d",
+   "data_size": 5974,
+   "finder_flags": 256,
+   "name": "mar-0.2.0-src/src/lz4dec.c",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "e24e37ca16f945818b0b348b18de610f2ebb10e7dca946c4f6bb61684ef2176c",
+   "data_size": 1551,
+   "finder_flags": 256,
+   "name": "mar-0.2.0-src/src/lz4dec.h",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "1d7b4f8d48b9fe4b7570b3bf7314c46bbcf811ec9d372f9d2f15f7d00c80d6ed",
+   "data_size": 8473,
+   "finder_flags": 256,
+   "name": "mar-0.2.0-src/src/lzw.c",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "40020ccffea371c2fb3d934bfc29a01a3ed666de7730ba4d4174bdceed0bdfd8",
+   "data_size": 1769,
+   "finder_flags": 256,
+   "name": "mar-0.2.0-src/src/lzw.h",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "1242b0c046f3d7c99b1fbfb7001c8e3783d072cc55ee80f0ef9678d853ded10a",
+   "data_size": 7984,
+   "finder_flags": 256,
+   "name": "mar-0.2.0-src/src/main.c",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "8004d5b4bce264b76848e5e76e27e6cd23c4455eb8ac3f62e6d5367a446b492a",
+   "data_size": 1383,
+   "finder_flags": 256,
+   "name": "mar-0.2.0-src/src/main.h",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "52ef88dfeeae0ad63842bb211c55d17a133daa35930f313ae1aefdd012f6db67",
+   "data_size": 3066,
+   "finder_flags": 256,
+   "name": "mar-0.2.0-src/src/mar.c",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "815857b8408ec1a9b9def7ae7d75f1387aaadf84e3c271df10d4c5331df97619",
+   "data_size": 4250,
+   "finder_flags": 256,
+   "name": "mar-0.2.0-src/src/mar.h",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "d6b06c157b327ab2b36457d2d61aadb256b4d97f84bc1e9ce3dc52669f4f40ec",
+   "data_size": 1593,
+   "finder_flags": 256,
+   "name": "mar-0.2.0-src/src/mar_crc.c",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "dc21ad4a46f3db316e95db680a8100462bca13e691f4042235369ad1a6b94685",
+   "data_size": 862,
+   "finder_flags": 256,
+   "name": "mar-0.2.0-src/src/mar_crc.h",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "e54bb0205afc84ff092fb19840c2cbbef299b73f1f41c08f00227dfbeb3fc14a",
+   "data_size": 8380,
+   "finder_flags": 256,
+   "name": "mar-0.2.0-src/src/mar_dec.c",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "f303ccadac694541d469aaedfb14584b51fa5c1079c76ab25fd570b8d623e91d",
+   "data_size": 750,
+   "finder_flags": 256,
+   "name": "mar-0.2.0-src/src/mar_dec.h",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "e3c9b3a7b3e46120294301802c9d41313ce65ec7a4104159aba99a7d3aad6d7d",
+   "data_size": 6663,
+   "finder_flags": 256,
+   "name": "mar-0.2.0-src/src/mar_enc.c",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "a789254c04bf354d875a5c007cd99a60b284d31a9cf2c2195c01790bb1c872dc",
+   "data_size": 750,
+   "finder_flags": 256,
+   "name": "mar-0.2.0-src/src/mar_enc.h",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "c80f19680b3912c7845b24df58cdd21bc5bcd83ab18fb60e917aaccb87f1f8fc",
+   "data_size": 1722,
+   "finder_flags": 256,
+   "name": "mar-0.2.0-src/src/mar_init.c",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "aa60e1f5a2d4272b74917d3ad2348f71131a5e7bf249589e50b0cdb546f6bfc9",
+   "data_size": 726,
+   "finder_flags": 256,
+   "name": "mar-0.2.0-src/src/mar_init.h",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "775cfc3f5d7a9792a8d822ec7734dce3ca8651570a310266020d54bdaf952f1a",
+   "data_size": 7675,
+   "finder_flags": 256,
+   "name": "mar-0.2.0-src/src/mar_io.c",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "ddd194144094b5c41e49a6255eeb82ca9aba9c8c0c3f4b97a228bada574ed9fb",
+   "data_size": 1426,
+   "finder_flags": 256,
+   "name": "mar-0.2.0-src/src/mar_io.h",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "c4de936f666e4a7c5169864a9f0ba4fe88f0b759d12a761d349b05fd2e07f612",
+   "data_size": 4396,
+   "finder_flags": 256,
+   "name": "mar-0.2.0-src/src/progress.c",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "ff57ff5e7e1aa229e78ef67e3b49ad4d244cd686661b2a3a7911188d56e0c983",
+   "data_size": 1009,
+   "finder_flags": 256,
+   "name": "mar-0.2.0-src/src/progress.h",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "eda04ed28029f9276ba02c5b3f0a0b1bdfc47476ddf876bc299f1fc62ac7a07b",
+   "data_size": 1539,
+   "finder_flags": 256,
+   "name": "mar-0.2.0-src/src/rsrc.h",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
+   "rsrc_sha256": "d1e59c40b7d7bdab0e4c921ce2ee21cdc40d2f7c1389b166b56990834e5961fe",
+   "rsrc_size": 428,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "37116dffddc48edbd406e34dd4f2d9cf5f461417aab9d49114810b8167634afe",
+   "data_size": 10727,
+   "finder_flags": 256,
+   "name": "mar-0.2.0-src/src/rsrc.r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
+   "rsrc_sha256": "160f576b7c50825dad365b112774ef7bb4560c62eaf20211271142314cb3a2fd",
+   "rsrc_size": 428,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "mar-twin-mar020src.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "sha256": "77c24ddfc7c41c8e2e23b8a95f69cad29782a8893cf9955800bcbb5ef4d2f9ed",
+ "size": 247671
+}

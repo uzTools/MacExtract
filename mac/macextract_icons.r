@@ -294,6 +294,12 @@ resource 'FREF' (167) { 'DDF6', 1, "" };
 resource 'FREF' (168) { 'DDF7', 1, "" };
 resource 'FREF' (169) { 'DDFL', 1, "" };
 resource 'FREF' (170) { 'DDf4', 1, "" };
+/* MAR, the types mar 0.2.0 gives the archives it writes, creator `MARc`
+   (reference/mar/mar-0.2.0-src/src/mar_io.c): `MARd` a folder's `.mar`,
+   `MARf` a file's `.mac`. Its LZW-compressed archive is `ZIVU`, claimed
+   above. DECISIONS.md 2026-11-03, *the archive that carries its own CRCs*. */
+resource 'FREF' (171) { 'MARd', 1, "" };
+resource 'FREF' (172) { 'MARf', 1, "" };
 
 resource 'BNDL' (128) {
     'MExt', 0,
@@ -304,7 +310,8 @@ resource 'BNDL' (128) {
                 24, 152, 25, 153, 26, 154, 27, 155, 28, 156, 29, 158,
                 30, 157,
                 31, 159, 32, 160, 33, 161, 34, 162, 35, 163, 36, 164, 37, 165,
-                38, 166, 39, 167, 40, 168, 41, 169, 42, 170 } }
+                38, 166, 39, 167, 40, 168, 41, 169, 42, 170,
+                43, 171, 44, 172 } }
 };
 
 /* The SIGNATURE resource: type = the creator code, ID 0. The Finder wants
