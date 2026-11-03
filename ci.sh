@@ -455,6 +455,14 @@ if [ -f build/mac/MacExtract.bin ]; then
     echo "dist: MacExtract.bin matches the build ($built)"
 fi
 
+# The double-click helpers (companion/) were built by nothing here until
+# 2026-11-03: a helper that the Finder will not register, or that stopped
+# being one segment, or grew, passed every run. This builds one and reads
+# what the Finder needs off the file; whether it hands an archive on is the
+# emulator's (DECISIONS.md 2026-11-03, *the gate a helper commit has*).
+echo "=== companion: the double-click helper ==="
+python3 tools/check_helpers.py || fail "the double-click helper"
+
 # Nothing watched the application's SIZE until 2026-09-23, and it moved
 # 10,112 B in a month without a status file noticing. Every byte is
 # resident on the target, so it is heap the Macintosh no longer has, and
