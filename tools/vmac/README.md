@@ -265,7 +265,7 @@ missing `In`/`Out` volume paints `-1001`/`-1002`; `run.py` reports `NOGRID`,
 failed, not the Mac** (twice in an 88-run sweep, both passed on re-run):
 **re-run it before drawing any conclusion.** `run.py` and `os9.py` turn
 SIGTERM/SIGINT into a clean exit; after any interrupted sweep check `pgrep -x
-minivmac`, `pgrep -f qemu-system`, `pgrep -x Xvfb` — strays cost the next
+minivmac`, `pgrep -x qemu-system-ppc`, `pgrep -x Xvfb` — strays cost the next
 emulator CPU.
 
 **Timing.** `run.py --emu mv-4M-1x` splits boot from extraction (the "alive"

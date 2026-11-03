@@ -4014,7 +4014,8 @@ bundle is not `ovl_bundle.r.rsrc.bin`, the Rez'd resource fork around it
 (DECISIONS.md 2026-09-26, *the fork that was mistaken for its contents*).
 It is not resident while an archive is extracted, so
 `tools/check_app_size.py` watches `MacExtract.code.bin` (`EXPECT`
-**46,336 B**) and only warns on the bundle.
+**46,976 B**; corrected 2026-11-03 from 46,336, read off the script) and
+only warns on the bundle.
 
 **The launch READ is not a new cost** (DECISIONS.md 2026-09-26, *the fork
 that was mistaken for its contents*). Figures of 2026-10-06, not
