@@ -20385,15 +20385,17 @@ application: byte-exact on System 6.0.8 at 1 MB and 512 KB, System 3.0 at
 run: the boot image in the cache no longer matches its SHA-1.
 
 **The twins differ, and only where a Macintosh writes on its own.** All 77
-resource forks match the `.sit`'s except inside bytes 16..255, the
-header's reserved area, in up to 9 bytes (offsets 61 and 76-79 in the
-source's forks, 114-117 in all of them). 114-117 read as Macintosh dates:
+resource forks match the `.sit`'s except inside bytes 16..127, the area of
+a resource file's header the Resource Manager stamps per session, which
+every emulator check here has masked since M10 (*The on-Mac resource-fork
+mask is bytes 16..127*, above): up to 9 bytes, offsets 61 and 76-79 in the
+source's forks, 114-117 in all of them. 114-117 read as Macintosh dates:
 2019-05-31 in every `.mar` fork, mar 0.2.0's date in its ChangeLog, and
-2021-09-22 in every `.sit` fork, two days before the forum post. A
-hypothesis, not tested: the system stamps that area when a resource file is
-written, and the two archives were made from copies two years apart. Those
-bytes are vouched for by hampa's CRC alone;
-`tools/run_mar.py` counts the forks that rely on it rather than hiding them.
+2021-09-22 in every `.sit` fork, two days before the forum post, so the
+two were made from copies two years apart. First written here as a
+hypothesis; the repository already measured it. Those bytes are vouched
+for by hampa's CRC alone; `tools/run_mar.py` counts the forks that rely on
+it rather than hiding them.
 
 **The licence.** mac-utils and mar 0.2.0 are GPL-2.0-only, which cannot
 become LGPL-2.1-or-later. So, as for btoa (2026-08-23, *btoa's licence*),
@@ -20479,6 +20481,31 @@ button takes the folder the dialog is IN, and Save opens in it, so a folder
 archived with defaults lands inside itself. The engine mutants that get inited
 wrong or drop the lock now fail on the Unix writer's archives too, where
 before only on this repository's own.
+
+**Dropped on the icon, and a wild archive on System 6 (2026-11-03).** In
+the System 7.0.1 Finder, mar 0.2.0's own `MARd`, `MARf` and `ZIVU` files
+dragged onto MacExtract were each accepted and extracted (the bundle's two
+new types, and `ZIVU` through the `.Z` layer); a name already taken came
+out `~1`, said in the report. Read back, every data fork byte-exact and
+every resource fork outside 16..127. `Bumpaint_1.0.mar` (Macintosh Garden,
+sha256 d560bfb1...; the first archive here not written by hampa, MacStamp's
+copy), a single application with a custom icon, extracted on System 6.0.8:
+on disk flags 0x2500 kept and location (-1, -1); in the System 6 Finder at
+the first free spot, with the GENERIC application icon. Not the disk and
+not MacExtract, measured each on a fresh boot: generic on an 800K and an
+8 MB disk, with its flags 0x2500, 0x2100, 0x2400 and 0x2000; generic when
+mar 0.2.0 itself decodes it; and the control, MacExtract archived by mar
+0.2.0 and extracted by MacExtract onto an 800K disk (flags 0x2100 kept,
+(-1, -1)), shows its own icon at the first free spot. Bumpaint carries
+eight resources typed `BNDL`, one a bundle (132: `BUMP`, `APPL` and `SRUD`
+to `ICN#` 128 and 129) and seven not (records named `Mitm`, `Menu`,
+`Butn`); that the System 6 Finder reads one of those is a hypothesis, not
+tested. Two harness
+artifacts first read as defects: bytes 48..125 of every extracted resource
+fork carry the file's name (the Resource Manager's stamp, inside the mask),
+and a file's type lost when the emulator was closed without the volume
+put away (Mini vMac's lazy write-back; `arcmac.Session.shutdown` clicks
+System 6's Special menu, which on System 7 is elsewhere).
 
 **Evidence.** `tools/run_mar.py` (TESTING.md, *MAR*). Four engine mutants
 fail it: CRC never checked, inited cleared on the top item, lock ignored, and

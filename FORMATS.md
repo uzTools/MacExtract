@@ -2484,10 +2484,10 @@ read: an archive inside an LZ4 frame, which mar 0.2.0 also opens
 | `synth-mar-tree.mar` | nested and empty folders, one fork or none, a lock, a comment past 255 B, a `/` in a name | `tools/synth_mar.py`'s items |
 
 **The twins agree except in the resource fork's reserved header**: of 77
-resource forks, all differ from the `.sit`'s only inside bytes 16..255, in
-up to 9 bytes; every data fork is identical (`tools/run_mar.py`). Bytes
-114..117 read 2019-05-31 in every `.mar` fork and 2021-09-22 in every `.sit`
-fork (measured; why they differ is a hypothesis, DECISIONS.md, same entry).
+resource forks, all differ from the `.sit`'s only inside bytes 16..127, the
+area the Resource Manager stamps, in up to 9 bytes; every data fork is
+identical (`tools/run_mar.py`). Bytes 114..117 read 2019-05-31 in every
+`.mar` fork and 2021-09-22 in every `.sit` fork (DECISIONS.md, same entry).
 
 **The Finder info stated is what mar 0.2.0's expander writes, but for one
 bit**, read from

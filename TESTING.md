@@ -3075,7 +3075,7 @@ GPL-2.0-only and are not run (NOTICE), so **what wrote it is the grader**
 2. **hampa's two archives**: every header and block CRC (288) walked by a
    second reading of the layout in the script; then every fork against the
    engine's reading of their StuffIt twins, which `run_diff.py` holds to
-   `unar`. A resource fork may differ only inside bytes 16..255, and the
+   `unar`. A resource fork may differ only inside bytes 16..127, and the
    number that do is printed (77).
 3. **Variants of the tree**: a header byte (refused), a fork, CRC and
    comment byte (that entry fails, the rest come out), cuts at every

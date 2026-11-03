@@ -17,10 +17,11 @@ of it, and the author's own READERS are GPL-2.0-only and are not run
                           archives (mar-twin-*.sit, graded against `unar`
                           by run_diff.py): every fork the engine takes out
                           of a .mar must be the one it takes out of the
-                          twin, except bytes 16..255 of a resource fork —
-                          the header's reserved area, where the two
-                          copies were made at different times and differ
-                          by up to 9 bytes. Those bytes are vouched for by
+                          twin, except bytes 16..127 of a resource fork —
+                          what the Resource Manager stamps per session,
+                          masked by every emulator check here; the two
+                          copies were made two years apart and differ
+                          there by up to 9 bytes. Those bytes are vouched for by
                           the CRC alone, and the count of forks relying on
                           that is printed.
   synth-mar-single.mac,   tools/synth_mar.py's items, field for field:
@@ -437,7 +438,7 @@ def lanes(cli, work):
             if r != tr:
                 diff = [i for i in range(max(len(r), len(tr)))
                         if i >= len(r) or i >= len(tr) or r[i] != tr[i]]
-                if len(r) == len(tr) and all(16 <= i < 256 for i in diff):
+                if len(r) == len(tr) and all(16 <= i < 128 for i in diff):
                     allowance += 1
                 else:
                     fail(f"{fx}: {k!r} resource fork differs from the twin's "
@@ -448,7 +449,7 @@ def lanes(cli, work):
         print(f"run_mar: {fx}: {len(items)} items, every CRC, "
               f"{len(forks)} files against {twin}")
     print(f"run_mar: {allowance} resource forks equal the twin's only outside "
-          f"bytes 16..255, which the CRC alone vouches for")
+          f"bytes 16..127, which the CRC alone vouches for")
 
     # 3. Variants of the tree case.
     base = synth_mar.write(synth_mar.CASES["tree"])
