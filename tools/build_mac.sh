@@ -1359,8 +1359,12 @@ UNC_MAC_A5_DEFAULT=36528
 # bar, the cheaper part scans and the open-ended split's verdict. The
 # destination dialog and a set's setup are images, given back with the
 # bundle before the budget.
-UNC_MAC_CODE_EAGER=39016
-UNC_MAC_A5_EAGER=16648
+# +4 and -4 on 2026-11-03, 39,016 -> 39,020 and 16,648 -> 16,644: StuffIt 5
+# joins the formats whose ciphers go on a definite NO (DECISIONS.md
+# 2026-11-03, *the ciphers a header can refuse*). The A5 is `.data`
+# alignment; the sum, and so every budget, is unmoved.
+UNC_MAC_CODE_EAGER=39020
+UNC_MAC_A5_EAGER=16644
 # +8 on 2026-10-02 for the same reason as the eager pair above: the
 # overlay call that now says WHICH of StuffIt 2.x's ciphers an entry
 # wants. A5 fell to 19,096 and its ceiling is left where it was.

@@ -1797,12 +1797,11 @@ either way the names are changed deliberately.
   show — a different System, emulator or ROM, growth that lands in slack,
   or resident bytes outside the `CODE` + A5 unit (the autotest harness;
   `run_tiers.py` notes each).
-- **Whether a Compact Pro or zip archive holds an encrypted entry.** The
-  shell drops the ciphers on a definite NO from `unc_archive_encrypted`,
-  which the CLI cannot reach, so the shipped lane grants those formats
-  10,252 B less than the machine does (measured 2026-10-09). It decides
-  nothing: the narrowest margin on any Compact Pro or zip layer in the
-  sample is 138,989 B, re-measured 2026-10-09.
+- **Encryption only as `unc_archive_encrypted` answers it.** Since
+  2026-11-03 the shipped lane asks that function through
+  `tools/encinfo_probe.c` for each Compact Pro, zip and StuffIt 5 layer, as
+  the shell does; it cannot see a wrong answer, which is `run_crypt.py`'s
+  (*Decryption*).
 - **Fragmentation.** The Memory Manager also needs one PIECE that big
   ("Memory is too broken up"); nothing here models it. No disagreement
   currently rests on it.
@@ -2186,6 +2185,13 @@ given"* with no and a wrong password and no fork written; **forkless,
 decrunching"* with `lsar` setting no flag, so an oracle that learns the
 bit is noticed. **Measured able to fail**: without the `SIT_NEWDE` term
 the lane reports three problems.
+
+**The answer that lets the ciphers go** (`check_encinfo`): plain and
+encrypted zips, every part of a spanned set refusing to answer, and since
+2026-11-03 StuffIt 5 — an encrypted archive says yes, the same bytes with
+header bit 7 cleared say no AND are refused as encrypted with the right
+password, and the corpus's 32 say no (DECISIONS.md 2026-11-03, *the ciphers a
+header can refuse*).
 
 **Who grades each cipher:**
 

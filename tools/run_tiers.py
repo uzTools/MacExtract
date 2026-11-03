@@ -76,15 +76,13 @@ What it CANNOT see, and why the emulator stays
   stale on 2026-09-22 — two by 21,666 B — and the one-fixture
   System 6.0.8 / 512 KB disagreement that had been filed under
   fragmentation below was this, entirely.
-- **Whether a Compact Pro or zip archive is encrypted.** The shell asks
-  `unc_archive_encrypted` and releases the ciphers on a definite NO;
-  that walk is not reachable from the CLI, so this lane keeps them for
-  those two formats always and grants 10,252 B LESS than the machine
-  does (measured 2026-10-09: on the System 6.0.8 512Ke a zip with
-  nothing encrypted is granted what a tar is). Deliberately pessimistic, and it decides nothing: the narrowest
-  margin on any Compact Pro or zip layer in the sample is 138,989 B
-  (`derived-MUSFMT10.ZIP` at System 6.0.8 / 512 KB, re-measured
-  2026-10-09 at the re-taken budgets).
+- **Nothing about encryption it does not ask.** The shell drops the
+  ciphers for the formats its release condition names when
+  `unc_archive_encrypted` says NO; since 2026-11-03 this lane reads that
+  condition out of `mac/ovl_load_eager.c` and asks the same function
+  through `tools/encinfo_probe.c`, layer by layer. Until then it kept the
+  ciphers for Compact Pro and zip always and granted 10,252 B less than the
+  machine (DECISIONS.md 2026-11-03, *the ciphers a header can refuse*).
 - **Fragmentation.** The budget is one number; the Memory Manager also
   has to find ONE piece that big. The Mac shell reports that case
   separately (`gShortPiece`, "Memory is too broken up"), and nothing
@@ -112,6 +110,7 @@ What it CANNOT see, and why the emulator stays
   wants 203,680.
 """
 import argparse
+import glob
 import os
 import re
 import shutil
@@ -1035,7 +1034,7 @@ IMAGES = {
     "OVL_ID_SUPERDISK":   6634,
     "OVL_ID_TEXT":        11438,
     "OVL_ID_ZIPOLD":      10832,
-    "OVL_ID_SNIFF":       13392,
+    "OVL_ID_SNIFF":       13444,
     "OVL_ID_DESTDLG":     1682,
     "OVL_ID_SEGSETUP":    2364,
 }
@@ -1118,7 +1117,10 @@ IMAGES = {
 # **STUFFIT +4, the bundle +4 B, 2026-11-03**: StuffIt 5's folder table as
 # a block that grows (DECISIONS.md 2026-11-03, *the folders past the
 # table*).
-BUNDLE = 188424
+# **SNIFF +52, the bundle +52 B, 2026-11-03**: StuffIt 5's answer to
+# unc_archive_encrypted (DECISIONS.md 2026-11-03, *the ciphers a header can
+# refuse*); no keep set holds the sniffer, so only an envelope pays it.
+BUNDLE = 188476
 
 # What the SHIPPED lane asserts, and it is the refused fixtures BY NAME
 # rather than a tally: a tier that refuses two different fixtures and still
@@ -1139,10 +1141,12 @@ EXPECT_SHIPPED = {
     "sys3-512K": ("derived-Library_ISBN_Barcoder.sit", "synth-dd-m5.dd"),
     # a2ps.V4.3.tar.Z joined 2026-10-09: the machine refused it (66/72) where
     # this lane, on a base 16,888 B stale, had passed it (TIERS above).
-    "sys6-512K": ("a2ps.V4.3.tar.Z",
-                  "derived-Cool_Tools__.sit", "derived-Library_ISBN_Barcoder.sit",
-                  "derived-a2basic.dmg.sit", "popper-1.7.tar.Z",
-                  "synth-dd-m5.dd"),
+    # derived-Cool_Tools__.sit and derived-a2basic.dmg.sit left 2026-11-03,
+    # predicted here and then run on the machine: a StuffIt 5 header with no
+    # password hash releases the ciphers (DECISIONS.md 2026-11-03, *the
+    # ciphers a header can refuse*).
+    "sys6-512K": ("a2ps.V4.3.tar.Z", "derived-Library_ISBN_Barcoder.sit",
+                  "popper-1.7.tar.Z", "synth-dd-m5.dd"),
 }
 
 CCOMMENT = re.compile(r"/\*.*?\*/", re.S)
@@ -1238,6 +1242,42 @@ def keep_sets(path=os.path.join(REPO, "mac", "ovl_load_eager.c")):
                 raise SystemExit("run_tiers: the loader keeps %s and this "
                                  "file has no size for it" % image)
     return out
+
+
+def cipher_release(path=os.path.join(REPO, "mac", "ovl_load_eager.c")):
+    """The formats whose ciphers the loader drops on a definite NO from
+    unc_archive_encrypted, read out of the condition that does it."""
+    text = CCOMMENT.sub(" ", open(path, encoding="utf-8").read())
+    m = re.search(r"if\s*\(\s*crypt\s*&&\s*\(([^;{}]*?)\)\s*&&\s*"
+                  r"unc_archive_encrypted\(\s*fmt\s*,\s*io\s*\)\s*==\s*"
+                  r"UNC_ENC_NO\s*\)", text)
+    if not m:
+        raise SystemExit("run_tiers: the loader's cipher release changed "
+                         "shape")
+    return frozenset(re.findall(r"fmt\s*==\s*(UNC_FORMAT_\w+)", m.group(1)))
+
+
+def encinfo_probe(tmp):
+    """tools/encinfo_probe.c, built once: the engine's own
+    unc_archive_encrypted, which the CLI does not reach. Returns a function
+    from a layer's path to "yes", "no" or "unknown"."""
+    probe = os.path.join(tmp, "encinfo_probe")
+    src = [os.path.join(HERE, "encinfo_probe.c")]
+    src += sorted(glob.glob(os.path.join(REPO, "src", "*.c")))
+    src += sorted(glob.glob(os.path.join(REPO, "third_party", "zlib", "*.c")))
+    inc = ["-I" + os.path.join(REPO, d)
+           for d in ("include", "src", os.path.join("third_party", "zlib"))]
+    cc = subprocess.run(["cc", "-O1", "-o", probe] + inc + src,
+                        capture_output=True, text=True)
+    if cc.returncode != 0:
+        raise SystemExit("run_tiers: encinfo_probe did not build: "
+                         + cc.stderr.strip().split("\n")[-1])
+
+    def ask(path):
+        out = subprocess.run([probe, path], capture_output=True,
+                             text=True).stdout.split()
+        return out[0] if out else "unknown"
+    return ask
 
 
 def check_images(builddir=os.path.join(REPO, "build", "mac")):
@@ -1434,8 +1474,11 @@ def peel(binary, path, tmp, fmts):
     return out
 
 
-def sweep_shipped(binary, fixtures, base, fixdir, keep, fmts, tmp):
-    """Sweep at `base` plus what each layer's format gets back."""
+def sweep_shipped(binary, fixtures, base, fixdir, keep, fmts, tmp,
+                  release=frozenset(), ask=None):
+    """Sweep at `base` plus what each layer's format gets back. A layer of
+    a format in `release` keeps no ciphers when `ask` says NO, as the
+    loader does."""
     fails = []
     for n in fixtures:
         p = os.path.join(fixdir, n)
@@ -1452,7 +1495,10 @@ def sweep_shipped(binary, fixtures, base, fixdir, keep, fmts, tmp):
                   file=sys.stderr)
             return None
         for ident, shown, path in layers:
-            budget = base + gain(keep.get(ident, keep["default"]))
+            k = keep.get(ident, keep["default"])
+            if ident in release and "OVL_ID_CRYPT" in k and ask(path) == "no":
+                k = k - {"OVL_ID_CRYPT"}
+            budget = base + gain(k)
             r = subprocess.run([binary, "t", "-nr", "--budget", str(budget),
                                 path], capture_output=True, text=True)
             m = SHORT.search(r.stderr)
@@ -1514,15 +1560,17 @@ def main():
         raise SystemExit("run_tiers: no %s — build it first" % a.macextract)
 
     fixtures = names(a.list)
-    keep = fmts = tmp = None
+    keep = fmts = tmp = ask = None
+    release = frozenset()
     if a.shipped or a.check:
-        fmts, keep = formats(), keep_sets()
+        fmts, keep, release = formats(), keep_sets(), cipher_release()
         print("run_tiers: %s" % check_images())
         print("run_tiers: %s" % (check_saved() or
                                  "OVL_SAVED not checked (no m68k size tool, "
                                  "or build/mac and build/mac-resident are "
                                  "not both built)"))
         tmp = tempfile.mkdtemp(prefix="run_tiers.")
+        ask = encinfo_probe(tmp)
     try:
         if a.check:
             bad = 0
@@ -1542,7 +1590,8 @@ def main():
                 bad += not ok
             for tier in sorted(TIERS):
                 fails = sweep_shipped(a.macextract, fixtures, TIERS[tier][0],
-                                      a.fixtures, keep, fmts, tmp)
+                                      a.fixtures, keep, fmts, tmp,
+                                      release, ask)
                 if fails is None:
                     return 1
                 got = len(fixtures) - len(fails)
@@ -1563,7 +1612,7 @@ def main():
         what = a.tier and TIERS[a.tier][1] or "an explicit budget"
         if a.shipped:
             fails = sweep_shipped(a.macextract, fixtures, budget, a.fixtures,
-                                  keep, fmts, tmp)
+                                  keep, fmts, tmp, release, ask)
             if fails is None:
                 return 1
             print("run_tiers: %d of %d pass on the shipped build — %s"

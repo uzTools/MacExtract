@@ -3921,7 +3921,7 @@ bundle*.
 
 | build | switch | resident `CODE` | A5 | `MacExtract.code.bin` | `MacExtract.bin` |
 |---|---|---|---|---|---|
-| **eager — SHIPPED** | (default) | **39,016 B** | 16,648 B | **46,976 B** | **243,456 B** |
+| **eager — SHIPPED** | (default) | **39,020 B** | 16,644 B | **46,976 B** | **243,456 B** |
 | lazy | `UNC_OVL_LAZY=1` | 38,252 B | 16,708 B | 46,080 B | 238,720 B |
 | resident — the control | `UNC_OVL_RESIDENT=1` | **180,224 B** | **36,528 B** | 210,560 B | 218,624 B |
 
@@ -4012,7 +4012,7 @@ table*); the
 probe pair has not been re-measured, so the 320 B is that day's
 difference, not today's.
 
-The bundle is **188,424 B** — the nineteen images sum to 188,178 B, so its
+The bundle is **188,476 B** — the nineteen images sum to 188,230 B, so its
 index costs **246 B** (`tools/run_tiers.py` `BUNDLE`, `IMAGES`): a
 4-byte header, 12 bytes of directory per image and padding of each image to
 a multiple of 4 — the padding is why the index is not a constant. The
@@ -4092,7 +4092,7 @@ budget (a fixture is in the Mac sample); the rest are the same sum with no
 fixture. Every row has since moved by arithmetic only — each application or
 image change since 2026-10-09 shifts `OVL_SAVED`, the images and `TIERS` by
 amounts recorded in its DECISIONS.md entry and in `tools/run_tiers.py`'s
-comments, last on 2026-11-03 (*the folders past the table*), with
+comments, last on 2026-11-03 (*the ciphers a header can refuse*), with
 `run_tiers.py --check` moving no tally.
 
 | sniffed format | images kept | granted, against the control |
@@ -4107,9 +4107,9 @@ comments, last on 2026-11-03 (*the folders past the table*), with
 | ARC | arc, ciphers, codecs | **+137,426 B** (measured) |
 | Compact Pro, Compact Pro segment | cptdd, ciphers, codecs | +129,966 B (arithmetic), and **+139,578 B** where the directory says no entry is encrypted (measured) |
 | Tar | zipold, codecs | **+143,902 B** (measured) |
-| StuffIt, StuffIt 5 | stuffit, ciphers, codecs | **+116,924 B** (measured) |
+| StuffIt, StuffIt 5 | stuffit, ciphers, codecs | **+116,924 B** (measured), and **+126,536 B** for a StuffIt 5 archive whose header carries no password hash (measured, 2026-11-03) |
 | Zip, spanned zip | exo, zipold, ciphers, codecs | +104,054 B (arithmetic), **+113,666 B** unencrypted (measured) |
-| every envelope, and every segment scheme that joins to a file | the whole bundle, kept | **−27,666 B** (measured) |
+| every envelope, and every segment scheme that joins to a file | the whole bundle, kept | **−27,718 B** (measured) |
 
 A change to resident code moves every row by the control's growth less the
 shipped build's; a change to an image moves only the rows that keep it — so a
@@ -4121,11 +4121,11 @@ left*).
 **The last row is the one no tally had shown**: a `.hqx`, `.gz`, `.Z` or
 MacBinary wrapper does not know what is under it, so the bundle stays and that
 layer runs with **less** memory than a resident build would give it —
-188,424 B held against 161,088 B saved. It costs nothing on the tiers because
+188,476 B held against 161,088 B saved. It costs nothing on the tiers because
 the layer under the envelope gets its own budget a moment later (*What an
 archive keeps*), and the envelope's own decode is small: the heaviest in the
 Mac sample is `popper-1.7.tar.Z`'s LZW at 147,764 B, which clears the
-System 3.0 / 512 KB envelope budget of 168,716 B by 20,952 B (arithmetic from
+System 3.0 / 512 KB envelope budget of 168,664 B by 20,900 B (arithmetic from
 `TIERS` and `gain()`, CORRECTED 2026-11-03 from 168,736 and 20,972 B).
 
 ### Where the traps are written down
@@ -4172,7 +4172,7 @@ half was wrong 2026-09-19 to 09-23: it still counted `unc_crypt.c`'s three
 
 The application ships as **243,456 B** of MacBinary (`dist/MacExtract.bin`,
 `ls -l` 2026-11-03; it read 243,328 B on 2026-11-02). **46,976 B** is
-`MacExtract.code.bin`, read at launch and never purged, and **188,424 B** is
+`MacExtract.code.bin`, read at launch and never purged, and **188,476 B** is
 the `'OVLY'` bundle, read at launch and mostly given back before the engine
 takes its budget (*Overlays*). What stays costs the heap one for one: the
 link produces a single `MacExtract.code.bin`, and `Elf2Mac/LdScript.cc`
@@ -5281,8 +5281,8 @@ designed: `derived-Library_ISBN_Barcoder.sit` writes 33 of 34, and
 
 **The overlays recover `derived-a2basic.dmg.sit` and `derived-Cool_Tools__.sit`**
 — the only tier where they open an archive rather than just grant heap
-(*Overlays*). They need 240,898 B and 242,464 B in one block against the
-resident build's budget; the shipped build grants 82–105 KB more.
+(*Overlays*). They need 222,458 B and 224,536 B against the resident
+build's budget; the shipped build grants 82–105 KB more.
 
 **The resident build's budget was 205,476 B, measured 2026-10-09**: a 225,956 B
 free heap (`sys30.py --emu mv-512Ke -D UNC_OVL_RESIDENT -D UNC_AT_BUDGET`,
@@ -5295,20 +5295,22 @@ asserts"). History of the figure: *Budget*.
 **68/72 is the resident build's ceiling**, a property of four archives
 against that budget. `tools/run_tiers.py` reproduces it fixture for fixture,
 and with a budget per format (*What each format is granted*) the shipped
-build's refusals by name. Minimum budgets, bisected 2026-09-22:
+build's refusals by name. Minimum budgets, re-bisected 2026-11-03 (CORRECTED:
+the 2026-09-22 bisection read 17,928-18,440 B higher on every StuffIt 5 row,
+its fixed folder table; DECISIONS.md 2026-11-03, *the folders past the table*):
 
 | fixture | needs | of which | against 205,476 B (the measurement) |
 |---|---|---|---|
-| `derived-a2basic.dmg.sit` | **240,898 B** | one 205,020 B BWT block — the entry's whole 205,019 B output in a single block — plus the walk state | 1.17x |
-| `derived-Cool_Tools__.sit` | **242,464 B** | one block of the same shape, over a 206,582-byte resource fork | 1.18x |
-| `derived-Library_ISBN_Barcoder.sit` | **388,033 B** | one 352,161 B block, same shape | 1.89x |
+| `derived-a2basic.dmg.sit` | **222,458 B** | one 205,020 B BWT block — the entry's whole 205,019 B output in a single block — plus the walk state | 1.08x |
+| `derived-Cool_Tools__.sit` | **224,536 B** | one block of the same shape, over a 206,582-byte resource fork | 1.09x |
+| `derived-Library_ISBN_Barcoder.sit` | **370,105 B** | one 352,161 B block, same shape | 1.80x |
 | `synth-dd-m5.dd` | **401,408 B** | 1,536 B per distinct context byte, all 256 of them | 1.95x |
 
 A block a BWT inverts must be resident, and DiskDoubler method 5's 256 splay
 trees are adaptive state, so no allocation strategy reaches these; a smaller
 archive would, not a smaller engine. The line is the BLOCK SIZE the
 compressor chose, not the format: the sample's other five StuffIt 5 fixtures
-pass, `derived-Troi-ClipSave-Plug-in1.1.sit` needing 162,618 B.
+pass, `derived-Troi-ClipSave-Plug-in1.1.sit` needing 144,690 B.
 
 **What is refused is one entry's working set, never the archive**, and the
 demand is the codec's, not the file size's: `synth-dd-m5.dd` outputs 1,145 B
@@ -5318,7 +5320,8 @@ and asks for 405,520 B. **Nor is the boundary a number**:
 `derived-a2basic.dmg.sit` wants 247,687 B and is refused at 37,372 B because
 its block is under the renegotiation floor.
 
-**System 6.0.8 on the same machine: 68/74 shipped** (BLOCKERS.md, *Status*),
+**System 6.0.8 on the same machine: 70/74 shipped** since 2026-11-03, 68/74
+before (BLOCKERS.md, *Status*),
 **63/72 resident** (`run.py --emu mv-512Ke --system System6.hfv`, 2026-10-09,
 the nine `run_tiers.py` named). System 3.0's failures are a strict subset of
 System 6's, and the difference is the SYSTEM HEAP: free heap at extraction
@@ -5337,7 +5340,12 @@ re-taken, it names all six (BLOCKERS.md, *Withdrawn claims*). The six:
 `a2ps.V4.3.tar.Z`, `derived-Cool_Tools__.sit`,
 `derived-Library_ISBN_Barcoder.sit`, `derived-a2basic.dmg.sit`,
 `popper-1.7.tar.Z` and `synth-dd-m5.dd`; the two `.Z` files are envelopes and
-keep the whole bundle (*What each format is granted*). A 2,926 B discrepancy
+keep the whole bundle (*What each format is granted*). **Four since
+2026-11-03**: a StuffIt 5 archive whose header carries no password hash lets
+the ciphers go, and the model, asked, passed Cool Tools and a2basic by 3,000
+and 5,078 B; the machine passed both, and the sample's other six StuffIt 5
+archives as before (DECISIONS.md 2026-11-03, *the ciphers a header can
+refuse*). A 2,926 B discrepancy
 under that model was the stale base (DECISIONS.md 2026-09-27, *the residue
 that was two numbers*).
 
@@ -5463,7 +5471,7 @@ data and relocations. 63,744 B was measured against 2026-09-01's build;
 `ApplLimit − ApplZone` = **78,568 B**, leaving 20,956 B for every buffer
 (*derived*; DECISIONS.md 2026-10-22, *the runtime the application did not
 need*). `CODE` has since fallen 2,584 B; the sum has not been re-derived. The
-eager loader then asks for the `'OVLY'` bundle as ONE **188,424 B** block
+eager loader then asks for the `'OVLY'` bundle as ONE **188,476 B** block
 (*Overlays*). The bound is the RAM under the screen buffer, so no smaller
 System moves it (*What the application costs the engine*); the margin is
 kilobytes, which is why MANUAL_TESTS.md §6's HD20 question is about a

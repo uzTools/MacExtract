@@ -1,10 +1,10 @@
 /*
  * unc_encinfo.c — does this archive contain an encrypted entry?
  *
- * Answered from the archive's own directory, before anything is decoded, for
- * the two formats that can answer without guessing: Compact Pro and zip. Both
- * keep a per-entry flag in a structure that is read in one place, so the
- * question costs a walk of that structure and nothing else.
+ * Answered before anything is decoded, for the formats that can answer
+ * without guessing: Compact Pro and zip from their directories, which keep a
+ * per-entry flag in a structure read in one place, and StuffIt 5 from its
+ * header, without which its reader decrypts nothing.
  *
  * Why the engine and not the Macintosh shell: the offsets below belong to the
  * readers beside this file, and a second copy of a format's layout is what
@@ -145,12 +145,28 @@ static int zip_has_encrypted(UncIO *io)
     return UNC_ENC_NO;
 }
 
+/* StuffIt 5. Not a walk: the archive's password hash is read only when
+ * header byte 83 has bit 7 (SIT5_ARCH_CRYPTED), and without it src/fmt_sit5.c
+ * decrypts nothing — an entry flagged encrypted ends UNC_ERR_ENCRYPTED, and
+ * fork key bytes on one that is not are refused as corrupt. So a clear bit
+ * is a definite NO about what the reader will do, whatever the entries
+ * claim. Measured over 56 archives, 2026-10-06: the bit is set on all five
+ * encrypted ones and on nothing else (FORMATS.md, *StuffIt 5's archive flag
+ * byte*). */
+static int sit5_has_encrypted(UncIO *io)
+{
+    uint8_t b;
+    if (unc_read_at(io, 83, &b, 1) != UNC_OK) return UNC_ENC_UNKNOWN;
+    return (b & 0x80) ? UNC_ENC_YES : UNC_ENC_NO;
+}
+
 int unc_archive_encrypted(UncFormat fmt, UncIO *io)
 {
     if (io == NULL) return UNC_ENC_UNKNOWN;
     switch (fmt) {
     case UNC_FORMAT_COMPACTPRO: return cpt_has_encrypted(io);
     case UNC_FORMAT_ZIP:        return zip_has_encrypted(io);
+    case UNC_FORMAT_SIT5:       return sit5_has_encrypted(io);
     default:                    return UNC_ENC_UNKNOWN;
     }
 }

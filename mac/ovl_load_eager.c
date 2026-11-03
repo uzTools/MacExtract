@@ -208,17 +208,19 @@ void ovl_release_if_unwanted(UncFormat fmt, UncIO *io)
     crypt = gKeepSet[i][1] & KEEP_CRYPT;
 
     /* Compact Pro and zip keep a per-entry encryption flag in a directory
-     * that can be walked before anything is decoded, so for those two the
-     * ciphers are kept only when an entry actually needs them
+     * that can be walked before anything is decoded, and StuffIt 5's header
+     * says whether its reader can decrypt anything at all, so for those
+     * three the ciphers are kept only when an entry can need them
      * (unc_archive_encrypted). Anything else — a format that flags encryption
-     * per entry with no directory (StuffIt, StuffIt 5, PackIt), one that does
-     * not flag it at all (ARC), or a directory that would not read — answers
-     * UNKNOWN, and UNKNOWN is treated as YES.
+     * per entry with no directory (StuffIt, PackIt), one that does not flag
+     * it at all (ARC), or a header or directory that would not read —
+     * answers UNKNOWN, and UNKNOWN is treated as YES.
      *
      * This is the only place the answer may be acted on: there is no reload,
      * so releasing the ciphers on a maybe would lose an entry rather than
      * cost a disk access. */
-    if (crypt && (fmt == UNC_FORMAT_COMPACTPRO || fmt == UNC_FORMAT_ZIP) &&
+    if (crypt && (fmt == UNC_FORMAT_COMPACTPRO || fmt == UNC_FORMAT_ZIP ||
+                  fmt == UNC_FORMAT_SIT5) &&
         unc_archive_encrypted(fmt, io) == UNC_ENC_NO)
         crypt = 0;
 

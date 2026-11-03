@@ -480,6 +480,8 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-03 (the symbols no encoder writes) — DiskDoubler method 10 and Now Compress shape 3 refuse the symbols their arithmetic cannot take
 - 2026-11-03 (the fork that padded to nothing) — MacBinary's fork layout inside a zip or LZH entry is checked by subtraction, at the two places that decide it
 - 2026-11-03 (the folders past the table) — StuffIt 5 keeps every folder in a block that grows, and its peak heap falls 17-18 KB
+- 2026-11-03 (the parents the descent already knew) — DiskDoubler method 2/5's trees without parent[] were measured 5.6-7.1 % slower on a Mac Plus, and not landed
+- 2026-11-03 (the ciphers a header can refuse) — a StuffIt 5 archive with no password hash releases the cipher image, and System 6.0.8 at 512 KB goes 68 -> 70/74
 
 ---
 
@@ -19512,3 +19514,59 @@ shipped tally moves: `derived-a2basic.dmg.sit` there needs 222,458 B of
 -4): `unc_sit5_extract` +38 with the two helpers inlined, so `OVL_SAVED`
 +32 and `TIERS` -32 each, DERIVED. The lazy build's MacBinary +128 B
 (one block).
+
+## 2026-11-03 (the parents the descent already knew) — DiskDoubler method 2/5's trees without parent[] were measured 5.6-7.1 % slower on a Mac Plus, and not landed
+
+**Claim (measured).** A review proposed dropping `DdM2Tree.parent[512]`:
+the splay climbs only the path the decode came down, so that path, kept
+during the descent, can stand in for it (1,536 -> 1,024 B a tree;
+`synth-dd-m5.dd` 401,408 -> 270,336 B, inside System 3.0 / 512 KB's
+DiskDoubler grant). It is right, and byte-exact. On a Mac Plus at 1x
+(`run.py --emu mv-4M-1x -D UNC_AT_TIMING`, a 300 KB method-5 fork written by
+`tools/vmac/ddencode.py`), engine ticks went **8,110 -> 8,564, +5.6 %**; a
+variant keeping parents for internal nodes only, the leaf's from a register
+(1,280 B a tree, 335,872 B, 88 B inside the grant), went to **8,683,
++7.1 %**. x86 callgrind called the first **0.9 % faster**.
+
+**Why not landed.** The store per bit is in the innermost loop a 68000 has
+here, and what it buys is one SYNTHETIC fixture at one tier: methods 2 and
+5 have one real fork between them, 564 B. Free on no other axis, so not
+taken.
+
+**Kept from it, not landed either:** the trees' 1 KB of pointers moved out
+of `dd_fork`'s frame takes 988 B off method 10's chain, the engine's
+deepest (FORMATS.md, *Stack*); and method 5's tree count could be refused
+outside 32/64/128/256 as the 1991 expander does (2026-08-28, *the tree
+count*). Each is its own change to price.
+
+## 2026-11-03 (the ciphers a header can refuse) — a StuffIt 5 archive with no password hash releases the cipher image, and System 6.0.8 at 512 KB goes 68 -> 70/74
+
+**Claim (measured).** `unc_archive_encrypted` answers StuffIt 5 from header
+byte 83: `fmt_sit5.c` reads the password hash only under bit 7, and without
+it decrypts nothing — an entry flagged encrypted ends `UNC_ERR_ENCRYPTED`,
+and fork key bytes on one that is not are refused as corrupt. So a clear
+bit is a definite NO about the reader, whatever the entries say, and the
+shell drops the 9,604 B cipher image as it already did for Compact Pro and
+zip. `unc_crypt_init` is an inline in the decoder, so nothing reaches the
+image. Measured on 56 archives (2026-10-06): the bit marks all five
+encrypted ones and nothing else.
+
+**Evidence.** `run_crypt.py` (TESTING.md, *Decryption*): an encrypted
+archive says yes; the same bytes with the bit cleared say no and are
+refused as encrypted with the right password; the corpus's 32 say no.
+`run_tiers.py` now reads the shell's release condition and asks the same
+function per layer: it predicted Cool Tools and a2basic passing at System
+6.0.8 / 512 KB by 3,000 and 5,078 B (bisected needs 224,536 and 222,458 B
+against 227,536 granted). **The machine passed both**, byte-exact, peak
+heap 228,558 and 226,035 B, and the sample's other six StuffIt 5 archives
+as before (Library_ISBN 33 of 34). 68 -> 70/74, the other 66 not re-run:
+nothing else takes the new path.
+
+**What the model gave up.** It had kept the ciphers for Compact Pro and
+zip always, 10,252 B pessimistic; asking the function removes that too, and
+no tally of either moves.
+
+**Cost (measured).** Shipped CODE +4 and A5 -4 (alignment): the sum, and
+so every budget, unmoved. `ovl_sniff` +52 B and the bundle +52, which only a
+layer keeping the whole bundle pays: the envelope row falls 52 B. The
+resident control and the download are unmoved.

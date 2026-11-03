@@ -176,6 +176,8 @@ def check_encinfo(_macextract, problems, tmp):
         problems.append("encinfo: probe did not build: "
                         + cc.stderr.strip().split("\n")[-1])
         return
+    check_encinfo_sit5(probe, _macextract, problems, tmp)
+
     payload = os.path.join(tmp, "payload.bin")
     with open(payload, "wb") as f:
         f.write(os.urandom(400 * 1024))
@@ -205,6 +207,43 @@ def check_encinfo(_macextract, problems, tmp):
                             % (os.path.basename(path), got, want))
     print("encinfo: %d case(s) checked, including %d part(s) of a spanned set"
           % (len(cases), len(cases) - 2))
+
+
+def check_encinfo_sit5(probe, macextract, problems, tmp):
+    """StuffIt 5 answers from header byte 83, bit 7: the reader reads the
+    password hash only under it, so with it clear nothing is decrypted and
+    the ciphers may go. Three things, each able to fail on its own: an
+    encrypted archive says yes; the same bytes with the bit cleared say no
+    AND are refused as encrypted with the right password given, which is
+    what makes that no safe; and every StuffIt 5 archive in the corpus says
+    no (none is encrypted)."""
+    enc = os.path.join(tmp, "encinfo-sit5.sit")
+    synth("sit5-rc4", enc, LONG_PW)
+    with open(enc, "rb") as f:
+        d = bytearray(f.read())
+    d[83] &= 0x7F
+    clear = os.path.join(tmp, "encinfo-sit5-clear.sit")
+    with open(clear, "wb") as f:
+        f.write(d)
+    cases = [(enc, "yes"), (clear, "no")]
+    for path in sorted(glob.glob(os.path.join(ROOT, "fixtures", "*"))):
+        if not os.path.isfile(path):
+            continue
+        with open(path, "rb") as f:
+            head = f.read(84)
+        if head.startswith(b"StuffIt (c)1997-") and len(head) == 84:
+            cases.append((path, "no"))
+    for path, want in cases:
+        out = subprocess.run([probe, path], capture_output=True,
+                             text=True).stdout.split()
+        got = out[0] if out else "(nothing)"
+        if got != want:
+            problems.append("encinfo: %s answered %s, wanted %s"
+                            % (os.path.basename(path), got, want))
+    check_refusal("sit5 hash bit cleared", clear, macextract, problems,
+                  args=("-p", LONG_PW),
+                  expect="encrypted by a scheme we cannot read")
+    print("encinfo: %d StuffIt 5 case(s) checked" % len(cases))
 
 
 # ---------------------------------------------------------------------
