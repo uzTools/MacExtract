@@ -1169,6 +1169,26 @@ int unc_cpt_rle_flush(CptRle *r);
 UncFormat unc_macbinary_probe(const uint8_t *head, int32_t len, UncIO *io);
 int unc_macbinary_extract(UncCtx *c);
 int unc_macbinary_meta(UncEntryInfo *e, const uint8_t *b);
+
+/* Where a MacBinary header puts its forks in a stream of `total` bytes:
+ * the data fork after the secondary header, the resource fork after the
+ * data fork padded to 128. 0 when the two do not fit. Compared by
+ * subtraction: a length within 127 of 4 GB padded to 128 wraps to 0, and
+ * the sum it was checked as then fit. */
+static inline int unc_macbinary_layout(const uint8_t *mb, uint32_t total,
+                                       uint32_t *ds, uint32_t *rs)
+{
+    uint32_t dlen = unc_get_u32be(mb + 83), rlen = unc_get_u32be(mb + 87);
+    uint32_t d = 128u + ((unc_get_u16be(mb + 120) + 127u) & ~127u), r, pad;
+    if (d > total || dlen > total - d) return 0;
+    r = d + dlen;
+    pad = (0u - dlen) & 127u;
+    if (pad > total - r || rlen > total - r - pad) return 0;
+    *ds = d;
+    *rs = r + pad;
+    return 1;
+}
+
 UncFormat unc_applesingle_probe(const uint8_t *head, int32_t len,
                                 UncIO *io);
 int unc_appledouble_extract(UncCtx *c);

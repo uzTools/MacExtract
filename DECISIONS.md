@@ -478,6 +478,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-01 (the split that called a short file whole) — an open-ended split with a missing part reported its truncated file as complete
 - 2026-11-02 (the dialogs that became the application) — v0.45.0 ships the dialog redesign the PoC switches held, resolved rather than switched on, and the application is byte for byte the one tested
 - 2026-11-03 (the symbols no encoder writes) — DiskDoubler method 10 and Now Compress shape 3 refuse the symbols their arithmetic cannot take
+- 2026-11-03 (the fork that padded to nothing) — MacBinary's fork layout inside a zip or LZH entry is checked by subtraction, at the two places that decide it
 
 ---
 
@@ -19430,3 +19431,41 @@ download +128 B (one MacBinary block). The resident control +32 B (CODE
 +32 and `TIERS` -32 each, DERIVED; every row of FORMATS.md's *What each
 format is granted* rises 20-38 B, the envelope row 24 B. `run_tiers.py
 --check`: no tally moves.
+
+## 2026-11-03 (the fork that padded to nothing) — MacBinary's fork layout inside a zip or LZH entry is checked by subtraction, at the two places that decide it
+
+**Claim (measured).** A MacBinary header inside a ZipIt or MacLHA entry
+was checked against the entry's size with sums: `128 + pad(sec)`, plus
+`pad(dlen)`, plus `rlen`, no more than the size. A `dlen` within 127 of
+4 GB pads to 0, and the sum then fits. A MacLHA entry claiming
+0xFFFFFFF8 bytes, whose header claims a 0xFFFFFFF0-byte data fork, LISTED
+as a 4,294,967,280-byte TEXT/ttxt data fork; it is now listed as the raw
+stream it is. `unc_macbinary_layout` (`unc_internal.h`) compares each
+length with what is left of the size instead.
+
+**What it did not change.** Extraction: the entry ends "file is truncated"
+either way, since no small file decodes to 4 GB, and the Macintosh refuses
+a 2 GB fork before making the file (2026-10-14, *the file the disk was too
+full for*). The forks a wrapped layout cut were clamped by `fork_span`, so
+no write left its buffer. The listing is the whole of the difference.
+
+**Two call sites, not five.** A review asked for the five copies of the
+arithmetic as one helper. Of the five, two decide: zip's peek
+(`zip_mb_peek`) and LZH's split. The other three run after one of those
+has accepted the same header against the same size (zip's split), or are
+re-checked by one before any fork is cut (MacLHA's header test, and so
+its sum, which keeps a comment saying so). Calling the helper at all five
+costs 168 B of resident control: LZH's two calls outlined it (118 B) and
+took `unc_get_u32be` out of line with it (42 B). At two sites it inlines,
+`ovl_lzh` falls 20 B and `ovl_exo` grows 28.
+
+**Evidence.** `test_lzh_macbinary_wrap`: the 176-byte entry above, failing
+on the code before and passing after, and a control that patches the same
+archive into a header that fits, which both accept. Zip's site has no test
+of its own: it is the same function, and a ZipIt entry was not built.
+
+**Cost (measured).** Shipped CODE + A5 and the download unmoved. The
+resident control's CODE +12 and A5 -12 (alignment), so `OVL_SAVED` and
+`TIERS` do not move. `ovl_exo` +28, `ovl_lzh` -20, the bundle +8: the zip
+rows of FORMATS.md's *What each format is granted* fall 28 B, LZH's rises
+20, the envelope row falls 8. `run_tiers.py --check`: no tally moves.

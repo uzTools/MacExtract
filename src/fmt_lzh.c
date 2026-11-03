@@ -1036,6 +1036,8 @@ static int lzh_maclha_header(const uint8_t *mb, uint32_t origsize,
     dlen = unc_get_u32be(mb + 83);
     rlen = unc_get_u32be(mb + 87);
     if (dlen > origsize || rlen > origsize) return 0;
+    /* A length within 127 of 4 GB pads to 0 and can pass this; the
+     * caller's unc_macbinary_layout refuses it before any fork is cut. */
     total = 128u + ((dlen + 127u) & ~127u) + ((rlen + 127u) & ~127u);
     return total == origsize;
 }
@@ -1141,13 +1143,10 @@ int unc_lzh_extract(UncCtx *c)
             lzh_out_start(&o, c, obuf, !c->opt.test_only);
         }
         if (mac) {
-            uint32_t sec = unc_get_u16be(mb + 120);
             uint32_t dlen = unc_get_u32be(mb + 83);
             uint32_t rlen = unc_get_u32be(mb + 87);
-            uint32_t ds = 128u + ((sec + 127u) & ~127u);
-            uint32_t rs = ds + ((dlen + 127u) & ~127u);
-            if (dlen > e.origsize || rlen > e.origsize ||
-                rs + rlen > e.origsize) {
+            uint32_t ds, rs;
+            if (!unc_macbinary_layout(mb, e.origsize, &ds, &rs)) {
                 mac = 0;
             } else {
                 unc_fork_split(&o, ds, ds + dlen, rs, rs + rlen);

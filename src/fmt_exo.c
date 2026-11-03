@@ -535,14 +535,9 @@ static int zip_mb_peek(UncCtx *c, uint32_t part, uint32_t lhoffs,
     if (es.headgot != 128) return 0;
     if (!unc_macbinary_probe(mb, 128, 0)) return 0;
     {
-        uint32_t sec  = unc_get_u16be(mb + 120);
-        uint32_t dlen = unc_get_u32be(mb + 83);
-        uint32_t rlen = unc_get_u32be(mb + 87);
-        uint32_t ds = 128u + ((sec + 127u) & ~127u);
-        uint32_t rs = ds + ((dlen + 127u) & ~127u);
-        if (dlen > usize || rlen > usize || rs + rlen > usize) return 0;
+        uint32_t ds, rs;
+        return unc_macbinary_layout(mb, usize, &ds, &rs);
     }
-    return 1;
 }
 
 /* ------------------------------------------------------------------ */
@@ -1586,6 +1581,8 @@ int unc_zip_extract(UncCtx *c)
                            mb, iobuf, iocap, obuf, ocap) : 0;
         if (sret < 0) { err = sret; break; }
         if (sret) {
+            /* zip_mb_peek has checked by unc_macbinary_layout that
+             * these fit, so none of the sums can wrap. */
             uint32_t sec  = unc_get_u16be(mb + 120);
             uint32_t dlen = unc_get_u32be(mb + 83);
             uint32_t rlen = unc_get_u32be(mb + 87);

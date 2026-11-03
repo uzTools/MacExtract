@@ -670,7 +670,11 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # 10's three refused symbols, dd_fork +34, and Now Compress shape 3's,
 # now_fork -6 (DECISIONS.md 2026-11-03, *the symbols no encoder writes*).
 # In images everywhere but here; the shipped pair is unmoved.
-UNC_MAC_CODE_DEFAULT=180176
+# +12 on 2026-11-03, 180,176 -> 180,188, A5 -12 below: MacBinary's fork
+# layout checked by subtraction in zip's and LZH's readers (DECISIONS.md
+# 2026-11-03, *the fork that padded to nothing*). The control's sum is
+# unmoved; the shipped pair too.
+UNC_MAC_CODE_DEFAULT=180188
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -881,7 +885,9 @@ UNC_MAC_CODE_DEFAULT=180176
 # +64 on 2026-11-02, 36,476 -> 36,540: v0.45.0, the dialogs (above).
 # +4 on 2026-11-03, 36,540 -> 36,544: `.data` alignment under method 10's
 # and shape 3's checks (above); no object's data moved.
-UNC_MAC_A5_DEFAULT=36544
+# -12 on 2026-11-03, 36,544 -> 36,532: `.data` alignment under the
+# MacBinary layout check (above); no data was added.
+UNC_MAC_A5_DEFAULT=36532
 # A CEILING PER CONFIGURATION, because one ceiling measured on another build
 # cannot fire. The figures above are the RESIDENT control build, which carries
 # every decoder; the shipped build's resident code is a third of that, so

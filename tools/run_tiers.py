@@ -1019,8 +1019,8 @@ IMAGES = {
     "OVL_ID_CODECS":      6016,
     "OVL_ID_CPTDD":       15156,
     "OVL_ID_CRYPT":       9604,
-    "OVL_ID_EXO":         30200,
-    "OVL_ID_LZH":         10458,
+    "OVL_ID_EXO":         30228,
+    "OVL_ID_LZH":         10438,
     "OVL_ID_NOW":         4762,
     "OVL_ID_PACKIT":      2180,
     "OVL_ID_SPACESAVER":  16168,
@@ -1106,7 +1106,10 @@ IMAGES = {
 # reach compared as integers, which came out smaller than the pointer
 # compare it replaced (DECISIONS.md 2026-11-03, *the symbols no encoder
 # writes*).
-BUNDLE = 188412
+# **EXO +28, LZH -20, the bundle +8 B, 2026-11-03**: MacBinary's fork
+# layout checked by subtraction, in zip's peek and LZH's split; LZH comes
+# out smaller (DECISIONS.md 2026-11-03, *the fork that padded to nothing*).
+BUNDLE = 188420
 
 # What the SHIPPED lane asserts, and it is the refused fixtures BY NAME
 # rather than a tally: a tier that refuses two different fixtures and still
