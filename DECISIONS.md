@@ -19727,8 +19727,15 @@ and the two icon families `make_stub.py` adds, 14,976 → **11,648 B** per
 helper. What is left of the runtime, relocation and exit handling (~2.7
 KB), would need start-up code of its own; not done. The same build on
 6.0.8 MultiFinder and 7.0.1, MacExtract busy: the second archive
-extracted after the first (one run each). The icons are now 4,864 B of
-each helper, the next thing to weigh.
+extracted after the first (one run each). The icons were then 4,864 B
+of each helper: two families, MacExtract's own for the helper and the
+archive icon for its documents. **The maintainer, 2026-11-03: the archive
+icon for both.** One family, every `FREF` on local icon 0: **9,344 B** per
+helper. Read on screen: on 7.0.1 and on a 6.0.8 disk no helper had
+registered on, the helper and its archives draw the archive icon (on a
+6.0.8 disk an older helper had registered on, the Desktop file kept the
+old icon); and on that fresh 6.0.8 disk a double-click still launched
+MacExtract with the archive, extracted.
 
 **How long the helper must stay (measured, 7.0.1, the final build with
 only the stay changed, one run each).** The maintainer asked whether the
