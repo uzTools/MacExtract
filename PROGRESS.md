@@ -56,7 +56,7 @@ their tallies are BLOCKERS.md's (*Status*); per-tier tables are FORMATS.md's.
 | M43 The two MIME gaps | A multipart's uuencoded part no longer hides the rest; `message/partial` joins | FORMATS.md (*Segmented archives*) |
 | M44 Level with the yardstick | Six functions at `-O3`: 70.4 s → 52.6 s for +1,024 B | FORMATS.md (*What -O3 is worth, and where*) |
 | M45 System 3.0 tier | The same binary on System 3.0 at 4 MB and 1 MB; 512 KB measured | FORMATS.md (*System 3.0 tier*, *512 KB machines*), `tools/vmac/sys30.py` |
-| M46 Two constants | The stack priced (5,200 B), 44 KB back to every 1 MB extraction | FORMATS.md (*Stack*, *Budget*), BLOCKERS.md (*Withdrawn claims*: the 20 KB stack) |
+| M46 Two constants | The stack priced (5,200 B), 44 KB back to every 1 MB extraction | FORMATS.md (*Stack*, *Budget*), DECISIONS.md 2026-08-31 (two constants) |
 | M47 The medium, not the machine | A Macintosh 512K boots System 3.0 off MFS; the application needs HFS | FORMATS.md (*A true Macintosh 512K*) |
 | M48 Two byte reads | Starts on a 64K-ROM Macintosh; on `main` since 2026-10-16 as `GrowApplZone` | DECISIONS.md 2026-10-15 (the purge MaxApplZone never did), MANUAL_TESTS.md §6 |
 | M49 The machine that is too small | A Macintosh 128K bombs `ID = 03`; `tools/vmac/memtest` names the heap wall | FORMATS.md (*A Macintosh 128K*) |
