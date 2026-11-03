@@ -97,6 +97,7 @@ else()
     list(FILTER ENGINE_SRC EXCLUDE REGEX "unc_crypt\\.c$")
     list(FILTER ENGINE_SRC EXCLUDE REGEX "fmt_sitseg_end\\.c$")
     list(FILTER ENGINE_SRC EXCLUDE REGEX "unc_encinfo\\.c$")
+    list(FILTER ENGINE_SRC EXCLUDE REGEX "unc_peek\\.c$")
     list(FILTER ENGINE_SRC EXCLUDE REGEX "fmt_macbinary\\.c$")
     list(FILTER ENGINE_SRC EXCLUDE REGEX "fmt_applesingle\\.c$")
     list(FILTER ENGINE_SRC EXCLUDE REGEX "fmt_spacesaver\\.c$")
@@ -845,6 +846,7 @@ add_custom_command(
             ${ENGINE_DIR}/src/fmt_sitseg_probe.c
             ${ENGINE_DIR}/src/fmt_sitseg_end.c
             ${ENGINE_DIR}/src/unc_encinfo.c
+            ${ENGINE_DIR}/src/unc_peek.c
             ${ENGINE_DIR}/src/fmt_spacesaver_probe.c
             ${ENGINE_DIR}/src/fmt_sqp_probe.c
             ${ENGINE_DIR}/src/fmt_superdisk_probe.c
@@ -877,6 +879,7 @@ add_custom_command(
             ${ENGINE_DIR}/src/fmt_sitseg_probe.c
             ${ENGINE_DIR}/src/fmt_sitseg_end.c
             ${ENGINE_DIR}/src/unc_encinfo.c
+            ${ENGINE_DIR}/src/unc_peek.c
             ${ENGINE_DIR}/src/fmt_spacesaver_probe.c
             ${ENGINE_DIR}/src/fmt_sqp_probe.c
             ${ENGINE_DIR}/src/fmt_superdisk_probe.c

@@ -215,6 +215,12 @@ python3 tools/run_foreign.py --macextract build/san/macextract \
 # `unar -p`, which is a different implementation of each cipher.
 python3 tools/run_crypt.py --macextract build/san/macextract \
     || fail "decryption tests"
+# What an envelope holds, from its first bytes, against the whole unwrap: the
+# Mac shell releases the rest of the bundle on that answer and cannot undo
+# it, so a wrong one is a layer that fails where it worked (TESTING.md,
+# *The envelope peek*).
+python3 tools/run_peek.py --macextract build/san/macextract \
+    || fail "envelope peek"
 # The archive-key oracle and its compiled scanner (tools/sit_akscan.c),
 # which read the Shortcut updater's key off an emulated Mac's memory:
 # graded against the Python verifier and Aladdin's own MKeys.

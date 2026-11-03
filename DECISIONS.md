@@ -482,6 +482,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-03 (the folders past the table) — StuffIt 5 keeps every folder in a block that grows, and its peak heap falls 17-18 KB
 - 2026-11-03 (the parents the descent already knew) — DiskDoubler method 2/5's trees without parent[] were measured 5.6-7.1 % slower on a Mac Plus, and not landed
 - 2026-11-03 (the ciphers a header can refuse) — a StuffIt 5 archive with no password hash releases the cipher image, and System 6.0.8 at 512 KB goes 68 -> 70/74
+- 2026-11-03 (the envelope that said what it held) — an envelope is peeked into before the release and keeps only what its payload needs; System 6.0.8 at 512 KB goes 70 -> 72/74
 
 ---
 
@@ -19570,3 +19571,52 @@ no tally of either moves.
 so every budget, unmoved. `ovl_sniff` +52 B and the bundle +52, which only a
 layer keeping the whole bundle pays: the envelope row falls 52 B. The
 resident control and the download are unmoved.
+
+## 2026-11-03 (the envelope that said what it held) — an envelope is peeked into before the release and keeps only what its payload needs; System 6.0.8 at 512 KB goes 70 -> 72/74
+
+**Claim (measured).** Every envelope kept the whole overlay bundle, because
+what is under one is unknown until it is unwrapped, and the release cannot be
+undone mid-run. `unc_envelope_peek` (`src/unc_peek.c`, in the sniffer's
+image) decodes the envelope through an 8 KB window of the file, outside the
+budget, stops at 512 bytes of the first file's data fork, and sniffs those.
+When they name a format in the keep table, the envelope keeps its own reader,
+the sniffer (the layer under it is sniffed after this) and what that format
+keeps; the layer under it then gives the reader and the sniffer back. When
+they name nothing, it keeps everything, as before.
+
+**The premise, measured before any shell code.** Over all 464 envelope
+fixtures, the peek names 299 and **names none wrongly** against the whole
+unwrap's sniff (`tools/run_peek.py`, in `ci.sh`, which fails at 290 or
+fewer: measured failing with a 256 B window). The 165 it does not name
+keep the bundle: Compact Pro and SuperDisk! say what they are only at the
+end of the file, and some payloads are no archive. Its heaviest decode is
+52,216 B (inflate's window), against ~92 KB free before the release at
+System 6.0.8 / 512 KB. **The window is what made it possible**: decoding
+the whole first block before the release, LZW's tables for `popper` (16-bit)
+would have needed 147,764 B and the peek could not have run where it was
+needed; LZW sizes its table from its input, and an 8 KB input sizes it for
+that. 2 KB named no BinHex at all: `bh_fork` writes 4 KB at a time.
+
+**What it bought.** At System 6.0.8 / 512 KB a `.tar.Z` layer is granted
+200,022 B instead of 72,090 B; `a2ps.V4.3.tar.Z` and `popper-1.7.tar.Z`
+pass. **The whole sample re-run there: 72/74**, the two left the per-entry
+refusals of `synth-dd-m5.dd` and Library_ISBN, as `run_tiers.py` predicted
+it. The autotest build takes ONE layer by design, so the layer under an
+envelope — the trim, and any wrong guess — runs only in the real
+application's chain: `interactive.py --chain` on the same machine,
+BinHex -> StuffIt, MacBinary -> StuffIt, both `.tar.Z`, and Compact Pro in
+MacBinary (not named, the control), **all five match the CLI**, screens
+clean. That phase compared names against the CLI's visible `.rsrc` sidecars
+and so failed every chain ending in a file with a resource fork; it asks for
+hidden forks now. The sample's 17 envelopes on System 3.0 / 512 KB and on
+the 1 MB floor: 17/17 on both.
+
+**Cost (measured).** Shipped CODE +388, A5 +44: **432 B off every budget on
+every tier**, the release +248, its shim +76, the rest the slots, the rows and
+`unc_extract_as` in the host vector. The sniffer image +760 B. Every grant row
+of FORMATS.md's table falls 432 B; an envelope not named falls 1,192 B more,
+the sniffer's growth. The download +1,152 B.
+
+**What it cannot see.** A payload the corpus lacks that the head names
+wrongly: its layer would fail for memory (`ovl_run`, `UNC_ERR_MEM`) where it
+worked before. `run_peek.py` grades every envelope the corpus has.

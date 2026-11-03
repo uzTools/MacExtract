@@ -2311,6 +2311,11 @@ Saving a SECOND time puts both records in the catalog: the first was
                                     # — needs a fixture OVER 64 KB, below
     interactive.py --named split    # a plain .NNN split, likewise
     interactive.py --chain          # .sit.hqx: do ALL the envelope layers come off?
+                                    # The only run of the layer UNDER an envelope:
+                                    # the autotest build takes one. Names only, against
+                                    # the CLI's hidden forks (visible `.rsrc` sidecars
+                                    # failed every file with a resource fork until
+                                    # 2026-11-03)
     interactive.py --wrapped        # a set whose parts are each in an envelope
     interactive.py --wd             # output lands in the archive's folder, not at /
     interactive.py --dest           # output lands on the volume the user CHOSE

@@ -1363,8 +1363,14 @@ UNC_MAC_A5_DEFAULT=36528
 # joins the formats whose ciphers go on a definite NO (DECISIONS.md
 # 2026-11-03, *the ciphers a header can refuse*). The A5 is `.data`
 # alignment; the sum, and so every budget, is unmoved.
-UNC_MAC_CODE_EAGER=39020
-UNC_MAC_A5_EAGER=16644
+# +388 and +44 on 2026-11-03, 39,020 -> 39,408 and 16,644 -> 16,688: an
+# envelope peeked into before the release (DECISIONS.md 2026-11-03, *the
+# envelope that said what it held*) — the release +248, its shim into the
+# sniffer +76, ovl_drop +40 and the peek's allocator +24; the A5 is the
+# eleven envelope rows, two more kept slots and `unc_extract_as` in the host
+# vector. 432 B off every budget.
+UNC_MAC_CODE_EAGER=39408
+UNC_MAC_A5_EAGER=16688
 # +8 on 2026-10-02 for the same reason as the eager pair above: the
 # overlay call that now says WHICH of StuffIt 2.x's ciphers an entry
 # wants. A5 fell to 19,096 and its ceiling is left where it was.

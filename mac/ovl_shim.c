@@ -116,6 +116,20 @@ int unc_archive_encrypted(UncFormat fmt, UncIO *io)
     return (int)e(&gOvlHost, OVL_ARCHIVE_ENCRYPTED, io, (void *)(long)fmt);
 }
 
+/* In the same image: what an envelope holds, from its first bytes. Asked
+ * only by the eager release, with the bundle whole; without the image the
+ * answer is UNKNOWN, which keeps the bundle. */
+UncFormat unc_envelope_peek(UncIO *io, UncAlloc *al, int *enc)
+{
+    OverlayEntry e = ovl_image(OVL_ID_SNIFF);
+    int32_t r;
+    *enc = UNC_ENC_UNKNOWN;
+    if (!e) return UNC_FORMAT_UNKNOWN;
+    r = e(&gOvlHost, OVL_ENVELOPE_PEEK, io, al);
+    *enc = (int)((r >> 8) & 0xff) - 1;
+    return (UncFormat)(r & 0xff);
+}
+
 /* In the same image: where a fat installer's part 1 ends. A StuffIt set
  * keeps the bundle whole while it joins (ovl_release_if_unwanted), so the
  * image is there when part 1 is opened; without it the answer is the

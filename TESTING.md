@@ -1011,6 +1011,23 @@ Macintosh*).
 **What none of it sees:** the two real payloads, re-run by hand
 (FORMATS.md, *StuffIt 5's method 14*).
 
+## The envelope peek (`tools/run_peek.py`, in `ci.sh`)
+
+Every envelope fixture: `unc_envelope_peek`, through
+`tools/encinfo_probe.c --peek`, against a sniff of the whole unwrap
+(`macextract x -nr`). A peek naming another format fails; one naming
+nothing is counted (that envelope keeps the bundle); fewer than 290 named
+fails, so a peek that stopped naming anything cannot pass (measured: a
+256 B window names 4). Measured 2026-11-03: 299 of 464 named, none wrongly,
+peak 52,216 B (DECISIONS.md
+2026-11-03, *the envelope that said what it held*).
+
+**What it cannot see:** a payload the corpus lacks; whether the peek fits a
+Macintosh's heap (`run_tiers.py` charges its peak, fragmentation is the
+emulator's); and the shell's use of the answer, which only the interactive
+chain runs — the autotest build takes one layer (`interactive.py --chain`,
+`tools/vmac/README.md`).
+
 ## StuffIt 5's folders (`tools/run_sit5dirs.py`, in `ci.sh`)
 
 Two generated archives, one past each limit the folder table had until

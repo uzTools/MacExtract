@@ -884,7 +884,11 @@ EXPECT = {
 # against the shipped pair's 0: StuffIt 5's folder table, in `ovl_stuffit`
 # everywhere but there (DECISIONS.md 2026-11-03, *the folders past the
 # table*). TIERS -32.
-OVL_SAVED = 161088
+# **-432 2026-11-03, -> 160,656**: the shipped pair's +432 (CODE +388, A5
+# +44), the envelope peek before the release, against the control's 0
+# (DECISIONS.md 2026-11-03, *the envelope that said what it held*). TIERS
+# unmoved; every shipped budget 432 B lower.
+OVL_SAVED = 160656
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
 # every kept image is one — as is the bundle an envelope holds on to.
@@ -1034,7 +1038,7 @@ IMAGES = {
     "OVL_ID_SUPERDISK":   6634,
     "OVL_ID_TEXT":        11438,
     "OVL_ID_ZIPOLD":      10832,
-    "OVL_ID_SNIFF":       13444,
+    "OVL_ID_SNIFF":       14204,
     "OVL_ID_DESTDLG":     1682,
     "OVL_ID_SEGSETUP":    2364,
 }
@@ -1120,7 +1124,10 @@ IMAGES = {
 # **SNIFF +52, the bundle +52 B, 2026-11-03**: StuffIt 5's answer to
 # unc_archive_encrypted (DECISIONS.md 2026-11-03, *the ciphers a header can
 # refuse*); no keep set holds the sniffer, so only an envelope pays it.
-BUNDLE = 188476
+# **SNIFF +760, the bundle +760 B, 2026-11-03**: unc_envelope_peek, and an
+# envelope it names the contents of keeps the sniffer for the layer under it
+# (DECISIONS.md 2026-11-03, *the envelope that said what it held*).
+BUNDLE = 189236
 
 # What the SHIPPED lane asserts, and it is the refused fixtures BY NAME
 # rather than a tally: a tier that refuses two different fixtures and still
@@ -1144,9 +1151,10 @@ EXPECT_SHIPPED = {
     # derived-Cool_Tools__.sit and derived-a2basic.dmg.sit left 2026-11-03,
     # predicted here and then run on the machine: a StuffIt 5 header with no
     # password hash releases the ciphers (DECISIONS.md 2026-11-03, *the
-    # ciphers a header can refuse*).
-    "sys6-512K": ("a2ps.V4.3.tar.Z", "derived-Library_ISBN_Barcoder.sit",
-                  "popper-1.7.tar.Z", "synth-dd-m5.dd"),
+    # ciphers a header can refuse*). a2ps.V4.3.tar.Z and popper-1.7.tar.Z
+    # left the same day the same way: an envelope that names what it holds
+    # keeps only that (*the envelope that said what it held*).
+    "sys6-512K": ("derived-Library_ISBN_Barcoder.sit", "synth-dd-m5.dd"),
 }
 
 CCOMMENT = re.compile(r"/\*.*?\*/", re.S)
@@ -1203,11 +1211,13 @@ def keep_sets(path=os.path.join(REPO, "mac", "ovl_load_eager.c")):
                          "up in gKeepSet")
     out = {"default": frozenset()}
     rows = re.findall(r"\{\s*(UNC_FORMAT_\w+)\s*,\s*KEEP\(\s*(OVL_ID_\w+)"
-                      r"\s*,\s*(KEEP_CRYPT|0)\s*\)\s*\}", body)
+                      r"\s*,\s*(KEEP_CRYPT|KEEP_PEEK|0)\s*\)\s*\}", body)
     if body.count("{") != len(rows):
         raise SystemExit("run_tiers: a release-table row this model cannot "
                          "read")
     for fmt, image, crypt in rows:
+        if crypt == "KEEP_PEEK":
+            continue                     # an envelope: peek_rows()
         keep = {image, "OVL_ID_CODECS"}
         if crypt == "KEEP_CRYPT":
             keep.add("OVL_ID_CRYPT")
@@ -1224,7 +1234,7 @@ def keep_sets(path=os.path.join(REPO, "mac", "ovl_load_eager.c")):
     extra = 0
     for m in re.finditer(r"if\s*\(([^;{}]*?)\)\s*ovl_keep\((OVL_ID_\w+)\s*,",
                          tail):
-        fmts = re.findall(r"fmt\s*==\s*(UNC_FORMAT_\w+)", m.group(1))
+        fmts = re.findall(r"(?:fmt|as)\s*==\s*(UNC_FORMAT_\w+)", m.group(1))
         if not fmts:
             continue                     # `if (want)`, `if (crypt)`
         for f in fmts:
@@ -1233,7 +1243,12 @@ def keep_sets(path=os.path.join(REPO, "mac", "ovl_load_eager.c")):
                                  "and is not a releasing case" % (f, m.group(2)))
             out[f] = out[f] | {m.group(2)}
         extra += 1
-    if tail.count("ovl_keep(") != 3 + extra:
+    # The two a peeked envelope adds, the inner format's reader and the
+    # sniffer, are peek_keep()'s.
+    if ("ovl_keep(inner, 5)" not in tail or
+            "ovl_keep(OVL_ID_SNIFF, 4)" not in tail):
+        raise SystemExit("run_tiers: a peeked envelope's keeps changed shape")
+    if tail.count("ovl_keep(") != 5 + extra:
         raise SystemExit("run_tiers: the loader has an ovl_keep this model "
                          "cannot attribute to a format")
     for keep in out.values():
@@ -1248,13 +1263,22 @@ def cipher_release(path=os.path.join(REPO, "mac", "ovl_load_eager.c")):
     """The formats whose ciphers the loader drops on a definite NO from
     unc_archive_encrypted, read out of the condition that does it."""
     text = CCOMMENT.sub(" ", open(path, encoding="utf-8").read())
-    m = re.search(r"if\s*\(\s*crypt\s*&&\s*\(([^;{}]*?)\)\s*&&\s*"
-                  r"unc_archive_encrypted\(\s*fmt\s*,\s*io\s*\)\s*==\s*"
+    m = re.search(r"if\s*\(\s*crypt\s*&&\s*\(([^;{}]*?)\)\s*&&[^;{}]*?"
+                  r"unc_archive_encrypted\(\s*as\s*,\s*io\s*\)[^;{}]*?==\s*"
                   r"UNC_ENC_NO\s*\)", text)
     if not m:
         raise SystemExit("run_tiers: the loader's cipher release changed "
                          "shape")
-    return frozenset(re.findall(r"fmt\s*==\s*(UNC_FORMAT_\w+)", m.group(1)))
+    return frozenset(re.findall(r"as\s*==\s*(UNC_FORMAT_\w+)", m.group(1)))
+
+
+def peek_rows(path=os.path.join(REPO, "mac", "ovl_load_eager.c")):
+    """The envelopes the loader peeks into, and the image each one's reader
+    is in: the KEEP_PEEK rows of its table."""
+    text = CCOMMENT.sub(" ", open(path, encoding="utf-8").read())
+    body = text.split("gKeepSet[][2] = {", 1)[1].split("};", 1)[0]
+    return dict(re.findall(r"\{\s*(UNC_FORMAT_\w+)\s*,\s*KEEP\(\s*"
+                           r"(OVL_ID_\w+)\s*,\s*KEEP_PEEK\s*\)\s*\}", body))
 
 
 def encinfo_probe(tmp):
@@ -1273,11 +1297,43 @@ def encinfo_probe(tmp):
         raise SystemExit("run_tiers: encinfo_probe did not build: "
                          + cc.stderr.strip().split("\n")[-1])
 
-    def ask(path):
-        out = subprocess.run([probe, path], capture_output=True,
-                             text=True).stdout.split()
-        return out[0] if out else "unknown"
+    def ask(path, peek=False):
+        if not peek:
+            out = subprocess.run([probe, path], capture_output=True,
+                                 text=True).stdout.split()
+            return out[0] if out else "unknown"
+        # "<inner format name> <yes|no|unknown> <peak> <path>", the name
+        # possibly with spaces in it, "-" for none.
+        line = subprocess.run([probe, "--peek", path], capture_output=True,
+                              text=True).stdout.strip()
+        if not line.endswith(path):
+            return None, "unknown", 0
+        name, enc, peak = line[:-len(path)].rstrip().rsplit(" ", 2)
+        return (None if name == "-" else name), enc, int(peak)
     return ask
+
+
+# The reserve the shell leaves when it takes a budget: `FreeMem() - 20,480`
+# (FORMATS.md, *Budget*). The peek runs on NewPtr before the budget is
+# taken, so what it can have is a budget plus this.
+RESERVE = 20480
+
+
+def peek_keep(ident, path, base, keep, peek, release, ask, fmts):
+    """What an envelope layer keeps, as ovl_release_if_unwanted decides it:
+    its own reader, the format its first bytes name and what that keeps, and
+    the sniffer — or the whole bundle (an empty set) when the peek names
+    nothing this table keeps, or would not fit the heap the bundle leaves."""
+    name, enc, peak = ask(path, peek=True)
+    inner = next((k for k, (n, _env) in fmts.items() if n == name), None)
+    if inner is None or inner not in keep or inner in peek:
+        return frozenset()
+    if peak > base + gain(frozenset()) + RESERVE:
+        return frozenset()
+    k = set(keep[inner]) | {peek[ident], "OVL_ID_SNIFF"}
+    if inner in release and enc == "no":
+        k.discard("OVL_ID_CRYPT")
+    return frozenset(k)
 
 
 def check_images(builddir=os.path.join(REPO, "build", "mac")):
@@ -1475,7 +1531,7 @@ def peel(binary, path, tmp, fmts):
 
 
 def sweep_shipped(binary, fixtures, base, fixdir, keep, fmts, tmp,
-                  release=frozenset(), ask=None):
+                  release=frozenset(), ask=None, peek=None):
     """Sweep at `base` plus what each layer's format gets back. A layer of
     a format in `release` keeps no ciphers when `ask` says NO, as the
     loader does."""
@@ -1496,7 +1552,11 @@ def sweep_shipped(binary, fixtures, base, fixdir, keep, fmts, tmp,
             return None
         for ident, shown, path in layers:
             k = keep.get(ident, keep["default"])
-            if ident in release and "OVL_ID_CRYPT" in k and ask(path) == "no":
+            if peek and ident in peek:
+                k = peek_keep(ident, path, base, keep, peek, release, ask,
+                              fmts)
+            elif ident in release and "OVL_ID_CRYPT" in k and \
+                    ask(path) == "no":
                 k = k - {"OVL_ID_CRYPT"}
             budget = base + gain(k)
             r = subprocess.run([binary, "t", "-nr", "--budget", str(budget),
@@ -1560,10 +1620,11 @@ def main():
         raise SystemExit("run_tiers: no %s — build it first" % a.macextract)
 
     fixtures = names(a.list)
-    keep = fmts = tmp = ask = None
+    keep = fmts = tmp = ask = peek = None
     release = frozenset()
     if a.shipped or a.check:
         fmts, keep, release = formats(), keep_sets(), cipher_release()
+        peek = peek_rows()
         print("run_tiers: %s" % check_images())
         print("run_tiers: %s" % (check_saved() or
                                  "OVL_SAVED not checked (no m68k size tool, "
@@ -1591,7 +1652,7 @@ def main():
             for tier in sorted(TIERS):
                 fails = sweep_shipped(a.macextract, fixtures, TIERS[tier][0],
                                       a.fixtures, keep, fmts, tmp,
-                                      release, ask)
+                                      release, ask, peek)
                 if fails is None:
                     return 1
                 got = len(fixtures) - len(fails)
@@ -1612,7 +1673,7 @@ def main():
         what = a.tier and TIERS[a.tier][1] or "an explicit budget"
         if a.shipped:
             fails = sweep_shipped(a.macextract, fixtures, budget, a.fixtures,
-                                  keep, fmts, tmp, release, ask)
+                                  keep, fmts, tmp, release, ask, peek)
             if fails is None:
                 return 1
             print("run_tiers: %d of %d pass on the shipped build — %s"

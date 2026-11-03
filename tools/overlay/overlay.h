@@ -165,6 +165,8 @@ typedef int32_t (*OverlayEntry)(const OverlayHost *host, int32_t which,
 #define OVL_DEST_ASK           58  /* the destination dialog; a = OvlDestArgs*, returns 1 if chosen */
 #define OVL_SEGSETUP_RUN       59  /* a set's setup; a = SegSetupArgs*, b = SegSetupFns* */
 #define OVL_SNIFF_ENVELOPE     60  /* unc_sniff_envelope: a = UncIO*; returns the UncFormat */
+#define OVL_ENVELOPE_PEEK      61  /* unc_envelope_peek: a = UncIO*, b = UncAlloc*;
+                                    * returns (enc + 1) << 8 | the UncFormat */
 
 /* OVL_DEST_ASK's argument. Plain integers, so this header needs no Mac
  * one: `v`/`h` are the dialog's top left, `vol` is the reply's vRefNum. */

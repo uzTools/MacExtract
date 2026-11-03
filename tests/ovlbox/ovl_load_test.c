@@ -40,6 +40,13 @@ OverlayEntry ovl_image(short id);
 OverlayEntry ovl_image_q(short id, int expected);
 void ovl_preload(void);
 void ovl_release_if_unwanted(UncFormat fmt, UncIO *io);
+
+/* The envelope peek's allocator (ovl_load_eager.c). Nothing here runs a peek
+ * — it calls into the sniffer's image, which this lane cannot execute — so
+ * these only have to link. Here and not in ovlbox.c, which the sink test
+ * links beside its own. */
+Ptr NewPtr(Size n) { return (Ptr)malloc((size_t)n); }
+void DisposePtr(Ptr p) { free(p); }
 int ovl_reload(void);
 unsigned long ovl_be32(const unsigned char *p);
 unsigned short ovl_be16(const unsigned char *p);

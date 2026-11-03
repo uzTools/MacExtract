@@ -1851,8 +1851,11 @@ def phase_chain(args, appbin, workdir, shot):
         return False
     ref = os.path.join(workdir, "_cli")
     os.makedirs(ref, exist_ok=True)
-    R.sh(CD.CLI, "x", "-o", ref, args.fixture)
-    want = set(os.listdir(ref))
+    # A resource fork is part of the file on the Mac and a NAME.rsrc beside
+    # it from the CLI by default, so every chain ending in a file with one
+    # read MISMATCH until 2026-11-03. Hidden forks are `._NAME`, left out.
+    R.sh(CD.CLI, "x", "--forks", "hidden", "-o", ref, args.fixture)
+    want = {n for n in os.listdir(ref) if not n.startswith("._")}
 
     ok = got == want
     print(f"interactive: after the chain, the volume holds {sorted(got)}")

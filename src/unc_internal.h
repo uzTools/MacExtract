@@ -1324,6 +1324,12 @@ int unc_zip_scan_eocd(void *ctx, UncZipReadAt rd, uint32_t end, uint32_t *at);
 #define UNC_ENC_UNKNOWN (-1)
 int unc_archive_encrypted(UncFormat fmt, UncIO *io);
 
+/* What the envelope `io` holds, sniffed from the first bytes of its payload
+ * (src/unc_peek.c): UNC_FORMAT_UNKNOWN when those do not say, or when `io`
+ * is no envelope. *enc gets unc_archive_encrypted's answer over the same
+ * bytes. Allocates through `al`; leaves `io` at 0. */
+UncFormat unc_envelope_peek(UncIO *io, UncAlloc *al, int *enc);
+
 /* One StuffIt fork: seek to `at`, decode `complen` -> `outlen` bytes
  * with the given method, verify the CRC-16/ARC (`wantcrc`; method 15
  * verifies its own internal CRC-32 instead). Shared by the classic

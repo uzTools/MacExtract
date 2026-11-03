@@ -50,7 +50,7 @@ unc_crypt_sit unc_crypt_sit5_key unc_crypt_free unc_entry_long_name
 unc_zip_scan_eocd unc_skip unc_crypt_zip unc_crypt_winzip_aes
 unc_hmac_final unc_crypt_apply unc_crypt_pf unc_as_record
 unc_ad_init unc_ad_feed unc_ad_end unc_ad_apply unc_side_kind unc_side_of
-unc_side_zip_open unc_side_zip_pair unc_copy_fork
+unc_side_zip_open unc_side_zip_pair unc_copy_fork unc_extract_as
 """.split()
 
 HEADERS = ("src/unc_internal.h", "include/macextract.h")
