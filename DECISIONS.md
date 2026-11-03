@@ -473,9 +473,15 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-30 (the middle part that was refused) — a spanned zip opened from a middle part, NAME.zNN, joins its set as the Mac shell's always did: every part of the family is placed by name, so refusing the middle ones protected nothing
 - 2026-10-31 (the dialog that opened behind the Finder) — a dialog put up while MacExtract is in the background stays blank and deaf even once brought forward, so the application waits to be brought forward first, and reads its waiting events before deciding it is
 - 2026-10-31 (the disk Standard File took first) — the part dialog takes the disk-inserted event on every call of its filter, because Standard File acts on it before the filter is shown it, and ejects any disk without the wanted part
+- 2026-10-31 (the helper list Expander asks for) — StuffIt Expander 5.5's installer offers to become Internet Config's helper for downloaded files; it claims no Finder creator, so nothing in it replaces a stub
+- 2026-10-31 (the hand-off that arrives once) — a post-processor's Open Documents event launches MacExtract with the archive, and is lost if MacExtract is already open; `companion/icsetup` makes MacExtract the post-processor where Expander was, and stamps downloads as MacExtract's
+- 2026-10-31 (the stub that sorts) — a stub hands MacExtract only the types its bundle claims; on Mac OS 9 the first launch after boot passes over a stub whose file name is 10 characters or more, StuffIt Expander then holds the creator, and a short name keeps it
 - 2026-11-01 (the scan that read every file's end) — a MIME set's candidates are described as MIME alone, and the envelope scan sniffs envelopes alone: both had run every scheme's or format's check on every file of a folder
 - 2026-11-01 (the set opened from its last floppy) — a MIME set opened from a later part ejects that disk at the first ask and needs it once
 - 2026-11-01 (the split that called a short file whole) — an open-ended split with a missing part reported its truncated file as complete
+- 2026-11-01 (the creators Expander does not open) — on Mac OS 9 StuffIt Expander is registered under `SITx` alone and a `SIT!` archive asks which program to use; a second bundle claims no creator for a stub either; and the boot volume every Mac OS 9 run here used carries StuffIt Deluxe's Finder patches
+- 2026-11-01 (the floor, and the second double-click) — the triaging stub hands a `SIT!` archive to MacExtract on System 3.0 at 1 MB; under MultiFinder a second double-click while MacExtract extracts is refused with MultiFinder's own alert
+- 2026-11-01 (the Open item MultiFinder looks for) — a File > Open... that queues during an extraction lets a second double-click wait its turn on System 6 MultiFinder, System 7 and Mac OS 9, for 192 B
 - 2026-11-02 (the dialogs that became the application) — v0.45.0 ships the dialog redesign the PoC switches held, resolved rather than switched on, and the application is byte for byte the one tested
 - 2026-11-03 (the symbols no encoder writes) — DiskDoubler method 10 and Now Compress shape 3 refuse the symbols their arithmetic cannot take
 - 2026-11-03 (the fork that padded to nothing) — MacBinary's fork layout inside a zip or LZH entry is checked by subtraction, at the two places that decide it
@@ -484,12 +490,6 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-03 (the ciphers a header can refuse) — a StuffIt 5 archive with no password hash releases the cipher image, and System 6.0.8 at 512 KB goes 68 -> 70/74
 - 2026-11-03 (the envelope that said what it held) — an envelope is peeked into before the release and keeps only what its payload needs; System 6.0.8 at 512 KB goes 70 -> 72/74
 - 2026-11-03 (the nibble that cost more than a byte) — Arsenic's inverse-BWT table at 2.5 bytes an entry puts a2basic on the fast path at 1 MB and slows every machine with room 1.6-3.7 %; not landed
-- 2026-10-31 (the helper list Expander asks for) — StuffIt Expander 5.5's installer offers to become Internet Config's helper for downloaded files; it claims no Finder creator, so nothing in it replaces a stub
-- 2026-10-31 (the hand-off that arrives once) — a post-processor's Open Documents event launches MacExtract with the archive, and is lost if MacExtract is already open; `companion/icsetup` makes MacExtract the post-processor where Expander was, and stamps downloads as MacExtract's
-- 2026-10-31 (the stub that sorts) — a stub hands MacExtract only the types its bundle claims; on Mac OS 9 the first launch after boot passes over a stub whose file name is 10 characters or more, StuffIt Expander then holds the creator, and a short name keeps it
-- 2026-11-01 (the creators Expander does not open) — on Mac OS 9 StuffIt Expander is registered under `SITx` alone and a `SIT!` archive asks which program to use; a second bundle claims no creator for a stub either; and the boot volume every Mac OS 9 run here used carries StuffIt Deluxe's Finder patches
-- 2026-11-01 (the floor, and the second double-click) — the triaging stub hands a `SIT!` archive to MacExtract on System 3.0 at 1 MB; under MultiFinder a second double-click while MacExtract extracts is refused with MultiFinder's own alert
-- 2026-11-01 (the Open item MultiFinder looks for) — a File > Open... that queues during an extraction lets a second double-click wait its turn on System 6 MultiFinder, System 7 and Mac OS 9; 192 B, not yet in the tree
 - 2026-11-03 (the gate a helper commit has) — `ci.sh` built nothing in `companion/`; `tools/check_helpers.py` builds a helper and reads what the Finder needs off it, and a commit touching only `companion/` and docs is gated by it and `tools/check_docs.py`
 
 ---
@@ -19332,6 +19332,210 @@ the way). A part renamed on a floppy is found once copied off it. Measured
 on 7.0.1 and 6.0.8: the wrong part, then the right ones, byte-exact; an
 unrelated disk on a one-drive Mac, then parts 2 and 3, byte-exact.
 
+## 2026-10-31 (the helper list Expander asks for) — StuffIt Expander 5.5's installer offers to become Internet Config's helper for downloaded files; it claims no Finder creator, so nothing in it replaces a stub
+
+Question (OPEN_ITEMS.md, *The double-click helpers*): the 5.5 installer
+"says it can take ownership of other creators" — does Aladdin have a way to
+open other programs' archives by double-click that the stubs should copy?
+
+**Claim (measured, Mac OS 9.2 under QEMU, two installs).** The question the
+installer asks, after copying the application, is Internet Config's, not
+the Finder's: *"Your Macintosh uses a list of helper applications to help
+expand files downloaded from the Internet. StuffIt Expander can be made the
+default helper application for expanding all files transferred to your
+machine. [...] Click "OK" to set StuffIt Expander as the default helper
+application."* (OK / Cancel; `DITL` 4002, text drawn by the installer's
+code). OK was clicked; the installer then reported success and showed no
+other alert, both times.
+
+**Read off the installer and the application, no emulator.** The installer
+(`APPL`/`STi0`, InstallerMaker) carries `STR#` 3000 *Extension*: `.sit .pf
+.hqx .bin .uu .uue .zip .gz .tgz .tar .img .smi` — the twelve extensions it
+maps — and the alerts *"Internet Preferences is fixed for Stuffit™
+Archives"* and *"Could not fix Internet Preferences"* (`DITL` 4000, 4001).
+Expander 5.5 exposes the same thing as a preference, `DITL` 3007 *Internet
+Config*, *"Use StuffIt Expander for all available types"*. Its bundles are
+`SITx` (`APPL ZIP  Bzp2 TARF BINA TEXT ...`) and a second one owned by
+`SIT!` (`SITD SIT! SIT5 Seg* SPSV Part`), the 4.0.2 arrangement that
+decorates and opens nothing (2026-10-12, *the second bundle that only
+paints*). Its own Read Me lists the twelve formats and a "helper"
+application lookup for formats it cannot read; the installer's Read Me says
+nothing of creators.
+
+**What OK wrote (measured, second install on a writable copy of the boot
+volume, shut down from the guest).** `Internet Preferences`' `Mapping`
+entry, read with `hfsutils` before and after (`companion/harvest/icmap.py`,
+the walk landing exactly on the resource's end): the 14 stock Mac OS 9.2
+entries for the twelve extensions were replaced by 22 of Aladdin's. Each
+keeps `SITx` as the post-processor, as stock already had it; what changed
+is the type and creator a saved download is STAMPED with:
+
+| extension | stock creator | after OK |
+|---|---|---|
+| `.sit` | `SITD`/`SITx` | `SIT5`, `SITD`, `SIT!` all `SIT!` (StuffIt Deluxe) |
+| `.hqx`, `.uu`, `.uue` | `TEXT`/`SITx`; `TEXT`/`R*ch` | `TEXT`/`R*ch` (BBEdit) |
+| `.bin` | `BINA`/`SITx` | `BINA`/`????` |
+| `.img` | `GKON` (GraphicConverter) | `Wrap`, `ddsk` disk images |
+| `.zip`, `.gz`, `.tgz`, `.tar`, `.pf`, `.smi` | `ZIP `, `Gzip`, `S691`, `CSIT`, `sImg` | the same creators |
+
+**Consequence.** No Finder mechanism to copy; the stubs stay. It bears on
+*which creators*: on Mac OS 9.2 after that OK, a browser that stamps
+downloads from Internet Config (hypothesis — no download was made) saves
+a `.sit` as `SIT!`, a `.zip` as `ZIP `, a `.tar` as
+`S691` (SunTar, not in `companion/app-bundles.tsv`), and BinHex and uu as
+BBEdit's `R*ch`, which no stub can claim without taking BBEdit's text files.
+Offering MacExtract as Internet Config's post-processor is a separate
+route, reaching only System 7.5+ with Internet Config and only new
+downloads (not priced, not proposed).
+
+## 2026-10-31 (the hand-off that arrives once) — a post-processor's Open Documents event launches MacExtract with the archive, and is lost if MacExtract is already open; `companion/icsetup` makes MacExtract the post-processor where Expander was, and stamps downloads as MacExtract's
+
+Asked by the maintainer: a small helper that sets Internet Config up for
+the user, after *the helper list Expander asks for* (above).
+
+**The gate first (measured, Mac OS 9.2 under QEMU, one run).** Whether a
+post-processor hand-off reaches a MacExtract whose `SIZE` says
+`notHighLevelEventAware`. `tools/aeodoc/` does what a browser does: an
+odoc for one archive to creator `MExt`.
+
+| case | how it was sent | result |
+|---|---|---|
+| A: MacExtract not running | odoc coerced to `typeAppParameters`, `LaunchApplication` | launched, asked *Extract into this folder*, extracted; data fork identical to the Linux CLI's |
+| B: MacExtract running (at its destination prompt) | `AESend` to its process, no reply asked | `AESend` returned 0; nothing extracted, no alert |
+
+So the Process Manager turns a launch event into the Finder information
+MacExtract already reads; an event to a running copy is dropped, silently
+for a sender that asks no reply. That is OPEN_ITEMS.md, *The double-click
+helpers*.
+
+**The helper (measured, same guest; a writable copy of the boot volume,
+shut down from the guest, `Internet Preferences` read back with hfsutils
+and `companion/harvest/icmap.py`).** `companion/icsetup/`, 10,752 B as
+MacBinary, built against Apple's `InternetConfig.h` and `libICGlueFar.a`
+(the near glue does not link). It rewrites the `Mapping` preference
+through `ICGetPref`/`ICSetPref`, saving the original under its own key
+`4D457874•SavedMapping` first; Restore writes that back.
+
+- **Which entries.** An extension MacExtract extracts AND an entry that
+  is already post-processed. The first build took the extension alone and
+  turned `.ascii` (SimpleText, plain text) and `.sea` (an application,
+  run, not opened) into MacExtract's; on the stock map the rule takes
+  exactly the 20 entries `SITx` had.
+- **What changes in each.** The post-processor (creator and name) AND,
+  asked by the maintainer, the file creator and application name: all
+  `MExt`/"MacExtract". On stock Mac OS 9.2 `.sit`, `.hqx`, `.bin`, `.pit`
+  and `.taz` were stamped `SITx`, a creator the stubs leave out (it is also
+  StuffIt X's; OPEN_ITEMS.md, *The double-click helpers*), so without
+  this a kept download double-clicks into Expander. Type, flags, extension
+  and MIME type stay; MacExtract's bundle claims every one of the types.
+  Read back: 20 entries differ from stock, in those four fields only. An
+  archive stamped `SITD`/`MExt`, opened from the Finder, went to
+  MacExtract and was extracted.
+- **Read back**: only `Mapping` and the backup key changed; the backup is
+  the stock `Mapping` byte for byte; the 20 entries name `MExt`; the walk
+  lands on the end (315 entries). A second run offers Restore; Restore,
+  then a third run, counts the stock 20 again.
+- **No Internet Config**: System 6.0.8 (as the boot shell) and System 3.0
+  (from the Finder) show *"Internet Config is not installed…"* and quit.
+
+**Size**: 59,392 B before `-gc-sections` (the universal `libInterface.a`
+is one object), 10,624 B after it and the MacsBug-name strip; 10,752 B
+with the stamping. Restore was run on the build before the stamping
+(same code path, unchanged).
+
+**Not run**: System 7.x with an Internet Config extension, a browser
+download, and whether a browser that finds MacExtract busy reports it.
+
+## 2026-10-31 (the stub that sorts) — a stub hands MacExtract only the types its bundle claims; on Mac OS 9 the first launch after boot passes over a stub whose file name is 10 characters or more, StuffIt Expander then holds the creator, and a short name keeps it
+
+Asked by the maintainer: a `SITx` stub that sends what MacExtract opens to
+MacExtract and the rest (StuffIt X, type `SITX`, read off Expander 7.0.3's
+bundle under `SIT!`) to StuffIt Expander, which would make
+`companion/icsetup` unnecessary; then, why Mac OS 9 kept `SITx` with
+Expander.
+
+**What the stub does** (`companion/stub/stub.c`, 8,448 B as MacBinary).
+It reads each document's type from the Finder's list and the types out of
+MacExtract's own `FREF`s at run time. All claimed: MacExtract, as before.
+Any one not: the first other application of the stub's creator the
+Desktop Manager lists. None: an alert. Measured: a `.sit` dropped on a
+`SITx` stub reached MacExtract (a logging build read 29 types and `SITD`).
+The hand-off to the other application has not run; the stub has not been
+run on System 6 or 3.0.
+
+**Why Expander won (measured, Mac OS 9.2 under QEMU, 15 boots; a `SITx`
+stub, StuffIt Expander 5.5 dated 1999, a `SITD`/`SITx` archive at the
+root).**
+
+- **At mount** every volume's desktop database lists both, the stub
+  first (`tools/dtlist`, which draws PBDTGetAPPL's answers in a window).
+- **The first application launch after boot**, when it is the archive,
+  goes to the stub or to Expander by the STUB'S FILE NAME. Stub won:
+  `Stub0`, `Stub1`, `Helper`, `SITx`, `SITx Hlp` (4-8 characters). Expander
+  won: `SITx Helper` (five boots), `SITxHelper`, `Expand Helper`, `Stub
+  Helper SITx` (10-16). A logging build of the stub wrote nothing in the
+  long-name case: the Finder launched Expander itself.
+- **After Expander has run**, that volume's database lists Expander alone
+  (`dtlist`), and every later open goes to it.
+- **When anything else was launched first**, the archive went to the stub
+  with the long name too (three boots).
+- **Ruled out, a boot each**: the date (20 minutes' wait), PowerPC code
+  (`cfrg` removed), a newer `vers`, high-level-event awareness, the
+  creator `SITx` (an Expander re-badged `TQ05` won the same way), the
+  `SITX` document, the stub's `FREF` list, the folder names. Why the
+  Finder reads a name length is not known; 9 characters is not run.
+
+**Installed after mount, the stub wins whatever its name (one boot, the
+maintainer's lead: "the last installed or inited takes precedence").**
+The losing layout, `SITx Helper`; before any launch the stub was
+duplicated in the Finder (Cmd-D), so `SITx Helper copy` (16 characters)
+was added to the database after Expander. The first launch, `A.sit`,
+went to the stub. The database then listed the copy at index 0 and 1 and
+Expander at 2; the original's entry was gone, replaced by its copy's.
+Then StuffIt Expander launched directly and quit: both entries stayed,
+and `A.sit` still went to the stub. So Expander running does not take the
+creator; the Finder dropping the stub on a first launch does.
+
+What is published agrees: Apple's *Information Alley* (May 1995) — "the
+Finder launches the application whose record in the desktop database was
+updated last" (quoted in Info-Mac Digest v16 #354); Inside Macintosh,
+PBDTGetAPPL — index 0 is "the application file with the most recent
+creation date", 1 and up "in arbitrary order"; Thomas Tempelmann's
+*How the Finder locates the creator application of a document*
+(tempel.org, tested 7.6.1-8.6) — a running application first, then the
+document's volume, the boot volume, the rest; on each, the application
+"tagged" as "the last one added", then the others if it is not valid; and
+"different versions … quite random". None mentions a name length.
+
+**Consequence.** A stub named in 8 characters or fewer is launched for
+its creator over StuffIt Expander on Mac OS 9, so a `SITx` stub can take
+Expander's downloads there — `icsetup` is then not needed for that; the
+`SIT! Helper` naming in `companion/README.md` (11) is the losing kind.
+**The three cases, and the user who installs StuffIt after MacExtract
+(measured, five more boots; the stub `SITx Helper`, 11 characters).**
+
+| case | result |
+|---|---|
+| Expander holding `SITx` (it alone in the database), the helpers folder duplicated in the Finder | the archive went to the stub |
+| Expander running, the archive opened | Expander (`Export.2`); quit, the stub again |
+| Expander holding `SITx`, `Desktop DB`/`DF` deleted so the Finder rebuilds them | Expander took the first launch, as on a fresh volume |
+| MacExtract and its helpers first, then Aladdin's own 5.5 installer onto the same volume (Internet Config question cancelled) | the stub; the database had NO Expander entry, even after Expander was launched from its folder |
+| the same volume restarted | the stub; still no Expander entry |
+
+So the StuffIt installer does not take the creator on Mac OS 9; a desktop
+rebuild does, by the registration race. **The way back without
+uninstalling StuffIt: open the helper by itself.** A stub opened with no
+document now removes its own entry and adds it again (PBDTRemoveAPPL,
+PBDTAddAPPL, PBDTFlush; Inside Macintosh: More Macintosh Toolbox, Desktop
+Manager) and says *"Archives this helper claims open in MacExtract
+again."* Measured on the rebuilt volume where Expander held `SITx`: after
+it the database listed the stub first, Expander second, and the archive
+went to MacExtract. (Opened alone, the stub used to start MacExtract at its
+Open dialog; that is what changed.) A running Expander still wins while it
+runs (Tempelmann: a running application first). Not run: System 7.x, and
+the reclaim on System 6 and 3.0, which have no desktop database for it
+(the stub then says it could not register itself).
+
 ## 2026-11-01 (the scan that read every file's end) — a MIME set's candidates are described as MIME alone, and the envelope scan sniffs envelopes alone: both had run every scheme's or format's check on every file of a folder
 
 **Claim (measured).** The part dialog was blank for ~5 s on the LC 475,
@@ -19369,6 +19573,368 @@ ended `UNC_OK` — no size is announced, so the short stream read as a clean
 end. `unc_sitseg_emit` now ends it `UNC_ERR_TRUNCATED` when the joiner met
 a missing part. The checks: whole, with a gap, and a counted split without
 a length still refused.
+
+## 2026-11-01 (the creators Expander does not open) — on Mac OS 9 StuffIt Expander is registered under `SITx` alone and a `SIT!` archive asks which program to use; a second bundle claims no creator for a stub either; and the boot volume every Mac OS 9 run here used carries StuffIt Deluxe's Finder patches
+
+Asked by the maintainer: Expander "opens more than one creator code"; can
+one stub claim several?
+
+**Measured (Mac OS 9.2 under QEMU, one boot on the shared `hfsboot.img`,
+two on a copy without StuffIt Deluxe's Finder add-ons).** A volume with
+StuffIt Expander 5.5 alone (its bundles: `SITx`, and `SIT!` with a `SIT!`
+signature resource) and a stub `Multi`, creator `MXst`, given a second
+`BNDL` and signature resource owned by `TQ07`. `tools/dtlist`: Expander
+is listed under `SITx` only, nothing under `SIT!`; `Multi` under `MXst`
+only, nothing under `TQ07`. A `SIT!` archive, double-clicked: *"Could not
+find the application program that created the document"*, offering
+MacExtract, Multi and StuffIt Expander (the programs whose bundles claim
+its type, `SITD`). A `TQ07` archive: the same. So no application, and no
+stub, owns a creator through a second bundle; the 2026-10-12 result
+(System 6.0.8, 7.0.1) holds on Mac OS 9.
+
+**The confounder.** On the shared `hfsboot.img` the same `SIT!` archive
+put up *"S.sit is in an older StuffIt format … converted using the
+StuffIt Deluxe application. [Don't Open] [Open Browse Only]"*: its System
+Folder carries StuffIt Deluxe 5.0.1's True Finder Integration, Aladdin
+Compression and Magic Menu (Dec 1998), the StuffIt Engine (2001) and
+Expander preferences, left by earlier work here. True Finder Integration
+patches the Finder for StuffIt archives — the likely source of "every
+StuffIt product opens them all". Every Mac OS 9 run of 2026-10-31 used
+that volume; the one case re-run without the three add-ons, the 11-
+character `SITx Helper` losing the first launch to Expander, came out the
+same. The rest of *the stub that sorts* is not re-run clean.
+
+## 2026-11-01 (the floor, and the second double-click) — the triaging stub hands a `SIT!` archive to MacExtract on System 3.0 at 1 MB; under MultiFinder a second double-click while MacExtract extracts is refused with MultiFinder's own alert
+
+**The stub on the floor (measured, Mini vMac, Mac Plus 1 MB, System 3.0,
+one boot each; `tools/vmac/mkboot.py --finder`, the stub in `MacExtract
+Helpers`, registered by opening that folder once).** A `SIT!`/`SIT!`
+archive double-clicked: MacExtract opened at *"Extract into this
+folder:"* — the stub's triage (`OpenResFile` on MacExtract, its `FREF`s)
+runs on the floor. The stub opened by itself: *"This helper could not
+register itself (error -50)."* — System 3.0 has no Desktop Manager
+(PBDTGetPath refuses, as measured for MacExtract 2026-10-17); the alert
+is safe, its wording is a programmer's.
+
+**MacExtract opened twice (measured, Mini vMac 1x, Mac Plus 4 MB, System
+6.0.8 under MultiFinder, one boot).** A 150 KB StuffIt 5 archive
+(`derived-a2basic.dmg.sit`, creator `MExt`) double-clicked and Save
+pressed; during the extraction a 3-second press on the Finder's window
+brought the Finder forward; a second `MExt` archive double-clicked:
+MultiFinder's alert *"Some "MacExtract" documents could not be opened or
+printed. Please open the documents from within the application."* No
+second copy starts and the running one is not handed the archive. The
+MacExtract application itself double-clicked the same way (same disk,
+another boot): MultiFinder brings the running copy to the front at its
+progress window, with no second copy and no alert. (A
+plain click did not switch: MacExtract sees a press only at its next
+progress callback, 2026-10-12.) Mac OS 9, sending an event to the
+running copy, drops it silently (2026-10-31, *the hand-off that arrives
+once*); a Finder double-click there is not run.
+
+**Type list (MacStamp, 2026-11-01, from formats.tsv, choices.tsv and its
+142,267-file census).** Every type MacStamp gives a format MacExtract
+extracts is in MacExtract's bundle; but DiskDoubler's own compressed
+single files carry creator `DDAP` and types `DDF0`-`DDF5`, `DD01`,
+`DDFL`, `DDf4` (census DDF2 88, DD01 10, DDFL 8, DDF3 2), which
+MacExtract extracts and its bundle does not claim — so a `DDAP` stub's
+triage would pass them to DiskDoubler.
+
+## 2026-11-01 (the Open item MultiFinder looks for) — a File > Open... that queues during an extraction lets a second double-click wait its turn on System 6 MultiFinder, System 7 and Mac OS 9, for 192 B
+
+Asked by the maintainer: a second archive opened while MacExtract
+extracts should wait its turn, not be refused.
+
+**The mechanism (Technical Note OV17, *MultiFinder Revisited: The 6.0
+System*, "Open Document and Quit").** In System 6.0 and later MultiFinder
+opens a document in an application already running "by simulating a
+mouse-down event in the application's menu item for opening files", then
+"short circuits" its `_SFGetFile` into returning the document; by default
+it looks for a File menu with Open.... MacExtract's File menu had only
+Quit, hence MultiFinder's *"could not be opened or printed"*.
+
+**The prototype** (`mac/`, uncommitted on `companion-expander55`; the diff
+is kept beside the run's notes): File gets `Open…` above Quit; chosen in
+the progress pump it calls SFGetFile and APPENDS the choice to the
+Finder's own document list (`AppParmHandle`, a record in its format), so
+the main loop takes it after the current archive exactly as it takes a
+second document of one Finder selection — no queue of its own. **Price:
++192 B code, +0 B A5** (CORRECTED 2026-11-03: rebased onto that day's
+tree it is +180 B code and +12 B A5, alignment; 192 B off every budget
+either way). Two heavier versions were measured and dropped:
+four fixed slots in A5 (+300 code, +292 A5) and a handle of our own
+(+348, +20). The first append build lost the queued archive silently on
+System 6 and 7: the Segment Loader's handle is locked and cannot grow in
+place; `HUnlock` before `SetHandleSize` fixed it (the reader goes by
+offsets, so the move is harmless). A5 moves with code size in padding
+steps: −4 B of code took A5 from +20 to +0 here.
+
+**Measured (one run each):**
+
+| System | how the second archive was opened | result (final build) |
+|---|---|---|
+| 6.0.8 MultiFinder, Mac Plus 4 MB, 1x | double-clicked in the Finder mid-extraction | no alert; after the first, its destination dialog; both extracted |
+| 7.0.1, Mac Plus 4 MB, 1x | the same | both extracted: System 7's Finder uses the menu for an application not aware of Apple events |
+| Mac OS 9.2 (clean copy), QEMU | the same | both extracted |
+| 6.0.8 Finder, Mac Plus 1 MB, 1x | File > Open... by hand mid-extraction | the Open dialog over the extraction; the choice extracted after it (two earlier runs queued the wrong row, by the harness's coordinates, and were refused *"Unknown format."*) |
+
+**The three checks after (final build, one run each):**
+
+- **Stack** (`-D UNC_AT_STACK`, its Standard File sampled by `SFHook`
+  here too): System 6.0.8 Finder at 1 MB, `derived-Library_ISBN_Barcoder
+  .sit` (the fixture FORMATS.md's *Stack* was sized on), File > Open...
+  mid-extraction, `Second.sit` queued and extracted. SAMPLE **5,038 B**
+  and PAINT **7,954 / 12,198 B**, the same as the same fixture without the
+  queue: Standard File over the decoder went no deeper than the decoder
+  already does. One moment of one fixture; not the deepest chain forced.
+- **MultiFinder at 1 MB**: MacExtract gets 597 KB (*"not enough memory …
+  2,048K needed, 597K available"*, OK); the second archive double-clicked
+  mid-extraction was queued and both were extracted (`a2basic.dmg` in
+  about 20 minutes at 1x).
+- **MacExtract at its own Open dialog** (MultiFinder, 4 MB): a 3-second
+  press on the Finder's window does not switch out of the modal dialog,
+  so no double-click reaches the Finder; the user chooses there. System
+  7 not run.
+
+**Committed 2026-11-01 with DiskDoubler's types in the bundle.**
+MacStamp's census found DiskDoubler's single compressed files (creator
+`DDAP`) typed `DDF0`-`DDF3`, `DD01`, `DDFL` and `DDf4`, none of which
+MacExtract's bundle claimed, though it opens them by content: so the
+System 7 Finder refused them dropped on it and a `DDAP` helper's triage
+would pass them on. The bundle now claims `DD01`, `DD02`, `DDF0`-`DDF7`,
+`DDFL` and `DDf4` (DiskDoubler's own expanders declare the rest; its other
+declared types are left out, `mac/macextract_icons.r`). **Price: 144 B**
+of budget, map entries outside the CODE + A5 unit: the 1 MB probe
+(`run.py --mem 1M -D UNC_AT_BUDGET`, `derived-ASCbeep.sit`) gave 742,636 B
+before and 742,492 B after, 12 B a type; the File menu's new item moved it
+by nothing. Re-take: `tools/build_mac.sh` ceilings +192 in all three
+configurations, `run_tiers.py` `TIERS` -336 each, `TIERS_CONTROL` +192,
+`TIERS_MACHINE` -144, `OVL_SAVED` unmoved (both builds grew 192);
+`dist/` rebuilt; `ci.sh` green. `dist/README.txt` still advises opening
+MacExtract again for the next archive: release notes, rewritten when a
+version is cut.
+
+**The helpers do not reach the queue (measured, System 6.0.8 MultiFinder,
+Mac Plus 4 MB, 1x, one run, the shipped build and a `SIT!` helper
+registered by opening its folder).** MacExtract extracting a `MExt`
+archive; the Finder brought forward; a `SITD`/`SIT!` archive
+double-clicked: MacExtract came back to the front, still on the first,
+with no alert, and the second was never extracted. The helper's `_Launch`
+of an application already running only brings it forward; the document
+list the Finder gave the helper goes nowhere. Open: OPEN_ITEMS.md, *The
+double-click helpers*.
+
+**The Finder's own route is open to a helper (measured, the same setup,
+one run).** Disassembly of the System 6.0.8 Finder (6.1.8, `CODE` 4) and
+MultiFinder (`CODE` 2, named `Puppet`) shows what the Finder does for a
+document whose application is running: it lists the processes with
+`_OSDispatch` selector 1 (a buffer and a maximum; 10-byte entries of
+process number, creator and four bytes that were 0 — corrected; first
+written as number, type, creator), and hands MultiFinder a *puppet string*
+with selector 0 (process number, handle, a long 0, a word 0). The handle
+is a long offset to the next event (6), a word count, that many 16-byte
+event records, then the document list copied whole in `AppParmHandle`'s
+layout; one record per document, `what` 15 and `message` `$0C` in the
+high byte and the document's offset in the handle below it, and a last
+record of `what` `$2000`. A probe helper making exactly those calls, the
+handle in the system heap since the helper quits at once, found
+MacExtract by creator in the list, and MacExtract asked where to extract
+the second archive when the first finished and extracted it, as it does
+for its own creator's double-click. The control is the paragraph above.
+Not known: whether MultiFinder copies or frees the handle (the probe
+leaks its 60 bytes), and whether System 7's Process Manager keeps
+selectors 0 and 1; selector 23 returns a process's details (name at +46)
+and is not needed.
+
+**The helper sends it, on System 6 only (measured, the same setup, one
+run each).** `companion/stub` lists the processes and, when one has
+creator `MExt`, queues the puppet string instead of `_Launch`ing; the
+handle goes in the system heap because MultiFinder disposes of it once
+played (`_DisposHandle` on its queue's head, read in `CODE` 1, not
+measured), after the helper has quit. 6.0.8 MultiFinder: the second
+archive extracted after the first. 6.0.8 without MultiFinder, where
+`_OSDispatch` is unimplemented: MacExtract launched with the archive, as
+before. The first build matched the list entry at the wrong offset and
+handed nothing on; a log of each test inside the helper found it. 9,344 B,
+from 8,832.
+
+**System 7.0.1 takes none of the helper's routes (measured, Mac Plus
+4 MB, 1x, the dist build, a `SIT!` helper registered by opening it alone,
+one run each unless noted).**
+
+| route, from the helper | result |
+|---|---|
+| puppet string, selectors 1 and 0 | both answered (process numbers `$7FFx`); nothing played; MacExtract was in front, and `SetFrontProcess` to it changed nothing |
+| `AESend` of an odoc to `MExt` | `connectionInvalid` (−609), from a helper `notHighLevelEventAware` and from one `isHighLevelEventAware` |
+| `AESend`, addressed by process serial number | `protocolErr` (−603) |
+| `PostHighLevelEvent` of the odoc's `'appa'` block, by serial number (what the Finder posts) | −603, from a helper not HLE-aware and from one that is |
+| the same, after `SetFrontProcess` to MacExtract, the Finder's order | MacExtract comes to the front; −603 |
+| the archive restamped `MExt`, the Finder asked to open it (`'FNDR'`/`'sope'`, the folder's alias and an `'fsel'` list), creator put back after 3 s | from a helper not HLE-aware: `noPortErr` (−903), nothing sent. From one that is: **queued and extracted after the first**; the creator stayed `MExt` (that probe was `cannotBackground`, so it is not known to have run again in time; not re-tested) |
+| `LaunchApplication`, the odoc as `launchAppParameters` | returns 0; nothing, whether the helper quits at once, copies the parameters to the system heap first, or stays running 10 s (corrected: an illegal-instruction stop first reported here was the probe's, BLOCKERS.md, *Withdrawn claims*) |
+
+For an application that is NOT running, the 7.0.1 Finder's `CODE` 103
+builds an odoc and calls `_Launch` with an extended block (`'LC'`, length
+32, flags `$4900`); for one that is, it calls `SetFrontProcess` (`CODE`
+160 `$8D4`) and posts the same block with `PostHighLevelEvent` to the
+process's serial number (`CODE` 160 `$644`, `CODE` 10 `$46A`: event at
++0, refcon +16, length +20, buffer +24). No Apple Event Manager trap
+appears in its code. Its `CODE` resources
+are `dcmp` 0 compressed and were read with a scratch transcription of
+python-rsrcfork's `compress/dcmp0.py`, whose output matched the stated
+length on all 186. The control: the same disk with the second archive
+stamped `MExt` and double-clicked, so the Finder hands it on; MacExtract
+extracted it after the first. (Corrected: the conclusion first written
+here, that 7.0.1 refuses every event a helper posts, was withdrawn the
+same day; BLOCKERS.md, *Withdrawn claims*.)
+
+**Why every post above failed, and the one that works (read in the
+7.0.1 Process Manager, then measured, same setup, one run each).** The
+Process Manager is the System file's `scod` resources −16479 to −16461,
+`dcmp` 2 compressed, read with a scratch transcription of
+python-rsrcfork's `compress/dcmp2.py` (every one to its stated length).
+Its `PostHighLevelEvent` (`scod` −16462 `$8BA`) sorts the receiver at
+`$1802`: a process addressed by serial number that has no high-level
+event port, as MacExtract, is sent down a fourth path, which calls
+`−16464 $5BC`, the Process Manager's own translation of an `'aevt'` odoc
+or quit into a puppet string (`$0C` per document, `$2000` last: the
+MultiFinder format above). That translation has two conditions:
+
+- **no process switch in progress**: it returns `protocolErr` (−603)
+  while the word at A5−870, which the switching code (`−16464
+  $37A0`–`$42AA`) steps through 13, 12, 11, 6, is not zero. A helper just
+  launched is still being switched in, so every post above came back
+  −603. Settled first, 60 ticks of `WaitNextEvent`, the first post returns
+  0;
+- **every document an alias**: it compares each descriptor's type with
+  `'alis'` (`$430`) and gives up otherwise; with `FSSpec`s the post
+  returned 0 and nothing arrived.
+
+And a third, measured but not read: the helper must not quit at once. A
+probe that posted and stayed 3 s in `WaitNextEvent` got its archive
+extracted; the helper that posted and quit got nothing, with the same
+log. That the string goes with its poster is the hypothesis.
+
+**One mechanism for System 6 and 7, then two again for Mac OS 9
+(measured, same setups, one run each unless noted).** The translation
+hands its string to `−16464 $28A`, which brings the target forward and
+queues it through the routine MultiFinder's selector 0 reaches, with the
+same arguments (process, handle, a long 0, a word 0). So the first 7.0.1
+test of selector 0 failed for the reason the posts did: the helper called
+it mid-switch, and quit at once. Called after 60 ticks of `WaitNextEvent`,
+the helper then staying, the MultiFinder call queued the second archive on
+7.0.1 too, and for a day the helper made only those two calls (9,472 B;
+corrected: "one mechanism" was the conclusion first written here). Mac OS
+9.2 does not take the string (below), so `companion/stub` is back to the
+two routes of 91cdd48: the MultiFinder string where there is no Apple
+Event Manager (System 6), the odoc where there is (System 7, Mac OS 9).
+10,112 B (8,832 before any of this), its forks byte-identical to the
+builds measured: 6.0.8 MultiFinder, 7.0.1 and Mac OS 9.2 (two runs) with
+MacExtract busy, the second archive extracted after the first; 7.0.1
+with MacExtract not running, and 6.0.8 without MultiFinder: MacExtract
+launched with the archive and extracted it.
+
+**What the helper weighs (measured, 2026-11-03).** Of the 10,112 B, the
+helper's own code is about 2.3 KB (`main` 2,114 B with everything
+inlined); the rest is Retro68's default runtime: the multi-segment loader
+and its patches, relocation, C start-up and exit handling, MacsBug names.
+Built single-segment (`--mac-single`, `--mac-strip-macsbug`,
+`-ffunction-sections`): **6,784 B**, one 5,443-B `CODE`; with the bundle
+and the two icon families `make_stub.py` adds, 14,976 → **11,648 B** per
+helper. What is left of the runtime, relocation and exit handling (~2.7
+KB), would need start-up code of its own; not done. The same build on
+6.0.8 MultiFinder and 7.0.1, MacExtract busy: the second archive
+extracted after the first (one run each). The icons were then 4,864 B
+of each helper: two families, MacExtract's own for the helper and the
+archive icon for its documents. **The maintainer, 2026-11-03: the archive
+icon for both.** One family, every `FREF` on local icon 0: **9,344 B** per
+helper. Read on screen: on 7.0.1 and on a 6.0.8 disk no helper had
+registered on, the helper and its archives draw the archive icon (on a
+6.0.8 disk an older helper had registered on, the Desktop file kept the
+old icon); and on that fresh 6.0.8 disk a double-click still launched
+MacExtract with the archive, extracted.
+
+**How long the helper must stay (measured, 7.0.1, the final build with
+only the stay changed, one run each).** The maintainer asked whether the
+stay was the ticks between MacExtract's event pumps, the gaps that also
+leave a click unanswered (FORMATS.md, *How long a click waits*: Arsenic
+0.8 s at most, Compact Pro 4.8 s).
+
+| MacExtract busy with | helper stays | second archive |
+|---|---|---|
+| `derived-a2basic.dmg.sit`, Arsenic | 0 s | lost |
+| the same | 0.5 s | extracted |
+| `derived-XferIt_1.5b4.sea`, Compact Pro, double-clicked at 20 % | 3 s | extracted |
+| the same | 12 s | extracted |
+| the same, twice (20 % → 28 %) | 0.5 s | extracted, both |
+
+These do not answer the question (corrected: first written here as "it is
+not the pump"). The stay is a loop of `WaitNextEvent` until so many ticks
+have passed, and on a cooperative Mac the helper's call does not return
+until it is given time again, which, MacExtract being in front, may be at
+MacExtract's next pump; so "0.5 s" may have been one call lasting a
+pump's gap. What the table does show: no call at all loses the archive,
+and some call is enough.
+
+The helper's ticks after the call, logged (TickCount before the call,
+after it, after each `WaitNextEvent`; one run each): behind Compact Pro
+0, 1, 4, 4, 4, 4, 4, **1,830**; behind Arsenic 0, 0, 4, 4, 4, 4, 4,
+**227**. The first five calls return at once, the helper still in front;
+the sixth waits until the helper is given time in the background, 30 s
+and 3.8 s later. So every stay above was in fact that long, and the
+question is whether the quick calls are enough. **They are not**
+(behind Compact Pro, double-clicked at 20 %, one run each): one
+`WaitNextEvent` then quit, lost; five, lost. The helper has to last until
+the call that blocks, whose return waits on MacExtract's next event call:
+the maintainer's ticks. Not because MacExtract must be in front: a helper
+that queued the string, called `SetFrontProcess` to MacExtract and quit
+at once lost the archive behind Compact Pro and behind Arsenic, MacExtract
+in front throughout (one run each; corrected: a front-process
+explanation was first written here). *Hypothesis*: the helper is the
+string's puppeteer (Technical Note OV17's word), the string is abandoned
+if it quits before the string has played, and the blocking call returns
+when it has.
+
+**A second archive double-clicked during the stay (measured, 7.0.1,
+Arsenic busy, one run).** Other.sit, then 2 s later Third.sit, both
+`SIT!`: **neither was extracted**, and the helper was still open in the
+last frame. The Finder hands a second document to a running helper by
+bringing it forward, which the helper does not read, and the first
+string's switch is presumably undone with it.
+
+**Mac OS 9.2 takes the Apple event, not the puppet string (measured,
+QEMU, a fresh transfer disk each run, the helper registered by opening it
+alone, `derived-Library_ISBN_Barcoder.sit` busy and `Other.sit` opened at
+0–39 %).** The current helper's MultiFinder string arrives: when the
+first archive is done MacExtract takes a second one, and says **"Could
+not open the archive."** Three runs: as committed; with each document's
+working directory reopened under `'ERIK'` (MultiFinder's own, 6.0.8
+`CODE` 1 `$9FC`); with the volume's own reference number, the archive
+being at the root. So it is not the working directory. **What it does
+with them (measured, one run, a scratch MacExtract that appended Standard
+File's reply to a file before queueing, never committed):** the helper's
+string came back as volume 7999, type `D3C44FB8` and a 64-byte name of
+binary noise; in the same session the Finder's own hand-over of a `MExt`
+archive came back as volume −2, `SITD`, `Third.sit`. So Mac OS 9 plays the
+string and answers MacExtract's dialog from somewhere other than the
+helper's record: it does not resolve a `$0C` message's offset as 6.0.8 and
+7.0.1 do. Where it reads instead is not known (*hypothesis*: the 24 bits
+as an address, or from another base); its Process Manager is not in the
+System file's `scod`s any more but a `ProcessMgrLib` fragment, apparently
+in the compressed NewWorld ROM, and was not read. The helper of 91cdd48, which posts an
+odoc settled and with aliases where Apple events exist, got the archive
+extracted on Mac OS 9 (one run). So one mechanism cannot cover the three:
+the string fails on 9, the event does not exist on 6.
+
+**Where it stops (the maintainer, 2026-11-02).** One more archive at a
+time is what is promised: File > Open... on every System, a double-click
+under MultiFinder and System 7, through a helper or straight to MacExtract
+for its own creator. More archives opened in a burst short enough to fall
+inside a helper's stay are dropped silently, a limitation of the
+application (OPEN_ITEMS.md, Part 1). Weighed and not taken: the helper
+answering its own File > Open... during the stay (bytes in every helper,
+and twenty helpers), a mailbox on disk (a single-floppy Mac would be
+asked for MacExtract's disk at every check), and a mailbox in the system
+heap behind a Gestalt selector (declined).
 
 ## 2026-11-02 (the dialogs that became the application) — v0.45.0 ships the dialog redesign the PoC switches held, resolved rather than switched on, and the application is byte for byte the one tested
 
@@ -19654,569 +20220,6 @@ for a machine with room. **Not tried:** keeping the 3-byte table whenever
 it fits and falling to 2.5 bytes only where it does not, a tier between
 the table and the sampled index. Only its dispatch would touch the fast
 path, and that test is what would need the same measurement.
-## 2026-10-31 (the helper list Expander asks for) — StuffIt Expander 5.5's installer offers to become Internet Config's helper for downloaded files; it claims no Finder creator, so nothing in it replaces a stub
-
-Question (OPEN_ITEMS.md, *The double-click helpers*): the 5.5 installer
-"says it can take ownership of other creators" — does Aladdin have a way to
-open other programs' archives by double-click that the stubs should copy?
-
-**Claim (measured, Mac OS 9.2 under QEMU, two installs).** The question the
-installer asks, after copying the application, is Internet Config's, not
-the Finder's: *"Your Macintosh uses a list of helper applications to help
-expand files downloaded from the Internet. StuffIt Expander can be made the
-default helper application for expanding all files transferred to your
-machine. [...] Click "OK" to set StuffIt Expander as the default helper
-application."* (OK / Cancel; `DITL` 4002, text drawn by the installer's
-code). OK was clicked; the installer then reported success and showed no
-other alert, both times.
-
-**Read off the installer and the application, no emulator.** The installer
-(`APPL`/`STi0`, InstallerMaker) carries `STR#` 3000 *Extension*: `.sit .pf
-.hqx .bin .uu .uue .zip .gz .tgz .tar .img .smi` — the twelve extensions it
-maps — and the alerts *"Internet Preferences is fixed for Stuffit™
-Archives"* and *"Could not fix Internet Preferences"* (`DITL` 4000, 4001).
-Expander 5.5 exposes the same thing as a preference, `DITL` 3007 *Internet
-Config*, *"Use StuffIt Expander for all available types"*. Its bundles are
-`SITx` (`APPL ZIP  Bzp2 TARF BINA TEXT ...`) and a second one owned by
-`SIT!` (`SITD SIT! SIT5 Seg* SPSV Part`), the 4.0.2 arrangement that
-decorates and opens nothing (2026-10-12, *the second bundle that only
-paints*). Its own Read Me lists the twelve formats and a "helper"
-application lookup for formats it cannot read; the installer's Read Me says
-nothing of creators.
-
-**What OK wrote (measured, second install on a writable copy of the boot
-volume, shut down from the guest).** `Internet Preferences`' `Mapping`
-entry, read with `hfsutils` before and after (`companion/harvest/icmap.py`,
-the walk landing exactly on the resource's end): the 14 stock Mac OS 9.2
-entries for the twelve extensions were replaced by 22 of Aladdin's. Each
-keeps `SITx` as the post-processor, as stock already had it; what changed
-is the type and creator a saved download is STAMPED with:
-
-| extension | stock creator | after OK |
-|---|---|---|
-| `.sit` | `SITD`/`SITx` | `SIT5`, `SITD`, `SIT!` all `SIT!` (StuffIt Deluxe) |
-| `.hqx`, `.uu`, `.uue` | `TEXT`/`SITx`; `TEXT`/`R*ch` | `TEXT`/`R*ch` (BBEdit) |
-| `.bin` | `BINA`/`SITx` | `BINA`/`????` |
-| `.img` | `GKON` (GraphicConverter) | `Wrap`, `ddsk` disk images |
-| `.zip`, `.gz`, `.tgz`, `.tar`, `.pf`, `.smi` | `ZIP `, `Gzip`, `S691`, `CSIT`, `sImg` | the same creators |
-
-**Consequence.** No Finder mechanism to copy; the stubs stay. It bears on
-*which creators*: on Mac OS 9.2 after that OK, a browser that stamps
-downloads from Internet Config (hypothesis — no download was made) saves
-a `.sit` as `SIT!`, a `.zip` as `ZIP `, a `.tar` as
-`S691` (SunTar, not in `companion/app-bundles.tsv`), and BinHex and uu as
-BBEdit's `R*ch`, which no stub can claim without taking BBEdit's text files.
-Offering MacExtract as Internet Config's post-processor is a separate
-route, reaching only System 7.5+ with Internet Config and only new
-downloads (not priced, not proposed).
-
-## 2026-10-31 (the hand-off that arrives once) — a post-processor's Open Documents event launches MacExtract with the archive, and is lost if MacExtract is already open; `companion/icsetup` makes MacExtract the post-processor where Expander was, and stamps downloads as MacExtract's
-
-Asked by the maintainer: a small helper that sets Internet Config up for
-the user, after *the helper list Expander asks for* (above).
-
-**The gate first (measured, Mac OS 9.2 under QEMU, one run).** Whether a
-post-processor hand-off reaches a MacExtract whose `SIZE` says
-`notHighLevelEventAware`. `tools/aeodoc/` does what a browser does: an
-odoc for one archive to creator `MExt`.
-
-| case | how it was sent | result |
-|---|---|---|
-| A: MacExtract not running | odoc coerced to `typeAppParameters`, `LaunchApplication` | launched, asked *Extract into this folder*, extracted; data fork identical to the Linux CLI's |
-| B: MacExtract running (at its destination prompt) | `AESend` to its process, no reply asked | `AESend` returned 0; nothing extracted, no alert |
-
-So the Process Manager turns a launch event into the Finder information
-MacExtract already reads; an event to a running copy is dropped, silently
-for a sender that asks no reply. That is OPEN_ITEMS.md, *The double-click
-helpers*.
-
-**The helper (measured, same guest; a writable copy of the boot volume,
-shut down from the guest, `Internet Preferences` read back with hfsutils
-and `companion/harvest/icmap.py`).** `companion/icsetup/`, 10,752 B as
-MacBinary, built against Apple's `InternetConfig.h` and `libICGlueFar.a`
-(the near glue does not link). It rewrites the `Mapping` preference
-through `ICGetPref`/`ICSetPref`, saving the original under its own key
-`4D457874•SavedMapping` first; Restore writes that back.
-
-- **Which entries.** An extension MacExtract extracts AND an entry that
-  is already post-processed. The first build took the extension alone and
-  turned `.ascii` (SimpleText, plain text) and `.sea` (an application,
-  run, not opened) into MacExtract's; on the stock map the rule takes
-  exactly the 20 entries `SITx` had.
-- **What changes in each.** The post-processor (creator and name) AND,
-  asked by the maintainer, the file creator and application name: all
-  `MExt`/"MacExtract". On stock Mac OS 9.2 `.sit`, `.hqx`, `.bin`, `.pit`
-  and `.taz` were stamped `SITx`, a creator the stubs leave out (it is also
-  StuffIt X's; OPEN_ITEMS.md, *The double-click helpers*), so without
-  this a kept download double-clicks into Expander. Type, flags, extension
-  and MIME type stay; MacExtract's bundle claims every one of the types.
-  Read back: 20 entries differ from stock, in those four fields only. An
-  archive stamped `SITD`/`MExt`, opened from the Finder, went to
-  MacExtract and was extracted.
-- **Read back**: only `Mapping` and the backup key changed; the backup is
-  the stock `Mapping` byte for byte; the 20 entries name `MExt`; the walk
-  lands on the end (315 entries). A second run offers Restore; Restore,
-  then a third run, counts the stock 20 again.
-- **No Internet Config**: System 6.0.8 (as the boot shell) and System 3.0
-  (from the Finder) show *"Internet Config is not installed…"* and quit.
-
-**Size**: 59,392 B before `-gc-sections` (the universal `libInterface.a`
-is one object), 10,624 B after it and the MacsBug-name strip; 10,752 B
-with the stamping. Restore was run on the build before the stamping
-(same code path, unchanged).
-
-**Not run**: System 7.x with an Internet Config extension, a browser
-download, and whether a browser that finds MacExtract busy reports it.
-
-## 2026-10-31 (the stub that sorts) — a stub hands MacExtract only the types its bundle claims; on Mac OS 9 the first launch after boot passes over a stub whose file name is 10 characters or more, StuffIt Expander then holds the creator, and a short name keeps it
-
-Asked by the maintainer: a `SITx` stub that sends what MacExtract opens to
-MacExtract and the rest (StuffIt X, type `SITX`, read off Expander 7.0.3's
-bundle under `SIT!`) to StuffIt Expander, which would make
-`companion/icsetup` unnecessary; then, why Mac OS 9 kept `SITx` with
-Expander.
-
-**What the stub does** (`companion/stub/stub.c`, 8,448 B as MacBinary).
-It reads each document's type from the Finder's list and the types out of
-MacExtract's own `FREF`s at run time. All claimed: MacExtract, as before.
-Any one not: the first other application of the stub's creator the
-Desktop Manager lists. None: an alert. Measured: a `.sit` dropped on a
-`SITx` stub reached MacExtract (a logging build read 29 types and `SITD`).
-The hand-off to the other application has not run; the stub has not been
-run on System 6 or 3.0.
-
-**Why Expander won (measured, Mac OS 9.2 under QEMU, 15 boots; a `SITx`
-stub, StuffIt Expander 5.5 dated 1999, a `SITD`/`SITx` archive at the
-root).**
-
-- **At mount** every volume's desktop database lists both, the stub
-  first (`tools/dtlist`, which draws PBDTGetAPPL's answers in a window).
-- **The first application launch after boot**, when it is the archive,
-  goes to the stub or to Expander by the STUB'S FILE NAME. Stub won:
-  `Stub0`, `Stub1`, `Helper`, `SITx`, `SITx Hlp` (4-8 characters). Expander
-  won: `SITx Helper` (five boots), `SITxHelper`, `Expand Helper`, `Stub
-  Helper SITx` (10-16). A logging build of the stub wrote nothing in the
-  long-name case: the Finder launched Expander itself.
-- **After Expander has run**, that volume's database lists Expander alone
-  (`dtlist`), and every later open goes to it.
-- **When anything else was launched first**, the archive went to the stub
-  with the long name too (three boots).
-- **Ruled out, a boot each**: the date (20 minutes' wait), PowerPC code
-  (`cfrg` removed), a newer `vers`, high-level-event awareness, the
-  creator `SITx` (an Expander re-badged `TQ05` won the same way), the
-  `SITX` document, the stub's `FREF` list, the folder names. Why the
-  Finder reads a name length is not known; 9 characters is not run.
-
-**Installed after mount, the stub wins whatever its name (one boot, the
-maintainer's lead: "the last installed or inited takes precedence").**
-The losing layout, `SITx Helper`; before any launch the stub was
-duplicated in the Finder (Cmd-D), so `SITx Helper copy` (16 characters)
-was added to the database after Expander. The first launch, `A.sit`,
-went to the stub. The database then listed the copy at index 0 and 1 and
-Expander at 2; the original's entry was gone, replaced by its copy's.
-Then StuffIt Expander launched directly and quit: both entries stayed,
-and `A.sit` still went to the stub. So Expander running does not take the
-creator; the Finder dropping the stub on a first launch does.
-
-What is published agrees: Apple's *Information Alley* (May 1995) — "the
-Finder launches the application whose record in the desktop database was
-updated last" (quoted in Info-Mac Digest v16 #354); Inside Macintosh,
-PBDTGetAPPL — index 0 is "the application file with the most recent
-creation date", 1 and up "in arbitrary order"; Thomas Tempelmann's
-*How the Finder locates the creator application of a document*
-(tempel.org, tested 7.6.1-8.6) — a running application first, then the
-document's volume, the boot volume, the rest; on each, the application
-"tagged" as "the last one added", then the others if it is not valid; and
-"different versions … quite random". None mentions a name length.
-
-**Consequence.** A stub named in 8 characters or fewer is launched for
-its creator over StuffIt Expander on Mac OS 9, so a `SITx` stub can take
-Expander's downloads there — `icsetup` is then not needed for that; the
-`SIT! Helper` naming in `companion/README.md` (11) is the losing kind.
-**The three cases, and the user who installs StuffIt after MacExtract
-(measured, five more boots; the stub `SITx Helper`, 11 characters).**
-
-| case | result |
-|---|---|
-| Expander holding `SITx` (it alone in the database), the helpers folder duplicated in the Finder | the archive went to the stub |
-| Expander running, the archive opened | Expander (`Export.2`); quit, the stub again |
-| Expander holding `SITx`, `Desktop DB`/`DF` deleted so the Finder rebuilds them | Expander took the first launch, as on a fresh volume |
-| MacExtract and its helpers first, then Aladdin's own 5.5 installer onto the same volume (Internet Config question cancelled) | the stub; the database had NO Expander entry, even after Expander was launched from its folder |
-| the same volume restarted | the stub; still no Expander entry |
-
-So the StuffIt installer does not take the creator on Mac OS 9; a desktop
-rebuild does, by the registration race. **The way back without
-uninstalling StuffIt: open the helper by itself.** A stub opened with no
-document now removes its own entry and adds it again (PBDTRemoveAPPL,
-PBDTAddAPPL, PBDTFlush; Inside Macintosh: More Macintosh Toolbox, Desktop
-Manager) and says *"Archives this helper claims open in MacExtract
-again."* Measured on the rebuilt volume where Expander held `SITx`: after
-it the database listed the stub first, Expander second, and the archive
-went to MacExtract. (Opened alone, the stub used to start MacExtract at its
-Open dialog; that is what changed.) A running Expander still wins while it
-runs (Tempelmann: a running application first). Not run: System 7.x, and
-the reclaim on System 6 and 3.0, which have no desktop database for it
-(the stub then says it could not register itself).
-
-## 2026-11-01 (the creators Expander does not open) — on Mac OS 9 StuffIt Expander is registered under `SITx` alone and a `SIT!` archive asks which program to use; a second bundle claims no creator for a stub either; and the boot volume every Mac OS 9 run here used carries StuffIt Deluxe's Finder patches
-
-Asked by the maintainer: Expander "opens more than one creator code"; can
-one stub claim several?
-
-**Measured (Mac OS 9.2 under QEMU, one boot on the shared `hfsboot.img`,
-two on a copy without StuffIt Deluxe's Finder add-ons).** A volume with
-StuffIt Expander 5.5 alone (its bundles: `SITx`, and `SIT!` with a `SIT!`
-signature resource) and a stub `Multi`, creator `MXst`, given a second
-`BNDL` and signature resource owned by `TQ07`. `tools/dtlist`: Expander
-is listed under `SITx` only, nothing under `SIT!`; `Multi` under `MXst`
-only, nothing under `TQ07`. A `SIT!` archive, double-clicked: *"Could not
-find the application program that created the document"*, offering
-MacExtract, Multi and StuffIt Expander (the programs whose bundles claim
-its type, `SITD`). A `TQ07` archive: the same. So no application, and no
-stub, owns a creator through a second bundle; the 2026-10-12 result
-(System 6.0.8, 7.0.1) holds on Mac OS 9.
-
-**The confounder.** On the shared `hfsboot.img` the same `SIT!` archive
-put up *"S.sit is in an older StuffIt format … converted using the
-StuffIt Deluxe application. [Don't Open] [Open Browse Only]"*: its System
-Folder carries StuffIt Deluxe 5.0.1's True Finder Integration, Aladdin
-Compression and Magic Menu (Dec 1998), the StuffIt Engine (2001) and
-Expander preferences, left by earlier work here. True Finder Integration
-patches the Finder for StuffIt archives — the likely source of "every
-StuffIt product opens them all". Every Mac OS 9 run of 2026-10-31 used
-that volume; the one case re-run without the three add-ons, the 11-
-character `SITx Helper` losing the first launch to Expander, came out the
-same. The rest of *the stub that sorts* is not re-run clean.
-
-## 2026-11-01 (the floor, and the second double-click) — the triaging stub hands a `SIT!` archive to MacExtract on System 3.0 at 1 MB; under MultiFinder a second double-click while MacExtract extracts is refused with MultiFinder's own alert
-
-**The stub on the floor (measured, Mini vMac, Mac Plus 1 MB, System 3.0,
-one boot each; `tools/vmac/mkboot.py --finder`, the stub in `MacExtract
-Helpers`, registered by opening that folder once).** A `SIT!`/`SIT!`
-archive double-clicked: MacExtract opened at *"Extract into this
-folder:"* — the stub's triage (`OpenResFile` on MacExtract, its `FREF`s)
-runs on the floor. The stub opened by itself: *"This helper could not
-register itself (error -50)."* — System 3.0 has no Desktop Manager
-(PBDTGetPath refuses, as measured for MacExtract 2026-10-17); the alert
-is safe, its wording is a programmer's.
-
-**MacExtract opened twice (measured, Mini vMac 1x, Mac Plus 4 MB, System
-6.0.8 under MultiFinder, one boot).** A 150 KB StuffIt 5 archive
-(`derived-a2basic.dmg.sit`, creator `MExt`) double-clicked and Save
-pressed; during the extraction a 3-second press on the Finder's window
-brought the Finder forward; a second `MExt` archive double-clicked:
-MultiFinder's alert *"Some "MacExtract" documents could not be opened or
-printed. Please open the documents from within the application."* No
-second copy starts and the running one is not handed the archive. The
-MacExtract application itself double-clicked the same way (same disk,
-another boot): MultiFinder brings the running copy to the front at its
-progress window, with no second copy and no alert. (A
-plain click did not switch: MacExtract sees a press only at its next
-progress callback, 2026-10-12.) Mac OS 9, sending an event to the
-running copy, drops it silently (2026-10-31, *the hand-off that arrives
-once*); a Finder double-click there is not run.
-
-**Type list (MacStamp, 2026-11-01, from formats.tsv, choices.tsv and its
-142,267-file census).** Every type MacStamp gives a format MacExtract
-extracts is in MacExtract's bundle; but DiskDoubler's own compressed
-single files carry creator `DDAP` and types `DDF0`-`DDF5`, `DD01`,
-`DDFL`, `DDf4` (census DDF2 88, DD01 10, DDFL 8, DDF3 2), which
-MacExtract extracts and its bundle does not claim — so a `DDAP` stub's
-triage would pass them to DiskDoubler.
-
-## 2026-11-01 (the Open item MultiFinder looks for) — a File > Open... that queues during an extraction lets a second double-click wait its turn on System 6 MultiFinder, System 7 and Mac OS 9; 192 B, not yet in the tree
-
-Asked by the maintainer: a second archive opened while MacExtract
-extracts should wait its turn, not be refused.
-
-**The mechanism (Technical Note OV17, *MultiFinder Revisited: The 6.0
-System*, "Open Document and Quit").** In System 6.0 and later MultiFinder
-opens a document in an application already running "by simulating a
-mouse-down event in the application's menu item for opening files", then
-"short circuits" its `_SFGetFile` into returning the document; by default
-it looks for a File menu with Open.... MacExtract's File menu had only
-Quit, hence MultiFinder's *"could not be opened or printed"*.
-
-**The prototype** (`mac/`, uncommitted on `companion-expander55`; the diff
-is kept beside the run's notes): File gets `Open…` above Quit; chosen in
-the progress pump it calls SFGetFile and APPENDS the choice to the
-Finder's own document list (`AppParmHandle`, a record in its format), so
-the main loop takes it after the current archive exactly as it takes a
-second document of one Finder selection — no queue of its own. **Price:
-+192 B code, +0 B A5.** Two heavier versions were measured and dropped:
-four fixed slots in A5 (+300 code, +292 A5) and a handle of our own
-(+348, +20). The first append build lost the queued archive silently on
-System 6 and 7: the Segment Loader's handle is locked and cannot grow in
-place; `HUnlock` before `SetHandleSize` fixed it (the reader goes by
-offsets, so the move is harmless). A5 moves with code size in padding
-steps: −4 B of code took A5 from +20 to +0 here.
-
-**Measured (one run each):**
-
-| System | how the second archive was opened | result (final build) |
-|---|---|---|
-| 6.0.8 MultiFinder, Mac Plus 4 MB, 1x | double-clicked in the Finder mid-extraction | no alert; after the first, its destination dialog; both extracted |
-| 7.0.1, Mac Plus 4 MB, 1x | the same | both extracted: System 7's Finder uses the menu for an application not aware of Apple events |
-| Mac OS 9.2 (clean copy), QEMU | the same | both extracted |
-| 6.0.8 Finder, Mac Plus 1 MB, 1x | File > Open... by hand mid-extraction | the Open dialog over the extraction; the choice extracted after it (two earlier runs queued the wrong row, by the harness's coordinates, and were refused *"Unknown format."*) |
-
-**The three checks after (final build, one run each):**
-
-- **Stack** (`-D UNC_AT_STACK`, its Standard File sampled by `SFHook`
-  here too): System 6.0.8 Finder at 1 MB, `derived-Library_ISBN_Barcoder
-  .sit` (the fixture FORMATS.md's *Stack* was sized on), File > Open...
-  mid-extraction, `Second.sit` queued and extracted. SAMPLE **5,038 B**
-  and PAINT **7,954 / 12,198 B**, the same as the same fixture without the
-  queue: Standard File over the decoder went no deeper than the decoder
-  already does. One moment of one fixture; not the deepest chain forced.
-- **MultiFinder at 1 MB**: MacExtract gets 597 KB (*"not enough memory …
-  2,048K needed, 597K available"*, OK); the second archive double-clicked
-  mid-extraction was queued and both were extracted (`a2basic.dmg` in
-  about 20 minutes at 1x).
-- **MacExtract at its own Open dialog** (MultiFinder, 4 MB): a 3-second
-  press on the Finder's window does not switch out of the modal dialog,
-  so no double-click reaches the Finder; the user chooses there. System
-  7 not run.
-
-**Committed 2026-11-01 with DiskDoubler's types in the bundle.**
-MacStamp's census found DiskDoubler's single compressed files (creator
-`DDAP`) typed `DDF0`-`DDF3`, `DD01`, `DDFL` and `DDf4`, none of which
-MacExtract's bundle claimed, though it opens them by content: so the
-System 7 Finder refused them dropped on it and a `DDAP` helper's triage
-would pass them on. The bundle now claims `DD01`, `DD02`, `DDF0`-`DDF7`,
-`DDFL` and `DDf4` (DiskDoubler's own expanders declare the rest; its other
-declared types are left out, `mac/macextract_icons.r`). **Price: 144 B**
-of budget, map entries outside the CODE + A5 unit: the 1 MB probe
-(`run.py --mem 1M -D UNC_AT_BUDGET`, `derived-ASCbeep.sit`) gave 742,636 B
-before and 742,492 B after, 12 B a type; the File menu's new item moved it
-by nothing. Re-take: `tools/build_mac.sh` ceilings +192 in all three
-configurations, `run_tiers.py` `TIERS` -336 each, `TIERS_CONTROL` +192,
-`TIERS_MACHINE` -144, `OVL_SAVED` unmoved (both builds grew 192);
-`dist/` rebuilt; `ci.sh` green. `dist/README.txt` still advises opening
-MacExtract again for the next archive: release notes, rewritten when a
-version is cut.
-
-**The helpers do not reach the queue (measured, System 6.0.8 MultiFinder,
-Mac Plus 4 MB, 1x, one run, the shipped build and a `SIT!` helper
-registered by opening its folder).** MacExtract extracting a `MExt`
-archive; the Finder brought forward; a `SITD`/`SIT!` archive
-double-clicked: MacExtract came back to the front, still on the first,
-with no alert, and the second was never extracted. The helper's `_Launch`
-of an application already running only brings it forward; the document
-list the Finder gave the helper goes nowhere. Open: OPEN_ITEMS.md, *The
-double-click helpers*.
-
-**The Finder's own route is open to a helper (measured, the same setup,
-one run).** Disassembly of the System 6.0.8 Finder (6.1.8, `CODE` 4) and
-MultiFinder (`CODE` 2, named `Puppet`) shows what the Finder does for a
-document whose application is running: it lists the processes with
-`_OSDispatch` selector 1 (a buffer and a maximum; 10-byte entries of
-process number, creator and four bytes that were 0 — corrected; first
-written as number, type, creator), and hands MultiFinder a *puppet string*
-with selector 0 (process number, handle, a long 0, a word 0). The handle
-is a long offset to the next event (6), a word count, that many 16-byte
-event records, then the document list copied whole in `AppParmHandle`'s
-layout; one record per document, `what` 15 and `message` `$0C` in the
-high byte and the document's offset in the handle below it, and a last
-record of `what` `$2000`. A probe helper making exactly those calls, the
-handle in the system heap since the helper quits at once, found
-MacExtract by creator in the list, and MacExtract asked where to extract
-the second archive when the first finished and extracted it, as it does
-for its own creator's double-click. The control is the paragraph above.
-Not known: whether MultiFinder copies or frees the handle (the probe
-leaks its 60 bytes), and whether System 7's Process Manager keeps
-selectors 0 and 1; selector 23 returns a process's details (name at +46)
-and is not needed.
-
-**The helper sends it, on System 6 only (measured, the same setup, one
-run each).** `companion/stub` lists the processes and, when one has
-creator `MExt`, queues the puppet string instead of `_Launch`ing; the
-handle goes in the system heap because MultiFinder disposes of it once
-played (`_DisposHandle` on its queue's head, read in `CODE` 1, not
-measured), after the helper has quit. 6.0.8 MultiFinder: the second
-archive extracted after the first. 6.0.8 without MultiFinder, where
-`_OSDispatch` is unimplemented: MacExtract launched with the archive, as
-before. The first build matched the list entry at the wrong offset and
-handed nothing on; a log of each test inside the helper found it. 9,344 B,
-from 8,832.
-
-**System 7.0.1 takes none of the helper's routes (measured, Mac Plus
-4 MB, 1x, the dist build, a `SIT!` helper registered by opening it alone,
-one run each unless noted).**
-
-| route, from the helper | result |
-|---|---|
-| puppet string, selectors 1 and 0 | both answered (process numbers `$7FFx`); nothing played; MacExtract was in front, and `SetFrontProcess` to it changed nothing |
-| `AESend` of an odoc to `MExt` | `connectionInvalid` (−609), from a helper `notHighLevelEventAware` and from one `isHighLevelEventAware` |
-| `AESend`, addressed by process serial number | `protocolErr` (−603) |
-| `PostHighLevelEvent` of the odoc's `'appa'` block, by serial number (what the Finder posts) | −603, from a helper not HLE-aware and from one that is |
-| the same, after `SetFrontProcess` to MacExtract, the Finder's order | MacExtract comes to the front; −603 |
-| the archive restamped `MExt`, the Finder asked to open it (`'FNDR'`/`'sope'`, the folder's alias and an `'fsel'` list), creator put back after 3 s | from a helper not HLE-aware: `noPortErr` (−903), nothing sent. From one that is: **queued and extracted after the first**; the creator stayed `MExt` (that probe was `cannotBackground`, so it is not known to have run again in time; not re-tested) |
-| `LaunchApplication`, the odoc as `launchAppParameters` | returns 0; nothing, whether the helper quits at once, copies the parameters to the system heap first, or stays running 10 s (corrected: an illegal-instruction stop first reported here was the probe's, BLOCKERS.md, *Withdrawn claims*) |
-
-For an application that is NOT running, the 7.0.1 Finder's `CODE` 103
-builds an odoc and calls `_Launch` with an extended block (`'LC'`, length
-32, flags `$4900`); for one that is, it calls `SetFrontProcess` (`CODE`
-160 `$8D4`) and posts the same block with `PostHighLevelEvent` to the
-process's serial number (`CODE` 160 `$644`, `CODE` 10 `$46A`: event at
-+0, refcon +16, length +20, buffer +24). No Apple Event Manager trap
-appears in its code. Its `CODE` resources
-are `dcmp` 0 compressed and were read with a scratch transcription of
-python-rsrcfork's `compress/dcmp0.py`, whose output matched the stated
-length on all 186. The control: the same disk with the second archive
-stamped `MExt` and double-clicked, so the Finder hands it on; MacExtract
-extracted it after the first. (Corrected: the conclusion first written
-here, that 7.0.1 refuses every event a helper posts, was withdrawn the
-same day; BLOCKERS.md, *Withdrawn claims*.)
-
-**Why every post above failed, and the one that works (read in the
-7.0.1 Process Manager, then measured, same setup, one run each).** The
-Process Manager is the System file's `scod` resources −16479 to −16461,
-`dcmp` 2 compressed, read with a scratch transcription of
-python-rsrcfork's `compress/dcmp2.py` (every one to its stated length).
-Its `PostHighLevelEvent` (`scod` −16462 `$8BA`) sorts the receiver at
-`$1802`: a process addressed by serial number that has no high-level
-event port, as MacExtract, is sent down a fourth path, which calls
-`−16464 $5BC`, the Process Manager's own translation of an `'aevt'` odoc
-or quit into a puppet string (`$0C` per document, `$2000` last: the
-MultiFinder format above). That translation has two conditions:
-
-- **no process switch in progress**: it returns `protocolErr` (−603)
-  while the word at A5−870, which the switching code (`−16464
-  $37A0`–`$42AA`) steps through 13, 12, 11, 6, is not zero. A helper just
-  launched is still being switched in, so every post above came back
-  −603. Settled first, 60 ticks of `WaitNextEvent`, the first post returns
-  0;
-- **every document an alias**: it compares each descriptor's type with
-  `'alis'` (`$430`) and gives up otherwise; with `FSSpec`s the post
-  returned 0 and nothing arrived.
-
-And a third, measured but not read: the helper must not quit at once. A
-probe that posted and stayed 3 s in `WaitNextEvent` got its archive
-extracted; the helper that posted and quit got nothing, with the same
-log. That the string goes with its poster is the hypothesis.
-
-**One mechanism for System 6 and 7, then two again for Mac OS 9
-(measured, same setups, one run each unless noted).** The translation
-hands its string to `−16464 $28A`, which brings the target forward and
-queues it through the routine MultiFinder's selector 0 reaches, with the
-same arguments (process, handle, a long 0, a word 0). So the first 7.0.1
-test of selector 0 failed for the reason the posts did: the helper called
-it mid-switch, and quit at once. Called after 60 ticks of `WaitNextEvent`,
-the helper then staying, the MultiFinder call queued the second archive on
-7.0.1 too, and for a day the helper made only those two calls (9,472 B;
-corrected: "one mechanism" was the conclusion first written here). Mac OS
-9.2 does not take the string (below), so `companion/stub` is back to the
-two routes of 91cdd48: the MultiFinder string where there is no Apple
-Event Manager (System 6), the odoc where there is (System 7, Mac OS 9).
-10,112 B (8,832 before any of this), its forks byte-identical to the
-builds measured: 6.0.8 MultiFinder, 7.0.1 and Mac OS 9.2 (two runs) with
-MacExtract busy, the second archive extracted after the first; 7.0.1
-with MacExtract not running, and 6.0.8 without MultiFinder: MacExtract
-launched with the archive and extracted it.
-
-**What the helper weighs (measured, 2026-11-03).** Of the 10,112 B, the
-helper's own code is about 2.3 KB (`main` 2,114 B with everything
-inlined); the rest is Retro68's default runtime: the multi-segment loader
-and its patches, relocation, C start-up and exit handling, MacsBug names.
-Built single-segment (`--mac-single`, `--mac-strip-macsbug`,
-`-ffunction-sections`): **6,784 B**, one 5,443-B `CODE`; with the bundle
-and the two icon families `make_stub.py` adds, 14,976 → **11,648 B** per
-helper. What is left of the runtime, relocation and exit handling (~2.7
-KB), would need start-up code of its own; not done. The same build on
-6.0.8 MultiFinder and 7.0.1, MacExtract busy: the second archive
-extracted after the first (one run each). The icons were then 4,864 B
-of each helper: two families, MacExtract's own for the helper and the
-archive icon for its documents. **The maintainer, 2026-11-03: the archive
-icon for both.** One family, every `FREF` on local icon 0: **9,344 B** per
-helper. Read on screen: on 7.0.1 and on a 6.0.8 disk no helper had
-registered on, the helper and its archives draw the archive icon (on a
-6.0.8 disk an older helper had registered on, the Desktop file kept the
-old icon); and on that fresh 6.0.8 disk a double-click still launched
-MacExtract with the archive, extracted.
-
-**How long the helper must stay (measured, 7.0.1, the final build with
-only the stay changed, one run each).** The maintainer asked whether the
-stay was the ticks between MacExtract's event pumps, the gaps that also
-leave a click unanswered (FORMATS.md, *How long a click waits*: Arsenic
-0.8 s at most, Compact Pro 4.8 s).
-
-| MacExtract busy with | helper stays | second archive |
-|---|---|---|
-| `derived-a2basic.dmg.sit`, Arsenic | 0 s | lost |
-| the same | 0.5 s | extracted |
-| `derived-XferIt_1.5b4.sea`, Compact Pro, double-clicked at 20 % | 3 s | extracted |
-| the same | 12 s | extracted |
-| the same, twice (20 % → 28 %) | 0.5 s | extracted, both |
-
-These do not answer the question (corrected: first written here as "it is
-not the pump"). The stay is a loop of `WaitNextEvent` until so many ticks
-have passed, and on a cooperative Mac the helper's call does not return
-until it is given time again, which, MacExtract being in front, may be at
-MacExtract's next pump; so "0.5 s" may have been one call lasting a
-pump's gap. What the table does show: no call at all loses the archive,
-and some call is enough.
-
-The helper's ticks after the call, logged (TickCount before the call,
-after it, after each `WaitNextEvent`; one run each): behind Compact Pro
-0, 1, 4, 4, 4, 4, 4, **1,830**; behind Arsenic 0, 0, 4, 4, 4, 4, 4,
-**227**. The first five calls return at once, the helper still in front;
-the sixth waits until the helper is given time in the background, 30 s
-and 3.8 s later. So every stay above was in fact that long, and the
-question is whether the quick calls are enough. **They are not**
-(behind Compact Pro, double-clicked at 20 %, one run each): one
-`WaitNextEvent` then quit, lost; five, lost. The helper has to last until
-the call that blocks, whose return waits on MacExtract's next event call:
-the maintainer's ticks. Not because MacExtract must be in front: a helper
-that queued the string, called `SetFrontProcess` to MacExtract and quit
-at once lost the archive behind Compact Pro and behind Arsenic, MacExtract
-in front throughout (one run each; corrected: a front-process
-explanation was first written here). *Hypothesis*: the helper is the
-string's puppeteer (Technical Note OV17's word), the string is abandoned
-if it quits before the string has played, and the blocking call returns
-when it has.
-
-**A second archive double-clicked during the stay (measured, 7.0.1,
-Arsenic busy, one run).** Other.sit, then 2 s later Third.sit, both
-`SIT!`: **neither was extracted**, and the helper was still open in the
-last frame. The Finder hands a second document to a running helper by
-bringing it forward, which the helper does not read, and the first
-string's switch is presumably undone with it.
-
-**Mac OS 9.2 takes the Apple event, not the puppet string (measured,
-QEMU, a fresh transfer disk each run, the helper registered by opening it
-alone, `derived-Library_ISBN_Barcoder.sit` busy and `Other.sit` opened at
-0–39 %).** The current helper's MultiFinder string arrives: when the
-first archive is done MacExtract takes a second one, and says **"Could
-not open the archive."** Three runs: as committed; with each document's
-working directory reopened under `'ERIK'` (MultiFinder's own, 6.0.8
-`CODE` 1 `$9FC`); with the volume's own reference number, the archive
-being at the root. So it is not the working directory. **What it does
-with them (measured, one run, a scratch MacExtract that appended Standard
-File's reply to a file before queueing, never committed):** the helper's
-string came back as volume 7999, type `D3C44FB8` and a 64-byte name of
-binary noise; in the same session the Finder's own hand-over of a `MExt`
-archive came back as volume −2, `SITD`, `Third.sit`. So Mac OS 9 plays the
-string and answers MacExtract's dialog from somewhere other than the
-helper's record: it does not resolve a `$0C` message's offset as 6.0.8 and
-7.0.1 do. Where it reads instead is not known (*hypothesis*: the 24 bits
-as an address, or from another base); its Process Manager is not in the
-System file's `scod`s any more but a `ProcessMgrLib` fragment, apparently
-in the compressed NewWorld ROM, and was not read. The helper of 91cdd48, which posts an
-odoc settled and with aliases where Apple events exist, got the archive
-extracted on Mac OS 9 (one run). So one mechanism cannot cover the three:
-the string fails on 9, the event does not exist on 6.
-
-**Where it stops (the maintainer, 2026-11-02).** One more archive at a
-time is what is promised: File > Open... on every System, a double-click
-under MultiFinder and System 7, through a helper or straight to MacExtract
-for its own creator. More archives opened in a burst short enough to fall
-inside a helper's stay are dropped silently, a limitation of the
-application (OPEN_ITEMS.md, Part 1). Weighed and not taken: the helper
-answering its own File > Open... during the stay (bytes in every helper,
-and twenty helpers), a mailbox on disk (a single-floppy Mac would be
-asked for MacExtract's disk at every check), and a mailbox in the system
-heap behind a Gestalt selector (declined).
 
 ## 2026-11-03 (the gate a helper commit has) — `ci.sh` built nothing in `companion/`; `tools/check_helpers.py` builds a helper and reads what the Finder needs off it, and a commit touching only `companion/` and docs is gated by it and `tools/check_docs.py`
 
@@ -20249,4 +20252,3 @@ the files already on disk, which `icsetup` could not (*the stub that
 sorts*, 2026-10-31). What only `icsetup` did, MacExtract as Internet
 Config's post-processor, stays under consideration (OPEN_ITEMS.md, *The
 double-click helpers*); the code is at 9e149a5.
-
