@@ -20336,12 +20336,18 @@ its folder has been opened. 7.0.1: opening the folder registers the helper
 as `SIT!`'s application (it was launched for the archive) but not its
 document icons; the archive stayed a blank document after closing and
 reopening the volume window and after a second boot, and drew the archive
-icon after a desktop rebuild. Whether a copy made by the Finder registers
-the icons too is not run (these disks are written from Linux). Mac OS 9.2,
-with StuffIt Expander on the boot disk: Expander's icon throughout, after
-the helper took `SIT!` back (its own alert) and after a restart, though
-the archive opened in MacExtract. Why is not separated; a hypothesis is
-that the icon is looked up on the boot volume's desktop database first.
+icon after a desktop rebuild. Copied from a floppy by the 7.0.1 Finder,
+the helper itself drew the generic application icon and the archive
+stayed blank, its folder opened or not: the 7.0.1 Finder registers no
+bundle short of a rebuild, as 2026-10-18 (*the icon Expander registers*)
+found for MacExtract, which registers its own (`DTBundle`). Mac OS 9.2:
+Expander's icon throughout, after the helper took `SIT!` back (its own
+alert) and after a restart, though the archive opened in MacExtract; the
+boot volume holds no Expander, only its preferences and an alias, and with
+its desktop database deleted and rebuilt at startup the archive drew the
+helper's archive icon, in colour (the colour members' first Finder): the
+icon was a stale entry on the boot volume's database, which OS 9 consults
+before the archive's own volume.
 
 **Consequence.** The helpers can live in any folder, on any mounted
 volume; what a user must do is what the Finder needs anyway, open
