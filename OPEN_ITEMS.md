@@ -248,20 +248,22 @@ ships later, on MacExtract's own floppy. Left:
   — Mac OS 9.2's downloads of `.sit`, `.hqx`, `.bin`, `.pit`, `.taz`
   (DECISIONS.md 2026-10-31, *the helper list Expander asks for*), and
   MacStamp's own BinHex, PackIt, btoa and base64 stamps — reach it by
-  double-click only after `companion/icsetup`, and the files already on
-  disk not even then.
+  double-click through a `SITx` helper, which sends StuffIt X back to
+  Expander; so `SITx` belongs on the list.
 - **Which of a file's two dates System 7 compares** between two applications
   of one creator. Not separated.
-- **A download finishing while MacExtract is open is lost** once
-  `companion/icsetup` has made it Internet Config's post-processor:
-  MacExtract is not high-level-event aware, so the Open Documents event
-  sent to a running copy is dropped (DECISIONS.md 2026-10-31, *the hand-off
-  that arrives once*). Closes with an odoc handler in MacExtract (resident
-  bytes, unpriced) or a line in the helpers' read-me.
 - **The stub's reclaim on System 7.x, 6 and 3.0.** On Mac OS 9 a helper
   opened by itself takes its creator back from StuffIt Expander
   (DECISIONS.md 2026-10-31, *the stub that sorts*); System 7.x and the
   stub's alert on Systems without a desktop database are not run.
-- **`icsetup` under System 7.x with Internet Config 1.x or 2.0**, and a real
-  browser download through it. Only Mac OS 9.2's built-in Internet Config
-  was run.
+- **MacExtract as Internet Config's post-processor — under consideration,
+  the maintainer, 2026-11-03.** It is what would extract a download
+  without a double-click; the helpers do not do it, Expander stays the
+  post-processor. `companion/icsetup`, which set it up (and stamped
+  downloads as MacExtract's) and measured working on Mac OS 9.2 only, is
+  retired from the tree and kept at 9e149a5 (DECISIONS.md 2026-10-31, *the
+  hand-off that arrives once*). Not run: System 7.x with an Internet Config
+  extension, a real browser download, and a download finishing while
+  MacExtract extracts, which the hand-off of 2026-11-01 suggests may now
+  queue (DECISIONS.md 2026-11-01, *the Open item MultiFinder looks for*;
+  *hypothesis*).

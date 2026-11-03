@@ -19845,3 +19845,11 @@ icon, and whether a hand-off arrives; those stay emulator runs.
 and docs needs `tools/check_docs.py` and `tools/check_helpers.py` green, not
 the whole of `ci.sh`.
 
+**`companion/icsetup` retired (the maintainer, 2026-11-03).** A `SITx`
+helper that sorts covers what `icsetup` was first for, Mac OS 9's
+downloads stamped `SITx` reaching MacExtract by double-click, and covers
+the files already on disk, which `icsetup` could not (*the stub that
+sorts*, 2026-10-31). What only `icsetup` did, MacExtract as Internet
+Config's post-processor, stays under consideration (OPEN_ITEMS.md, *The
+double-click helpers*); the code is at 9e149a5.
+
