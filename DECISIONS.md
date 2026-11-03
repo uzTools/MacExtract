@@ -20329,6 +20329,20 @@ dialog and the two entries extracted:
 MFS floppy; the triage's hand-back to a creator's own program on System 6
 through the Desktop file.
 
+**The archives' icons** (measured the same day, the same runs and four
+more; the lookup changed nothing in the bundle). 6.0.8, with and without
+MultiFinder, and 3.0: the archive draws the helper's archive icon once
+its folder has been opened. 7.0.1: opening the folder registers the helper
+as `SIT!`'s application (it was launched for the archive) but not its
+document icons; the archive stayed a blank document after closing and
+reopening the volume window and after a second boot, and drew the archive
+icon after a desktop rebuild. Whether a copy made by the Finder registers
+the icons too is not run (these disks are written from Linux). Mac OS 9.2,
+with StuffIt Expander on the boot disk: Expander's icon throughout, after
+the helper took `SIT!` back (its own alert) and after a restart, though
+the archive opened in MacExtract. Why is not separated; a hypothesis is
+that the icon is looked up on the boot volume's desktop database first.
+
 **Consequence.** The helpers can live in any folder, on any mounted
 volume; what a user must do is what the Finder needs anyway, open
 MacExtract's folder and the helpers' once. The "could not be found" alert
