@@ -491,6 +491,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-03 (the envelope that said what it held) — an envelope is peeked into before the release and keeps only what its payload needs; System 6.0.8 at 512 KB goes 70 -> 72/74
 - 2026-11-03 (the nibble that cost more than a byte) — Arsenic's inverse-BWT table at 2.5 bytes an entry puts a2basic on the fast path at 1 MB and slows every machine with room 1.6-3.7 %; not landed
 - 2026-11-03 (the gate a helper commit has) — `ci.sh` built nothing in `companion/`; `tools/check_helpers.py` builds a helper and reads what the Finder needs off it, and a commit touching only `companion/` and docs is gated by it and `tools/check_docs.py`
+- 2026-11-03 (the creators that get a helper) — sixteen, each owning archives alone: MacStamp's own pair for every format MacExtract extracts, and MacZip and PackIt from its census; the editors and HexEdit, whose files a type cannot sort, stay out
 
 ---
 
@@ -20252,3 +20253,37 @@ the files already on disk, which `icsetup` could not (*the stub that
 sorts*, 2026-10-31). What only `icsetup` did, MacExtract as Internet
 Config's post-processor, stays under consideration (OPEN_ITEMS.md, *The
 double-click helpers*); the code is at 9e149a5.
+
+## 2026-11-03 (the creators that get a helper) — sixteen, each owning archives alone: MacStamp's own pair for every format MacExtract extracts, and MacZip and PackIt from its census; the editors and HexEdit, whose files a type cannot sort, stay out
+
+**Decided by the maintainer, on a list drawn from MacStamp** (its
+`data/formats.tsv` pairs and its 142,267-file census, `pair-census.csv`,
+2026-11-03). The list is `companion/helpers.tsv`; a helper's bundle claims
+the types there, and what it hands on is MacExtract's bundle's business
+(2026-10-31, *the stub that sorts*).
+
+**In:** the creator MacStamp itself writes for each format MacExtract
+extracts (`SIT!`, `SITx`, `DDAP`, `ZIP `, `CPCT`, `NCdc`, `Gzip`, `MB2P`,
+`TIGR`, `S691`, `LZIV`, `LARC`, `arc*`), present in the census or not,
+since MacStamp stamps them from here on; `MARc` (the maintainer); and two
+the census alone showed: `IZip`, MacZip 1.06, 12 zips (and MacStamp's zip
+pair since macstamp c018dd4), and `PIT `, PackIt III 1.3 measured writing
+`PIT `/`PIT ` (macstamp DECISIONS 2026-10-14).
+
+**Out, because a type cannot sort their files** (measured, the census):
+- `ttxt`, `R*ch`, `MSWD`, `MOSS`: the only archive type they carry is
+  `TEXT` (7,317, 4,046, 822, 154 files), and a `.hqx` is `TEXT` like a
+  readme; a helper claiming it would send every text document to MacExtract.
+  A helper that reads the file's first bytes would sort them; not built.
+- `hDmp`, HexEdit 1.4: its 13 `BINA` files got the creator from a download
+  mapping; of 11 read, 10 are MacBinary and one is not (MacStamp's reading;
+  MacStamp no longer writes `hDmp`, c018dd4).
+- `STi1`: an Aladdin installer's own segments, which belong to it.
+- `java`/`JAVA`: four `ZIP ` class libraries beside 118 `clss` files.
+- `GEOL`, AppleLink: one `HBSF` beside 22 `TEXT` of its own.
+- `mdos`, `????`, `0000`: no program; `mdos`'s `BINA` is any DOS file.
+
+**Consequence.** Sixteen helpers at 9,344 B of MacBinary each, about
+150 KB; what they take on a floppy is not measured. `MARd` and `MARf`
+reach MacExtract once its bundle claims them; until then a `MARc` helper
+hands them back to Hampa's application.
