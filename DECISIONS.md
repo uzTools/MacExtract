@@ -20489,18 +20489,21 @@ new types, and `ZIVU` through the `.Z` layer); a name already taken came
 out `~1`, said in the report. Read back, every data fork byte-exact and
 every resource fork outside 16..127. `Bumpaint_1.0.mar` (Macintosh Garden,
 sha256 d560bfb1...; the first archive here not written by hampa, MacStamp's
-copy), a single application with a custom icon, extracted on System 6.0.8:
-on disk flags 0x2500 kept and location (-1, -1); in the System 6 Finder at
-the first free spot, with the GENERIC application icon. Not the disk and
-not MacExtract, measured each on a fresh boot: generic on an 800K and an
-8 MB disk, with its flags 0x2500, 0x2100, 0x2400 and 0x2000; generic when
-mar 0.2.0 itself decodes it; and the control, MacExtract archived by mar
-0.2.0 and extracted by MacExtract onto an 800K disk (flags 0x2100 kept,
-(-1, -1)), shows its own icon at the first free spot. Bumpaint carries
-eight resources typed `BNDL`, one a bundle (132: `BUMP`, `APPL` and `SRUD`
-to `ICN#` 128 and 129) and seven not (records named `Mitm`, `Menu`,
-`Butn`); that the System 6 Finder reads one of those is a hypothesis, not
-tested. Two harness
+copy), one application with a bundle (`ICN#` 128) and a custom icon
+(-16455), extracted onto a 1,440K floppy (`run.py`'s default output disk):
+on disk flags 0x2500 kept and location (-1, -1), placed by the Finder at
+the first free spot. **Its icon, compared pixel for pixel** with a
+reference of the same file whose creator was patched to `zzzz` and bundle
+bit cleared (the System's generic icon): on System 7.0.1 the custom icon,
+identical to System 7's own generic application icon (0 pixels apart, so
+it LOOKS generic and is not); on System 6.0.8 the bundle's `ICN#` 128
+(3 pixels apart; 5 from System 6's generic icon), System 6 having no
+custom icons. The same on a floppy made under 6.0.8 and read under 7.0.1,
+and made under 7.0.1 and read under 6.0.8; the same with its flags 0x2000
+and 0x2100, and when mar 0.2.0 itself decodes it. Each System shows what
+the archive holds. *Corrected the same day*: this paragraph first said
+the icon was generic on System 6 whatever the disk, flags or extractor,
+and blamed Bumpaint's eight `BNDL` resources (BLOCKERS.md). Two harness
 artifacts first read as defects: bytes 48..125 of every extracted resource
 fork carry the file's name (the Resource Manager's stamp, inside the mask),
 and a file's type lost when the emulator was closed without the volume
