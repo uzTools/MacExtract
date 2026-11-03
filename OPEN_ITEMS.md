@@ -266,7 +266,9 @@ ships later, on MacExtract's own floppy. Left:
   (DECISIONS.md 2026-10-31, *the helper list Expander asks for*), and
   MacStamp's own BinHex, PackIt, btoa and base64 stamps — reach it by
   double-click through a `SITx` helper, which sends StuffIt X back to
-  Expander; so `SITx` belongs on the list.
+  Expander; so `SITx` belongs on the list. `MARc` too: Hampa's Mac
+  application writes its archives as `MARd`, `MARf` and `ZIVU` under that
+  creator (the maintainer, 2026-11-03).
 - **Which of a file's two dates System 7 compares** between two applications
   of one creator. Not separated.
 - **The stub's reclaim on System 7.x, 6 and 3.0.** On Mac OS 9 a helper
