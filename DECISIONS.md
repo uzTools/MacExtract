@@ -495,6 +495,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-03 (the helper that asks the desktop) — a helper finds MacExtract wherever the Finder has seen it, through the desktop database on System 7 and Mac OS 9 and the Desktop file on System 6 and 3.0, and registers its own icons; +384 B
 - 2026-11-03 (the archive that carries its own CRCs) — MAR comes in, graded by what its author wrote, read from GPL-2.0-only sources for their facts alone
 - 2026-11-03 (the helper without a runtime) — position-independent code leaves Retro68's relocator, start-up and exit chain nothing to do: a stamped helper 9,728 -> 6,784 B
+- 2026-11-03 (the hand-back to the Finder) — a helper that is not event-aware cannot post to the Finder (-903); an event-aware one can, and the 7.0.1 Finder opens a document through FNDR/sope as a double-click would, but answers a document no application owns with silence, not its alert
 
 ---
 
@@ -20547,3 +20548,27 @@ Mac OS 9.2.
 **Still over 5 KB.** What is left: the code 2.9 KB, icons 2,240 B (the
 colour members 1,920), alerts 544, map and headers. The rest is the
 maintainer's choice.
+
+## 2026-11-03 (the hand-back to the Finder) — a helper that is not event-aware cannot post to the Finder (-903); an event-aware one can, and the 7.0.1 Finder opens a document through FNDR/sope as a double-click would, but answers a document no application owns with silence, not its alert
+
+**Asked by the maintainer:** a document MacExtract does not claim should
+go back to the Finder, which then opens its real creator's program or
+errors out in its own words, as if there were no helper. Probes on 7.0.1,
+logging each call's result beside the helper (not in the tree):
+
+| probe | result |
+|---|---|
+| the shipped helper (not event-aware): its desktop entry removed, an odoc posted to the Finder | **−903** (`noPortErr`): no port, nothing arrives; entry restored |
+| an event-aware helper, launched by a double-click | the Finder sends it an `odoc`, not Finder information (`AppParmHandle` empty) |
+| it, for a `SITD` archive: `LaunchApplication` of MacExtract with that `odoc` coerced to `appa` as the launch parameters | 0; MacExtract opened the archive and extracted it |
+| it, for a `SITX` file: an `odoc` to the Finder | sent (0); nothing: the 7.0.1 Finder accepts no `odoc` (its filter, CODE 10 $94A: `aevt` `abou amis ansr boot oapp obit open quit`, and its `FNDR` suite) |
+| `FNDR`/`sope`, the folder's alias as `----` and the items' as `fsel` (read off CODE 10 $996 and $77C) for the `Apps` folder | the Finder opened its window |
+| `sope` for an archive stamped `MExt` | MacExtract launched with it: a double-click's result |
+| `sope` for the `SITX` file, no `SIT!` program left (the helper's entry removed), the Finder brought forward, `kAEAlwaysInteract`, waiting for the reply | reply without an error, and **no alert**: silence |
+
+**So on 7.0.1** the hand-back reaches a real creator's program but not the
+Finder's own error. Not run: Mac OS 9's Finder (which does take `odoc`),
+a `sope` to a remaining program of the same creator (Expander), and the
+event-aware helper's other routes (a running MacExtract, the triage).
+System 6 and 3.0 have no events: the Finder is not there to hand back to
+(without MultiFinder it has quit to launch the helper).
