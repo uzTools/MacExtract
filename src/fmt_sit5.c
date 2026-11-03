@@ -59,48 +59,53 @@
 #define SIT5_ARCH_20      0x20
 #define SIT5_ARCH_CRYPTED 0x80
 
-/* Map from directory entry offset -> its path, for parent lookup.
- * Bounded pool; archives with more directories than fit fail cleanly
- * per entry (parent falls back to the root). */
-#define SIT5_MAX_DIRS 256
-
+/* Every folder's path, found by the offset of its entry, which is how an
+ * entry names its folder — XADStuffIt5Parser.m keeps the same map in a
+ * dictionary. One record per folder, [offset u32][length u8][path], in a
+ * block that starts small and doubles: until 2026-11-03 it was a fixed
+ * 18,440 B table of 256 folders and 16 KB of paths, and a folder past
+ * either was dropped without a word, its contents put at the root
+ * (DECISIONS.md 2026-11-03, *the folders past the table*). A block that
+ * cannot grow sets `lost`, and an entry whose folder is not found then
+ * fails for want of memory rather than landing at the root. */
 typedef struct Sit5Dirs {
-    uint32_t offs[SIT5_MAX_DIRS];
-    uint16_t start[SIT5_MAX_DIRS];   /* offset into pool */
-    uint16_t len[SIT5_MAX_DIRS];
-    int32_t  count;
-    uint32_t pool_used;
-    uint8_t  pool[16384];
+    uint8_t *buf;
+    uint32_t used, cap;
+    int      lost;
 } Sit5Dirs;
 
 static const uint8_t *sit5_dir_lookup(const Sit5Dirs *d, uint32_t offs,
                                       uint32_t *lenout)
 {
-    int32_t i;
-    for (i = 0; i < d->count; i++) {
-        if (d->offs[i] == offs) {
-            *lenout = d->len[i];
-            return d->pool + d->start[i];
+    uint32_t at = 0;
+    while (at < d->used) {
+        if (unc_get_u32be(d->buf + at) == offs) {
+            *lenout = d->buf[at + 4];
+            return d->buf + at + 5;
         }
+        at += 5u + d->buf[at + 4];
     }
     *lenout = 0;
     return NULL;
 }
 
-static void sit5_dir_add(Sit5Dirs *d, uint32_t offs,
+static void sit5_dir_add(UncCtx *c, Sit5Dirs *d, uint32_t offs,
                          const uint8_t *path, uint32_t len)
 {
-    if (d->count >= SIT5_MAX_DIRS || d->pool_used + len > sizeof d->pool)
-        return;   /* children of an overflowed dir land at the root */
-    d->offs[d->count] = offs;
-    d->start[d->count] = (uint16_t)d->pool_used;
-    d->len[d->count] = (uint16_t)len;
-    {
-        uint32_t i;
-        for (i = 0; i < len; i++) d->pool[d->pool_used + i] = path[i];
+    uint32_t i;
+    if (d->used + 5u + len > d->cap) {
+        uint32_t want = d->cap ? d->cap * 2u : 512u;
+        uint8_t *nb = (uint8_t *)unc_alloc(c->al, want);
+        if (!nb) { d->lost = 1; return; }
+        for (i = 0; i < d->used; i++) nb[i] = d->buf[i];
+        unc_free(c->al, d->buf);
+        d->buf = nb;
+        d->cap = want;
     }
-    d->pool_used += len;
-    d->count++;
+    unc_put_u32be(d->buf + d->used, offs);
+    d->buf[d->used + 4] = (uint8_t)len;
+    for (i = 0; i < len; i++) d->buf[d->used + 5 + i] = path[i];
+    d->used += 5u + len;
 }
 
 /* StuffIt 5's archive key is MD5(password) cut to five bytes, and the
@@ -146,7 +151,7 @@ int unc_sit5_extract(UncCtx *c)
     uint8_t hdr[128], name[256];
     uint32_t firstoffs, pos, fsize;
     int32_t numentries, i;
-    Sit5Dirs *dirs;
+    Sit5Dirs dirs;
     uint8_t *iobuf, *obuf;
     UncCrypt *cr;
     uint8_t pwhash[UNC_SIT5_KEYLEN], archivekey[UNC_SIT5_KEYLEN];
@@ -251,12 +256,11 @@ int unc_sit5_extract(UncCtx *c)
         }
     }
 
-    dirs = (Sit5Dirs *)unc_alloc(c->al, (uint32_t)sizeof *dirs);
-    if (!dirs) return UNC_ERR_MEM;
-    dirs->count = 0;
-    dirs->pool_used = 0;
+    dirs.buf = NULL;
+    dirs.used = dirs.cap = 0;
+    dirs.lost = 0;
     iobuf = (uint8_t *)unc_alloc(c->al, iocap + ocap + (uint32_t)sizeof *cr);
-    if (!iobuf) { unc_free(c->al, dirs); return UNC_ERR_MEM; }
+    if (!iobuf) return UNC_ERR_MEM;
     obuf = iobuf + iocap;
     cr = (UncCrypt *)(void *)(obuf + ocap);
     unc_crypt_init(cr);
@@ -273,7 +277,7 @@ int unc_sit5_extract(UncCtx *c)
         int hasdatakey = 0, hasrsrckey = 0;
         uint32_t dirfiles = 0;
         UncEntryInfo e;
-        int sret;
+        int sret, nomem;
 
         if (unc_read_at(c->io, pos, hdr, 48) != UNC_OK) {
             err = i == 0 ? UNC_ERR_FORMAT : UNC_ERR_TRUNCATED;
@@ -462,9 +466,10 @@ int unc_sit5_extract(UncCtx *c)
         /* Path: parent from diroffs map, then this component. */
         {
             uint32_t plen;
-            const uint8_t *ppath = sit5_dir_lookup(dirs, diroffs, &plen);
+            const uint8_t *ppath = sit5_dir_lookup(&dirs, diroffs, &plen);
             if (ppath) unc_entry_set_path(&e, ppath, plen);
             else       unc_entry_set_path(&e, name, 0);
+            nomem = !ppath && diroffs && dirs.lost;
         }
         unc_entry_path_append(&e, name, namelen);
 
@@ -482,11 +487,12 @@ int unc_sit5_extract(UncCtx *c)
             e.comp_data_size = e.comp_rsrc_size = 0;
             sret = c->sink->begin_entry(c->sink->ctx, &e);
             if (sret < 0) { err = UNC_ERR_SINK; goto out; }
-            if (sret == 0 && c->sink->end_entry(c->sink->ctx, UNC_OK) < 0) {
+            if (sret == 0 && c->sink->end_entry(c->sink->ctx, nomem ?
+                                                UNC_ERR_MEM : UNC_OK) < 0) {
                 err = UNC_ERR_SINK;
                 goto out;
             }
-            sit5_dir_add(dirs, pos, e.name, e.name_len);
+            if (!nomem) sit5_dir_add(c, &dirs, pos, e.name, e.name_len);
             /* `numentries` is signed; a directory's declared child count is
              * attacker-controlled, so a sum past INT32_MAX is undefined and
              * can wrap negative, ending the walk early with success. */
@@ -511,7 +517,9 @@ int unc_sit5_extract(UncCtx *c)
 
         if (sret == 0) {
             int est = UNC_OK;
-            if (!c->opt.list_only) {
+            if (nomem) {
+                est = UNC_ERR_MEM;
+            } else if (!c->opt.list_only) {
                 if (encrypted && !havehash) {
                     /* Encrypted, but the archive header carries no hash
                      * to check a password against — nothing here can
@@ -567,6 +575,6 @@ int unc_sit5_extract(UncCtx *c)
 out:
     unc_free(c->al, cmt);
     unc_free(c->al, iobuf);
-    unc_free(c->al, dirs);
+    unc_free(c->al, dirs.buf);
     return err;
 }

@@ -207,10 +207,13 @@ REPO = os.path.dirname(HERE)
 # Compress shape 3 refuse the symbols their arithmetic cannot take
 # (DECISIONS.md 2026-11-03, *the symbols no encoder writes*), the control's
 # CODE +28 and A5 +4 (alignment); they were 196,446 / 101,064 / 625,352.
+# **-32 more each 2026-11-03, DERIVED**: StuffIt 5's folder table as a
+# block that grows (DECISIONS.md 2026-11-03, *the folders past the table*),
+# the control's CODE +36 and A5 -4.
 TIERS = {
-    "sys3-512K": (196414, "System 3.0, Macintosh 512Ke (222,070 B free)"),
-    "sys6-512K": (101032, "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
-    "floor-1M":  (625320, "System 6.0.8, 1 MB Mac Plus — the floor target"),
+    "sys3-512K": (196382, "System 3.0, Macintosh 512Ke (222,070 B free)"),
+    "sys6-512K": (101000, "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
+    "floor-1M":  (625288, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
 # **-592 more each 2026-10-24, DERIVED**: SUMacC's `.dl`, the control's
 # CODE +584 and A5 +8 (DECISIONS.md 2026-10-24, *the format before
@@ -414,7 +417,8 @@ TIERS = {
 # data + bss -680. The machine gave +4,204, because the jump table, the
 # stub segments and the relocations trimmed at launch are resident bytes
 # this unit never counted — which is why TIERS was measured, not moved.
-TIERS_CONTROL = 216720     # build/mac-resident, CODE + A5, 2026-11-03
+TIERS_CONTROL = 216752     # build/mac-resident, CODE + A5, 2026-11-03
+# +32 more the same day: StuffIt 5's folder table that grows; TIERS -32.
 # +32 on 2026-11-03: method 10's and shape 3's refused symbols; TIERS -32.
 # +2,480 on 2026-11-02: v0.45.0, the dialogs; TIERS above -2,480.
 # +144 on 2026-10-25: the review before v0.44.0; TIERS above -144.
@@ -534,7 +538,7 @@ SHORT = re.compile(r"at least (\d+) bytes more memory")
 # The shipped lanes do not move: the material is all in `ovl_stuffit`
 # (DECISIONS.md 2026-10-11, *the constant was a square*).
 # 64 -> 63 at sys6-512K on 2026-11-02, DERIVED: `derived-PuzzleGetter_0.8.sit`
-# (below).
+# (below). 63 -> 64 on 2026-11-03, DERIVED: it left again.
 EXPECT = {
     "floor-1M": (),
     "sys3-512K": ("derived-Cool_Tools__.sit",
@@ -544,14 +548,12 @@ EXPECT = {
                   "derived-Expand_Now_1.0.1.sea",
                   "derived-LHA_Expander_1.0.3.sea",
                   "derived-Library_ISBN_Barcoder.sit",
-                  # Joined 2026-11-02, DERIVED: the control's +2,480 B for
-                  # v0.45.0's dialogs leaves 101,064 B, and this one needs
-                  # 101,582 (bisected; the "at least" a refusal prints is
-                  # StuffIt 5's first block, not its need). The engine's
-                  # demand is the same as v0.44.0's to the byte; the
-                  # shipped lane does not move (DECISIONS.md 2026-11-02,
-                  # *the dialogs that became the application*).
-                  "derived-PuzzleGetter_0.8.sit",
+                  # `derived-PuzzleGetter_0.8.sit` joined 2026-11-02,
+                  # DERIVED, needing 101,582 B of 101,064 (DECISIONS.md
+                  # 2026-11-02, *the dialogs that became the application*),
+                  # and left 2026-11-03: StuffIt 5's folder table is no
+                  # longer a fixed 18,440 B, and it needs 83,654 (bisected;
+                  # DECISIONS.md 2026-11-03, *the folders past the table*).
                   "derived-Terrainman_2.0__.sea",
                   "derived-Troi-ClipSave-Plug-in1.1.sit",
                   # Joined 2026-10-17: the control grew 4,592 B with the
@@ -879,7 +881,11 @@ EXPECT = {
 # alignment) against the shipped pair's 0: method 10's and shape 3's
 # refused symbols are in `ovl_cptdd` and `ovl_now` everywhere but there
 # (DECISIONS.md 2026-11-03, *the symbols no encoder writes*). TIERS -32.
-OVL_SAVED = 161056
+# **+32 2026-11-03, -> 161,088**: the control's +32 (CODE +36, A5 -4)
+# against the shipped pair's 0: StuffIt 5's folder table, in `ovl_stuffit`
+# everywhere but there (DECISIONS.md 2026-11-03, *the folders past the
+# table*). TIERS -32.
+OVL_SAVED = 161088
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
 # every kept image is one — as is the bundle an envelope holds on to.
@@ -1024,7 +1030,7 @@ IMAGES = {
     "OVL_ID_NOW":         4762,
     "OVL_ID_PACKIT":      2180,
     "OVL_ID_SPACESAVER":  16168,
-    "OVL_ID_STUFFIT":     28194,
+    "OVL_ID_STUFFIT":     28198,
     "OVL_ID_SQP":         1736,
     "OVL_ID_SUPERDISK":   6634,
     "OVL_ID_TEXT":        11438,
@@ -1109,7 +1115,10 @@ IMAGES = {
 # **EXO +28, LZH -20, the bundle +8 B, 2026-11-03**: MacBinary's fork
 # layout checked by subtraction, in zip's peek and LZH's split; LZH comes
 # out smaller (DECISIONS.md 2026-11-03, *the fork that padded to nothing*).
-BUNDLE = 188420
+# **STUFFIT +4, the bundle +4 B, 2026-11-03**: StuffIt 5's folder table as
+# a block that grows (DECISIONS.md 2026-11-03, *the folders past the
+# table*).
+BUNDLE = 188424
 
 # What the SHIPPED lane asserts, and it is the refused fixtures BY NAME
 # rather than a tally: a tier that refuses two different fixtures and still

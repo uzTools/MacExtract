@@ -1011,6 +1011,21 @@ Macintosh*).
 **What none of it sees:** the two real payloads, re-run by hand
 (FORMATS.md, *StuffIt 5's method 14*).
 
+## StuffIt 5's folders (`tools/run_sit5dirs.py`, in `ci.sh`)
+
+Two generated archives, one past each limit the folder table had until
+2026-11-03: 301 folders, and 81 folders holding about 17 KB of paths. The
+corpus's 32 StuffIt 5 archives hold 12 folders at most. Each is graded
+against the paths and bytes that went in, `unar`, and this CLI; then the
+first at one byte under its own peak, where nothing may land at the root
+and every entry not written must fail for memory (DECISIONS.md 2026-11-03,
+*the folders past the table*). Against the build before: 45 and 5 files
+missing. With the per-entry error removed, the starved check fails three
+ways.
+
+**What it cannot see:** whether StuffIt writes such an archive this way,
+entries out of depth-first order, or which folders a budget refuses.
+
 ## The forks `unar` refuses (`tools/run_ddforks.py`, on demand)
 
 `unar` 1.10.8 fails on 11 of the 33 DiskDoubler DDn forks in

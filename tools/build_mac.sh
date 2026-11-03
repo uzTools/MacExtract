@@ -674,7 +674,11 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # layout checked by subtraction in zip's and LZH's readers (DECISIONS.md
 # 2026-11-03, *the fork that padded to nothing*). The control's sum is
 # unmoved; the shipped pair too.
-UNC_MAC_CODE_DEFAULT=180188
+# +36 on 2026-11-03, 180,188 -> 180,224, A5 -4 below: StuffIt 5's folder
+# table as a block that grows, unc_sit5_extract +38 with its two helpers
+# inlined (DECISIONS.md 2026-11-03, *the folders past the table*); in
+# `ovl_stuffit` everywhere but here, +4 B there.
+UNC_MAC_CODE_DEFAULT=180224
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -887,7 +891,9 @@ UNC_MAC_CODE_DEFAULT=180188
 # and shape 3's checks (above); no object's data moved.
 # -12 on 2026-11-03, 36,544 -> 36,532: `.data` alignment under the
 # MacBinary layout check (above); no data was added.
-UNC_MAC_A5_DEFAULT=36532
+# -4 on 2026-11-03, 36,532 -> 36,528: `.data` alignment under the StuffIt 5
+# folder table (above); no data was added.
+UNC_MAC_A5_DEFAULT=36528
 # A CEILING PER CONFIGURATION, because one ceiling measured on another build
 # cannot fire. The figures above are the RESIDENT control build, which carries
 # every decoder; the shipped build's resident code is a third of that, so

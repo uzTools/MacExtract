@@ -479,6 +479,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-02 (the dialogs that became the application) — v0.45.0 ships the dialog redesign the PoC switches held, resolved rather than switched on, and the application is byte for byte the one tested
 - 2026-11-03 (the symbols no encoder writes) — DiskDoubler method 10 and Now Compress shape 3 refuse the symbols their arithmetic cannot take
 - 2026-11-03 (the fork that padded to nothing) — MacBinary's fork layout inside a zip or LZH entry is checked by subtraction, at the two places that decide it
+- 2026-11-03 (the folders past the table) — StuffIt 5 keeps every folder in a block that grows, and its peak heap falls 17-18 KB
 
 ---
 
@@ -19469,3 +19470,45 @@ resident control's CODE +12 and A5 -12 (alignment), so `OVL_SAVED` and
 `TIERS` do not move. `ovl_exo` +28, `ovl_lzh` -20, the bundle +8: the zip
 rows of FORMATS.md's *What each format is granted* fall 28 B, LZH's rises
 20, the envelope row falls 8. `run_tiers.py --check`: no tally moves.
+
+## 2026-11-03 (the folders past the table) — StuffIt 5 keeps every folder in a block that grows, and its peak heap falls 17-18 KB
+
+**Claim (measured).** StuffIt 5 finds an entry's folder by the offset of
+the folder's entry. The map was a fixed 18,440 B table, 256 folders and
+16 KB of their paths, and a folder past either limit was dropped without
+a word: its contents came out at the root with no error, the comment above
+it saying they "fail cleanly". It is now one block of records,
+`[offset][length][path]`, that starts at 512 B on the first folder and
+doubles, as XADStuffIt5Parser.m keeps the same map in a dictionary.
+
+**Evidence.** `tools/run_sit5dirs.py` (TESTING.md, *StuffIt 5's folders*):
+301 folders, and 81 folders holding about 17 KB of paths. The build before
+this lost 45 files and 5; `unar` and this build lose none. Nothing in the
+corpus came near: 32 StuffIt 5 archives, 12 folders at most, 6 deep.
+
+**A block that cannot grow fails the entries, not the archive.** It sets
+`lost`, and an entry whose folder is then not found fails `UNC_ERR_MEM`
+instead of landing at the root; a folder that is still found extracts.
+Graded at one byte under the archive's own peak; with the per-entry error
+removed, that check fails three ways.
+
+**Why not a stack of open folders, which would be smaller.** Measured over
+the corpus, every entry's folder IS on the chain of folders above the
+entry just read, so a stack would have served all 32 archives. But the
+reference does not depend on that order and nothing in the format says
+it holds; a stack would put an out-of-order entry at the root, which is
+the failure being removed.
+
+**What it bought.** Every StuffIt 5 peak falls 17,416-18,440 B (all 32
+archives, `t --stats` both ways): 18,440 where there is no folder, 17,928
+with one 512 B block, 17,416 where it grows once. The resident lane at
+System 6.0.8 / 512 KB gets `derived-PuzzleGetter_0.8.sit` back, 63 -> 64
+of 74 (needs 83,654 B, bisected; DERIVED, not run on the machine). No
+shipped tally moves: `derived-a2basic.dmg.sit` there needs 222,458 B of
+217,928 granted (bisected; the refusal says "at least 172").
+
+**Cost (measured).** Shipped CODE + A5 and the download unmoved;
+`ovl_stuffit` +4 B, the bundle +4 B. The resident control's CODE +36 (A5
+-4): `unc_sit5_extract` +38 with the two helpers inlined, so `OVL_SAVED`
++32 and `TIERS` -32 each, DERIVED. The lazy build's MacBinary +128 B
+(one block).

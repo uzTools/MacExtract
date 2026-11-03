@@ -228,6 +228,12 @@ python3 tools/sit_mkey_oracle.py || fail "StuffIt MKey oracle"
 # graded three ways, `unar` included (TESTING.md, *StuffIt method 14*).
 python3 tools/run_sit14wrap.py --macextract build/san/macextract \
     || fail "StuffIt method 14 window wrap"
+# StuffIt 5 folders past what a fixed table held (256, and 16 KB of
+# paths), which nothing in the corpus approaches: generated, graded three
+# ways with `unar`, and once more at one byte under its own peak
+# (TESTING.md, *StuffIt 5's folders*).
+python3 tools/run_sit5dirs.py --macextract build/san/macextract \
+    || fail "StuffIt 5 folders"
 # The optimized StuffIt archives, graded by the program that WROTE them:
 # StuffIt Deluxe 2.0.1 under Mini vMac stuffed a text file with `Text 1`
 # enabled and unstuffed it again, and what it hands back is the only
