@@ -483,6 +483,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-03 (the parents the descent already knew) — DiskDoubler method 2/5's trees without parent[] were measured 5.6-7.1 % slower on a Mac Plus, and not landed
 - 2026-11-03 (the ciphers a header can refuse) — a StuffIt 5 archive with no password hash releases the cipher image, and System 6.0.8 at 512 KB goes 68 -> 70/74
 - 2026-11-03 (the envelope that said what it held) — an envelope is peeked into before the release and keeps only what its payload needs; System 6.0.8 at 512 KB goes 70 -> 72/74
+- 2026-11-03 (the nibble that cost more than a byte) — Arsenic's inverse-BWT table at 2.5 bytes an entry puts a2basic on the fast path at 1 MB and slows every machine with room 1.6-3.7 %; not landed
 
 ---
 
@@ -19620,3 +19621,29 @@ the sniffer's growth. The download +1,152 B.
 **What it cannot see.** A payload the corpus lacks that the head names
 wrongly: its layer would fail for memory (`ovl_run`, `UNC_ERR_MEM`) where it
 worked before. `run_peek.py` grades every envelope the corpus has.
+
+## 2026-11-03 (the nibble that cost more than a byte) — Arsenic's inverse-BWT table at 2.5 bytes an entry puts a2basic on the fast path at 1 MB and slows every machine with room 1.6-3.7 %; not landed
+
+**Claim (measured).** A review proposed a 2-byte table plus ~8 KB of
+per-value window counts in place of 3 bytes an entry (2026-09-19, *three
+bytes hold a position*), to put `derived-a2basic.dmg.sit` on the fast
+path at 1 MB. Priced on reading, that scheme adds a value lookup and a
+window search to every output byte. The cheaper form of the same saving is
+bzip2's small mode: 2 bytes of position and a 4-bit nibble, 2.5 bytes an
+entry (positions to 2^20; every corpus block is 2^19). Prototyped:
+byte-exact on all 980 fixtures; a2basic's peak 810,645 -> 711,896 B, under
+the 1 MB floor's 751,392 B StuffIt 5 grant.
+
+**On a Mac Plus at 1x** (`run.py --emu mv-4M-1x -D UNC_AT_TIMING`, HEAD
+from a worktree; the timing build's grid FAILs by design): engine ticks
+`derived-KeyGraphics.sit` **827 -> 858, +3.7 %**, a2basic **16,917 ->
+17,180, +1.6 %**. At 1 MB a2basic took the fast path, 17,180 ticks
+(~286 s), where HEAD ran past the harness's 300 s on the sampled index
+(341.6 s recorded, FORMATS.md). The nibble's odd/even select costs more
+than the third byte load it replaces.
+
+**Not landed**, by the rule set for it: the fast path may not get slower
+for a machine with room. **Not tried:** keeping the 3-byte table whenever
+it fits and falling to 2.5 bytes only where it does not, a tier between
+the table and the sampled index. Only its dispatch would touch the fast
+path, and that test is what would need the same measurement.
