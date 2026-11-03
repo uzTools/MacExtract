@@ -39,8 +39,9 @@ import deskclaim as D                                         # noqa: E402
 # 2026-11-03 (DECISIONS.md 2026-11-01, *What the helper weighs*). Lower it when
 # the helper shrinks; raising it is a decision, not a fix. RAISED 2026-11-03,
 # 9,344 -> 9,472: MacExtract found through the desktop, wherever it is
-# (DECISIONS.md 2026-11-03, *the helper that asks the desktop*).
-CEILING = 9472
+# (DECISIONS.md 2026-11-03, *the helper that asks the desktop*); 9,472 ->
+# 9,728 the same day, the stub registering its own icons (the same entry).
+CEILING = 9728
 FAMILY = (b"ICN#", b"ics#", b"icl4", b"ics4", b"icl8", b"ics8")
 CREATOR, TYPES = b"SIT!", (b"SIT!", b"SITD")
 HAS_BUNDLE, INITED = 0x2000, 0x0100

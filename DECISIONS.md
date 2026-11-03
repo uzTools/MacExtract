@@ -492,7 +492,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-03 (the nibble that cost more than a byte) — Arsenic's inverse-BWT table at 2.5 bytes an entry puts a2basic on the fast path at 1 MB and slows every machine with room 1.6-3.7 %; not landed
 - 2026-11-03 (the gate a helper commit has) — `ci.sh` built nothing in `companion/`; `tools/check_helpers.py` builds a helper and reads what the Finder needs off it, and a commit touching only `companion/` and docs is gated by it and `tools/check_docs.py`
 - 2026-11-03 (the creators that get a helper) — sixteen, each owning archives alone: MacStamp's own pair for every format MacExtract extracts, and MacZip and PackIt from its census; the editors and HexEdit, whose files a type cannot sort, stay out
-- 2026-11-03 (the helper that asks the desktop) — a helper finds MacExtract wherever the Finder has seen it, through the desktop database on System 7 and Mac OS 9 and the Desktop file on System 6 and 3.0; +128 B
+- 2026-11-03 (the helper that asks the desktop) — a helper finds MacExtract wherever the Finder has seen it, through the desktop database on System 7 and Mac OS 9 and the Desktop file on System 6 and 3.0, and registers its own icons; +384 B
 - 2026-11-03 (the archive that carries its own CRCs) — MAR comes in, graded by what its author wrote, read from GPL-2.0-only sources for their facts alone
 
 ---
@@ -20289,11 +20289,11 @@ pair since macstamp c018dd4), and `PIT `, PackIt III 1.3 measured writing
 - `mdos`, `????`, `0000`: no program; `mdos`'s `BINA` is any DOS file.
 
 **Consequence.** Sixteen helpers at 9,344 B of MacBinary each, about
-150 KB (9,472 B, about 152 KB, since *the helper that asks the desktop*); what they take on a floppy is not measured. `MARd` and `MARf`
+150 KB (9,728 B, about 156 KB, since *the helper that asks the desktop*); what they take on a floppy is not measured. `MARd` and `MARf`
 reach MacExtract once its bundle claims them; until then a `MARc` helper
 hands them back to Hampa's application.
 
-## 2026-11-03 (the helper that asks the desktop) — a helper finds MacExtract wherever the Finder has seen it, through the desktop database on System 7 and Mac OS 9 and the Desktop file on System 6 and 3.0; +128 B
+## 2026-11-03 (the helper that asks the desktop) — a helper finds MacExtract wherever the Finder has seen it, through the desktop database on System 7 and Mac OS 9 and the Desktop file on System 6 and 3.0, and registers its own icons; +384 B
 
 **Asked by the maintainer:** no reliance on where the files sit, and the
 desktop as the only source. The stub found MacExtract in the folder above
@@ -20348,6 +20348,17 @@ its desktop database deleted and rebuilt at startup the archive drew the
 helper's archive icon, in colour (the colour members' first Finder): the
 icon was a stale entry on the boot volume's database, which OS 9 consults
 before the archive's own volume.
+
+**So the stub registers its own icons** (`Icons`, `companion/stub/stub.c`):
+per `FREF`, family 128's six members through `PBDTAddIcon`, on its own
+volume; always when opened by itself, otherwise only while the database
+has no large icon for its first type. **+284 B of code, +256 B of
+MacBinary (9,728 B a stamped helper).** Measured on 7.0.1: the folder
+copied from a floppy by the Finder and never opened, `Apps` opened once,
+the archive double-clicked: handed to MacExtract (the copy had registered
+the creator), and on the next boot the archive drew the archive icon and
+the helper its own. 6.0.8 with the stock Desktop file, rerun: handed, the
+archive icon as before.
 
 **Consequence.** The helpers can live in any folder, on any mounted
 volume; what a user must do is what the Finder needs anyway, open

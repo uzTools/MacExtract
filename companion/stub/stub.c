@@ -25,6 +25,9 @@
  * it the last registered, and says so. A volume without a Desktop Manager
  * (System 6 and older) has nothing to reclaim; there the stub says that.
  *
+ * Its icons: registered by the stub itself where the Finder would not
+ * (Icons, below).
+ *
  * Where MacExtract is: wherever the Finder has seen it, on any mounted
  * volume — the application of creator MExt in the volume's desktop
  * database, or in its Desktop file where it has none (FindApp, below). No
@@ -229,7 +232,7 @@ static Boolean DesktopFile(OSType creator, short vol, long *dir, Str255 name,
     unsigned char *e, *end;
     Boolean found = false;
 
-    ref = OpenRFPerm("\pDesktop", vol, fsRdPerm);
+    ref = OpenRFPerm((ConstStr255Param)"\pDesktop", vol, fsRdPerm);
     if (ref == -1) return false;
     h = Get1Resource('APPL', 0);
     if (h) {
@@ -247,6 +250,57 @@ static Boolean DesktopFile(OSType creator, short vol, long *dir, Str255 name,
     CloseResFile(ref);
     UseResFile(saved);
     return found;
+}
+
+/* ICONS. The 7.0.1 Finder registers no bundle short of a desktop
+ * rebuild, so a helper and its archives draw generic icons there until
+ * one (measured; DECISIONS.md 2026-11-03, *the helper that asks the
+ * desktop*). The stub registers its own, as StuffIt Expander 4.0.2 and
+ * MacExtract do (mac/macextract_mac.c, DTBundle; DECISIONS.md 2026-10-18,
+ * *the icon Expander registers*): per 'FREF', the six members of the one
+ * icon family, ID 128, through PBDTAddIcon as icon types 1 to 6 (Inside
+ * Macintosh: More Macintosh Toolbox, Desktop Manager). Every 'FREF' is on
+ * local icon 0, which is that family (companion/make_stub.py; checked by
+ * tools/check_helpers.py), so the 'BNDL' is not read. Unless `force`,
+ * only when the database has no large icon for the first 'FREF' under
+ * this creator yet, so a double-click does not rewrite it each time. A
+ * volume without a Desktop Manager is the Finder's to fill. */
+static void Icons(short vol, OSType creator, Boolean force)
+{
+    static const OSType kIcon[6] =
+        { 'ICN#', 'icl4', 'icl8', 'ics#', 'ics4', 'ics8' };
+    DTPBRec d;
+    Handle f, h;
+    char probe[256];
+    short i, n;
+
+    d.ioCompletion = NULL;
+    d.ioNamePtr = NULL;
+    d.ioVRefNum = vol;
+    if (PBDTGetPath(&d)) return;
+    d.ioFileCreator = creator;
+    for (i = 1; (f = Get1IndResource('FREF', i)) != NULL; i++) {
+        d.ioFileType = *(OSType *)*f;
+        if (i == 1 && !force) {
+            d.ioTagInfo = 0;
+            d.ioDTBuffer = probe;
+            d.ioDTReqCount = sizeof probe;
+            d.ioIconType = 1;
+            if (!PBDTGetIconSync(&d)) return;
+        }
+        for (n = 0; n < 6; n++) {
+            h = Get1Resource(kIcon[n], 128);
+            if (!h) continue;
+            HLock(h);
+            d.ioTagInfo = 0;
+            d.ioDTBuffer = *h;
+            d.ioDTReqCount = GetHandleSize(h);
+            d.ioIconType = (SignedByte)(n + 1);
+            PBDTAddIconSync(&d);
+            HUnlock(h);
+        }
+    }
+    PBDTFlushSync(&d);
 }
 
 /* The first application of `creator` the Finder has seen, on any mounted
@@ -502,13 +556,14 @@ int main(void)
     OSType creator;
     OSErr err;
 
-    if (HomeFolder(&vol, me, &self)
-        || !FindApp('MExt', vol, self, &mvol, &dir, name)) {
+    if (HomeFolder(&vol, me, &self)) return 0;
+    creator = OwnCreator(vol, self, me);
+    if (creator) Icons(vol, creator, !HasDocuments());
+    if (!FindApp('MExt', vol, self, &mvol, &dir, name)) {
         Toolbox();
         StopAlert(kNotFoundAlert, NULL);
         return 0;
     }
-    creator = OwnCreator(vol, self, me);
 
     /* Opened by itself: take the creator back, and stop there. */
     if (!HasDocuments()) {
