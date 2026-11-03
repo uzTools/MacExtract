@@ -3,7 +3,7 @@
    icons for the creator each stub claims. */
 #include "Multiverse.r"
 
-/* MacExtract was not found beside this helper's folder. */
+/* No volume's desktop lists MacExtract: the Finder has not seen it. */
 resource 'ALRT' (128, purgeable) {
     { 90, 100, 200, 412 }, 128, {
         OK, visible, sound1, OK, visible, sound1,
@@ -15,8 +15,8 @@ resource 'DITL' (128, purgeable) {
     {
         { 78, 232, 98, 292 }, Button { enabled, "OK" };
         { 12, 64, 70, 300 }, StaticText { disabled,
-          "MacExtract could not be found. Keep this helper in a folder "
-          "beside MacExtract." };
+          "MacExtract could not be found. Open the folder it is in, "
+          "then try again." };
     }
 };
 
@@ -38,7 +38,7 @@ resource 'DITL' (129, purgeable) {
 };
 
 /* A document MacExtract's bundle does not claim, and no other application
-   of this helper's creator is known to the Desktop Manager. */
+   of this helper's creator is known to any volume's desktop. */
 resource 'ALRT' (130, purgeable) {
     { 90, 100, 200, 412 }, 130, {
         OK, visible, sound1, OK, visible, sound1,

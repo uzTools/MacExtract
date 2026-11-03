@@ -16,12 +16,12 @@ hands it on*).
     python3 companion/make_stub.py build/stub/Stub.bin \
       --creator 'SIT!' --types 'SIT!' -o 'SIT! Helper.bin'
 
-The stub goes in a folder beside MacExtract (`MacExtract Helpers`), and
-the Finder has to know it: a desktop rebuild registers it from its own
-bundle, or an entry in the volume's `Desktop` file does
-(`tools/vmac/deskclaim.py` writes one). No installer is needed: opening the helpers'
-folder once registers them (DECISIONS.md 2026-10-12, *the stub beside
-StuffIt*). What is left is OPEN_ITEMS.md, *The double-click helpers*.
+The stubs go in any folder (`MacExtract Helpers` on MacExtract's own
+disk), and the Finder has to know them and MacExtract: a stub finds
+MacExtract through the desktop, wherever it is (DECISIONS.md 2026-11-03,
+*the helper that asks the desktop*). No installer is needed: opening the
+helpers' folder and MacExtract's once registers them, and so does a desktop
+rebuild (DECISIONS.md 2026-10-12, *the stub beside StuffIt*). What is left is OPEN_ITEMS.md, *The double-click helpers*.
 
 | file | what |
 |---|---|

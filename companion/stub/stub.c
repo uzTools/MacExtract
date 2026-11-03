@@ -11,11 +11,9 @@
  * documents' types, from the Finder's list, are checked against the types
  * MacExtract's own bundle claims, read out of MacExtract at run time so
  * the two cannot drift. All claimed: MacExtract. Any one not: the whole
- * list goes to the creator's own application, the first other one the
- * Desktop Manager knows for this stub's creator, launched the same way;
- * a volume without a Desktop Manager (System 6 and older) has none to
- * offer, and the stub says so (DECISIONS.md 2026-10-31, *the stub that
- * sorts*).
+ * list goes to the creator's own application, found as MacExtract is
+ * (below) and launched the same way (DECISIONS.md 2026-10-31, *the stub
+ * that sorts*).
  *
  * RECLAIM. On Mac OS 9 the Finder gives a creator's documents to the
  * application registered LAST in the volume's desktop database (Apple's
@@ -27,10 +25,11 @@
  * it the last registered, and says so. A volume without a Desktop Manager
  * (System 6 and older) has nothing to reclaim; there the stub says that.
  *
- * Where MacExtract is: the folder ABOVE the stub's own — the stubs live in
- * a folder beside it (DECISIONS.md 2026-10-11, *where the stubs can live*)
- * — found by type APPL and creator MExt, so a renamed MacExtract is still
- * found.
+ * Where MacExtract is: wherever the Finder has seen it, on any mounted
+ * volume — the application of creator MExt in the volume's desktop
+ * database, or in its Desktop file where it has none (FindApp, below). No
+ * folder is assumed (the maintainer, 2026-11-03; DECISIONS.md 2026-11-03,
+ * *the helper that asks the desktop*).
  *
  * HYPOTHESIS, which the stub exists to test: that the Segment Loader keeps
  * the Finder information across a _Launch from one application to the
@@ -78,15 +77,13 @@ static void Toolbox(void)
     InitCursor();
 }
 
-/* The folder MacExtract should be in: the parent of the stub's own.
- * Also the stub's own name and folder, to tell it apart from the
+/* The stub's own volume, folder and name, to tell it apart from the
  * creator's real application. */
-static OSErr HomeFolder(short *vol, long *dir, Str255 name, long *self)
+static OSErr HomeFolder(short *vol, Str255 name, long *self)
 {
     short ref;
     Handle parms;
     FCBPBRec fcb;
-    CInfoPBRec c;
     OSErr err;
 
     GetAppParms(name, &ref, &parms);
@@ -97,16 +94,7 @@ static OSErr HomeFolder(short *vol, long *dir, Str255 name, long *self)
     fcb.ioFCBIndx = 0;
     err = PBGetFCBInfoSync(&fcb);
     if (err) return err;
-
-    c.dirInfo.ioCompletion = NULL;
-    c.dirInfo.ioNamePtr = NULL;
-    c.dirInfo.ioVRefNum = fcb.ioFCBVRefNum;
-    c.dirInfo.ioFDirIndex = -1;            /* the folder ioDrDirID names */
-    c.dirInfo.ioDrDirID = fcb.ioFCBParID;
-    err = PBGetCatInfoSync(&c);
-    if (err) return err;
     *vol = fcb.ioFCBVRefNum;
-    *dir = c.dirInfo.ioDrParID;
     *self = fcb.ioFCBParID;
     return noErr;
 }
@@ -206,15 +194,70 @@ static OSErr Reclaim(short vol, long self, Str255 me, OSType creator)
     return err;
 }
 
-/* The first application of `creator` the Desktop Manager knows, on any
- * mounted volume, that is not this stub. Source: Inside Macintosh: Files,
- * Desktop Manager — PBDTGetPath for a volume's desktop database, then
- * PBDTGetAPPL by creator and index, which answers the name and the parent
- * folder (ioAPPLParID); a volume without a Desktop Manager refuses
- * PBDTGetPath (measured on System 3.0, 6.0.8 and a 7.0.1 floppy:
+/* Whether `name` in `dir` is an application of `creator` that is not
+ * this stub: an entry may outlive its file, or name a renamed one. One of
+ * the stub's own creator in the stub's own folder is the stub. */
+static Boolean IsApp(OSType creator, short vol, long dir, Str255 name,
+                     short selfVol, long selfDir)
+{
+    CInfoPBRec c;
+
+    if (vol == selfVol && dir == selfDir)
+        return false;
+    c.hFileInfo.ioCompletion = NULL;
+    c.hFileInfo.ioNamePtr = name;
+    c.hFileInfo.ioVRefNum = vol;
+    c.hFileInfo.ioFDirIndex = 0;
+    c.hFileInfo.ioDirID = dir;
+    return !PBGetCatInfoSync(&c) && c.hFileInfo.ioFlFndrInfo.fdCreator == creator;
+}
+
+/* A volume with no desktop database (System 6 and older, and a 7.0.1
+ * floppy): the 'APPL' resource 0 of its Desktop file, the Finder's list of
+ * the applications it has seen, opened read-only (OpenRFPerm, Inside
+ * Macintosh IV, The Resource Manager) so a Finder holding it open is not
+ * disturbed. The resource's layout is MEASURED, not documented: entries
+ * of creator, folder ID and name, each padded to even, newest first, read
+ * off the System 3.0 and 6.0.8 Finders' Desktop files (tools/vmac/
+ * deskclaim.py, *appl_parse*). Every entry starts on an even offset of
+ * the handle, so its creator and folder are read as longs. */
+static Boolean DesktopFile(OSType creator, short vol, long *dir, Str255 name,
+                           short selfVol, long selfDir)
+{
+    short saved = CurResFile(), ref;
+    Handle h;
+    unsigned char *e, *end;
+    Boolean found = false;
+
+    ref = OpenRFPerm("\pDesktop", vol, fsRdPerm);
+    if (ref == -1) return false;
+    h = Get1Resource('APPL', 0);
+    if (h) {
+        HLock(h);
+        e = (unsigned char *)*h;
+        end = e + GetHandleSize(h);
+        for (; e + 9 <= end && e + 9 + e[8] <= end && !found;
+             e += (9 + e[8] + 1) & ~1) {
+            if (*(OSType *)e != creator) continue;
+            BlockMoveData(e + 8, name, e[8] + 1);
+            *dir = *(long *)(e + 4);
+            found = IsApp(creator, vol, *dir, name, selfVol, selfDir);
+        }
+    }
+    CloseResFile(ref);
+    UseResFile(saved);
+    return found;
+}
+
+/* The first application of `creator` the Finder has seen, on any mounted
+ * volume, that is not this stub: by PBDTGetAPPL from the volume's desktop
+ * database (Source: Inside Macintosh: Files, Desktop Manager — PBDTGetPath,
+ * then PBDTGetAPPL by creator and index, which answers the name and the
+ * parent folder, ioAPPLParID), or from its Desktop file where PBDTGetPath
+ * refuses (measured on System 3.0, 6.0.8 and a 7.0.1 floppy:
  * mac/macextract_mac.c, PBDTGetPath's comment). */
-static Boolean FindOwner(OSType creator, short selfVol, long selfDir,
-                         Str255 me, short *vol, long *dir, Str255 name)
+static Boolean FindApp(OSType creator, short selfVol, long selfDir,
+                       short *vol, long *dir, Str255 name)
 {
     HParamBlockRec v;
     DTPBRec dt;
@@ -226,21 +269,23 @@ static Boolean FindOwner(OSType creator, short selfVol, long selfDir,
         v.volumeParam.ioVRefNum = 0;
         v.volumeParam.ioVolIndex = vi;
         if (PBHGetVInfoSync(&v)) return false;
+        *vol = v.volumeParam.ioVRefNum;
         dt.ioCompletion = NULL;
         dt.ioNamePtr = NULL;
-        dt.ioVRefNum = v.volumeParam.ioVRefNum;
-        if (PBDTGetPath(&dt)) continue;
+        dt.ioVRefNum = *vol;
+        if (PBDTGetPath(&dt)) {
+            if (DesktopFile(creator, *vol, dir, name, selfVol, selfDir))
+                return true;
+            continue;
+        }
         for (k = 1; k < 32; k++) {
             dt.ioNamePtr = name;
             dt.ioIndex = k;
             dt.ioFileCreator = creator;
             if (PBDTGetAPPLSync(&dt)) break;
-            if (v.volumeParam.ioVRefNum == selfVol
-                && dt.ioAPPLParID == selfDir
-                && EqualString(name, me, false, true)) continue;
-            *vol = v.volumeParam.ioVRefNum;
             *dir = dt.ioAPPLParID;
-            return true;
+            if (IsApp(creator, *vol, *dir, name, selfVol, selfDir))
+                return true;
         }
     }
 }
@@ -448,36 +493,17 @@ static int Odoc(void)
     return !err;
 }
 
-/* An application of creator MExt in that folder, by name. */
-static OSErr FindMacExtract(short vol, long dir, Str255 name)
-{
-    CInfoPBRec c;
-    short i;
-
-    for (i = 1; ; i++) {
-        c.hFileInfo.ioCompletion = NULL;
-        c.hFileInfo.ioNamePtr = name;
-        c.hFileInfo.ioVRefNum = vol;
-        c.hFileInfo.ioFDirIndex = i;
-        c.hFileInfo.ioDirID = dir;
-        if (PBGetCatInfoSync(&c)) return fnfErr;
-        if (c.hFileInfo.ioFlAttrib & 0x10) continue;          /* a folder */
-        if (c.hFileInfo.ioFlFndrInfo.fdType == 'APPL'
-            && c.hFileInfo.ioFlFndrInfo.fdCreator == 'MExt')
-            return noErr;
-    }
-}
-
 int main(void)
 {
-    short vol, ovol;
+    short vol, mvol, ovol;
     long dir, self, odir;
     Str255 me, name, owner;
     WDPBRec wd;
     OSType creator;
     OSErr err;
 
-    if (HomeFolder(&vol, &dir, me, &self) || FindMacExtract(vol, dir, name)) {
+    if (HomeFolder(&vol, me, &self)
+        || !FindApp('MExt', vol, self, &mvol, &dir, name)) {
         Toolbox();
         StopAlert(kNotFoundAlert, NULL);
         return 0;
@@ -503,14 +529,14 @@ int main(void)
      * and for _Launch, which names the application relative to it. */
     wd.ioCompletion = NULL;
     wd.ioNamePtr = NULL;
-    wd.ioVRefNum = vol;
+    wd.ioVRefNum = mvol;
     wd.ioWDProcID = 'MXst';
     wd.ioWDDirID = dir;
     err = PBOpenWDSync(&wd);
     if (!err) err = SetVol(NULL, wd.ioVRefNum);
 
     if (!err && !AllOpenable(name)) {
-        if (creator && FindOwner(creator, vol, self, me, &ovol, &odir, owner))
+        if (creator && FindApp(creator, vol, self, &ovol, &odir, owner))
             err = LaunchIn(ovol, odir, owner);
         else {
             Toolbox();
@@ -519,7 +545,7 @@ int main(void)
         }
     } else if (!err) {
         if (Puppet() || Odoc()) return 0;
-        err = LaunchIn(vol, dir, name);
+        err = LaunchIn(mvol, dir, name);
     }
 
     Toolbox();

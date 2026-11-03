@@ -492,6 +492,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-03 (the nibble that cost more than a byte) — Arsenic's inverse-BWT table at 2.5 bytes an entry puts a2basic on the fast path at 1 MB and slows every machine with room 1.6-3.7 %; not landed
 - 2026-11-03 (the gate a helper commit has) — `ci.sh` built nothing in `companion/`; `tools/check_helpers.py` builds a helper and reads what the Finder needs off it, and a commit touching only `companion/` and docs is gated by it and `tools/check_docs.py`
 - 2026-11-03 (the creators that get a helper) — sixteen, each owning archives alone: MacStamp's own pair for every format MacExtract extracts, and MacZip and PackIt from its census; the editors and HexEdit, whose files a type cannot sort, stay out
+- 2026-11-03 (the helper that asks the desktop) — a helper finds MacExtract wherever the Finder has seen it, through the desktop database on System 7 and Mac OS 9 and the Desktop file on System 6 and 3.0; +128 B
 
 ---
 
@@ -15847,7 +15848,8 @@ Finder's alert, identified positively:
 
 **Consequence.** Per creator, a visible stub in a folder beside
 MacExtract, bundle under that creator, `APPL` entry written; a rebuild
-finds them by their bundles. **A stub can also give the archives their
+finds them by their bundles. (CORRECTED 2026-11-03: any folder; the stub
+finds MacExtract through the desktop, *the helper that asks the desktop*.) **A stub can also give the archives their
 icon**: an `FREF` for type `SIT!` and its own `ICN#` drew the archive with
 it (the inherited `'****'` `FREF` gives none); a drawn icon re-run settled
 that the inverted frame was not a selection. **The icon** is
@@ -16190,7 +16192,8 @@ Segment Loader keeps `AppParmHandle` across the stub's `_Launch`.
 | 3.0 | the companion's `Desktop` entry | handed |
 
 **How it works.** `companion/stub/stub.c`: the folder above its own (from
-`GetAppParms`, `PBGetFCBInfo`, `PBGetCatInfo`); MacExtract found by type
+`GetAppParms`, `PBGetFCBInfo`, `PBGetCatInfo`; since 2026-11-03 the desktop
+instead, *the helper that asks the desktop*); MacExtract found by type
 `APPL` and creator `MExt`, not name; that folder made default with
 `PBOpenWD` and `SetVol`; the original `_Launch` form (name pointer and
 configuration word, `launchBlockID` 0), leaving `AppParmHandle` alone; an
@@ -16298,7 +16301,8 @@ order (alphabetical): last-sorting opens, first-sorting gives icons
 (System 6).
 
 **Consequence.** No installer: copy the folder beside MacExtract and open
-it once. A StuffIt on the disk does not stop archives opening; the icon
+it once (since 2026-11-03 any folder, MacExtract's opened once too: *the
+helper that asks the desktop*). A StuffIt on the disk does not stop archives opening; the icon
 crossover is the Finder's (one bundle per creator) and unavoidable without
 giving up the bundle a rebuild needs (2026-10-11, *where the stubs can
 live*).
@@ -20284,6 +20288,47 @@ pair since macstamp c018dd4), and `PIT `, PackIt III 1.3 measured writing
 - `mdos`, `????`, `0000`: no program; `mdos`'s `BINA` is any DOS file.
 
 **Consequence.** Sixteen helpers at 9,344 B of MacBinary each, about
-150 KB; what they take on a floppy is not measured. `MARd` and `MARf`
+150 KB (9,472 B, about 152 KB, since *the helper that asks the desktop*); what they take on a floppy is not measured. `MARd` and `MARf`
 reach MacExtract once its bundle claims them; until then a `MARc` helper
 hands them back to Hampa's application.
+
+## 2026-11-03 (the helper that asks the desktop) — a helper finds MacExtract wherever the Finder has seen it, through the desktop database on System 7 and Mac OS 9 and the Desktop file on System 6 and 3.0; +128 B
+
+**Asked by the maintainer:** no reliance on where the files sit, and the
+desktop as the only source. The stub found MacExtract in the folder above
+its own (2026-10-11, *where the stubs can live*); now `FindApp`
+(`companion/stub/stub.c`) looks up creator `MExt` on every mounted volume:
+`PBDTGetAPPL` where the volume has a desktop database, else the `'APPL'`
+resource 0 of its `Desktop` file, opened read-only with `OpenRFPerm`. That
+resource's layout is measured, not documented (`tools/vmac/deskclaim.py`,
+*appl_parse*), and System 3.0's stock Desktop file has it too (read off
+`Sys30.img` 2026-11-03: `Installer`, `Font/DA Mover`). Each entry found is
+checked against the catalog, so a stale one is passed over. The same
+lookup finds a creator's own program for the triage, which System 6 had
+none for. **Price: +174 B of code, +128 B of MacBinary (9,472 B a stamped
+helper).** A File Manager reader of the resource fork was +932 B and was
+dropped.
+
+**Measured,** a `SIT!` helper in `Tools:Helpers`, MacExtract in `Apps`, a
+`SITD`/`SIT!` archive at the root; each graded on MacExtract's destination
+dialog and the two entries extracted:
+
+| System | how the Finder knew MacExtract | result |
+|---|---|---|
+| 6.0.8, Finder, 4 MB | a desktop rebuild at boot | handed |
+| 6.0.8, Finder — control | stock Desktop file, `Apps` never opened | the helper's "could not be found" |
+| 6.0.8, Finder | stock Desktop file, `Apps` opened once | handed |
+| 6.0.8, MultiFinder | the same, the Finder holding the file open | handed |
+| 7.0.1, 4 MB — control | stock desktop database, `Apps` never opened | "could not be found" |
+| 7.0.1 | `Apps` opened once | handed |
+| 3.0, Mac Plus 1 MB | stock Desktop file, `Apps` opened once | handed |
+| Mac OS 9.2 (QEMU) | a fresh 32 MB volume, both folders opened; StuffIt Expander on the boot disk | handed |
+
+**Not run:** MacExtract on a different volume from the helper; a 400 KB
+MFS floppy; the triage's hand-back to a creator's own program on System 6
+through the Desktop file.
+
+**Consequence.** The helpers can live in any folder, on any mounted
+volume; what a user must do is what the Finder needs anyway, open
+MacExtract's folder and the helpers' once. The "could not be found" alert
+now says that.

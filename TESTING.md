@@ -2473,7 +2473,7 @@ behind its tree.)
 Builds `companion/stub`, stamps a `SIT!` helper with `companion/make_stub.py`,
 and reads off the file what the Finder needs: the flags, one `CODE`
 segment, `canBackground`, the bundle with one icon family, every `FREF` on
-local icon 0, and a 9,344 B ceiling. `--file X` checks a helper already
+local icon 0, and a 9,472 B ceiling. `--file X` checks a helper already
 stamped. Shown able to fail on each property (DECISIONS.md 2026-11-03,
 *the gate a helper commit has*). **It cannot see** whether a Finder
 accepts the bundle or draws the icon, or whether a hand-off to MacExtract
