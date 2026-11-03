@@ -60,18 +60,20 @@
 #include <Traps.h>
 #include <AppleEvents.h>
 
-QDGlobals qd;
+/* No globals: the image is position-independent (-mpcrel) and runs
+ * unrelocated, so nothing may live in .data or .bss, which no start-up code
+ * here sets up. QuickDraw's globals sit in stub_main's frame, which lasts
+ * the whole run; InitGraf records where through A5. */
+typedef struct { QDGlobals qd; char done; } Tb;
 
 enum { kNotFoundAlert = 128, kLaunchAlert = 129, kNoOwnerAlert = 130,
        kReclaimedAlert = 131, kNoReclaimAlert = 132 };
 
-static void Toolbox(void)
+static void Toolbox(Tb *t)
 {
-    static char done;
-
-    if (done) return;
-    done = 1;
-    InitGraf(&qd.thePort);
+    if (t->done) return;
+    t->done = 1;
+    InitGraf(&t->qd.thePort);
     InitFonts();
     InitWindows();
     InitMenus();
@@ -478,7 +480,7 @@ static void Settle(long ticks)
 }
 
 /* 1 if a running MacExtract was handed the documents. */
-static int Odoc(void)
+static int Odoc(Tb *tb)
 {
     Handle ap = LMGetAppParmHandle();
     ProcessSerialNumber psn = { 0, kNoProcess };
@@ -531,7 +533,7 @@ static int Odoc(void)
         return 0;
     HLock(parm.dataHandle);
     a = *(unsigned char **)parm.dataHandle;
-    Toolbox();
+    Toolbox(tb);
     for (k = 0; k < 10; k++) {
         Settle(k ? 30 : 60);
         err = PostHighLevelEvent((EventRecord *)a, (Ptr)&psn,
@@ -547,8 +549,19 @@ static int Odoc(void)
     return !err;
 }
 
-int main(void)
+static int stub_main(void);
+/* The entry point, in place of Retro68's _start: nothing to relocate,
+ * no constructors, and out through ExitToShell as Retro68's _exit leaves
+ * (mac/mac_start.c does the same for MacExtract, less the relocation). */
+void stub_start(void)
 {
+    stub_main();
+    ExitToShell();
+}
+
+static int stub_main(void)
+{
+    Tb t, *tb = &t;
     short vol, mvol, ovol;
     long dir, self, odir;
     Str255 me, name, owner;
@@ -556,11 +569,12 @@ int main(void)
     OSType creator;
     OSErr err;
 
+    t.done = 0;
     if (HomeFolder(&vol, me, &self)) return 0;
     creator = OwnCreator(vol, self, me);
     if (creator) Icons(vol, creator, !HasDocuments());
     if (!FindApp('MExt', vol, self, &mvol, &dir, name)) {
-        Toolbox();
+        Toolbox(tb);
         StopAlert(kNotFoundAlert, NULL);
         return 0;
     }
@@ -568,7 +582,7 @@ int main(void)
     /* Opened by itself: take the creator back, and stop there. */
     if (!HasDocuments()) {
         OSErr r = creator ? Reclaim(vol, self, me, creator) : fnfErr;
-        Toolbox();
+        Toolbox(tb);
         if (r) {
             Str255 num;
             NumToString(r, num);
@@ -594,16 +608,16 @@ int main(void)
         if (creator && FindApp(creator, vol, self, &ovol, &odir, owner))
             err = LaunchIn(ovol, odir, owner);
         else {
-            Toolbox();
+            Toolbox(tb);
             StopAlert(kNoOwnerAlert, NULL);
             return 0;
         }
     } else if (!err) {
-        if (Puppet() || Odoc()) return 0;
+        if (Puppet() || Odoc(tb)) return 0;
         err = LaunchIn(mvol, dir, name);
     }
 
-    Toolbox();
+    Toolbox(tb);
     {
         Str255 num;
         NumToString(err, num);

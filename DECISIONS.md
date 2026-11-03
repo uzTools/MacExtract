@@ -494,6 +494,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-03 (the creators that get a helper) — sixteen, each owning archives alone: MacStamp's own pair for every format MacExtract extracts, and MacZip and PackIt from its census; the editors and HexEdit, whose files a type cannot sort, stay out
 - 2026-11-03 (the helper that asks the desktop) — a helper finds MacExtract wherever the Finder has seen it, through the desktop database on System 7 and Mac OS 9 and the Desktop file on System 6 and 3.0, and registers its own icons; +384 B
 - 2026-11-03 (the archive that carries its own CRCs) — MAR comes in, graded by what its author wrote, read from GPL-2.0-only sources for their facts alone
+- 2026-11-03 (the helper without a runtime) — position-independent code leaves Retro68's relocator, start-up and exit chain nothing to do: a stamped helper 9,728 -> 6,784 B
 
 ---
 
@@ -20487,3 +20488,32 @@ before the first commit, and measured (0 ticks, then 31). The
 sniffer's answer changes for the four MAR fixtures and no other of 1,002
 corpus files. None of 4,880 non-archives (reference/, this tree) sniffs as
 MAR.
+
+## 2026-11-03 (the helper without a runtime) — position-independent code leaves Retro68's relocator, start-up and exit chain nothing to do: a stamped helper 9,728 -> 6,784 B
+
+**Asked by the maintainer:** a helper "shouldn't be more than 5k"; it was
+9,728 B. Measured split: `CODE` 5,925 (the helper's own code about 2,800,
+Retro68's relocator 1,656, its segment set-up 476, newlib's exit chain,
+stdio array and constructors about 1,500 with their data), icons 2,240,
+five alerts 544, map and MacBinary about 900.
+
+**What changed.** Compiled `-mpcrel`, every reference to the image's own
+constants is PC-relative and the image has no relocations (`CODE` 1 is the
+4-byte header, the image and an empty two-byte table). So the stub
+takes its own entry, `stub_start` (`-Wl,-e`, as `mac/mac_start.c` does for
+MacExtract), which calls the main body and `ExitToShell`: no relocator, no
+constructors, no exit chain. `.bss` is not set up by anything, so
+QuickDraw's globals and the toolbox flag moved into the main body's frame;
+the 4 B `.bss` the linker script still reserves is referenced by nothing
+(the disassembly: the one absolute address left is `$0AEC`,
+`AppParmHandle`). **6,784 B stamped, 4,224 B unstamped.**
+
+**Measured:** 6.0.8, stock Desktop file, `Apps` opened: handed. 7.0.1, the
+helpers folder copied by the Finder: handed. 7.0.1 at 1x, the archive
+double-clicked while MacExtract extracted `Slow.sit`: queued and extracted
+after it (the odoc route). Not rerun: 3.0, MultiFinder's puppet string,
+Mac OS 9.2.
+
+**Still over 5 KB.** What is left: the code 2.9 KB, icons 2,240 B (the
+colour members 1,920), alerts 544, map and headers. The rest is the
+maintainer's choice.

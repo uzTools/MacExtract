@@ -15,6 +15,11 @@ add_application(Stub CREATOR "MXst" stub.c stub.r)
 # One CODE segment and no MacsBug names: Retro68's multi-segment loader
 # and its patches are a third of a default build (10,112 B -> 6,784 B as
 # MacBinary; DECISIONS.md 2026-11-01, *the Open item MultiFinder looks for*).
-target_compile_options(Stub PRIVATE -Os -Wall -ffunction-sections)
+# Then no Retro68 runtime at all: position-independent code (-mpcrel) has
+# nothing to relocate, so stub.c's own entry (stub_start) replaces _start,
+# its relocator and newlib's exit chain (7,168 -> 4,224 B; DECISIONS.md
+# 2026-11-03, *the helper without a runtime*). Nothing may go in .data or
+# .bss: no start-up code sets them up.
+target_compile_options(Stub PRIVATE -Os -Wall -ffunction-sections -mpcrel)
 target_link_options(Stub PRIVATE -Wl,-gc-sections -Wl,--mac-single
-    -Wl,--mac-strip-macsbug)
+    -Wl,--mac-strip-macsbug -Wl,-e,stub_start)
