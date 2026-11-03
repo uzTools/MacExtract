@@ -490,6 +490,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-01 (the creators Expander does not open) — on Mac OS 9 StuffIt Expander is registered under `SITx` alone and a `SIT!` archive asks which program to use; a second bundle claims no creator for a stub either; and the boot volume every Mac OS 9 run here used carries StuffIt Deluxe's Finder patches
 - 2026-11-01 (the floor, and the second double-click) — the triaging stub hands a `SIT!` archive to MacExtract on System 3.0 at 1 MB; under MultiFinder a second double-click while MacExtract extracts is refused with MultiFinder's own alert
 - 2026-11-01 (the Open item MultiFinder looks for) — a File > Open... that queues during an extraction lets a second double-click wait its turn on System 6 MultiFinder, System 7 and Mac OS 9; 192 B, not yet in the tree
+- 2026-11-03 (the gate a helper commit has) — `ci.sh` built nothing in `companion/`; `tools/check_helpers.py` builds a helper and reads what the Finder needs off it, and a commit touching only `companion/` and docs is gated by it and `tools/check_docs.py`
 
 ---
 
@@ -20216,3 +20217,28 @@ answering its own File > Open... during the stay (bytes in every helper,
 and twenty helpers), a mailbox on disk (a single-floppy Mac would be
 asked for MacExtract's disk at every check), and a mailbox in the system
 heap behind a Gestalt selector (declined).
+
+## 2026-11-03 (the gate a helper commit has) — `ci.sh` built nothing in `companion/`; `tools/check_helpers.py` builds a helper and reads what the Finder needs off it, and a commit touching only `companion/` and docs is gated by it and `tools/check_docs.py`
+
+Asked by the maintainer, who stopped a full `ci.sh` run gating a change to
+`companion/make_stub.py`: the run takes half an hour and could not fail on
+anything in `companion/`, which nothing in it builds. Two changes, both his.
+
+**The layer (measured: it can fail).** `tools/check_helpers.py` builds
+`companion/stub`, stamps a `SIT!` helper with `make_stub.py`, and checks off
+the file the Finder flags (hasBundle set, inited clear, `APPL`, the
+creator), one `CODE` segment, `canBackground` in `'SIZE'`, the bundle (owner,
+signature, one icon family at 128, every `FREF` on local icon 0) and a size
+ceiling, 9,344 B. Pointed with `--file` at helpers of this branch's own
+history, it failed on each property the history changed: the two-family
+single-segment helper on the icons and the size; the multi-segment one on
+the segments too; the first helper of 2026-10-31 on `cannotBackground`; and
+a copy of today's with hasBundle cleared, then with inited set, on each.
+It runs in `ci.sh` after the Mac build, and skips like it without Retro68.
+What it cannot see: whether a given Finder accepts the bundle and draws the
+icon, and whether a hand-off arrives; those stay emulator runs.
+
+**The rule.** CLAUDE.md, *Rules*: a commit that changes only `companion/`
+and docs needs `tools/check_docs.py` and `tools/check_helpers.py` green, not
+the whole of `ci.sh`.
+

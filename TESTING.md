@@ -2468,6 +2468,17 @@ tools/make_dist.sh`, in the same commit as the change to `mac/` or `src/`.
 (Before the check, `0aa9101` had shipped a download 591 B of resource fork
 behind its tree.)
 
+## The double-click helper (`tools/check_helpers.py`, in `ci.sh`, added 2026-11-03)
+
+Builds `companion/stub`, stamps a `SIT!` helper with `companion/make_stub.py`,
+and reads off the file what the Finder needs: the flags, one `CODE`
+segment, `canBackground`, the bundle with one icon family, every `FREF` on
+local icon 0, and a 9,344 B ceiling. `--file X` checks a helper already
+stamped. Shown able to fail on each property (DECISIONS.md 2026-11-03,
+*the gate a helper commit has*). **It cannot see** whether a Finder
+accepts the bundle or draws the icon, or whether a hand-off to MacExtract
+arrives: those are emulator runs (`tools/vmac/README.md`).
+
 ## The three Macintosh configurations (`ci.sh` variants 4, 4b, 4c, 4d)
 
 The application is three builds from one tree, and `ci.sh` compiles all
