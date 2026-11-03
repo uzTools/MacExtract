@@ -12,5 +12,9 @@
 cmake_minimum_required(VERSION 3.10)
 project(macextract_stub C)
 add_application(Stub CREATOR "MXst" stub.c stub.r)
-target_compile_options(Stub PRIVATE -Os -Wall)
-target_link_options(Stub PRIVATE -Wl,-gc-sections)
+# One CODE segment and no MacsBug names: Retro68's multi-segment loader
+# and its patches are a third of a default build (10,112 B -> 6,784 B as
+# MacBinary; DECISIONS.md 2026-11-01, *the Open item MultiFinder looks for*).
+target_compile_options(Stub PRIVATE -Os -Wall -ffunction-sections)
+target_link_options(Stub PRIVATE -Wl,-gc-sections -Wl,--mac-single
+    -Wl,--mac-strip-macsbug)

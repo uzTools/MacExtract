@@ -19717,6 +19717,19 @@ MacExtract busy, the second archive extracted after the first; 7.0.1
 with MacExtract not running, and 6.0.8 without MultiFinder: MacExtract
 launched with the archive and extracted it.
 
+**What the helper weighs (measured, 2026-11-03).** Of the 10,112 B, the
+helper's own code is about 2.3 KB (`main` 2,114 B with everything
+inlined); the rest is Retro68's default runtime: the multi-segment loader
+and its patches, relocation, C start-up and exit handling, MacsBug names.
+Built single-segment (`--mac-single`, `--mac-strip-macsbug`,
+`-ffunction-sections`): **6,784 B**, one 5,443-B `CODE`; with the bundle
+and the two icon families `make_stub.py` adds, 14,976 → **11,648 B** per
+helper. What is left of the runtime, relocation and exit handling (~2.7
+KB), would need start-up code of its own; not done. The same build on
+6.0.8 MultiFinder and 7.0.1, MacExtract busy: the second archive
+extracted after the first (one run each). The icons are now 4,864 B of
+each helper, the next thing to weigh.
+
 **How long the helper must stay (measured, 7.0.1, the final build with
 only the stay changed, one run each).** The maintainer asked whether the
 stay was the ticks between MacExtract's event pumps, the gaps that also
