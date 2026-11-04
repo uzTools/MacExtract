@@ -248,11 +248,6 @@ grade against.
   the whole bundle and is refused on System 6.0.8 at 512 KB, 2,930 B short
   (DECISIONS.md 2026-11-04, *the frame mar 0.2.0 reads*). Closes with a ring
   that grows with the output, priced against that refusal.
-- **mar 0.2.0's expander's Finder info is read from its source**
-  (FORMATS.md, *MAR*), never read back: its Decode has run on System 6.0.8
-  and 7.0.1 (DECISIONS.md 2026-11-03 and 2026-11-04), its files compared,
-  its Finder info not. Closes with that output read back
-  (`tools/vmac/hfscat.py`).
 
 ## The shell's own File Manager blocks, until multiversal's glue is inline
 

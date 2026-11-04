@@ -2493,14 +2493,16 @@ identical (`tools/run_mar.py`). Bytes 114..117 read 2019-05-31 in every
 
 **The Finder info stated is what mar 0.2.0's expander writes, but for one
 bit**, read from
-`mar_dec.c`, not measured on a Macintosh:
+`mar_dec.c` and measured on System 6.0.8 against mar 0.2.0's own Decode of
+the same two archives: every item below the first identical, field for
+field, but for a date of 0 (DECISIONS.md 2026-11-03, same entry):
 
 | record | becomes |
 |---|---|
 | @96..111 | FInfo (a file) or DInfo (a folder), whole; on the FIRST item, on-desk (0x0001) cleared and inited KEPT, where mar clears both: the shell writes that item's location (−1, −1), and the Finder places it and keeps its window (DECISIONS.md 2026-11-03, same entry) |
 | @112..115 | a folder's `frScroll`, v then h; the rest of DXInfo 0 |
 | @84 bit 0 | a file **locked** |
-| @88, @92 | created, modified: wall clock |
+| @88, @92 | created, modified: wall clock; 0 leaves the File Manager's, now, where mar writes 0 (1904), as the shell does for every format |
 | the comment block | the Get Info comment, cut at 255 (the expander skips it) |
 
 **An LZW-compressed archive needs no codec of its own**: mar 0.2.0's

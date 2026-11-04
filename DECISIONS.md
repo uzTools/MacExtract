@@ -20530,6 +20530,17 @@ emulator on this two-CPU host, one boot never settled and one opened the
 `in` window before `In` mounted, so nothing ran; and both LZ4 frames graded against a `build/rel` built before LZ4 existed,
 which named nothing (0 files where the Mac gave 1).
 
+**mar 0.2.0's own Decode, read back (2026-11-04).** On System 6.0.8 mar
+decoded `mar-wild-mar020.mar` and `synth-mar-tree.mar`, and MacExtract
+extracted both on the same System; `hfscat.py` compared every catalog
+record. Every item below the first is identical in FInfo/DInfo, FXInfo/
+DXInfo, the lock and the dates, the 41-character name cut to the same 31,
+but for one thing: a record date of 0, which mar writes as 0 (1904) and the
+shell leaves to the File Manager, now, as it does for every format. The
+first item differs as decided above: mar's `Top Folder` came out with
+inited and on-desk cleared and its location kept, as `mar_dec.c` says;
+`mar-0.2.0` had already been placed by the Finder when it was read.
+
 ## 2026-11-03 (the helper without a runtime) — position-independent code leaves Retro68's relocator, start-up and exit chain nothing to do: a stamped helper 9,728 -> 6,784 B
 
 **Asked by the maintainer:** a helper "shouldn't be more than 5k"; it was
