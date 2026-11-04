@@ -150,7 +150,9 @@ helpers once.
 No hard disk? The MacExtract floppy is ready as it comes: put it in, eject
 it, put in the floppy with your archive and double-click the archive. The
 Mac asks for each disk in turn -- a few swaps before MacExtract asks where
-to put the files, more while it extracts.
+to put the files, more while it extracts. On System 7 the Finder alone asks
+for the two disks about four times each before MacExtract even starts; open
+MacExtract first and choose the archive in its Open dialog to avoid that.
 
 Floor target: System 3.0 on a 1 MB Mac Plus (68000) -- the system the Plus
 shipped with in January 1986. It also runs in 512 KB, on a Macintosh 512Ke.

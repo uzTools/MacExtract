@@ -501,6 +501,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-04 (the floppy that is ready) — the MacExtract floppy carries a Desktop file listing MacExtract and the helpers, so a Mac without a hard disk opens an archive from another floppy with the MacExtract floppy ejected; inited bits measured to change nothing
 - 2026-11-04 (the layouts the release did not hold) — the launch grows the heap with MaxApplZone where the ROM has it, which purges nothing: purged by MaxMem, the dialogs' preloaded layouts were read again from MacExtract's floppy, and a one-drive Mac's dialog opened there
 - 2026-11-04 (the icon the 64K ROM could not open) — the destination dialog reads the Finder's small icon only where the ROM has OpenRFPerm; since v0.45.0 a 64K-ROM Macintosh bombed at launch
+- 2026-11-04 (the swaps before the first instruction) — on System 7 with one floppy drive, double-clicking an archive costs about four rounds of swaps before the application runs; nothing here can prevent them, and the README says so
 
 ---
 
@@ -20864,3 +20865,27 @@ budget moves.
 
 **What let it through:** nothing runs the 64K ROM; it is MANUAL_TESTS.md
 §6's, by hand, and §6 still read "starts" from 2026-10-16.
+
+## 2026-11-04 (the swaps before the first instruction) — on System 7 with one floppy drive, double-clicking an archive costs about four rounds of swaps before the application runs; nothing here can prevent them, and the README says so
+
+**Measured** on System 7.0.1, 4 MB, one floppy drive, MacExtract's floppy
+write-protected, the archive on a second floppy, every request answered,
+with marks in screen memory at each step:
+
+| route | disk requests |
+|---|---|
+| double-click the `SIT!` archive (through the helper) | MacExtract and Archives alternating 4 + 3 **before the helper's first line**; one round for its `LaunchApplication` of MacExtract; Archives for the archive; one round once MacExtract's dialog first gives the background time |
+| the same archive stamped `MExt`, MacExtract stopped by an endless loop on the first line of `main()` | the same 4 + 3 before that line |
+| MacExtract opened from its floppy, Eject in its Open dialog, Archives in, Open | **none** to the end of the report |
+
+So the Finder's launch of an application for a document on another floppy
+reads both disks in turn before any of the application's code runs, and
+a launch by `LaunchApplication` (the helper's) costs one round. Withdrawn
+on the way: writes to Archives (the same with it write-protected), the
+Finder redrawing its window (the same with the window clear of the
+request), the default volume during the dialog (the same switched to
+Archives). A pause at launch (`WaitNextEvent`, 1 s) took the Finder's
+follow-up round off the double-click route, five rounds instead of six;
+not landed (the maintainer: a System 7 Mac without a hard disk is
+unlikely, and one would boot System 6). `dist/README.txt` says to open
+MacExtract first on System 7.
