@@ -219,7 +219,23 @@ def check_dist(stub):
                 continue
             ls = subprocess.run(["hls", "-1", ":MacExtract Helpers"], capture_output=True, text=True,
                                 encoding="mac_roman", env=env)
+            # The Desktop file: MacExtract and every helper, the helpers in
+            # the folder's own catalog ID (DECISIONS.md 2026-11-04, *the
+            # floppy that is ready*).
+            ids = subprocess.run(["hls", "-i", "-a", ":"], capture_output=True, text=True,
+                                 encoding="mac_roman", env=env).stdout
+            dirid = [int(l.split(None, 1)[0]) for l in ids.splitlines()
+                     if l.split(None, 1)[1:] == ["MacExtract Helpers"]]
+            got_d = os.path.join(home, "check-Desktop.bin")
+            cp = subprocess.run(["hcopy", "-m", ":Desktop", got_d], capture_output=True, env=env)
             subprocess.run(["humount"], capture_output=True, env=env)
+            if cp.returncode or not dirid:
+                bad.append(f"dist/{img}: no Desktop file, or no helpers folder")
+            else:
+                ent = D.desktop_appl(open(got_d, "rb").read())
+                want_e = D.desktop_appl(M.desktop(dirid[0]))
+                if ent != want_e:
+                    bad.append(f"dist/{img}: the Desktop file's APPL list is {ent}, not {want_e}")
             got = sorted(ls.stdout.split("\n")[:-1]) if not ls.returncode else None
             if got != names:
                 bad.append(f"dist/{img}: MacExtract Helpers holds {got}, not {names}")

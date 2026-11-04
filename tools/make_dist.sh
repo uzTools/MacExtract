@@ -95,6 +95,12 @@ for img in dist/MacExtract.dsk "$IMG"; do
     for h in "$HFS_TMP"/helpers/*.bin; do
         HOME=$HFS_TMP hcopy -m "$h" ":MacExtract Helpers:$(basename "$h" .bin)"
     done
+    # The Desktop file listing MacExtract and the helpers, so a Mac with
+    # no hard disk finds them on this floppy with it ejected (DECISIONS.md
+    # 2026-11-04, *the floppy that is ready*).
+    DIRID=$(HOME=$HFS_TMP hls -i -a ":" | awk '$2 == "MacExtract" && $3 == "Helpers" {print $1}')
+    python3 companion/make_helpers.py --desktop "$HFS_TMP/Desktop.bin" --dirid "$DIRID"
+    HOME=$HFS_TMP hcopy -m "$HFS_TMP/Desktop.bin" ":Desktop"
     HOME=$HFS_TMP humount >/dev/null
 done
 VERSION=$(sed -n 's/^#define UNC_VERSION "\(.*\)"/\1/p' include/macextract.h)
@@ -140,6 +146,11 @@ want. A file MacExtract cannot open goes to the program that made it, if
 that program is on the Mac. On Mac OS 9, if StuffIt Expander is installed
 afterwards and takes its archives back, open the "StuffIt" and "Expander"
 helpers once.
+
+No hard disk? The MacExtract floppy is ready as it comes: put it in, eject
+it, put in the floppy with your archive and double-click the archive. The
+Mac asks for each disk in turn -- a few swaps before MacExtract asks where
+to put the files, more while it extracts.
 
 Floor target: System 3.0 on a 1 MB Mac Plus (68000) -- the system the Plus
 shipped with in January 1986. It also runs in 512 KB, on a Macintosh 512Ke.

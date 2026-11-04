@@ -38,6 +38,11 @@ that program is on the Mac. On Mac OS 9, if StuffIt Expander is installed
 afterwards and takes its archives back, open the "StuffIt" and "Expander"
 helpers once.
 
+No hard disk? The MacExtract floppy is ready as it comes: put it in, eject
+it, put in the floppy with your archive and double-click the archive. The
+Mac asks for each disk in turn -- a few swaps before MacExtract asks where
+to put the files, more while it extracts.
+
 Floor target: System 3.0 on a 1 MB Mac Plus (68000) -- the system the Plus
 shipped with in January 1986. It also runs in 512 KB, on a Macintosh 512Ke.
 On a true Macintosh 512K -- the 64K ROM -- it opens and lists a disk, but

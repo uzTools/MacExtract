@@ -498,6 +498,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-03 (the hand-back to the Finder) — a helper that is not event-aware cannot post to the Finder (-903); an event-aware one can, and the 7.0.1 Finder opens a document through FNDR/sope as a double-click would, but answers a document no application owns with silence, not its alert
 - 2026-11-04 (the frame mar 0.2.0 reads) — an LZ4 frame unwraps like `.Z`, written from the published specification and graded against liblz4; the release kept a shared image in the wrong slot
 - 2026-11-04 (the helpers in dist) — the sixteen helpers ship in dist/ as one Finder-style zip MacExtract opens, and on both disk images in a "MacExtract Helpers" folder beside MacExtract, before any release
+- 2026-11-04 (the floppy that is ready) — the MacExtract floppy carries a Desktop file listing MacExtract and the helpers, so a Mac without a hard disk opens an archive from another floppy with the MacExtract floppy ejected; inited bits measured to change nothing
 
 ---
 
@@ -20683,3 +20684,32 @@ floppy, the archive on the hard disk, no MacExtract there: the floppy's
 folder opened, the archive drew the archive icon, and a double-click
 reached the floppy's MacExtract, which extracted it; so MacExtract on
 another volume than the archive's, not run before, works.
+
+## 2026-11-04 (the floppy that is ready) — the MacExtract floppy carries a Desktop file listing MacExtract and the helpers, so a Mac without a hard disk opens an archive from another floppy with the MacExtract floppy ejected; inited bits measured to change nothing
+
+**Asked by the maintainer:** insert the MacExtract floppy, eject it, insert
+the floppy holding a `SIT!`/`SIT!` archive, double-click, and it extracts,
+swapping, on a Mac with no hard disk; the folder and helpers "already
+inited". Runs on `mv-4M-1d` (a boot disk and ONE floppy drive,
+`tools/vmac/onedrive.py`), every *"Please insert the disk"* answered by
+the disk it names, read off the prompt:
+
+| System, boot | MacExtract floppy | result | disks asked before MacExtract's dialog; after |
+|---|---|---|---|
+| 3.0, its own floppy, no hard disk | as shipped then (no Desktop file) | *"An application can't be found for this document."*, the floppy ejected or in: the 3.0 Finder wrote a `DeskTop` holding one `'STR '` and registered nothing | — |
+| 3.0 | + a Desktop file listing MacExtract and the 16 | extracted onto the boot floppy | MacExtract, Archives, MacExtract, Archives, MacExtract; Archives |
+| 6.0.8, hard disk with neither MacExtract nor helpers | the same | extracted onto the MacExtract floppy, where the dialog opened | MacExtract, Archives, MacExtract; then every read and write a swap |
+| 7.0.1, the same | the same, files inited and placed by a catalog patch, or not | extracted onto Archives, identical requests either way | after the first Command-E the Finder asks for MacExtract once (a person puts it back and ejects again); then MacExtract and Archives seven times each; then four |
+| 3.0 | **`dist/MacExtract.dsk` as now built** | extracted onto the boot floppy | MacExtract, Archives, MacExtract; Archives |
+| 7.0.1 | **the same** | extracted onto Archives | as above |
+
+**So the Desktop file is what makes it, and inited does nothing measured:**
+`make_dist.sh` writes `Desktop` (invisible, `FNDR`/`ERIK`) onto both disks
+with `companion/make_helpers.py --desktop`: the 3.0 Finder's own
+`'STR '` 0 "Finder 1.0" and `'APPL'` 0 in the layout `tools/vmac/deskclaim.py`
+measured, MacExtract at the root and the 16 in their folder's catalog
+ID. `tools/check_helpers.py` fails on an image without it (shown). The
+inited bits are not set: hfsutils cannot, and the catalog patch that did
+bought nothing. **Not run:** the 1.44 MB image, Mac OS 9 reading a floppy,
+a locked floppy, System 6 booted from a floppy (its System file here is
+1.2 MB), and a real Mac.

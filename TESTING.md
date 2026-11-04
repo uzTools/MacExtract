@@ -2478,8 +2478,10 @@ local icon 0, `'vers'` 1 saying `UNC_VERSION`, and a 6,912 B ceiling. Then the s
 `companion/helpers.tsv`, each read the same way for its own creator and
 types; `dist/MacExtract-Helpers.zip` byte for byte the zip this tree
 writes (it is reproducible; one changed byte fails, shown 2026-11-04);
-and both disk images' `MacExtract Helpers` folders holding those names
-when hfsutils is there.
+and both disk images' `MacExtract Helpers` folders holding those names,
+and their `Desktop` files listing MacExtract and every helper in that
+folder (a disk without one fails, shown 2026-11-04), when hfsutils is
+there.
 `--file X` checks a helper already stamped. Shown able to fail on each property (DECISIONS.md 2026-11-03,
 *the gate a helper commit has*). **It cannot see** whether a Finder
 accepts the bundle or draws the icon, or whether a hand-off to MacExtract

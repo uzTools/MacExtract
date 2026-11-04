@@ -3,6 +3,7 @@
 
     python3 companion/make_helpers.py build/stub/Stub.bin -o DIR
     python3 companion/make_helpers.py build/stub/Stub.bin --zip OUT.zip
+    python3 companion/make_helpers.py --desktop OUT.bin --dirid N
 
 Writes DIR/<name>.bin, one MacBinary per row: the row's creator and types
 stamped onto the build by make_stub.stamp, named in its header as the row
@@ -14,6 +15,13 @@ MacExtract itself opens: a zip laid out as the Mac OS X Finder writes one,
 resource fork, in copyfile's layout (tools/synth_macosx.py, copyfile_sidecar,
 which run_meta.py grades MacExtract on). Fixed times, so the same tree
 writes the same bytes. tools/check_helpers.py checks both.
+
+--desktop writes, as MacBinary, the invisible Desktop file make_dist.sh puts
+on both disks, so that a Mac without a hard disk finds the helpers on the
+MacExtract floppy with it ejected: the Finders of System 3.0 to 7.x keep a
+floppy's applications in that file, and the 3.0 Finder registers none on
+insertion (DECISIONS.md 2026-11-04, *the floppy that is ready*). N is the
+"MacExtract Helpers" folder's catalog ID.
 """
 import argparse, os, sys, zipfile
 
@@ -78,13 +86,38 @@ def write_zip(path, stub):
             put(f"__MACOSX/{FOLDER}/._{name}", sidecar(mb))
 
 
+def desktop(dirid):
+    """The Desktop file, as MacBinary: what System 3.0's Finder writes on a
+    floppy ('STR ' 0, "Finder 1.0", attribute $04; measured, the same
+    entry), and 'APPL' 0 listing MacExtract at the root (ID 2) and every
+    helper in folder `dirid`, in the layout tools/vmac/deskclaim.py measured
+    off System 6.0.8's (appl_build). Type FNDR, creator ERIK, invisible, as
+    the Finder's own."""
+    ents = [(b"MExt", 2, b"MacExtract")] + [
+        (creator, dirid, name.encode("mac_roman")) for creator, name, _t in rows()]
+    res = [(b"STR ", 0, 0x04, None, b"\nFinder 1.0"),
+           (b"APPL", 0, 0, None, D.appl_build(ents))]
+    h = bytearray(128)
+    n = b"Desktop"
+    h[1] = len(n)
+    h[2:2 + len(n)] = n
+    h[65:73] = b"FNDRERIK"
+    h[73] = 0x40                                   # invisible ($4000)
+    return D.macbin_join(bytes(h), b"", D.rsrc_write(res, 0))
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("stub", help="the stub build's MacBinary (Stub.bin)")
+    ap.add_argument("stub", nargs="?", help="the stub build's MacBinary (Stub.bin)")
     ap.add_argument("-o", "--outdir")
     ap.add_argument("--zip")
+    ap.add_argument("--desktop")
+    ap.add_argument("--dirid", type=int)
     a = ap.parse_args()
+    if a.desktop:
+        open(a.desktop, "wb").write(desktop(a.dirid))
+        return
     stub = open(a.stub, "rb").read()
     if a.outdir:
         os.makedirs(a.outdir, exist_ok=True)
