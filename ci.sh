@@ -361,6 +361,16 @@ MACEXTRACT=build/ars/macextract sh tests/run_robustness.sh \
 python3 tools/run_diff.py --macextract build/san/macextract \
     --format "StuffIt 5" --budget 615348 || fail "StuffIt 5 diff under 1 MB budget"
 
+# The middle rung, the 2.5-byte table, is also chosen by an allocation
+# failing, and only between two budgets no fixed one hits for every block:
+# force it. Swapping its odd and even nibbles fails 29 of the 32 fixtures.
+make BUILD=build/arsh CFLAGS="-O1 -g -fsanitize=address,undefined,alignment \
+     -fno-sanitize-recover=all -DUNC_ARS_FORCE_HALF" all >/dev/null \
+     || fail "forced-half build"
+./build/arsh/unit_tests || fail "unit tests (forced half)"
+python3 tools/run_diff.py --macextract build/arsh/macextract \
+    --format "StuffIt 5" || fail "StuffIt 5 diff (forced half)"
+
 # The deep end of the sampling dial, which neither run above reaches: a
 # budget big enough to hold the block at all is big enough to keep `target`
 # high, so no real run makes a query whose scan spans most of the block.

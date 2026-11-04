@@ -420,13 +420,16 @@ typedef struct Arsenic {
     UncBitIn   bi;
 
     uint8_t   *block;       /* [blockcap + 1], grown on demand up to blocksize */
-    uint8_t   *transform;   /* [transform_cap * 3] inverse-BWT vector, or NULL */
+    uint8_t   *transform;   /* [transform_cap * 3] inverse-BWT vector, or
+                             * [transform_cap * 2.5] when walk is HALF; or NULL */
+    uint8_t   *nib;         /* HALF: the high nibbles, after the low halves */
     ArsIndex  *index;       /* set instead of transform when memory is tight */
     uint32_t   blocksize;   /* the DECLARED block size, 1 << blockbits */
     uint32_t   blockcap;    /* what is actually allocated right now */
     uint32_t   outlen;      /* the entry's whole output — bounds the block */
     uint32_t   transform_cap;
     int32_t    blockbits;
+    uint8_t    walk;        /* ARS_WALK_*: which of the three the walk reads */
 
     uint32_t   numbytes, bytecount, transformindex;
     int        randomized, endofblocks;
@@ -493,6 +496,43 @@ static inline void ars_transform_put(uint8_t *t, uint32_t k, uint32_t v)
     p[2] = (uint8_t)v;
 }
 
+/* TWO AND A HALF bytes per entry, the middle rung: the shape of bzip2's
+ * small mode, the low 16 bits of a position in one array and the high 4
+ * in a nibble array. Storage, not format: the walk reads the same
+ * positions. A position below 1 << 20 fits; every corpus block is
+ * 1 << 19. Taken only
+ * when the 3-byte table cannot be allocated: its odd/even select measured
+ * 1.6-3.7 % slower than the 3-byte load on a Mac Plus (DECISIONS.md
+ * 2026-11-03, *the nibble that cost more than a byte*), and it is still
+ * far faster than the sampled index's scan. */
+#define ARS_HALF_MAX (1u << 20)
+
+static inline uint32_t ars_half_get(const uint8_t *t, const uint8_t *nib,
+                                    uint32_t k)
+{
+    const uint8_t *p = t + k * 2u;
+    uint32_t hi = nib[k >> 1];
+    hi = (k & 1u) ? (hi & 15u) : (hi >> 4);
+    return (hi << 16) | ((uint32_t)p[0] << 8) | (uint32_t)p[1];
+}
+
+static inline void ars_half_put(uint8_t *t, uint8_t *nib, uint32_t k,
+                                uint32_t v)
+{
+    uint8_t *p = t + k * 2u, *q = nib + (k >> 1);
+    p[0] = (uint8_t)(v >> 8);
+    p[1] = (uint8_t)v;
+    *q = (k & 1u) ? (uint8_t)((*q & 0xF0u) | (v >> 16))
+                  : (uint8_t)((*q & 0x0Fu) | ((v >> 16) << 4));
+}
+
+/* What the walk reads, set per block by ars_bwt_prepare. One byte tested
+ * against zero for the fast path, as the index pointer was before the
+ * middle rung: the 3-byte table must not pay for the other two. */
+#define ARS_WALK_TABLE 0u
+#define ARS_WALK_HALF  1u
+#define ARS_WALK_INDEX 2u
+
 /* Block bytes between two reports while either inverse is built: 14 s of
  * a2basic's 205 KB block went by without one on a Mac Plus, and 18 s of
  * its sampled index at 1 MB. Chunked so the inner loops test nothing. */
@@ -510,7 +550,7 @@ static int ars_inverse_bwt(Arsenic *a)
     uint32_t next[256];
     uint32_t i, end, c, total = 0, n = a->numbytes;
     const uint8_t *block = a->block;
-    uint8_t *transform = a->transform;
+    uint8_t *transform = a->transform, *nib = a->nib;
     int pass, e;
 
     for (i = 0; i < 256; i++) next[i] = 0;
@@ -521,9 +561,12 @@ static int ars_inverse_bwt(Arsenic *a)
             end = n - i > ARS_BWT_CHUNK ? i + ARS_BWT_CHUNK : n;
             if (pass == 0)
                 for (; i < end; i++) next[block[i]]++;
-            else
+            else if (a->walk == ARS_WALK_TABLE)
                 for (; i < end; i++)
                     ars_transform_put(transform, next[block[i]]++, i);
+            else
+                for (; i < end; i++)
+                    ars_half_put(transform, nib, next[block[i]]++, i);
         }
         if (pass == 0)
             for (i = 0; i < 256; i++) {
@@ -538,12 +581,12 @@ static int ars_inverse_bwt(Arsenic *a)
 
 /* Output bytes between progress reports. Much finer than the engine's
  * input-side UNC_PROGRESS_STEP (8192) because this decoder's bytes are
- * expensive: under the sampled index a2basic emits 205,019 bytes in 927 s
- * on a Mac Plus, so an 8 KB interval would tick once every 37 seconds —
- * a bar that jumps in 4% steps and a Cancel button that takes half a
- * minute to answer. At 256 the same run reports ~800 times, about 1.2 s
- * apart. The cost is a compare per output byte and a callback that the
- * Mac shell rate-limits to 10 Hz anyway. */
+ * expensive: under the sampled index a2basic emits 205,019 bytes in 341 s
+ * on a Mac Plus (measured, 2026-11-04), so an 8 KB interval would tick
+ * once every 14 seconds — a bar that jumps in 4% steps and a Cancel
+ * button that takes that long to answer. At 256 the same run reports
+ * ~800 times, about 0.4 s apart. The cost is a compare per output byte
+ * and a callback that the Mac shell rate-limits to 10 Hz anyway. */
 #define ARS_PROGRESS_STEP 256u
 
 /* Samples per byte value at the first attempt. Halved until the index fits;
@@ -691,22 +734,33 @@ static uint32_t ars_index_next(const Arsenic *a, uint32_t k)
 }
 
 /* Choose how this block's BWT will be inverted: the 3-bytes-per-byte table
- * when the allocator affords it, the sampled index when it does not.
+ * when the allocator affords it, the 2.5-byte one when only that fits, the
+ * sampled index when neither does.
  *
  * The choice is made per block, and the table is kept across blocks while it
  * is big enough, so a stream that starts affordable stays on the fast path
- * without reallocating. UNC_ARS_FORCE_SAMPLED drops the fast path entirely;
- * it exists so ci.sh can run the whole corpus through the fallback. */
+ * without reallocating. UNC_ARS_FORCE_SAMPLED drops both tables;
+ * UNC_ARS_FORCE_HALF drops the 3-byte one; they exist so ci.sh can run the
+ * corpus through each rung. */
 static int ars_bwt_prepare(Arsenic *a, UncAlloc *al)
 {
 #ifndef UNC_ARS_FORCE_SAMPLED
-    if (a->numbytes > a->transform_cap) {
-        uint8_t *nt;
+    uint32_t n = a->numbytes;
+    if (n > a->transform_cap) {
+        uint8_t *nt = NULL;
         unc_free(al, a->transform);
         a->transform = NULL;
         a->transform_cap = 0;
-        nt = (uint8_t *)unc_alloc(al, a->numbytes * 3u);
-        if (nt) { a->transform = nt; a->transform_cap = a->numbytes; }
+#ifndef UNC_ARS_FORCE_HALF
+        nt = (uint8_t *)unc_alloc(al, n * 3u);
+        a->walk = ARS_WALK_TABLE;
+#endif
+        if (!nt && n <= ARS_HALF_MAX) {
+            nt = (uint8_t *)unc_alloc(al, n * 2u + (n + 1u) / 2u);
+            a->walk = ARS_WALK_HALF;
+            a->nib = nt + n * 2u;
+        }
+        if (nt) { a->transform = nt; a->transform_cap = n; }
     }
     if (a->transform) {
         unc_free(al, a->index);
@@ -718,6 +772,7 @@ static int ars_bwt_prepare(Arsenic *a, UncAlloc *al)
      * than grown; freeing first keeps the two from coexisting. */
     unc_free(al, a->index);
     a->index = NULL;
+    a->walk = ARS_WALK_INDEX;
     return ars_index_build(a, al);
 }
 
@@ -993,7 +1048,9 @@ int unc_arsenic_decode(UncBufIn *in, UncAlloc *al, uint32_t outlen,
     a->outlen = outlen;
     a->transform = NULL;
     a->transform_cap = 0;
+    a->nib = NULL;
     a->index = NULL;
+    a->walk = ARS_WALK_INDEX;
 
     a->numbytes = a->bytecount = 0;
     a->repeat = 0;
@@ -1041,9 +1098,14 @@ retry:
                 a->randcount = (int32_t)ars_randtable[0];
             }
 
-            a->transformindex = a->index
-                ? ars_index_next(a, a->transformindex)
-                : ars_transform_get(a->transform, a->transformindex);
+            if (a->walk == ARS_WALK_TABLE)
+                a->transformindex = ars_transform_get(a->transform,
+                                                      a->transformindex);
+            else if (a->walk == ARS_WALK_HALF)
+                a->transformindex = ars_half_get(a->transform, a->nib,
+                                                 a->transformindex);
+            else
+                a->transformindex = ars_index_next(a, a->transformindex);
             byte = a->block[a->transformindex];
 
             /* Randomisation: flip bit 0 of the byte at each position the

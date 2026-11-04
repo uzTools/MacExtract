@@ -3992,12 +3992,14 @@ bundle*.
 
 | build | switch | resident `CODE` | A5 | `MacExtract.code.bin` | `MacExtract.bin` |
 |---|---|---|---|---|---|
-| **eager — SHIPPED** | (default) | **39,672 B** | 16,712 B | **47,744 B** | **250,240 B** |
-| lazy | `UNC_OVL_LAZY=1` | 38,500 B | 16,764 B | 46,464 B | 244,992 B |
-| resident — the control | `UNC_OVL_RESIDENT=1` | **184,920 B** | **36,648 B** | 215,552 B | 224,000 B |
+| **eager — SHIPPED** | (default) | **39,672 B** | 16,712 B | **47,744 B** | **250,496 B** |
+| lazy | `UNC_OVL_LAZY=1` | 38,500 B | 16,764 B | 46,464 B | 245,248 B |
+| resident — the control | `UNC_OVL_RESIDENT=1` | **185,160 B** | **36,664 B** | 215,808 B | 224,256 B |
 
-Read off the builds 2026-11-04, after LZ4 and the launch that purges
-nothing (DECISIONS.md 2026-11-04, *the frame mar 0.2.0 reads*, *the
+Read off the builds 2026-11-04, after Arsenic's 2.5-byte table (the control
++240 B of `CODE` and +16 B of A5 alignment, the shipped pair unmoved), LZ4
+and the launch that purges nothing (DECISIONS.md 2026-11-04, *the rung
+between the table and the index*, *the frame mar 0.2.0 reads*, *the
 layouts the release did not hold*; the two file sizes CORRECTED the same
 day, 128 B stale since LZ4; 2026-11-03, *the archive that carries its own CRCs*, *the symbols no encoder writes*, *the fork that
 padded to nothing*, *the folders past the table*; 2026-11-01, *the Open
@@ -4081,12 +4083,13 @@ Measured 2026-09-27:
 whose tallies it is quoted beside. It cancels in a difference taken from
 one probe pair (*What it buys, against the control*): **117,040 B saved
 between the shipped pair against 116,720 B between the probe pair**, both
-2026-09-27. The shipped pair is **165,184 B** (`OVL_SAVED`,
-`tools/run_tiers.py`) since 2026-11-04 (*the frame mar 0.2.0 reads*); the
+2026-09-27. The shipped pair is **165,440 B** (`OVL_SAVED`,
+`tools/run_tiers.py`) since 2026-11-04 (*the rung between the table and the
+index*); the
 probe pair has not been re-measured, so the 320 B is that day's
 difference, not today's.
 
-The bundle is **194,024 B** — the nineteen images sum to 193,780 B, so its
+The bundle is **194,280 B** — the nineteen images sum to 194,036 B, so its
 index costs **244 B** (`tools/run_tiers.py` `BUNDLE`, `IMAGES`): a
 4-byte header, 12 bytes of directory per image and padding of each image to
 a multiple of 4 — the padding is why the index is not a constant. The
@@ -4147,7 +4150,7 @@ carries, and they were read again from the floppy (DECISIONS.md 2026-11-04,
 
 A tier's budget for a format is the resident build's budget for that tier
 (`TIERS`; *512 KB machines*, *Floor target verification*), plus
-the 165,184 B of `CODE` and A5 the shipped build does not carry (`OVL_SAVED`;
+the 165,440 B of `CODE` and A5 the shipped build does not carry (`OVL_SAVED`;
 *Three configurations, one tree*), less the images the format keeps and 8 B of
 block header each, less a **322 B residue** (`OVL_RESIDUE`, re-taken
 2026-10-22 from the shipped and resident budget probes on all three tiers;
@@ -4200,7 +4203,7 @@ left*).
 
 **The last row is the one no tally had shown**: a wrapper whose payload the
 peek cannot name keeps the bundle, and that layer runs with **less** memory than
-a resident build would give it — 194,024 B held against 165,184 B saved. Until
+a resident build would give it — 194,280 B held against 165,440 B saved. Until
 2026-11-03 that was every envelope, and it refused `a2ps.V4.3.tar.Z` and
 `popper-1.7.tar.Z` at System 6.0.8 / 512 KB; the peek names Tar from the first
 512 bytes and the `.Z` layer is granted 200,022 B there instead of 72,090 B
@@ -4254,10 +4257,10 @@ nothing calls; the linked figure is `tools/code_map.py`'s, below. (The rodata
 half was wrong 2026-09-19 to 09-23: it still counted `unc_crypt.c`'s three
 2,048-byte tables after they moved to key setup — *Where the code is*.)
 
-The application ships as **250,240 B** of MacBinary (`dist/MacExtract.bin`,
-`ls -l` 2026-11-04, with LZ4; it read 247,296 B before it; CORRECTED the
-same day from 250,112). **47,744 B** is
-`MacExtract.code.bin`, read at launch and never purged, and **194,024 B** is
+The application ships as **250,496 B** of MacBinary (`dist/MacExtract.bin`,
+`ls -l` 2026-11-04, with Arsenic's 2.5-byte table; 250,240 B before it,
+CORRECTED the same day from 250,112). **47,744 B** is
+`MacExtract.code.bin`, read at launch and never purged, and **194,280 B** is
 the `'OVLY'` bundle, read at launch and mostly given back before the engine
 takes its budget (*Overlays*). What stays costs the heap one for one: the
 link produces a single `MacExtract.code.bin`, and `Elf2Mac/LdScript.cc`
@@ -4872,7 +4875,14 @@ one emulator at a time:
 | `derived-a2basic.dmg.sit` | 205,019 B | **281 s** (peak 829,041 B) | **341 s** (peak 703,565 B) | 1.21x |
 | `derived-Library_ISBN_Barcoder.sit` | 641,115 B | **461 s** (peak 1,353,789 B) | **742 s** (peak 644,858 B) | 1.61x |
 
-**All four cells re-measured 2026-10-10**, byte-exact. The fallback costs
+**All four cells re-measured 2026-10-10**, byte-exact. **Since 2026-11-04
+a2basic does not take the sampled index at 1 MB**: its 197,515-byte block
+fits the 2.5-byte table (493,788 B) in the 750,902 B StuffIt 5 grant, and
+its engine time there is **17,163 ticks against the sampled index's 20,056
+(−14.4 %)**, 1.02x its 4 MB 16,845 (all `UNC_AT_TIMING`, measured
+2026-11-04; Mac peak not re-taken, 711,904 B in the Linux trace). ISBN's
+block (323,384 B) needs 808,460 B for it and still falls to the index
+(DECISIONS.md 2026-11-04, *the rung between the table and the index*). The fallback costs
 1.21x to 1.61x; the ratio widens with block fill, and neither the x86 ratio
 nor output size predicts it (DECISIONS.md 2026-08-07, *the inverse BWT falls
 back to a sampled occurrence index*). The sampled index sizes itself to the
@@ -5373,22 +5383,23 @@ build's budget; the shipped build grants 82–105 KB more.
 free heap (`sys30.py --emu mv-512Ke -D UNC_OVL_RESIDENT -D UNC_AT_BUDGET`,
 slots swapped per `tools/vmac/README.md`) less the flat 20,480 B reserve.
 Re-taken on the machine at **201,590 B** on 2026-10-22; `tools/run_tiers.py`
-now asserts **191,364 B**, derived from the control build's growth since
+now asserts **191,108 B** (2026-11-04), derived from the control build's growth since
 (CORRECTED 2026-10-25: this read "205,476 B, the figure run_tiers.py
 asserts"). History of the figure: *Budget*.
 
 **68/72 is the resident build's ceiling**, a property of four archives
 against that budget. `tools/run_tiers.py` reproduces it fixture for fixture,
 and with a budget per format (*What each format is granted*) the shipped
-build's refusals by name. Minimum budgets, re-bisected 2026-11-03 (CORRECTED:
+build's refusals by name. Minimum budgets, re-bisected 2026-11-03, the three
+StuffIt 5 rows +16 B on 2026-11-04 (the 2.5-byte table's state) (CORRECTED:
 the 2026-09-22 bisection read 17,928-18,440 B higher on every StuffIt 5 row,
 its fixed folder table; DECISIONS.md 2026-11-03, *the folders past the table*):
 
 | fixture | needs | of which | against 205,476 B (the measurement) |
 |---|---|---|---|
-| `derived-a2basic.dmg.sit` | **222,458 B** | one 205,020 B BWT block — the entry's whole 205,019 B output in a single block — plus the walk state | 1.08x |
-| `derived-Cool_Tools__.sit` | **224,536 B** | one block of the same shape, over a 206,582-byte resource fork | 1.09x |
-| `derived-Library_ISBN_Barcoder.sit` | **370,105 B** | one 352,161 B block, same shape | 1.80x |
+| `derived-a2basic.dmg.sit` | **222,474 B** | one 205,020 B BWT block — the entry's whole 205,019 B output in a single block — plus the walk state | 1.08x |
+| `derived-Cool_Tools__.sit` | **224,552 B** | one block of the same shape, over a 206,582-byte resource fork | 1.09x |
+| `derived-Library_ISBN_Barcoder.sit` | **370,121 B** | one 352,161 B block, same shape | 1.80x |
 | `synth-dd-m5.dd` | **401,408 B** | 1,536 B per distinct context byte, all 256 of them | 1.95x |
 
 A block a BWT inverts must be resident, and DiskDoubler method 5's 256 splay
@@ -5398,28 +5409,31 @@ compressor chose, not the format: the sample's other five StuffIt 5 fixtures
 pass, `derived-Troi-ClipSave-Plug-in1.1.sit` needing 144,690 B.
 
 **The whole corpus at both 512 KB tiers** (`run_tiers.py --shipped --list`
-over all 988 fixtures, `main` at a6668bd, 2026-11-04; MEASURED on Linux,
+over all 988 fixtures, `main` at a6668bd, 2026-11-04, re-taken the same day
+with Arsenic's 2.5-byte table and the launch that purges nothing — grants
+298 B lower, needs up to 16 B higher,
+no tally moved; MEASURED on Linux,
 not run on a Mac): **953/988 at System 3.0 and at System 6.0.8; 972/988 at
 the 1 MB floor.** The 16 that fail at 1 MB fail with no budget at all (cut
 originals, a password, a lone split part) and are not memory. Of the other
 19, `synth-dd-m5.dd` is synthetic, and the rest are **nine real StuffIt 5
 archives, each also refused as its `.hqx`** — all Arsenic, each needing one
 block resident that is already larger than System 3.0's whole StuffIt 5
-grant (322,038 B; System 6.0.8's is 226,656 B). Needs bisected to 256 B
+grant (321,740 B; System 6.0.8's is 226,358 B). Needs bisected to 256 B
 (an upper bound); block = the largest single allocation at that budget
 (DECISIONS.md 2026-11-04, *the corpus past the sample*):
 
 | archive (and its `.hqx`) | needs | block | short, System 3.0 | short, System 6.0.8 |
 |---|---|---|---|---|
-| `derived-Library_ISBN_Barcoder.sit` | 370,116 B | 352,161 B | 48,078 B | 143,460 B |
-| `derived-YP_Circuits_CC__.sit` | 389,892 B | 371,917 B | 67,854 B | 163,236 B |
-| `derived-Orbit3d_1.0..sit` | 395,751 B | 377,769 B | 73,713 B | 169,095 B |
-| `derived-FloatingNotes.sit` | 420,653 B | 402,496 B | 98,615 B | 193,997 B |
-| `derived-Weather_2.2.sit` | 461,181 B | 443,233 B | 139,143 B | 234,525 B |
-| `derived-Phonebook_Plus.sit` | 485,595 B | 468,085 B | 163,557 B | 258,939 B |
-| `derived-EasyFind.dmg.sit` | 541,747 B | 524,289 B | 219,709 B | 315,091 B |
-| `derived-XMenu.dmg.sit` | 541,747 B | 524,289 B | 219,709 B | 315,091 B |
-| `derived-Domino_v1.4.sit` | 542,479 B | 524,289 B | 220,441 B | 315,823 B |
+| `derived-Library_ISBN_Barcoder.sit` | 370,360 B | 352,161 B | 48,620 B | 144,002 B |
+| `derived-YP_Circuits_CC__.sit` | 389,892 B | 371,917 B | 68,152 B | 163,534 B |
+| `derived-Orbit3d_1.0..sit` | 395,751 B | 377,769 B | 74,011 B | 169,393 B |
+| `derived-FloatingNotes.sit` | 420,653 B | 402,496 B | 98,913 B | 194,295 B |
+| `derived-Weather_2.2.sit` | 461,425 B | 443,233 B | 139,685 B | 235,067 B |
+| `derived-Phonebook_Plus.sit` | 485,595 B | 468,085 B | 163,855 B | 259,237 B |
+| `derived-EasyFind.dmg.sit` | 541,991 B | 524,289 B | 220,251 B | 315,633 B |
+| `derived-XMenu.dmg.sit` | 541,991 B | 524,289 B | 220,251 B | 315,633 B |
+| `derived-Domino_v1.4.sit` | 542,479 B | 524,289 B | 220,739 B | 316,121 B |
 
 **What is refused is one entry's working set, never the archive**, and the
 demand is the codec's, not the file size's: `synth-dd-m5.dd` outputs 1,145 B
@@ -5582,7 +5596,7 @@ data and relocations. 63,744 B was measured against 2026-09-01's build;
 `ApplLimit − ApplZone` = **78,568 B**, leaving 20,956 B for every buffer
 (*derived*; DECISIONS.md 2026-10-22, *the runtime the application did not
 need*). `CODE` has since fallen 2,584 B; the sum has not been re-derived. The
-eager loader then asks for the `'OVLY'` bundle as ONE **194,024 B** block
+eager loader then asks for the `'OVLY'` bundle as ONE **194,280 B** block
 (*Overlays*). The bound is the RAM under the screen buffer, so no smaller
 System moves it (*What the application costs the engine*); the margin is
 kilobytes, which is why MANUAL_TESTS.md §6's HD20 question is about a

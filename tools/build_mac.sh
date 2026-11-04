@@ -697,7 +697,11 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # -72 the same day, 184,992 -> 184,920, A5 -24 below: HoldUI out again, and
 # MaxApplZone where the ROM has it (the same entry): the launch no longer
 # purges the layouts, so nothing needs holding.
-UNC_MAC_CODE_DEFAULT=184920
+# +240 on 2026-11-04, 184,920 -> 185,160, A5 +16 below: Arsenic's 2.5-byte
+# inverse-BWT table (DECISIONS.md 2026-11-04, *the rung between the table
+# and the index*), ars_half_put and ars_half_get's walk. The shipped pair
+# is unmoved: the code is in `ovl_stuffit` (+256).
+UNC_MAC_CODE_DEFAULT=185160
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -920,7 +924,9 @@ UNC_MAC_CODE_DEFAULT=184920
 # row and its name, and alignment.
 # +24 on 2026-11-04, 36,648 -> 36,672: HoldUI's two tables (above).
 # -24 the same day, back to 36,648: HoldUI out again (above).
-UNC_MAC_A5_DEFAULT=36648
+# +16 on 2026-11-04, 36,648 -> 36,664: `.data` alignment under Arsenic's
+# 2.5-byte table (above); sit_arsenic.o's .rodata and .data are unmoved.
+UNC_MAC_A5_DEFAULT=36664
 # A CEILING PER CONFIGURATION, because one ceiling measured on another build
 # cannot fire. The figures above are the RESIDENT control build, which carries
 # every decoder; the shipped build's resident code is a third of that, so

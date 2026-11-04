@@ -281,9 +281,12 @@ TAKEN = "2026-11-03"
 # -> 194,020 2026-11-03: the LZ4 frame, its reader in `ovl_zipold`
 # (+2,580) and its probe in `ovl_sniff` (+112) (DECISIONS.md 2026-11-03,
 # *the frame mar 0.2.0 reads*).
-EXPECT_BUNDLE = 194020
+# -> 194,280 2026-11-04: Arsenic's 2.5-byte table in `ovl_stuffit` (+256),
+# over the destination dialog's 64K-ROM check (+4)
+# (DECISIONS.md 2026-11-04, *the rung between the table and the index*).
+EXPECT_BUNDLE = 194280
 TOLERANCE_BUNDLE = 2048
-TAKEN_BUNDLE = "2026-11-03"
+TAKEN_BUNDLE = "2026-11-04"
 
 
 def main():

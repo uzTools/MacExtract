@@ -238,10 +238,15 @@ REPO = os.path.dirname(HERE)
 # probe (742,488 -> 742,478 B, `derived-ASCbeep.sit`, the autotest build's
 # CODE + A5 unmoved). TIERS_MACHINE -10 with it. They were 191,278 /
 # 95,896 / 620,184.
+# **-256 more each 2026-11-04, DERIVED**: Arsenic's 2.5-byte inverse-BWT
+# table (DECISIONS.md 2026-11-04, *the rung between the table and the
+# index*), the control's CODE +240 and A5 +16; OVL_SAVED +256 offsets it,
+# and StuffIt's image +256 takes it back from that format alone. They were
+# 191,364 / 95,982 / 620,270.
 TIERS = {
-    "sys3-512K": (191364, "System 3.0, Macintosh 512Ke (222,070 B free)"),
-    "sys6-512K": (95982,  "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
-    "floor-1M":  (620270, "System 6.0.8, 1 MB Mac Plus — the floor target"),
+    "sys3-512K": (191108, "System 3.0, Macintosh 512Ke (222,070 B free)"),
+    "sys6-512K": (95726,  "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
+    "floor-1M":  (620014, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
 # **-592 more each 2026-10-24, DERIVED**: SUMacC's `.dl`, the control's
 # CODE +584 and A5 +8 (DECISIONS.md 2026-10-24, *the format before
@@ -445,7 +450,8 @@ TIERS = {
 # data + bss -680. The machine gave +4,204, because the jump table, the
 # stub segments and the relocations trimmed at launch are resident bytes
 # this unit never counted — which is why TIERS was measured, not moved.
-TIERS_CONTROL = 221568     # build/mac-resident, CODE + A5, 2026-11-04
+TIERS_CONTROL = 221824     # build/mac-resident, CODE + A5, 2026-11-04
+# +256 the same day: Arsenic's 2.5-byte table; TIERS -256.
 # -96 the same day: HoldUI out, MaxApplZone in; TIERS +96 (and -10).
 # +128 on 2026-11-04: HoldUI; TIERS -128.
 # +2,768 the same day: the LZ4 frame, its reader linked in; TIERS -2,768.
@@ -937,7 +943,11 @@ EXPECT = {
 # **+2,720 2026-11-03, -> 165,184**: the LZ4 frame, the control's +2,768
 # (CODE +2,760, A5 +8) against the shipped pair's +48 (CODE +20, A5 +28)
 # (DECISIONS.md 2026-11-03, *the frame mar 0.2.0 reads*). TIERS -2,768.
-OVL_SAVED = 165184
+# **+256 2026-11-04, -> 165,440**: Arsenic's 2.5-byte table, the control's
+# +256 (CODE +240, A5 +16) against the shipped pair's 0: the code is in
+# `ovl_stuffit` (DECISIONS.md 2026-11-04, *the rung between the table and
+# the index*). TIERS -256.
+OVL_SAVED = 165440
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
 # every kept image is one — as is the bundle an envelope holds on to.
@@ -1082,7 +1092,7 @@ IMAGES = {
     "OVL_ID_NOW":         4762,
     "OVL_ID_PACKIT":      2180,
     "OVL_ID_SPACESAVER":  16168,
-    "OVL_ID_STUFFIT":     28198,
+    "OVL_ID_STUFFIT":     28454,
     "OVL_ID_SQP":         1736,
     "OVL_ID_SUPERDISK":   6634,
     "OVL_ID_TEXT":        11438,
@@ -1185,7 +1195,10 @@ IMAGES = {
 # **DESTDLG +6, the bundle +4 B, 2026-11-04**: the Finder's icon is not
 # read on a 64K ROM, which has no OpenRFPerm (DECISIONS.md 2026-11-04,
 # *the icon the 64K ROM could not open*); in no keep set.
-BUNDLE = 194024
+# **STUFFIT +256, the bundle +256 B, 2026-11-04**: Arsenic's 2.5-byte
+# inverse-BWT table (DECISIONS.md 2026-11-04, *the rung between the table
+# and the index*).
+BUNDLE = 194280
 
 # What the SHIPPED lane asserts, and it is the refused fixtures BY NAME
 # rather than a tally: a tier that refuses two different fixtures and still

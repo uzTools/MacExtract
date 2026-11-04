@@ -503,6 +503,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-04 (the icon the 64K ROM could not open) — the destination dialog reads the Finder's small icon only where the ROM has OpenRFPerm; since v0.45.0 a 64K-ROM Macintosh bombed at launch
 - 2026-11-04 (the swaps before the first instruction) — on System 7 with one floppy drive, double-clicking an archive costs about four rounds of swaps before the application runs; nothing here can prevent them, and the README says so
 - 2026-11-04 (the corpus past the sample) — the whole corpus at both 512 KB tiers refuses nine real archives, all StuffIt 5 Arsenic blocks larger than the grant; no layout recovers one, so the compact-layout and small-item RAM work has no 512 KB target
+- 2026-11-04 (the rung between the table and the index) — Arsenic gets a 2.5-byte inverse-BWT table between the 3-byte one and the sampled index, taken only when the 3-byte one cannot be allocated: a2basic at 1 MB −14.4 % engine time, 4 MB unmoved, for 256 B of StuffIt image
 
 ---
 
@@ -20906,11 +20907,44 @@ its `.hqx`).
 
 **Why nothing in the queue reaches them.** Each needs one Arsenic block
 resident, 352,161-524,289 B, and the block alone exceeds System 3.0's whole
-StuffIt 5 grant (322,038 B). A smaller inverse-BWT structure only moves
+StuffIt 5 grant (321,740 B; 322,038 B before the rung below and the launch
+that purges nothing took 298). A smaller inverse-BWT structure only moves
 what sits beside the block: the 2.5-byte table, the parent-free
 DiskDoubler trees, gzip's ISIZE window and UncCrypt's lazy allocation are
 each worth at most a few hundred bytes to 25 % of a block, against
-shortfalls of 48,078 B and up. **Consequence:** the 2.5-byte rung stands
+shortfalls of 48,620 B and up (48,078 B before them). **Consequence:** the 2.5-byte rung stands
 on its 1 MB time alone; DiskDoubler's parent-free rebuild, the gzip
 window and the lazy UncCrypt are not done, because no real archive at
 512 KB is refused by what they would save.
+
+## 2026-11-04 (the rung between the table and the index) — Arsenic gets a 2.5-byte inverse-BWT table between the 3-byte one and the sampled index, taken only when the 3-byte one cannot be allocated: a2basic at 1 MB −14.4 % engine time, 4 MB unmoved, for 256 B of StuffIt image
+
+**Claim (measured).** `ars_bwt_prepare` now tries three layouts in turn —
+the 3-byte table, then two bytes of low position plus a nibble array (the
+shape of bzip2's small mode, positions below 1 << 20), then the sampled
+index — each only after the previous allocation failed. On the 1x Mac Plus
+(`UNC_AT_TIMING`, engine ticks = run − read − write − meta, one emulator at
+a time): `derived-a2basic.dmg.sit` at 1 MB **20,056 → 17,163 ticks
+(−14.4 %)**; it now takes the 2.5-byte table (493,788 B in the 750,902 B
+grant). At 4 MB, where the 3-byte table fits, a2basic 16,920 → 16,845 and
+`derived-KeyGraphics.sit` 825 → 812, twice each, so the fast path pays
+nothing measurable. `derived-Library_ISBN_Barcoder.sit` needs 808,460 B for
+the new table and still takes the index; on this corpus the window between
+2.5n and 3n is a2basic's alone at 1 MB.
+
+**Cost (measured).** `ovl_stuffit` +256 B (28,198 → 28,454), the bundle the
+same; the shipped CODE and A5 unmoved; the resident control CODE +240 and A5
++16 (alignment; `sit_arsenic.o` gains no data), so `OVL_SAVED` +256 and
+`TIERS` −256 each, and StuffIt is the one format whose grant falls (256 B).
+The Arsenic state is 16 B larger on Linux (a pointer and a byte; 6 B on the
+68000, estimate), which is the +16 B in every StuffIt 5 minimum budget. No
+tally moves: `run_tiers.py --check` and the whole corpus at all three tiers
+(953 / 953 / 972) refuse the same archives by name.
+
+**Why the slower select is acceptable here.** The nibble select measured
+1.6-3.7 % slower than the 3-byte load (2026-11-03, *the nibble that cost
+more than a byte*), so it is never preferred to the 3-byte table, only to
+the index. **Tested:** ci.sh builds `UNC_ARS_FORCE_HALF` (no 3-byte table)
+under ASan/UBSan and runs the unit tests and the StuffIt 5 differential
+through it, so all three rungs are exercised; the odd/even nibble swapped
+fails 29 of 32 there (shown before the lane was trusted).
