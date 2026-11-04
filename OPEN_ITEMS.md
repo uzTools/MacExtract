@@ -252,8 +252,10 @@ grade against.
   fails its published SHA-1 (written to 2026-11-02, 18:12); `os9.py
   --setup --force` re-fetches it. Every 68k tier passes 4/4 (DECISIONS.md
   2026-11-03, *the archive that carries its own CRCs*).
-- **mar 0.2.0's expander has not been run**: the Finder info stated is read
-  from its source (FORMATS.md, *MAR*). Closes with its output read back
+- **mar 0.2.0's expander's Finder info is read from its source**
+  (FORMATS.md, *MAR*), never read back: its Decode has run on System 6.0.8
+  and 7.0.1 (DECISIONS.md 2026-11-03 and 2026-11-04), its files compared,
+  its Finder info not. Closes with that output read back
   (`tools/vmac/hfscat.py`).
 
 ## The shell's own File Manager blocks, until multiversal's glue is inline
