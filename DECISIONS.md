@@ -20728,6 +20728,27 @@ with `companion/make_helpers.py --desktop`: the 3.0 Finder's own
 measured, MacExtract at the root and the 16 in their folder's catalog
 ID. `tools/check_helpers.py` fails on an image without it (shown). The
 inited bits are not set: hfsutils cannot, and the catalog patch that did
-bought nothing. **Not run:** the 1.44 MB image, Mac OS 9 reading a floppy,
-a locked floppy, System 6 booted from a floppy (its System file here is
-1.2 MB), and a real Mac.
+bought nothing.
+
+**Write-protected, as the maintainer means it to be used** (the shipped
+image mounted read-only, and byte-identical after each run; the writable
+copies were written to): 3.0 with no hard disk, as unlocked; 7.0.1, as
+unlocked, and the Finder no longer asks for the floppy back after
+Command-E; 6.0.8, the destination dialog opens on the locked MacExtract
+floppy with Extract dimmed, and Drive then Extract (or Eject and a
+writable floppy) finishes it, onto the hard disk. **Why 6.0.8's dialog is
+there:** not where MacExtract points it. On a hard disk the dialog opens
+beside a double-clicked archive on 6.0.8 and 7.0.1 alike, with the
+shipped build (`Archives:M.sit` stamped `MExt`; measured 2026-11-04), so
+the Finder's launch sets that folder. On the floppy the archive's disk is
+out of the drive when the dialog opens: after it was read, MacExtract's
+floppy was asked for again twice (a 200 KB archive: MacExtract, Archives,
+MacExtract, Archives, MacExtract, then the dialog), and Standard File
+shows the disk that is in (hypothesis; 3.0 showed its boot floppy, 7.0.1
+asked for Archives first). What asks for MacExtract's floppy after the
+archive is read is not found. Setting Standard File's folder to the
+archive's before asking was built (+40 B) and changed nothing, on the
+hard disk or the floppy, and is not in the tree; nor is an uncached read
+of one byte of the archive before the dialog, which asked for no disk.
+**Not run:** the 1.44 MB image, Mac OS 9 reading a floppy, System 6
+booted from a floppy (its System file here is 1.2 MB), and a real Mac.
