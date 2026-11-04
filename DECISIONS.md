@@ -504,6 +504,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-04 (the swaps before the first instruction) — on System 7 with one floppy drive, double-clicking an archive costs about four rounds of swaps before the application runs; nothing here can prevent them, and the README says so
 - 2026-11-04 (the corpus past the sample) — the whole corpus at both 512 KB tiers refuses nine real archives, all StuffIt 5 Arsenic blocks larger than the grant; no layout recovers one, so the compact-layout and small-item RAM work has no 512 KB target
 - 2026-11-04 (the rung between the table and the index) — Arsenic gets a 2.5-byte inverse-BWT table between the 3-byte one and the sampled index, taken only when the 3-byte one cannot be allocated: a2basic at 1 MB −14.4 % engine time, 4 MB unmoved, for 256 B of StuffIt image
+- 2026-11-04 (the padding six files never had) — six corpus archives filed as truncated are whole MacBinary I files with no padding after the data fork; the Compact Pro self-extractors among them run from that layout, while StuffIt Expander 4.0.2, unar and this engine refuse it
 
 ---
 
@@ -20900,7 +20901,9 @@ a locked floppy, System 6 booted from a floppy (its System file here is
 **Claim (measured, Linux).** `run_tiers.py --shipped --list` over all 988
 fixtures, both 512 KB tiers and the 1 MB floor (FORMATS.md, *512 KB
 machines*): 953, 953 and 972 pass. The 16 failing at every tier fail with
-no budget (cut originals, a password, one part of a set alone), so the
+no budget (cut files, six whole files in a MacBinary layout this engine
+refuses, a password, one part of a set alone; corrected the same day,
+*the padding six files never had*), so the
 lane counts them; they are not memory. What remains is `synth-dd-m5.dd`
 and nine real StuffIt 5 archives, each arriving twice (as itself and as
 its `.hqx`).
@@ -20948,3 +20951,64 @@ the index. **Tested:** ci.sh builds `UNC_ARS_FORCE_HALF` (no 3-byte table)
 under ASan/UBSan and runs the unit tests and the StuffIt 5 differential
 through it, so all three rungs are exercised; the odd/even nibble swapped
 fails 29 of 32 there (shown before the lane was trusted).
+
+## 2026-11-04 (the padding six files never had) — six corpus archives filed as truncated are whole MacBinary I files with no padding after the data fork; the Compact Pro self-extractors among them run from that layout, while StuffIt Expander 4.0.2, unar and this engine refuse it
+
+**Claim (measured).** `appledraw51.cpt`, `pcal296.cpt`, `ddarchive.sit`,
+`sigmaedit.sit`, `sitdoc.sit` and `systemidle.sit` (MacBinary I, all from
+nic.funet.fi) are each exactly 128 + data + resource bytes long. The
+resource fork starts at 128 + data length, not at the next multiple of
+128, and its own header there puts the map's end at the fork's end. The
+standard pads (`reference/notes/macbinary_ii.txt`); these files do not.
+Re-padded, all six extract with every CRC (`t`, Linux). 59 MacBinary
+fixtures have the same layout; the 53 with an empty resource fork
+extract today because nothing follows their data fork.
+
+**The writer's own program, run.** The two `APPL/EXTR` files are Compact
+Pro self-extractors, and their extractor code is that resource fork.
+Booted as the shell on System 6.0.8 (4 MB) with the forks read at those
+offsets, each extracts itself: 18 files and 3. Every data fork is
+identical to the engine's, and every resource fork is identical except
+2-24 bytes in its reserved header (offsets 62-121).
+
+**What the other readers do.** StuffIt Expander 4.0.2 does the same on
+all six (file typed `TEXT/ttxt`; its Open dialog does not list `BINA`):
+it writes the complete data fork, no resource fork and no type or
+creator, then shows "a disk related error (-39)". `unar` fails the
+resource fork. This engine says "file is truncated". The CLI keeps both
+forks; the application (`run.py`, `ddarchive.sit`) keeps the data fork
+whole, untyped, beside a 286-byte resource fork holding the 238 bytes
+past the padded offset (its reserved header aside) and 48 zeros.
+
+**Consequence.** Six of the 16 archives failing at every tier are not
+damaged. The arithmetic that graded their resource forks (2026-09-22,
+*the container is the oracle*) read the wrong 234-13,036 bytes and could
+not tell: it was confirmed on the data fork, which starts at 128 in
+either layout (BLOCKERS.md, *Withdrawn claims*). Reading the layout is
+open (OPEN_ITEMS.md, *MacBinary I without padding*).
+
+**The other ten, tried.**
+
+- `guysmaccontacts.sea` is cut. Its data fork stops at 114,644 of
+  137,726 bytes, and its resource fork, the extractor, is absent.
+  Compact Pro's directory starts at 137,652, past the end, so nothing can
+  run or list it.
+- `uu-wild-terrainman.uu` is a whole uuencoding of a cut `.sit`: 184,340
+  of the 184,385 bytes its header declares. Expander 4.0.2 asks whether
+  to continue. Yes writes all 14 files, with the application's resource
+  fork at 236,691 of 236,742 bytes, and warns that "the integrity of the
+  resource fork of this file could not be verified", then "File Locked".
+  No writes nothing. This engine extracts the other 13 and fails that
+  fork; the application deletes a failed entry's file (not run on this
+  one).
+- `arcplus712.zip`'s one entry is stored, so no decoder has a choice to
+  make. Info-ZIP's `unzip -t` reports the same CRC mismatch (`ebad877f`
+  against the header's `5fc17729`). PKUNZIP was not run.
+- `sitcrypt-wild-F7Menus.sit.bin`: no password is known; not tried.
+- The six `ddtf-*` parts: given every part of its set, each of the three
+  sets extracts with every CRC (`t --part`, Linux). One part alone is the
+  sweep's limit, and DiskDoubler Pro's own two-part set is joined on the
+  Mac by `ddseg-real` (tools/vmac/README.md).
+
+**Not run:** StuffIt or Compact Pro proper (only the two self-extractors
+and Expander 4.0.2), and the application on the other five.

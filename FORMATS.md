@@ -5415,7 +5415,9 @@ with Arsenic's 2.5-byte table and the launch that purges nothing — grants
 no tally moved; MEASURED on Linux,
 not run on a Mac): **953/988 at System 3.0 and at System 6.0.8; 972/988 at
 the 1 MB floor.** The 16 that fail at 1 MB fail with no budget at all (cut
-originals, a password, a lone split part) and are not memory. Of the other
+files, six whole files in a MacBinary layout this engine refuses, a
+password, a lone split part; corrected 2026-11-04, DECISIONS.md *the
+padding six files never had*) and are not memory. Of the other
 19, `synth-dd-m5.dd` is synthetic, and the rest are **nine real StuffIt 5
 archives, each also refused as its `.hqx`** — all Arsenic, each needing one
 block resident that is already larger than System 3.0's whole StuffIt 5
