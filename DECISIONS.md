@@ -20833,9 +20833,14 @@ builds: that run makes MacExtract the boot shell, so the "Finder" file it
 reads the icon from is its own (CORRECTED the same day: first read as a
 512 KB fault; a probe found 64 KB free and `OpenRFPerm` succeeding, the
 same at 1 MB, and `--e2e`, which keeps the Finder, draws the folder at
-512Ke). A second archive of one Finder list finds the layouts
-in memory unless the engine's run made the Memory Manager purge them (not
-measured).
+512Ke). A second archive of one Finder list asks for no more disks than its
+decoders' reload does (measured on 6.0.8, the floppy write-protected, two
+`SIT!` archives selected together and opened, one floppy drive: MacExtract
+then Archives before the second dialog, which opens on Archives, at 4 MB,
+1 MB and 512Ke, the last with `derived-LHA_Expander_1.0.3.sea` extracted
+first; the 1 MB and 512Ke one-drive emulators built as `setup.sh` builds
+`mv-4M-1d`). Re-reading the layouts with the decoders would remove no
+swap in any of the three.
 
 ## 2026-11-04 (the icon the 64K ROM could not open) — the destination dialog reads the Finder's small icon only where the ROM has OpenRFPerm; since v0.45.0 a 64K-ROM Macintosh bombed at launch
 
