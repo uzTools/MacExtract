@@ -214,6 +214,25 @@ costs the engine*).
 | the overlay shims, `mac/ovl_shim.c` | 2,462 B of code | ~25 dispatchers of one shape; a table might be a third of that |
 | the relocator, `Retro68Relocate` and `Retro68ApplyRelocations` | 1,656 B of code | Elf2Mac places it at the start of `.text`; needs a layout Elf2Mac does not offer |
 
+## Corpus archives that fail at every tier: not tried with the program that wrote them
+
+The 16 fixtures `run_tiers.py --shipped` fails at 512 KB and 1 MB alike
+(FORMATS.md, *512 KB machines*) fail with no budget too, so "damaged" is
+this engine's verdict (and `unar`'s or `macunpack`'s, where the manifest
+says so) and no writer's. Closing a row: the original program's own
+expander run on the file under emulation (`tools/vmac/expander.py`,
+`ddpro.py`; DOSBox for PKZIP), its output, or its refusal, recorded.
+
+| fixture | here | try it with |
+|---|---|---|
+| `appledraw51.cpt`, `pcal296.cpt` | *file is truncated* | Compact Pro |
+| `guysmaccontacts.sea` | *file is truncated* (the `.cpt` inside) | the self-extractor itself, then Compact Pro |
+| `ddarchive.sit`, `sigmaedit.sit`, `sitdoc.sit`, `systemidle.sit` | truncated (exit 1) | StuffIt Expander |
+| `uu-wild-terrainman.uu` | the `.sit` inside is truncated | StuffIt Expander on the decoded `.sit` |
+| `arcplus712.zip` | `ARC712.EXE`: *checksum mismatch* | PKUNZIP under DOSBox |
+| `sitcrypt-wild-F7Menus.sit.bin` | *wrong password, or none given* | StuffIt, once a password is known; none is |
+| the six `ddtf-*.dd.N.hqx` / `.sea.N.hqx` parts | *missing segments* when a part is unwrapped alone, a limit of the sweep | DiskDoubler with every part beside it, and this engine the same way |
+
 ## Formats classic Mac programs wrote that nothing here opens — leads, not findings
 
 From Macintosh Repository's *Compression & Archiving* category, read
