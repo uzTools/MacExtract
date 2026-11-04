@@ -227,10 +227,13 @@ REPO = os.path.dirname(HERE)
 # archive, in the bundle, a map entry outside the CODE + A5 unit: the 1 MB
 # probe 742,512 -> 742,500 B (`derived-ASCbeep.sit`). TIERS_MACHINE -12
 # with it. They were 191,430 / 96,048 / 620,336.
+# **-12 more each 2026-11-04**: `LZ4 `, MacStamp's type for any other LZ4
+# frame, the same: 742,500 -> 742,488 B. They were 191,418 / 96,036 /
+# 620,324.
 TIERS = {
-    "sys3-512K": (191418, "System 3.0, Macintosh 512Ke (222,070 B free)"),
-    "sys6-512K": (96036,  "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
-    "floor-1M":  (620324, "System 6.0.8, 1 MB Mac Plus — the floor target"),
+    "sys3-512K": (191406, "System 3.0, Macintosh 512Ke (222,070 B free)"),
+    "sys6-512K": (96024,  "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
+    "floor-1M":  (620312, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
 # **-592 more each 2026-10-24, DERIVED**: SUMacC's `.dl`, the control's
 # CODE +584 and A5 +8 (DECISIONS.md 2026-10-24, *the format before
@@ -483,10 +486,11 @@ TIERS_CONTROL = 221536     # build/mac-resident, CODE + A5, 2026-11-03
 # outside the CODE + A5 unit (TIERS above); measured at floor-1M.
 # **-12 each 2026-11-04**: `LZ4-` in the bundle, as above; measured at
 # floor-1M. (MAR's two types, -24 on 2026-11-03, are in these figures.)
+# **-12 more 2026-11-04**: `LZ4 `, as above.
 TIERS_MACHINE = {
-    "sys3-512K": 412954,   # 201,590 + 211,616, measured 2026-10-22 (was
-    "sys6-512K": 317572,   # 106,208 + 211,616   413,492 / 318,092 / 842,380
-    "floor-1M":  841860,   # 630,496 + 211,616   from 2026-10-09)
+    "sys3-512K": 412942,   # 201,590 + 211,616, measured 2026-10-22 (was
+    "sys6-512K": 317560,   # 106,208 + 211,616   413,492 / 318,092 / 842,380
+    "floor-1M":  841848,   # 630,496 + 211,616   from 2026-10-09)
 }
 
 # DERIVED, not re-measured, 2026-10-01: all three fell by 2,024 B — the

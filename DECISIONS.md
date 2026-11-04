@@ -20523,6 +20523,13 @@ sniffer's answer changes for the four MAR fixtures and no other of 1,002
 corpus files. None of 4,880 non-archives (reference/, this tree) sniffs as
 MAR.
 
+**Mac OS 9.2 (2026-11-04).** The four MAR fixtures and both `.mar.lz4`
+byte-exact (`os9.py --autotest`; an LZ4 frame to the MAR it holds, one
+layer, as a `.Z`). Misses first, none the application's: with a second
+emulator on this two-CPU host, one boot never settled and one opened the
+`in` window before `In` mounted, so nothing ran; and both LZ4 frames graded against a `build/rel` built before LZ4 existed,
+which named nothing (0 files where the Mac gave 1).
+
 ## 2026-11-03 (the helper without a runtime) — position-independent code leaves Retro68's relocator, start-up and exit chain nothing to do: a stamped helper 9,728 -> 6,784 B
 
 **Asked by the maintainer:** a helper "shouldn't be more than 5k"; it was

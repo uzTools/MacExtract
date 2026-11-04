@@ -248,10 +248,6 @@ grade against.
   the whole bundle and is refused on System 6.0.8 at 512 KB, 2,930 B short
   (DECISIONS.md 2026-11-04, *the frame mar 0.2.0 reads*). Closes with a ring
   that grows with the output, priced against that refusal.
-- **Mac OS 9.2 not run on MAR**: `~/.cache/macextract/qemu-ppc/MacOS9.img`
-  fails its published SHA-1 (written to 2026-11-02, 18:12); `os9.py
-  --setup --force` re-fetches it. Every 68k tier passes 4/4 (DECISIONS.md
-  2026-11-03, *the archive that carries its own CRCs*).
 - **mar 0.2.0's expander's Finder info is read from its source**
   (FORMATS.md, *MAR*), never read back: its Decode has run on System 6.0.8
   and 7.0.1 (DECISIONS.md 2026-11-03 and 2026-11-04), its files compared,
