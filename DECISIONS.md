@@ -21057,6 +21057,16 @@ fails before its fix and passes after, under clang's UBSan only**: gcc's
 sanitizer build ran the Arsenic test green on the unfixed code. ci.sh
 gains a clang UBSan unit-test lane (skipped without clang).
 
+**Time (measured, 1x Mac Plus, `UNC_AT_TIMING`, b0b2db0 against the fix,
+alternated).** Engine ticks: a2basic at 1 MB 17,187 → 17,188 and at 4 MB
+16,867 → 16,868, KeyGraphics 817 → 817; `derived-DD_Expand.sea` (method
+10) at 1 MB **3,243 → 3,213 (−0.9 %), the same both times on two runs
+each**. A check that adds an instruction is not plausibly faster, so the
+DiskDoubler −30 is a **hypothesis: layout** (the image's code after the
+check moves 12 B), not a gain the fix makes. Peaks at 1 MB, measured on
+the Mac: a2basic **711,838 B** (the 2.5-byte rung; the Linux trace says
+711,904), DD_Expand 108,610 B, unmoved.
+
 **Cost (measured).** `ovl_cptdd` +12 B (15,156 → 15,168), the bundle the
 same; `ovl_stuffit` unmoved (`sit_arsenic.o` the same size at -Os). The
 resident control CODE +72 and A5 −8, so `OVL_SAVED` +64 and `TIERS` −64

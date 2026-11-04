@@ -4885,7 +4885,7 @@ a2basic does not take the sampled index at 1 MB**: its 197,515-byte block
 fits the 2.5-byte table (493,788 B) in the 750,902 B StuffIt 5 grant, and
 its engine time there is **17,163 ticks against the sampled index's 20,056
 (−14.4 %)**, 1.02x its 4 MB 16,845 (all `UNC_AT_TIMING`, measured
-2026-11-04; Mac peak not re-taken, 711,904 B in the Linux trace). ISBN's
+2026-11-04; Mac peak **711,838 B**, measured the same day, byte-exact). ISBN's
 block (323,384 B) needs 808,460 B for it and still falls to the index
 (DECISIONS.md 2026-11-04, *the rung between the table and the index*). The fallback costs
 1.21x to 1.61x; the ratio widens with block fill, and neither the x86 ratio
