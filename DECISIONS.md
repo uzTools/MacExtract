@@ -20572,3 +20572,6 @@ a `sope` to a remaining program of the same creator (Expander), and the
 event-aware helper's other routes (a running MacExtract, the triage).
 System 6 and 3.0 have no events: the Finder is not there to hand back to
 (without MultiFinder it has quit to launch the helper).
+
+**Decided** (the maintainer, 2026-11-04): no hand-back; the helper keeps
+its own alerts and stays not event-aware. The probes stay out of the tree.
