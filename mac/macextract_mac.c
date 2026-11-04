@@ -4345,6 +4345,29 @@ static void DestIconLoad(void)
 #endif
 
 
+/* The layouts the destination dialog and the progress window are built
+ * from (DLOG, DITL, dctb, dlgx 140, 141, 146) are preloaded but purgeable,
+ * and the overlay bundle does not carry them: Standard File and the Dialog
+ * Manager fetch a layout by ID. GrowApplZone's MaxMem purges every
+ * purgeable block (II-38), the preloaded layouts with them, and the dialog
+ * then read them again from MacExtract's own disk, which on a Mac with one
+ * floppy drive put the archive's floppy out and the dialog on MacExtract's,
+ * locked as the floppy ships (measured on System 6.0.8; DECISIONS.md
+ * 2026-11-04, *the layouts the release did not hold*). So they are read
+ * again here at launch, where MacExtract's disk is in, held until the
+ * progress window is open, and let go before the engine extracts. */
+static void HoldUI(Boolean hold)
+{
+    static const OSType kType[] = { 'DLOG', 'DITL', 'dctb', 'dlgx' };
+    static const short kId[] = { 140, 141, 146 };
+    short t, i;
+    for (t = 0; t < 4; t++)
+        for (i = 0; i < 3; i++) {
+            Handle h = GetResource(kType[t], kId[i]);
+            if (h) { if (hold) HNoPurge(h); else HPurge(h); }
+        }
+}
+
 static int AskDest(short *vol)
 {
     SFReply dest;
@@ -4524,6 +4547,7 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
             outDir = 0;
             gDestVol = outVol;
             ProgOpen((Progress *)prog->ctx, name);
+            HoldUI(false);
         }
         gAskDest = false;
 #endif
@@ -7076,6 +7100,7 @@ int main(void)
 #ifdef UNC_SHELL_IMAGES
     DestIconLoad();             /* the Finder file is on the startup disk */
 #endif
+    HoldUI(true);
     FlushEvents(everyEvent, 0);
 
     DropInit();

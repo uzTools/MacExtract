@@ -499,6 +499,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-04 (the frame mar 0.2.0 reads) — an LZ4 frame unwraps like `.Z`, written from the published specification and graded against liblz4; the release kept a shared image in the wrong slot
 - 2026-11-04 (the helpers in dist) — the sixteen helpers ship in dist/ as one Finder-style zip MacExtract opens, and on both disk images in a "MacExtract Helpers" folder beside MacExtract, before any release
 - 2026-11-04 (the floppy that is ready) — the MacExtract floppy carries a Desktop file listing MacExtract and the helpers, so a Mac without a hard disk opens an archive from another floppy with the MacExtract floppy ejected; inited bits measured to change nothing
+- 2026-11-04 (the layouts the release did not hold) — the destination dialog's and progress window's layouts are held from launch until the progress window is open: purged by the launch's own MaxMem, they were read again from MacExtract's floppy, and a one-drive Mac's dialog opened there
 
 ---
 
@@ -20734,9 +20735,11 @@ bought nothing.
 image mounted read-only, and byte-identical after each run; the writable
 copies were written to): 3.0 with no hard disk, as unlocked; 7.0.1, as
 unlocked, and the Finder no longer asks for the floppy back after
-Command-E; 6.0.8, the destination dialog opens on the locked MacExtract
+Command-E; 6.0.8, the destination dialog opened on the locked MacExtract
 floppy with Extract dimmed, and Drive then Extract (or Eject and a
-writable floppy) finishes it, onto the hard disk. **Why 6.0.8's dialog is
+writable floppy) finished it, onto the hard disk; since HoldUI the same
+day it opens on the archive's floppy (*the layouts the release did not
+hold*). **Why 6.0.8's dialog is
 there:** not where MacExtract points it. On a hard disk the dialog opens
 beside a double-clicked archive on 6.0.8 and 7.0.1 alike, with the
 shipped build (`Archives:M.sit` stamped `MExt`; measured 2026-11-04), so
@@ -20745,10 +20748,65 @@ out of the drive when the dialog opens: after it was read, MacExtract's
 floppy was asked for again twice (a 200 KB archive: MacExtract, Archives,
 MacExtract, Archives, MacExtract, then the dialog), and Standard File
 shows the disk that is in (hypothesis; 3.0 showed its boot floppy, 7.0.1
-asked for Archives first). What asks for MacExtract's floppy after the
-archive is read is not found. Setting Standard File's folder to the
+asked for Archives first). Setting Standard File's folder to the
 archive's before asking was built (+40 B) and changed nothing, on the
 hard disk or the floppy, and is not in the tree; nor is an uncached read
-of one byte of the archive before the dialog, which asked for no disk.
+of one byte of the archive before the dialog, which asked for no disk. (What asks was found the same day: *the layouts the release did not hold*.)
 **Not run:** the 1.44 MB image, Mac OS 9 reading a floppy, System 6
 booted from a floppy (its System file here is 1.2 MB), and a real Mac.
+
+## 2026-11-04 (the layouts the release did not hold) — the destination dialog's and progress window's layouts are held from launch until the progress window is open: purged by the launch's own MaxMem, they were read again from MacExtract's floppy, and a one-drive Mac's dialog opened there
+
+**Found by a probe build** (not in the tree): MacExtract wrote a mark into
+screen memory at each step of `main()` and `RunExtract`, the helper its
+own on another row, and every *"Please insert the disk"* frame of the
+6.0.8 one-floppy walk (the shipped floppy locked, a 200 KB `SIT!`/`SIT!`
+archive) was read for them. The request for MacExtract's floppy that put
+the archive's out came **between the mark before `AskDest` and the one
+after it**: the destination dialog. The overlay images were not it (the
+eager bundle is in memory; `mac/ovl_load_eager.c`), and the dialog's
+code runs from the bundle; but its layout, `DLOG`/`DITL`/`dctb` 140, is
+fetched by Standard File by ID, and like every layout of this
+application it is `preload` and `purgeable`. The same probe with those
+three not purgeable: the dialog opened on the archive's floppy, Extract
+enabled, and the archive extracted there.
+
+**What purged it is MacExtract's own launch, not a short heap** (measured
+the same day: a probe checking `DITL` 140 with `SetResLoad(false)` on
+6.0.8 at 4 MB): loaded before `GrowApplZone`, purged straight after it.
+`GrowApplZone`'s `MaxMem` purges every purgeable block (II-38; DECISIONS.md
+2026-10-15, *the purge MaxApplZone never did*). So since 2026-10-15 the
+`preload` of every dialog and alert (2026-10-14, *the disk the dialogs
+were on*) has been undone at each launch on System 6, and each layout is
+read from MacExtract's disk at first use; the closing report's request
+for MacExtract's floppy is that (hypothesis: not probed). First written
+here as the sniff's memory, which was a guess, CORRECTED before it was
+pushed.
+
+**`HoldUI`** (`mac/macextract_mac.c`) reads `DLOG`, `DITL`, `dctb`,
+`dlgx` 140, 141 and 146 (the destination dialog, its New Folder box, the
+progress window) again at launch, after the bundle's preload, marks them
+not purgeable, and
+purgeable again once the progress window is open: the engine extracts
+with the memory it had, and the 492 B (about 600 B of heap) are held
+through the sniff, beside the 194,020 B bundle held there anyway.
+**+92 B of code and +36 B of A5 (two tables; a version without them was
+144 B), 128 B off every budget; `OVL_SAVED` unmoved.** The closing
+report's alert is still read at the end, and a second archive of one
+Finder list meets its layouts purgeable again; neither is held, since
+the engine runs between.
+
+**Measured**, the shipped floppy write-protected, the 200 KB archive on a
+second floppy, every request answered:
+
+| System | disks asked before MacExtract's dialog | the dialog | after |
+|---|---|---|---|
+| 6.0.8 (hard disk, one floppy drive) | MacExtract, Archives (was MacExtract, Archives, MacExtract, Archives, MacExtract) | on Archives, Extract enabled (was the locked MacExtract floppy, dimmed) | MacExtract once, at the end; extracted onto Archives |
+| 3.0, no hard disk | MacExtract, Archives | on Archives (was the System floppy) | MacExtract once; extracted onto Archives |
+| 7.0.1 (hard disk, one floppy drive) | MacExtract and Archives six times each (was seven) | on Archives | MacExtract, Archives (was twice each) |
+
+The sniff at 512 KB, which the tier suites cannot see (they run the
+autotest build, which has no dialogs): `interactive.py` on System 6.0.8 /
+512Ke with `derived-LHA_Expander_1.0.3.sea`, the narrowest archive that
+tier passes, extracted complete with HoldUI as without. The destination
+dialog's New button has no folder icon at 512Ke in both builds; not this.

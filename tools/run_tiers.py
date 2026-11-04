@@ -230,10 +230,12 @@ REPO = os.path.dirname(HERE)
 # **-12 more each 2026-11-04**: `LZ4 `, MacStamp's type for any other LZ4
 # frame, the same: 742,500 -> 742,488 B. They were 191,418 / 96,036 /
 # 620,324.
+# **-128 more each 2026-11-04, DERIVED**: HoldUI (DECISIONS.md 2026-11-04, *the layouts the release did not hold*), the control's
+# CODE +104 and A5 +24; the shipped pair grew the same, OVL_SAVED unmoved.
 TIERS = {
-    "sys3-512K": (191406, "System 3.0, Macintosh 512Ke (222,070 B free)"),
-    "sys6-512K": (96024,  "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
-    "floor-1M":  (620312, "System 6.0.8, 1 MB Mac Plus — the floor target"),
+    "sys3-512K": (191278, "System 3.0, Macintosh 512Ke (222,070 B free)"),
+    "sys6-512K": (95896,  "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
+    "floor-1M":  (620184, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
 # **-592 more each 2026-10-24, DERIVED**: SUMacC's `.dl`, the control's
 # CODE +584 and A5 +8 (DECISIONS.md 2026-10-24, *the format before
@@ -437,7 +439,8 @@ TIERS = {
 # data + bss -680. The machine gave +4,204, because the jump table, the
 # stub segments and the relocations trimmed at launch are resident bytes
 # this unit never counted — which is why TIERS was measured, not moved.
-TIERS_CONTROL = 221536     # build/mac-resident, CODE + A5, 2026-11-03
+TIERS_CONTROL = 221664     # build/mac-resident, CODE + A5, 2026-11-04
+# +128 on 2026-11-04: HoldUI; TIERS -128.
 # +2,768 the same day: the LZ4 frame, its reader linked in; TIERS -2,768.
 # +1,824 the same day: MAR, its reader linked in; TIERS -1,824 (and -24).
 # +192 the same day: the queueing File > Open...; TIERS -192 (and -144).
