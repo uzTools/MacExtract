@@ -30,4 +30,4 @@ S691	suntar	TARF	pair
 LZIV	MacCompress	ZIVU,ZIVM	pair
 LARC	MacLHa	LHA 	pair
 arc*	ArcMac	mArc,ARC7	pair
-MARc	Hampa's Mac application	MARd,MARf,ZIVU	the maintainer
+MARc	Hampa's Mac application	MARd,MARf,ZIVU,LZ4-	the maintainer

@@ -223,10 +223,14 @@ REPO = os.path.dirname(HERE)
 # **-2,768 more each 2026-11-03, DERIVED**: the LZ4 frame (DECISIONS.md
 # 2026-11-03, *the frame mar 0.2.0 reads*), the control's CODE +2,760 and A5
 # +8; they were 194,198 / 98,816 / 623,104.
+# **-12 more each 2026-11-04**: `LZ4-`, mar's type for an LZ4-wrapped
+# archive, in the bundle, a map entry outside the CODE + A5 unit: the 1 MB
+# probe 742,512 -> 742,500 B (`derived-ASCbeep.sit`). TIERS_MACHINE -12
+# with it. They were 191,430 / 96,048 / 620,336.
 TIERS = {
-    "sys3-512K": (191430, "System 3.0, Macintosh 512Ke (222,070 B free)"),
-    "sys6-512K": (96048,  "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
-    "floor-1M":  (620336, "System 6.0.8, 1 MB Mac Plus — the floor target"),
+    "sys3-512K": (191418, "System 3.0, Macintosh 512Ke (222,070 B free)"),
+    "sys6-512K": (96036,  "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
+    "floor-1M":  (620324, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
 # **-592 more each 2026-10-24, DERIVED**: SUMacC's `.dl`, the control's
 # CODE +584 and A5 +8 (DECISIONS.md 2026-10-24, *the format before
@@ -477,10 +481,12 @@ TIERS_CONTROL = 221536     # build/mac-resident, CODE + A5, 2026-11-03
 # the CODE + A5 unit (TIERS above); measured at floor-1M.
 # **-72 each 2026-10-25**: the archive icon's map entries, resident bytes
 # outside the CODE + A5 unit (TIERS above); measured at floor-1M.
+# **-12 each 2026-11-04**: `LZ4-` in the bundle, as above; measured at
+# floor-1M. (MAR's two types, -24 on 2026-11-03, are in these figures.)
 TIERS_MACHINE = {
-    "sys3-512K": 412966,   # 201,590 + 211,616, measured 2026-10-22 (was
-    "sys6-512K": 317584,   # 106,208 + 211,616   413,492 / 318,092 / 842,380
-    "floor-1M":  841872,   # 630,496 + 211,616   from 2026-10-09)
+    "sys3-512K": 412954,   # 201,590 + 211,616, measured 2026-10-22 (was
+    "sys6-512K": 317572,   # 106,208 + 211,616   413,492 / 318,092 / 842,380
+    "floor-1M":  841860,   # 630,496 + 211,616   from 2026-10-09)
 }
 
 # DERIVED, not re-measured, 2026-10-01: all three fell by 2,024 B — the
