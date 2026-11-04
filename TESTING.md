@@ -3575,9 +3575,16 @@ nothing*).
 - **What gcc's UBSan does not check, in ci.sh.** Both finds are clang-only
   diagnostics; `ci.sh` runs the unit tests under clang for that reason,
   and nothing else in it does.
-- **SpaceSaver from real data.** No SpaceSaver stream is in the corpus;
-  `tools/ssmodule/` writes them only with the control panel in the
-  emulator cache, so that target started from the header alone.
+- **SpaceSaver from real data, unless the specimens are fetched.** No
+  SpaceSaver stream is in the corpus, but the 48 files SpaceSaver wrote
+  are (`tools/fetch_specimens.py --only spacesaver`), and `make_seeds.py`
+  seeds from them when present. CORRECTED 2026-11-04: this said the
+  target could only start from the header. Without them it seeds from
+  `run_spacesaver.py --emit` (methods 0 and 4, 3 streams): over 300 s,
+  clang 18, those reached 350 edges in 34,960 runs against 97,608 from
+  the header alone and both stopped at 370, so they add speed and no
+  edges. Methods 1-3 from real data are still unseeded where discmaster
+  cannot be reached.
 - **Parameters the header does not model**: DiskDoubler's XOR value other
   than 0x5A, SpaceSaver's preset dictionary, StuffIt's optimizer decoders
   (PNTG, delta, JPEG), a cipher in front of any stream.

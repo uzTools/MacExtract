@@ -16,10 +16,14 @@ A stream that is encrypted (a reader with a cipher) is not written: its
 bytes are ciphertext. At most --max seeds per target, smallest first, so a
 run starts from many short streams rather than a few long ones.
 
+SpaceSaver is in no fixture, so its seeds come from the files SpaceSaver
+itself wrote where tools/fetch_specimens.py has fetched them (all four
+methods), and always from what tools/run_spacesaver.py --emit writes
+(methods 0 and 4 only).
+
 WHAT IT CANNOT SEE: a decoder reached by no fixture gets no seed (it then
-starts from the header alone — SpaceSaver, whose only data here is what
-tools/ssmodule/ writes, and that needs the control panel in the emulator
-cache), and the harness's `param` is reconstructed
+starts from the header alone; SpaceSaver's methods 1-3 without the fetched
+specimens), and the harness's `param` is reconstructed
 from what the caller passed, so a decoder parameter the harness does not
 model (DiskDoubler's xorval beyond 0, SpaceSaver's preset) is dropped.
 """
@@ -183,6 +187,35 @@ def patch(tree):
         open(path, "w").write(text)
 
 
+SS_HOME = os.environ.get("UNC_VMAC_HOME",
+                         os.path.expanduser("~/.cache/macextract/vmac"))
+SS_SPECIMENS = os.path.join(SS_HOME, "specimens", "spacesaver")
+SS_PRESET = os.path.join(SS_SPECIMENS, "PrAm-4048.bin")
+
+
+def spacesaver_inputs(cli):
+    """Every SpaceSaver file this machine has: the fetched specimens (the
+    same glob and magic test tools/run_spacesaver.py grades), then what
+    `run_spacesaver.py --emit` writes into .tmp/fuzz/ssemit."""
+    out = []
+    if os.path.isdir(SS_SPECIMENS):
+        for n in sorted(os.listdir(SS_SPECIMENS)):
+            p = os.path.join(SS_SPECIMENS, n)
+            if n.endswith(".ss") and open(p, "rb").read(8) == b"SIT!DFD3":
+                out.append(p)
+    emit = os.path.join(REPO, ".tmp", "fuzz", "ssemit")
+    shutil.rmtree(emit, ignore_errors=True)
+    subprocess.run([sys.executable, os.path.join(REPO, "tools",
+                                                 "run_spacesaver.py"),
+                    "--macextract", cli, "--emit", emit],
+                   stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                   timeout=600)
+    if os.path.isdir(emit):
+        out += [os.path.join(emit, n) for n in sorted(os.listdir(emit))
+                if n.endswith(".ss")]
+    return out
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", default=os.path.join(REPO, ".tmp", "fuzz", "seeds"))
@@ -219,6 +252,19 @@ def main():
             subprocess.run([cli, "t", p], env=env,
                            stdout=subprocess.DEVNULL,
                            stderr=subprocess.DEVNULL, timeout=600)
+
+    # SpaceSaver is in no fixture (its files may not be committed, and no
+    # tool here reads them, so there are no manifests). Two sources exist
+    # anyway: the files SpaceSaver itself wrote, which
+    # tools/fetch_specimens.py --only spacesaver puts outside the
+    # repository, and the method-0 and method-4 files
+    # tools/run_spacesaver.py --emit writes from nothing.
+    for p in spacesaver_inputs(cli):
+        args = [cli, "t"]
+        if os.path.exists(SS_PRESET):
+            args += ["--preset", SS_PRESET]
+        subprocess.run(args + [p], env=env, stdout=subprocess.DEVNULL,
+                       stderr=subprocess.DEVNULL, timeout=600)
 
     for n in CHAINS:
         p = os.path.join(a.fixtures, n)
