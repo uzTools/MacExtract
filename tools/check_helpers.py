@@ -22,6 +22,7 @@ Checked, each from where it is decided:
     ICN# list a single pair local 0 -> 128, 'FREF' 128 for APPL and one per
     document type, every one on local icon 0 (the maintainer, 2026-11-03:
     the archive icon for the helper and its documents);
+  - 'vers' 1 carrying UNC_VERSION, MacExtract's own (a release bumps both);
   - the size, against a ceiling: a helper is on every floppy twenty times.
 
 What it CANNOT see: whether the Finder of a given System accepts the bundle,
@@ -42,8 +43,10 @@ import deskclaim as D                                         # noqa: E402
 # (DECISIONS.md 2026-11-03, *the helper that asks the desktop*); 9,472 ->
 # 9,728 the same day, the stub registering its own icons (the same entry).
 # LOWERED 2026-11-03, 9,728 -> 6,784: no Retro68 runtime (DECISIONS.md
-# 2026-11-03, *the helper without a runtime*).
-CEILING = 6784
+# 2026-11-03, *the helper without a runtime*). RAISED 2026-11-04, 6,784 ->
+# 6,912: 'vers' 1, MacExtract's version (DECISIONS.md 2026-11-04, *the
+# helpers in dist*).
+CEILING = 6912
 FAMILY = (b"ICN#", b"ics#", b"icl4", b"ics4", b"icl8", b"ics8")
 CREATOR, TYPES = b"SIT!", (b"SIT!", b"SITD")
 HAS_BUNDLE, INITED = 0x2000, 0x0100
@@ -88,7 +91,8 @@ def build():
     return helper
 
 
-def check(path):
+def check(path, creator=CREATOR, types=TYPES, ceiling=CEILING):
+    CREATOR, TYPES = creator, tuple(types)
     bad = []
     blob = open(path, "rb").read()
     h, _d, r = D.macbin_split(blob)
@@ -122,6 +126,19 @@ def check(path):
         ids = sorted(by.get(t, {}))
         if ids != [128]:
             bad.append(f"{t.decode()} IDs {ids}, not the one family at 128")
+
+    # The version Get Info shows: MacExtract's UNC_VERSION (the maintainer,
+    # 2026-11-04; a release bumps it), so a helper that missed a bump fails.
+    sys.path.insert(0, os.path.join(ROOT, "companion"))
+    import make_stub
+    want_v = make_stub.unc_version()
+    v = by.get(b"vers", {}).get(1)
+    if v is None or len(v) < 7:
+        bad.append("no 'vers' 1")
+    else:
+        short = v[7:7 + v[6]].decode("mac_roman")
+        if short != want_v:
+            bad.append(f"'vers' 1 says {short!r}, not UNC_VERSION {want_v!r}")
 
     if 0 not in by.get(CREATOR, {}):
         bad.append(f"no signature resource {CREATOR.decode()} 0")
@@ -160,9 +177,53 @@ def check(path):
         if sorted(kinds) != sorted((b"APPL",) + TYPES):
             bad.append(f"FREF types {kinds}, not APPL and {list(TYPES)}")
 
-    if len(blob) > CEILING:
-        bad.append(f"{len(blob)} B, over the {CEILING} B ceiling")
+    if ceiling and len(blob) > ceiling:
+        bad.append(f"{len(blob)} B, over the {ceiling} B ceiling")
     return bad, len(blob)
+
+
+def check_dist(stub):
+    """The sixteen helpers dist/ ships: every row of companion/helpers.tsv
+    stamped from this tree's stub passes check() for its own creator and
+    types; dist/MacExtract-Helpers.zip is byte for byte the zip
+    make_helpers.py writes from them (it is reproducible: fixed times), so a
+    stale or hand-edited one fails; and both disk images' "MacExtract
+    Helpers" folders hold those names, when hfsutils is there to look."""
+    sys.path.insert(0, os.path.join(ROOT, "companion"))
+    import make_helpers as M
+    bad = []
+    want = M.rows()
+    built = open(stub, "rb").read()
+    tmp = os.path.join(ROOT, "build", "stub")
+    for (creator, name, types), (_n, mb) in zip(want, M.helpers(built)):
+        path = os.path.join(tmp, "check-" + name + ".bin")
+        open(path, "wb").write(mb)
+        b, _ = check(path, creator, types, ceiling=None)
+        bad += [f"{name}: {x}" for x in b]
+    shipped = os.path.join(ROOT, "dist", "MacExtract-Helpers.zip")
+    fresh = os.path.join(tmp, "check-helpers.zip")
+    M.write_zip(fresh, built)
+    if not os.path.isfile(shipped):
+        bad.append("dist/MacExtract-Helpers.zip is missing — run tools/make_dist.sh")
+    elif open(shipped, "rb").read() != open(fresh, "rb").read():
+        bad.append("dist/MacExtract-Helpers.zip is STALE: not the zip this tree "
+                   "builds — run tools/make_dist.sh")
+    if shutil.which("hls") and shutil.which("hmount"):
+        names = sorted(n for _, n, _ in want)
+        for img in ("MacExtract.dsk", "MacExtract-1440K.img"):
+            home = os.path.join(ROOT, ".tmp")
+            env = dict(os.environ, HOME=home)
+            r = subprocess.run(["hmount", os.path.join(ROOT, "dist", img)], capture_output=True, env=env)
+            if r.returncode:
+                bad.append(f"dist/{img}: hmount failed")
+                continue
+            ls = subprocess.run(["hls", "-1", ":MacExtract Helpers"], capture_output=True, text=True,
+                                encoding="mac_roman", env=env)
+            subprocess.run(["humount"], capture_output=True, env=env)
+            got = sorted(ls.stdout.split("\n")[:-1]) if not ls.returncode else None
+            if got != names:
+                bad.append(f"dist/{img}: MacExtract Helpers holds {got}, not {names}")
+    return bad
 
 
 def main():
@@ -174,12 +235,15 @@ def main():
     if path is None:
         return 0
     bad, size = check(path)
+    if not a.file:
+        bad += check_dist(os.path.join(ROOT, "build", "stub", "Stub.bin"))
     for b in bad:
         print(f"helpers: FAIL: {b}")
     if bad:
         return 1
     print(f"helpers: {os.path.basename(path)}: {size} B (ceiling {CEILING}), "
-          f"one CODE segment, one icon family, every FREF on local 0")
+          f"one CODE segment, one icon family, every FREF on local 0"
+          + ("" if a.file else "; the helpers zip and both images current"))
     return 0
 
 

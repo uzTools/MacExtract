@@ -25,6 +25,19 @@ unarchiver, so MacExtract ships in three forms that need no unarchiver:
                   work either: it arrives still wrapped, with nothing on the
                   Mac to unwrap it. Not yet tried on a real SuperDrive.
 
+Double-click helpers. Both disks also hold a "MacExtract Helpers" folder,
+and MacExtract-Helpers.zip has the same sixteen in one file: open it with
+MacExtract. Each one stands in
+for a program that made archives -- StuffIt, Compact Pro, DiskDoubler and
+others -- so that double-clicking one of its archives opens it in
+MacExtract, on every System from 3.0 to Mac OS 9. Copy the folder to your
+hard disk along with MacExtract, anywhere you like, and open it and
+MacExtract's folder once so the Finder sees them. Keep only the helpers you
+want. A file MacExtract cannot open goes to the program that made it, if
+that program is on the Mac. On Mac OS 9, if StuffIt Expander is installed
+afterwards and takes its archives back, open the "StuffIt" and "Expander"
+helpers once.
+
 Floor target: System 3.0 on a 1 MB Mac Plus (68000) -- the system the Plus
 shipped with in January 1986. It also runs in 512 KB, on a Macintosh 512Ke.
 On a true Macintosh 512K -- the 64K ROM -- it opens and lists a disk, but

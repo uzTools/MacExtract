@@ -497,6 +497,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-03 (the helper without a runtime) — position-independent code leaves Retro68's relocator, start-up and exit chain nothing to do: a stamped helper 9,728 -> 6,784 B
 - 2026-11-03 (the hand-back to the Finder) — a helper that is not event-aware cannot post to the Finder (-903); an event-aware one can, and the 7.0.1 Finder opens a document through FNDR/sope as a double-click would, but answers a document no application owns with silence, not its alert
 - 2026-11-04 (the frame mar 0.2.0 reads) — an LZ4 frame unwraps like `.Z`, written from the published specification and graded against liblz4; the release kept a shared image in the wrong slot
+- 2026-11-04 (the helpers in dist) — the sixteen helpers ship in dist/ as one Finder-style zip MacExtract opens, and on both disk images in a "MacExtract Helpers" folder beside MacExtract, before any release
 
 ---
 
@@ -20643,3 +20644,42 @@ itself now decodes up to 69,816 B before the release, the heaviest of any
 envelope (inflate's was 52,216), and fitted there. A ring that grows with
 the output would make small frames cheap and leave a 64 KB one where it
 is (OPEN_ITEMS.md).
+## 2026-11-04 (the helpers in dist) — the sixteen helpers ship in dist/ as one Finder-style zip MacExtract opens, and on both disk images in a "MacExtract Helpers" folder beside MacExtract, before any release
+
+**Asked by the maintainer** (2026-11-04), reversing 2026-10-19's "after
+the first public release" for `dist/`; no release is cut. `tools/make_dist.sh`
+builds `companion/stub`, and `companion/make_helpers.py` stamps one helper
+per row of `companion/helpers.tsv` into `:MacExtract Helpers:` on
+`MacExtract.dsk` and `MacExtract-1440K.img`, and into **one download for
+everyone else, `dist/MacExtract-Helpers.zip`** (the maintainer: a single
+file, not sixteen). It is laid out as the Finder zips a folder, each
+helper an empty data fork beside its `__MACOSX/…/._name` sidecar in
+copyfile's layout (`tools/synth_macosx.py`), since README.md's "a Finder
+zip comes out whole" is what MacExtract is graded on; fixed times make it
+reproducible. Each helper's name is 8 characters at most, since a longer
+one loses `SITx` to Expander on Mac OS 9 (2026-10-31, *the stub that
+sorts*); the names are the programs' (`StuffIt`, `Expander`, `DiskDblr`,
+`CompPro` …). **Each carries MacExtract's version** in `'vers'` 1
+("0.45.0, MacExtract helper", what Get Info shows), from `UNC_VERSION`,
+so a release bumps it with MacExtract's (the maintainer: the helpers ship
+with and depend on the MacExtract beside them; one number answers which).
+**57,149 B for the zip (6,912 B a helper as MacBinary, 128 B of it the
+version); the 800K disk keeps 441,856 B free.** `dist/README.txt` and
+README.md say how to install them. `tools/check_helpers.py` fails on a
+zip that is not the one this tree writes (shown on one byte changed), on
+a helper whose `'vers'` is not `UNC_VERSION` (shown on a bump to 0.46.0
+with `dist/` not rebuilt: the old helper and the zip both fail), and on an
+image whose folder does not hold the sixteen. Get Info's version line has
+not been looked at in a Finder; the resource is laid out as MacExtract's,
+which has.
+
+**Measured.** The Linux CLI extracts the zip with all sixteen resource
+forks byte-identical to the stamped helpers, `APPL` and each creator. On
+System 6.0.8: MacExtract opened the zip and wrote the folder, the helper
+`StuffIt` with Finder flags `0x2000` (hasBundle, not inited); the folder
+opened once, a `SITD`/`SIT!` archive double-clicked went through it to
+MacExtract and extracted. And the shipped `MacExtract.dsk` as a second
+floppy, the archive on the hard disk, no MacExtract there: the floppy's
+folder opened, the archive drew the archive icon, and a double-click
+reached the floppy's MacExtract, which extracted it; so MacExtract on
+another volume than the archive's, not run before, works.

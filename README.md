@@ -28,6 +28,7 @@ currently **v0.45.0**, or from the tree:
 | [`dist/MacExtract.bin`](dist/MacExtract.bin) | MacBinary, for any MacBinary-aware transfer |
 | [`dist/MacExtract.dsk`](dist/MacExtract.dsk) | an 800K floppy image, for a real floppy or an emulator |
 | [`dist/MacExtract-1440K.img`](dist/MacExtract-1440K.img) | the same at 1.44 MB, for a USB floppy drive and a SuperDrive Mac |
+| [`dist/MacExtract-Helpers.zip`](dist/MacExtract-Helpers.zip) | the double-click helpers in one file, for MacExtract to open; also on both disks |
 
 None of them needs an unarchiver to open. [`dist/README.txt`](dist/README.txt)
 has the transfer notes.
@@ -43,6 +44,10 @@ zip, gzip, tar and `.Z`.
 - **Everything comes back as it was:** both forks, type and creator, dates,
   icon positions, folder windows, Get Info comments, the Locked box and
   custom icons, so an extracted application simply runs.
+- **Double-click an archive** and it opens in MacExtract: the "MacExtract
+  Helpers" folder on the disks stands in for StuffIt, Compact Pro,
+  DiskDoubler and thirteen other programs, on every System. Copy it to your
+  disk with MacExtract and open both folders once.
 - **No StuffIt on the machine?** On Mac OS 9, double-clicking an archive
   whose program is missing asks which to use, and MacExtract is on the list.
 - **Nested files** (`.sit.hqx`, `.tar.Z`) are unwrapped by looking inside,

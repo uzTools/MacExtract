@@ -14,6 +14,9 @@
 #                    which writes MFM only and so cannot make an 800K GCR disk;
 #                    a SuperDrive Mac mounts it (DECISIONS.md 2026-10-14,
 #                    *the floppy a USB drive can write*).
+#   MacExtract-Helpers.zip — the double-click helpers, one per creator
+#                    (companion/helpers.tsv), in one zip MacExtract opens;
+#                    also in a "MacExtract Helpers" folder on both disks.
 #   README.txt     — the paragraphs above, for the download.
 #
 # Builds the application first (needs a Retro68 toolchain, and hfsutils for
@@ -66,6 +69,34 @@ HOME=$HFS_TMP hformat -l MacExtract "$IMG" >/dev/null
 HOME=$HFS_TMP hmount "$IMG" >/dev/null
 HOME=$HFS_TMP hcopy -m dist/MacExtract.bin ":"
 HOME=$HFS_TMP humount >/dev/null
+# The double-click helpers, one per creator companion/helpers.tsv lists: as
+# one Finder-style zip, dist/MacExtract-Helpers.zip, which MacExtract itself
+# opens, and in a "MacExtract Helpers" folder beside MacExtract on both
+# disks (the maintainer, 2026-11-04; DECISIONS.md 2026-11-04, *the helpers
+# in dist*). tools/check_helpers.py checks them;
+# the toolchain is found as tools/build_mac.sh finds it, which has just
+# succeeded.
+if [ -n "$RETRO68" ] && [ -d "$RETRO68" ]; then
+    TOOLCHAIN="$RETRO68"
+elif command -v m68k-apple-macos-gcc >/dev/null 2>&1; then
+    TOOLCHAIN="$(dirname "$(dirname "$(command -v m68k-apple-macos-gcc)")")"
+else
+    TOOLCHAIN=/opt/Retro68-build/toolchain
+fi
+cmake -B build/stub -S companion/stub \
+    -DCMAKE_TOOLCHAIN_FILE="$TOOLCHAIN/m68k-apple-macos/cmake/retro68.toolchain.cmake" >/dev/null
+cmake --build build/stub >/dev/null
+rm -rf dist/helpers
+python3 companion/make_helpers.py build/stub/Stub.bin -o "$HFS_TMP/helpers" \
+    --zip dist/MacExtract-Helpers.zip
+for img in dist/MacExtract.dsk "$IMG"; do
+    HOME=$HFS_TMP hmount "$img" >/dev/null
+    HOME=$HFS_TMP hmkdir ":MacExtract Helpers"
+    for h in "$HFS_TMP"/helpers/*.bin; do
+        HOME=$HFS_TMP hcopy -m "$h" ":MacExtract Helpers:$(basename "$h" .bin)"
+    done
+    HOME=$HFS_TMP humount >/dev/null
+done
 VERSION=$(sed -n 's/^#define UNC_VERSION "\(.*\)"/\1/p' include/macextract.h)
 [ -n "$VERSION" ] || { echo "make_dist: no UNC_VERSION in include/macextract.h" >&2; exit 1; }
 
@@ -96,6 +127,19 @@ unarchiver, so MacExtract ships in three forms that need no unarchiver:
                   Copying MacExtract.bin onto a PC-formatted disk does not
                   work either: it arrives still wrapped, with nothing on the
                   Mac to unwrap it. Not yet tried on a real SuperDrive.
+
+Double-click helpers. Both disks also hold a "MacExtract Helpers" folder,
+and MacExtract-Helpers.zip has the same sixteen in one file: open it with
+MacExtract. Each one stands in
+for a program that made archives -- StuffIt, Compact Pro, DiskDoubler and
+others -- so that double-clicking one of its archives opens it in
+MacExtract, on every System from 3.0 to Mac OS 9. Copy the folder to your
+hard disk along with MacExtract, anywhere you like, and open it and
+MacExtract's folder once so the Finder sees them. Keep only the helpers you
+want. A file MacExtract cannot open goes to the program that made it, if
+that program is on the Mac. On Mac OS 9, if StuffIt Expander is installed
+afterwards and takes its archives back, open the "StuffIt" and "Expander"
+helpers once.
 
 Floor target: System 3.0 on a 1 MB Mac Plus (68000) -- the system the Plus
 shipped with in January 1986. It also runs in 512 KB, on a Macintosh 512Ke.

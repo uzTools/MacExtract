@@ -107,7 +107,7 @@ usually a declared ceiling nobody questioned.
 - **68000 discipline** (non-negotiable): byte-wise big-endian reads only, zero unaligned dereferences; no recursion, call depth ≤ 4 KB — **measure it, do not assume it** (it was exceeded by 66 % for months; FORMATS.md, *Stack*, has the method); 32-bit arithmetic in hot paths; no libc in the engine — all I/O, allocation and progress via caller callbacks; no global mutable state; allocation failure is a per-entry error, never per-archive; progress callback every 8–16 KB with clean abort.
 - **Commit and push whenever it is appropriate — do not ask.** Small, focused commits, pushed to `main` as they are made: the maintainer reads the docs on GitHub, and a wrong commit is revertible. **A release is the exception** — see *Cutting a release*.
 - **`./ci.sh` green before every commit**, except a docs-only change, where `tools/check_docs.py` is the layer that can fail, and a change to `companion/` and docs only, where `tools/check_docs.py` and `tools/check_helpers.py` are (nothing else in `ci.sh` builds the helpers; what they do is measured on the emulator). Code, comments and docs in English.
-- **`dist/` is a committed binary and goes stale silently**, and it is the only download. Rebuild it with `tools/make_dist.sh` in the SAME commit as any change to `mac/` or `src/`, and re-read `dist/README.txt`.
+- **`dist/` is a committed binary and goes stale silently**, and it is the only download. Rebuild it with `tools/make_dist.sh` in the SAME commit as any change to `mac/` or `src/`, or to the helpers it carries (`companion/stub/`, `companion/helpers.tsv`, the stamping scripts), and re-read `dist/README.txt`.
 - **LGPL-2.1-or-later**, forced by transcribing XADMaster; keep `NOTICE` accurate.
 - Fixture archives are copyrighted and never committed — only `fixtures/SOURCES.md` and the manifests. Same rule for the Mac ROM and System image under `tools/vmac/`.
 - Work autonomously through a task list; log non-obvious decisions in `DECISIONS.md`; if something cannot be made to pass after genuine effort, write it up in `BLOCKERS.md` and move on rather than stalling.
@@ -129,7 +129,9 @@ git push origin v0.12
 ```
 
 - **`UNC_VERSION` is the source of truth**; `check_docs.py` fails if
-  `dist/README.txt`, `--version` and README.md disagree with it.
+  `dist/README.txt`, `--version` and README.md disagree with it. The
+  helpers carry it too (`'vers'` 1, stamped by `make_dist.sh`), and
+  `check_helpers.py` fails on one that missed the bump.
 - **Push `main` before tagging** — Actions reads the workflow from the pushed
   ref.
 - **`dist/` must be current**; the workflow publishes what is committed.

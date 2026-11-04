@@ -5,29 +5,32 @@
 # creators that get a helper*).
 #
 #   creator   the helper's creator, MacStamp's evidence for it in `source`
+#   name      the helper's file name: 8 characters at most, since on Mac
+#             OS 9 a longer one loses the creator to StuffIt Expander at the
+#             first launch after boot (DECISIONS.md 2026-10-31, *the stub
+#             that sorts*)
 #   program   the program that owns it (app-bundles.tsv, or MacStamp's
 #             creators.tsv)
 #   types     comma-separated, since a type may end in a space; each one
-#             MacExtract's bundle claims, except MARd and MARf, claimed
-#             once MAR extracts
+#             MacExtract's bundle claims
 #   source    pair = MacStamp's own pair for the format (data/formats.tsv);
 #             census = MacStamp's 142,267-file census (pair-census.csv),
 #             archive-typed files under the creator
 #
-# creator	program	types	source
-SIT!	StuffIt	SITD,SIT!,SIT5,Seg1,Seg2,Seg3,SegN,SegM	pair; census 725
-SITx	StuffIt Expander	SIT!,SITD,BINA,TEXT,PIT 	pair (BinHex, PackIt); census 606
-DDAP	DiskDoubler	DDA2,DDAR,DDSP,DD01,DD02,DDF0,DDF1,DDF2,DDF3,DDF4,DDF5,DDF6,DDF7,DDFL,DDf4	pair; census 129
-ZIP 	(MacStamp's pair for zip)	ZIP 	pair; census 100
-CPCT	Compact Pro	PACT	pair; census 80
-IZip	MacZip	ZIP 	pair since macstamp c018dd4; census 12
-PIT 	PackIt	PIT 	pair; census 2
-NCdc	Expand Now (Now Compress)	NCar	pair; census 1
-Gzip	MacGzip	Gzip	pair
-MB2P	MacBinary II+	BINA,TEXT	pair
-TIGR	Tiger	BINA	pair (AppleSingle)
-S691	suntar	TARF	pair
-LZIV	MacCompress	ZIVU,ZIVM	pair
-LARC	MacLHa	LHA 	pair
-arc*	ArcMac	mArc,ARC7	pair
-MARc	Hampa's Mac application	MARd,MARf,ZIVU,LZ4-	the maintainer
+# creator	name	program	types	source
+SIT!	StuffIt	StuffIt	SITD,SIT!,SIT5,Seg1,Seg2,Seg3,SegN,SegM	pair; census 725
+SITx	Expander	StuffIt Expander	SIT!,SITD,BINA,TEXT,PIT 	pair (BinHex, PackIt); census 606
+DDAP	DiskDblr	DiskDoubler	DDA2,DDAR,DDSP,DD01,DD02,DDF0,DDF1,DDF2,DDF3,DDF4,DDF5,DDF6,DDF7,DDFL,DDf4	pair; census 129
+ZIP 	Zip	(MacStamp's pair for zip)	ZIP 	pair; census 100
+CPCT	CompPro	Compact Pro	PACT	pair; census 80
+IZip	MacZip	MacZip	ZIP 	pair since macstamp c018dd4; census 12
+PIT 	PackIt	PackIt	PIT 	pair; census 2
+NCdc	NowComp	Expand Now (Now Compress)	NCar	pair; census 1
+Gzip	Gzip	MacGzip	Gzip	pair
+MB2P	MacBin	MacBinary II+	BINA,TEXT	pair
+TIGR	Tiger	Tiger	BINA	pair (AppleSingle)
+S691	suntar	suntar	TARF	pair
+LZIV	Compress	MacCompress	ZIVU,ZIVM	pair
+LARC	MacLHa	MacLHa	LHA 	pair
+arc*	ArcMac	ArcMac	mArc,ARC7	pair
+MARc	MAR	Hampa's Mac application	MARd,MARf,ZIVU,LZ4-	the maintainer

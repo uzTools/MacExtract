@@ -269,10 +269,12 @@ seven glue routines linked today total 298 B (`FSRead` 58, `FSWrite` 58,
 `SetFPos` 42, `GetEOF` 38, `SetEOF` 36, `FlushVol` 36, `FSClose` 30;
 measured, `nm -S`).
 
-## The double-click helpers: what is left before they ship
+## The double-click helpers: what is left
 
-`companion/` works (DECISIONS.md 2026-10-11, *the stub that hands it on*) and
-ships later, on MacExtract's own floppy. Left:
+`companion/` works (DECISIONS.md 2026-10-11, *the stub that hands it on*);
+its sixteen helpers are in `dist/` and on both disk images since
+2026-11-04, in no release yet (DECISIONS.md 2026-11-04, *the helpers in
+dist*). Left:
 
 - **Which of a file's two dates System 7 compares** between two applications
   of one creator. Not separated.

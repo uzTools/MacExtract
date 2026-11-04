@@ -55,19 +55,35 @@ def bndl(owner, ntypes):
     return owner + struct.pack(">hH", 0, 1) + b"ICN#" + icn + b"FREF" + fref
 
 
-def main():
-    ap = argparse.ArgumentParser(description=__doc__,
-                                 formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("stub", help="the stub build's MacBinary (Stub.bin)")
-    ap.add_argument("--creator", required=True)
-    ap.add_argument("--types", nargs="+", required=True,
-                    help="document types this creator writes")
-    ap.add_argument("-o", "--out", required=True)
-    a = ap.parse_args()
-    creator = ostype(a.creator)
-    types = [ostype(t) for t in a.types]
+def unc_version():
+    """UNC_VERSION, from include/macextract.h: the helpers carry
+    MacExtract's own version (the maintainer, 2026-11-04)."""
+    for line in open(os.path.join(ROOT, "include", "macextract.h")):
+        if line.startswith("#define UNC_VERSION "):
+            return line.split('"')[1]
+    raise SystemExit("make_stub: no UNC_VERSION in include/macextract.h")
 
-    h, d, r = D.macbin_split(open(a.stub, "rb").read())
+
+def vers(version, what):
+    """A 'vers' resource. Source: the Rez template in Retro68's
+    Multiverse.r — major, minor-and-bug-fix, stage (release $80),
+    non-release revision, region (verUS 0), short and long version
+    strings. Filled as mac/macextract_icons.r fills MacExtract's: byte 2 is
+    the minor written as two hex digits that read as the number, since the
+    field's BCD nibbles cannot hold a minor over 9."""
+    major, minor = (int(x) for x in version.split(".")[:2])
+    sv, lv = version.encode("mac_roman"), f"{version}, {what}".encode("mac_roman")
+    return (bytes([int(str(major), 16), int(str(minor % 100), 16), 0x80, 0])
+            + struct.pack(">h", 0) + bytes([len(sv)]) + sv
+            + bytes([len(lv)]) + lv)
+
+
+def stamp(stub, creator, types, name=None, version=None):
+    """The stub build's MacBinary `stub` made the helper for `creator`
+    (four bytes) and `types` (a list of four-byte codes), named `name` in
+    its MacBinary header if given, carrying `version` (MacExtract's
+    UNC_VERSION by default) in 'vers' 1, which Get Info shows."""
+    h, d, r = D.macbin_split(stub)
     res, fattr = D.rsrc_read(r)
     if any(t in (b"BNDL", b"FREF") + FAMILY for t, *_ in res):
         raise SystemExit("make_stub: the stub build already has a bundle")
@@ -80,12 +96,34 @@ def main():
     res.append((b"BNDL", 128, PURGEABLE, None, bndl(creator, len(types))))
     sig = b"MacExtract helper"
     res.append((creator, 0, PURGEABLE, None, bytes([len(sig)]) + sig))
+    res.append((b"vers", 1, PURGEABLE, None,
+                vers(version or unc_version(), "MacExtract helper")))
 
     h = bytearray(h)
+    if name is not None:
+        # Source: the MacBinary II header, as tools/vmac/deskclaim.py reads
+        # it: the name's length at 1 and its bytes from 2, 63 at most.
+        n = name.encode("mac_roman")[:63]
+        h[1:65] = bytes([len(n)]) + n + b"\0" * (63 - len(n))
     h[69:73] = creator
     flags = ((h[73] << 8) | h[101] | HAS_BUNDLE) & ~INITED
     h[73], h[101] = flags >> 8, flags & 0xFF
-    open(a.out, "wb").write(D.macbin_join(bytes(h), d, D.rsrc_write(res, fattr)))
+    return D.macbin_join(bytes(h), d, D.rsrc_write(res, fattr))
+
+
+def main():
+    ap = argparse.ArgumentParser(description=__doc__,
+                                 formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("stub", help="the stub build's MacBinary (Stub.bin)")
+    ap.add_argument("--creator", required=True)
+    ap.add_argument("--types", nargs="+", required=True,
+                    help="document types this creator writes")
+    ap.add_argument("--name", help="the file name in the MacBinary header")
+    ap.add_argument("-o", "--out", required=True)
+    a = ap.parse_args()
+    out = stamp(open(a.stub, "rb").read(), ostype(a.creator),
+                [ostype(t) for t in a.types], a.name)
+    open(a.out, "wb").write(out)
     print(f"make_stub: {a.out}: creator {a.creator}, types {' '.join(a.types)}")
 
 
