@@ -505,6 +505,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-04 (the corpus past the sample) — the whole corpus at both 512 KB tiers refuses nine real archives, all StuffIt 5 Arsenic blocks larger than the grant; no layout recovers one, so the compact-layout and small-item RAM work has no 512 KB target
 - 2026-11-04 (the rung between the table and the index) — Arsenic gets a 2.5-byte inverse-BWT table between the 3-byte one and the sampled index, taken only when the 3-byte one cannot be allocated: a2basic at 1 MB −14.4 % engine time, 4 MB unmoved, for 256 B of StuffIt image
 - 2026-11-04 (the padding six files never had) — six corpus archives filed as truncated are whole MacBinary I files with no padding after the data fork; the Compact Pro self-extractors among them run from that layout, while StuffIt Expander 4.0.2, unar and this engine refuse it
+- 2026-11-04 (the code that ran before the release) — no resident shell code is worth moving into the bundle: what runs before the images are released also runs during extraction, or before the bundle is read
 
 ---
 
@@ -21012,3 +21013,19 @@ open (OPEN_ITEMS.md, *MacBinary I without padding*).
 
 **Not run:** StuffIt or Compact Pro proper (only the two self-extractors
 and Expander 4.0.2), and the application on the other five.
+## 2026-11-04 (the code that ran before the release) — no resident shell code is worth moving into the bundle: what runs before the images are released also runs during extraction, or before the bundle is read
+
+**Claim (measured, from the shipped build's symbol table and a call graph
+off its disassembly, 2026-11-04).** Of the resident functions reached on
+the way to `ovl_release_if_unwanted`, the set-membership tests
+`SplitPartOf` (122 B) and `ZipFamPartOf` (216 B) are called again from
+`SegScanFamily` when a set asks for its next part, mid-extraction;
+`RepNew`, `ShowNote` and `SegDriveOf` by the report and the set dialog;
+`unc_segment_describe` by `unc_sitseg_extract`. `unc_mac_start` (102 B)
+and `main`'s initialisation run before `ovl_preload` has read the bundle,
+so they cannot be in it. Only `DestIconLoad` (36 B) runs strictly before
+the release, against an 18 B entry stub.
+
+**Consequence:** nothing moved; at most 18 B was on offer, and an image
+that a set's later part calls back into would have to stay kept, which
+costs that format its whole size.
