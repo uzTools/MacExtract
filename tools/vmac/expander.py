@@ -99,7 +99,11 @@ TYPES = {
     "StuffIt 5": ("SIT!", "SIT!"),
     "Compact Pro": ("PACT", "CPCT"),
     "BinHex 4": ("TEXT", "ttxt"),
-    "MacBinary": ("BINA", "????"),
+    # Not `BINA`: Expander's dialog does not list it, and its FREFs name
+    # only APPL, ****, fold, disk, SITD and SIT!. Typed TEXT, a MacBinary
+    # file is listed and decoded (measured 2026-11-04, seven files; DECISIONS.md
+    # 2026-11-04, *the padding six files never had*).
+    "MacBinary": ("TEXT", "ttxt"),
 }
 
 

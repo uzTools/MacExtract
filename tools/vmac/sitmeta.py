@@ -533,7 +533,10 @@ def run_boot(archives, tag, emu, system, quiet):
             time.sleep(1.0)
             shot(mac + "-selected")
             m.click(*X.EXPAND_BUTTON)
-            X.last_change(m, scratch, 1.5, quiet, 900.0)
+            # Until the screen has held still `quiet` seconds. This was
+            # expander.last_change, which 7bacda9 replaced with macclock's
+            # stopwatch; only the wait was ever used here.
+            m.settle(scratch, interval=1.5, timeout=900.0, quiet=quiet)
             shot(mac + "-done")
             m.key("Return")
             time.sleep(1.5)

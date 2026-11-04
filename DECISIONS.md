@@ -20990,6 +20990,16 @@ not tell: it was confirmed on the data fork, which starts at 128 in
 either layout (BLOCKERS.md, *Withdrawn claims*). The engine reads the
 layout since the same day (*the six read whole*).
 
+**Where they came from (a hypothesis; the writer is not identified).** The
+layout is one writer's habit, not damage: every unpadded file here is
+MacBinary I from nic.funet.fi (59), while all its MacBinary II files are
+padded and only 11 of its MacBinary I ones are. 54 of the 59 carry a
+modification date in 1905-1907, near zero, where the 11 padded ones carry
+1991-1994, so the writer probably did not run on a Macintosh. The 53 with
+no resource fork extract anywhere that tolerates a missing final pad;
+StuffIt Expander 4.0.2 does not (`adobenumbers.sit`: "a disk related error
+(-39)", measured once, 2026-11-04).
+
 **The other ten, tried.**
 
 - `guysmaccontacts.sea` is cut. Its data fork stops at 114,644 of
