@@ -47,16 +47,43 @@
  * resident on the Macintosh while this reader is an overlay. */
 
 /* Stream `size` fork bytes from the current position to the sink,
- * then skip the padding up to a 128-byte boundary.
+ * then skip `pad` bytes of padding.
  * Returns UNC_OK or an error; short input yields UNC_ERR_TRUNCATED
  * after delivering what was available. */
 static int mb_stream_fork(UncCtx *c, UncFork fork, uint32_t size,
-                          uint8_t *buf, uint32_t bufsz)
+                          uint32_t pad, uint8_t *buf, uint32_t bufsz)
 {
     int err = unc_copy_fork(c, fork, size, buf, bufsz);
     if (err != UNC_OK) return err;
-    /* Skip zero padding to the next 128-byte boundary. */
-    return unc_skip(c->io, MB_PAD(size) - size);
+    return unc_skip(c->io, pad);
+}
+
+/* Whether a MacBinary I file left out the padding after its data fork.
+ * Some writer did, for 59 files of the nic.funet.fi archive here, six of
+ * them with a resource fork (DECISIONS.md 2026-11-04, *the padding six
+ * files never had*); read as padded, those are "truncated". Taken only
+ * where the file is exactly 128 + data + resource bytes and the resource
+ * fork's own header, read where the fork would then start, puts the map
+ * at the fork's end: a padded file cut short to that length would also
+ * need those 16 bytes to agree. II and III carry a CRC and have not been
+ * seen without padding.
+ * Source: reference/sumacc/h/res.h, struct resfile — offset to data,
+ * offset to map, length of data, length of map, four longs. */
+static int mb_unpadded(UncCtx *c, int v, uint32_t d, uint32_t r)
+{
+    uint8_t h[16];
+    unc_off_t n;
+    uint32_t doff, moff, dlen;
+    if (v != 1 || r < 16 || !(d & 127u) || !c->io->size) return 0;
+    n = c->io->size(c->io->ctx);
+    if (n == UNC_OFF_UNKNOWN || d > UNC_U32_MAX - MB_HDR - r ||    /* no wrap */
+        (unc_off_t)(d + r + MB_HDR) != n) return 0;
+    if (unc_read_at(c->io, MB_HDR + d, h, 16) != UNC_OK) return 0;
+    doff = unc_get_u32be(h);
+    moff = unc_get_u32be(h + 4);
+    dlen = unc_get_u32be(h + 8);
+    return moff <= r && unc_get_u32be(h + 12) == r - moff &&
+           doff <= moff && dlen <= moff - doff;
 }
 
 int unc_macbinary_extract(UncCtx *c)
@@ -65,7 +92,7 @@ int unc_macbinary_extract(UncCtx *c)
     UncEntryInfo e;
     uint32_t datasize, rsrcsize, extsize, cmtlen, bufsz, need;
     uint8_t *buf;
-    int err, sret;
+    int err, sret, v, unp;
 
     err = unc_read_at(c->io, 0, hdr, MB_HDR);
     if (err != UNC_OK) return err;
@@ -87,7 +114,8 @@ int unc_macbinary_extract(UncCtx *c)
      * macbinary_specs_theunarchiver.md, the original standard's
      * amendment, which II adopts). MacBinary I has no field: the probe
      * holds 99..125 at zero for it. */
-    cmtlen = unc_macbinary_meta(&e, hdr) >= 2 ? unc_get_u16be(hdr + 99) : 0;
+    v = unc_macbinary_meta(&e, hdr);
+    cmtlen = v >= 2 ? unc_get_u16be(hdr + 99) : 0;
     if (cmtlen > UNC_ENTRY_COMMENT_MAX) cmtlen = UNC_ENTRY_COMMENT_MAX;
     e.data_size    = datasize;
     e.rsrc_size    = rsrcsize;
@@ -124,14 +152,20 @@ int unc_macbinary_extract(UncCtx *c)
     err = UNC_OK;
     if (!c->opt.list_only) {
         if (!buf) err = UNC_ERR_MEM;
+        /* Before the seek below: the test reads the file elsewhere. */
+        unp = mb_unpadded(c, v, datasize, rsrcsize);
         if (err == UNC_OK) {
             /* Data fork begins after the (padded) secondary header. */
             if (c->io->seek(c->io->ctx, MB_HDR + MB_PAD(extsize)) < 0)
                 err = UNC_ERR_IO;
             if (err == UNC_OK)
-                err = mb_stream_fork(c, UNC_FORK_DATA, datasize, buf, bufsz);
+                err = mb_stream_fork(c, UNC_FORK_DATA, datasize,
+                                     unp ? 0 : MB_PAD(datasize) - datasize,
+                                     buf, bufsz);
             if (err == UNC_OK)
-                err = mb_stream_fork(c, UNC_FORK_RSRC, rsrcsize, buf, bufsz);
+                err = mb_stream_fork(c, UNC_FORK_RSRC, rsrcsize,
+                                     unp ? 0 : MB_PAD(rsrcsize) - rsrcsize,
+                                     buf, bufsz);
         }
     }
 

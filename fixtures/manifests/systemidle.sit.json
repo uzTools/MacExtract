@@ -4,10 +4,11 @@
    "creator": "SIT!",
    "data_sha256": "8fd96d72fad3f599710b187834dd57fcd24fcc103491a47119d07556198603f2",
    "data_size": 18509,
+   "finder_flags": 0,
    "name": "SystemIdle.Sit",
-   "rsrc_oracle": "MacBinary container arithmetic",
-   "rsrc_sha256": "f519e1da6ac0edbeab4c299f6871601caee2879969822ec824358a34c0987d49",
-   "rsrc_size": 235,
+   "rsrc_oracle": "MacBinary container arithmetic, unpadded",
+   "rsrc_sha256": "e641e31461cfcbd688b73b8974be1bf0a8b92b59edcfb0255d101cb93642ae55",
+   "rsrc_size": 286,
    "type": "SIT!"
   }
  ],

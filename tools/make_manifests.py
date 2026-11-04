@@ -699,14 +699,26 @@ def adjudicate_with_deark(fixture_path, entries):
 #     file by 36,045 B and whose resource fork is therefore not present
 #     at all); or
 #   - the entry's OTHER fork is already adjudicated by an oracle and
-#     the same arithmetic reproduces it byte for byte, which pins both
-#     offsets on that file (the six MacBinary I fixtures, where the
-#     data fork is unar's and the resource fork is the remainder).
+#     the same arithmetic reproduces it byte for byte. That pins the
+#     data fork's offset only: it starts at 128 whether or not the
+#     writer padded it, so it cannot tell where the resource fork
+#     starts (BLOCKERS.md, *Withdrawn claims*, 2026-11-04).
+#
+# **Six MacBinary I fixtures were written with no padding after the data
+# fork** (DECISIONS.md 2026-11-04, *the padding six files never had*).
+# Their resource fork starts at 128 + data, and it is read there only on
+# the evidence fmt_macbinary.c requires: MacBinary I, the file exactly
+# 128 + data + resource bytes, and the fork's own header (offset and
+# length of its map, reference/sumacc/h/res.h) ending at the fork's end
+# — the file's bytes agreeing with themselves, not with this engine.
 #
 # The layout itself is not assumed either: it reproduces both forks of
 # **174 undamaged MacBinary fixtures**, every one in the corpus with a
 # single entry and two adjudicated forks, with no mismatch.
 MACBINARY_ID = "MacBinary container arithmetic"
+# The same, on a whole file in the unpadded layout: the forks are complete,
+# so `run_diff.py` grades them byte for byte and does not expect them cut.
+MACBINARY_UNPADDED_ID = "MacBinary container arithmetic, unpadded"
 
 
 def _crc16_ccitt(data):
@@ -729,9 +741,9 @@ def macbinary_slices(path):
 
 
 def macbinary_slices_bytes(d):
-    """(data_bytes, rsrc_bytes, crc_ok) as the container places them,
-    clipped to where the bytes actually end; None if the header is not
-    a MacBinary one."""
+    """(data_bytes, rsrc_bytes, crc_ok, unpadded) as the container places
+    them, clipped to where the bytes actually end; None if the header is
+    not a MacBinary one."""
     if len(d) < 128 or d[0] != 0 or d[74] != 0 or d[82] != 0:
         return None
     if not 1 <= d[1] <= 63:
@@ -739,10 +751,18 @@ def macbinary_slices_bytes(d):
     dlen = int.from_bytes(d[83:87], "big")
     rlen = int.from_bytes(d[87:91], "big")
     rstart = 128 + (dlen + 127) // 128 * 128
+    unpadded = False
+    if (not any(d[99:126]) and dlen % 128 and rlen >= 16
+            and len(d) == 128 + dlen + rlen):
+        moff = int.from_bytes(d[128 + dlen + 4:128 + dlen + 8], "big")
+        mlen = int.from_bytes(d[128 + dlen + 12:128 + dlen + 16], "big")
+        if moff <= rlen and mlen == rlen - moff:
+            rstart = 128 + dlen         # MacBinary I with no padding
+            unpadded = True
     crc = int.from_bytes(d[124:126], "big")
     return (d[128:min(len(d), 128 + dlen)],
             d[min(len(d), rstart):min(len(d), rstart + rlen)],
-            crc != 0 and crc == _crc16_ccitt(d[0:124]))
+            crc != 0 and crc == _crc16_ccitt(d[0:124]), unpadded)
 
 
 def adjudicate_from_macbinary(fixture_path, fmt, entries):
@@ -783,7 +803,7 @@ def adjudicate_from_macbinary(fixture_path, fmt, entries):
             continue
         e[fork + "_size"] = len(blobs[fork])
         e[fork + "_sha256"] = hashlib.sha256(blobs[fork]).hexdigest()
-        e[fork + "_oracle"] = MACBINARY_ID
+        e[fork + "_oracle"] = MACBINARY_UNPADDED_ID if got[3] else MACBINARY_ID
         del un[fork]
         filled += 1
     if not un:

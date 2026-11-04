@@ -4,10 +4,11 @@
    "creator": "SIT!",
    "data_sha256": "5671df6f7bcb47c522678811bf2e0ff5f4b842ce5290b3e4aa549be68c67f709",
    "data_size": 50187,
+   "finder_flags": 0,
    "name": "SigmaEdit.sit",
-   "rsrc_oracle": "MacBinary container arithmetic",
-   "rsrc_sha256": "ca229ce865a4eb7dfd236cccf3c983a301eff47e663b837d1568997ede3e28c1",
-   "rsrc_size": 348,
+   "rsrc_oracle": "MacBinary container arithmetic, unpadded",
+   "rsrc_sha256": "bb9d0cc5cc6734db910a44323e3218aad8cf39a8a2a8fb5d511b771e01c56360",
+   "rsrc_size": 465,
    "type": "SIT!"
   }
  ],

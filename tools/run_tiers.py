@@ -248,10 +248,14 @@ REPO = os.path.dirname(HERE)
 # nothing*), the control's CODE +72 and A5 -8; OVL_SAVED +64 offsets it,
 # and the DiskDoubler image's +12 takes that much back from its formats.
 # They were 191,108 / 95,726 / 620,014.
+# **-256 more each the same day, DERIVED**: MacBinary I without padding
+# (DECISIONS.md 2026-11-04, *the six read whole*), the control's CODE +264 and A5 -8;
+# OVL_SAVED +256 offsets it, and the BinHex image's +264 takes that much
+# back from the formats it keeps. They were 191,044 / 95,662 / 619,950.
 TIERS = {
-    "sys3-512K": (191044, "System 3.0, Macintosh 512Ke (222,070 B free)"),
-    "sys6-512K": (95662,  "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
-    "floor-1M":  (619950, "System 6.0.8, 1 MB Mac Plus — the floor target"),
+    "sys3-512K": (190788, "System 3.0, Macintosh 512Ke (222,070 B free)"),
+    "sys6-512K": (95406,  "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
+    "floor-1M":  (619694, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
 # **-592 more each 2026-10-24, DERIVED**: SUMacC's `.dl`, the control's
 # CODE +584 and A5 +8 (DECISIONS.md 2026-10-24, *the format before
@@ -455,8 +459,9 @@ TIERS = {
 # data + bss -680. The machine gave +4,204, because the jump table, the
 # stub segments and the relocations trimmed at launch are resident bytes
 # this unit never counted — which is why TIERS was measured, not moved.
-TIERS_CONTROL = 221888     # build/mac-resident, CODE + A5, 2026-11-04
+TIERS_CONTROL = 222144     # build/mac-resident, CODE + A5, 2026-11-04
 # +64 the same day: the fuzzer's null-pointer offsets; TIERS -64.
+# +256 the same day: MacBinary I without padding; TIERS -256.
 # +256 the same day: Arsenic's 2.5-byte table; TIERS -256.
 # -96 the same day: HoldUI out, MaxApplZone in; TIERS +96 (and -10).
 # +128 on 2026-11-04: HoldUI; TIERS -128.
@@ -957,7 +962,10 @@ EXPECT = {
 # found, the control's +64 (CODE +72, A5 -8) against the shipped pair's 0:
 # the DiskDoubler one is in `ovl_cptdd` (+12) (DECISIONS.md 2026-11-04,
 # *the offsets from nothing*). TIERS -64.
-OVL_SAVED = 165504
+# **+256 the same day, -> 165,760**: MacBinary I without padding, the
+# control's +256 (CODE +264, A5 -8) against the shipped pair's 0: the
+# reader is in `ovl_binhex` (DECISIONS.md 2026-11-04, *the six read whole*). TIERS -256.
+OVL_SAVED = 165760
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
 # every kept image is one — as is the bundle an envelope holds on to.
@@ -1092,7 +1100,7 @@ OVL_RESIDUE = -322
 # own Finder info*).
 IMAGES = {
     "OVL_ID_ARC":         7696,
-    "OVL_ID_BINHEX":      7158,
+    "OVL_ID_BINHEX":      7422,
     "OVL_ID_BTOA":        2496,
     "OVL_ID_CODECS":      6016,
     "OVL_ID_CPTDD":       15168,
@@ -1211,7 +1219,9 @@ IMAGES = {
 # **CPTDD +12, the bundle +12 B, the same day**: method 10's block of no
 # literals and no offsets takes no offset from NULL (DECISIONS.md
 # 2026-11-04, *the offsets from nothing*).
-BUNDLE = 194292
+# **BINHEX +264, the bundle +264 B, the same day**: MacBinary I without
+# padding is read where the file proves it (DECISIONS.md 2026-11-04, *the six read whole*).
+BUNDLE = 194556
 
 # What the SHIPPED lane asserts, and it is the refused fixtures BY NAME
 # rather than a tally: a tier that refuses two different fixtures and still

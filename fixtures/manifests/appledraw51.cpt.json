@@ -4,10 +4,11 @@
    "creator": "EXTR",
    "data_sha256": "b593cc349f0bb4094369c577da2bf6f174e7ea6bdcfb45bed9be945737d99968",
    "data_size": 78123,
+   "finder_flags": 8192,
    "name": "•Draw 5.1.cpt",
-   "rsrc_oracle": "MacBinary container arithmetic",
-   "rsrc_sha256": "f909cf97f5526adff90789db217279477799ec75b78fd9f2463b071460172f05",
-   "rsrc_size": 13036,
+   "rsrc_oracle": "MacBinary container arithmetic, unpadded",
+   "rsrc_sha256": "ae832555841fe5938ad47dc60b6f3c5bcd5499d69a3b0f206faf0d84281b6de4",
+   "rsrc_size": 13121,
    "type": "APPL"
   }
  ],

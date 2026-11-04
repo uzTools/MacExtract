@@ -705,7 +705,11 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # offsets the fuzzer found (DECISIONS.md 2026-11-04, *the offsets from
 # nothing*); DiskDoubler's test inlines into more than one caller here,
 # where `ovl_cptdd` pays 12 B.
-UNC_MAC_CODE_DEFAULT=185232
+# +264 the same day, 185,232 -> 185,496, A5 -8 below: MacBinary I without
+# padding (DECISIONS.md 2026-11-04, *the six read whole*), the file-size test
+# and the second skip in fmt_macbinary.c; `ovl_binhex` +264, the shipped
+# pair unmoved.
+UNC_MAC_CODE_DEFAULT=185496
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -932,7 +936,9 @@ UNC_MAC_CODE_DEFAULT=185232
 # 2.5-byte table (above); sit_arsenic.o's .rodata and .data are unmoved.
 # -8 the same day, 36,664 -> 36,656: `.data` alignment under the fuzzer's
 # fixes (above); no data was added or removed.
-UNC_MAC_A5_DEFAULT=36656
+# -8 the same day, 36,656 -> 36,648: `.data` alignment under the unpadded
+# MacBinary test (above); no data was added or removed.
+UNC_MAC_A5_DEFAULT=36648
 # A CEILING PER CONFIGURATION, because one ceiling measured on another build
 # cannot fire. The figures above are the RESIDENT control build, which carries
 # every decoder; the shipped build's resident code is a third of that, so

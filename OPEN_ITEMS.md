@@ -214,18 +214,6 @@ costs the engine*).
 | the overlay shims, `mac/ovl_shim.c` | 2,462 B of code | ~25 dispatchers of one shape; a table might be a third of that |
 | the relocator, `Retro68Relocate` and `Retro68ApplyRelocations` | 1,656 B of code | Elf2Mac places it at the start of `.text`; needs a layout Elf2Mac does not offer |
 
-## MacBinary I without padding: six whole archives refused
-
-Six corpus files from nic.funet.fi put the resource fork straight after
-the data fork, with no padding to 128 (DECISIONS.md 2026-11-04, *the
-padding six files never had*). This engine, `unar` and StuffIt Expander
-4.0.2 call them truncated; Compact Pro's own self-extractors, two of the
-six, run from that layout and extract byte-exact. Closing it: read the
-layout where a file is exactly 128 + data + resource bytes and the fork's
-own header at 128 + data ends at the fork's end (not priced), and
-re-adjudicate the six manifests' resource-fork hashes, which grade the
-bytes at the padded offset, in the same commit.
-
 ## Formats classic Mac programs wrote that nothing here opens — leads, not findings
 
 From Macintosh Repository's *Compression & Archiving* category, read

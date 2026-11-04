@@ -507,6 +507,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-04 (the padding six files never had) — six corpus archives filed as truncated are whole MacBinary I files with no padding after the data fork; the Compact Pro self-extractors among them run from that layout, while StuffIt Expander 4.0.2, unar and this engine refuse it
 - 2026-11-04 (the code that ran before the release) — no resident shell code is worth moving into the bundle: what runs before the images are released also runs during extraction, or before the bundle is read
 - 2026-11-04 (the offsets from nothing) — the per-decoder fuzzer's first run found two pointer offsets taken from NULL, one in the 2.5-byte rung landed the same day; gcc's UBSan, the only one ci.sh ran, cannot see either
+- 2026-11-04 (the six read whole) — MacBinary I without padding after the data fork is read where the file is exactly that long and the resource fork's own header ends at the fork's end: six funet archives extract, for 264 B of the BinHex image and no tally
 
 ---
 
@@ -20986,8 +20987,8 @@ past the padded offset (its reserved header aside) and 48 zeros.
 damaged. The arithmetic that graded their resource forks (2026-09-22,
 *the container is the oracle*) read the wrong 234-13,036 bytes and could
 not tell: it was confirmed on the data fork, which starts at 128 in
-either layout (BLOCKERS.md, *Withdrawn claims*). Reading the layout is
-open (OPEN_ITEMS.md, *MacBinary I without padding*).
+either layout (BLOCKERS.md, *Withdrawn claims*). The engine reads the
+layout since the same day (*the six read whole*).
 
 **The other ten, tried.**
 
@@ -21060,3 +21061,42 @@ gains a clang UBSan unit-test lane (skipped without clang).
 same; `ovl_stuffit` unmoved (`sit_arsenic.o` the same size at -Os). The
 resident control CODE +72 and A5 −8, so `OVL_SAVED` +64 and `TIERS` −64
 each, re-taken; only DiskDoubler's grant falls (12 B). No tally moves.
+
+## 2026-11-04 (the six read whole) — MacBinary I without padding after the data fork is read where the file is exactly that long and the resource fork's own header ends at the fork's end: six funet archives extract, for 264 B of the BinHex image and no tally
+
+**Claim (measured).** `unc_macbinary_extract` reads the resource fork at
+128 + data, and skips no padding, where four things hold: the header is
+MacBinary I, the data fork is not a multiple of 128, the file is exactly
+128 + data + resource bytes, and the fork's own header there puts its map
+at the fork's end (`reference/sumacc/h/res.h`, struct resfile). Anything
+else reads as before. The six funet files of *the padding six files never
+had* extract with every CRC, their resource forks the file's own bytes;
+`guysmaccontacts.sea`, which is cut, still fails.
+
+**Evidence.** `test_macbinary_unpadded`: the same forks padded and
+unpadded are both read, and one byte too many, a map that does not end at
+the fork's end, and a MacBinary II header are each refused. Removing any of
+the four conditions fails it (shown before it was trusted). The six
+manifests are re-graded by `make_manifests.py` under the same test, with
+their own oracle name, so `run_diff.py` grades them byte for byte instead of
+asserting them cut: the MacBinary differential is 237/237 with the change
+and fails exactly the six without it.
+
+**Cost (measured).** `ovl_binhex` +264 B (7,158 -> 7,422), the bundle the
+same; the shipped CODE and A5 unmoved; the resident control's CODE +264
+and A5 -8 (alignment), so `OVL_SAVED` +256 and `TIERS` -256, and the
+formats that keep the BinHex image, BinHex and MacBinary, are granted 8 B
+less. `unc_macbinary_extract`'s frame 540 -> 564 B, far off the engine's
+deepest chain; the peak heap of a MacBinary extraction unmoved (8,192 B on
+five fixtures, both builds). `run_tiers.py --check` moves no tally; the
+whole corpus goes 953 -> 959 at both 512 KB tiers and 972 -> 978 at 1 MB,
+the six and nothing else. The download +256 B.
+
+**Why only MacBinary I.** Every unpadded file seen is MacBinary I, and all
+141 MacBinary II files from the same archive are padded; II and III carry
+a CRC over their lengths, and nothing has shown one of them written this
+way.
+
+**Not run:** the application on any of the six (the reader is the same
+code on both hosts; the Mac's file size comes from the same `size`
+callback, measured only on Linux).

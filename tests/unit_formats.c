@@ -191,6 +191,69 @@ static void mb_recrc(uint8_t *b)
     b[124] = (uint8_t)(crc >> 8); b[125] = (uint8_t)crc;
 }
 
+/* MacBinary I written with no padding after the data fork (DECISIONS.md
+ * 2026-11-04, *the padding six files never had*): read where the file is
+ * exactly that long and the resource fork's own header ends at the fork's
+ * end, and nowhere else. */
+static void mb_unpadded_run(const uint8_t *arc, uint32_t len,
+                            uint32_t rsrc_at, int whole)
+{
+    MemIO m;
+    UncIO io;
+    UncAlloc al;
+    UncSink sk;
+    CapSink cap;
+    test_make_memio(&io, &m, arc, len);
+    test_make_alloc(&al);
+    cap_make(&sk, &cap);
+    unc_extract_as(UNC_FORMAT_MACBINARY, &io, &sk, &al, NULL, NULL);
+    CHECK(cap.count == 1);
+    CHECK(cap.dlen[0] == 11 && memcmp(cap.data[0], "hello, fork", 11) == 0);
+    if (whole) {
+        CHECK(cap.status[0] == UNC_OK);
+        CHECK(cap.rlen[0] == 46 && memcmp(cap.rsrc[0], arc + rsrc_at, 46) == 0);
+    } else {
+        /* Read as padded, past the end: under the CLI "file is truncated";
+         * this MemIO refuses the seek over the absent padding instead. */
+        CHECK(cap.status[0] != UNC_OK);
+        CHECK(cap.rlen[0] < 46);
+    }
+}
+
+static void test_macbinary_unpadded(void)
+{
+    uint8_t arc[1024], rsrc[46];
+    uint32_t len;
+    /* A resource fork with no resources: header (data at 16, map at 16,
+     * no data, a 30-byte map), then the map, which opens with a copy of
+     * the header. */
+    memset(rsrc, 0, sizeof rsrc);
+    rsrc[3] = 16; rsrc[7] = 16; rsrc[15] = 30;
+    memcpy(rsrc + 16, rsrc, 16);
+    rsrc[16 + 25] = 0x1C; rsrc[16 + 27] = 0x1E;
+    rsrc[16 + 28] = 0xFF; rsrc[16 + 29] = 0xFF;
+
+    len = mb_synth(arc, "test.txt", "hello, fork", 11, (const char *)rsrc, 46);
+    memset(arc + 99, 0, 27);                /* MacBinary I: no CRC, 99..125 zero */
+    mb_unpadded_run(arc, len, 256, 1);      /* padded, as before */
+
+    /* The same forks back to back. */
+    memmove(arc + 128 + 11, arc + 256, 46);
+    len = 128 + 11 + 46;
+    mb_unpadded_run(arc, len, 128 + 11, 1);
+    /* One byte more than the forks: not that layout. */
+    arc[len] = 0;
+    mb_unpadded_run(arc, len + 1, 0, 0);
+    /* A fork header whose map does not end at the fork's end. */
+    arc[128 + 11 + 15] = 29;
+    mb_unpadded_run(arc, len, 0, 0);
+    arc[128 + 11 + 15] = 30;
+    /* MacBinary II, which has a CRC, has not been seen without padding. */
+    arc[122] = 129; arc[123] = 129;
+    mb_recrc(arc);
+    mb_unpadded_run(arc, len, 0, 0);
+}
+
 static void test_macbinary_meta(void)
 {
     static const char cmt[] = "A comment after the resource fork.";
@@ -6111,6 +6174,7 @@ void run_format_tests(void)
 {
     test_malformed_regressions();
     test_macbinary();
+    test_macbinary_unpadded();
     test_macbinary_meta();
     test_applesingle();
     test_sidecar();
