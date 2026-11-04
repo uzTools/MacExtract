@@ -4086,8 +4086,8 @@ between the shipped pair against 116,720 B between the probe pair**, both
 probe pair has not been re-measured, so the 320 B is that day's
 difference, not today's.
 
-The bundle is **194,020 B** — the nineteen images sum to 193,774 B, so its
-index costs **246 B** (`tools/run_tiers.py` `BUNDLE`, `IMAGES`): a
+The bundle is **194,024 B** — the nineteen images sum to 193,780 B, so its
+index costs **244 B** (`tools/run_tiers.py` `BUNDLE`, `IMAGES`): a
 4-byte header, 12 bytes of directory per image and padding of each image to
 a multiple of 4 — the padding is why the index is not a constant. The
 bundle is not `ovl_bundle.r.rsrc.bin`, the Rez'd resource fork around it
@@ -4200,7 +4200,7 @@ left*).
 
 **The last row is the one no tally had shown**: a wrapper whose payload the
 peek cannot name keeps the bundle, and that layer runs with **less** memory than
-a resident build would give it — 194,020 B held against 165,184 B saved. Until
+a resident build would give it — 194,024 B held against 165,184 B saved. Until
 2026-11-03 that was every envelope, and it refused `a2ps.V4.3.tar.Z` and
 `popper-1.7.tar.Z` at System 6.0.8 / 512 KB; the peek names Tar from the first
 512 bytes and the `.Z` layer is granted 200,022 B there instead of 72,090 B
@@ -4254,9 +4254,10 @@ nothing calls; the linked figure is `tools/code_map.py`'s, below. (The rodata
 half was wrong 2026-09-19 to 09-23: it still counted `unc_crypt.c`'s three
 2,048-byte tables after they moved to key setup — *Where the code is*.)
 
-The application ships as **250,112 B** of MacBinary (`dist/MacExtract.bin`,
-`ls -l` 2026-11-04, with LZ4; it read 247,296 B before it). **47,744 B** is
-`MacExtract.code.bin`, read at launch and never purged, and **194,020 B** is
+The application ships as **250,240 B** of MacBinary (`dist/MacExtract.bin`,
+`ls -l` 2026-11-04, with LZ4; it read 247,296 B before it; CORRECTED the
+same day from 250,112). **47,744 B** is
+`MacExtract.code.bin`, read at launch and never purged, and **194,024 B** is
 the `'OVLY'` bundle, read at launch and mostly given back before the engine
 takes its budget (*Overlays*). What stays costs the heap one for one: the
 link produces a single `MacExtract.code.bin`, and `Elf2Mac/LdScript.cc`
@@ -5557,7 +5558,7 @@ data and relocations. 63,744 B was measured against 2026-09-01's build;
 `ApplLimit − ApplZone` = **78,568 B**, leaving 20,956 B for every buffer
 (*derived*; DECISIONS.md 2026-10-22, *the runtime the application did not
 need*). `CODE` has since fallen 2,584 B; the sum has not been re-derived. The
-eager loader then asks for the `'OVLY'` bundle as ONE **194,020 B** block
+eager loader then asks for the `'OVLY'` bundle as ONE **194,024 B** block
 (*Overlays*). The bound is the RAM under the screen buffer, so no smaller
 System moves it (*What the application costs the engine*); the margin is
 kilobytes, which is why MANUAL_TESTS.md §6's HD20 question is about a

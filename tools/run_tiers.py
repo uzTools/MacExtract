@@ -1088,7 +1088,7 @@ IMAGES = {
     "OVL_ID_TEXT":        11438,
     "OVL_ID_ZIPOLD":      15144,
     "OVL_ID_SNIFF":       14676,
-    "OVL_ID_DESTDLG":     1682,
+    "OVL_ID_DESTDLG":     1688,
     "OVL_ID_SEGSETUP":    2364,
 }
 # **ZIPOLD +3,374 B and EXO +972 B, the bundle +4,344 B, 2026-10-17**:
@@ -1182,7 +1182,10 @@ IMAGES = {
 # **ZIPOLD +2,580, SNIFF +112, the bundle +2,692 B, 2026-11-03**: the LZ4
 # frame's reader beside MAR's, its probe beside the others (DECISIONS.md
 # 2026-11-03, *the frame mar 0.2.0 reads*).
-BUNDLE = 194020
+# **DESTDLG +6, the bundle +4 B, 2026-11-04**: the Finder's icon is not
+# read on a 64K ROM, which has no OpenRFPerm (DECISIONS.md 2026-11-04,
+# *the icon the 64K ROM could not open*); in no keep set.
+BUNDLE = 194024
 
 # What the SHIPPED lane asserts, and it is the refused fixtures BY NAME
 # rather than a tally: a tier that refuses two different fixtures and still

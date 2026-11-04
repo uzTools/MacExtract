@@ -90,6 +90,7 @@ static void LoadFolderIcon(void)
         S.haveSICN = 1;
         return;
     }
+    if (*(const short *)0x028EL <= 0) return;   /* ROM85: no OpenRFPerm */
     cur = CurResFile();
     ref = OpenRFPerm(LMGetFinderName(), LMGetBootDrive(), fsRdPerm);
     if (ref == -1) return;

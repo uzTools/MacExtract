@@ -112,7 +112,7 @@ lacks (DECISIONS.md 2026-10-15, *the purge MaxApplZone never did*;
 
 | configuration | status |
 |---|---|
-| 64K ROM, floppies only | bombs `ID = 12` at launch, before any window — measured under emulation 2026-11-04, on 37ba9e4 and the build after it alike; on 2026-10-16 it started, and a real archive bombed `ID = 12` on an HFS call. The change between is not bisected |
+| 64K ROM, floppies only | starts, interface works, a real archive bombs `ID = 12` on an HFS call — measured under emulation; from v0.45.0 to 2026-11-04 it bombed at launch (DECISIONS.md 2026-11-04, *the icon the 64K ROM could not open*) |
 | 64K ROM **with an HD20 and its driver** | **unknown — the test.** The HD20 start-up software supplies the 128K-ROM File Manager (Inside Macintosh IV, *The Floppy Disk Interface*) |
 | 64K ROM with the `Hard Disk 20` file, no drive | unknown; hangs under emulation — *hypothesis*: the driver hunting for hardware |
 

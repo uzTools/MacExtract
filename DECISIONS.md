@@ -500,6 +500,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-04 (the helpers in dist) — the sixteen helpers ship in dist/ as one Finder-style zip MacExtract opens, and on both disk images in a "MacExtract Helpers" folder beside MacExtract, before any release
 - 2026-11-04 (the floppy that is ready) — the MacExtract floppy carries a Desktop file listing MacExtract and the helpers, so a Mac without a hard disk opens an archive from another floppy with the MacExtract floppy ejected; inited bits measured to change nothing
 - 2026-11-04 (the layouts the release did not hold) — the launch grows the heap with MaxApplZone where the ROM has it, which purges nothing: purged by MaxMem, the dialogs' preloaded layouts were read again from MacExtract's floppy, and a one-drive Mac's dialog opened there
+- 2026-11-04 (the icon the 64K ROM could not open) — the destination dialog reads the Finder's small icon only where the ROM has OpenRFPerm; since v0.45.0 a 64K-ROM Macintosh bombed at launch
 
 ---
 
@@ -20831,3 +20832,26 @@ destination dialog's New button has no folder icon at 512Ke in all three
 builds; not this. A second archive of one Finder list finds the layouts
 in memory unless the engine's run made the Memory Manager purge them (not
 measured).
+
+## 2026-11-04 (the icon the 64K ROM could not open) — the destination dialog reads the Finder's small icon only where the ROM has OpenRFPerm; since v0.45.0 a 64K-ROM Macintosh bombed at launch
+
+**Found while re-checking the heap fix on the emulated Macintosh 512K
+(64K ROM, MFS System 3.0)**: `ID = 12`, an unimplemented trap, at launch,
+before any window, where 2026-10-16's build opened Standard File.
+**Bisected over `dist/MacExtract.bin`** (one boot per committed binary):
+15471f7 starts, 7a3f1aa (v0.45.0) bombs. v0.45.0's destination dialog
+reads, at launch, the Finder's `SICN` 128 for its New button on Systems
+3.0 and 6.0.8 (*the dialogs that became the application*), through
+`OpenRFPerm` and `Get1Resource`, both 128K-ROM traps (Inside Macintosh
+IV). Its Gestalt call was guarded for that ROM; this was not.
+
+**Fix: the same `ROM85` test the Gestalt guard uses, before
+`OpenRFPerm`** (`tools/overlay/ovl_destdlg.c`, `LoadFolderIcon`). Measured:
+that build reaches Standard File on the 64K ROM; without the line, the
+same tree bombs `ID = 12`. A 64K ROM's New button has no folder icon,
+as no button had one before v0.45.0. The image +6 B, the bundle +4, in no
+keep set; resident `CODE` and A5 unmoved in all three builds, so no
+budget moves.
+
+**What let it through:** nothing runs the 64K ROM; it is MANUAL_TESTS.md
+§6's, by hand, and §6 still read "starts" from 2026-10-16.
