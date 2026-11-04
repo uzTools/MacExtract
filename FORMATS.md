@@ -3992,13 +3992,14 @@ bundle*.
 
 | build | switch | resident `CODE` | A5 | `MacExtract.code.bin` | `MacExtract.bin` |
 |---|---|---|---|---|---|
-| **eager — SHIPPED** | (default) | **39,728 B** | 16,752 B | **47,744 B** | **250,112 B** |
-| lazy | `UNC_OVL_LAZY=1` | 38,556 B | 16,756 B | 46,336 B | 244,864 B |
-| resident — the control | `UNC_OVL_RESIDENT=1` | **184,992 B** | **36,672 B** | 215,552 B | 223,872 B |
+| **eager — SHIPPED** | (default) | **39,672 B** | 16,712 B | **47,744 B** | **250,240 B** |
+| lazy | `UNC_OVL_LAZY=1` | 38,500 B | 16,764 B | 46,464 B | 244,992 B |
+| resident — the control | `UNC_OVL_RESIDENT=1` | **184,920 B** | **36,648 B** | 215,552 B | 224,000 B |
 
-Read off the builds 2026-11-04, after LZ4 and HoldUI (DECISIONS.md
-2026-11-04, *the frame mar 0.2.0 reads*, *the layouts the release did not
-hold*; 2026-11-03, *the archive that carries its own CRCs*, *the symbols no encoder writes*, *the fork that
+Read off the builds 2026-11-04, after LZ4 and the launch that purges
+nothing (DECISIONS.md 2026-11-04, *the frame mar 0.2.0 reads*, *the
+layouts the release did not hold*; the two file sizes CORRECTED the same
+day, 128 B stale since LZ4; 2026-11-03, *the archive that carries its own CRCs*, *the symbols no encoder writes*, *the fork that
 padded to nothing*, *the folders past the table*; 2026-11-01, *the Open
 item MultiFinder looks for*: +180 B of `CODE` and +12 B of A5 alignment,
 and twelve DiskDoubler types in the bundle; 2026-11-02, *the
@@ -4137,11 +4138,10 @@ unchanged while each grant rose the same 536 B as the control (DECISIONS.md
 ciphers, against no disk access after the archive is chosen (measured
 2026-09-24; the lazy lifetime is not shipped and not re-measured). Eager ships
 because on a one-drive Mac Plus the application's floppy may be out by then.
-That held for the images only until 2026-11-04: the destination dialog's and
-progress window's layouts, which no image carries, were purged under a tight
-heap and read again from the floppy; HoldUI holds them until the progress
-window is open (DECISIONS.md 2026-11-04, *the layouts the release did not
-hold*).
+From 2026-10-15 to 2026-11-04 that held for the images only: the launch's
+growth of the heap purged the dialogs' preloaded layouts, which no image
+carries, and they were read again from the floppy (DECISIONS.md 2026-11-04,
+*the layouts the release did not hold*).
 
 ### What each format is granted, against the control
 
@@ -4466,7 +4466,7 @@ output sections answer what the budget asks.
 630,496 B, measured 2026-10-22** (`-D UNC_OVL_RESIDENT -D UNC_AT_BUDGET`,
 `derived-PCCTS.tar`; `FreeMem()` less a flat 20 KB reserve), with 201,590
 and 106,208 B on the 512Ke tiers (*512 KB machines*). Lowered since by
-derivation to **620,184 B** (2026-11-04), one for one with the control's
+derivation to **620,270 B** (2026-11-04), one for one with the control's
 growth; `tools/run_tiers.py` (`TIERS`, `TIERS_CONTROL`, `TIERS_MACHINE`)
 holds the current figures and each step. Earlier machine figures: 634,364
 (2026-10-09), 653,532 (2026-09-27), 648,250 (2026-09-22), 648,100
@@ -5372,7 +5372,7 @@ build's budget; the shipped build grants 82–105 KB more.
 free heap (`sys30.py --emu mv-512Ke -D UNC_OVL_RESIDENT -D UNC_AT_BUDGET`,
 slots swapped per `tools/vmac/README.md`) less the flat 20,480 B reserve.
 Re-taken on the machine at **201,590 B** on 2026-10-22; `tools/run_tiers.py`
-now asserts **191,278 B**, derived from the control build's growth since
+now asserts **191,364 B**, derived from the control build's growth since
 (CORRECTED 2026-10-25: this read "205,476 B, the figure run_tiers.py
 asserts"). History of the figure: *Budget*.
 

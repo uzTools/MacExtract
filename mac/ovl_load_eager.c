@@ -10,8 +10,9 @@
  * 84-103 KB more than a resident build and needs NO disk access after the
  * archive has been chosen, which on a Mac Plus with one drive is the moment
  * the application's floppy may be out. That is the images'; the dialogs'
- * layouts, which no image carries, are held by mac/macextract_mac.c's
- * HoldUI until the progress window is open. The lazy one grants 894 B-10.7 KB
+ * layouts, which no image carries, are the resource file's preloads, which
+ * stay in memory because the launch grows the heap without purging
+ * (mac/macextract_mac.c, GrowApplZone). The lazy one grants 894 B-10.7 KB
  * more still, for a format that must keep the ciphers, and pays a disk
  * access per format instead.
  *

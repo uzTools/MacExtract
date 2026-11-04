@@ -259,38 +259,45 @@ static int HasPartition(void)
     return zone + 512L * 1024L < (long)LMGetMemTop();
 }
 
-/* Grows the application heap zone to ApplLimit, which is what MaxApplZone
- * does, with three calls every ROM has: ask how far the zone can grow, ask
- * for one block that big, give it back. The zone stays grown; the block
- * leaves a free one.
+/* Grows the application heap zone to ApplLimit. MaxApplZone where the ROM
+ * has it; on the 64K ROM, three calls it has: ask how far the zone can grow,
+ * ask for one block that big, give it back.
  *
  * Source: Inside Macintosh II, The Memory Manager. II-30: MaxApplZone is
  * `[Not in ROM]`, and Retro68 emits it as a trap, which bombs on a 64K ROM
  * (FORMATS.md, *A true Macintosh 512K*). II-38: MaxMem returns "the size in
  * bytes of the largest contiguous free block in the zone after the
  * compaction", and for the original application heap zone sets grow to "the
- * maximum number of bytes by which the zone can grow"; it "doesn't actually
- * expand the zone". II-13: an allocation the compacted zone cannot satisfy
- * makes the Memory Manager try "expanding the zone by the requested number
- * of bytes (rounded up to the nearest 1K bytes)", the original application
- * zone only and only up to its limit. MaxMem, NewPtr and DisposPtr each have
- * a trap macro in that volume (II-38, II-36), which is the 64K ROM's.
- * Where this zone actually ends up is a measurement, not this comment
- * (DECISIONS.md 2026-10-15, *the purge MaxApplZone never did*).
+ * maximum number of bytes by which the zone can grow". II-13: an allocation
+ * the compacted zone cannot satisfy makes the Memory Manager try "expanding
+ * the zone by the requested number of bytes (rounded up to the nearest 1K
+ * bytes)". The ROM version is the word at ROMBase+8, "$00xx for the
+ * Macintosh 128K or 512K" (II, Operating System Utilities, Environs, itself
+ * `[Not in ROM]`); 117 ($75) is the 128K ROM (IV, Preface). Written as "not
+ * positively a 64K ROM", so a word nobody surveyed takes MaxApplZone.
  *
- * It does NOT touch the zone header, which is the Memory Manager's: Mac OS
- * 9's Modern Memory Manager keeps its own. MaxMem also purges the zone's
- * purgeable blocks, which MaxApplZone does not (II-30). */
+ * Why not one path: every growth through an allocation purges the zone's
+ * purgeable blocks first, MaxMem's and a bare NewPtr's alike, and with them
+ * every dialog and alert layout the resource file preloads; the destination
+ * dialog then read its own from MacExtract's disk, which on a Mac with one
+ * floppy drive asked for that floppy over the archive's. MaxApplZone purges
+ * nothing (measured on System 6.0.8; DECISIONS.md 2026-11-04, *the layouts
+ * the release did not hold*). A 64K ROM has no HFS without a Hard Disk 20,
+ * so it never runs MacExtract off one floppy drive. */
 static void GrowApplZone(void)
 {
-    /* Its two results are D0 and A0 (II-38); multiversal 057c802 makes the
-     * call inline (pull request 20), where it was 44 B of Pascal glue. */
-    Size grow;
-    Size largest = MaxMem(&grow);
-    Ptr p;
-    p = NewPtr(largest + grow);
-    if (p != NULL)
-        DisposePtr(p);
+    const unsigned char *rom = (const unsigned char *)LMGetROMBase();
+    if (!(rom[8] == 0 && rom[9] < 0x75)) {
+        MaxApplZone();
+    } else {
+        /* Its two results are D0 and A0 (II-38); multiversal 057c802 makes
+         * the call inline (pull request 20), where it was 44 B of glue. */
+        Size grow;
+        Size largest = MaxMem(&grow);
+        Ptr p = NewPtr(largest + grow);
+        if (p != NULL)
+            DisposePtr(p);
+    }
 }
 
 #ifdef UNC_MAC_AUTOTEST
@@ -4345,29 +4352,6 @@ static void DestIconLoad(void)
 #endif
 
 
-/* The layouts the destination dialog and the progress window are built
- * from (DLOG, DITL, dctb, dlgx 140, 141, 146) are preloaded but purgeable,
- * and the overlay bundle does not carry them: Standard File and the Dialog
- * Manager fetch a layout by ID. GrowApplZone's MaxMem purges every
- * purgeable block (II-38), the preloaded layouts with them, and the dialog
- * then read them again from MacExtract's own disk, which on a Mac with one
- * floppy drive put the archive's floppy out and the dialog on MacExtract's,
- * locked as the floppy ships (measured on System 6.0.8; DECISIONS.md
- * 2026-11-04, *the layouts the release did not hold*). So they are read
- * again here at launch, where MacExtract's disk is in, held until the
- * progress window is open, and let go before the engine extracts. */
-static void HoldUI(Boolean hold)
-{
-    static const OSType kType[] = { 'DLOG', 'DITL', 'dctb', 'dlgx' };
-    static const short kId[] = { 140, 141, 146 };
-    short t, i;
-    for (t = 0; t < 4; t++)
-        for (i = 0; i < 3; i++) {
-            Handle h = GetResource(kType[t], kId[i]);
-            if (h) { if (hold) HNoPurge(h); else HPurge(h); }
-        }
-}
-
 static int AskDest(short *vol)
 {
     SFReply dest;
@@ -4547,7 +4531,6 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
             outDir = 0;
             gDestVol = outVol;
             ProgOpen((Progress *)prog->ctx, name);
-            HoldUI(false);
         }
         gAskDest = false;
 #endif
@@ -7100,7 +7083,6 @@ int main(void)
 #ifdef UNC_SHELL_IMAGES
     DestIconLoad();             /* the Finder file is on the startup disk */
 #endif
-    HoldUI(true);
     FlushEvents(everyEvent, 0);
 
     DropInit();

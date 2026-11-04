@@ -1133,6 +1133,15 @@ route, and an item naming the wrong obstacle.
   was needed.** Seven failed variants were evidence about the sender's
   STATE as much as about its permissions, and the code that returned the
   error was one decompression away.
+- **"`CompactMem`, then a `NewPtr` that grows the zone, avoids the purge
+  `MaxMem` makes"** — DECISIONS.md 2026-10-15, *the purge MaxApplZone never
+  did*, as the alternative not taken; its evidence was `FreeMem` and the
+  budget. **Withdrawn 2026-11-04**: a probe of one preloaded layout found
+  that `NewPtr` purges, as every allocation that grows the zone does; only
+  `MaxApplZone` did not. **Cost: one recommendation to the maintainer,
+  built and probed before it landed** (*the layouts the release did not
+  hold*). A free-memory total cannot say which blocks are in the heap;
+  check the block.
 
 ### Corrected figures and superseded write-ups
 

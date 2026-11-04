@@ -232,10 +232,16 @@ REPO = os.path.dirname(HERE)
 # 620,324.
 # **-128 more each 2026-11-04, DERIVED**: HoldUI (DECISIONS.md 2026-11-04, *the layouts the release did not hold*), the control's
 # CODE +104 and A5 +24; the shipped pair grew the same, OVL_SAVED unmoved.
+# **+86 each the same day**: HoldUI out again and MaxApplZone where the ROM
+# has it (the same entry): the control's CODE -72 and A5 -24, DERIVED +96;
+# and the layouts the launch no longer purges, -10 measured on the 1 MB
+# probe (742,488 -> 742,478 B, `derived-ASCbeep.sit`, the autotest build's
+# CODE + A5 unmoved). TIERS_MACHINE -10 with it. They were 191,278 /
+# 95,896 / 620,184.
 TIERS = {
-    "sys3-512K": (191278, "System 3.0, Macintosh 512Ke (222,070 B free)"),
-    "sys6-512K": (95896,  "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
-    "floor-1M":  (620184, "System 6.0.8, 1 MB Mac Plus — the floor target"),
+    "sys3-512K": (191364, "System 3.0, Macintosh 512Ke (222,070 B free)"),
+    "sys6-512K": (95982,  "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
+    "floor-1M":  (620270, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
 # **-592 more each 2026-10-24, DERIVED**: SUMacC's `.dl`, the control's
 # CODE +584 and A5 +8 (DECISIONS.md 2026-10-24, *the format before
@@ -439,7 +445,8 @@ TIERS = {
 # data + bss -680. The machine gave +4,204, because the jump table, the
 # stub segments and the relocations trimmed at launch are resident bytes
 # this unit never counted — which is why TIERS was measured, not moved.
-TIERS_CONTROL = 221664     # build/mac-resident, CODE + A5, 2026-11-04
+TIERS_CONTROL = 221568     # build/mac-resident, CODE + A5, 2026-11-04
+# -96 the same day: HoldUI out, MaxApplZone in; TIERS +96 (and -10).
 # +128 on 2026-11-04: HoldUI; TIERS -128.
 # +2,768 the same day: the LZ4 frame, its reader linked in; TIERS -2,768.
 # +1,824 the same day: MAR, its reader linked in; TIERS -1,824 (and -24).
@@ -490,10 +497,12 @@ TIERS_CONTROL = 221664     # build/mac-resident, CODE + A5, 2026-11-04
 # **-12 each 2026-11-04**: `LZ4-` in the bundle, as above; measured at
 # floor-1M. (MAR's two types, -24 on 2026-11-03, are in these figures.)
 # **-12 more 2026-11-04**: `LZ4 `, as above.
+# **-10 more 2026-11-04**: the layouts the launch no longer purges (TIERS
+# above); measured at floor-1M.
 TIERS_MACHINE = {
-    "sys3-512K": 412942,   # 201,590 + 211,616, measured 2026-10-22 (was
-    "sys6-512K": 317560,   # 106,208 + 211,616   413,492 / 318,092 / 842,380
-    "floor-1M":  841848,   # 630,496 + 211,616   from 2026-10-09)
+    "sys3-512K": 412932,   # 201,590 + 211,616, measured 2026-10-22 (was
+    "sys6-512K": 317550,   # 106,208 + 211,616   413,492 / 318,092 / 842,380
+    "floor-1M":  841838,   # 630,496 + 211,616   from 2026-10-09)
 }
 
 # DERIVED, not re-measured, 2026-10-01: all three fell by 2,024 B — the

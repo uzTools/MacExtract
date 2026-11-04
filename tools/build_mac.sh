@@ -694,7 +694,10 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # +104 on 2026-11-04, 184,888 -> 184,992, A5 +24 below: HoldUI, the
 # destination dialog's and progress window's layouts held until the
 # progress window is open (DECISIONS.md 2026-11-04, *the layouts the release did not hold*).
-UNC_MAC_CODE_DEFAULT=184992
+# -72 the same day, 184,992 -> 184,920, A5 -24 below: HoldUI out again, and
+# MaxApplZone where the ROM has it (the same entry): the launch no longer
+# purges the layouts, so nothing needs holding.
+UNC_MAC_CODE_DEFAULT=184920
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -916,7 +919,8 @@ UNC_MAC_CODE_DEFAULT=184992
 # +8 on 2026-11-03, 36,640 -> 36,648: the LZ4 frame (above), the table
 # row and its name, and alignment.
 # +24 on 2026-11-04, 36,648 -> 36,672: HoldUI's two tables (above).
-UNC_MAC_A5_DEFAULT=36672
+# -24 the same day, back to 36,648: HoldUI out again (above).
+UNC_MAC_A5_DEFAULT=36648
 # A CEILING PER CONFIGURATION, because one ceiling measured on another build
 # cannot fire. The figures above are the RESIDENT control build, which carries
 # every decoder; the shipped build's resident code is a third of that, so
@@ -1417,8 +1421,11 @@ UNC_MAC_A5_DEFAULT=36672
 # held from launch until the progress window is open, so a one-drive Mac
 # is not asked for MacExtract's floppy between reading the archive and the
 # dialog (DECISIONS.md 2026-11-04, *the layouts the release did not hold*). The A5 is its two tables. 128 B off every budget.
-UNC_MAC_CODE_EAGER=39728
-UNC_MAC_A5_EAGER=16752
+# -56 and -40 the same day, to 39,672 and 16,712: HoldUI out again, and
+# MaxApplZone where the ROM has it, which purges nothing (the same entry);
+# 96 B back on every budget, 10 B of which the kept layouts take at 1 MB.
+UNC_MAC_CODE_EAGER=39672
+UNC_MAC_A5_EAGER=16712
 # +8 on 2026-10-02 for the same reason as the eager pair above: the
 # overlay call that now says WHICH of StuffIt 2.x's ciphers an entry
 # wants. A5 fell to 19,096 and its ceiling is left where it was.
@@ -1536,8 +1543,9 @@ UNC_MAC_A5_EAGER=16752
 # +16 code on 2026-11-03, the LZ4 frame's shim (the eager pair above);
 # data + bss 16,736, under its ceiling.
 # +92 code on 2026-11-04: HoldUI, as the eager pair; data + bss 16,756,
-# under its ceiling.
-UNC_MAC_CODE_LAZY=38556
+# under its ceiling. -56 the same day, HoldUI out again (the eager pair
+# above); data + bss 16,764, under its ceiling.
+UNC_MAC_CODE_LAZY=38500
 UNC_MAC_A5_LAZY=19200
 if [ -n "$UNC_OVL_RESIDENT" ]; then
     UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-$UNC_MAC_CODE_DEFAULT}

@@ -499,7 +499,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-04 (the frame mar 0.2.0 reads) — an LZ4 frame unwraps like `.Z`, written from the published specification and graded against liblz4; the release kept a shared image in the wrong slot
 - 2026-11-04 (the helpers in dist) — the sixteen helpers ship in dist/ as one Finder-style zip MacExtract opens, and on both disk images in a "MacExtract Helpers" folder beside MacExtract, before any release
 - 2026-11-04 (the floppy that is ready) — the MacExtract floppy carries a Desktop file listing MacExtract and the helpers, so a Mac without a hard disk opens an archive from another floppy with the MacExtract floppy ejected; inited bits measured to change nothing
-- 2026-11-04 (the layouts the release did not hold) — the destination dialog's and progress window's layouts are held from launch until the progress window is open: purged by the launch's own MaxMem, they were read again from MacExtract's floppy, and a one-drive Mac's dialog opened there
+- 2026-11-04 (the layouts the release did not hold) — the launch grows the heap with MaxApplZone where the ROM has it, which purges nothing: purged by MaxMem, the dialogs' preloaded layouts were read again from MacExtract's floppy, and a one-drive Mac's dialog opened there
 
 ---
 
@@ -16920,7 +16920,11 @@ System 6.0.8 at 1 MB, `FreeMem` within 36 B of `main`'s. Budget −32, −32
 and −18 B against `main` (on System 6 exactly its +32 B of `CODE` + A5); +24
 B of `CODE` against `_MaxMem`'s +12; `HeapEnd` never checked on System 7
 or Mac OS 9. The maintainer kept `_MaxMem`; the alternative is here if the
-purge's reload at launch, never timed, matters.
+purge's reload at launch, never timed, matters. (CORRECTED 2026-11-04: it
+purges too, at the `NewPtr`, measured with a probe of one preloaded layout;
+`FreeMem` and the budget could not show which blocks were gone. Only
+`MaxApplZone` does not purge, and it is back where the ROM has it: *the
+layouts the release did not hold*.)
 
 **`_MaxMem` is inline asm, the first in `mac/`**: two register outputs, and
 Multiverse's Pascal glue costs +44 B against +12. autc04/multiversal pull
@@ -20737,9 +20741,8 @@ copies were written to): 3.0 with no hard disk, as unlocked; 7.0.1, as
 unlocked, and the Finder no longer asks for the floppy back after
 Command-E; 6.0.8, the destination dialog opened on the locked MacExtract
 floppy with Extract dimmed, and Drive then Extract (or Eject and a
-writable floppy) finished it, onto the hard disk; since HoldUI the same
-day it opens on the archive's floppy (*the layouts the release did not
-hold*). **Why 6.0.8's dialog is
+writable floppy) finished it, onto the hard disk; since the same day it
+opens on the archive's floppy (*the layouts the release did not hold*). **Why 6.0.8's dialog is
 there:** not where MacExtract points it. On a hard disk the dialog opens
 beside a double-clicked archive on 6.0.8 and 7.0.1 alike, with the
 shipped build (`Archives:M.sit` stamped `MExt`; measured 2026-11-04), so
@@ -20755,7 +20758,7 @@ of one byte of the archive before the dialog, which asked for no disk. (What ask
 **Not run:** the 1.44 MB image, Mac OS 9 reading a floppy, System 6
 booted from a floppy (its System file here is 1.2 MB), and a real Mac.
 
-## 2026-11-04 (the layouts the release did not hold) — the destination dialog's and progress window's layouts are held from launch until the progress window is open: purged by the launch's own MaxMem, they were read again from MacExtract's floppy, and a one-drive Mac's dialog opened there
+## 2026-11-04 (the layouts the release did not hold) — the launch grows the heap with MaxApplZone where the ROM has it, which purges nothing: purged by MaxMem, the dialogs' preloaded layouts were read again from MacExtract's floppy, and a one-drive Mac's dialog opened there
 
 **Found by a probe build** (not in the tree): MacExtract wrote a mark into
 screen memory at each step of `main()` and `RunExtract`, the helper its
@@ -20777,36 +20780,54 @@ the same day: a probe checking `DITL` 140 with `SetResLoad(false)` on
 `GrowApplZone`'s `MaxMem` purges every purgeable block (II-38; DECISIONS.md
 2026-10-15, *the purge MaxApplZone never did*). So since 2026-10-15 the
 `preload` of every dialog and alert (2026-10-14, *the disk the dialogs
-were on*) has been undone at each launch on System 6, and each layout is
-read from MacExtract's disk at first use; the closing report's request
-for MacExtract's floppy is that (hypothesis: not probed). First written
-here as the sniff's memory, which was a guess, CORRECTED before it was
-pushed.
+were on*) had been undone at each launch on System 6, and each layout was
+read from MacExtract's disk at first use. First written here as the
+sniff's memory, which was a guess, CORRECTED before it was pushed.
 
-**`HoldUI`** (`mac/macextract_mac.c`) reads `DLOG`, `DITL`, `dctb`,
-`dlgx` 140, 141 and 146 (the destination dialog, its New Folder box, the
-progress window) again at launch, after the bundle's preload, marks them
-not purgeable, and
-purgeable again once the progress window is open: the engine extracts
-with the memory it had, and the 492 B (about 600 B of heap) are held
-through the sniff, beside the 194,020 B bundle held there anyway.
-**+92 B of code and +36 B of A5 (two tables; a version without them was
-144 B), 128 B off every budget; `OVL_SAVED` unmoved.** The closing
-report's alert is still read at the end, and a second archive of one
-Finder list meets its layouts purgeable again; neither is held, since
-the engine runs between.
+**Held first, then not purged.** `HoldUI`, which read the destination
+dialog's, its New Folder box's and the progress window's layouts again at
+launch and held them until the progress window was open (+128 B), was
+pushed first (37ba9e4) and taken out the same day for the cause. Each way
+of growing the zone, probed on 6.0.8 with `DITL` 140 checked before, in the
+middle and after (measured; every one grew the zone to `ApplLimit`):
+
+| growth | purges |
+|---|---|
+| `MaxMem`, then `NewPtr` of the sum (since 2026-10-15) | yes |
+| `CompactMem`, then `NewPtr` of its result + `ApplLimit` − `HeapEnd` (2026-10-15's alternative) | yes, at the `NewPtr`; not at `CompactMem` |
+| `NewPtr` of `ApplLimit` − `HeapEnd` + 1 KB alone | yes |
+| `MaxApplZone` | **no** |
+
+So an allocation that grows the zone purges first, and `MaxApplZone` is
+the only growth here that does not allocate. It is not in the 64K ROM
+(II-30), so the ROM-version test of 2026-10-15's first version is back
+(`!(ROMBase[8] == 0 && ROMBase[9] < $75)`), and the 64K ROM keeps `MaxMem`
+and its purge: without a Hard Disk 20 it has no HFS, so it never runs
+MacExtract from one floppy drive. Every preload now stays (purgeable, so
+the Memory Manager can still take it back when it needs to).
+
+**Price.** Against `HoldUI`: shipped `CODE` −56 and A5 −40; the control
+`CODE` −72 and A5 −24, so every budget +96 DERIVED, less 10 B the kept
+layouts take, measured on the 1 MB probe (742,488 → 742,478 B,
+`derived-ASCbeep.sit`; that autotest build's `CODE` + A5 is the same in
+both). Against the build before `HoldUI`: shipped `CODE` +36 and A5 −4.
+`OVL_SAVED` unmoved.
 
 **Measured**, the shipped floppy write-protected, the 200 KB archive on a
-second floppy, every request answered:
+second floppy, every request answered (`HoldUI`'s build re-run on 7.0.1 as
+the control the same day):
 
-| System | disks asked before MacExtract's dialog | the dialog | after |
+| System | disks asked before MacExtract's dialog | the dialog | after Return |
 |---|---|---|---|
-| 6.0.8 (hard disk, one floppy drive) | MacExtract, Archives (was MacExtract, Archives, MacExtract, Archives, MacExtract) | on Archives, Extract enabled (was the locked MacExtract floppy, dimmed) | MacExtract once, at the end; extracted onto Archives |
-| 3.0, no hard disk | MacExtract, Archives | on Archives (was the System floppy) | MacExtract once; extracted onto Archives |
-| 7.0.1 (hard disk, one floppy drive) | MacExtract and Archives six times each (was seven) | on Archives | MacExtract, Archives (was twice each) |
+| 6.0.8 (hard disk, one floppy drive) | MacExtract, Archives (was MacExtract, Archives, MacExtract, Archives, MacExtract) | on Archives, Extract enabled (was the locked MacExtract floppy, dimmed) | **none** (`HoldUI`: MacExtract once, for the closing report) |
+| 3.0, no hard disk | MacExtract, Archives | on Archives (was the System floppy) | **none** (`HoldUI`: MacExtract once) |
+| 7.0.1 (hard disk, one floppy drive) | MacExtract and Archives six times each, as `HoldUI`'s build (was seven); what asks is not found | on Archives | **none** (`HoldUI`: MacExtract, Archives) |
 
 The sniff at 512 KB, which the tier suites cannot see (they run the
 autotest build, which has no dialogs): `interactive.py` on System 6.0.8 /
 512Ke with `derived-LHA_Expander_1.0.3.sea`, the narrowest archive that
-tier passes, extracted complete with HoldUI as without. The destination
-dialog's New button has no folder icon at 512Ke in both builds; not this.
+tier passes, extracted complete, as with `HoldUI` and without it. The
+destination dialog's New button has no folder icon at 512Ke in all three
+builds; not this. A second archive of one Finder list finds the layouts
+in memory unless the engine's run made the Memory Manager purge them (not
+measured).
