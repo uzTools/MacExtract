@@ -20828,8 +20828,12 @@ The sniff at 512 KB, which the tier suites cannot see (they run the
 autotest build, which has no dialogs): `interactive.py` on System 6.0.8 /
 512Ke with `derived-LHA_Expander_1.0.3.sea`, the narrowest archive that
 tier passes, extracted complete, as with `HoldUI` and without it. The
-destination dialog's New button has no folder icon at 512Ke in all three
-builds; not this. A second archive of one Finder list finds the layouts
+destination dialog's New button had no folder icon there in all three
+builds: that run makes MacExtract the boot shell, so the "Finder" file it
+reads the icon from is its own (CORRECTED the same day: first read as a
+512 KB fault; a probe found 64 KB free and `OpenRFPerm` succeeding, the
+same at 1 MB, and `--e2e`, which keeps the Finder, draws the folder at
+512Ke). A second archive of one Finder list finds the layouts
 in memory unless the engine's run made the Memory Manager purge them (not
 measured).
 
