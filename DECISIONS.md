@@ -502,6 +502,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-04 (the layouts the release did not hold) — the launch grows the heap with MaxApplZone where the ROM has it, which purges nothing: purged by MaxMem, the dialogs' preloaded layouts were read again from MacExtract's floppy, and a one-drive Mac's dialog opened there
 - 2026-11-04 (the icon the 64K ROM could not open) — the destination dialog reads the Finder's small icon only where the ROM has OpenRFPerm; since v0.45.0 a 64K-ROM Macintosh bombed at launch
 - 2026-11-04 (the swaps before the first instruction) — on System 7 with one floppy drive, double-clicking an archive costs about four rounds of swaps before the application runs; nothing here can prevent them, and the README says so
+- 2026-11-04 (the corpus past the sample) — the whole corpus at both 512 KB tiers refuses nine real archives, all StuffIt 5 Arsenic blocks larger than the grant; no layout recovers one, so the compact-layout and small-item RAM work has no 512 KB target
 
 ---
 
@@ -20889,3 +20890,27 @@ follow-up round off the double-click route, five rounds instead of six;
 not landed (the maintainer: a System 7 Mac without a hard disk is
 unlikely, and one would boot System 6). `dist/README.txt` says to open
 MacExtract first on System 7.
+bought nothing. **Not run:** the 1.44 MB image, Mac OS 9 reading a floppy,
+a locked floppy, System 6 booted from a floppy (its System file here is
+1.2 MB), and a real Mac.
+
+## 2026-11-04 (the corpus past the sample) — the whole corpus at both 512 KB tiers refuses nine real archives, all StuffIt 5 Arsenic blocks larger than the grant; no layout recovers one, so the compact-layout and small-item RAM work has no 512 KB target
+
+**Claim (measured, Linux).** `run_tiers.py --shipped --list` over all 988
+fixtures, both 512 KB tiers and the 1 MB floor (FORMATS.md, *512 KB
+machines*): 953, 953 and 972 pass. The 16 failing at every tier fail with
+no budget (cut originals, a password, one part of a set alone), so the
+lane counts them; they are not memory. What remains is `synth-dd-m5.dd`
+and nine real StuffIt 5 archives, each arriving twice (as itself and as
+its `.hqx`).
+
+**Why nothing in the queue reaches them.** Each needs one Arsenic block
+resident, 352,161-524,289 B, and the block alone exceeds System 3.0's whole
+StuffIt 5 grant (322,038 B). A smaller inverse-BWT structure only moves
+what sits beside the block: the 2.5-byte table, the parent-free
+DiskDoubler trees, gzip's ISIZE window and UncCrypt's lazy allocation are
+each worth at most a few hundred bytes to 25 % of a block, against
+shortfalls of 48,078 B and up. **Consequence:** the 2.5-byte rung stands
+on its 1 MB time alone; DiskDoubler's parent-free rebuild, the gzip
+window and the lazy UncCrypt are not done, because no real archive at
+512 KB is refused by what they would save.

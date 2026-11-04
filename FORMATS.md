@@ -5397,6 +5397,30 @@ archive would, not a smaller engine. The line is the BLOCK SIZE the
 compressor chose, not the format: the sample's other five StuffIt 5 fixtures
 pass, `derived-Troi-ClipSave-Plug-in1.1.sit` needing 144,690 B.
 
+**The whole corpus at both 512 KB tiers** (`run_tiers.py --shipped --list`
+over all 988 fixtures, `main` at a6668bd, 2026-11-04; MEASURED on Linux,
+not run on a Mac): **953/988 at System 3.0 and at System 6.0.8; 972/988 at
+the 1 MB floor.** The 16 that fail at 1 MB fail with no budget at all (cut
+originals, a password, a lone split part) and are not memory. Of the other
+19, `synth-dd-m5.dd` is synthetic, and the rest are **nine real StuffIt 5
+archives, each also refused as its `.hqx`** — all Arsenic, each needing one
+block resident that is already larger than System 3.0's whole StuffIt 5
+grant (322,038 B; System 6.0.8's is 226,656 B). Needs bisected to 256 B
+(an upper bound); block = the largest single allocation at that budget
+(DECISIONS.md 2026-11-04, *the corpus past the sample*):
+
+| archive (and its `.hqx`) | needs | block | short, System 3.0 | short, System 6.0.8 |
+|---|---|---|---|---|
+| `derived-Library_ISBN_Barcoder.sit` | 370,116 B | 352,161 B | 48,078 B | 143,460 B |
+| `derived-YP_Circuits_CC__.sit` | 389,892 B | 371,917 B | 67,854 B | 163,236 B |
+| `derived-Orbit3d_1.0..sit` | 395,751 B | 377,769 B | 73,713 B | 169,095 B |
+| `derived-FloatingNotes.sit` | 420,653 B | 402,496 B | 98,615 B | 193,997 B |
+| `derived-Weather_2.2.sit` | 461,181 B | 443,233 B | 139,143 B | 234,525 B |
+| `derived-Phonebook_Plus.sit` | 485,595 B | 468,085 B | 163,557 B | 258,939 B |
+| `derived-EasyFind.dmg.sit` | 541,747 B | 524,289 B | 219,709 B | 315,091 B |
+| `derived-XMenu.dmg.sit` | 541,747 B | 524,289 B | 219,709 B | 315,091 B |
+| `derived-Domino_v1.4.sit` | 542,479 B | 524,289 B | 220,441 B | 315,823 B |
+
 **What is refused is one entry's working set, never the archive**, and the
 demand is the codec's, not the file size's: `synth-dd-m5.dd` outputs 1,145 B
 and asks for 405,520 B. **Nor is the boundary a number**:
