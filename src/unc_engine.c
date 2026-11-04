@@ -60,6 +60,9 @@ static const UncFormatDesc unc_formats[] = {
     { UNC_FORMAT_ZIP,         "Zip",                 0, unc_zip_extract },
     { UNC_FORMAT_GZIP,        "Gzip",                1, unc_gzip_extract },
     { UNC_FORMAT_COMPRESS_Z,  "Unix compress",       1, unc_compressz_extract },
+    /* One stream in a frame, as `.Z`: mar 0.2.0's other compressed form
+     * of a MAR (src/fmt_lz4.c). */
+    { UNC_FORMAT_LZ4,         "LZ4",                 1, unc_lz4_extract },
     { UNC_FORMAT_TAR,         "Tar",                 0, unc_tar_extract },
     /* Not an envelope even as a `.mac`, which holds one file: the
      * format is the same when it holds a folder (fmt_mar.c). */

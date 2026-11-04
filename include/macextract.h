@@ -123,6 +123,9 @@ typedef enum UncFormat {
     /* Brought in scope 2026-11-03; appended for the same ABI reason. */
     UNC_FORMAT_MAR,           /* .mar/.mac — Hampa Hug's MAR          */
 
+    /* Brought in scope 2026-11-03; appended for the same ABI reason. */
+    UNC_FORMAT_LZ4,           /* .lz4 — an LZ4 frame (a .mar.lz4)     */
+
     UNC_FORMAT__COUNT
 } UncFormat;
 

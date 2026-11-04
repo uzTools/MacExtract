@@ -205,6 +205,7 @@ static const unsigned char gKeepSet[][2] = {
     { UNC_FORMAT_APPLEDOUBLE, KEEP(OVL_ID_BINHEX,     KEEP_PEEK) },
     { UNC_FORMAT_GZIP,        KEEP(OVL_ID_EXO,        KEEP_PEEK) },
     { UNC_FORMAT_COMPRESS_Z,  KEEP(OVL_ID_EXO,        KEEP_PEEK) },
+    { UNC_FORMAT_LZ4,         KEEP(OVL_ID_ZIPOLD,     KEEP_PEEK) },
     { UNC_FORMAT_UU,          KEEP(OVL_ID_TEXT,       KEEP_PEEK) },
     { UNC_FORMAT_BASE64,      KEEP(OVL_ID_TEXT,       KEEP_PEEK) },
     { UNC_FORMAT_BTOA,        KEEP(OVL_ID_BTOA,       KEEP_PEEK) },
@@ -245,7 +246,7 @@ static void ovl_drop(int slot)
 
 void ovl_release_if_unwanted(UncFormat fmt, UncIO *io)
 {
-    short want, inner = 0;
+    short want, inner = 0, wslot = 0;
     int crypt, row, enc = UNC_ENC_UNKNOWN;
     UncFormat as = fmt;     /* whose rules the ciphers and zipold follow */
 
@@ -279,7 +280,12 @@ void ovl_release_if_unwanted(UncFormat fmt, UncIO *io)
         row = keep_row(as);
         if (row < 0 || (gKeepSet[row][1] & KEEP_PEEK)) return;
         inner = (short)(OVL_ID_CRYPT + (gKeepSet[row][1] & 0x1f));
-        if (inner == want) inner = 0;      /* one copy serves both */
+        /* One copy serves both, kept in the INNER layer's slot: slot 0 is
+         * dropped when that layer starts, and an LZ4 frame and the MAR in
+         * it are both `ovl_zipold`'s — kept in slot 0 the MAR layer ran
+         * with its image gone, "Archive damaged." (measured 2026-11-03;
+         * DECISIONS.md, *the frame mar 0.2.0 reads*). */
+        if (inner == want) { inner = 0; wslot = 5; }
     }
     crypt = gKeepSet[row][1] & KEEP_CRYPT;
 
@@ -303,7 +309,7 @@ void ovl_release_if_unwanted(UncFormat fmt, UncIO *io)
         crypt = 0;
 
     OVL_DIAG(gRelFmt = (short)fmt);
-    ovl_keep(want, 0);
+    ovl_keep(want, wslot);
     if (as != fmt) {
         if (inner) ovl_keep(inner, 5);
         ovl_keep(OVL_ID_SNIFF, 4);

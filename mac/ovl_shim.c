@@ -349,3 +349,5 @@ DECODER(unc_compressz_extract,  OVL_ID_EXO,        OVL_COMPRESSZ_EXTRACT,  RUN_C
 DECODER(unc_tar_extract,        OVL_ID_ZIPOLD,     OVL_TAR_EXTRACT,        RUN_CODECS)
 /* MAR beside it: stored forks, no codec (src/fmt_mar.c). */
 DECODER(unc_mar_extract,        OVL_ID_ZIPOLD,     OVL_MAR_EXTRACT,        0)
+/* An LZ4 frame beside it: its own window, no codec (src/fmt_lz4.c). */
+DECODER(unc_lz4_extract,        OVL_ID_ZIPOLD,     OVL_LZ4_EXTRACT,        0)

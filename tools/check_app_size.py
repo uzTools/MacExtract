@@ -278,7 +278,10 @@ TAKEN = "2026-11-03"
 # +52, the envelope peek +760), then MAR — its reader in `ovl_zipold`
 # (+1,732) and its probe and CRC in `ovl_sniff` (+360) (DECISIONS.md
 # 2026-11-03, *the archive that carries its own CRCs*).
-EXPECT_BUNDLE = 191328
+# -> 194,020 2026-11-03: the LZ4 frame, its reader in `ovl_zipold`
+# (+2,580) and its probe in `ovl_sniff` (+112) (DECISIONS.md 2026-11-03,
+# *the frame mar 0.2.0 reads*).
+EXPECT_BUNDLE = 194020
 TOLERANCE_BUNDLE = 2048
 TAKEN_BUNDLE = "2026-11-03"
 

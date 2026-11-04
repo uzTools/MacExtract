@@ -316,6 +316,12 @@ python3 tools/run_sqp.py --macextract build/san/macextract \
 # last decoded by gzip too, each comparison with a control that must fail.
 python3 tools/run_mar.py --macextract build/san/macextract \
     || fail "MAR tests"
+# LZ4 frames, mar 0.2.0's other compressed MAR: every frame is liblz4's own,
+# written through ctypes (tools/synth_lz4.py), across every block size, both
+# block modes and every checksum, then damaged and cut ones that must be
+# refused. Skips, and says so, where liblz4 is absent.
+python3 tools/run_lz4.py --macextract build/san/macextract \
+    || fail "LZ4 frame tests"
 # The Finder metadata beyond type, creator and flags (`l --meta`): FInfo
 # and FXInfo whole, the backup date, the lock and the Get Info comment,
 # held to lsar where it reads them and to the synthesizers' own input where

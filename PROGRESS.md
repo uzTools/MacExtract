@@ -6,8 +6,8 @@ and where the detail lives. Numbers are in FORMATS.md, reasoning in
 DECISIONS.md, how a suite runs in TESTING.md, what is still missing in
 OPEN_ITEMS.md. A row is one sentence and a citation.
 
-**The suite is 986 fixtures**, byte-exact against `unar` and, where `unar`
-fails, `macunpack`; 9,860 robustness variants clean. The Macintosh tiers and
+**The suite is 988 fixtures**, byte-exact against `unar` and, where `unar`
+fails, `macunpack`; 9,880 robustness variants clean. The Macintosh tiers and
 their tallies are BLOCKERS.md's (*Status*); per-tier tables are FORMATS.md's.
 
 | Milestone | Delivered | Detail |
@@ -86,3 +86,4 @@ their tallies are BLOCKERS.md's (*Status*); per-tier tables are FORMATS.md's.
 | M72 The format before BinHex | SUMacC's `.dl`, byte-exact against hexbin and SUMacC's `fromhex`; +32 B resident | DECISIONS.md 2026-10-24 (*the format before BinHex*) |
 | M73 The dialogs | A destination dialog with New Folder on every System, one dialog for a missing part that ejects a wrong disk, the Finder's progress window, no dialog behind the Finder; +592 B resident, the dialog and a set's setup as images | DECISIONS.md 2026-11-02 (*the dialogs that became the application*) |
 | M74 MAR | Hampa Hug's archive, every CRC of his two archives and the forks of their StuffIt twins; its LZW form through the `.Z` envelope; its two types in the bundle; +40 B of every budget | DECISIONS.md 2026-11-03 (*the archive that carries its own CRCs*), FORMATS.md (*MAR*) |
+| M75 LZ4 frames | mar 0.2.0's `.mar.lz4`: liblz4's frames byte for byte, mar 0.2.0 decoding the same; the release's shared-image slot fixed; +48 B of every budget | DECISIONS.md 2026-11-04 (*the frame mar 0.2.0 reads*), FORMATS.md (*LZ4 frames*) |

@@ -496,6 +496,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-03 (the archive that carries its own CRCs) — MAR comes in, graded by what its author wrote, read from GPL-2.0-only sources for their facts alone
 - 2026-11-03 (the helper without a runtime) — position-independent code leaves Retro68's relocator, start-up and exit chain nothing to do: a stamped helper 9,728 -> 6,784 B
 - 2026-11-03 (the hand-back to the Finder) — a helper that is not event-aware cannot post to the Finder (-903); an event-aware one can, and the 7.0.1 Finder opens a document through FNDR/sope as a double-click would, but answers a document no application owns with silence, not its alert
+- 2026-11-04 (the frame mar 0.2.0 reads) — an LZ4 frame unwraps like `.Z`, written from the published specification and graded against liblz4; the release kept a shared image in the wrong slot
 
 ---
 
@@ -20575,3 +20576,70 @@ System 6 and 3.0 have no events: the Finder is not there to hand back to
 
 **Decided** (the maintainer, 2026-11-04): no hand-back; the helper keeps
 its own alerts and stays not event-aware. The probes stay out of the tree.
+
+## 2026-11-04 (the frame mar 0.2.0 reads) — an LZ4 frame unwraps like `.Z`, written from the published specification and graded against liblz4; the release kept a shared image in the wrong slot
+
+**The maintainer's call: make the archive, add the decoder, price it.**
+mar 0.2.0 opens a MAR inside an LZ4 frame (`.mar.lz4`, `.mac.lz4`;
+`mar_dec.c`, `mar_is_lz4`, `main.c`, `mar_check_mar`) and writes none:
+someone runs the `lz4` tool on a `.mar` off the Mac. None has been seen in
+the wild.
+
+**The archives first (measured).** liblz4 1.10.0, the reference library,
+was already installed; `tools/synth_lz4.py` calls `LZ4F_compressFrame`
+through ctypes with explicit preferences, so every frame here is the
+reference implementation's. Four shapes (64K linked blocks with a content
+checksum, 4M independent as the `lz4` tool writes by default, 256K with
+block checksums and the content size, level 12 with 1M linked blocks)
+over four MARs: mar 0.2.0's Decode on System 6.0.8 unwrapped all four,
+and every file that could be matched is the one MacExtract takes out of
+the plain MAR (19; the 20th has a 41-character name, which mar cut to 31).
+
+**The reader** (`src/fmt_lz4.c`), written from the published frame and
+block formats and xxHash-32's specification (`reference/notes`, whose
+notices permit any use; NOTICE): the descriptor and its header checksum,
+stored and compressed blocks, block and content checksums, the content
+size, concatenated frames as the reference tool decodes them, skippable
+frames; a dictionary id refused, the legacy frame not read (mar does not).
+An envelope (`UNC_FORMAT_LZ4`), named as `.Z` is, its reader in
+`ovl_zipold` beside MAR's. One 64 KB ring is the match window and the
+output's staging at once, so any block size streams through it.
+
+**What testing found.** (1) The output went to the sink only when the
+ring wrapped. The envelope peek sees the first 8 KB of the file and wants
+512 bytes of output; a first block larger than 8 KB compressed never
+wrapped there, the peek named nothing, the layer kept the whole bundle,
+and System 6.0.8 at 512 KB refused it, 2,930 B short. It now flushes every
+4 KB, and the peek names it. (2) **A latent fault in the release**: when an
+envelope and the format under it share an image, one copy served both, in
+slot 0 — the slot dropped when the inner layer starts. Never reached
+before (the one pair sharing an image, BinHex over MacBinary, is two
+envelopes, which keep the whole bundle); LZ4 over MAR, both `ovl_zipold`,
+gave "Archive damaged." The copy now goes in the inner layer's slot.
+
+**Evidence.** `tools/run_lz4.py`: 165 liblz4 frames (every block size,
+linked and independent, each checksum, content size, levels 0 to 12,
+over a MAR, incompressible bytes, long runs and 4.7 MB) byte for byte;
+concatenated, skippable and empty frames; 24 damaged, cut and foreign
+frames refused. Three mutant readers fail it: content checksum unchecked,
+header checksum unchecked, a length byte of 255 ending the length. On the
+Macintosh, both LZ4 fixtures byte-exact on System 6.0.8 at 512 KB and
+1 MB, System 3.0 at 512 KB and 1 MB, and System 7.0.1 (one System 3.0
+512 KB miss, not reproduced in two re-runs: the harness's); the whole chain
+through the application, LZ4 then MAR, on System 6.0.8 at 512 KB and 4 MB,
+and `popper-1.7.tar.Z` at 512 KB unchanged.
+
+**Price (measured).** Shipped CODE +32 and A5 +16 with the release's fix,
+**48 B off every budget**, the LZ4 table row, name, shim and keep row; the
+lazy build CODE +16. `ovl_zipold` 12,564 -> 15,144, `ovl_sniff` 14,564 ->
+14,676, the bundle 191,328 -> 194,020. The control CODE +2,760 and A5 +8:
+`OVL_SAVED` +2,720, `TIERS` -2,768, DERIVED; no tally moves. **Heap: a
+constant 69,816 B**, the ring whatever the payload — a declared ceiling,
+not measured from the data. With the peek naming what is inside (a
+`.mar.lz4`) the layer is granted 129,002 B over the base, room on every
+tier; an LZ4 frame of something the peek cannot name keeps the whole
+bundle and is refused on System 6.0.8 at 512 KB, 2,930 B short. The peek
+itself now decodes up to 69,816 B before the release, the heaviest of any
+envelope (inflate's was 52,216), and fitted there. A ring that grows with
+the output would make small frames cheap and leave a 64 KB one where it
+is (OPEN_ITEMS.md).

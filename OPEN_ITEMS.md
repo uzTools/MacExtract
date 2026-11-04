@@ -7,7 +7,7 @@
    withdrawn claim to BLOCKERS.md, numbers to FORMATS.md).
 
 Nothing here stops the engine or the CLI, which are byte-exact against the
-oracle across 986 fixtures in `./ci.sh`.
+oracle across 988 fixtures in `./ci.sh`.
 
 **Filing something here is a decision to stop looking, so ask first.** Each
 of these questions has emptied a row at least once (BLOCKERS.md, *Withdrawn
@@ -243,10 +243,11 @@ grade against.
 
 ## MAR: what is not read or not run
 
-- **An archive inside an LZ4 frame** (`04 22 4D 18`): mar 0.2.0 reads one
-  (`mar_dec.c`, `mar_is_lz4`), and the engine has no LZ4. No such archive
-  has been seen; closes with one, then a reader graded against the `lz4`
-  tool.
+- **An LZ4 frame's 64 KB ring is allocated whole**, 69,816 B of heap
+  whatever the payload: an LZ4 frame of anything the peek cannot name keeps
+  the whole bundle and is refused on System 6.0.8 at 512 KB, 2,930 B short
+  (DECISIONS.md 2026-11-04, *the frame mar 0.2.0 reads*). Closes with a ring
+  that grows with the output, priced against that refusal.
 - **Mac OS 9.2 not run on MAR**: `~/.cache/macextract/qemu-ppc/MacOS9.img`
   fails its published SHA-1 (written to 2026-11-02, 18:12); `os9.py
   --setup --force` re-fetches it. Every 68k tier passes 4/4 (DECISIONS.md

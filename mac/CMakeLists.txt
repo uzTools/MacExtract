@@ -124,6 +124,7 @@ else()
     list(FILTER ENGINE_SRC EXCLUDE REGEX "fmt_exo\\.c$")
     list(FILTER ENGINE_SRC EXCLUDE REGEX "fmt_tar\\.c$")
     list(FILTER ENGINE_SRC EXCLUDE REGEX "fmt_mar\\.c$")
+    list(FILTER ENGINE_SRC EXCLUDE REGEX "fmt_lz4\\.c$")
     list(FILTER ENGINE_SRC EXCLUDE REGEX "unc_sniff\\.c$")
     # The Mac OS X sidecars zip and tar share are ovl_zipold's too.
     list(FILTER ENGINE_SRC EXCLUDE REGEX "unc_sidecar\\.c$")
@@ -744,6 +745,7 @@ add_custom_command(
             ${ENGINE_DIR}/src/fmt_tar_probe.c
             ${ENGINE_DIR}/src/fmt_mar.c
             ${ENGINE_DIR}/src/fmt_mar_probe.c
+            ${ENGINE_DIR}/src/fmt_lz4.c
             ${ENGINE_DIR}/src/unc_sidecar.c
     DEPENDS ${ENGINE_DIR}/tools/overlay/ovl_zipold.c
             ${CMAKE_CURRENT_BINARY_DIR}/ovl_forwards_zipold_gen.c
@@ -755,6 +757,7 @@ add_custom_command(
             ${ENGINE_DIR}/src/fmt_tar_probe.c
             ${ENGINE_DIR}/src/fmt_mar.c
             ${ENGINE_DIR}/src/fmt_mar_probe.c
+            ${ENGINE_DIR}/src/fmt_lz4.c
             ${ENGINE_DIR}/src/unc_sidecar.c
             ${OVL_DEPS})
 
@@ -843,6 +846,7 @@ add_custom_command(
             ${ENGINE_DIR}/src/fmt_lzh_probe.c
             ${ENGINE_DIR}/src/fmt_macbinary_probe.c
             ${ENGINE_DIR}/src/fmt_mar_probe.c
+            ${ENGINE_DIR}/src/fmt_lz4_probe.c
             ${ENGINE_DIR}/src/fmt_mime_probe.c
             ${ENGINE_DIR}/src/fmt_mimeseg_probe.c
             ${ENGINE_DIR}/src/fmt_now_probe.c
@@ -877,6 +881,7 @@ add_custom_command(
             ${ENGINE_DIR}/src/fmt_lzh_probe.c
             ${ENGINE_DIR}/src/fmt_macbinary_probe.c
             ${ENGINE_DIR}/src/fmt_mar_probe.c
+            ${ENGINE_DIR}/src/fmt_lz4_probe.c
             ${ENGINE_DIR}/src/fmt_mime_probe.c
             ${ENGINE_DIR}/src/fmt_mimeseg_probe.c
             ${ENGINE_DIR}/src/fmt_now_probe.c

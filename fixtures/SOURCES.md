@@ -1033,3 +1033,5 @@ a comment was found.
 | mar-twin-mar020src.sit | 77c24ddfc7c41c8e2e23b8a95f69cad29782a8893cf9955800bcbb5ef4d2f9ed | 247671 | http://www.hampa.ch/pub/pce/misc/mar-0.2.0-src.sit |
 | synth-mar-single.mac | 6abf81aac73cb19ac756c52e911ac4524bb29e07a5657f8bf082e57f4a378ab0 | 4096 | synthetic:tools/synth_mar.py --case single |
 | synth-mar-tree.mar | b6778539e451046f863288ddb18b72a4c1fc738015c58ff7bd4fcef50bbc4946 | 9856 | synthetic:tools/synth_mar.py --case tree |
+| synth-mar-tree.mar.lz4 | e98824a5efa43040f7c08deba2ce53df505647b2d849b609d2924c721f559e05 | 817 | synthetic:tools/synth_lz4.py fixtures/synth-mar-tree.mar --block 7 --content-checksum |
+| synth-mar020.mar.lz4 | 33b808060c0ab5d7f5d644b65e4c8e08a121f246ffa3d209f1717ddadd5b6018 | 74922 | synthetic:tools/synth_lz4.py fixtures/mar-wild-mar020.mar --block 4 --linked --content-checksum --block-checksum |

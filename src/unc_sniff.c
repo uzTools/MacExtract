@@ -40,6 +40,9 @@ static const UncProbe unc_sniff_order[] = {
     unc_packit_probe,
     unc_gzip_probe,
     unc_compressz_probe,
+    /* A 4-byte magic and a descriptor's version and reserved bits
+     * (fmt_lz4_probe.c). */
+    unc_lz4_probe,
     /* 'CSIT' and a version word, confirmed by a second 'CSIT' twelve
      * bytes from the end. Neither StuffIt probe above can take one: their
      * magics are 'SIT!' and the StuffIt 5 banner (fmt_pf.c). */
@@ -169,6 +172,7 @@ static const UncProbe unc_sniff_order[] = {
 static const UncProbe unc_sniff_envelope_order[] = {
     unc_gzip_probe,
     unc_compressz_probe,
+    unc_lz4_probe,
     unc_pf_probe,
     unc_macbinary_probe,
     unc_applesingle_probe,

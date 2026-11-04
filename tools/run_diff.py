@@ -65,6 +65,8 @@ IMPLEMENTED = {
     # Nor MAR: every block's CRC-32 as its author's writer stored it, and
     # hampa's StuffIt twins of the same folders (tools/run_mar.py).
     "MAR": "MAR",
+    # Nor an LZ4 frame: the bytes liblz4 encoded (tools/run_lz4.py).
+    "LZ4": "LZ4",
 }
 
 # A fixture whose oracle names a format this engine does not have. Until

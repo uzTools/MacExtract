@@ -37,7 +37,7 @@ has the transfer notes.
 StuffIt (classic and 5.x), Compact Pro, BinHex (and the older `.hex`/`.hcx` and `.dl`),
 MacBinary, PackIt, AppleLink packages, DiskDoubler and MacCompress, Now Compress, StuffIt
 SpaceSaver, Alysis SuperDisk!, Private File, ARC, LZH/LHA, uuencode, btoa,
-base64 and MIME attachments, AppleSingle/AppleDouble, MAR (`.mar`, `.mac`),
+base64 and MIME attachments, AppleSingle/AppleDouble, MAR (`.mar`, `.mac`, `.mar.lz4`),
 zip, gzip, tar and `.Z`.
 
 - **Everything comes back as it was:** both forks, type and creator, dates,

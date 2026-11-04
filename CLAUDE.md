@@ -11,10 +11,10 @@ The engine is the product. The Mac app is a thin shell.
 
 ## Where things stand
 
-**M0–M74 are DONE and nothing is in flight.** Every format in FORMATS.md's
+**M0–M75 are DONE and nothing is in flight.** Every format in FORMATS.md's
 table extracts, and the engine recognises nothing it does not extract
-(DECISIONS.md 2026-10-18, *the formats it only named*). The engine passes a **986-fixture** differential suite
-against `unar` and, where `unar` fails, `macunpack`, plus 9,860 robustness variants. The Macintosh application extracts byte-exact on every
+(DECISIONS.md 2026-10-18, *the formats it only named*). The engine passes a **988-fixture** differential suite
+against `unar` and, where `unar` fails, `macunpack`, plus 9,880 robustness variants. The Macintosh application extracts byte-exact on every
 emulated tier from System 3.0 at 1 MB to Mac OS 9.2; the tallies are
 BLOCKERS.md's (*Status*). The interactive UI is driven end to end on System
 3.0 and System 6; above those it is deliberate scope, not an open item.
@@ -32,8 +32,8 @@ BLOCKERS.md's (*Status*). The interactive UI is driven end to end on System
 | `tools/vmac/README.md` | how to run the emulator harnesses and probes | before booting anything |
 | `MANUAL_TESTS.md` | what only somebody outside this machine can do — hardware, a copy of the software, an account to post from | when something needs one of those |
 
-That session-start reading is **~11.0k tokens** (PROGRESS 3.1k,
-OPEN_ITEMS 5.2k, BLOCKERS' first two sections 2.7k); BLOCKERS'
+That session-start reading is **~11.1k tokens** (PROGRESS 3.2k,
+OPEN_ITEMS 5.3k, BLOCKERS' first two sections 2.7k); BLOCKERS'
 withdrawn-claims archive is another **~39.5k** and is reference, not
 orientation. All five are ESTIMATES (bytes ÷ 3.93, ±5 %, 2026-11-03; no
 tokenizer is installed). `tools/check_docs.py` only fails at 25 % drift, and

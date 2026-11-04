@@ -41,7 +41,7 @@ REPO = os.path.dirname(HERE)
 sys.path.insert(0, HERE)
 import run_tiers  # noqa: E402
 
-# Measured 2026-11-03: 299 of 464 envelope fixtures named, 0 wrong; a 256 B
+# Measured 2026-11-04: 301 of 466 envelope fixtures named, 0 wrong; a 256 B
 # window names 4, which this floor fails.
 NAMED_FLOOR = 290
 

@@ -1,0 +1,16 @@
+{
+ "entries": [
+  {
+   "data_sha256": "b6778539e451046f863288ddb18b72a4c1fc738015c58ff7bd4fcef50bbc4946",
+   "data_size": 9856,
+   "name": "synth-mar-tree.mar",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  }
+ ],
+ "fixture": "synth-mar-tree.mar.lz4",
+ "format": "LZ4",
+ "oracle": "the bytes liblz4 1.10.0 encoded (tools/synth_lz4.py), and mar 0.2.0 decodes the same shapes (tools/run_lz4.py)",
+ "sha256": "e98824a5efa43040f7c08deba2ce53df505647b2d849b609d2924c721f559e05",
+ "size": 817
+}

@@ -687,6 +687,17 @@ This project's decoders are transcriptions/ports of algorithms from:
     the specimen cache, never committed. DECISIONS.md 2026-11-03 (*the
     archive that carries its own CRCs*).
 
+  * The LZ4 frame and block formats and xxHash-32, by Yann Collet —
+    https://github.com/lz4/lz4 (doc/, v1.10.0) and
+    https://github.com/Cyan4973/xxHash (doc/xxhash_spec.md, v0.8.2). The
+    three specifications, whose notices permit copying and distribution
+    for any purpose, are what `src/fmt_lz4.c` is written from; no code of
+    either library is in it. `reference/notes` holds them, fetched by
+    `tools/fetch_references.sh`. `tools/synth_lz4.py` calls the system's
+    liblz4 (BSD-2-Clause) through ctypes to write test frames; it is
+    linked into nothing that ships. DECISIONS.md 2026-11-04 (*the frame
+    mar 0.2.0 reads*).
+
   * lhasa 0.4.0, by Simon Howard — https://github.com/fragglet/lhasa,
     ISC licence. Since 2026-09-19 `src/fmt_lzh.c`'s decoders follow it
     rather than XADMaster: `lh_new_decoder.c` and `tree_decode.c` for

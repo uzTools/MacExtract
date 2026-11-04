@@ -17,8 +17,8 @@
  * format that needs the end of the file (Compact Pro's index) or more than
  * the head, or a reader whose payload starts past the window.
  *
- * The head is sniffed as a file of PEEK_HEAD bytes. Measured 2026-11-03 over
- * every envelope fixture, 464: 299 named, none other than the format the
+ * The head is sniffed as a file of PEEK_HEAD bytes. Measured 2026-11-04 over
+ * every envelope fixture, 466: 301 named, none other than the format the
  * whole payload sniffs as (tools/run_peek.py, in ci.sh); the rest name
  * nothing — Compact Pro and SuperDisk! say what they are only at the end.
  * A 2 KB window named no BinHex at all: bh_fork writes 4 KB at a time.

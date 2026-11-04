@@ -108,6 +108,18 @@ if [ ! -d reference/mar ]; then
     unar -q -o reference/mar reference/mar/mar-0.2.0-src.sit >/dev/null
 fi
 
+# LZ4's frame and block formats (Yann Collet), and xxHash-32's, which the
+# frame's checksums are: the published specifications src/fmt_lz4.c is
+# written from. mar 0.2.0 reads a MAR inside an LZ4 frame. Their notices
+# permit copying for any purpose.
+for f in lz4_Frame_format lz4_Block_format; do
+    [ -f reference/notes/$f.md ] || curl -sSfL -o reference/notes/$f.md \
+        "https://raw.githubusercontent.com/lz4/lz4/v1.10.0/doc/$f.md"
+done
+[ -f reference/notes/xxhash_spec.md ] || curl -sSfL \
+    -o reference/notes/xxhash_spec.md \
+    "https://raw.githubusercontent.com/Cyan4973/xxHash/v0.8.2/doc/xxhash_spec.md"
+
 # NOT `cd reference/notes`, which is what these blocks used to open with.
 # Every block BELOW them names its file from the repository root, so the
 # cd made all of those write into reference/notes/reference/notes/ — a

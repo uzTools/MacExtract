@@ -220,10 +220,13 @@ REPO = os.path.dirname(HERE)
 # +100, and its two types in the bundle, -24 measured on the 1 MB probe
 # (742,600 -> 742,576 B, `derived-ASCbeep.sit`). TIERS_MACHINE -24 with it.
 # They were 196,046 / 100,664 / 624,952.
+# **-2,768 more each 2026-11-03, DERIVED**: the LZ4 frame (DECISIONS.md
+# 2026-11-03, *the frame mar 0.2.0 reads*), the control's CODE +2,760 and A5
+# +8; they were 194,198 / 98,816 / 623,104.
 TIERS = {
-    "sys3-512K": (194198, "System 3.0, Macintosh 512Ke (222,070 B free)"),
-    "sys6-512K": (98816,  "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
-    "floor-1M":  (623104, "System 6.0.8, 1 MB Mac Plus — the floor target"),
+    "sys3-512K": (191430, "System 3.0, Macintosh 512Ke (222,070 B free)"),
+    "sys6-512K": (96048,  "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
+    "floor-1M":  (620336, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
 # **-592 more each 2026-10-24, DERIVED**: SUMacC's `.dl`, the control's
 # CODE +584 and A5 +8 (DECISIONS.md 2026-10-24, *the format before
@@ -427,7 +430,8 @@ TIERS = {
 # data + bss -680. The machine gave +4,204, because the jump table, the
 # stub segments and the relocations trimmed at launch are resident bytes
 # this unit never counted — which is why TIERS was measured, not moved.
-TIERS_CONTROL = 218768     # build/mac-resident, CODE + A5, 2026-11-03
+TIERS_CONTROL = 221536     # build/mac-resident, CODE + A5, 2026-11-03
+# +2,768 the same day: the LZ4 frame, its reader linked in; TIERS -2,768.
 # +1,824 the same day: MAR, its reader linked in; TIERS -1,824 (and -24).
 # +192 the same day: the queueing File > Open...; TIERS -192 (and -144).
 # +32 more the same day: StuffIt 5's folder table that grows; TIERS -32.
@@ -908,7 +912,10 @@ EXPECT = {
 # reader is in `ovl_zipold` and the probe in the sniffer's image
 # (DECISIONS.md 2026-11-03, *the archive that carries its own CRCs*). TIERS
 # -1,824; its two bundle types are outside the unit (TIERS -24 more).
-OVL_SAVED = 162464
+# **+2,720 2026-11-03, -> 165,184**: the LZ4 frame, the control's +2,768
+# (CODE +2,760, A5 +8) against the shipped pair's +48 (CODE +20, A5 +28)
+# (DECISIONS.md 2026-11-03, *the frame mar 0.2.0 reads*). TIERS -2,768.
+OVL_SAVED = 165184
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
 # every kept image is one — as is the bundle an envelope holds on to.
@@ -1057,8 +1064,8 @@ IMAGES = {
     "OVL_ID_SQP":         1736,
     "OVL_ID_SUPERDISK":   6634,
     "OVL_ID_TEXT":        11438,
-    "OVL_ID_ZIPOLD":      12564,
-    "OVL_ID_SNIFF":       14564,
+    "OVL_ID_ZIPOLD":      15144,
+    "OVL_ID_SNIFF":       14676,
     "OVL_ID_DESTDLG":     1682,
     "OVL_ID_SEGSETUP":    2364,
 }
@@ -1150,7 +1157,10 @@ IMAGES = {
 # **ZIPOLD +1,732, SNIFF +360, the bundle +2,092 B, 2026-11-03**: MAR's
 # reader beside tar's, and its probe and CRC beside the others (DECISIONS.md
 # 2026-11-03, *the archive that carries its own CRCs*).
-BUNDLE = 191328
+# **ZIPOLD +2,580, SNIFF +112, the bundle +2,692 B, 2026-11-03**: the LZ4
+# frame's reader beside MAR's, its probe beside the others (DECISIONS.md
+# 2026-11-03, *the frame mar 0.2.0 reads*).
+BUNDLE = 194020
 
 # What the SHIPPED lane asserts, and it is the refused fixtures BY NAME
 # rather than a tally: a tier that refuses two different fixtures and still

@@ -686,7 +686,12 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # unc_mar_extract 1,100, mar_block 270, unc_mar_hdr_ok 108, unc_mar_probe
 # 90, unc_mar_crc 88, and the out-of-line unc_get_u32be its file keeps.
 # The shipped pair is CODE +16 and A5 0 (the eager pair below).
-UNC_MAC_CODE_DEFAULT=182128
+# +2,760 on 2026-11-03, 182,128 -> 184,888, A5 +8 below: the LZ4 frame
+# (DECISIONS.md 2026-11-03, *the frame mar 0.2.0 reads*): unc_lz4_extract,
+# lz_frame, lz_block and lz_len, xxHash-32 (xxh_update 168, xxh_digest 232)
+# and __mulsi3, which it is the first resident caller of here. The shipped
+# pair is CODE +20 and A5 +28 (the eager pair below).
+UNC_MAC_CODE_DEFAULT=184888
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -905,7 +910,9 @@ UNC_MAC_CODE_DEFAULT=182128
 # queueing File > Open... (above); no data was added.
 # +100 on 2026-11-03, 36,540 -> 36,640: MAR (above) — its 64-byte CRC
 # table, the engine table's row and its name, and alignment.
-UNC_MAC_A5_DEFAULT=36640
+# +8 on 2026-11-03, 36,640 -> 36,648: the LZ4 frame (above), the table
+# row and its name, and alignment.
+UNC_MAC_A5_DEFAULT=36648
 # A CEILING PER CONFIGURATION, because one ceiling measured on another build
 # cannot fire. The figures above are the RESIDENT control build, which carries
 # every decoder; the shipped build's resident code is a third of that, so
@@ -1392,8 +1399,17 @@ UNC_MAC_A5_DEFAULT=36640
 # and its probe in the sniffer's image; resident are the shim, the engine
 # table's row and its name, and the keep set's two bytes. Its two bundle
 # types are map entries outside this unit, 24 B more off every budget.
-UNC_MAC_CODE_EAGER=39604
-UNC_MAC_A5_EAGER=16700
+# +20 and +28 on 2026-11-03, 39,604 -> 39,624 and 16,700 -> 16,728: the
+# LZ4 frame (DECISIONS.md 2026-11-03, *the frame mar 0.2.0 reads*). Its
+# reader is in `ovl_zipold` and its probe in the sniffer's image; resident
+# are the shim, the engine table's row and its name, and the keep set's
+# two bytes; the A5 is `.data` alignment over them. 48 B off every budget.
+# +12 and -12 the same day, 39,624 -> 39,636 and 16,728 -> 16,716: the
+# release keeps an image an envelope shares with what is under it in the
+# inner layer's slot (DECISIONS.md 2026-11-03, *the frame mar 0.2.0
+# reads*); the sum, and so every budget, unmoved.
+UNC_MAC_CODE_EAGER=39636
+UNC_MAC_A5_EAGER=16716
 # +8 on 2026-10-02 for the same reason as the eager pair above: the
 # overlay call that now says WHICH of StuffIt 2.x's ciphers an entry
 # wants. A5 fell to 19,096 and its ceiling is left where it was.
@@ -1508,7 +1524,9 @@ UNC_MAC_A5_EAGER=16700
 # data + bss 16,692, under its ceiling.
 # +20 code on 2026-11-03, MAR's shim (the eager pair above); data + bss
 # 16,720, under its ceiling.
-UNC_MAC_CODE_LAZY=38448
+# +16 code on 2026-11-03, the LZ4 frame's shim (the eager pair above);
+# data + bss 16,736, under its ceiling.
+UNC_MAC_CODE_LAZY=38464
 UNC_MAC_A5_LAZY=19200
 if [ -n "$UNC_OVL_RESIDENT" ]; then
     UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-$UNC_MAC_CODE_DEFAULT}
