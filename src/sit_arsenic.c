@@ -758,7 +758,7 @@ static int ars_bwt_prepare(Arsenic *a, UncAlloc *al)
         if (!nt && n <= ARS_HALF_MAX) {
             nt = (uint8_t *)unc_alloc(al, n * 2u + (n + 1u) / 2u);
             a->walk = ARS_WALK_HALF;
-            a->nib = nt + n * 2u;
+            if (nt) a->nib = nt + n * 2u;   /* not from NULL: that is UB */
         }
         if (nt) { a->transform = nt; a->transform_cap = n; }
     }

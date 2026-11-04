@@ -284,7 +284,9 @@ TAKEN = "2026-11-03"
 # -> 194,280 2026-11-04: Arsenic's 2.5-byte table in `ovl_stuffit` (+256),
 # over the destination dialog's 64K-ROM check (+4)
 # (DECISIONS.md 2026-11-04, *the rung between the table and the index*).
-EXPECT_BUNDLE = 194280
+# -> 194,292 the same day: DiskDoubler method 10's empty block in
+# `ovl_cptdd` (+12) (DECISIONS.md 2026-11-04, *the offsets from nothing*).
+EXPECT_BUNDLE = 194292
 TOLERANCE_BUNDLE = 2048
 TAKEN_BUNDLE = "2026-11-04"
 

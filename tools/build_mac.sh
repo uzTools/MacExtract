@@ -701,7 +701,11 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # inverse-BWT table (DECISIONS.md 2026-11-04, *the rung between the table
 # and the index*), ars_half_put and ars_half_get's walk. The shipped pair
 # is unmoved: the code is in `ovl_stuffit` (+256).
-UNC_MAC_CODE_DEFAULT=185160
+# +72 the same day, 185,160 -> 185,232, A5 -8 below: the null-pointer
+# offsets the fuzzer found (DECISIONS.md 2026-11-04, *the offsets from
+# nothing*); DiskDoubler's test inlines into more than one caller here,
+# where `ovl_cptdd` pays 12 B.
+UNC_MAC_CODE_DEFAULT=185232
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -926,7 +930,9 @@ UNC_MAC_CODE_DEFAULT=185160
 # -24 the same day, back to 36,648: HoldUI out again (above).
 # +16 on 2026-11-04, 36,648 -> 36,664: `.data` alignment under Arsenic's
 # 2.5-byte table (above); sit_arsenic.o's .rodata and .data are unmoved.
-UNC_MAC_A5_DEFAULT=36664
+# -8 the same day, 36,664 -> 36,656: `.data` alignment under the fuzzer's
+# fixes (above); no data was added or removed.
+UNC_MAC_A5_DEFAULT=36656
 # A CEILING PER CONFIGURATION, because one ceiling measured on another build
 # cannot fire. The figures above are the RESIDENT control build, which carries
 # every decoder; the shipped build's resident code is a third of that, so

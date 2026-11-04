@@ -3606,6 +3606,14 @@ static void test_dd_ddn_shifts(void)
     put32(s + 33, 0x0100210Cu);   /* 2 codes, 1 B, max 1, 1 bit, zero-coded */
     s[37] = 0x60;                 /* 0 absent; 1 present, length 1 */
     CHECK(dd_ddn_status(s, 22 + 11 + 6) == UNC_ERR_CORRUPT);
+
+    /* A block of no literals and no offsets: nothing is allocated for
+     * them, and the literals' start was taken as an offset of 0 from the
+     * NULL that left — undefined, and stopped on by clang's UBSan
+     * (tools/fuzz/ fz_ddn's find, minimised to these 22 zero bytes,
+     * 2026-11-04). The header's XOR of nothing is 0, so it parses. */
+    memset(s, 0, 22);
+    CHECK(dd_ddn_status(s, 22) == UNC_ERR_TRUNCATED);   /* 1 byte declared */
 }
 
 
@@ -4918,6 +4926,73 @@ static void test_now_distance0(void)
 }
 
 /* ------------------------------------------------------------------ */
+/* Arsenic with neither inverse-BWT table affordable                  */
+/* ------------------------------------------------------------------ */
+
+/* A running total against a cap, as the Mac shell's allocator keeps. */
+typedef struct { uint32_t cap, live; } ArsCapAlloc;
+static void *ars_cap_alloc(void *ctx, uint32_t size)
+{
+    ArsCapAlloc *a = (ArsCapAlloc *)ctx;
+    uint32_t *p;
+    if (size > a->cap - a->live) return NULL;
+    p = (uint32_t *)malloc((size_t)size + 8u);
+    if (!p) return NULL;
+    p[0] = size;
+    a->live += size;
+    return p + 2;
+}
+static void ars_cap_free(void *ctx, void *ptr)
+{
+    ArsCapAlloc *a = (ArsCapAlloc *)ctx;
+    if (!ptr) return;
+    a->live -= ((uint32_t *)ptr - 2)[0];
+    free((uint32_t *)ptr - 2);
+}
+
+/* tools/fuzz/ fz_sit's first find, minimised (2026-11-04): a block of
+ * 274 bytes under a 12 KB cap, so the 3-byte and the 2.5-byte tables are
+ * both refused. ars_bwt_prepare then set the nibble pointer from the
+ * NULL the second allocation returned — undefined behaviour, which the
+ * sanitizer build stops on — before falling to the sampled index. */
+static const uint8_t ars_both_refused[18] = {
+    0x42, 0xc1, 0xd4, 0xde, 0x7e, 0x01, 0x00, 0x00, 0x11, 0x9e,
+    0xf7, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00
+};
+
+static void test_arsenic_both_tables_refused(void)
+{
+    MemIO m;
+    UncIO io;
+    ArsCapAlloc ca;
+    UncAlloc al;
+    UncSink sk;
+    CapSink cap;
+    UncCtx c;
+    static uint8_t iobuf[UNC_IOBUF], obuf[UNC_STAGE];
+    int err;
+
+    ca.cap = 3u << 12;
+    ca.live = 0;
+    al.ctx = &ca;
+    al.alloc = ars_cap_alloc;
+    al.free = ars_cap_free;
+    test_make_memio(&io, &m, ars_both_refused, sizeof ars_both_refused);
+    cap_make(&sk, &cap);
+    memset(&c, 0, sizeof c);
+    c.io = &io;
+    c.sink = &sk;
+    c.al = &al;
+    c.ps.total = sizeof ars_both_refused;
+    c.pwstate = UNC_PW_UNSET;
+    err = unc_sit_decode_fork(&c, UNC_FORK_DATA, 0, sizeof ars_both_refused,
+                              0x8f, 15, 0, 0, iobuf, UNC_IOBUF, obuf,
+                              UNC_STAGE, NULL);
+    CHECK(err != UNC_OK);          /* the stream is garbage past its header */
+    CHECK(ca.live == 0);           /* and everything it took is back */
+}
+
+/* ------------------------------------------------------------------ */
 /* Alysis SuperDisk! — the container, and the fork order no fixture    */
 /* in the corpus can show (both of them have one fork per file)        */
 /* ------------------------------------------------------------------ */
@@ -6065,6 +6140,7 @@ void run_format_tests(void)
     test_diskdoubler();
     test_nowcompress();
     test_now_distance0();
+    test_arsenic_both_tables_refused();
     test_applelink();
     test_sqp();
     test_foreign();

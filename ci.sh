@@ -371,6 +371,20 @@ make BUILD=build/arsh CFLAGS="-O1 -g -fsanitize=address,undefined,alignment \
 python3 tools/run_diff.py --macextract build/arsh/macextract \
     --format "StuffIt 5" || fail "StuffIt 5 diff (forced half)"
 
+# The unit tests again under CLANG's UBSan, which checks what gcc's does
+# not: an offset applied to a null pointer. ars_bwt_prepare did that when
+# both tables were refused, gcc's build ran the test that reaches it
+# green, clang's stopped on it (TESTING.md, *Fuzzing each decoder on its
+# own*). No clang is a skip; a clang that will not build this is a failure.
+if command -v clang >/dev/null 2>&1; then
+    make BUILD=build/ut-clang CC=clang CFLAGS="-O1 -g \
+         -fsanitize=address,undefined,alignment -fno-sanitize-recover=all" \
+         build/ut-clang/unit_tests >/dev/null || fail "clang sanitizer build"
+    ./build/ut-clang/unit_tests || fail "unit tests (clang sanitizers)"
+else
+    echo "unit tests (clang sanitizers): no clang, skipped"
+fi
+
 # The deep end of the sampling dial, which neither run above reaches: a
 # budget big enough to hold the block at all is big enough to keep `target`
 # high, so no real run makes a query whose scan spans most of the block.

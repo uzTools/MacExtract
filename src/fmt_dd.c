@@ -814,7 +814,9 @@ static int dd_ddn_run(DdFork *o, UncCtx *c, DdnState *st, UncBufIn *in,
             st->lit = nb; st->litcap = want;
         }
         offs = (uint16_t *)(void *)st->lit;
-        lits = st->lit + numoffsets * 2u;
+        /* A block of no literals and no offsets allocates nothing, and an
+         * offset from NULL is undefined even when it is 0 (tools/fuzz/). */
+        lits = st->lit ? st->lit + numoffsets * 2u : NULL;
 
         /* offsets */
         if ((err = ddn_read_code(st, &cd->off, in, lenbuf, &codeend)) != UNC_OK)

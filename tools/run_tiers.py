@@ -243,10 +243,15 @@ REPO = os.path.dirname(HERE)
 # index*), the control's CODE +240 and A5 +16; OVL_SAVED +256 offsets it,
 # and StuffIt's image +256 takes it back from that format alone. They were
 # 191,364 / 95,982 / 620,270.
+# **-64 more each the same day, DERIVED**: the null-pointer offsets the
+# per-decoder fuzzer found (DECISIONS.md 2026-11-04, *the offsets from
+# nothing*), the control's CODE +72 and A5 -8; OVL_SAVED +64 offsets it,
+# and the DiskDoubler image's +12 takes that much back from its formats.
+# They were 191,108 / 95,726 / 620,014.
 TIERS = {
-    "sys3-512K": (191108, "System 3.0, Macintosh 512Ke (222,070 B free)"),
-    "sys6-512K": (95726,  "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
-    "floor-1M":  (620014, "System 6.0.8, 1 MB Mac Plus — the floor target"),
+    "sys3-512K": (191044, "System 3.0, Macintosh 512Ke (222,070 B free)"),
+    "sys6-512K": (95662,  "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
+    "floor-1M":  (619950, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
 # **-592 more each 2026-10-24, DERIVED**: SUMacC's `.dl`, the control's
 # CODE +584 and A5 +8 (DECISIONS.md 2026-10-24, *the format before
@@ -450,7 +455,8 @@ TIERS = {
 # data + bss -680. The machine gave +4,204, because the jump table, the
 # stub segments and the relocations trimmed at launch are resident bytes
 # this unit never counted — which is why TIERS was measured, not moved.
-TIERS_CONTROL = 221824     # build/mac-resident, CODE + A5, 2026-11-04
+TIERS_CONTROL = 221888     # build/mac-resident, CODE + A5, 2026-11-04
+# +64 the same day: the fuzzer's null-pointer offsets; TIERS -64.
 # +256 the same day: Arsenic's 2.5-byte table; TIERS -256.
 # -96 the same day: HoldUI out, MaxApplZone in; TIERS +96 (and -10).
 # +128 on 2026-11-04: HoldUI; TIERS -128.
@@ -947,7 +953,11 @@ EXPECT = {
 # +256 (CODE +240, A5 +16) against the shipped pair's 0: the code is in
 # `ovl_stuffit` (DECISIONS.md 2026-11-04, *the rung between the table and
 # the index*). TIERS -256.
-OVL_SAVED = 165440
+# **+64 the same day, -> 165,504**: the null-pointer offsets the fuzzer
+# found, the control's +64 (CODE +72, A5 -8) against the shipped pair's 0:
+# the DiskDoubler one is in `ovl_cptdd` (+12) (DECISIONS.md 2026-11-04,
+# *the offsets from nothing*). TIERS -64.
+OVL_SAVED = 165504
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
 # every kept image is one — as is the bundle an envelope holds on to.
@@ -1085,7 +1095,7 @@ IMAGES = {
     "OVL_ID_BINHEX":      7158,
     "OVL_ID_BTOA":        2496,
     "OVL_ID_CODECS":      6016,
-    "OVL_ID_CPTDD":       15156,
+    "OVL_ID_CPTDD":       15168,
     "OVL_ID_CRYPT":       9604,
     "OVL_ID_EXO":         30228,
     "OVL_ID_LZH":         10438,
@@ -1198,7 +1208,10 @@ IMAGES = {
 # **STUFFIT +256, the bundle +256 B, 2026-11-04**: Arsenic's 2.5-byte
 # inverse-BWT table (DECISIONS.md 2026-11-04, *the rung between the table
 # and the index*).
-BUNDLE = 194280
+# **CPTDD +12, the bundle +12 B, the same day**: method 10's block of no
+# literals and no offsets takes no offset from NULL (DECISIONS.md
+# 2026-11-04, *the offsets from nothing*).
+BUNDLE = 194292
 
 # What the SHIPPED lane asserts, and it is the refused fixtures BY NAME
 # rather than a tally: a tier that refuses two different fixtures and still

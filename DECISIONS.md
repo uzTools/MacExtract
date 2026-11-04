@@ -506,6 +506,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-04 (the rung between the table and the index) — Arsenic gets a 2.5-byte inverse-BWT table between the 3-byte one and the sampled index, taken only when the 3-byte one cannot be allocated: a2basic at 1 MB −14.4 % engine time, 4 MB unmoved, for 256 B of StuffIt image
 - 2026-11-04 (the padding six files never had) — six corpus archives filed as truncated are whole MacBinary I files with no padding after the data fork; the Compact Pro self-extractors among them run from that layout, while StuffIt Expander 4.0.2, unar and this engine refuse it
 - 2026-11-04 (the code that ran before the release) — no resident shell code is worth moving into the bundle: what runs before the images are released also runs during extraction, or before the bundle is read
+- 2026-11-04 (the offsets from nothing) — the per-decoder fuzzer's first run found two pointer offsets taken from NULL, one in the 2.5-byte rung landed the same day; gcc's UBSan, the only one ci.sh ran, cannot see either
 
 ---
 
@@ -21029,3 +21030,33 @@ the release, against an 18 B entry stub.
 **Consequence:** nothing moved; at most 18 B was on offer, and an image
 that a set's later part calls back into would have to stay kept, which
 costs that format its whole size.
+
+## 2026-11-04 (the offsets from nothing) — the per-decoder fuzzer's first run found two pointer offsets taken from NULL, one in the 2.5-byte rung landed the same day; gcc's UBSan, the only one ci.sh ran, cannot see either
+
+**Claim (measured).** `tools/fuzz/` (libFuzzer, clang 19, ASan + UBSan; TESTING.md,
+*Fuzzing each decoder on its own*), 600 s a target, stopped four of fourteen
+targets on two sites, both clang's "applying … offset to null pointer":
+
+- `ars_bwt_prepare` set the 2.5-byte table's nibble pointer from the
+  allocation before testing it, so a block that neither table fits
+  (every one at 512 KB) offset NULL. Found by `sit` after 72,059 runs
+  and `arsenic` after 45,742; minimised to an 18-byte stream under a
+  12 KB cap. The rung had been pushed hours before (*the rung between
+  the table and the index*).
+- DiskDoubler method 10 (`dd_ddn_run`) took the literals' start as
+  `st->lit + numoffsets * 2` for a block of no literals and no offsets,
+  which allocates nothing: an offset of 0 from NULL. Found by `dd` after
+  582 runs and `ddn` after 12,857; minimised to 22 zero bytes. Present
+  since method 10 was written.
+
+Neither pointer was ever dereferenced, so no output changed; both are
+undefined behaviour a compiler may exploit. **Each has a unit test that
+fails before its fix and passes after, under clang's UBSan only**: gcc's
+`-fsanitize=undefined` does not check an offset from NULL, and ci.sh's
+sanitizer build ran the Arsenic test green on the unfixed code. ci.sh
+gains a clang UBSan unit-test lane (skipped without clang).
+
+**Cost (measured).** `ovl_cptdd` +12 B (15,156 → 15,168), the bundle the
+same; `ovl_stuffit` unmoved (`sit_arsenic.o` the same size at -Os). The
+resident control CODE +72 and A5 −8, so `OVL_SAVED` +64 and `TIERS` −64
+each, re-taken; only DiskDoubler's grant falls (12 B). No tally moves.

@@ -3994,10 +3994,12 @@ bundle*.
 |---|---|---|---|---|---|
 | **eager — SHIPPED** | (default) | **39,672 B** | 16,712 B | **47,744 B** | **250,496 B** |
 | lazy | `UNC_OVL_LAZY=1` | 38,500 B | 16,764 B | 46,464 B | 245,248 B |
-| resident — the control | `UNC_OVL_RESIDENT=1` | **185,160 B** | **36,664 B** | 215,808 B | 224,256 B |
+| resident — the control | `UNC_OVL_RESIDENT=1` | **185,232 B** | **36,656 B** | 215,936 B | 224,256 B |
 
-Read off the builds 2026-11-04, after Arsenic's 2.5-byte table (the control
-+240 B of `CODE` and +16 B of A5 alignment, the shipped pair unmoved), LZ4
+Read off the builds 2026-11-04, after the fuzzer's null-pointer offsets (the
+control +72 B of `CODE` and −8 B of A5; *the offsets from nothing*), Arsenic's
+2.5-byte table (the control +240 B of `CODE` and +16 B of A5 alignment, the
+shipped pair unmoved), LZ4
 and the launch that purges nothing (DECISIONS.md 2026-11-04, *the rung
 between the table and the index*, *the frame mar 0.2.0 reads*, *the
 layouts the release did not hold*; the two file sizes CORRECTED the same
@@ -4083,13 +4085,12 @@ Measured 2026-09-27:
 whose tallies it is quoted beside. It cancels in a difference taken from
 one probe pair (*What it buys, against the control*): **117,040 B saved
 between the shipped pair against 116,720 B between the probe pair**, both
-2026-09-27. The shipped pair is **165,440 B** (`OVL_SAVED`,
-`tools/run_tiers.py`) since 2026-11-04 (*the rung between the table and the
-index*); the
+2026-09-27. The shipped pair is **165,504 B** (`OVL_SAVED`,
+`tools/run_tiers.py`) since 2026-11-04 (*the offsets from nothing*); the
 probe pair has not been re-measured, so the 320 B is that day's
 difference, not today's.
 
-The bundle is **194,280 B** — the nineteen images sum to 194,036 B, so its
+The bundle is **194,292 B** — the nineteen images sum to 194,048 B, so its
 index costs **244 B** (`tools/run_tiers.py` `BUNDLE`, `IMAGES`): a
 4-byte header, 12 bytes of directory per image and padding of each image to
 a multiple of 4 — the padding is why the index is not a constant. The
@@ -4150,7 +4151,7 @@ carries, and they were read again from the floppy (DECISIONS.md 2026-11-04,
 
 A tier's budget for a format is the resident build's budget for that tier
 (`TIERS`; *512 KB machines*, *Floor target verification*), plus
-the 165,440 B of `CODE` and A5 the shipped build does not carry (`OVL_SAVED`;
+the 165,504 B of `CODE` and A5 the shipped build does not carry (`OVL_SAVED`;
 *Three configurations, one tree*), less the images the format keeps and 8 B of
 block header each, less a **322 B residue** (`OVL_RESIDUE`, re-taken
 2026-10-22 from the shipped and resident budget probes on all three tiers;
@@ -4203,7 +4204,7 @@ left*).
 
 **The last row is the one no tally had shown**: a wrapper whose payload the
 peek cannot name keeps the bundle, and that layer runs with **less** memory than
-a resident build would give it — 194,280 B held against 165,440 B saved. Until
+a resident build would give it — 194,292 B held against 165,504 B saved. Until
 2026-11-03 that was every envelope, and it refused `a2ps.V4.3.tar.Z` and
 `popper-1.7.tar.Z` at System 6.0.8 / 512 KB; the peek names Tar from the first
 512 bytes and the `.Z` layer is granted 200,022 B there instead of 72,090 B
@@ -4260,7 +4261,7 @@ half was wrong 2026-09-19 to 09-23: it still counted `unc_crypt.c`'s three
 The application ships as **250,496 B** of MacBinary (`dist/MacExtract.bin`,
 `ls -l` 2026-11-04, with Arsenic's 2.5-byte table; 250,240 B before it,
 CORRECTED the same day from 250,112). **47,744 B** is
-`MacExtract.code.bin`, read at launch and never purged, and **194,280 B** is
+`MacExtract.code.bin`, read at launch and never purged, and **194,292 B** is
 the `'OVLY'` bundle, read at launch and mostly given back before the engine
 takes its budget (*Overlays*). What stays costs the heap one for one: the
 link produces a single `MacExtract.code.bin`, and `Elf2Mac/LdScript.cc`
@@ -5383,7 +5384,7 @@ build's budget; the shipped build grants 82–105 KB more.
 free heap (`sys30.py --emu mv-512Ke -D UNC_OVL_RESIDENT -D UNC_AT_BUDGET`,
 slots swapped per `tools/vmac/README.md`) less the flat 20,480 B reserve.
 Re-taken on the machine at **201,590 B** on 2026-10-22; `tools/run_tiers.py`
-now asserts **191,108 B** (2026-11-04), derived from the control build's growth since
+now asserts **191,044 B** (2026-11-04), derived from the control build's growth since
 (CORRECTED 2026-10-25: this read "205,476 B, the figure run_tiers.py
 asserts"). History of the figure: *Budget*.
 
@@ -5598,7 +5599,7 @@ data and relocations. 63,744 B was measured against 2026-09-01's build;
 `ApplLimit − ApplZone` = **78,568 B**, leaving 20,956 B for every buffer
 (*derived*; DECISIONS.md 2026-10-22, *the runtime the application did not
 need*). `CODE` has since fallen 2,584 B; the sum has not been re-derived. The
-eager loader then asks for the `'OVLY'` bundle as ONE **194,280 B** block
+eager loader then asks for the `'OVLY'` bundle as ONE **194,292 B** block
 (*Overlays*). The bound is the RAM under the screen buffer, so no smaller
 System moves it (*What the application costs the engine*); the margin is
 kilobytes, which is why MANUAL_TESTS.md §6's HD20 question is about a

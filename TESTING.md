@@ -3518,6 +3518,74 @@ callback, which is the most it can claim.
 **Demonstrated failing**: a matcher that ignores the fingerprint (4
 failures — the name-alike intruder gets used) and a joiner that drops one
 byte per part boundary (27 failures).
+## Fuzzing each decoder on its own (`tools/fuzz/`, not in `ci.sh`)
+
+Coverage-guided libFuzzer over each decoder's RAW stream, under ASan and
+UBSan, with no container in front: no magic, header CRC or directory to
+get past. Needs clang with `-fsanitize=fuzzer`; `build.sh` exits 2 without
+it rather than building something weaker.
+
+    sh tools/fuzz/build.sh                       # build/fuzz/fz_<target>, 14 of them
+    python3 tools/fuzz/make_seeds.py             # .tmp/fuzz/seeds/<target>
+    python3 tools/fuzz/run.py --seconds 600      # all targets, two at a time
+
+An input is `[outlen 4 B BE][param][budget][stream]` (`fz_common.h`): the
+budget byte is the allocator's cap in 4 KB steps (0 = 16 MB), so the
+fallbacks a small Mac takes are reached. `make_seeds.py` copies the engine
+to a scratch tree, puts a hook at each decoder's entry that writes the
+stream it is handed, and runs `t` over every fixture (and the two SuperDisk!
+chains, `x` then `t`). A crash is minimised with `-minimize_crash=1` and
+becomes a unit test shown to fail before its fix.
+
+**Can fail:** an off-by-one planted in `now_lzss`'s output bound was found
+in about 23,700 runs (19 s) from the corpus seeds, 2026-11-04.
+
+**Run 2026-11-04, 600 s a target, clang 19** (cov = libFuzzer's edges over
+the whole instrumented engine, not comparable across targets):
+
+| target | seeds | cov | corpus | runs | stopped on |
+|---|---|---|---|---|---|
+| `sit` (classic methods, 13, 14, Arsenic) | 197 | 1,031 → **1,098** | 920 | 72,059 → **749,902** | null offset, `ars_bwt_prepare` → clean |
+| `sit13` | 64 | 246 | 249 | 187,478 | — |
+| `sit14` | 5 | 277 | 234 | 370,521 | — |
+| `arsenic` | 64 | 300 → **358** | 329 | 45,742 → **418,081** | the same → clean |
+| `dd` (methods 0-10) | 117 | 655 → **833** | 797 | 582 → **475,789** | null offset, `dd_ddn_run` → clean |
+| `ddn` (method 10) | 53 | 284 → **313** | 268 | 12,857 → **395,210** | the same → clean |
+| `lzh_static` (-lh4- to -lh7-) | 10 | 264 | 284 | 219,567 | — |
+| `lzh_dyn` (-lh1-/2-/3-, -lz5-, -lzs-) | 3 | 440 | 507 | 175,908 | — |
+| `now` (shapes 1-3, Huffman then LZSS) | 64 | 187 | 201 | 2,241,669 | — |
+| `spacesaver` | **0** | 395 | 437 | 2,959,716 | — |
+| `superdisk` | 5 | 263 | 340 | 1,003,158 | — |
+| `implode` | 25 | 168 | 149 | 317,055 | — |
+| `shrink` | 37 | 151 | 147 | 348,980 | — |
+| `reduce` | 9 | 116 | 130 | 573,214 | — |
+
+The second figure in a row is the re-run after the fix, 600 s more from
+the corpus the first left (DECISIONS.md 2026-11-04, *the offsets from
+nothing*).
+
+**What it CANNOT see.**
+- **Wrong bytes.** The only signal is a sanitizer abort, a timeout (20 s)
+  or a leak (`fz_done`); output goes to a null sink and is graded by
+  nothing.
+- **Whether a find is reachable from an archive.** The container's checks
+  are skipped, so a crash can be one no real file produces; both finds
+  so far are reachable (each unit test goes through a container or the
+  fork decoder a container calls).
+- **What gcc's UBSan does not check, in ci.sh.** Both finds are clang-only
+  diagnostics; `ci.sh` runs the unit tests under clang for that reason,
+  and nothing else in it does.
+- **SpaceSaver from real data.** No SpaceSaver stream is in the corpus;
+  `tools/ssmodule/` writes them only with the control panel in the
+  emulator cache, so that target started from the header alone.
+- **Parameters the header does not model**: DiskDoubler's XOR value other
+  than 0x5A, SpaceSaver's preset dictionary, StuffIt's optimizer decoders
+  (PNTG, delta, JPEG), a cipher in front of any stream.
+- **The 68000.** Host-only, little-endian, 64-bit pointers: no alignment
+  fault, call depth or 16-bit `int` is exercised (FORMATS.md, *Stack*).
+- **Seeds are corpus-shaped.** At most 64 a target, smallest first; a
+  decoder path no fixture reaches is found only by mutation.
+
 ## The derivation tools (`tools/derive_*.py`, not in `ci.sh`)
 
 **These are not tests. They are the evidence that a format's facts come
