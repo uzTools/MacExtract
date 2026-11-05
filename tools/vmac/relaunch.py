@@ -317,8 +317,9 @@ def main():
             print(f"relaunch: queued archive {third[0]}: entries "
                   f"{'on the volume' if got3 else 'MISSING'}")
         if third:
-            # Since v0.45.0 the destination is asked once a launch, so only
-            # the volume grades the archives after the first.
+            # The destination is asked once an archive, but in whatever order
+            # the machine's speed puts the frames, so only the volume grades
+            # the archives after the first.
             ok = d3 == "handed" and got1 and got2 and got3
         elif a.expect == "both":
             ok = d3 == "handed" and d5 == "handed" and got1 and got2
