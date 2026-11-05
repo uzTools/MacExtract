@@ -715,7 +715,10 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # +24 the same day, 185,584 -> 185,608, A5 +8 below: an LZ4 match is held
 # to its block's size before it is copied (DECISIONS.md 2026-11-05, *the
 # match longer than its block*); in `ovl_zipold` everywhere but here.
-UNC_MAC_CODE_DEFAULT=185608
+# +28 the same day, 185,608 -> 185,636, A5 +4 below: a MAR listing reads
+# only the comment an entry carries and counts what it skips (DECISIONS.md
+# 2026-11-05, *the comment a listing read whole*); `ovl_zipold` elsewhere.
+UNC_MAC_CODE_DEFAULT=185636
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -948,7 +951,9 @@ UNC_MAC_CODE_DEFAULT=185608
 # Open...'s record (above); no data was added.
 # +8 the same day, 36,656 -> 36,664: `.data` alignment under the LZ4
 # bound (above); no data was added.
-UNC_MAC_A5_DEFAULT=36664
+# +4 the same day, 36,664 -> 36,668: `.data` alignment under the MAR
+# listing (above); no data was added.
+UNC_MAC_A5_DEFAULT=36668
 # A CEILING PER CONFIGURATION, because one ceiling measured on another build
 # cannot fire. The figures above are the RESIDENT control build, which carries
 # every decoder; the shipped build's resident code is a third of that, so

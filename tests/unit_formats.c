@@ -5717,6 +5717,145 @@ static void test_mar(void)
     CHECK(unc_sniff(&io) != UNC_FORMAT_MAR);
 }
 
+/* A MAR entry's Get Info comment in a listing (DECISIONS.md 2026-11-05,
+ * *the comment a listing read whole*): `l` reads what the entry carries,
+ * 255 bytes, and judges no CRC; `t` reads it all and refuses a damaged one.
+ * And the progress a listing reports (*the bytes a listing never
+ * counted*): it reaches the end of the archive, forks and comment
+ * included, though it reads neither. */
+static uint32_t gMarRead;
+static int32_t mar_count_read(void *ctx, void *buf, int32_t len)
+{
+    int32_t n = mio_read(ctx, buf, len);
+    if (n > 0) gMarRead += (uint32_t)n;
+    return n;
+}
+static uint32_t gMarTickDone, gMarTickTotal;
+static int gMarEntries;     /* a listing's entries, CapSink holding eight */
+static int mar_any_begin(void *ctx, const UncEntryInfo *info)
+{
+    (void)ctx; (void)info;
+    gMarEntries++;
+    return 0;
+}
+static int mar_any_end(void *ctx, int status)
+{
+    (void)ctx; (void)status;
+    return 0;
+}
+static int mar_tick(void *ctx, uint32_t done, uint32_t total)
+{
+    (void)ctx;
+    gMarTickDone = done;
+    gMarTickTotal = total;
+    return 1;
+}
+
+static void test_mar_comment_listing(void)
+{
+    enum { CLEN = 70000, DLEN = 10 };
+    uint32_t cspan = (CLEN + 4 + 127) & ~127u, n = 128 + 128 + cspan, i;
+    uint8_t *a = (uint8_t *)calloc(1, n);
+    MemIO m;
+    UncIO io;
+    UncAlloc al;
+    UncSink sk;
+    CapSink cap;
+    UncOptions opt;
+    UncProgress pr;
+
+    if (!a) { CHECK(0); return; }
+    mar_put32(a, MAR_MAGIC);
+    mar_put32(a + 4, MAR_FILE);
+    a[8] = 4;
+    memcpy(a + 9, "Note", 4);
+    mar_put32(a + 72, DLEN);
+    mar_put32(a + 80, CLEN);
+    memcpy(a + 96, "TEXTttxt", 8);
+    mar_put32(a + 124, unc_mar_crc(0, a, 124));
+    memcpy(a + 128, "0123456789", DLEN);
+    mar_put32(a + 128 + DLEN, unc_mar_crc(0, a + 128, DLEN));
+    for (i = 0; i < CLEN; i++) a[256 + i] = (uint8_t)('a' + i % 26);
+    mar_put32(a + 256 + CLEN, unc_mar_crc(0, a + 256, CLEN));
+
+    test_make_alloc(&al);
+    memset(&opt, 0, sizeof opt);
+    opt.list_only = 1;
+    pr.ctx = NULL;
+    pr.tick = mar_tick;
+
+    /* Listed: the header and the 255 bytes the entry carries, no more. */
+    test_make_memio(&io, &m, a, n);
+    io.read = mar_count_read;
+    gMarRead = gMarTickDone = gMarTickTotal = 0;
+    cap_make(&sk, &cap);
+    CHECK(unc_extract_as(UNC_FORMAT_MAR, &io, &sk, &al, &pr, &opt) == UNC_OK);
+    CHECK(cap.count == 1 && cap.status[0] == UNC_OK);
+    CHECK(cap.info[0].comment_len == 255 &&
+          memcmp(cap.ecomment[0], a + 256, 255) == 0);
+    CHECK(gMarRead <= 128 + 255);
+
+    /* A comment byte past those 255 changed: the listing is the same, and
+     * the test refuses the entry, as extraction does. */
+    a[256 + 1000] ^= 1;
+    test_make_memio(&io, &m, a, n);
+    cap_make(&sk, &cap);
+    CHECK(unc_extract_as(UNC_FORMAT_MAR, &io, &sk, &al, NULL, &opt) == UNC_OK);
+    CHECK(cap.count == 1 && cap.status[0] == UNC_OK &&
+          cap.info[0].comment_len == 255);
+    opt.list_only = 0;
+    opt.test_only = 1;
+    test_make_memio(&io, &m, a, n);
+    cap_make(&sk, &cap);
+    (void)unc_extract_as(UNC_FORMAT_MAR, &io, &sk, &al, NULL, &opt);
+    CHECK(cap.count == 1 && cap.status[0] == UNC_ERR_CRC &&
+          cap.info[0].comment_len == 0);
+    free(a);
+
+    /* The progress of a listing: a folder of 70 files of 1,000 B each.
+     * Only headers are read, so the first tick comes at the 64th, 8 KB of
+     * them; it must say where that header ends in the file, forks and
+     * padding included, not 64 headers' worth. */
+    {
+        enum { NF = 70 };
+        uint32_t rec = 128 + 1024, at = 0, k;
+        n = 128 + NF * rec + 128;
+        a = (uint8_t *)calloc(1, n);
+        if (!a) { CHECK(0); return; }
+        mar_put32(a, MAR_MAGIC);
+        mar_put32(a + 4, MAR_FOLDER);
+        a[8] = 1; a[9] = 'D';
+        mar_put32(a + 124, unc_mar_crc(0, a, 124));
+        at = 128;
+        for (k = 0; k < NF; k++, at += rec) {
+            uint8_t *h = a + at;
+            mar_put32(h, MAR_MAGIC);
+            mar_put32(h + 4, MAR_FILE);
+            h[8] = 2; h[9] = 'f'; h[10] = (uint8_t)('0' + k % 10);
+            mar_put32(h + 72, 1000);
+            mar_put32(h + 124, unc_mar_crc(0, h, 124));
+            mar_put32(h + 128 + 1000, unc_mar_crc(0, h + 128, 1000));
+        }
+        mar_put32(a + at, MAR_MAGIC);
+        mar_put32(a + at + 4, MAR_END);
+        mar_put32(a + at + 124, unc_mar_crc(0, a + at, 124));
+        opt.list_only = 1;
+        opt.test_only = 0;
+        test_make_memio(&io, &m, a, n);
+        gMarTickDone = gMarTickTotal = 0;
+        gMarEntries = 0;
+        sk.ctx = NULL;
+        sk.begin_entry = mar_any_begin;
+        sk.write = NULL;
+        sk.end_entry = mar_any_end;
+        sk.comment = NULL;
+        (void)unc_extract_as(UNC_FORMAT_MAR, &io, &sk, &al, &pr, &opt);
+        CHECK(gMarTickTotal == n && gMarTickDone == 128 + 62 * rec + 128);
+        CHECK(gMarEntries == 1 + NF);
+        free(a);
+    }
+}
+
 /* An LZ4 block whose sequences ask for more than the frame's block size
  * stops within that size: 4 KB of input whose one match is 255-runs long
  * would otherwise write about 1 MB before the block's end was checked
@@ -6289,6 +6428,7 @@ void run_format_tests(void)
     test_btoa();
     test_mar();
     test_lz4_block_bound();
+    test_mar_comment_listing();
     test_base64_mime();
     test_resfork_find();
 }

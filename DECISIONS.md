@@ -511,6 +511,8 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-05 (the head that was not the file) — an envelope's peek can name a format its payload is not, and the layer under it then failed "Archive damaged."; that layer now reads the bundle again, for 32 B
 - 2026-11-05 (the list the Finder did not pad) — File > Open... appended its record at the document list's size; no Finder measured leaves slack there, but with slack put in the queued archive was lost, so the record now goes after the last one, zeroed and counted, for 96 B
 - 2026-11-05 (the match longer than its block) — an LZ4 match is held to its block's size before it is copied: 4 KB of input made 1,019,904 B where its block allowed 64 KB, for 24 B of `ovl_zipold` and +0.5 % on a Mac Plus
+- 2026-11-05 (the comment a listing read whole) — a MAR listing read an entry's whole comment block and judged its CRC, then hid the verdict; it now reads the 255 bytes the entry carries and judges no block, as it judges no fork, for 24 B of `ovl_zipold`
+- 2026-11-05 (the bytes a listing never counted) — MAR's progress counted only what it read, so a listing and a skipped entry under-counted; each record now ends at its own end, for 4 B
 
 ---
 
@@ -21253,3 +21255,46 @@ sequences): **3,510 -> 3,527 ticks, +0.5 %**, the engine's share 3,458 ->
 3,471; the run after it repeated to the tick. Keeping the block's end in
 the state instead (one load fewer) wraps past 2 GB of a frame's output,
 so it was not taken. `run_tiers.py --check`: no tally moves.
+
+## 2026-11-05 (the comment a listing read whole) — a MAR listing read an entry's whole comment block and judged its CRC, then hid the verdict; it now reads the 255 bytes the entry carries and judges no block, as it judges no fork, for 24 B of `ovl_zipold`
+
+**Claim (measured).** `unc_mar_extract` read an entry's Get Info comment
+before `begin_entry` in every mode, all of it and through its CRC, and in
+list mode reset a CRC failure to OK. `test_mar_comment_listing`, one entry
+with a 70,000 B comment: the listing read all 70,000 B; and with a comment
+byte past the first 255 changed, it listed the entry with no comment at
+all, where `t` refuses it. A block can be as long as the file holds.
+
+**The behaviour chosen.** `l` reports what `x` would of the archive's
+shape — an entry cut short or too large to place, which list mode already
+judged — and judges no block's CRC, as it reads no fork. StuffIt's reader
+applies the same rule (`src/fmt_sit.c`, list mode checks truncation and
+decodes nothing). So a listing reads the 255 bytes an entry carries and
+hands them on unjudged; `t` and `x` read the whole block and refuse a
+damaged one, as before. Judging the comment in a listing would mean
+reading it whole, which is the cost being removed.
+
+**Evidence.** The test above: at most 128 + 255 B read in the listing,
+the comment handed on, a damaged one listed as such and refused by `t`;
+the reader before fails all three. `run_mar.py`, which grades `l --meta`'s
+comment, unmoved.
+
+**Cost (measured).** `ovl_zipold` +24 B. With the next entry, the control
++32 (CODE +28, A5 +4), so `OVL_SAVED` +32 and `TIERS` -32; grants +32,
++4 where `ovl_zipold` is kept. `run_tiers.py --check`: no tally moves.
+
+## 2026-11-05 (the bytes a listing never counted) — MAR's progress counted only what it read, so a listing and a skipped entry under-counted; each record now ends at its own end, for 4 B
+
+**Claim (measured).** MAR's progress was the headers plus the block bytes
+read, against the file's size: padding and CRCs never counted, nor the
+blocks of an entry skipped or listed. A listing of a folder of 70 files of
+1,000 B ticked at 8,192 B, 64 headers, where the 64th ends at 71,680 B.
+
+**The fix.** At each record's end `done` is set to that end, where the
+next header is read. It adds no callback: the next header's tick reports
+it. Adding the remainder through `unc_progress_add` instead, which would
+tick at once, cost 60 B of `ovl_zipold` against 4, and only a listing of a
+few huge entries would see the difference.
+
+**Evidence.** `test_mar_comment_listing` asserts the tick at 71,680 of
+the file's 80,896 B; the reader without the fix fails it, at 8,192.

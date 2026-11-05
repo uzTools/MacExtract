@@ -204,11 +204,17 @@ int unc_mar_extract(UncCtx *c)
 
         /* The comment, ahead of the forks it follows: the entry carries
          * it from begin_entry. A comment whose CRC fails is not handed
-         * on, and the entry fails with it. */
+         * on, and the entry fails with it. A listing reads only what the
+         * entry carries and judges it no more than the forks it does not
+         * read: `l` reports what `x` would of the archive's shape — an
+         * entry cut, or too large to place — and of no block's CRC
+         * (DECISIONS.md 2026-11-05, *the comment a listing read whole*). */
         if (est == UNC_OK && clen) {
             uint32_t keep = clen < UNC_ENTRY_COMMENT_MAX
                             ? clen : UNC_ENTRY_COMMENT_MAX;
-            est = mar_block(c, pos + dspan + rspan, clen, -1, buf, cmt, keep);
+            est = c->opt.list_only
+                ? unc_read_at(c->io, pos + dspan + rspan, cmt, (int32_t)keep)
+                : mar_block(c, pos + dspan + rspan, clen, -1, buf, cmt, keep);
             if (est == UNC_OK) {
                 e.comment = cmt;
                 e.comment_len = (uint16_t)keep;
@@ -229,8 +235,6 @@ int unc_mar_extract(UncCtx *c)
                                          buf, NULL, 0);
                 }
                 if (ferr != UNC_OK) est = ferr;
-            } else if (est == UNC_ERR_CRC) {
-                est = UNC_OK;   /* listing reads no fork, so judges none */
             }
             if (c->sink->end_entry(c->sink->ctx, est) < 0) {
                 err = UNC_ERR_SINK;
@@ -239,6 +243,12 @@ int unc_mar_extract(UncCtx *c)
             if (unc_fatal(est)) { err = est; break; }
         }
         if (est == UNC_ERR_TOOLARGE) break;
+        /* What the entry occupies and was not read for counts too: the
+         * padding and CRCs, and every block of one skipped or listed
+         * (DECISIONS.md 2026-11-05, *the bytes a listing never counted*).
+         * Headers and blocks read have counted up to here, so `done` is
+         * where the entry began plus what of it was read. */
+        c->ps.done = (uint32_t)next;
         if (top) break;
         pos = next;
     }
