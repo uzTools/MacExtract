@@ -126,6 +126,7 @@ typedef struct {
     uint32_t  pos;        /* total bytes out of this frame, mod nothing */
     uint32_t  flushed;    /* how many of them the sink has */
     uint32_t  bstart;     /* `pos` where the current block began */
+    uint32_t  bmax;       /* the most one block may decode to */
     Xxh       content;
     Xxh       block;
     int       bsum;       /* block checksums are on */
@@ -211,6 +212,13 @@ __attribute__((noinline)) static int lz_block(Lz4 *z, int linked)
         mlen = ((uint32_t)tok & 15u);
         if (mlen == 15 && (err = lz_len(z, &mlen)) != UNC_OK) return err;
         mlen += 4;
+        /* A match is the only output no input byte pays for: 255-runs
+         * make ~1 GB of one 4 MB block. Literals are bounded by the block's
+         * input, so this one compare a sequence bounds the block, within
+         * bmax; lz_frame's after it catches literals alone. The sum does
+         * not wrap: what the block has made stays under 8 MB, and lz_len
+         * stops at UNC_MAC_MAX. */
+        if (z->pos - z->bstart + mlen > z->bmax) return UNC_ERR_CORRUPT;
         while (mlen--) {
             uint8_t b = z->ring[(z->pos - off) & LZ4_MASK];
             if ((err = lz_put(z, b)) != UNC_OK) return err;
@@ -246,7 +254,7 @@ __attribute__((noinline)) static int lz_frame(Lz4 *z)
     if ((flg & LZ4_FLG_VERSION) != LZ4_FLG_V01 || (flg & LZ4_FLG_RESV) ||
         (d[1] & LZ4_BD_RESV) || (d[1] >> 4) < 4)
         return UNC_ERR_CORRUPT;
-    bmax = 1u << (8 + 2 * (d[1] >> 4));          /* 64K, 256K, 1M, 4M */
+    z->bmax = bmax = 1u << (8 + 2 * (d[1] >> 4));  /* 64K, 256K, 1M, 4M */
     if (flg & LZ4_FLG_CSIZE) {
         if ((err = lz_raw(z, d + dn, 8)) != UNC_OK) return err;
         csize = unc_get_u32le(d + dn);

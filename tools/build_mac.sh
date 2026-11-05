@@ -712,7 +712,10 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # +88 on 2026-11-05, 185,496 -> 185,584, A5 +8 below: File > Open...
 # appends its record after the Finder's last one, zeroed, and counts it
 # (DECISIONS.md 2026-11-05, *the list the Finder did not pad*).
-UNC_MAC_CODE_DEFAULT=185584
+# +24 the same day, 185,584 -> 185,608, A5 +8 below: an LZ4 match is held
+# to its block's size before it is copied (DECISIONS.md 2026-11-05, *the
+# match longer than its block*); in `ovl_zipold` everywhere but here.
+UNC_MAC_CODE_DEFAULT=185608
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -943,7 +946,9 @@ UNC_MAC_CODE_DEFAULT=185584
 # MacBinary test (above); no data was added or removed.
 # +8 on 2026-11-05, 36,648 -> 36,656: `.data` alignment under File >
 # Open...'s record (above); no data was added.
-UNC_MAC_A5_DEFAULT=36656
+# +8 the same day, 36,656 -> 36,664: `.data` alignment under the LZ4
+# bound (above); no data was added.
+UNC_MAC_A5_DEFAULT=36664
 # A CEILING PER CONFIGURATION, because one ceiling measured on another build
 # cannot fire. The figures above are the RESIDENT control build, which carries
 # every decoder; the shipped build's resident code is a third of that, so

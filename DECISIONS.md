@@ -510,6 +510,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-04 (the six read whole) — MacBinary I without padding after the data fork is read where the file is exactly that long and the resource fork's own header ends at the fork's end: six funet archives extract, for 264 B of the BinHex image and no tally
 - 2026-11-05 (the head that was not the file) — an envelope's peek can name a format its payload is not, and the layer under it then failed "Archive damaged."; that layer now reads the bundle again, for 32 B
 - 2026-11-05 (the list the Finder did not pad) — File > Open... appended its record at the document list's size; no Finder measured leaves slack there, but with slack put in the queued archive was lost, so the record now goes after the last one, zeroed and counted, for 96 B
+- 2026-11-05 (the match longer than its block) — an LZ4 match is held to its block's size before it is copied: 4 KB of input made 1,019,904 B where its block allowed 64 KB, for 24 B of `ovl_zipold` and +0.5 % on a Mac Plus
 
 ---
 
@@ -21222,3 +21223,33 @@ and so without the slack.
 budget**. Control CODE +88, A5 +8; lazy +84, -20. `OVL_SAVED` unmoved,
 `TIERS` -96, `TIERS_CONTROL` +96. Heap and stack: the record is the
 Finder's list growing by one record, as before.
+
+## 2026-11-05 (the match longer than its block) — an LZ4 match is held to its block's size before it is copied: 4 KB of input made 1,019,904 B where its block allowed 64 KB, for 24 B of `ovl_zipold` and +0.5 % on a Mac Plus
+
+**Claim (measured).** `lz_frame` checked a block's output against the
+frame's block size only after the block. A match length is a run of 255s,
+so input bought output at 255 to 1: `test_lz4_block_bound`, one literal
+and a match of 4,000 255s in a 64 KB-block frame, 4,007 B of block,
+**wrote 1,019,904 B** before `UNC_ERR_CORRUPT`. A 4 MB block would make
+about 1 GB the same way (arithmetic).
+
+**The fix.** One compare a sequence, on the match, before it is copied:
+what the block has made plus the match against the block size. Literals
+cost an input byte each, so they cannot outrun the block's own input,
+itself refused above the block size; the check after the block still
+catches them. The sum cannot wrap: the block's output so far stays under
+8 MB and `lz_len` stops at `UNC_MAC_MAX`. The test now passes with the
+entry refused before any of the match is written; it failed before.
+`run_lz4.py` (every block size, both modes, every checksum) and
+`run_mar.py` unmoved.
+
+**Cost (measured).** `ovl_zipold` +24 B (15,144 -> 15,168), the bundle
+the same; the shipped CODE and A5 unmoved; the control CODE +24, A5 +8
+(alignment), so `OVL_SAVED` +32 and `TIERS` -32: Tar, MAR, Zip and the
+envelopes that keep `ovl_zipold` are granted 8 B more, the rest 32. On a
+Mac Plus at 1x (`run.py --emu mv-4M-1x -D UNC_AT_TIMING`), a 400,000 B
+frame of XADMaster's source written by liblz4 (64 KB blocks, many short
+sequences): **3,510 -> 3,527 ticks, +0.5 %**, the engine's share 3,458 ->
+3,471; the run after it repeated to the tick. Keeping the block's end in
+the state instead (one load fewer) wraps past 2 GB of a frame's output,
+so it was not taken. `run_tiers.py --check`: no tally moves.

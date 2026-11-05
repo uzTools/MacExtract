@@ -5717,6 +5717,71 @@ static void test_mar(void)
     CHECK(unc_sniff(&io) != UNC_FORMAT_MAR);
 }
 
+/* An LZ4 block whose sequences ask for more than the frame's block size
+ * stops within that size: 4 KB of input whose one match is 255-runs long
+ * would otherwise write about 1 MB before the block's end was checked
+ * (DECISIONS.md 2026-11-05, *the match longer than its block*). */
+typedef struct { uint32_t bytes; int status, entries; } Lz4Count;
+static int lz4c_begin(void *ctx, const UncEntryInfo *info)
+{
+    (void)info;
+    ((Lz4Count *)ctx)->entries++;
+    return 0;
+}
+static int lz4c_write(void *ctx, UncFork fork, const void *buf, int32_t len)
+{
+    (void)fork; (void)buf;
+    ((Lz4Count *)ctx)->bytes += (uint32_t)len;
+    return 0;
+}
+static int lz4c_end(void *ctx, int status)
+{
+    ((Lz4Count *)ctx)->status = status;
+    return 0;
+}
+
+static void test_lz4_block_bound(void)
+{
+    enum { RUNS = 4000 };
+    static uint8_t f[7 + 4 + 5 + RUNS + 1 + 1 + 4];
+    uint32_t n = 0, bn, i;
+    MemIO m;
+    UncIO io;
+    UncAlloc al;
+    UncSink sk;
+    Lz4Count c;
+
+    /* Magic, FLG v01 with independent blocks, BD 64 KB, and the header
+     * checksum: byte 1 of XXH32 of FLG and BD (the frame format's HC; 0x82
+     * by a Python XXH32 that gives 0xA7 for lz4's own `64 40`). */
+    f[n++] = 0x04; f[n++] = 0x22; f[n++] = 0x4D; f[n++] = 0x18;
+    f[n++] = 0x60; f[n++] = 0x40; f[n++] = 0x82;
+    n += 4;                                  /* the block size, below */
+    bn = n;
+    f[n++] = 0x1F;                           /* 1 literal, match 15 + more */
+    f[n++] = 'A';
+    f[n++] = 0x01; f[n++] = 0x00;            /* offset 1 */
+    for (i = 0; i < RUNS; i++) f[n++] = 0xFF;
+    f[n++] = 0x00;                           /* match 4 + 15 + 255 * RUNS */
+    f[n++] = 0x00;                           /* the last sequence, empty */
+    f[bn - 4] = (uint8_t)(n - bn);
+    f[bn - 3] = (uint8_t)((n - bn) >> 8);
+    n += 4;                                  /* the end mark, zero */
+
+    memset(&c, 0, sizeof c);
+    sk.ctx = &c;
+    sk.begin_entry = lz4c_begin;
+    sk.write = lz4c_write;
+    sk.end_entry = lz4c_end;
+    sk.comment = NULL;
+    test_make_alloc(&al);
+    test_make_memio(&io, &m, f, n);
+    CHECK(unc_sniff(&io) == UNC_FORMAT_LZ4);
+    (void)unc_extract_as(UNC_FORMAT_LZ4, &io, &sk, &al, NULL, NULL);
+    CHECK(c.entries == 1 && c.status == UNC_ERR_CORRUPT);
+    CHECK(c.bytes <= 65536u);
+}
+
 static void test_btoa(void)
 {
     static const char v5[] =
@@ -6223,6 +6288,7 @@ void run_format_tests(void)
     test_winzip_aes_pieces();
     test_btoa();
     test_mar();
+    test_lz4_block_bound();
     test_base64_mime();
     test_resfork_find();
 }

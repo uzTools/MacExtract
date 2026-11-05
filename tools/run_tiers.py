@@ -257,10 +257,14 @@ REPO = os.path.dirname(HERE)
 # *the list the Finder did not pad*), the control's CODE +88 and A5 +8;
 # the shipped pair grew the same 96, OVL_SAVED unmoved. They were 190,788
 # / 95,406 / 619,694.
+# **-32 more each the same day, DERIVED**: an LZ4 match held to its block
+# (DECISIONS.md 2026-11-05, *the match longer than its block*), the
+# control's CODE +24 and A5 +8; OVL_SAVED +32 offsets it, and the zipold
+# image's +24 takes that much back from the formats that keep it.
 TIERS = {
-    "sys3-512K": (190692, "System 3.0, Macintosh 512Ke (222,070 B free)"),
-    "sys6-512K": (95310,  "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
-    "floor-1M":  (619598, "System 6.0.8, 1 MB Mac Plus — the floor target"),
+    "sys3-512K": (190660, "System 3.0, Macintosh 512Ke (222,070 B free)"),
+    "sys6-512K": (95278,  "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
+    "floor-1M":  (619566, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
 # **-592 more each 2026-10-24, DERIVED**: SUMacC's `.dl`, the control's
 # CODE +584 and A5 +8 (DECISIONS.md 2026-10-24, *the format before
@@ -464,7 +468,8 @@ TIERS = {
 # data + bss -680. The machine gave +4,204, because the jump table, the
 # stub segments and the relocations trimmed at launch are resident bytes
 # this unit never counted — which is why TIERS was measured, not moved.
-TIERS_CONTROL = 222240     # build/mac-resident, CODE + A5, 2026-11-05
+TIERS_CONTROL = 222272     # build/mac-resident, CODE + A5, 2026-11-05
+# +32 the same day: an LZ4 match held to its block; TIERS -32.
 # +96 on 2026-11-05: File > Open...'s record after the last one; TIERS -96.
 # +64 the same day: the fuzzer's null-pointer offsets; TIERS -64.
 # +256 the same day: MacBinary I without padding; TIERS -256.
@@ -976,7 +981,11 @@ EXPECT = {
 # against the control's 0: `mac/ovl_load_eager.c` is the eager lifetime's
 # alone (DECISIONS.md 2026-11-05, *the head that was not the file*). TIERS
 # unmoved.
-OVL_SAVED = 165728
+# **+32 the same day, -> 165,760**: an LZ4 match held to its block, the
+# control's +32 (CODE +24, A5 +8) against the shipped pair's 0: the reader
+# is in `ovl_zipold` (DECISIONS.md 2026-11-05, *the match longer than its
+# block*). TIERS -32.
+OVL_SAVED = 165760
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
 # every kept image is one — as is the bundle an envelope holds on to.
@@ -1125,7 +1134,7 @@ IMAGES = {
     "OVL_ID_SQP":         1736,
     "OVL_ID_SUPERDISK":   6634,
     "OVL_ID_TEXT":        11438,
-    "OVL_ID_ZIPOLD":      15144,
+    "OVL_ID_ZIPOLD":      15168,
     "OVL_ID_SNIFF":       14676,
     "OVL_ID_DESTDLG":     1688,
     "OVL_ID_SEGSETUP":    2364,
@@ -1232,7 +1241,10 @@ IMAGES = {
 # 2026-11-04, *the offsets from nothing*).
 # **BINHEX +264, the bundle +264 B, the same day**: MacBinary I without
 # padding is read where the file proves it (DECISIONS.md 2026-11-04, *the six read whole*).
-BUNDLE = 194556
+# **ZIPOLD +24, the bundle +24 B, 2026-11-05**: an LZ4 match is held to
+# its block's size before it is copied (DECISIONS.md 2026-11-05, *the
+# match longer than its block*).
+BUNDLE = 194580
 
 # What the SHIPPED lane asserts, and it is the refused fixtures BY NAME
 # rather than a tally: a tier that refuses two different fixtures and still
