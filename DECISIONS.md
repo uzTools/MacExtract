@@ -508,6 +508,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-04 (the code that ran before the release) — no resident shell code is worth moving into the bundle: what runs before the images are released also runs during extraction, or before the bundle is read
 - 2026-11-04 (the offsets from nothing) — the per-decoder fuzzer's first run found two pointer offsets taken from NULL, one in the 2.5-byte rung landed the same day; gcc's UBSan, the only one ci.sh ran, cannot see either
 - 2026-11-04 (the six read whole) — MacBinary I without padding after the data fork is read where the file is exactly that long and the resource fork's own header ends at the fork's end: six funet archives extract, for 264 B of the BinHex image and no tally
+- 2026-11-05 (the head that was not the file) — an envelope's peek can name a format its payload is not, and the layer under it then failed "Archive damaged."; that layer now reads the bundle again, for 32 B
 
 ---
 
@@ -21138,3 +21139,58 @@ way.
 **Not run:** the application on any of the six (the reader is the same
 code on both hosts; the Mac's file size comes from the same `size`
 callback, measured only on Linux).
+
+## 2026-11-05 (the head that was not the file) — an envelope's peek can name a format its payload is not, and the layer under it then failed "Archive damaged."; that layer now reads the bundle again, for 32 B
+
+**Claim (measured).** `unc_envelope_peek` sniffs the payload's first 512 B
+as a file of 512 B, so a probe that reads past them cannot claim it, and a
+weaker one later in the order can. Crafted: a tar header with a zip behind
+it whose offsets count from the start of the file, as a self-extractor's
+do. Its head sniffs as tar, the whole file as zip, by the end-record scan;
+in MacBinary, BinHex and gzip the peek says Tar. On System 6.0.8 at 4 MB
+the shipped application kept `ovl_zipold`, released `ovl_exo`, and the zip
+layer ended **"Archive damaged."**: `ovl_run` returns `UNC_ERR_MEM` with no
+allocator shortfall, so the outcome falls through to *damaged*.
+
+**No real file does it (measured).** The 466 envelope fixtures, and every
+other fixture plus the three Private File specimens wrapped in MacBinary,
+BinHex and gzip (1,620 payloads, 1,128 named): **no peek disagrees with the
+whole file's sniff.** No Private File is named in any envelope: its
+confirming `CSIT` sits 12 B from the end, past the head, and nothing else
+claims a `CSIT` head, so it keeps the bundle.
+
+**The fix: the review's (b), with the second opening done by the shell.**
+The release remembers what the peek named (`gPeeked` holds the format). When
+the layer under it sniffs as something else, `ovl_reload` reads the bundle
+as it does between two archives, and the release runs again for what the
+layer is. If that read fails, ALRT 135 says MacExtract could not get ready
+and to open it again; the unwrapped file is still on the volume, and
+opened on its own it is no envelope. Telling the user to open the archive
+again would not have helped: a fresh launch peeks the same way.
+
+**Why not (a)**, UNKNOWN unless the answer is ordered before the first
+probe that reads past the head. That probe is Private File's, ahead of
+MacBinary, LZH, DiskDoubler, Now, tar, ARC and zip; and the zip end-record
+scan reads no head at all, so no rule over the head can make tar safe.
+(a) keeps 825 of the 1,128 wrapped names, none of them tar, and gives back
+what the peek was for: `a2ps.V4.3.tar.Z` and `popper-1.7.tar.Z` at System
+6.0.8 / 512 KB (*the envelope that said what it held*). (b) costs a disk
+read only when the peek was wrong.
+
+**Evidence.** `interactive.py --chain` on the crafted file in MacBinary:
+the build before, "Archive damaged.", `tarzip.zip` left and `inner.txt`
+missing; after, `inner.txt` and the intermediate gone, at 4 MB and on the
+512Ke under System 6.0.8. The control `export-hc.hqx`, BinHex over StuffIt
+named right, matches on the 512Ke. System 3.0 not run: `--chain` cannot
+launch from its Finder. `tools/run_peek.py` now grades the wrapped payloads
+and requires the crafted one to disagree in all three envelopes; a peek
+mutated to call tar ARC fails it 22 ways. `tests/ovlbox/ovl_load_test.c`
+sets `gPeeked` as a wrong peek leaves it (it is not `static` for that, which
+moves no byte) and asserts one read of the bundle and the layer's own
+decoder kept; the loader before fails both.
+
+**Cost (measured).** Shipped CODE +32 (`ovl_release_if_unwanted` 488 ->
+520), A5 0; lazy and the control unmoved, the file being the eager
+lifetime's alone. `OVL_SAVED` -32, `TIERS` unmoved, every grant row -32 B.
+Heap and disk: nothing unless the peek was wrong. `run_tiers.py --check`:
+no tally moves.

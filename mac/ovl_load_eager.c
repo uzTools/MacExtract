@@ -21,6 +21,7 @@
  */
 #include "ovl_load.h"
 #include <Resources.h>
+#include <Dialogs.h>
 
 static Handle gBundle;          /* the whole thing, until the release */
 static int    gBundleTried;
@@ -31,7 +32,9 @@ static int    gBundleTried;
 #define KEPT_SLOTS 6
 static Handle gKept[KEPT_SLOTS];
 static short  gKeptId[KEPT_SLOTS];
-static int    gPeeked;          /* slots 0 and 4 are for the layer above */
+int           gPeeked;          /* slots 0 and 4 are for the layer above;
+                                 * the format the peek named. Not static:
+                                 * tests/ovlbox sets it, having no peek */
 
 /* Find an image inside the bundle. Returns NULL if this bundle has no such
  * id, which is a build mismatch rather than a run-time condition. */
@@ -91,8 +94,9 @@ void ovl_preload(void)
  * lifetime's argument, and a loader that quietly re-read the application's
  * resource fork mid-extraction would spend exactly what it exists to save —
  * on a Mac Plus with one drive, at the moment the archive's floppy is in.
- * The only re-read is ovl_reload, BETWEEN archives, and only when the Finder
- * handed over more than one.
+ * The only re-reads are ovl_reload, BETWEEN archives, and only when the Finder
+ * handed over more than one; and between two LAYERS, only when an envelope's
+ * peek named a format the layer under it turned out not to be.
  *
  * That makes the release decision load-bearing rather than an optimisation:
  * an image released is gone for this archive. It is safe because nothing is
@@ -257,12 +261,17 @@ void ovl_release_if_unwanted(UncFormat fmt, UncIO *io)
         /* The layer under an envelope that was peeked into: its own sniff
          * has run, so the envelope's reader and the sniffer go back, and it
          * keeps what it would have kept had it been opened on its own. */
-        if (gPeeked) {
-            ovl_drop(0);
-            ovl_drop(4);
-            gPeeked = 0;
-        }
-        return;
+        if (!gPeeked) return;
+        ovl_drop(0);
+        ovl_drop(4);
+        /* Unless the whole file is not what its head said: a probe ahead
+         * of the peek's answer that reads past 512 bytes — a zip found by
+         * its end record behind a tar header — claims it, and its decoder
+         * went with the bundle. Read the bundle again, as between two
+         * archives, and release for what this layer is (DECISIONS.md
+         * 2026-11-05, *the head that was not the file*). */
+        if (gPeeked == (int)fmt) { gPeeked = 0; return; }
+        if (!ovl_reload()) { StopAlert(135, NULL); return; }  /* kNoReloadALRT */
     }
 
     /* The sniffer's image (OVL_ID_SNIFF) is in no keep set, on purpose: it
@@ -316,7 +325,7 @@ void ovl_release_if_unwanted(UncFormat fmt, UncIO *io)
     if (as != fmt) {
         if (inner) ovl_keep(inner, 5);
         ovl_keep(OVL_ID_SNIFF, 4);
-        gPeeked = 1;
+        gPeeked = (int)as;
     }
     /* Zip, and a spanned zip, also keep Shrink and Reduce, which nothing
      * else calls. */

@@ -1442,7 +1442,11 @@ UNC_MAC_A5_DEFAULT=36648
 # -56 and -40 the same day, to 39,672 and 16,712: HoldUI out again, and
 # MaxApplZone where the ROM has it, which purges nothing (the same entry);
 # 96 B back on every budget, 10 B of which the kept layouts take at 1 MB.
-UNC_MAC_CODE_EAGER=39672
+# +32 on 2026-11-05, 39,672 -> 39,704, A5 unmoved: the release reads the
+# bundle again under an envelope whose peek named the wrong format
+# (DECISIONS.md 2026-11-05, *the head that was not the file*). 32 B off
+# every budget.
+UNC_MAC_CODE_EAGER=39704
 UNC_MAC_A5_EAGER=16712
 # +8 on 2026-10-02 for the same reason as the eager pair above: the
 # overlay call that now says WHICH of StuffIt 2.x's ciphers an entry

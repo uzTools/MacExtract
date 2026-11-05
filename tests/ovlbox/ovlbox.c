@@ -51,6 +51,7 @@
 
 #include "ovlbox.h"
 #include "toolbox/OSUtils.h"
+#include "toolbox/Dialogs.h"
 
 long ovlbox_reads, ovlbox_flushes, ovlbox_moves, ovlbox_handles;
 long ovlbox_reserves, ovlbox_reserved;
@@ -219,6 +220,15 @@ OSErr MemError(void) { return 0; }
  * measured on the Macintosh (DECISIONS.md 2026-10-12, *the reload that the
  * list needs*). */
 void ReserveMem(Size n) { ovlbox_reserves++; ovlbox_reserved = (long)n; }
+
+/* The loader's one alert (Dialogs.h); counted, never shown. */
+long ovlbox_alerts;
+short StopAlert(short alertID, void *filterProc)
+{
+    (void)alertID; (void)filterProc;
+    ovlbox_alerts++;
+    return 1;
+}
 
 /* ---- Resource Manager ----------------------------------------------- */
 

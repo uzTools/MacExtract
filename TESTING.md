@@ -1023,7 +1023,16 @@ peak 69,816 B, an LZ4 frame's ring (DECISIONS.md
 2026-11-03, *the envelope that said what it held*; 2026-11-04, *the frame
 mar 0.2.0 reads*).
 
-**What it cannot see:** a payload the corpus lacks; whether the peek fits a
+Then every fixture that is not an envelope, and the three Private File
+specimens when the cache holds them, wrapped here in MacBinary, BinHex and
+gzip, under the same rule; fewer than 1,100 named fails. Measured
+2026-11-05: 1,128 of 1,620 named, none wrongly. And a CONTROL that must
+disagree in all three: a zip behind a tar header, tar by its first 512
+bytes and zip whole (DECISIONS.md 2026-11-05, *the head that was not the
+file*). A peek mutated to call tar ARC failed 22 ways.
+
+**What it cannot see:** a payload neither the corpus nor its wrapping
+holds; whether the peek fits a
 Macintosh's heap (`run_tiers.py` charges its peak, fragmentation is the
 emulator's); and the shell's use of the answer, which only the interactive
 chain runs — the autotest build takes one layer (`interactive.py --chain`,

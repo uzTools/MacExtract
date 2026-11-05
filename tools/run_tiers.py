@@ -965,7 +965,12 @@ EXPECT = {
 # **+256 the same day, -> 165,760**: MacBinary I without padding, the
 # control's +256 (CODE +264, A5 -8) against the shipped pair's 0: the
 # reader is in `ovl_binhex` (DECISIONS.md 2026-11-04, *the six read whole*). TIERS -256.
-OVL_SAVED = 165760
+# **-32 2026-11-05, -> 165,728**: the release reads the bundle again under
+# an envelope whose peek was wrong, the shipped pair's +32 (CODE +32, A5 0)
+# against the control's 0: `mac/ovl_load_eager.c` is the eager lifetime's
+# alone (DECISIONS.md 2026-11-05, *the head that was not the file*). TIERS
+# unmoved.
+OVL_SAVED = 165728
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
 # every kept image is one — as is the bundle an envelope holds on to.

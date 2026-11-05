@@ -17,6 +17,13 @@
  * format that needs the end of the file (Compact Pro's index) or more than
  * the head, or a reader whose payload starts past the window.
  *
+ * The head can also name what the whole file is not: a probe ahead of the
+ * answer that reads past 512 bytes cannot claim it here — a zip found by
+ * its end record behind a tar header sniffs as tar. The corpus holds no
+ * such payload; the shell reads its bundle again when the layer under
+ * disagrees (mac/ovl_load_eager.c; DECISIONS.md 2026-11-05, *the head that
+ * was not the file*).
+ *
  * The head is sniffed as a file of PEEK_HEAD bytes. Measured 2026-11-04 over
  * every envelope fixture, 466: 301 named, none other than the format the
  * whole payload sniffs as (tools/run_peek.py, in ci.sh); the rest name

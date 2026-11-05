@@ -401,6 +401,36 @@ int main(int argc, char **argv)
         CHECK(ovl_image_q(OVL_ID_STUFFIT, 1) == NULL,
               "the second release kept the first archive's decoder");
     }
+
+    /* The layer under an envelope whose peek named the wrong format
+     * (DECISIONS.md 2026-11-05, *the head that was not the file*). Nothing
+     * here can run a peek, so `gPeeked` is set as the release leaves it: a
+     * peek that said tar, and a layer that sniffs as LZH, whose decoder that
+     * release gave back. The bundle is read again, once, and released for
+     * LZH; a peek that was right reads nothing. */
+    printf("the layer under a wrong peek reads the bundle again\n");
+    {
+        extern int gPeeked;
+        reads0 = ovlbox_reads;
+        gPeeked = UNC_FORMAT_TAR;
+        ovl_release_if_unwanted(UNC_FORMAT_LZH, &io);
+        CHECK(ovlbox_reads == reads0 + 1,
+              "a wrong peek took %ld read(s), not 1", ovlbox_reads - reads0);
+        CHECK(ovl_image_q(OVL_ID_LZH, 1) != NULL,
+              "the layer's own decoder is not there after a wrong peek");
+        CHECK(ovl_image_q(OVL_ID_CODECS, 1) != NULL,
+              "the codecs are not there after a wrong peek");
+        CHECK(ovl_image_q(OVL_ID_ZIPOLD, 1) == NULL,
+              "the bundle was read again and not released");
+        CHECK(ovlbox_alerts == 0, "an alert for a reload that worked");
+        reads0 = ovlbox_reads;
+        gPeeked = UNC_FORMAT_LZH;
+        ovl_release_if_unwanted(UNC_FORMAT_LZH, &io);
+        CHECK(ovlbox_reads == reads0, "a peek that was right re-read the "
+              "bundle %ld time(s)", ovlbox_reads - reads0);
+        CHECK(gPeeked == 0, "a layer that was taken left gPeeked at %d",
+              gPeeked);
+    }
 #else
     /* The lazy lifetime releases nothing, and its release entry point must be
      * a no-op rather than a hole: the shell calls it either way. */
