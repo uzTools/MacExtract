@@ -1,11 +1,14 @@
-# Ready-to-post upstream issue (github.com/MacPaw/XADMaster)
+# Ready-to-post upstream issues (github.com/MacPaw/XADMaster)
 
-**Not filed, and not to be filed from here.** The maintainer posts this from
+**Not filed, and not to be filed from here.** The maintainer posts these from
 his own account (MANUAL_TESTS.md §7, CLAUDE.md Rules) — no session working in
-this repository should submit it. It is also not possible from here, for the
+this repository should submit one. It is also not possible from here, for the
 same reason as `tools/retro68-hopen-repro/`: no `gh` CLI, no credentials, and
-an unauthenticated POST to the issues API returns 401. Reproduction:
-`make_repro.py` in this directory.
+an unauthenticated POST to the issues API returns 401.
+
+Three sections, one each. Reproduction: `make_repro.py` for the first,
+`make_repro_unchecked.py` for the other two (2026-11-05), both in this
+directory.
 
 ---
 
@@ -58,3 +61,103 @@ while unaffected ones sit on either side of that range.
 `XADDiskDoublerParser.m` case 10. The symptom is a refill of the input buffer
 after the final bits have already been consumed, before the "do I still owe
 output?" test.
+
+---
+
+## DiskDoubler DDn (method 10): an unbounded literal run reads past its buffer
+
+`unar` 1.10.8 segfaults on some malformed DiskDoubler DDn forks, reading one
+byte past a fixed-size heap buffer.
+
+### Reproduction
+
+    tools/xadmaster-ddn-repro/make_repro_unchecked.py -o /tmp/ddn
+    unar -f /tmp/ddn/case_d.dd
+
+218 bytes: one `0xABCD0054` container, one DDn block declaring `numliterals
+= 1` and a length-code run of `1 << 22` literals (a legal code, 150, no
+arithmetic overflow — just more literals than the block declared). `unar`
+writes part of the declared output, then
+
+    Segmentation fault
+
+reproduced 3/3 runs; same fault instruction and address every time
+(`movzbl (%rax),%eax`, a 1-byte read at a page boundary, under gdb).
+
+A second, independent path reaches the identical fault: `case_b.dd` (also
+written by the same script) sets the length code to symbol 159, where
+`int length=1<<(code-128)` overflows a 32-bit signed int. With the block's
+own declared size large enough that nothing else bounds the resulting
+(corrupted) literal count first, it segfaults at the same instruction and
+the same address as `case_d.dd`. Reproduced 3/3 runs.
+
+### Where to look
+
+`XADDiskDoublerDDnHandle.m`, `-nextLiteralOrOffset:andLength:atPosition:`:
+`literalptr` (and `offsetptr`, read the same way) is read with no check
+against `numliterals` (`numoffsets`) — three `// TODO: check for literals
+left` comments mark the reads. `buffer` is a fixed `uint8_t[0x10000]` on
+the handle; nothing stops `literalptr` walking past it once `literalsleft`
+exceeds what the block actually populated.
+
+### That it needs a crafted file
+
+A correct DDn encoder's length-code stream is driven by the same counts it
+writes as `numliterals`/`numoffsets` — the two cannot disagree in a file
+DiskDoubler itself wrote. This project's own decoder (`src/fmt_dd.c`
+`dd_ddn_run`) added the missing bound in commit 7520f9a09d7a (2026-11-03,
+`DECISIONS.md`, *the symbols no encoder writes*) after finding the same gap
+by reading the reference; that fix's evidence was UBSan on this project's
+own build, not a run against `unar`. This is that run.
+
+---
+
+## DiskDoubler DDn (method 10): two offset-code gaps decode to wrong bytes, not an error
+
+Two more gaps in the same handle do not crash `unar` — each decodes to the
+wrong bytes with no error, `unar` reporting success (exit 0).
+
+### Reproduction
+
+    tools/xadmaster-ddn-repro/make_repro_unchecked.py -o /tmp/ddn
+    unar -f /tmp/ddn/case_a.dd   # writes "ABCDEFGHHHH"
+    unar -f /tmp/ddn/case_c.dd   # writes "ABCDEFGH\x00\x00\x00"
+
+**`case_a.dd`** (171 B): one match whose offset-code symbol (64) is past
+the 32 any correct offset code assigns (a code has up to 256 symbols, but a
+real encoder only ever uses the first 32). `(2+(slot&1))<<bits` is then
+shifted by `slot/2-1 = 31` with no bound, and the result is truncated
+storing into `uint16_t offsetptr[]`. The 3-byte match this decodes reads
+back whatever that truncated value names, not an error.
+
+**`case_c.dd`** (148 B): one match whose offset-code symbol is 31 with
+every one of its 14 extra bits set — 65,537 is the smallest value that
+slot should reach, but the arithmetic gives 65,536, which `uint16_t
+offsetptr[]` stores as 0. `offset > pos` lets 0 through (0 is never greater
+than a non-negative position), and the match reads
+`windowbuffer[pos & windowmask]` — the position it is about to write,
+read before it is. The window starts zeroed, so the 3 bytes this decodes
+to are 0, not the file's own earlier bytes a correct offset would read.
+
+### Why this is not a crash
+
+Every window access in the handle's base class is masked
+(`reference/XADMaster/XADLZSSHandle.m`, `windowbuffer[x & windowmask]`), so
+a garbage *offset value* is confined to the window buffer whatever it is —
+these two gaps corrupt what is decoded, not where the decoder reads or
+writes.
+
+### Where to look
+
+`XADDiskDoublerDDnHandle.m`, `-nextLiteralOrOffset:andLength:atPosition:`,
+the `else` branch that computes an offset from a slot. Bound `slot` before
+the shift (this project's reader refuses `slot > 31`, `src/fmt_dd.c`), and
+treat 65,536 as a long offset refused by `offset > wpos` rather than a
+0 that passes it (this project's reader refuses `offset == 0`).
+
+### That it needs a crafted file, same as the crash above
+
+The same correct-encoder argument applies: `tools/derive_dd.py`'s own DDn
+reader (written independently from the reference, for the format tables
+rather than for unar) never emits an offset-code symbol past 31, because no
+real DDn stream carries one.

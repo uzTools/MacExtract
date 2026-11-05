@@ -20025,6 +20025,24 @@ a code table that gives a 256-symbol alphabet's last symbol a codeword,
 and a silent wrong byte with exit 0 is a pass to that suite in a format
 with no CRC (TESTING.md, *Layers*).
 
+**Run against `unar` 1.10.8 itself, 2026-11-05** (`tools/xadmaster-ddn-repro/
+make_repro_unchecked.py`; none of the four was run there when this entry
+was written, unar not being installed on that machine). Three of the four
+confirm exactly as read: the slot-past-31 shift and the 65,536 -> 0 offset
+both decode wrong bytes with `unar` exit 0, no error — not a crash, since
+`XADLZSSHandle.m` masks every window access (`windowbuffer[x & windowmask]`)
+regardless of what a corrupted offset names. The run-code overflow DOES
+crash it: with the block's own declared size large enough that the
+corrupted literal count is not capped by the fork's total length first,
+`unar` segfaults reading one byte past `XADDiskDoublerDDnHandle`'s fixed
+`buffer[0x10000]` — the same fault address and instruction, 3/3 runs, as a
+**fifth, more direct** input: one literal declared and a length-code run in
+the millions, no overflow needed (`literalptr`/`offsetptr` are never
+checked against `numliterals`/`numoffsets`, three `// TODO: check for
+literals left` in the reference). Not run: an ASan build of `unar` itself
+(`gobjc-14`, the Objective-C frontend, is not installed and was not added).
+Write-up: `tools/xadmaster-ddn-repro/ISSUE.md`, two new sections.
+
 **Cost (measured).** Shipped CODE + A5 unmoved (39,016 + 16,648).
 `ovl_cptdd` +12 B (`dd_fork` +34 in the object), `ovl_now` **-6 B** (the
 integer compare is shorter than the pointer one), the bundle +8 B, the
