@@ -91,6 +91,38 @@ own declared size large enough that nothing else bounds the resulting
 (corrupted) literal count first, it segfaults at the same instruction and
 the same address as `case_d.dd`. Reproduced 3/3 runs.
 
+### Pinned to `literalptr` by name, not just by register
+
+Building the same, unmodified `reference/XADMaster` with `-g
+-fsanitize=address` and feeding `case_b.dd`/`case_d.dd` to the handle
+directly (bypassing the CLI) turns the stock crash into a symbol-resolved
+one, at the same source line both times:
+
+    AddressSanitizer: heap-buffer-overflow ... READ of size 1
+    #0 -[XADDiskDoublerDDnHandle nextLiteralOrOffset:andLength:atPosition:]
+       XADDiskDoublerDDnHandle.m:60   (return *literalptr++;)
+    ... located 0 bytes after 65920-byte region [0x...028800,0x...038980)
+
+`ivar_getOffset` (Objective-C runtime introspection, not guesswork) places
+`buffer` at object offset 336..65,872 of a 65,904-byte instance
+(`class_getInstanceSize`; the allocator's own 16 B brings the heap block
+to 65,920). The fault address is exactly the end of that block — 48 B
+*past* `buffer`'s own end, in the object's own trailing ivars
+(`literalptr`, `offsetptr`, `nextblock`, the two `BOOL`s) and the
+allocator's padding, not literally at `buffer+0x10000`: the read walks
+through the handle's own bookkeeping before it ever reaches unmapped
+memory. One consequence worth being precise about: the fault always lands
+at this same fixed, object-relative address once the declared literal run
+is long enough to reach it — it does not move with how many *more*
+literals the crafted block demands beyond that.
+
+Stock `unar`'s own crash is the identical mechanism at a coarser grain:
+under gdb, `%rax` at the fault is `0x555555a72000`, exactly the top of the
+process's `[heap]` mapping (`info proc mappings`) — in that run the handle
+happened to be the heap's last allocation, so the same one-byte overread
+lands on an unmapped page instead of an ASan redzone. **Confirmed**, not
+merely consistent with the hypothesis.
+
 ### Where to look
 
 `XADDiskDoublerDDnHandle.m`, `-nextLiteralOrOffset:andLength:atPosition:`:
