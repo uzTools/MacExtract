@@ -31,17 +31,20 @@ reload.
     r-1-desktop.png    booted, the volume open
     r-2-in.png         the folder open, both selected
     r-3-first.png      graded: the destination dialog for the first archive
-    r-4-first-done.png its "Extraction complete." (or report)
-    r-5-second.png     graded: the destination dialog again — or the
-                       Finder, if nothing followed
-    r-6-second-done.png
-    r-7-end.png
+    r-q0.png ...       a frame each time the screen settles after it: a
+                       destination dialog is accepted and counted, a
+                       progress window waited out, and the Finder ends it
 
-Graded on the two dialogs (deskclaim.py's `which_dialog`) AND on every
-entry of both archives being on the volume. **What it cannot see:** which
-launch extracted which archive beyond the order of the frames; and an
-entry refused for memory and one refused for a full disk look the same to
-the volume check — read r-6, or give the output room with `--in-disk`.
+Graded on the dialogs (deskclaim.py's `which_dialog`): the first's, then
+at least one more for the second (two with `--queue`), none with `--expect
+first`; AND on every entry of each archive being on the volume. The count
+replaced a frame per step on 2026-11-05: a fast machine finished both
+archives before the second's frame, and a 1x one sat at 0% long enough to
+read as finished. **What it cannot see:** which launch extracted which
+archive; a report window at the end, read as the Finder, which stops the
+loop — read the last `r-q` frame; and an entry refused for memory and one
+refused for a full disk look the same to the volume check — give the
+output room with `--in-disk`.
 """
 import argparse, os, shutil, sys, tempfile, time
 
@@ -245,45 +248,32 @@ def main():
                 mac.click(I.SF_FIRST_ROW[0] + 30, I.SF_FIRST_ROW[1] + 30)
                 mac.key("Return")
                 time.sleep(2.0)
-                # Three archives' worth of dialogs, in whatever order the
-                # machine's speed puts them: a destination dialog is
-                # accepted, a progress window waited out (Return there is
-                # Cancel's), and the Finder is the end. A long block sits
-                # at 0% for minutes, which a quiet screen cannot tell from
-                # the end — hence a loop, not a frame per step.
-                for i in range(12):
-                    mac.settle(os.path.join(a.outdir, ".settle.png"),
-                               interval=5.0, quiet=a.quiet, timeout=1500)
-                    fr = os.path.join(a.outdir, f"r-q{i}.png")
-                    shot(mac, os.path.basename(fr))
-                    d = D.which_dialog(fr)
-                    print(f"relaunch: frame r-q{i}: {d}")
-                    if d == "handed":
-                        I.accept_destination(mac)
-                    elif d == "nothing":
-                        break
-                    elif d == "open":          # an alert's border sits there
-                        mac.key("Return")
-            if not third:
+            # The archives after the first, in whatever order the
+            # machine's speed puts their frames: a destination dialog is
+            # accepted and counted, a progress window waited out (Return
+            # there is Cancel's), and the Finder is the end. A long block
+            # sits at 0% for minutes, which a quiet screen cannot tell from
+            # the end, and a fast machine is done with both before a fixed
+            # frame is taken — hence a loop, not a frame per step.
+            asked = 0
+            for i in range(12):
                 mac.settle(os.path.join(a.outdir, ".settle.png"),
-                           interval=5.0, quiet=a.quiet, timeout=1200)
-                shot(mac, "r-4-first-done.png")
-                mac.key("Return")                     # "Extraction complete."
-                time.sleep(a.launch_wait)             # the relaunch, if any
-                shot(mac, "r-5-second.png")
-                I.accept_destination(mac)
-                mac.settle(os.path.join(a.outdir, ".settle.png"),
-                           interval=5.0, quiet=a.quiet, timeout=1200)
-                shot(mac, "r-6-second-done.png")
-                mac.key("Return")
-                time.sleep(a.launch_wait)
-                shot(mac, "r-7-end.png")
+                           interval=5.0, quiet=a.quiet, timeout=1500)
+                fr = os.path.join(a.outdir, f"r-q{i}.png")
+                shot(mac, os.path.basename(fr))
+                d = D.which_dialog(fr)
+                print(f"relaunch: frame r-q{i}: {d}")
+                if d == "handed":
+                    asked += 1
+                    I.accept_destination(mac)
+                elif d == "nothing":
+                    break
+                elif d == "open":          # an alert's border sits there
+                    mac.key("Return")
         finally:
             mac.close()
 
         d3 = D.which_dialog(os.path.join(a.outdir, "r-3-first.png"))
-        d5 = "-" if third else \
-            D.which_dialog(os.path.join(a.outdir, "r-5-second.png"))
         have = I.volume_names(extra[0] if a.in_disk else
                               os.path.join(work, "boot.hfv"))
         top = () if a.in_disk else ("In",)
@@ -311,20 +301,19 @@ def main():
         print(f"relaunch: {first[0]} then {second[0]}")
         print(f"relaunch: first archive: dialog {d3}, entries "
               f"{'on the volume' if got1 else 'MISSING'}")
-        print(f"relaunch: second archive: dialog {d5}, entries "
+        print(f"relaunch: destination dialogs after the first: {asked}")
+        print(f"relaunch: second archive: entries "
               f"{'on the volume' if got2 else 'MISSING'}")
         if third:
             print(f"relaunch: queued archive {third[0]}: entries "
                   f"{'on the volume' if got3 else 'MISSING'}")
-        if third:
-            # The destination is asked once an archive, but in whatever order
-            # the machine's speed puts the frames, so only the volume grades
-            # the archives after the first.
-            ok = d3 == "handed" and got1 and got2 and got3
-        elif a.expect == "both":
-            ok = d3 == "handed" and d5 == "handed" and got1 and got2
+        # The destination is asked once an archive: one dialog more for the
+        # second, and one more again for a queued third.
+        more = 2 if third else 1
+        if a.expect == "both":
+            ok = d3 == "handed" and asked >= more and got1 and got2 and got3
         else:
-            ok = d3 == "handed" and got1 and d5 != "handed" and not got2
+            ok = d3 == "handed" and got1 and asked == 0 and not got2
         print(f"relaunch: {'PASS' if ok else 'FAIL'} (expected {a.expect})")
         return 0 if ok else 1
     finally:

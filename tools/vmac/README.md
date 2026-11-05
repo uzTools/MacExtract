@@ -2542,8 +2542,9 @@ showing its window.
                     --first derived-Cool_Tools__.sit --second derived-a2basic.dmg.sit
 
 Opens a `.cpt` and a `.sit` TOGETHER from the Finder (Select All, Open) and
-grades both: the destination dialog for each, and every entry of both on the
-volume. `--expect first` is the control, for a build before the reload.
+grades both: the destination dialog for each — counted over a frame taken each
+time the screen settles, since 2026-11-05, as a frame per step fell out of
+step at full speed and at 1x alike — and every entry of both on the volume. `--expect first` is the control, for a build before the reload.
 `--in-disk` puts the pair on a second disk with room for its output (System
 3.0's boot disk has none for `a2basic`); a `-D UNC_AT_HEAPLOG` build's `Heap
 Log` is printed at the end. Results: DECISIONS.md 2026-10-12, *the reload that
@@ -2553,7 +2554,7 @@ at the top of a folder output — the one place v0.42.0 closed the Finder's
 working directory (DECISIONS.md 2026-10-22, *the working directory the bundle
 closed*); `run.py` cannot see that, since it extracts into a volume's root by
 dirID. **What it cannot see:** an entry refused for memory and one refused for
-a full disk look the same to the volume check — read `r-6-second-done.png`.
+a full disk look the same to the volume check — read the last `r-q` frame.
 
     relaunch.py --app <build> --expect both --emu mv-4M-1x --folder-at 115,107 \
                 --first derived-a2basic.dmg.sit --queue derived-Downer.sit --queue-after 20
