@@ -3554,7 +3554,7 @@ the whole instrumented engine, not comparable across targets):
 | `lzh_static` (-lh4- to -lh7-) | 10 | 264 | 284 | 219,567 | — |
 | `lzh_dyn` (-lh1-/2-/3-, -lz5-, -lzs-) | 3 | 440 | 507 | 175,908 | — |
 | `now` (shapes 1-3, Huffman then LZSS) | 64 | 187 | 201 | 2,241,669 | — |
-| `spacesaver` | **0** | 395 | 437 | 2,959,716 | — |
+| `spacesaver` | **64** | 414 | 480 | 1,343,269 | 600 s, no crash (re-run 2026-11-05, clang 19.1.7, methods 0-4 seeded from the fetched specimens) |
 | `superdisk` | 5 | 263 | 340 | 1,003,158 | — |
 | `implode` | 25 | 168 | 149 | 317,055 | — |
 | `shrink` | 37 | 151 | 147 | 348,980 | — |
@@ -3575,16 +3575,21 @@ nothing*).
 - **What gcc's UBSan does not check, in ci.sh.** Both finds are clang-only
   diagnostics; `ci.sh` runs the unit tests under clang for that reason,
   and nothing else in it does.
-- **SpaceSaver from real data, unless the specimens are fetched.** No
-  SpaceSaver stream is in the corpus, but the 48 files SpaceSaver wrote
-  are (`tools/fetch_specimens.py --only spacesaver`), and `make_seeds.py`
-  seeds from them when present. CORRECTED 2026-11-04: this said the
-  target could only start from the header. Without them it seeds from
-  `run_spacesaver.py --emit` (methods 0 and 4, 3 streams): over 300 s,
-  clang 18, those reached 350 edges in 34,960 runs against 97,608 from
-  the header alone and both stopped at 370, so they add speed and no
-  edges. Methods 1-3 from real data are still unseeded where discmaster
-  cannot be reached.
+- **SpaceSaver from real data.** No SpaceSaver stream is in the corpus,
+  but the 48 files SpaceSaver wrote are
+  (`tools/fetch_specimens.py --only spacesaver`), and `make_seeds.py`
+  seeds from them when present. With the specimens fetched (2026-11-05,
+  clang 19.1.7) `make_seeds.py` kept 64 of 77 distinct streams across all
+  five methods — 37/14/6/5/2 for methods 0/1/2/3/4 — and the 600 s run
+  above reached 414 edges and 480 corpus against 395/437 from the header
+  alone, so methods 1-3 now contribute edges the emit-only seeds (methods
+  0 and 4) never reached. Without the specimens it still seeds from
+  `run_spacesaver.py --emit` (methods 0 and 4, 3 streams; those reached
+  350 edges over 300 s on clang 18 and plateaued at 370). The preset
+  dictionary is still not modelled: `make_seeds.py` passes `--preset` when
+  it CAPTURES a method-3 stream, but the harness `param` carries only the
+  method, so a mutated stream is decoded without the preset (listed
+  below).
 - **Parameters the header does not model**: DiskDoubler's XOR value other
   than 0x5A, SpaceSaver's preset dictionary, StuffIt's optimizer decoders
   (PNTG, delta, JPEG), a cipher in front of any stream.
