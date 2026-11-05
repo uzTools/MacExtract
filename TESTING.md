@@ -3590,6 +3590,22 @@ nothing*).
   it CAPTURES a method-3 stream, but the harness `param` carries only the
   method, so a mutated stream is decoded without the preset (listed
   below).
+
+  **The 395/437 and 414/480 figures above are not like for like** — different
+  builds (header alone's clang is unrecorded; the specimen run is clang
+  19.1.7), and the emit-only figure is a third build (clang 18) at 300 s,
+  not 600. A same-build, same-time, fresh-corpus sweep (clang 19.1.7, 600 s
+  each, one target at a time, 2026-11-05) puts the three starting points
+  side by side: empty corpus reaches 400 edges, 481 corpus, 6,563,311 runs;
+  the 3 emit-only streams reach 396 edges, 417 corpus, 4,396,028 runs; the
+  64 specimen seeds reach 408 edges, 439 corpus, but only 799,084 runs —
+  far fewer than the 1,343,269 of the run above, this machine being under
+  more load at the time (shared box), not a code change. Controlled this
+  way, none of the three edge counts clears the others by more than a
+  single 600 s run's own variance would explain; emit-only is not even
+  ahead of empty. The clearer uplift the 395→414 figures suggested was at
+  least partly the clang upgrade and run-to-run variance, not the seeds
+  alone.
 - **Parameters the header does not model**: DiskDoubler's XOR value other
   than 0x5A, SpaceSaver's preset dictionary, StuffIt's optimizer decoders
   (PNTG, delta, JPEG), a cipher in front of any stream.
