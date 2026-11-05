@@ -509,6 +509,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-04 (the offsets from nothing) — the per-decoder fuzzer's first run found two pointer offsets taken from NULL, one in the 2.5-byte rung landed the same day; gcc's UBSan, the only one ci.sh ran, cannot see either
 - 2026-11-04 (the six read whole) — MacBinary I without padding after the data fork is read where the file is exactly that long and the resource fork's own header ends at the fork's end: six funet archives extract, for 264 B of the BinHex image and no tally
 - 2026-11-05 (the head that was not the file) — an envelope's peek can name a format its payload is not, and the layer under it then failed "Archive damaged."; that layer now reads the bundle again, for 32 B
+- 2026-11-05 (the list the Finder did not pad) — File > Open... appended its record at the document list's size; no Finder measured leaves slack there, but with slack put in the queued archive was lost, so the record now goes after the last one, zeroed and counted, for 96 B
 
 ---
 
@@ -21194,3 +21195,30 @@ decoder kept; the loader before fails both.
 lifetime's alone. `OVL_SAVED` -32, `TIERS` unmoved, every grant row -32 B.
 Heap and disk: nothing unless the peek was wrong. `run_tiers.py --check`:
 no tally moves.
+
+## 2026-11-05 (the list the Finder did not pad) — File > Open... appended its record at the document list's size; no Finder measured leaves slack there, but with slack put in the queued archive was lost, so the record now goes after the last one, zeroed and counted, for 96 B
+
+**Claim (measured).** `QueueAsk` appended the chosen archive to
+`AppParmHandle` at `GetHandleSize`, while `DropNext` walks on from the
+Finder's last record: any slack between the two would be read as a record.
+**No Finder measured leaves any.** A `-D UNC_AT_HEAPLOG` build logs the
+handle's size against its records' walked end at launch, two documents
+handed over (`relaunch.py`): **32 against 32** on System 3.0 (512Ke), 6.0.8
+and 7.0.1, and **36 against 36** with even-length names, whose records end
+on a pad byte (`--pad`). The record's type, version and pad were left
+unwritten and the list's count stayed at the Finder's; nothing reads them.
+
+**The fix anyway, as asked.** The record goes after the last one, walked
+from the next untaken record (or where they ended), zeroed, and the count
+at offset 2 goes up by one. With slack put in (`-D UNC_AT_PARMSLACK`, 16
+zero bytes at launch) on System 6.0.8 at 1x, `relaunch.py --queue`: two
+archives handed over and a third chosen with File > Open... during the
+first. The build before: *"Could not open the archive."* for the slack,
+and the queued archive never extracted. After: **all three extracted**;
+and so without the slack.
+
+**Cost (measured).** Shipped CODE +84 (all of it `prog_tick`, into which
+`QueueAsk` is inlined), A5 +12 (`.data` alignment): **96 B off every
+budget**. Control CODE +88, A5 +8; lazy +84, -20. `OVL_SAVED` unmoved,
+`TIERS` -96, `TIERS_CONTROL` +96. Heap and stack: the record is the
+Finder's list growing by one record, as before.

@@ -252,10 +252,15 @@ REPO = os.path.dirname(HERE)
 # (DECISIONS.md 2026-11-04, *the six read whole*), the control's CODE +264 and A5 -8;
 # OVL_SAVED +256 offsets it, and the BinHex image's +264 takes that much
 # back from the formats it keeps. They were 191,044 / 95,662 / 619,950.
+# **-96 more each 2026-11-05, DERIVED**: File > Open... appends after the
+# Finder's last record, zeroed, and counts it (DECISIONS.md 2026-11-05,
+# *the list the Finder did not pad*), the control's CODE +88 and A5 +8;
+# the shipped pair grew the same 96, OVL_SAVED unmoved. They were 190,788
+# / 95,406 / 619,694.
 TIERS = {
-    "sys3-512K": (190788, "System 3.0, Macintosh 512Ke (222,070 B free)"),
-    "sys6-512K": (95406,  "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
-    "floor-1M":  (619694, "System 6.0.8, 1 MB Mac Plus — the floor target"),
+    "sys3-512K": (190692, "System 3.0, Macintosh 512Ke (222,070 B free)"),
+    "sys6-512K": (95310,  "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
+    "floor-1M":  (619598, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
 # **-592 more each 2026-10-24, DERIVED**: SUMacC's `.dl`, the control's
 # CODE +584 and A5 +8 (DECISIONS.md 2026-10-24, *the format before
@@ -459,7 +464,8 @@ TIERS = {
 # data + bss -680. The machine gave +4,204, because the jump table, the
 # stub segments and the relocations trimmed at launch are resident bytes
 # this unit never counted — which is why TIERS was measured, not moved.
-TIERS_CONTROL = 222144     # build/mac-resident, CODE + A5, 2026-11-04
+TIERS_CONTROL = 222240     # build/mac-resident, CODE + A5, 2026-11-05
+# +96 on 2026-11-05: File > Open...'s record after the last one; TIERS -96.
 # +64 the same day: the fuzzer's null-pointer offsets; TIERS -64.
 # +256 the same day: MacBinary I without padding; TIERS -256.
 # +256 the same day: Arsenic's 2.5-byte table; TIERS -256.

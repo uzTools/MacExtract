@@ -457,6 +457,12 @@ target_compile_options(MacExtract PRIVATE -mcpu=68000 -Os -Wno-multichar
                        # FORMATS.md, *What the reserve is for, measured at
                        # last*.
                        $<$<BOOL:$ENV{UNC_AT_CONTIG}>:-DUNC_AT_CONTIG>
+                       # UNC_AT_PARMSLACK: 16 zero bytes appended to the
+                       # Finder's document list at launch, as slack after
+                       # its records — which no Finder measured leaves — so
+                       # File > Open... can be graded against it (DECISIONS.md
+                       # 2026-11-05, *the list the Finder did not pad*).
+                       $<$<BOOL:$ENV{UNC_AT_PARMSLACK}>:-DUNC_AT_PARMSLACK>
                        # UNC_STACK_BUMP_KB: kStackBump in KB, so the stack
                        # size can be SWEPT without editing source. A
                        # requirement does not move when the stack does; a

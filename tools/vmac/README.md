@@ -2555,6 +2555,23 @@ closed*); `run.py` cannot see that, since it extracts into a volume's root by
 dirID. **What it cannot see:** an entry refused for memory and one refused for
 a full disk look the same to the volume check — read `r-6-second-done.png`.
 
+    relaunch.py --app <build> --expect both --emu mv-4M-1x --folder-at 115,107 \
+                --first derived-a2basic.dmg.sit --queue derived-Downer.sit --queue-after 20
+
+`--queue` puts a third archive alone on a floppy and, 20 s into the first,
+pulls File > Open... down, holds it while the progress pump reaches the
+mouseDown, presses Drive and opens it; then answers each destination dialog
+until the Finder is back, and grades all three archives on either volume
+(each destination dialog opens where Standard File last was). System 6
+geometry, at 1x: at full speed `a2basic` is done before the menu is pulled.
+The Open dialog sits 30 points below and right of `SF_DRIVE`'s, where a click
+lands on Eject and ejects the boot disk. `--pad` names the pair `aa.*`/`bb.*`,
+so every record of the Finder's list ends on a pad byte. A `-D
+UNC_AT_HEAPLOG` build logs the list's size against its walked end, and `-D
+UNC_AT_PARMSLACK` appends 16 bytes of slack to it at launch (DECISIONS.md
+2026-11-05, *the list the Finder did not pad*). **What it cannot see:** the
+queue on any system but 6.0.8.
+
 ### Making a segmented Compact Pro archive — `cptsegment.py`
 
     cptsegment.py --list

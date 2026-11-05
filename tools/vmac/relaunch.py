@@ -88,9 +88,24 @@ def main():
     ap.add_argument("--multifinder", action="store_true",
                     help="System 6 under MultiFinder")
     ap.add_argument("--launch-wait", type=float, default=25.0)
+    ap.add_argument("--queue", metavar="FIXTURE",
+                    help="during the first archive, File > Open... this one, "
+                         "alone on a floppy reached with Drive (System 6 "
+                         "geometry): it must be extracted too, after the two "
+                         "the Finder handed over (DECISIONS.md 2026-11-05, "
+                         "*the list the Finder did not pad*)")
+    ap.add_argument("--queue-after", type=float, default=4.0,
+                    help="seconds into the first extraction to open it")
+    ap.add_argument("--pad", action="store_true",
+                    help="name the archives `aa.*` and `bb.*`: an even-length "
+                         "name ends its record in the Finder's list on a pad "
+                         "byte, which `a.cpt` and `b.sit` never do")
     a = ap.parse_args()
 
     first, second = FIRST, SECOND
+    if a.pad:
+        first = first[:1] + ("a" + first[1],) + first[2:]
+        second = second[:1] + ("b" + second[1],) + second[2:]
     work0 = tempfile.mkdtemp(prefix="vmac-relaunch-names-")
     def spec(fixture, letter):
         ext = os.path.splitext(fixture)[1]
@@ -99,9 +114,10 @@ def main():
             os.path.join(R.REPO, "fixtures", fixture), work0)))
         return (fixture, letter + ext, typ, names)
     if a.first:
-        first = spec(a.first, "a")
+        first = spec(a.first, "aa" if a.pad else "a")
     if a.second:
-        second = spec(a.second, "b")
+        second = spec(a.second, "bb" if a.pad else "b")
+    third = spec(a.queue, "c") if a.queue else None
     shutil.rmtree(work0, ignore_errors=True)
     I.calibrate(a.system)
     icons = I.FINDER_ICONS[a.system]
@@ -155,6 +171,18 @@ def main():
             finally:
                 h.close()
 
+        if third:
+            qdisk = os.path.join(work, "queue.dsk")
+            R.make_floppy(qdisk, "Queue", size_kb=800,
+                          extras=[(fx(third[0]), third[1])])
+            qh = MB.HFS(qdisk)
+            try:
+                qh.run("hattrib", "-t", third[2], "-c", "MExt",
+                       qh.path(third[1]))
+            finally:
+                qh.close()
+            extra = extra + (qdisk,)
+
         mac = I.Mac(boot, a.emu, work, extra=extra)
         try:
             if mac.settle(os.path.join(a.outdir, ".settle.png"),
@@ -186,24 +214,76 @@ def main():
             time.sleep(a.launch_wait)
             shot(mac, "r-3-first.png")
             I.accept_destination(mac)
-            mac.settle(os.path.join(a.outdir, ".settle.png"),
-                       interval=5.0, quiet=a.quiet, timeout=1200)
-            shot(mac, "r-4-first-done.png")
-            mac.key("Return")                     # "Extraction complete."
-            time.sleep(a.launch_wait)             # the relaunch, if any
-            shot(mac, "r-5-second.png")
-            I.accept_destination(mac)
-            mac.settle(os.path.join(a.outdir, ".settle.png"),
-                       interval=5.0, quiet=a.quiet, timeout=1200)
-            shot(mac, "r-6-second-done.png")
-            mac.key("Return")
-            time.sleep(a.launch_wait)
-            shot(mac, "r-7-end.png")
+            if third:
+                # File > Open... has no Command key: the menu is pulled down
+                # and held while the extraction's progress pump gets round
+                # to the mouseDown, then released on its first item.
+                time.sleep(a.queue_after)
+                ox, oy = mac.origin()
+                mac._xdo("mousemove", str(ox + 52), str(oy + 9))
+                time.sleep(0.5)
+                mac._xdo("mousedown", "1")
+                time.sleep(3.0)
+                mac._xdo("mousemove", str(ox + 62), str(oy + 28))
+                time.sleep(1.5)
+                mac.shot(os.path.join(a.outdir, "r-3a-menu.png"),
+                         scale="200%")
+                # shot() parks the pointer off the screen: back onto the
+                # item before the release, or the menu chooses nothing.
+                mac._xdo("mousemove", str(ox + 62), str(oy + 28))
+                time.sleep(1.0)
+                mac._xdo("mouseup", "1")
+                time.sleep(4.0)
+                shot(mac, "r-3b-open.png")
+                # QueueAsk places its Open dialog at the destination
+                # dialog's spot, 30 points down and right of SF_DRIVE's;
+                # left there, the click lands on Eject — and ejects the
+                # boot disk.
+                mac.click(I.SF_DRIVE[0] + 30, I.SF_DRIVE[1] + 30)
+                time.sleep(2.0)
+                shot(mac, "r-3c-drive.png")
+                mac.click(I.SF_FIRST_ROW[0] + 30, I.SF_FIRST_ROW[1] + 30)
+                mac.key("Return")
+                time.sleep(2.0)
+                # Three archives' worth of dialogs, in whatever order the
+                # machine's speed puts them: a destination dialog is
+                # accepted, a progress window waited out (Return there is
+                # Cancel's), and the Finder is the end. A long block sits
+                # at 0% for minutes, which a quiet screen cannot tell from
+                # the end — hence a loop, not a frame per step.
+                for i in range(12):
+                    mac.settle(os.path.join(a.outdir, ".settle.png"),
+                               interval=5.0, quiet=a.quiet, timeout=1500)
+                    fr = os.path.join(a.outdir, f"r-q{i}.png")
+                    shot(mac, os.path.basename(fr))
+                    d = D.which_dialog(fr)
+                    print(f"relaunch: frame r-q{i}: {d}")
+                    if d == "handed":
+                        I.accept_destination(mac)
+                    elif d == "nothing":
+                        break
+                    elif d == "open":          # an alert's border sits there
+                        mac.key("Return")
+            if not third:
+                mac.settle(os.path.join(a.outdir, ".settle.png"),
+                           interval=5.0, quiet=a.quiet, timeout=1200)
+                shot(mac, "r-4-first-done.png")
+                mac.key("Return")                     # "Extraction complete."
+                time.sleep(a.launch_wait)             # the relaunch, if any
+                shot(mac, "r-5-second.png")
+                I.accept_destination(mac)
+                mac.settle(os.path.join(a.outdir, ".settle.png"),
+                           interval=5.0, quiet=a.quiet, timeout=1200)
+                shot(mac, "r-6-second-done.png")
+                mac.key("Return")
+                time.sleep(a.launch_wait)
+                shot(mac, "r-7-end.png")
         finally:
             mac.close()
 
         d3 = D.which_dialog(os.path.join(a.outdir, "r-3-first.png"))
-        d5 = D.which_dialog(os.path.join(a.outdir, "r-5-second.png"))
+        d5 = "-" if third else \
+            D.which_dialog(os.path.join(a.outdir, "r-5-second.png"))
         have = I.volume_names(extra[0] if a.in_disk else
                               os.path.join(work, "boot.hfv"))
         top = () if a.in_disk else ("In",)
@@ -220,12 +300,27 @@ def main():
             bh.close()
         got1 = all(comp(n) in have for n in first[3])
         got2 = all(comp(n) in have for n in second[3])
+        got3 = third is None
+        if third:
+            # Each destination dialog opens where Standard File last was,
+            # so with a floppy in play an archive's output can land on it.
+            qhave = I.volume_names(qdisk)
+            on = lambda w: all(comp(n) in have or tuple(n.split("/")) in qhave
+                               for n in w[3])
+            got2, got3 = on(second), on(third)
         print(f"relaunch: {first[0]} then {second[0]}")
         print(f"relaunch: first archive: dialog {d3}, entries "
               f"{'on the volume' if got1 else 'MISSING'}")
         print(f"relaunch: second archive: dialog {d5}, entries "
               f"{'on the volume' if got2 else 'MISSING'}")
-        if a.expect == "both":
+        if third:
+            print(f"relaunch: queued archive {third[0]}: entries "
+                  f"{'on the volume' if got3 else 'MISSING'}")
+        if third:
+            # Since v0.45.0 the destination is asked once a launch, so only
+            # the volume grades the archives after the first.
+            ok = d3 == "handed" and got1 and got2 and got3
+        elif a.expect == "both":
             ok = d3 == "handed" and d5 == "handed" and got1 and got2
         else:
             ok = d3 == "handed" and got1 and d5 != "handed" and not got2

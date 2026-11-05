@@ -4263,10 +4263,11 @@ nothing calls; the linked figure is `tools/code_map.py`'s, below. (The rodata
 half was wrong 2026-09-19 to 09-23: it still counted `unc_crypt.c`'s three
 2,048-byte tables after they moved to key setup — *Where the code is*.)
 
-The application ships as **250,752 B** of MacBinary (`dist/MacExtract.bin`,
-`ls -l` 2026-11-04, with MacBinary I read without padding; 250,496 B with
-Arsenic's 2.5-byte table before it, 250,240 B before that, CORRECTED the
-same day from 250,112). **47,744 B** is
+The application ships as **250,880 B** of MacBinary (`dist/MacExtract.bin`,
+`ls -l` 2026-11-05, with File > Open...'s record placed after the last;
+250,752 B with MacBinary I read without padding before it, 250,496 B with
+Arsenic's 2.5-byte table before that, 250,240 B before that, CORRECTED the
+same day from 250,112). **47,872 B** is
 `MacExtract.code.bin`, read at launch and never purged, and **194,556 B** is
 the `'OVLY'` bundle, read at launch and mostly given back before the engine
 takes its budget (*Overlays*). What stays costs the heap one for one: the

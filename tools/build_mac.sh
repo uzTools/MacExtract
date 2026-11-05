@@ -709,7 +709,10 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # padding (DECISIONS.md 2026-11-04, *the six read whole*), the file-size test
 # and the second skip in fmt_macbinary.c; `ovl_binhex` +264, the shipped
 # pair unmoved.
-UNC_MAC_CODE_DEFAULT=185496
+# +88 on 2026-11-05, 185,496 -> 185,584, A5 +8 below: File > Open...
+# appends its record after the Finder's last one, zeroed, and counts it
+# (DECISIONS.md 2026-11-05, *the list the Finder did not pad*).
+UNC_MAC_CODE_DEFAULT=185584
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -938,7 +941,9 @@ UNC_MAC_CODE_DEFAULT=185496
 # fixes (above); no data was added or removed.
 # -8 the same day, 36,656 -> 36,648: `.data` alignment under the unpadded
 # MacBinary test (above); no data was added or removed.
-UNC_MAC_A5_DEFAULT=36648
+# +8 on 2026-11-05, 36,648 -> 36,656: `.data` alignment under File >
+# Open...'s record (above); no data was added.
+UNC_MAC_A5_DEFAULT=36656
 # A CEILING PER CONFIGURATION, because one ceiling measured on another build
 # cannot fire. The figures above are the RESIDENT control build, which carries
 # every decoder; the shipped build's resident code is a third of that, so
@@ -1446,8 +1451,12 @@ UNC_MAC_A5_DEFAULT=36648
 # bundle again under an envelope whose peek named the wrong format
 # (DECISIONS.md 2026-11-05, *the head that was not the file*). 32 B off
 # every budget.
-UNC_MAC_CODE_EAGER=39704
-UNC_MAC_A5_EAGER=16712
+# +84 and +12 the same day, 39,704 -> 39,788 and 16,712 -> 16,724: File >
+# Open... appends its record after the Finder's last one, zeroed, and
+# counts it (DECISIONS.md 2026-11-05, *the list the Finder did not pad*).
+# The A5 is `.data` alignment. 96 B off every budget.
+UNC_MAC_CODE_EAGER=39788
+UNC_MAC_A5_EAGER=16724
 # +8 on 2026-10-02 for the same reason as the eager pair above: the
 # overlay call that now says WHICH of StuffIt 2.x's ciphers an entry
 # wants. A5 fell to 19,096 and its ceiling is left where it was.
@@ -1567,7 +1576,9 @@ UNC_MAC_A5_EAGER=16712
 # +92 code on 2026-11-04: HoldUI, as the eager pair; data + bss 16,756,
 # under its ceiling. -56 the same day, HoldUI out again (the eager pair
 # above); data + bss 16,764, under its ceiling.
-UNC_MAC_CODE_LAZY=38500
+# +84 code on 2026-11-05: File > Open...'s record, as the eager pair;
+# data + bss 16,744, under its ceiling.
+UNC_MAC_CODE_LAZY=38584
 UNC_MAC_A5_LAZY=19200
 if [ -n "$UNC_OVL_RESIDENT" ]; then
     UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-$UNC_MAC_CODE_DEFAULT}

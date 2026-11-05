@@ -6845,6 +6845,15 @@ static void DropInit(void)
     Handle h = LMGetAppParmHandle();
     const unsigned char *q;
     if (!h || !*h) return;
+#ifdef UNC_AT_PARMSLACK
+    {   /* PROBE: slack after the records, which QueueAsk must not append
+         * behind (mac/CMakeLists.txt). */
+        long sz = GetHandleSize(h), k;
+        HUnlock(h);
+        SetHandleSize(h, sz + 16);
+        for (k = 0; k < 16; k++) (*h)[sz + k] = 0;
+    }
+#endif
     q = (const unsigned char *)*h;
     if (q[0] || q[1]) return;                     /* appPrint: not ours */
     gDropLeft = (short)((q[2] << 8) | q[3]);
@@ -6881,8 +6890,9 @@ static void QueueAsk(void)
 {
     SFReply reply;
     Handle h = LMGetAppParmHandle();
-    long size, rec;
+    long end, rec, i;
     unsigned char *q;
+    short n;
 #ifdef UNC_AT_STACK
     /* Probe builds: sample inside Standard File's loop, which here runs on
      * top of a decoder's frames (FORMATS.md, *Stack*). */
@@ -6892,16 +6902,24 @@ static void QueueAsk(void)
     SFGetFile(gDestWhere, "\p", NULL, -1, NULL, NULL, &reply);
 #endif
     if (!reply.good || !h) return;
-    size = GetHandleSize(h);          /* message and count at least */
-    rec = (8 + 1 + reply.fName[0] + 1) & ~1;
+    /* After the last RECORD, which DropNext reaches by walking, and not at
+     * the handle's size: the records still to be taken are walked from the
+     * next one, and with none left the next one is where they ended. */
+    end = gDropOff ? gDropOff : 4;
+    q = (unsigned char *)*h;
+    for (n = gDropLeft; n > 0; n--) end += (q[end + 8] + 10) & ~1;
+    rec = (reply.fName[0] + 10) & ~1;
     HUnlock(h);                         /* the Segment Loader's may be locked */
-    SetHandleSize(h, size + rec);
+    SetHandleSize(h, end + rec);
     if (MemError()) return;
     q = (unsigned char *)*h;
-    q[size] = (unsigned char)(reply.vRefNum >> 8);
-    q[size + 1] = (unsigned char)reply.vRefNum;
-    BlockMoveData(reply.fName, q + size + 8, reply.fName[0] + 1);
-    if (gDropLeft <= 0) gDropOff = size;
+    if (!++q[3]) q[2]++;                /* the list's own count */
+    q += end;
+    for (i = 0; i < rec; i++) q[i] = 0; /* fType, versNum, the pad */
+    q[0] = (unsigned char)(reply.vRefNum >> 8);
+    q[1] = (unsigned char)reply.vRefNum;
+    BlockMoveData(reply.fName, q + 8, reply.fName[0] + 1);
+    if (gDropLeft <= 0) gDropOff = end;
     gDropLeft++;
 }
 
@@ -7032,6 +7050,29 @@ static void HeapLogFlush(void)
     PBCloseSync(&pb);
     gHeapLogLen = 0;
 }
+
+/* PROBE: the Finder's document list as handed over — the handle's size
+ * against the end of its records, walked as DropNext walks them. Anything
+ * between the two is slack a record appended at the handle's size would
+ * land past (DECISIONS.md 2026-11-05, *the list the Finder did not pad*). */
+static void HeapLogParm(void)
+{
+    Handle h = LMGetAppParmHandle();
+    unsigned char *b = gHeapLogBuf + gHeapLogLen;
+    const unsigned char *q;
+    short n = 0, k, cnt;
+    long end = 4;
+    if (!h || !*h) return;
+    q = (const unsigned char *)*h;
+    cnt = (short)((q[2] << 8) | q[3]);
+    for (k = 0; k < cnt; k++) end += (8 + 1 + q[end + 8] + 1) & ~1;
+    HL_str(b, &n, "parm msg="); HL_num(b, &n, (long)((q[0] << 8) | q[1]));
+    HL_str(b, &n, " count="); HL_num(b, &n, cnt);
+    HL_str(b, &n, " size="); HL_num(b, &n, GetHandleSize(h));
+    HL_str(b, &n, " end="); HL_num(b, &n, end);
+    b[n++] = '\r';
+    gHeapLogLen += n;
+}
 #endif
 
 int main(void)
@@ -7086,6 +7127,9 @@ int main(void)
     FlushEvents(everyEvent, 0);
 
     DropInit();
+#ifdef UNC_AT_HEAPLOG
+    HeapLogParm();
+#endif
 
     where.h = 82;
     where.v = 90;
