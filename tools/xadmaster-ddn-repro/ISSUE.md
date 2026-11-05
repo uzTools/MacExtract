@@ -6,9 +6,9 @@ this repository should submit one. It is also not possible from here, for the
 same reason as `tools/retro68-hopen-repro/`: no `gh` CLI, no credentials, and
 an unauthenticated POST to the issues API returns 401.
 
-Three findings below. Reproduction: `make_repro.py` for the first,
-`make_repro_unchecked.py` for the other two (2026-11-05); both scripts are
-in this directory.
+Four findings below. Reproduction: `make_repro.py` for the first,
+`make_repro_unchecked.py` for the other three (2026-11-05); both scripts
+are in this directory.
 
 ---
 
@@ -141,6 +141,58 @@ DiskDoubler itself wrote. This project's own decoder (`src/fmt_dd.c`
 `DECISIONS.md`, *the symbols no encoder writes*) after finding the same gap
 by reading the reference; that fix's evidence was UBSan on this project's
 own build, not a run against `unar`. This is that run.
+
+---
+
+## DiskDoubler DDn (method 10): the same unchecked read leaks heap memory into the extracted file
+
+The crash above needs a declared block size large enough to walk `literalptr`
+off the end of its heap allocation. A smaller declared size reaches the same
+unchecked read, stays inside mapped memory, and `unar` exits 0 having copied
+part of its own heap into the file it just "successfully" extracted.
+
+### Reproduction
+
+    tools/xadmaster-ddn-repro/make_repro_unchecked.py -o /tmp/ddn
+    unar -f -o /tmp/ddn-out /tmp/ddn/case_e.dd   # OK, exit 0
+
+225 bytes: one DDn block declaring 16 real literals, every one the byte
+`0x5A`, and a length-code run clamped by the block's own declared size to
+204,096 bytes total — comfortably on the safe side of the boundary a sweep
+against this same binary found (262,145 B still exits 0; 300,000 B already
+segfaults). Every output byte after the first 16 is something the crafted
+stream never supplied.
+
+### What came out, three runs
+
+| run | exit | output bytes | bytes ≠ `0x5A` |
+|---|---|---|---|
+| 1 | 0 | 204,096 | 204,080 |
+| 2 | 0 | 204,096 | 201,159 |
+| 3 | 0 | 204,096 | 204,080 |
+
+Runs 1 and 3 match; run 2 differs by 2,937 bytes that happened to collide
+with the marker value by chance — the leaked content itself is not bit-for-
+bit identical run to run, consistent with live heap state rather than a
+fixed pattern. Most of what's copied in is zero (freshly-mapped, untouched
+memory), but not all of it: a handful of other byte values each recur a few
+thousand times, which is not what zero-fill alone would produce.
+
+### Why this is worse than the crash
+
+The crash fails loudly. This does not: `unar` reports success, and the
+output file is wrong in a way nothing downstream is positioned to notice —
+it is larger than anything the archive actually contained, and the extra
+bytes are process memory, not file content. Whatever was live in that
+memory (a previous archive's path, buffered output, anything else allocated
+nearby) ends up on disk under the extracted file's name.
+
+### Where to look
+
+Same as the crash: `XADDiskDoublerDDnHandle.m`,
+`-nextLiteralOrOffset:andLength:atPosition:`. Fixing the crash (bounding
+`literalptr` against `numliterals`) fixes this too — the two are the same
+missing check, reached with two different declared sizes.
 
 ---
 

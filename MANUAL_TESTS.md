@@ -134,6 +134,11 @@ repository submits it** (CLAUDE.md, *Rules*); the maintainer posts it.
 **Record** the issue URL in BLOCKERS.md beside its claim. A rejection is a
 withdrawn claim, filed with what it cost.
 
+Two of `ISSUE.md`'s other findings there are a crash and a heap-memory
+leak into the extracted file (`case_d`/`case_e`, 2026-11-05); the maintainer
+may prefer reporting the leak privately to MacPaw over a public issue, the
+usual practice for a bug that can expose memory contents.
+
 ## 8. A release
 
 `v0.45.0` (2026-11-02) is the newest tag and is `main`'s `dist/`, released
