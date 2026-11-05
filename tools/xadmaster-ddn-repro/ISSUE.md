@@ -6,9 +6,9 @@ this repository should submit one. It is also not possible from here, for the
 same reason as `tools/retro68-hopen-repro/`: no `gh` CLI, no credentials, and
 an unauthenticated POST to the issues API returns 401.
 
-Three sections, one each. Reproduction: `make_repro.py` for the first,
-`make_repro_unchecked.py` for the other two (2026-11-05), both in this
-directory.
+Three findings below. Reproduction: `make_repro.py` for the first,
+`make_repro_unchecked.py` for the other two (2026-11-05); both scripts are
+in this directory.
 
 ---
 
@@ -124,17 +124,18 @@ wrong bytes with no error, `unar` reporting success (exit 0).
     unar -f /tmp/ddn/case_c.dd   # writes "ABCDEFGH\x00\x00\x00"
 
 **`case_a.dd`** (171 B): one match whose offset-code symbol (64) is past
-the 32 any correct offset code assigns (a code has up to 256 symbols, but a
-real encoder only ever uses the first 32). `(2+(slot&1))<<bits` is then
-shifted by `slot/2-1 = 31` with no bound, and the result is truncated
-storing into `uint16_t offsetptr[]`. The 3-byte match this decodes reads
-back whatever that truncated value names, not an error.
+the 32 symbols any correct offset code assigns (a code has up to 256
+symbols, but a real encoder only ever uses the first 32). `(2+(slot&1))<<bits`
+is then shifted by `slot/2-1 = 31` with no bound, and the result is
+truncated on storing into `uint16_t offsetptr[]`. The 3-byte match this
+decodes reads back whatever that truncated value names, not an error.
 
 **`case_c.dd`** (148 B): one match whose offset-code symbol is 31 with
-every one of its 14 extra bits set — 65,537 is the smallest value that
-slot should reach, but the arithmetic gives 65,536, which `uint16_t
-offsetptr[]` stores as 0. `offset > pos` lets 0 through (0 is never greater
-than a non-negative position), and the match reads
+every one of its 14 extra bits set. That is slot 31's own maximum — the
+next slot (32, never assigned by a real encoder) would start at 65,537 —
+so the arithmetic is right to give 65,536; it is `uint16_t offsetptr[]`
+that cannot hold it, and stores 0. `offset > pos` lets 0 through (0 is
+never greater than a non-negative position), and the match reads
 `windowbuffer[pos & windowmask]` — the position it is about to write,
 read before it is. The window starts zeroed, so the 3 bytes this decodes
 to are 0, not the file's own earlier bytes a correct offset would read.
