@@ -2361,6 +2361,13 @@ Saving a SECOND time puts both records in the catalog: the first was
                                     # leave an extraction for the Finder and
                                     # come back: a Finder click, then the
                                     # Application menu
+    interactive.py derived-MacPass390.sea --cancel-tap [--taps N]
+                                    # a press on Cancel released before the
+                                    # pump reads it: tapped (cancels, flashes),
+                                    # dragged off (does not), Cmd-. (flashes)
+    interactive.py ... --cancel-tap --app <MacBinary>
+                                    # the same against another build: the
+                                    # control, which loses the tap
 
 Run them one at a time (*This box has two cores*, above) — and every phase
 builds into the same `build/mac-interactive`, so two runs started together

@@ -718,7 +718,11 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # +28 the same day, 185,608 -> 185,636, A5 +4 below: a MAR listing reads
 # only the comment an entry carries and counts what it skips (DECISIONS.md
 # 2026-11-05, *the comment a listing read whole*); `ovl_zipold` elsewhere.
-UNC_MAC_CODE_DEFAULT=185636
+# +156 on 2026-11-06, 185,636 -> 185,792, A5 -28 below: a tap on Cancel
+# decided by where it was released, and the flash (DECISIONS.md
+# 2026-11-06, *the tap the pump read too late*); the same code as the
+# shipped pair.
+UNC_MAC_CODE_DEFAULT=185792
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -953,7 +957,9 @@ UNC_MAC_CODE_DEFAULT=185636
 # bound (above); no data was added.
 # +4 the same day, 36,664 -> 36,668: `.data` alignment under the MAR
 # listing (above); no data was added.
-UNC_MAC_A5_DEFAULT=36668
+# -28 on 2026-11-06, 36,668 -> 36,640: `.data` alignment under the tap on
+# Cancel (above); no data was added or removed.
+UNC_MAC_A5_DEFAULT=36640
 # A CEILING PER CONFIGURATION, because one ceiling measured on another build
 # cannot fire. The figures above are the RESIDENT control build, which carries
 # every decoder; the shipped build's resident code is a third of that, so
@@ -1465,8 +1471,15 @@ UNC_MAC_A5_DEFAULT=36668
 # Open... appends its record after the Finder's last one, zeroed, and
 # counts it (DECISIONS.md 2026-11-05, *the list the Finder did not pad*).
 # The A5 is `.data` alignment. 96 B off every budget.
-UNC_MAC_CODE_EAGER=39788
-UNC_MAC_A5_EAGER=16724
+# +156 and +4 on 2026-11-06, 39,788 -> 39,944 and 16,724 -> 16,728: a press
+# on Cancel already released when the pump reads it is decided by where it
+# was released, and a cancel taken without tracking flashes the button
+# (DECISIONS.md 2026-11-06, *the tap the pump read too late*): all of it
+# `prog_tick`, into which ProgressPump is inlined, 108 the release and 48
+# the flash, after trimming from +204. The A5 is `.data` alignment. 160 B
+# off every budget.
+UNC_MAC_CODE_EAGER=39944
+UNC_MAC_A5_EAGER=16728
 # +8 on 2026-10-02 for the same reason as the eager pair above: the
 # overlay call that now says WHICH of StuffIt 2.x's ciphers an entry
 # wants. A5 fell to 19,096 and its ceiling is left where it was.
@@ -1588,7 +1601,9 @@ UNC_MAC_A5_EAGER=16724
 # above); data + bss 16,764, under its ceiling.
 # +84 code on 2026-11-05: File > Open...'s record, as the eager pair;
 # data + bss 16,744, under its ceiling.
-UNC_MAC_CODE_LAZY=38584
+# +156 code on 2026-11-06: the tap on Cancel, as the eager pair; data + bss
+# 16,748, under its ceiling.
+UNC_MAC_CODE_LAZY=38740
 UNC_MAC_A5_LAZY=19200
 if [ -n "$UNC_OVL_RESIDENT" ]; then
     UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-$UNC_MAC_CODE_DEFAULT}

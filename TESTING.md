@@ -3870,6 +3870,13 @@ DECISIONS.md, *the character that was touched three times*).
     - `--wd`: the archive inside a folder, Return accepts the default
       destination; every output must be under that folder, none at the
       root.
+    - `--cancel-tap`: a press on Cancel already released when the pump
+      reads it — tapped (must cancel and flash), dragged off (must not),
+      and Cmd-. (must flash); graded on the volume and on `xwd` frames of
+      the button. `--app` runs it against another build: the one before
+      2026-11-06 cancels on the drag. It cannot see a release that lands
+      while the pump runs, nor a held press (DECISIONS.md 2026-11-06, *the
+      tap the pump read too late*).
     - **The default phase runs on both Mini vMac tiers**, `--system
       Sys7.img` included: `ProgressPump()`'s `WaitNextEvent` side, Cancel
       through `DialogSelect`, Cmd-., the SFGetFile repaint, and 8-bit names

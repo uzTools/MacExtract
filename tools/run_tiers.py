@@ -266,10 +266,14 @@ REPO = os.path.dirname(HERE)
 # 2026-11-05, *the comment a listing read whole*), the control's CODE +28
 # and A5 +4; OVL_SAVED +32 offsets it, the zipold image's +28 takes most
 # of it back from the formats that keep it.
+# **-128 more each 2026-11-06, DERIVED**: a tap on Cancel decided by where
+# it was released, and the flash (DECISIONS.md 2026-11-06, *the tap the
+# pump read too late*), the control's CODE +156 and A5 -28; the shipped
+# pair grew 160, OVL_SAVED -32. They were 190,628 / 95,246 / 619,534.
 TIERS = {
-    "sys3-512K": (190628, "System 3.0, Macintosh 512Ke (222,070 B free)"),
-    "sys6-512K": (95246,  "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
-    "floor-1M":  (619534, "System 6.0.8, 1 MB Mac Plus — the floor target"),
+    "sys3-512K": (190500, "System 3.0, Macintosh 512Ke (222,070 B free)"),
+    "sys6-512K": (95118,  "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
+    "floor-1M":  (619406, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
 # **-592 more each 2026-10-24, DERIVED**: SUMacC's `.dl`, the control's
 # CODE +584 and A5 +8 (DECISIONS.md 2026-10-24, *the format before
@@ -473,7 +477,8 @@ TIERS = {
 # data + bss -680. The machine gave +4,204, because the jump table, the
 # stub segments and the relocations trimmed at launch are resident bytes
 # this unit never counted — which is why TIERS was measured, not moved.
-TIERS_CONTROL = 222304     # build/mac-resident, CODE + A5, 2026-11-05
+TIERS_CONTROL = 222432     # build/mac-resident, CODE + A5, 2026-11-06
+# +128 on 2026-11-06: the tap on Cancel and its flash; TIERS -128.
 # +32 the same day: a MAR listing's comment and progress; TIERS -32.
 # +32 the same day: an LZ4 match held to its block; TIERS -32.
 # +96 on 2026-11-05: File > Open...'s record after the last one; TIERS -96.
@@ -995,7 +1000,12 @@ EXPECT = {
 # the control's +32 (CODE +28, A5 +4) against the shipped pair's 0, the
 # reader in `ovl_zipold` (DECISIONS.md 2026-11-05, *the comment a listing
 # read whole*). TIERS -32.
-OVL_SAVED = 165792
+# **-32 2026-11-06, -> 165,760**: a tap on Cancel decided by where it was
+# released, and the flash, the shipped pair's +160 (CODE +156, A5 +4)
+# against the control's +128 (CODE +156, A5 -28): the same code in both,
+# and the difference is where each build's `.data` alignment falls
+# (DECISIONS.md 2026-11-06, *the tap the pump read too late*). TIERS -128.
+OVL_SAVED = 165760
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
 # every kept image is one — as is the bundle an envelope holds on to.

@@ -144,9 +144,11 @@ which licence follows.
 
 ## A click during an extraction waits for the next progress callback
 
-The menu bar is read only in the progress pump, so a click shorter than the
-gap between callbacks is lost (DECISIONS.md 2026-10-12, *the application
-nobody could leave*). **What is left is 4–6 s on a Mac Plus** for Now
+Events are read only in the progress pump, so a click or Cmd-. waits for the
+next callback, and a click on the menu bar shorter than the gap is lost
+(DECISIONS.md 2026-10-12, *the application nobody could leave*). A press on
+Cancel is decided by where it was released (2026-11-06, *the tap the pump
+read too late*). **What is left is 4–6 s on a Mac Plus** for Now
 Compress, Compact Pro and DiskDoubler, 2–2.5 s for StuffIt and Zip — 8 KB of
 input at `UNC_PROGRESS_STEP` (FORMATS.md, *How long a click waits*).
 **Halving the step is measured** (FORMATS.md, *What a 4 KB step buys*): gaps

@@ -2609,6 +2609,170 @@ def phase_switch(args, appbin, workdir, shot):
     return bool(want) and not absent
 
 
+# The inside of the progress window's Cancel button, (x, y, w, h): DITL 146
+# item 1 is {51, 211, 71, 270} at DLOG 146's (80, 80), so the button is x
+# 291..350, y 131..151 (mac/macextract_colorbar.r), less its frame and
+# rounded corners. At rest it is white with "Cancel" in black; flashed, it
+# is inverted.
+CANCEL_INSIDE = (295, 134, 52, 14)
+# All black only while the progress window is up, (x, y, w, h): Cancel's
+# top edge and left edge, and the bar's left edge (item 3, {55, 10, 66,
+# 198}). One line was not enough: Standard File's selected row crosses the
+# bar's top edge, and a run waited on it photographed Standard File.
+PROGRESS_MARKS = ((295, 131, 52, 1), (291, 135, 1, 12), (90, 135, 1, 11))
+# The desktop below the progress window, outside every window.
+OFF_CANCEL = (256, 300)
+
+
+def frame_mean(path, box):
+    """Mean brightness, 0 black to 1 white, of `box` in a screenshot."""
+    x, y, w, h = box
+    # xwd keeps the window's 4-pixel X border, 520x350 where `import`
+    # gives the Mac's 512x342: every mark landed 4 px off until it was cut.
+    shave = ["-shave", "4x4", "+repage"] if path.endswith(".xwd") else []
+    out = subprocess.run(["convert", path, *shave, "-crop", f"{w}x{h}+{x}+{y}",
+                          "+repage", "-format", "%[fx:mean]", "info:"],
+                         check=True, capture_output=True, text=True).stdout
+    return float(out)
+
+
+def xwd(mac, path):
+    """One frame of the emulator window, fast: xwd costs a fraction of
+    ImageMagick's `import`, which is too slow to catch an 8-tick flash."""
+    subprocess.run(["xwd", "-display", mac.dpy.name, "-id", mac.dpy.window(),
+                    "-silent", "-out", path], check=True, capture_output=True)
+
+
+def phase_cancel_tap(args, appbin, workdir, shot):
+    """A press on Cancel that is over before the application looks at it.
+
+    The progress window's events are read only from the engine's progress
+    callback, seconds apart on a slow format (FORMATS.md, *How long a click
+    waits*), so the mouseDown is dequeued after the button has come up.
+    Each trial is its own boot of a fresh volume:
+
+    - **tap**: press and release on Cancel, then move the pointer off at
+      once. Must cancel, and the button must flash. Before 2026-11-06
+      TrackControl tested where the pointer was when the pump ran, and the
+      tap was lost: the control is that build (`--app`), which FAILS here.
+    - **drag**: press on Cancel, drag off, release, all inside one gap.
+      Must NOT cancel, as a button does not.
+    - **cmd**: Cmd-. Must cancel, and the button must flash.
+
+    "Cancelled" is graded on the volume, a strict subset of what the CLI
+    writes; "complete" is all of it. The flash is graded on a burst of
+    `xwd` frames over CANCEL_INSIDE, any frame darker than half.
+
+    What this CANNOT see: a tap released while the pump happens to run
+    (the race is a few tenths of a second in seconds); a flash shorter
+    than the burst's frame interval, which it prints; and anything about
+    a press still held when the pump runs, which is TrackControl's and the
+    default phase's. Pick a fixture with long gaps: derived-MacPass390.sea
+    (DiskDoubler, three entries, gaps to 4.2 s).
+    """
+    want = expected_names(args.fixture, workdir)
+    if not want:
+        return False
+    trials = ["tap"] * args.taps + ["drag", "cmd"]
+    ok = True
+    for n, kind in enumerate(trials, 1):
+        bootimg = os.path.join(workdir, f"boot-tap{n}.hfv")
+        R.sh(sys.executable, os.path.join(HERE, "mkboot.py"),
+             stock_image(args), appbin, bootimg,
+             "--data", f"{args.fixture}:archive.sit")
+        scratch = os.path.join(args.outdir, ".settle.png")
+        frames = os.path.join(workdir, f"frames{n}")
+        os.makedirs(frames, exist_ok=True)
+        mac = Mac(bootimg, args.emu, workdir)
+        try:
+            if mac.settle(scratch, interval=5.0,
+                          timeout=args.boot_timeout) is None:
+                raise SystemExit("interactive: the machine never settled")
+            sf_to_volume_root(mac, args.system)
+            mac.click(*SF_FIRST_ROW)
+            mac.key("Return")
+            time.sleep(4.0)
+            accept_destination(mac)
+            t0 = time.time()
+            poll = os.path.join(frames, "poll.xwd")
+            xwd(mac, poll)
+            while any(frame_mean(poll, b) > 0.1 for b in PROGRESS_MARKS):
+                if time.time() - t0 > 120:
+                    raise SystemExit("interactive: no progress window")
+                xwd(mac, poll)
+            os.remove(poll)
+            shot(mac, f"tap{n}-{kind}-1-progress.png")
+            ox, oy = mac.origin()
+            cx = ox + CANCEL_INSIDE[0] + CANCEL_INSIDE[2] // 2
+            cy = oy + CANCEL_INSIDE[1] + CANCEL_INSIDE[3] // 2
+            if kind == "cmd":
+                mac.command_key("period")
+            else:
+                mac._xdo("mousemove", str(cx), str(cy))
+                time.sleep(0.3)
+                mac._xdo("mousedown", "1")
+                time.sleep(0.05)
+                if kind == "drag":
+                    # Stepped: Mini vMac samples the mouse once a tick.
+                    for i in range(1, 5):
+                        mac._xdo("mousemove",
+                                 str(cx + (ox + OFF_CANCEL[0] - cx) * i // 4),
+                                 str(cy + (oy + OFF_CANCEL[1] - cy) * i // 4))
+                        time.sleep(0.03)
+                    mac._xdo("mouseup", "1")
+                else:
+                    # Released on the button, then moved off: Mini vMac
+                    # samples the mouse once a tick, and an up and a move in
+                    # one tick is a release off the button.
+                    mac._xdo("mouseup", "1")
+                    time.sleep(0.1)
+                    mac._xdo("mousemove", str(ox + OFF_CANCEL[0]),
+                             str(oy + OFF_CANCEL[1]))
+            t1 = time.time()
+            got_frames = 0
+            while time.time() - t1 < args.burst:
+                xwd(mac, os.path.join(frames, f"{got_frames:04d}.xwd"))
+                got_frames += 1
+            interval = args.burst / max(got_frames, 1)
+            mac.settle(scratch, interval=2.0,
+                       quiet=EXTRACT_QUIET if kind == "drag" else CANCEL_QUIET,
+                       timeout=args.complete_timeout)
+            shot(mac, f"tap{n}-{kind}-2-after.png")
+        finally:
+            mac.close()
+            if os.path.exists(scratch):
+                os.remove(scratch)
+        shots = sorted(os.listdir(frames))
+        # The window must still be up after the press, or the trial asked
+        # nothing: an extraction already over is COMPLETE whatever a press
+        # does.
+        up = bool(shots) and all(
+            frame_mean(os.path.join(frames, shots[0]), b) <= 0.1
+            for b in PROGRESS_MARKS)
+        means = [frame_mean(os.path.join(frames, f), CANCEL_INSIDE)
+                 for f in shots]
+        shutil.rmtree(frames, ignore_errors=True)
+        flashed = sum(1 for m in means if m < 0.5)
+        got = volume_names(os.path.join(workdir, "boot.hfv"))
+        os.remove(bootimg)
+        have = want & got
+        outcome = "COMPLETE" if have == want else "CANCELLED"
+        expect = "COMPLETE" if kind == "drag" else "CANCELLED"
+        if not up:
+            outcome = "VOID (no progress window after the press)"
+        good = outcome == expect and (kind == "drag" or flashed > 0)
+        ok = ok and good
+        print(f"interactive: trial {n} {kind}: {outcome} "
+              f"({len(have)} of {len(want)} files), button dark in "
+              f"{flashed} of {len(means)} frames "
+              f"(~{interval * 1000:.0f} ms apart, lightest "
+              f"{max(means, default=0):.2f}, darkest "
+              f"{min(means, default=0):.2f}) — "
+              + ("as expected" if good else f"WANTED {expect}"
+                 + ("" if kind == "drag" else " and a flash")))
+    return ok
+
+
 def stock_image(args):
     return os.path.join(R.VMAC_HOME, args.system)
 
@@ -2749,6 +2913,18 @@ def main():
                          "Ends on the names on the volume.")
     ap.add_argument("-D", dest="defines", action="append", default=[],
                     help="probe build switch (repeatable), e.g. -D UNC_AT_RESERVE")
+    ap.add_argument("--cancel-tap", action="store_true",
+                    help="a press on Cancel released before the application "
+                         "reads it: --taps tap trials, one dragged off, one "
+                         "Cmd-., each its own boot (phase_cancel_tap)")
+    ap.add_argument("--taps", type=int, default=1,
+                    help="--cancel-tap: how many tap trials")
+    ap.add_argument("--burst", type=float, default=6.0,
+                    help="--cancel-tap: seconds of xwd frames after the "
+                         "press, longer than the widest gap between pumps")
+    ap.add_argument("--app", metavar="MACBINARY",
+                    help="drive this application instead of building one "
+                         "from the tree: the control build, for instance")
     ap.add_argument("--e2e", action="store_true",
                     help="run the Finder end-to-end phase INSTEAD of the "
                          "cancel phases: launch by double-click, navigate "
@@ -2765,7 +2941,7 @@ def main():
 
     calibrate(args.system)
     os.makedirs(args.outdir, exist_ok=True)
-    appbin = build_interactive_app(tuple(args.defines))
+    appbin = args.app or build_interactive_app(tuple(args.defines))
     Mac.limit = int(args.boot_timeout + args.complete_timeout) + 900
     # In <repo>/.tmp/ (tools/guard.py): every phase below removes it, and
     # guard deletes its images at exit if a phase dies first.
@@ -2782,6 +2958,14 @@ def main():
         mac.shot(os.path.join(args.outdir, name),
                  scale="200%" if (args.e2e or args.drop or args.switch)
                  else None)
+
+    if args.cancel_tap:
+        try:
+            ok = phase_cancel_tap(args, appbin, workdir, shot)
+        finally:
+            shutil.rmtree(workdir, ignore_errors=True)
+        print(f"interactive: screenshots in {args.outdir} — LOOK AT THEM.")
+        return 0 if ok else 1
 
     if args.switch:
         try:
