@@ -14,7 +14,8 @@ the stubs can live*). So each stub carries:
     nothing in the Retro68 chain sets (tools/icon/set_bundle_bit.py);
   - a 'BNDL' owned by that creator, its signature resource, and 'FREF's:
     'APPL' for itself and one per document type, all local icon 0;
-  - one icon family, the archive icon (tools/icon/make_archive_icon.py),
+  - one icon family, the archive icon, read from
+    mac/macextract_archive_icons.r (tools/icon/make_archive_icon.py),
     for the helper and its documents alike: a second family, MacExtract's
     own for the helper, cost each helper file 2,304 B, and the maintainer
     chose the space (2026-11-03).

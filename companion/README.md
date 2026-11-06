@@ -28,7 +28,7 @@ rebuild (DECISIONS.md 2026-10-12, *the stub beside StuffIt*). What is left is OP
 | `stub/stub.c`, `stub/stub.r` | the stub: find MacExtract, launch it, or hand a running one the archive (MultiFinder's puppet string on System 6, an odoc on System 7 and Mac OS 9) |
 | `make_stub.py` | the stub for one creator: creator, bundle, icons |
 | `make_helpers.py` | every helper `helpers.tsv` lists, named, as MacBinary files or one Finder-style zip; `tools/make_dist.sh` ships the zip and puts the files on both disks, with a `Desktop` file listing them |
-| `../tools/icon/make_archive_icon.py` | the archive icon the stubs carry |
+| `../tools/icon/make_archive_icon.py` | the archive icon the stubs carry, read from `mac/macextract_archive_icons.r` |
 | `helpers.tsv` | the sixteen creators that get a helper, each one's file name, and the types its bundle claims |
 | `app-bundles.tsv` | the creator and bundles of 42 creators' programs, read off the programs |
 | `harvest/` | how that table was made: `dmget.py` (Discmaster, paced), `analyze.py`, `tabulate.py`, and Macintosh Repository's category list |

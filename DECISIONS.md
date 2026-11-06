@@ -519,6 +519,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-06 (the step a click waits for) — the progress step goes from 8 KB to 1 KB, which more than halves the slow formats' gaps for under 1 % of time; the stored-fork copies keep 8 KB under a constant of their own, and the time left is held within a percent, which the finer step made flicker
 - 2026-11-06 (the folder DiskDoubler Pro put back) — a `DDA2` folder record holds the folder's DInfo whole and its frScroll, as Norton DiskDoubler Pro 4.1.1 writes and restores them; +46..53 is padding, +62 a folder number, +86 a CRC, for 64 B of `ovl_cptdd`
 - 2026-11-06 (the desk no folder is put on) — the shell clears on-desk (0x0001) on every item at every level, in every format, MAR's included, and writes a top folder that has a window inited, for 32 B off every budget
+- 2026-11-06 (the icons a designer drew) — the application and archive icons are a designer's, imported by `tools/icon/import_icons.py`; nothing draws them any more
 
 ---
 
@@ -21564,3 +21565,34 @@ uses); bundle 194,748. Every grant against the control rises 32 to 108 B
 **Not measured:** a file written while the Finder runs (the volume was
 mounted at boot); System 6, 7.5 and later; a folder flagged on-desk below
 the top. None of the 37 `DDA2` folder records here carries the flag.
+
+## 2026-11-06 (the icons a designer drew) — the application and archive icons are a designer's, imported by `tools/icon/import_icons.py`; nothing draws them any more
+
+**Given to the maintainer** as `Extract-icons.sit` (a ResEdit file, on the
+share, 2026-11-06): eight variants over IDs 128-135. **131 and 134 are the
+only complete families** — `ICN#`, `ics#`, `icl4`, `ics4`, `icl8`, `ics8`
+each — and the maintainer chose them: 131 the application (our 128), 134
+the archive document (our 129). The rest are drafts, 32x32 only or missing
+`ics#`. Both pass what the old art was held to: every `icl8`/`ics8` pixel
+inside the mask is one of Apple's 34 icon colours (*the icon that did not
+darken*), and no 1-bit pixel lies outside its mask.
+
+**`tools/icon/import_icons.py`** replaces those twelve resources in
+`mac/macextract_icons.r` and `mac/macextract_archive_icons.r` and nothing
+else, refusing a family with a member missing, a stray pixel or a colour
+outside the 34. Its control: importing the shipped families back (128,
+129) reproduces both files byte for byte. **`make_archive_icon.py` now
+reads** the archive family back from its `.r` for the helpers
+(`companion/make_stub.py`), equal to the old generator's output before the
+import; `make_icon.py` and both drawing routines are deleted. The
+designer's file is not committed: the `.r` files are the source.
+
+**Seen**: System 6.0.8, `dist/MacExtract.dsk` opened (`mountcheck.py
+--open`, the new `docs/screens/0-icon.png`); System 7.5.5 on a 256-colour
+Mac II (`colouricon.py`), the application and a `SIT!`/`MExt` document.
+Not seen: 16 colours, an icon selected, System 7.0.1, Mac OS 8 and 9.
+
+**Price**: none. The same resources at the same sizes, unnamed, so the
+resource map and every budget are unmoved; CODE and A5 unmoved;
+`dist/MacExtract.bin` 251,264 B as before; the helpers zip 57,149 →
+57,098 B.
