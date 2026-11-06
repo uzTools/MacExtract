@@ -172,7 +172,7 @@ or measurement before it is read.**
 | format | stored, not read | oracle |
 |---|---|---|
 | MacBinary inside ZipIt and MacLHA | the Get Info comment, after both forks | none; none of 14 ZipIt payloads has one (2026-10-17); needs a second decode or a sink contract change, the maintainer's call |
-| zip | ZipIt `0x2805`'s View word: one specimen, value 0 | ZipIt's own expander on a non-zero View |
+| zip | ZipIt `0x2805`'s View word: 12 fields in three archives, all 0, every one ZipIt 2.x's; ZipIt 1.4 neither writes nor reads the field (2026-11-06) | ZipIt 2.2.2 (PowerPC, Carbon) on Mac OS 9 |
 | StuffIt 5 | a version-3 entry's Finder info; no version-3 entry here | Expander 5.5 on one |
 | LZH | OS/2's 0x7f/0xff headers; a level 0/1 name's bytes after a NUL | `lsar`; no specimen of the second |
 | AppleSingle entry 11 | ProDOS's access word | none; RFC 1740 gives its size, not its bits |

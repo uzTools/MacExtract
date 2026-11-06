@@ -520,6 +520,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-06 (the folder DiskDoubler Pro put back) — a `DDA2` folder record holds the folder's DInfo whole and its frScroll, as Norton DiskDoubler Pro 4.1.1 writes and restores them; +46..53 is padding, +62 a folder number, +86 a CRC, for 64 B of `ovl_cptdd`
 - 2026-11-06 (the desk no folder is put on) — the shell clears on-desk (0x0001) on every item at every level, in every format, MAR's included, and writes a top folder that has a window inited, for 32 B off every budget
 - 2026-11-06 (the icons a designer drew) — the application and archive icons are a designer's, imported by `tools/icon/import_icons.py`; nothing draws them any more
+- 2026-11-06 (the field ZipIt 1.4 never wrote) — ZipIt 1.4 neither writes nor reads `0x2805`, and keeps no folder's Finder info; the View word waits on ZipIt 2.x
 
 ---
 
@@ -21599,3 +21600,31 @@ Not seen: 16 colours, an icon selected, System 7.0.1, Mac OS 8 and 9.
 resource map and every budget are unmoved; CODE and A5 unmoved;
 `dist/MacExtract.bin` 251,264 B as before; the helpers zip 57,149 →
 57,098 B.
+
+## 2026-11-06 (the field ZipIt 1.4 never wrote) — ZipIt 1.4 neither writes nor reads `0x2805`, and keeps no folder's Finder info; the View word waits on ZipIt 2.x
+
+**The question** (OPEN_ITEMS.md, *the metadata the archives hold and the
+readers drop*): what ZipIt's `0x2805` View word means. APPNOTE.TXT 4.6.6
+calls it "ZipIt view flag"; every field here (12, in three archives; the
+row said one) holds 0, and `src/fmt_exo.c` reads only the frFlags before
+it.
+
+**Measured on ZipIt 1.4** (`specimens/zipit/zipit-1.4.sea`, a fat binary,
+on System 7.0.1; `tools/vmac/zipitmeta.py`):
+- **Writer.** A folder and a nested one, each with its own frFlags
+  (0x0104, 0x0108) and frView (0x0400, 0x0500), added and saved twice,
+  the second time after View ▸ by Name: both archives byte-identical, and
+  each folder's field is `0x2605` with its name and a zeroed type and
+  creator. No `0x2805`, no flags, no view: ZipIt 1.4 keeps no folder's
+  Finder info, and its window's sort order is not saved.
+- **Reader.** A zip whose two folders carry `0x2805` with frFlags 0x0102
+  and 0x0106 and View 0x0300 and 0x0500, extracted by ZipIt 1.4: the
+  folders come out 0x0100 (placed by the Finder) and 0x0000, frView 0
+  both. It reads neither half of the field.
+
+**So the field is ZipIt 2.x's**, and every specimen is: 2.2.2 is a
+PowerPC Carbon application (`Joy!peffpwpc`), so its oracle is Mac OS 9
+with CarbonLib, not this 68k tier. Its View menu sorts the archive window
+(by name, size, method, date …), which makes the View word **ZipIt's own
+display state rather than Finder metadata** — a hypothesis, untested on
+2.x. Nothing changes in the engine.
