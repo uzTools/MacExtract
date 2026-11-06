@@ -3147,8 +3147,12 @@ mv-1M-1x`, at 1 MB, and on 2026-10-10 on both 512 KB machines (`--emu
 mv-512Ke`, with `--system System6.hfv` and `--system Sys30.img`): refused,
 asked again, both forks byte-exact. **On `Sys30.img` the phase boots to the
 Finder** and double-clicks the volume and the application, as `--e2e` does;
-`pf-0-volume.png` is that window. The second Standard File row is `Forked.pf`
-on both systems.
+`pf-0-volume.png` is that window. `Forked.pf` is the second Standard File row
+on `Sys30.img` and the FIRST on `System6.hfv` (seen 2026-11-06; the second
+there is the Expander folder). `--wrong-password` sets the first answer: 65
+characters, run 2026-11-06 on System 6.0.8 at 4 MB, filled the field, were
+refused, and `hushnow` then gave both forks byte-exact (DECISIONS.md
+2026-11-06, *the 64th character of a password*).
 
 **The resource fork is compared with bytes 16..127 masked**, as every on-Mac
 harness does — the Macintosh stamps the file's name into that range

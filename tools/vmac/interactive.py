@@ -2279,17 +2279,20 @@ def phase_privatefile(args, appbin, workdir, shot):
             mac.click(*FINDER_APP_ICON, double=True)
             time.sleep(args.launch_wait)
         shot(mac, "pf-1-sfgetfile.png")
-        # Second row, as in --password: the invisible `Desktop` file
-        # sorts first.
-        mac.click(SF_FIRST_ROW[0], SF_FIRST_ROW[1] + SF_ROW_HEIGHT)
+        # System 3.0: the second row, as in --password. System 6.0.8 lists
+        # `Forked.pf` FIRST, above the Expander folder (seen 2026-11-06,
+        # pf-1-sfgetfile.png); the second row opened that folder.
+        mac.click(SF_FIRST_ROW[0],
+                  SF_FIRST_ROW[1] + (SF_ROW_HEIGHT if finder else 0))
         mac.key("Return")
         time.sleep(3.0)
         shot(mac, "pf-2-destination.png")
         mac.key("Return")
         time.sleep(8.0)
         shot(mac, "pf-3-asked.png")
-        for ch in "wrongone":
+        for ch in args.wrong_password:
             mac.key(ch)
+        shot(mac, "pf-3b-typed.png")
         mac.key("Return")
         time.sleep(4.0)
         shot(mac, "pf-4-asked-again.png")
@@ -2892,6 +2895,11 @@ def main():
                          "password dialog wrongly once, and check both "
                          "forks of the result on the host. Ignores the "
                          "fixture argument.")
+    ap.add_argument("--wrong-password", default="wrongone",
+                    help="with --privatefile: what is typed at the first "
+                         "ask. 65 characters drive the dialog's limit: 64 "
+                         "taken, the 65th refused (DECISIONS.md 2026-11-06, "
+                         "*the 64th character of a password*).")
     ap.add_argument("--report", action="store_true",
                     help="the end-of-run report phase: extract a generated "
                          "archive whose names cannot be written as they "

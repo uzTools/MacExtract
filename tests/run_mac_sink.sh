@@ -170,6 +170,24 @@ verify ./build/mac_sink_asan ram   # exercise the Mac app's RAM-slurp/xio_* path
 # The time left in the progress dialog: it must not go back up while the
 # rate holds (DECISIONS.md 2026-10-16, *the estimate that went back up*).
 ./build/mac_sink_asan --eta || { echo "mac-sink: eta FAILED"; exit 1; }
+# The password dialog's key filter, 64 and 65 characters typed: the 64th
+# went past a Str63 until 2026-11-06 (DECISIONS.md, *the 64th character of
+# a password*). It is Toolbox-only code mac_sink_test.c compiles out, so
+# gPassBuf's declaration and PassFilter are lifted out of the source as
+# they stand; tests/pass_filter_test.c says how and what it cannot see.
+{
+    sed -n 's/^static \(.*\) gPassBuf\(.*\);.*$/typedef \1 PassBufT\2; PASSBUF_STORAGE/p' \
+        mac/macextract_mac.c
+    awk '/^#define kPassDLOG/ { on = 1 }
+         on && !/^static .* gPassBuf/ { print }
+         on && /PassFilter\(/ { inf = 1 }
+         on && inf && /^}/ { exit }' mac/macextract_mac.c
+} > build/pass_filter_src.c
+[ "$(grep -c 'PASSBUF_STORAGE\|^static pascal Boolean PassFilter' build/pass_filter_src.c)" = 2 ] \
+    || { echo "mac-sink: pass-filter lift FAILED"; exit 1; }
+gcc -std=gnu99 -O1 -g -fsanitize=address,undefined -fno-sanitize-recover=all \
+    -Iinclude -Ibuild tests/pass_filter_test.c -o build/pass_filter_test \
+    && ./build/pass_filter_test || { echo "mac-sink: pass-filter FAILED"; exit 1; }
 # What the shell does to a name HFS cannot take as it stands: 31 characters
 # per component, and the collision that cutting creates numbered ~1. Its
 # own code, and until 2026-08-28 it had no test — the subjects are

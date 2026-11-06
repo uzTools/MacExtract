@@ -521,6 +521,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-06 (the desk no folder is put on) — the shell clears on-desk (0x0001) on every item at every level, in every format, MAR's included, and writes a top folder that has a window inited, for 32 B off every budget
 - 2026-11-06 (the icons a designer drew) — the application and archive icons are a designer's, imported by `tools/icon/import_icons.py`; nothing draws them any more
 - 2026-11-06 (the field ZipIt 1.4 never wrote) — ZipIt 1.4 neither writes nor reads `0x2805`; ZipIt 2.2.2 writes the folder's frFlags and View 0 whatever its Finder view, and puts no View into frView
+- 2026-11-06 (the 64th character of a password) — the password dialog's buffer was a Str63 and the 64th character typed went one byte past it; it is UNC_PASSWORD_MAX + 1, declared beside `gSegShort` so it costs 0 B where declared with its dialog it cost 16
 
 ---
 
@@ -21647,3 +21648,40 @@ PowerPC Carbon application (`Joy!peffpwpc`) that refuses CarbonLib 1.4
 project can run, and `src/fmt_exo.c`'s reading of `0x2805` — frFlags, no
 View — is what ZipIt 2.2.2 itself restores, less the colour of its
 uninitialised frView. Nothing changes in the engine.
+
+## 2026-11-06 (the 64th character of a password) — the password dialog's buffer was a Str63 and the 64th character typed went one byte past it; it is UNC_PASSWORD_MAX + 1, declared beside `gSegShort` so it costs 0 B where declared with its dialog it cost 16
+
+**Found by reading, then shown.** `PassFilter` stopped at
+`gPassBuf[0] >= UNC_PASSWORD_MAX` (64) and stored at `++gPassBuf[0]`, so
+the 64th character went to `gPassBuf[64]`, one past a Str63. In the
+shipped build that byte is `gSegFound` (`nm`, `0xbc81`; measured). No
+symptom, by reading: the part dialog sets `gSegFound` before every read
+of it, and `MacAskPassword` read the 64th character back intact.
+
+**Sized, not capped.** The engine takes 64 bytes (`UNC_PASSWORD_MAX`,
+every `pw[]` it keys from). Compact Pro and PackIt use 8 bytes of it;
+every other cipher uses all of it (FORMATS.md, *Encryption*). A cap at 63 would have refused on the Mac a
+64-character password the CLI takes.
+
+**Where it is declared is the price.** Declared with its dialog, 65
+bytes cost **16 B of A5** in the shipped build: the shell's `.bss`
+rounds to 4 at its section's end, and `_ebss` rounds to 16 with 2 B
+spare (measured). GCC places this file's statics in reverse order of
+declaration. Declared just above `gSegShort`, the buffer fills the byte
+of padding after it, and the 66 B `gAskDest`/`gPassBuf`/`gSegFound`
+took becomes 2. **CODE and A5 are unmoved in all three builds**: shipped
+39,900 / 16,708, lazy 38,696 / 16,760, resident 185,900 / 36,660
+(measured). The A5 ceiling sits on that figure, so a change that moves
+the layout fails it.
+
+**The test** (`tests/pass_filter_test.c`, from `tests/run_mac_sink.sh`)
+lifts the declaration and `PassFilter` out of the source and types 64
+then 65 characters into a buffer followed by a canary. On the old
+source, UBSan reports `index 64 out of bounds for type 'unsigned
+char [64]'`; without sanitizers the canary check fails at character 64.
+
+**On the emulator** (`interactive.py --privatefile --wrong-password`,
+System 6.0.8, 4 MB, measured): a 65-character wrong password filled the
+field, was refused and asked again, and `hushnow` then gave both forks
+of `Forked` byte-exact. A regression check, not the bug: the old build
+showed no symptom either, and the frame cannot count the bullets.

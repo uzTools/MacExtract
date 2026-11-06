@@ -470,6 +470,15 @@ static unc_off_t fio_size(void *ctx) { return ((FileIO *)ctx)->size; }
  * NOT inside UNC_AT_BUDGET: that build is a diagnostic and these two are
  * the shipped message. */
 static long gShortBy;      /* largest budget shortfall, in bytes; 0 = none */
+#if !defined(UNC_SINK_TEST) && !defined(UNC_MAC_AUTOTEST)
+/* The password dialog's buffer (*Asking for a password*): a length byte,
+ * then up to UNC_PASSWORD_MAX characters. It was a Str63, one short, and
+ * the 64th character went past it. Declared here, beside gSegShort, so
+ * the 65 bytes fill the hole that byte left: 0 B of A5, where declared
+ * with its dialog it cost 16 (DECISIONS.md 2026-11-06, *the 64th
+ * character of a password*). */
+static unsigned char gPassBuf[UNC_PASSWORD_MAX + 1];
+#endif
 /* A segmented set went on without one of its parts: one never found, or
  * one the user cancelled in the part dialog. A run that then fails did
  * so because a part is missing, and says that, not "damaged". */
@@ -4229,7 +4238,7 @@ typedef struct {
 #define kPassMsgItem    4
 #define kPassBullet     0xA5   /* MacRoman bullet */
 
-static Str63 gPassBuf;         /* what was actually typed */
+/* gPassBuf, what was actually typed, is declared with gSegShort. */
 
 static pascal Boolean PassFilter(DialogPtr dlg, EventRecord *ev, short *item)
 {

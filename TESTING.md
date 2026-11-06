@@ -30,8 +30,12 @@
    3b): the shell's own code from `mac/macextract_mac.c`, compiled on the
    host under ASan+UBSan and again big-endian under qemu-m68k, driven by
    the real engine over a spread of fixtures and compared byte-for-byte,
-   both forks, against the oracle manifests. **What it cannot see:**
-   `RunExtract`, `ExtractOne`, the dialogs and the Toolbox glue, which
+   both forks, against the oracle manifests. The password dialog's key
+   filter is the one piece of dialog code it runs, lifted out of the source
+   into `tests/pass_filter_test.c`: 64 and 65 characters typed, the bytes
+   after the buffer checked (DECISIONS.md 2026-11-06, *the 64th character
+   of a password*). **What it cannot see:**
+   `RunExtract`, `ExtractOne`, the other dialogs and the Toolbox glue, which
    the mock never calls — it builds its own `UncOptions`. Nor a read of
    state nobody set: ASan reports writes past a block, not a load from
    uninitialised stack, and valgrind missed the same field (read 20 times
