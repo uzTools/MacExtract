@@ -524,6 +524,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-06 (the 64th character of a password) — the password dialog's buffer was a Str63 and the 64th character typed went one byte past it; it is UNC_PASSWORD_MAX + 1, declared beside `gSegShort` so it costs 0 B where declared with its dialog it cost 16
 - 2026-11-06 (the floppy a 64K ROM reads) — `dist/` ships a 400K MFS floppy, MacExtract and the helpers zip typed `ZIP `/`MExt`, for a Macintosh 512K with a Hard Disk 20
 - 2026-11-06 (what ZipIt does with a Macintosh file) — ZipIt's View bit is a folder's expanded state; its MacBinary is chosen by a preference and carries no comment; a text entry is CR LF with the text bit, stripped on extraction; segments are spanned volumes the user names
+- 2026-11-06 (the two calls a 64K ROM lacks) — with the `Hard Disk 20` file's HFS a 64K ROM still bombed at `PurgeSpace` and `MoveHHi`; both are skipped where ROM85 is not positive, `GrowApplZone` tests ROM85 too, and the shipped build and every budget are unchanged to the byte
 
 ---
 
@@ -21715,9 +21716,13 @@ the image in drive 2 and a blank 800K HFS `Out` in drive 3:
 The application and zip on the image round-trip byte for byte at every
 `make_dist.sh` run.
 
-`mkmfs.py` now writes each file's icon position, three across, 150 apart:
-at none, every icon landed on the first, and 100 apart the zip's name ran
-into MacExtract's (System 3.0, measured).
+`mkmfs.py` now writes each file's icon position, three across, 150 apart,
+and the System 3.0 Finder keeps one only on an inited file (0x0100); it
+placed an uninited zip itself, its name running into MacExtract's (corrected
+2026-11-06: the spacing alone was said to fix it). So `--data` files are
+inited, the zip then lands clear (measured); MacExtract is not, or the
+Finder would not register its bundle (the sink's note in
+`mac/macextract_mac.c`).
 
 **What it cannot see.** A 64K ROM with an HD20 (MANUAL_TESTS.md §6); a
 locked floppy, where the Finder cannot write the Desktop file it builds.
@@ -21787,3 +21792,59 @@ needs a registered copy to write.
 
 **Not measured:** the MacBinary preference's other two settings; 2.2.2's
 MacBinary, linefeeds, dates and segments.
+
+## 2026-11-06 (the two calls a 64K ROM lacks) — with the `Hard Disk 20` file's HFS a 64K ROM still bombed at `PurgeSpace` and `MoveHHi`; both are skipped where ROM85 is not positive, `GrowApplZone` tests ROM85 too, and the shipped build and every budget are unchanged to the byte
+
+**Decision (the maintainer's), after pricing.** A 64K ROM with the `Hard
+Disk 20` file's HFS is a machine MacExtract extracts on. Without HFS it
+stays out, as do MFS destinations (2026-10-15, *the File Manager a 64K ROM
+has*).
+
+**The rig (measured).** The file is three `PTCH`: `TFS`,
+`Dispatch Kernel` and `.Sony`. With `.Sony` left out
+(`tools/vmac/hd20boot.py`), `mv-512K` boots System 3.0 and mounts a
+10 MB HFS image. FORMATS.md's "cannot be loaded here" is withdrawn
+(BLOCKERS.md). With the zip opened, the shipped build bombed at Extract,
+`ID = 03`, and wrote nothing.
+
+**What bombed (measured, `traptest -DTRAPTEST_MEM128`).** `MaxBlock`
+returns. `PurgeSpace`, `MoveHHi`, `HGetState`, `Count1Resources` and
+`Get1Resource` each bomb (FORMATS.md, *A true Macintosh 512K*). An
+extraction reaches only the first two. The budget note said `PurgeSpace`
+"is in the 64K ROM" (withdrawn, BLOCKERS.md).
+
+**The change.** Where ROM85 (0x028E) is not positive, `mal_take_budget`
+takes `FreeMem` alone and `ovl_keep` skips `MoveHHi`. ROM85 is the test
+`ovl_reloc.c` and the date code already use. On a 128K ROM and later the
+calls and their order are unchanged, less one `FreeMem`.
+
+**Priced on every axis, against `main`:**
+- **CODE + A5, shipped:** 0 B (39,900 + 16,708). The first form tested
+  the ROM version word at each site and cost +52/+12. ROM85 at both sites
+  was +16/+16; one `FreeMem` call, +12/+20. Both of those cross a 32-byte
+  step, because the slack before the 32-aligned `.data` object is 4 B.
+  Moving `GrowApplZone` from `ROMBase+8` to ROM85 saves the last 12 B.
+- **Resident control:** CODE −8, A5 +8, net 0, so `OVL_SAVED` and
+  `TIERS_CONTROL` stand. **Lazy:** −32.
+- **Stack:** every stack frame in `macextract_mac.c` and `ovl_load_eager.c`
+  is unchanged. **Heap:** no new allocations.
+- **Budget,** with `-D UNC_AT_BUDGET` on `adobenumbers.sit`: 719,928,
+  291,044 and 195,640 B at 1 MB, System 3.0 at 512 KB and System 6 at
+  512 KB, the same on both builds to the byte. So no tally moves.
+- **On the rig:** `MacExtract-Helpers.zip` extracted from
+  `MacExtract-400K.dsk` onto the HFS image, 16 of 16 helpers. They are
+  identical to `MacExtract.dsk`'s copies outside resource-fork bytes
+  48–125, which are system-reserved.
+
+The budget and rig runs used the change on the commit before the password
+fix (5c63520). The binary shipped here was run on the rig again.
+
+**Why ROM85 rather than the ROM version word.** Both tell the 64K ROM apart
+on every machine run. ROM85 is ≤ 0 on `mv-512K`, which skips both calls
+and launches, and > 0 on the three tiers, whose budgets did not move. It
+is 12 B cheaper in `GrowApplZone` alone.
+
+**What it cannot see.** The `.Sony` patch a real HD20 loads; one archive
+of one format, so a later 128K-only call on another path is untested;
+`HGetState` and the `Count1`/`Get1` calls, which the shipped extraction
+does not reach on a 64K ROM. A real 512K is MANUAL_TESTS.md §6.

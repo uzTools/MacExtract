@@ -102,21 +102,27 @@ the progress window, Cmd-. on a U.S. layout and on AZERTY (BLOCKERS.md, *Status*
 ## 6. A Macintosh 512K with a Hard Disk 20
 
 **Not a 128K**: that machine is out on its heap total (FORMATS.md, *A
-Macintosh 128K*). Mini vMac does not emulate the HD20, so this cannot be
-booted here (FORMATS.md, *A true Macintosh 512K*).
+Macintosh 128K*). Mini vMac does not emulate the HD20; an HFS image stands
+in for it, with the `Hard Disk 20` file less its `.Sony` patch, which hangs
+the emulator (`tools/vmac/hd20boot.py`; FORMATS.md, *A true Macintosh
+512K*).
 
 **`dist/` is the binary to use** since 2026-10-16: on a 64K ROM
 `GrowApplZone()` grows the heap without `MaxApplZone`, which that ROM
-lacks (DECISIONS.md 2026-10-15, *the purge MaxApplZone never did*;
-2026-11-04, *the layouts the release did not hold*).
+lacks, and since 2026-11-06 it skips `PurgeSpace` and `MoveHHi` there too
+(DECISIONS.md 2026-10-15, *the purge MaxApplZone never did*; 2026-11-04,
+*the layouts the release did not hold*; 2026-11-06, *the two calls a 64K
+ROM lacks*).
 
 | configuration | status |
 |---|---|
 | 64K ROM, floppies only | starts, interface works, a real archive bombs `ID = 12` on an HFS call — measured under emulation; from v0.45.0 to 2026-11-04 it bombed at launch (DECISIONS.md 2026-11-04, *the icon the 64K ROM could not open*) |
 | 64K ROM **with an HD20 and its driver** | **unknown — the test.** The HD20 start-up software supplies the 128K-ROM File Manager (Inside Macintosh IV, *The Floppy Disk Interface*) |
-| 64K ROM with the `Hard Disk 20` file, no drive | unknown; hangs under emulation — *hypothesis*: the driver hunting for hardware |
+| 64K ROM with the `Hard Disk 20` file less `.Sony`, an HFS image for the disk | **extracts** under emulation, one archive, 16 of 16 (2026-11-06) |
+| 64K ROM with the whole `Hard Disk 20` file, no drive | hangs under emulation — *hypothesis*: its `.Sony` patch against Mini vMac's own floppy driver |
 
-**The test:** write `dist/MacExtract-400K.dsk` to a 400K floppy, start up from
+**The test** is the one `dist/README.txt` gives anyone who has the
+machine: write `dist/MacExtract-400K.dsk` to a 400K floppy, start up from
 the HD20, double-click `MacExtract-Helpers.zip` on the floppy and choose
 the HD20; a pass is sixteen helpers in a `MacExtract Helpers` folder.
 Record whether it extracts; if it bombs, the ID and the screen; the

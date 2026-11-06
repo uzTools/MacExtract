@@ -27,6 +27,7 @@
 #include <Events.h>
 #include <LowMem.h>
 #include <Memory.h>
+#include <Resources.h>
 #include <string.h>
 
 QDGlobals qd;
@@ -111,6 +112,32 @@ int main(void)
     }
 
     mark(5);                    /* survived PBGetCatInfo */
+
+#ifdef TRAPTEST_MEM128
+    /* With HFS loaded from the `Hard Disk 20` file: the 128K ROM's Memory
+     * and Resource Manager calls the application makes once an extraction
+     * starts, one mark each, in its order. -DTRAPTEST_SKIP=n leaves out the
+     * first n of them, to reach the calls behind one that bombs. */
+#ifndef TRAPTEST_SKIP
+#define TRAPTEST_SKIP 0
+#endif
+    {
+        long total, contig;
+        Handle h = NewHandle(1024);
+        if (TRAPTEST_SKIP < 1) (void)MaxBlock();
+        mark(9);
+        if (TRAPTEST_SKIP < 2) PurgeSpace(&total, &contig);
+        mark(10);
+        if (TRAPTEST_SKIP < 3) MoveHHi(h);
+        mark(11);
+        if (TRAPTEST_SKIP < 4) (void)HGetState(h);
+        mark(12);
+        if (TRAPTEST_SKIP < 5) (void)Count1Resources('CODE');
+        mark(13);
+        if (TRAPTEST_SKIP < 6) (void)Get1Resource('CODE', 1);
+        mark(14);
+    }
+#endif
 
     for (;;)
         ;                       /* hold the screen; see the header */

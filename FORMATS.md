@@ -5562,7 +5562,7 @@ application costs the engine a kilobyte here too.** On
 `derived-Troi-ClipSave-Plug-in1.1.sit` with every decoder resident the two
 systems wrote 11 entries at 163,332 B against 6 entries at 89,613 B.
 
-### A true Macintosh 512K: the machine boots, the application bombs
+### A true Macintosh 512K: with the Hard Disk 20 file, it extracts
 
 **A 64 KB ROM cannot boot HFS** (MEASURED; "cannot be reached at all" was
 withdrawn 2026-08-31, BLOCKERS.md). On HFS the machine dies at startup, **Sad
@@ -5615,19 +5615,44 @@ launched it and extracted an archive, 2026-10-16.
 On the emulated 512K under Apple's MFS System 3.0 (2026-10-15): Standard
 File, the destination dialog, and a non-archive sniffed and refused with
 *"This file could not be extracted."* **A real StuffIt archive still bombs
-`ID = 12`** at an HFS call. So a 64K-ROM Macintosh is **one call short, and
-that call is HFS**, which Apple's `Hard Disk 20` file supplies ("the
+`ID = 12`** at an HFS call, which Apple's `Hard Disk 20` file supplies ("the
 hierarchical (128K ROM) version of the File Manager", Inside Macintosh IV,
-*The Floppy Disk Interface*). Whether that closes it is **untested and cannot
-be tested here** (MANUAL_TESTS.md §6).
+*The Floppy Disk Interface*). **That was not the only call short** (corrected
+2026-11-06; "one call short" before): with HFS loaded, `PurgeSpace` and
+`MoveHHi` bombed next, below.
 
 **Without that file there is no HFS**, measured under both the 140,299 B and
 the 182 KB System 3.0: an HFS floppy gets *"This is not a Macintosh disk"*.
-**It cannot be loaded here**: Apple's *HD 20 Startup* disk (in the same
-`System_3.x.sit`), and a disk built here with only that file added, stop on
-the 512K at an empty dialog frame, byte-identical from 45 s to 210 s — a
-deadlock, not a timeout. *Hypothesis, not measured:* Mini vMac's 128K model
-lacks the hardware the driver looks for.
+**It loads here without its third patch** (corrected 2026-11-06; "it cannot
+be loaded here" before, BLOCKERS.md, *Withdrawn claims*). The file is three
+`PTCH` resources: 0 `TFS`, 1 `Dispatch Kernel`, 2 `.Sony`. With all three,
+Apple's *HD 20 Startup* disk and a disk built here stop on the 512K at an
+empty dialog frame, byte-identical from 45 s to 210 s. Without `.Sony`
+(`tools/vmac/hd20boot.py`) System 3.0 boots and mounts a 10 MB HFS image in
+the next drive as `Hard Disk`. *Hypothesis, not measured:* the patch and
+Mini vMac's own floppy driver are what deadlock.
+
+`tools/vmac/traptest -DTRAPTEST_MEM128` on that boot disk, one mark per
+call, `-DTRAPTEST_SKIP` to reach past a bomb:
+
+| call (128K ROM) | 64K ROM + `Hard Disk 20` |
+|---|---|
+| `MaxBlock` | returns |
+| `PurgeSpace` | bombs |
+| `MoveHHi` | bombs |
+| `HGetState` | bombs |
+| `Count1Resources` | bombs |
+| `Get1Resource` | bombs |
+
+The shipped extraction reaches two: `PurgeSpace` taking the budget and
+`MoveHHi` keeping an image. **Since 2026-11-06 both are skipped where ROM85
+is not positive**, for 0 B and the same budget to the byte on the three
+tiers (DECISIONS.md 2026-11-06, *the two calls a 64K ROM lacks*). The rest
+are in `UNC_AT_*` builds or behind the Desktop Manager. **Measured on the
+emulated 512K**: `MacExtract-Helpers.zip`, double-clicked on
+`dist/MacExtract-400K.dsk` and extracted to `Hard Disk`, 16 of 16 helpers,
+identical to `MacExtract.dsk`'s outside resource-fork bytes 48–125 (the
+system-reserved 16–127). One archive; a real HD20 is MANUAL_TESTS.md §6.
 
 Harness facts: **System 3.0 ignores the boot blocks' shell name on MFS as on
 HFS**, so a probe is launched by being NAMED `Finder` (`mkmfs.py ...

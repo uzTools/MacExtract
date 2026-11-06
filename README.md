@@ -127,9 +127,11 @@ The Deluxes do not run on a Mac Plus. Details in [FORMATS.md](FORMATS.md).
 
 - **Minimum:** System 3.0, 68000, 512 KB: a Macintosh 512Ke, or a Plus with
   its 1986 system. A true Macintosh 512K (64K ROM) starts it, but extracting
-  needs HFS, which that machine has only with a Hard Disk 20; nobody has
-  tried one yet; the 400K floppy above is the disk for it. A Macintosh 128K
-  is too small.
+  needs HFS, which that machine has only with a Hard Disk 20. With one it
+  extracts on an emulator; nobody has tried a real one yet. If you have
+  one, the 400K floppy above is the test, and
+  [`dist/README.txt`](dist/README.txt) says what to do. A Macintosh 128K is
+  too small.
 - **For everything:** 1 MB. In 512 KB some large StuffIt 5 archives, and a
   few other big ones, skip the entries that do not fit and extract the rest.
 - **Runs on** System 6, System 7, Mac OS 8 and 9, PowerPC included.

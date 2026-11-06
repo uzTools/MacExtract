@@ -1,7 +1,7 @@
 # PROGRESS.md — milestone status
 
 Every milestone is **DONE** and nothing is in flight; the current release is
-v0.45.0, and M74 is on `main` after it. One line each: what it delivered,
+v0.45.0, and M74–M76 are on `main` after it. One line each: what it delivered,
 and where the detail lives. Numbers are in FORMATS.md, reasoning in
 DECISIONS.md, how a suite runs in TESTING.md, what is still missing in
 OPEN_ITEMS.md. A row is one sentence and a citation.
@@ -87,3 +87,4 @@ their tallies are BLOCKERS.md's (*Status*); per-tier tables are FORMATS.md's.
 | M73 The dialogs | A destination dialog with New Folder on every System, one dialog for a missing part that ejects a wrong disk, the Finder's progress window, no dialog behind the Finder; +592 B resident, the dialog and a set's setup as images | DECISIONS.md 2026-11-02 (*the dialogs that became the application*) |
 | M74 MAR | Hampa Hug's archive, every CRC of his two archives and the forks of their StuffIt twins; its LZW form through the `.Z` envelope; its two types in the bundle; +40 B of every budget | DECISIONS.md 2026-11-03 (*the archive that carries its own CRCs*), FORMATS.md (*MAR*) |
 | M75 LZ4 frames | mar 0.2.0's `.mar.lz4`: liblz4's frames byte for byte, mar 0.2.0 decoding the same; the release's shared-image slot fixed; +48 B of every budget | DECISIONS.md 2026-11-04 (*the frame mar 0.2.0 reads*), FORMATS.md (*LZ4 frames*) |
+| M76 A 64K ROM extracts | With the `Hard Disk 20` file's HFS a Macintosh 512K extracts, under emulation, for 0 B; a 400K MFS floppy in `dist/` | DECISIONS.md 2026-11-06 (*the floppy a 64K ROM reads*, *the two calls a 64K ROM lacks*), MANUAL_TESTS.md §6 |

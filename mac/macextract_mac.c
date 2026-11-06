@@ -271,10 +271,12 @@ static int HasPartition(void)
  * maximum number of bytes by which the zone can grow". II-13: an allocation
  * the compacted zone cannot satisfy makes the Memory Manager try "expanding
  * the zone by the requested number of bytes (rounded up to the nearest 1K
- * bytes)". The ROM version is the word at ROMBase+8, "$00xx for the
- * Macintosh 128K or 512K" (II, Operating System Utilities, Environs, itself
- * `[Not in ROM]`); 117 ($75) is the 128K ROM (IV, Preface). Written as "not
- * positively a 64K ROM", so a word nobody surveyed takes MaxApplZone.
+ * bytes)". The test is ROM85, the low-memory word at 0x028E, > 0 on a 128K
+ * ROM or later, as ovl_reloc.c's flush and the date code read it: <= 0 on
+ * the emulated 64K-ROM 512K, which takes this path and launches, and > 0 on
+ * the three tiers, whose budgets are MaxApplZone's to the byte (measured
+ * 2026-11-06). It replaced the ROM version word at ROMBase+8, 12 B more
+ * (DECISIONS.md 2026-11-06, *the two calls a 64K ROM lacks*).
  *
  * Why not one path: every growth through an allocation purges the zone's
  * purgeable blocks first, MaxMem's and a bare NewPtr's alike, and with them
@@ -286,8 +288,7 @@ static int HasPartition(void)
  * so it never runs MacExtract off one floppy drive. */
 static void GrowApplZone(void)
 {
-    const unsigned char *rom = (const unsigned char *)LMGetROMBase();
-    if (!(rom[8] == 0 && rom[9] < 0x75)) {
+    if (*(const short *)0x028EL > 0) {                  /* ROM85 */
         MaxApplZone();
     } else {
         /* Its two results are D0 and A0 (II-38); multiversal 057c802 makes
@@ -601,8 +602,9 @@ typedef struct {
  * PurgeSpace rather than FreeMem for the same reason: a released overlay is a
  * purgeable Handle, so FreeMem understates what the engine can actually have.
  * Source: Inside Macintosh II-42 — "the total amount of free memory that
- * would be available if all purgeable blocks were purged". It is in the 64K
- * ROM, so it costs the rom64k branch nothing. */
+ * would be available if all purgeable blocks were purged". It is NOT in the
+ * 64K ROM, as this note said until 2026-11-06: it bombs there (measured,
+ * tools/vmac/traptest), so a 64K ROM takes FreeMem alone. */
 static void mal_take_budget(MacAlloc *a);
 
 #ifdef UNC_AT_RESERVE
@@ -796,9 +798,14 @@ static void mal_take_budget(MacAlloc *a)
     long total, contig;
     long freenow;
     long reserve;
-    PurgeSpace(&total, &contig);
-    freenow = total;
-    if (freenow < FreeMem()) freenow = FreeMem();   /* never below the floor */
+    /* PurgeSpace is not in the 64K ROM (measured 2026-11-06 with the
+     * Hard Disk 20 file's HFS loaded, tools/vmac/traptest): there the
+     * budget is FreeMem alone, the floor. */
+    freenow = FreeMem();
+    if (*(const short *)0x028EL > 0) {                  /* ROM85 */
+        PurgeSpace(&total, &contig);
+        if (freenow < total) freenow = total;
+    }
     reserve = freenow / 4;
     if (reserve > kMemReserveMax) reserve = kMemReserveMax;
     if (reserve < kMemReserveMin) reserve = kMemReserveMin;

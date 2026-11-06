@@ -29,10 +29,11 @@ With every decoder resident (`-D UNC_OVL_RESIDENT`) the two are **68/72** and
 `tools/run_tiers.py` reproduces both lanes on all three tiers on Linux,
 fixture for fixture and by name.
 
-**A true Macintosh 512K — `mv-512K`, a 64 KB ROM — boots, and this
-application bombs on it.** It cannot read HFS, which is the whole of the
-negative; nothing here drives it as a tier, and `setup.sh` builds it and
-fetches both 64 KB ROMs so the frames can be re-taken rather than quoted.
+**A true Macintosh 512K — `mv-512K`, a 64 KB ROM — boots, and with the
+`Hard Disk 20` file this application extracts on it.** Without that file it
+cannot read HFS; nothing here drives it as a tier, and `setup.sh` builds it
+and fetches both 64 KB ROMs and the *HD 20 Startup* disk so the frames can
+be re-taken rather than quoted.
 Everything below wants a display and is watched by eye. `$V` is
 `$UNC_VMAC_HOME`.
 
@@ -40,6 +41,14 @@ Everything below wants a display and is watched by eye. `$V` is
     $V/mv-512K/minivmac -r $V/Mac128K.ROM $V/Sys30.img    # the other 64K ROM: identical
     $V/mv-512K/minivmac -r $V/Mac512K.ROM                 # no disk: blinking floppy, healthy
     $V/mv-512K/minivmac -r $V/Mac512K.ROM $V/Sys11.img    # MFS:  boots to Finder 1.1
+
+**`hd20boot.py` gives it HFS**: an MFS System 3.0 floppy carrying the
+`Hard Disk 20` file less its `.Sony` patch, which hangs the emulator, and a
+blank HFS image for the HD20 the emulator does not have. What it cannot see
+is that patch. Extract onto `Hard Disk` from the 400K floppy in drive 3:
+
+    hd20boot.py boot.img --hfs hd.img
+    $V/mv-512K/minivmac -r $V/Mac512K.ROM boot.img hd.img dist/MacExtract-400K.dsk
 
 **A Macintosh 128K — `mv-128K` — is too small to run it**, and that is the
 RAM rather than the ROM: `ID = 03` on launch (FORMATS.md, *A Macintosh
@@ -101,7 +110,11 @@ that exits has its marks erased by the desktop repaint). Its calls are in the
 application's order, so where it stops is where the application stops; marks
 are eight to a row in the top 75 points, clear of the system error dialog.
 `-DTRAPTEST_NO_MEM` drops the two memory calls, which is how the File Manager
-rows in FORMATS.md are reached on a 64K ROM at all. Build it by hand, put it on
+rows in FORMATS.md are reached on a 64K ROM at all. `-DTRAPTEST_MEM128` adds
+the Memory and Resource Manager calls an extraction makes, marks 9-14, and
+`-DTRAPTEST_SKIP=n` leaves out the first n of them; on `hd20boot.py`'s disk
+(`hd20boot.py boot.img .../TrapTest.bin:Finder`) that gave FORMATS.md's
+table of what a 64K ROM with HFS still lacks. Build it by hand, put it on
 the volume above as `Finder`, and read the marks — **on `mv-512Ke` as well as
 `mv-512K`**, because a probe that stops early says nothing until it has been
 seen to finish somewhere:

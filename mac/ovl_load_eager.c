@@ -143,7 +143,11 @@ static void ovl_keep(short id, int slot)
      * `derived-a2basic.dmg.sit` was granted 317,838 B and still failed —
      * `gRefusedWhy` = 2, NewPtr returning NULL for a 205 KB block against a
      * largest free block of 169,298 B. The memory was there, in two pieces. */
-    MoveHHi(h);
+    /* Not on a 64K ROM, which has no MoveHHi (measured 2026-11-06,
+     * tools/vmac/traptest): ROM85 > 0 is a 128K ROM or later, as
+     * ovl_reloc.c's flush reads it. */
+    if (*(const short *)OVL_LOWMEM_ROM85 > 0)
+        MoveHHi(h);
     HLock(h);
     BlockMoveData(p, *h, (Size)len);
     /* Relocated AGAIN, for the address the copy runs at: the fixup is

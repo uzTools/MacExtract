@@ -147,7 +147,13 @@ unarchiver, so MacExtract ships in four forms that need no unarchiver:
                   Disk 20: its 64K ROM reads no other floppy. It holds
                   MacExtract and MacExtract-Helpers.zip. Write it to a 400K
                   disk on a Mac with both kinds of drive. Not yet tried on a
-                  real 512K.
+                  real 512K; if you have one, this is the test: start up
+                  from the Hard Disk 20, put the floppy in, double-click
+                  MacExtract-Helpers.zip and choose the Hard Disk 20. Then
+                  tell us what happened, at
+                  https://github.com/uzTools/MacExtract/issues -- sixteen
+                  files in a "MacExtract Helpers" folder, or the ID number
+                  if it bombs.
 
 Double-click helpers. The 800K and 1.44 MB disks also hold a "MacExtract
 Helpers" folder,
@@ -174,8 +180,8 @@ Floor target: System 3.0 on a 1 MB Mac Plus (68000) -- the system the Plus
 shipped with in January 1986. It also runs in 512 KB, on a Macintosh 512Ke.
 On a true Macintosh 512K -- the 64K ROM -- it opens and lists a disk, but
 extracting needs HFS, which that machine has only with a Hard Disk 20
-attached; nobody has yet tried it on one (MacExtract-400K.dsk is the
-disk for it). A Macintosh 128K cannot run this
+attached. With one it extracts on an emulator; nobody has yet tried a
+real one (MacExtract-400K.dsk is the disk for it). A Macintosh 128K cannot run this
 at all: the program's code and data do not fit in its memory, whatever the
 system.
 The same binary runs unchanged through Mac OS 9 and adapts its memory use to

@@ -357,7 +357,11 @@ def main():
         if len(tc) != 8:
             raise SystemExit(f"mkmfs: {tc!r} is not four bytes of type and "
                              "four of creator")
-        files.append(MacFile(macname, tc[:4], tc[4:], 0,
+        # Inited (0x0100), so the Finder keeps the position build() gives
+        # it rather than placing the icon itself; a plain file has no
+        # bundle the flag would stop the Finder registering (the sink's
+        # note in mac/macextract_mac.c).
+        files.append(MacFile(macname, tc[:4], tc[4:], 0x0100,
                              open(path, "rb").read(), b""))
     open(a.image, "wb").write(build(files, a.name, boot))
     print(f"mkmfs: wrote {a.image} — {len(files)} file(s), volume {a.name!r}")

@@ -734,7 +734,10 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # -96 the same day, 185,996 -> 185,900, A5 unmoved: the release check on
 # Cancel out again (DECISIONS.md 2026-11-06, *the tap the pump read too
 # late*); the same code as the shipped pair.
-UNC_MAC_CODE_DEFAULT=185900
+# -8 the same day, 185,900 -> 185,892, A5 +8 below: PurgeSpace and MoveHHi
+# skipped on a 64K ROM, GrowApplZone's test on ROM85 (DECISIONS.md
+# 2026-11-06, *the two calls a 64K ROM lacks*); the shipped pair +0.
+UNC_MAC_CODE_DEFAULT=185892
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -977,7 +980,9 @@ UNC_MAC_CODE_DEFAULT=185900
 # step (above); no data was added or removed.
 # +16 the same day, 36,644 -> 36,660: `.data` alignment under the placement
 # rules (above); no data was added.
-UNC_MAC_A5_DEFAULT=36660
+# +8 the same day, 36,660 -> 36,668: `.data` alignment under the 64K ROM's
+# two calls (above); no data was added.
+UNC_MAC_A5_DEFAULT=36668
 # A CEILING PER CONFIGURATION, because one ceiling measured on another build
 # cannot fire. The figures above are the RESIDENT control build, which carries
 # every decoder; the shipped build's resident code is a third of that, so
@@ -1643,7 +1648,9 @@ UNC_MAC_A5_EAGER=16708
 # data + bss 16,760, under its ceiling.
 # -96 code the same day: the release check out again, as the eager pair;
 # data + bss 16,764, under its ceiling.
-UNC_MAC_CODE_LAZY=38696
+# -8 code the same day: the 64K ROM's two calls, as the eager pair; data +
+# bss 16,736, under its ceiling.
+UNC_MAC_CODE_LAZY=38688
 UNC_MAC_A5_LAZY=19200
 if [ -n "$UNC_OVL_RESIDENT" ]; then
     UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-$UNC_MAC_CODE_DEFAULT}

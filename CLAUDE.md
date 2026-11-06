@@ -11,7 +11,7 @@ The engine is the product. The Mac app is a thin shell.
 
 ## Where things stand
 
-**M0–M75 are DONE and nothing is in flight.** Every format in FORMATS.md's
+**M0–M76 are DONE and nothing is in flight.** Every format in FORMATS.md's
 table extracts, and the engine recognises nothing it does not extract
 (DECISIONS.md 2026-10-18, *the formats it only named*). The engine passes a **988-fixture** differential suite
 against `unar` and, where `unar` fails, `macunpack`, plus 9,880 robustness variants. The Macintosh application extracts byte-exact on every
@@ -32,9 +32,9 @@ BLOCKERS.md's (*Status*). The interactive UI is driven end to end on System
 | `tools/vmac/README.md` | how to run the emulator harnesses and probes | before booting anything |
 | `MANUAL_TESTS.md` | what only somebody outside this machine can do — hardware, a copy of the software, an account to post from | when something needs one of those |
 
-That session-start reading is **~12.2k tokens** (PROGRESS 3.2k,
-OPEN_ITEMS 6.3k, BLOCKERS' first two sections 2.7k); BLOCKERS'
-withdrawn-claims archive is another **~40.0k** and is reference, not
+That session-start reading is **~12.4k tokens** (PROGRESS 3.2k,
+OPEN_ITEMS 6.4k, BLOCKERS' first two sections 2.8k); BLOCKERS'
+withdrawn-claims archive is another **~40.8k** and is reference, not
 orientation. All five are ESTIMATES (bytes ÷ 3.93, ±5 %, 2026-11-06; no
 tokenizer is installed). `tools/check_docs.py` only fails at 25 % drift, and
 every one of them has gone stale before, so **re-measure them whenever you

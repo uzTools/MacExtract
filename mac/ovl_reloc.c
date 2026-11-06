@@ -96,10 +96,6 @@ void ovl_fixup(unsigned char *base, unsigned long size, long delta)
  * works, and the gFlushHas/gFlushCalls diagnostics below are what a run can
  * actually report: which route was taken, and how many times. Real 68020-and-up
  * silicon is MANUAL_TESTS.md's. */
-#ifndef OVL_LOWMEM_ROM85
-#define OVL_LOWMEM_ROM85 0x028EL
-#endif
-
 static int gFlushProbed;
 static int gFlushRoute;         /* 0 none, 1 _HWPriv, 2 FlushCodeCache */
 
