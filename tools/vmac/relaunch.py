@@ -99,6 +99,11 @@ def main():
                          "*the list the Finder did not pad*)")
     ap.add_argument("--queue-after", type=float, default=4.0,
                     help="seconds into the first extraction to open it")
+    ap.add_argument("--first-set", metavar="FIXTURE",
+                    help="the first archive is part 1 of a three-part StuffIt "
+                         "set cut from this fixture, parts 2 and 3 alone on a "
+                         "floppy; the part dialog is answered with Drive. "
+                         "System 3.0 and 6.0.8 geometry")
     ap.add_argument("--pad", action="store_true",
                     help="name the archives `aa.*` and `bb.*`: an even-length "
                          "name ends its record in the Finder's list on a pad "
@@ -113,10 +118,17 @@ def main():
     def spec(fixture, letter):
         ext = os.path.splitext(fixture)[1]
         typ = {".cpt": "PACT", ".sit": "SIT!", ".zip": "ZIP "}.get(ext, "????")
+        # A folder each: in one, an archive's expected names took in the
+        # files of the one specified before it, and the queued one could
+        # never pass.
+        out = os.path.join(work0, letter)
+        os.mkdir(out)
         names = tuple(sorted("/".join(c) for c in I.expected_names(
-            os.path.join(R.REPO, "fixtures", fixture), work0)))
+            os.path.join(R.REPO, "fixtures", fixture), out)))
         return (fixture, letter + ext, typ, names)
-    if a.first:
+    if a.first_set:
+        first = spec(a.first_set, "a")
+    elif a.first:
         first = spec(a.first, "aa" if a.pad else "a")
     if a.second:
         second = spec(a.second, "bb" if a.pad else "b")
@@ -129,6 +141,29 @@ def main():
     shot = lambda mac, n: mac.shot(os.path.join(a.outdir, n), scale="200%")
     try:
         boot = os.path.join(work, "boot-relaunch.hfv")
+        sdisk = None
+        if a.first_set:
+            # Cut as interactive.py --segments cuts (tools/synth_sitsplit.py's
+            # header): part 1 goes in `In` as the first archive, 2 and 3 on
+            # a floppy of their own.
+            sys.path.insert(0, os.path.join(R.REPO, "tools"))
+            from synth_sitsplit import header, crc16_arc   # noqa: E402
+            orig = open(os.path.join(R.REPO, "fixtures", a.first_set),
+                        "rb").read()
+            nm = os.path.basename(a.first_set).encode("mac_roman")[:31]
+            cuts = [0, len(orig) // 3, 2 * len(orig) // 3, len(orig)]
+            parts = []
+            for i in range(3):
+                pp = os.path.join(work, "part%d" % (i + 1))
+                with open(pp, "wb") as f:
+                    f.write(header(i + 1, nm, 0, len(orig),
+                                   running=crc16_arc(orig[:cuts[i + 1]])))
+                    f.write(orig[cuts[i]:cuts[i + 1]])
+                parts.append(pp)
+            first = (parts[0],) + first[1:]
+            sdisk = os.path.join(work, "parts.dsk")
+            R.make_floppy(sdisk, "Parts",
+                          extras=[(parts[1], "part-two"), (parts[2], "zzz")])
         fx = lambda n: os.path.join(R.REPO, "fixtures", n)
         extra = ()
         keep = ("--keep-inits",) if a.keep_inits else ()
@@ -186,6 +221,9 @@ def main():
                 qh.close()
             extra = extra + (qdisk,)
 
+        if sdisk:
+            extra = extra + (sdisk,)
+
         mac = I.Mac(boot, a.emu, work, extra=extra)
         try:
             if mac.settle(os.path.join(a.outdir, ".settle.png"),
@@ -217,6 +255,13 @@ def main():
             time.sleep(a.launch_wait)
             shot(mac, "r-3-first.png")
             I.accept_destination(mac)
+            if sdisk:
+                # Part 2 is not beside part 1, so the part dialog comes up;
+                # Drive takes it to the Parts floppy, which it scans.
+                time.sleep(10.0)
+                shot(mac, "r-3s-asked.png")
+                mac.click(*I.PART_DRIVE)
+                time.sleep(4.0)
             if third:
                 # File > Open... has no Command key: the menu is pulled down
                 # and held while the extraction's progress pump gets round
@@ -291,13 +336,29 @@ def main():
         got1 = all(comp(n) in have for n in first[3])
         got2 = all(comp(n) in have for n in second[3])
         got3 = third is None
-        if third:
-            # Each destination dialog opens where Standard File last was,
-            # so with a floppy in play an archive's output can land on it.
-            qhave = I.volume_names(qdisk)
-            on = lambda w: all(comp(n) in have or tuple(n.split("/")) in qhave
-                               for n in w[3])
-            got2, got3 = on(second), on(third)
+        # A destination dialog opens where Standard File last was: after
+        # File > Open... or a part dialog answered on a floppy, the next
+        # archive's files land on that floppy by default (measured on
+        # System 3.0 and 6.0.8, 2026-11-05; not changed). So each archive
+        # counts on either volume, and where it landed is said.
+        fl = (qdisk,) if third else (sdisk,) if sdisk else ()
+        fhave = set()
+        for d in fl:
+            fhave |= I.volume_names(d)
+        def where(w):
+            if all(comp(n) in have for n in w[3]):
+                return "in In" if not a.in_disk else "on the archives disk"
+            if fl and all(tuple(n.split("/")) in fhave for n in w[3]):
+                return "on the floppy"
+            return None
+        if fl:
+            w2 = where(second)
+            got2 = w2 is not None
+            print(f"relaunch: second archive's files: {w2 or 'MISSING'}")
+            if third:
+                w3 = where(third)
+                got3 = w3 is not None
+                print(f"relaunch: queued archive's files: {w3 or 'MISSING'}")
         print(f"relaunch: {first[0]} then {second[0]}")
         print(f"relaunch: first archive: dialog {d3}, entries "
               f"{'on the volume' if got1 else 'MISSING'}")

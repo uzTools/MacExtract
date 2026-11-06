@@ -2562,8 +2562,8 @@ a full disk look the same to the volume check — read the last `r-q` frame.
 `--queue` puts a third archive alone on a floppy and, 20 s into the first,
 pulls File > Open... down, holds it while the progress pump reaches the
 mouseDown, presses Drive and opens it; then answers each destination dialog
-until the Finder is back, and grades all three archives on either volume
-(each destination dialog opens where Standard File last was). System 6
+until the Finder is back, and grades all three archives on either volume,
+saying which each landed on. System 6
 geometry, at 1x: at full speed `a2basic` is done before the menu is pulled.
 The Open dialog sits 30 points below and right of `SF_DRIVE`'s, where a click
 lands on Eject and ejects the boot disk. `--pad` names the pair `aa.*`/`bb.*`,
@@ -2572,6 +2572,20 @@ UNC_AT_HEAPLOG` build logs the list's size against its walked end, and `-D
 UNC_AT_PARMSLACK` appends 16 bytes of slack to it at launch (DECISIONS.md
 2026-11-05, *the list the Finder did not pad*). **What it cannot see:** the
 queue on any system but 6.0.8.
+
+`--first-set FIXTURE` hands over part 1 of a three-part StuffIt set cut from
+the fixture (as `interactive.py --segments` cuts it) with the second archive,
+parts 2 and 3 alone on a floppy, and answers the part dialog with Drive.
+System 3.0 and 6.0.8: System 7 relabels Drive.
+
+**Where a later archive's files land (measured 2026-11-05, not changed).** A
+destination dialog opens where Standard File last was. After File > Open...
+(6.0.8) or a part dialog answered on a floppy (3.0 and 6.0.8), the next
+archive the Finder handed over extracts onto that floppy unless the user moves
+the dialog. Both modes print it: `second archive's files: on the floppy`. A
+fix pointing the dialog at the archive's folder was measured and not taken: on
+System 3.0 with a second disk mounted it opened the first dialog at the boot
+volume's root, for 80 B.
 
 ### Making a segmented Compact Pro archive — `cptsegment.py`
 
