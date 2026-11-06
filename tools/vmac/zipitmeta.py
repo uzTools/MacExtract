@@ -21,6 +21,16 @@ needs a row selected.
 
 Results: DECISIONS.md 2026-11-06, *the field ZipIt 1.4 never wrote*.
 
+ZipIt 2.2.2 (PowerPC Carbon, CarbonLib 1.5 or later) has no mode here: it
+was driven by hand under QEMU on `sitzip.CARBON_BOOT` (CarbonLib 1.6),
+through `os9mouse` with `os9_paths()` pointing it at an overlay, transfer
+disk and monitor of its own, and `os9_disk()` building that disk (ZipIt,
+the writer's folders, the sentinel zip). The steps, all Command keys but
+four clicks: Finder type-select and Cmd-O; personalize; "Not yet" (greyed
+for a few seconds); Cmd-G, Navigation Services, Choose; Cmd-S; select a
+row, Cmd-E, "Choose a Folder"; Cmd-Q; put the volume away. The frames are
+in the vmac cache, `specimens/zipit/meta/os9/`.
+
 What it CANNOT see: ZipIt 2.x, the only writer of 0x2805 seen (a PowerPC
 Carbon application: Mac OS 9, not this tier); ZipIt 1.x on System 6; a
 file's Finder info (only folders are planted); anything a dialog asks that
@@ -363,6 +373,95 @@ def reader(keep):
     print("zipitmeta: screenshots in %s" % s.shots)
     if not keep:
         shutil.rmtree(work, ignore_errors=True)
+
+
+# ------------------------------------------------------------------
+# ZipIt 2.2.2, the only writer of 0x2805 seen: a PowerPC Carbon
+# application (`Joy!peffpwpc`, CarbonLib imported with no minimum version),
+# so Mac OS 9 under QEMU (tools/vmac/os9mouse.py), on an overlay, transfer
+# disk and monitor socket of its own: the shared `sit5/` overlay carries
+# other sessions' installs.
+# ------------------------------------------------------------------
+
+SEA2 = os.path.join(R.VMAC_HOME, "specimens", "zipit", "zipit-2.2.2.sea")
+OS9DIR = os.path.join(os.path.dirname(R.VMAC_HOME), "zipit2")
+OS9VOL = "zipwork"
+
+
+def zipit2_app(work):
+    """ZipIt 2.2.2's CFM executable, out of its bundle: (type, creator,
+    data, rsrc)."""
+    mb = os.path.join(work, "sea2")
+    os.makedirs(mb)
+    subprocess.run([cli(), "x", "-o", mb, SEA2], check=True, capture_output=True)
+    sea = os.path.join(mb, "ZipIt 2.2.2.sea")
+    out = os.path.join(work, "z2")
+    os.makedirs(out)
+    subprocess.run([cli(), "x", "-f", "Zip", "-o", out, sea], check=True,
+                   capture_output=True)
+    p = os.path.join(out, "ZipIt.app", "Contents", "MacOS", "ZipIt")
+    data = open(p, "rb").read()
+    if data[:12] != b"Joy!peffpwpc":
+        raise SystemExit("zipitmeta: %s is not a PowerPC PEF" % p)
+    return ("APPL", "ZIP ", data, open(p + ".rsrc", "rb").read())
+
+
+def os9_disk(out, work):
+    """The transfer disk: ZipIt, the writer's two folders with their DInfo
+    planted, and the reader's sentinel zip, on an Apple_HFS partition
+    behind the boot disk's own map (tools/vmac/mkapmdisk.py)."""
+    import mkapmdisk
+    import os9mouse
+    vol = os.path.join(work, "vol.hfs")
+    t, c, data, rsrc = zipit2_app(work)
+    env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
+    make_volume(vol, OS9VOL, [], size_kb=32 * 1024)
+    try:
+        run = lambda *a: subprocess.run(a, check=True, capture_output=True, env=env)  # noqa
+        run("hmount", vol)
+        for d in ("Subject", "Subject:Inner"):
+            run("hmkdir", OS9VOL + ":" + d)
+        items = [("ZipIt", t, c, data, rsrc),
+                 ("Sentzip", "ZIP ", "ZIP ", sentinel_zip(), b"")] + \
+            [(rel, ft, fc, fd, fr) for rel, ft, fc, fd, fr in WRITER_FILES]
+        for i, (rel, ft, fc, fd, fr) in enumerate(items):
+            p = os.path.join(work, "x%d.bin" % i)
+            open(p, "wb").write(macbinary(rel.split("/")[-1], ft, fc, fd, fr))
+            parent = ":".join(rel.split("/")[:-1])
+            run("hcopy", "-m", p, OS9VOL + ":" + (parent + ":" if parent else ""))
+        run("humount", vol)
+    finally:
+        shutil.rmtree(env["HOME"], ignore_errors=True)
+    for path, dinfo in WRITER_DIRS:
+        hfscat.patch(vol, tuple(x.encode("mac-roman") for x in (OS9VOL,) + path),
+                     22, dinfo)
+    start = mkapmdisk.find_hfs_start(os9mouse.MASTER)
+    blocks = os.path.getsize(vol) // mkapmdisk.BLK
+    with open(out, "wb") as f:
+        f.write(mkapmdisk.clone_head(os9mouse.MASTER, start + blocks, OS9VOL,
+                                     start, blocks))
+        with open(vol, "rb") as v:
+            shutil.copyfileobj(v, f)
+    return start
+
+
+def os9_volume(disk, start):
+    """The transfer disk's HFS volume, as bytes, for hfscat."""
+    import mkapmdisk
+    with open(disk, "rb") as f:
+        f.seek(start * mkapmdisk.BLK)
+        return f.read()
+
+
+def os9_paths():
+    """Point os9mouse at this harness's own overlay, disk and socket."""
+    import os9mouse
+    os.makedirs(OS9DIR, exist_ok=True)
+    os9mouse.OVERLAY = os.path.join(OS9DIR, "os9.qcow2")
+    os9mouse.XFER = os.path.join(OS9DIR, "xfer.img")
+    os9mouse.MON = os.path.join(OS9DIR, "mon.sock")
+    os9mouse.SHOTS = os.path.join(OS9DIR, "shots")
+    return os9mouse
 
 
 def main():

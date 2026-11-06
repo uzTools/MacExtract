@@ -520,7 +520,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-06 (the folder DiskDoubler Pro put back) — a `DDA2` folder record holds the folder's DInfo whole and its frScroll, as Norton DiskDoubler Pro 4.1.1 writes and restores them; +46..53 is padding, +62 a folder number, +86 a CRC, for 64 B of `ovl_cptdd`
 - 2026-11-06 (the desk no folder is put on) — the shell clears on-desk (0x0001) on every item at every level, in every format, MAR's included, and writes a top folder that has a window inited, for 32 B off every budget
 - 2026-11-06 (the icons a designer drew) — the application and archive icons are a designer's, imported by `tools/icon/import_icons.py`; nothing draws them any more
-- 2026-11-06 (the field ZipIt 1.4 never wrote) — ZipIt 1.4 neither writes nor reads `0x2805`, and keeps no folder's Finder info; the View word waits on ZipIt 2.x
+- 2026-11-06 (the field ZipIt 1.4 never wrote) — ZipIt 1.4 neither writes nor reads `0x2805`; ZipIt 2.2.2 writes the folder's frFlags and View 0 whatever its Finder view, and puts no View into frView
 
 ---
 
@@ -21601,7 +21601,7 @@ resource map and every budget are unmoved; CODE and A5 unmoved;
 `dist/MacExtract.bin` 251,264 B as before; the helpers zip 57,149 →
 57,098 B.
 
-## 2026-11-06 (the field ZipIt 1.4 never wrote) — ZipIt 1.4 neither writes nor reads `0x2805`, and keeps no folder's Finder info; the View word waits on ZipIt 2.x
+## 2026-11-06 (the field ZipIt 1.4 never wrote) — ZipIt 1.4 neither writes nor reads `0x2805`; ZipIt 2.2.2 writes the folder's frFlags and View 0 whatever its Finder view, and puts no View into frView
 
 **The question** (OPEN_ITEMS.md, *the metadata the archives hold and the
 readers drop*): what ZipIt's `0x2805` View word means. APPNOTE.TXT 4.6.6
@@ -21622,9 +21622,28 @@ on System 7.0.1; `tools/vmac/zipitmeta.py`):
   folders come out 0x0100 (placed by the Finder) and 0x0000, frView 0
   both. It reads neither half of the field.
 
-**So the field is ZipIt 2.x's**, and every specimen is: 2.2.2 is a
-PowerPC Carbon application (`Joy!peffpwpc`), so its oracle is Mac OS 9
-with CarbonLib, not this 68k tier. Its View menu sorts the archive window
-(by name, size, method, date …), which makes the View word **ZipIt's own
-display state rather than Finder metadata** — a hypothesis, untested on
-2.x. Nothing changes in the engine.
+**So the field is ZipIt 2.x's**, and every specimen is. 2.2.2 is a
+PowerPC Carbon application (`Joy!peffpwpc`) that refuses CarbonLib 1.4
+(*"requires Carbon version 1.5 or later"*); it runs on `hfsboot-carbon.img`
+(CarbonLib 1.6, `sitzip.py --carbonlib`) under QEMU, driven by
+`os9mouse.py` on an overlay and transfer disk of its own
+(`zipitmeta.os9_disk`, `os9_paths`). **Measured there:**
+- **Writer.** The same two folders (frView 0x0400 and 0x0500) added and
+  saved: `0x2805` holds each folder's frFlags verbatim (0x0104, 0x0108)
+  and **View 0** for both. The View word is not frView.
+- **Reader.** The sentinel zip extracted: the folders keep the field's
+  colour-label bits (0x02, 0x06; inited not kept, and the Finder adds its
+  own), and come out with frView 0xf4c7 and 0xf4c0 and the nested one at
+  (1, 7998) — values in neither the archive nor the Finder (hypothesis:
+  uninitialised). ZipIt 2.2.2 puts no View into frView either.
+- **Not settled:** whether View is a folder's expanded state in ZipIt 2's
+  list (it has no View menu; its window is a list with disclosure
+  triangles). Expanding alone does not mark the archive changed, and the
+  one save with a folder expanded and a file added failed, *"Error during
+  temporary file operation"*. The kept archive and frames are in the vmac
+  cache, `specimens/zipit/meta/os9/`.
+
+**Consequence:** the View word is not Finder metadata in either ZipIt this
+project can run, and `src/fmt_exo.c`'s reading of `0x2805` — frFlags, no
+View — is what ZipIt 2.2.2 itself restores, less the colour of its
+uninitialised frView. Nothing changes in the engine.

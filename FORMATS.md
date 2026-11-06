@@ -3383,8 +3383,10 @@ the MacBinary header's in all 16. **Field lengths a real writer uses**:
 generated archive here produced), **14** (plus `fdFlags`) and **16**
 (plus the trailing word); `0x2805` always 8, `frFlags` 0x0000, 0x03a0 and
 0x2310, View 0 in all 12 — both length guards do something. **ZipIt 1.4
-neither writes nor reads `0x2805`** and records no folder's Finder info
-(DECISIONS.md 2026-11-06, *the field ZipIt 1.4 never wrote*). **ZipIt 1.x writes the long
+neither writes nor reads `0x2805`** and records no folder's Finder info;
+**ZipIt 2.2.2 writes frFlags and View 0** whatever the folder's Finder
+view, and puts no View into frView (DECISIONS.md 2026-11-06, *the field
+ZipIt 1.4 never wrote*). **ZipIt 1.x writes the long
 field on directories** (three entries, 1.4 and the Japanese build), whose
 zero bytes are not MacBinary; `zip_mb_peek` refuses anything under 128
 bytes and probes the header, so the claim is verified, not trusted.
