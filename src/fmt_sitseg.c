@@ -199,7 +199,7 @@ int unc_sitseg_emit(UncCtx *c, const UncSegmentDesc *desc, uint32_t base,
 
     err = UNC_OK;
     if (!c->opt.list_only) {
-        uint32_t bufsz = UNC_PROGRESS_STEP;
+        uint32_t bufsz = UNC_COPY_BUF;
         uint8_t *buf = (uint8_t *)unc_alloc(c->al, bufsz);
         if (!buf) err = UNC_ERR_MEM;
         if (err == UNC_OK) {

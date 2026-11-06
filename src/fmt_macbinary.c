@@ -124,7 +124,7 @@ int unc_macbinary_extract(UncCtx *c)
 
     /* One block for the copy and the comment behind it, which has to
      * outlive the copy: the sink may read it until end_entry returns. */
-    bufsz = c->opt.list_only ? 0 : UNC_PROGRESS_STEP;
+    bufsz = c->opt.list_only ? 0 : UNC_COPY_BUF;
     need = bufsz + cmtlen;
     buf = need ? (uint8_t *)unc_alloc(c->al, need) : NULL;
     if (cmtlen && buf) {

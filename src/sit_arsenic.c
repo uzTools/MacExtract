@@ -579,8 +579,8 @@ static int ars_inverse_bwt(Arsenic *a)
 }
 #endif
 
-/* Output bytes between progress reports. Much finer than the engine's
- * input-side UNC_PROGRESS_STEP (8192) because this decoder's bytes are
+/* Output bytes between progress reports. Finer than the engine's
+ * input-side UNC_PROGRESS_STEP because this decoder's bytes are
  * expensive: under the sampled index a2basic emits 205,019 bytes in 341 s
  * on a Mac Plus (measured, 2026-11-04), so an 8 KB interval would tick
  * once every 14 seconds — a bar that jumps in 4% steps and a Cancel

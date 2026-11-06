@@ -3238,7 +3238,7 @@ that polled the volume list instead never saw a volume appear.
 
 **`Mac.settle` answers "the screen stopped changing", not "the extraction
 finished".** The progress dialog repaints once per engine callback (every
-8–16 KB of input), so every settle that waits for an extraction passes
+1–8 KB of input), so every settle that waits for an extraction passes
 `quiet=EXTRACT_QUIET`, SECONDS the screen must hold still, longer than the
 worst repaint gap (`--dest` once returned at 33 %).
 

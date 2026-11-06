@@ -779,7 +779,7 @@ def launch_by_keyboard(q, outdir, wait=240.0, cancel=False, click=False,
         prog = shot("15-progress")
         # Cmd-. is sent until the dialog goes away, not once, and the
         # COUNT is printed. ProgressPump() runs only from prog_tick, which
-        # the engine calls per 8-16 KB of input consumed, so an application
+        # the engine calls per 1-8 KB of input consumed, so an application
         # decoding a format that does not tick is not pumping at all and a
         # chord into it is indistinguishable from a chord that does not
         # work. That is not a hypothesis: it is how Now Compress's missing

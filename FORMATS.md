@@ -4949,61 +4949,72 @@ inside it; the autotest row is the BinHex layer alone.
 
 The widest gap between two progress callbacks is the longest the window,
 Cancel, Cmd-. and the menu bar go unanswered (OPEN_ITEMS.md, *A click during
-an extraction*). `-D UNC_AT_TICKGAP` at `--emu mv-4M-1x --poll 20`,
-2026-10-12, `timing.txt`, all byte-exact; File Manager time is included, the
-shipped 10 Hz gate (up to 0.1 s) is not. **Before the first callback** holds
-the decoders' load and the archive's directory.
+an extraction*). `-D UNC_AT_TICKGAP` at `--emu mv-4M-1x --poll 20`, System
+6.0.8, all byte-exact; File Manager time is included, the shipped 10 Hz gate
+(up to 0.1 s) is not. **Before the first callback** holds the decoders' load
+and the archive's directory. **Re-measured 2026-11-06 at the 1 KB step**
+(`UNC_PROGRESS_STEP`; *What the step costs*), against the 8 KB build the same
+day, whose gaps were 2026-10-12's to the tenth.
 
-| fixture | format | widest gap | before the first | callbacks |
+| fixture | format | widest gap, 8 → 1 KB | before the first, 8 → 1 KB | callbacks at 1 KB |
 |---|---|---|---|---|
-| `derived-a2basic.dmg.sit` | StuffIt 5 (Arsenic) | **0.8 s** (254 s before 2026-10-12) | 1.2 s | 1,472 |
-| `derived-Library_ISBN_Barcoder.sit` | StuffIt 5 (Arsenic) | **1.1 s** (140 s) | 1.4 s | 4,623 |
-| `derived-KeyGraphics.sit` | StuffIt 5 (Arsenic) | **0.3 s** (9.4 s) | 0.2 s | 235 |
-| `derived-Expand_Now_1.0.1.sea` | Now Compress | **6.1 s** | **5.5 s** | 3 |
-| `derived-XferIt_1.5b4.sea` | Compact Pro | **4.8 s** | 3.0 s | 34 |
-| `derived-MacPass390.sea` | DiskDoubler | **4.2 s** | 2.4 s | 18 |
-| `derived-EmpireBuilderDemo.sit` | StuffIt | 2.5 s | 2.1 s | 33 |
-| `derived-MUSFMT10.ZIP` | Zip | 2.2 s | 2.0 s | 18 |
-| `PCCTS.tar.gz` | gzip | 1.9 s | 1.9 s | 7 |
-| `popper-1.7.tar.Z` | compress | 1.5 s | 1.8 s | 7 |
-| `macburger-helper.hqx` | BinHex | 1.1 s | 3.3 s | 37 |
-| `derived-PCCTS.tar` | Tar | 0.9 s | 2.1 s | 22 |
-| `derived-PackIt.pit` | PackIt | 0.7 s | 1.2 s | 7 |
-| `kermitut9test.bin` | MacBinary | 0.0 s | 1.2 s | 37 |
-| `derived-Export.sit` | StuffIt | — (none; 1.4 s in all) | — | 0 |
+| `derived-a2basic.dmg.sit` | StuffIt 5 (Arsenic) | **0.8 s** (254 s before 2026-10-12), by output, unmoved by the step | 1.2 s | 1,472 (2026-10-12) |
+| `derived-Library_ISBN_Barcoder.sit` | StuffIt 5 (Arsenic) | **1.1 s** (140 s), likewise | 1.4 s | 4,623 (2026-10-12) |
+| `derived-KeyGraphics.sit` | StuffIt 5 (Arsenic) | 0.3 → **0.3 s** | 0.2 s | 235 |
+| `derived-Expand_Now_1.0.1.sea` | Now Compress | 6.1 → **6.1 s** | **5.4 s** | 3 |
+| `derived-XferIt_1.5b4.sea` | Compact Pro | 4.8 → **1.9 s** | 3.1 → 1.4 s | 73 |
+| `derived-MacPass390.sea` | DiskDoubler | 4.2 → **1.7 s** | 2.4 → 1.2 s | 39 |
+| `derived-EmpireBuilderDemo.sit` | StuffIt | 2.5 → **1.0 s** | 2.1 → 1.2 s | 68 |
+| `derived-MUSFMT10.ZIP` | Zip | 2.4 → **1.2 s** | 2.1 → 0.3 s | 49 |
+| `PCCTS.tar.gz` | gzip | 1.9 → **1.2 s** | 2.6 → 1.6 s | 16 |
+| `popper-1.7.tar.Z` | compress | 1.5 → **0.8 s** | 2.5 → 1.8 s | 15 |
+| `macburger-helper.hqx` | BinHex | 1.1 → **0.6 s** | 4.2 → 3.8 s | 75 |
+| `derived-PCCTS.tar` | Tar | 0.9 → **0.4 s** | 2.1 → 2.0 s | 47 |
+| `derived-PackIt.pit` | PackIt | 0.7 → **0.4 s** | 1.2 → 1.0 s | 15 |
+| `kermitut9test.bin` | MacBinary | 0.0 → **0.0 s** | 1.2 s | 37 |
+| `derived-Export.sit` | StuffIt | — (none; 1.4 s in all) | — | 1 |
 
 **At 1 MB, under the sampled index**: a2basic **0.6 s** (18.3 s with only the
 block decode ticking), the Barcoder **1.9 s** (24.1 s), inside the walk.
 
-Every row but Arsenic's reports every 8 KB of INPUT (`UNC_PROGRESS_STEP`, two
-`UNC_IOBUF` refills); Now Compress reads a 32 KB block whole. A 68LC040 at
-25 MHz is several times faster (*hypothesis*: no machine here has timed one).
+Every row but Arsenic's reports every 1 KB of INPUT (`UNC_PROGRESS_STEP`), a
+stored fork's copy every 8 KB (`UNC_COPY_BUF`, MacBinary's row); Now Compress
+reads a 32 KB block whole, so no step moves it. The callbacks counted are the
+probe's, not every call (*hypothesis*: they double where the input octuples
+because the probe counts at the shell's 10 Hz gate). A 68LC040 at 25 MHz is
+several times faster (*hypothesis*: no machine here has timed one).
 
-### What a 4 KB step buys, measured 2026-10-13
+### What the step costs: 8, 4 and 1 KB
 
-`UNC_PROGRESS_STEP` 8,192 → 4,096, stored-fork copy buffers left at 8 KB, NOT
-shipped (OPEN_ITEMS.md, *A click during an extraction*), both builds with
-`-D UNC_AT_TICKGAP` (its callback runs the shipped `prog_tick`, not the bar's
-redraw). 1x, `timing.txt` less the two large Arsenic fixtures, byte-exact.
+`-D UNC_AT_TICKGAP`, 1x, `timing.txt` less the two large Arsenic fixtures,
+byte-exact, stored-fork copies at 8 KB in every build. 8 and 1 KB measured
+back to back 2026-11-06; **4 KB on 2026-10-13**, an older tree, against that
+day's 8 KB. Extraction time is `RunExtract`'s, in 60 Hz ticks.
 
-| fixture | gap, 8 → 4 KB | extraction, System 6.0.8 | System 7.0.1 |
-|---|---|---|---|
-| `derived-XferIt_1.5b4.sea`, Compact Pro | 4.8 → **3.1 s** | 102.80 → 102.85 s, +3 ticks | +14 ticks, +0.22 % |
-| `derived-MacPass390.sea`, DiskDoubler | 4.2 → **2.8 s** | 53.75 → 53.78 s, +2 | +7, +0.21 % |
-| `derived-EmpireBuilderDemo.sit`, StuffIt | 2.5 → **1.6 s** | 52.18 → 52.25 s, +4 | +13, +0.40 % |
-| `derived-MUSFMT10.ZIP`, Zip | 2.2 → **1.5 s** | 32.05 → 32.07 s, +1 | +7, +0.35 % |
-| `PCCTS.tar.gz`, gzip | 1.9 → **1.2 s** | +1 | — |
-| `popper-1.7.tar.Z`, compress | 1.5 → **0.8 s** | +1 | — |
-| `macburger-helper.hqx`, BinHex | 1.1 → **0.6 s** | +4 | — |
-| `derived-Expand_Now_1.0.1.sea`, Now Compress | 6.1 → 6.1 s | +0 | — |
+| fixture | gap, 8 / 4 / 1 KB | System 6.0.8, 4 KB | System 6.0.8, 1 KB | System 7.0.1, 4 KB | System 7.0.1, 1 KB |
+|---|---|---|---|---|---|
+| `derived-XferIt_1.5b4.sea`, Compact Pro | 4.8 / 3.1 / **1.9 s** | +3 ticks | 6,170 → 6,174, +4 | +14, +0.22 % | 6,268 → 6,283, **+0.24 %** |
+| `derived-MacPass390.sea`, DiskDoubler | 4.2 / 2.8 / **1.7 s** | +2 | 3,225 → 3,228, +3 | +7, +0.21 % | 3,283 → 3,291, **+0.24 %** |
+| `derived-EmpireBuilderDemo.sit`, StuffIt | 2.5 / 1.6 / **1.0 s** | +4 | 3,131 → 3,135, +4 | +13, +0.40 % | 3,223 → 3,237, **+0.43 %** |
+| `derived-MUSFMT10.ZIP`, Zip | 2.4 / 1.5 / **1.2 s** | +1 | 1,964 → 1,967, +3 | +7, +0.35 % | 2,049 → 2,064, **+0.73 %** |
+| `PCCTS.tar.gz`, gzip | 1.9 / 1.2 / **1.2 s** | +1 | +1 | — | — |
+| `popper-1.7.tar.Z`, compress | 1.5 / 0.8 / **0.8 s** | +1 | +1 | — | — |
+| `macburger-helper.hqx`, BinHex | 1.1 / 0.6 / **0.6 s** | +4 | +4 | — | — |
+| `derived-Expand_Now_1.0.1.sea`, Now Compress | 6.1 / 6.1 / **6.1 s** | +0 | +0 | — | — |
 
-The other five rows move by at most one tick. **Price: 0 B** in every image,
-resident `CODE` and A5, no heap; at most **+0.3 % on System 6 and +0.4 % on
-System 7**, about 1.5 and 7 ms per extra pump. Gaps fall by a third to a half
-(*hypothesis*: the widest gap holds File Manager writes, which do not halve).
-**What this cannot see:** System 7's autotest boots the application as the
-shell, so no other process was given time; with the Finder running each pump
-can switch to it (*hypothesis*: more than 7 ms).
+The other rows move by at most two ticks at 1 KB (`derived-PCCTS.tar` +2,
++0.43 %). **Price: 0 B** for the step in every image, resident `CODE` and A5,
+no heap; at most **+0.43 % on System 6 and +0.73 % on System 7** at 1 KB,
+little more than 4 KB, because the shell pumps at most 10 times a second
+whatever the engine calls. From 4 to 1 KB the gaps of Compact Pro,
+DiskDoubler and StuffIt fall again by a third; gzip's, compress's and
+BinHex's do not (*hypothesis*: their widest gap holds File Manager writes).
+The finer step made the time left flicker on a large archive, and the
+shell holds it within a percent, 16 B of code and 16 B less A5
+(DECISIONS.md 2026-11-06, *the step a click waits for*). **What this cannot
+see:** System 7's autotest boots the application as the shell, so no other
+process was given time; with the Finder running each pump can switch to it
+(*hypothesis*: more than 7 ms).
 
 ## What keeping a folder's date costs (Mac Plus, 1x)
 

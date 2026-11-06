@@ -148,13 +148,10 @@ Events are read only in the progress pump, so a click or Cmd-. waits for the
 next callback, and a click on the menu bar shorter than the gap is lost
 (DECISIONS.md 2026-10-12, *the application nobody could leave*). A press on
 Cancel is decided by where it was released (2026-11-06, *the tap the pump
-read too late*). **What is left is 4–6 s on a Mac Plus** for Now
-Compress, Compact Pro and DiskDoubler, 2–2.5 s for StuffIt and Zip — 8 KB of
-input at `UNC_PROGRESS_STEP` (FORMATS.md, *How long a click waits*).
-**Halving the step is measured** (FORMATS.md, *What a 4 KB step buys*): gaps
-down by a third to a half, 0 B, at most +0.4 % time. **The maintainer's to
-decide** (CLAUDE.md says 8–16 KB); it needs the three stored-fork copies sized
-by their own constant first. The LC 475's window was "not very reactive"
+read too late*). **What is left at the 1 KB step is 6.1 s on a Mac Plus**
+for Now Compress, whose 32 KB block no step reaches, and 1–2 s for Compact
+Pro, DiskDoubler, StuffIt, Zip and gzip (FORMATS.md, *How long a click
+waits*; *What the step costs*, 2026-11-06). The LC 475's window was "not very reactive"
 while extracting (2026-10-12, format not noted). Holding a menu down pauses
 the extraction — inherent to `MenuSelect`.
 

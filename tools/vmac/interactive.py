@@ -266,7 +266,7 @@ class Mac:
 
         **"Static" is only ever "unchanged since the last poll", and that is
         not the same question.** The progress dialog repaints when the engine
-        calls back, which is every 8–16 KB of INPUT — so on a slow decode the
+        calls back, which is every 1–8 KB of INPUT — so on a slow decode the
         gap between repaints is tens of seconds, two polls land inside one
         gap, and a running extraction reads as a finished one. Pass `quiet`
         (SECONDS the screen must be unchanged) for any settle that means "has
@@ -376,7 +376,7 @@ def sf_to_volume_root(mac, system):
 # How long the screen must hold still before an extraction is called
 # finished, in seconds. Not a poll interval: see Mac.settle, where the
 # reason it has to be this long is that the progress dialog repaints once
-# per engine callback and those are 8–16 KB of input apart. Every settle
+# per engine callback and those are 1–8 KB of input apart. Every settle
 # that waits for an extraction passes this; the ones that wait for a boot
 # do not need it.
 EXTRACT_QUIET = 120.0
@@ -390,7 +390,7 @@ def wait_for_alert(mac, scratch, timeout=240.0):
     """Wait for the screen to stop moving after a Cancel or a Cmd-period.
 
     Not a fixed sleep. The cancel is noticed in the engine's progress
-    callback, which fires every 8–16 KB of INPUT, so how long the alert
+    callback, which fires every 1–8 KB of INPUT, so how long the alert
     takes to come up is a property of the archive and the machine. Three
     seconds was enough until 2026-08-09 and then was not — and nothing
     failed when it stopped being enough: the phase photographed the

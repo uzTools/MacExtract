@@ -32,8 +32,8 @@ BLOCKERS.md's (*Status*). The interactive UI is driven end to end on System
 | `tools/vmac/README.md` | how to run the emulator harnesses and probes | before booting anything |
 | `MANUAL_TESTS.md` | what only somebody outside this machine can do — hardware, a copy of the software, an account to post from | when something needs one of those |
 
-That session-start reading is **~12.1k tokens** (PROGRESS 3.2k,
-OPEN_ITEMS 6.2k, BLOCKERS' first two sections 2.7k); BLOCKERS'
+That session-start reading is **~12.0k tokens** (PROGRESS 3.2k,
+OPEN_ITEMS 6.1k, BLOCKERS' first two sections 2.7k); BLOCKERS'
 withdrawn-claims archive is another **~40.0k** and is reference, not
 orientation. All five are ESTIMATES (bytes ÷ 3.93, ±5 %, 2026-11-06; no
 tokenizer is installed). `tools/check_docs.py` only fails at 25 % drift, and
@@ -104,7 +104,7 @@ usually a declared ceiling nobody questioned.
 - **Never file the upstream bug reports.** `tools/xadmaster-ddn-repro/` is ready to post; the maintainer posts it from his own account (MANUAL_TESTS.md §7). The Retro68 one was filed and is fixed upstream (BLOCKERS.md). Improve a repro if you have reason to — do not submit one.
 - **Never weaken a test to make it pass.** CRC mismatches are per-entry errors, not skips.
 - **When adding a harness, write down what it CANNOT see.** An aggregate check cannot fail on a property it never aggregates — a wrong gzip/.Z fallback NAME survived for weeks under the file-count-and-CRC grid.
-- **68000 discipline** (non-negotiable): byte-wise big-endian reads only, zero unaligned dereferences; no recursion, call depth ≤ 4 KB — **measure it, do not assume it** (it was exceeded by 66 % for months; FORMATS.md, *Stack*, has the method); 32-bit arithmetic in hot paths; no libc in the engine — all I/O, allocation and progress via caller callbacks; no global mutable state; allocation failure is a per-entry error, never per-archive; progress callback every 8–16 KB with clean abort.
+- **68000 discipline** (non-negotiable): byte-wise big-endian reads only, zero unaligned dereferences; no recursion, call depth ≤ 4 KB — **measure it, do not assume it** (it was exceeded by 66 % for months; FORMATS.md, *Stack*, has the method); 32-bit arithmetic in hot paths; no libc in the engine — all I/O, allocation and progress via caller callbacks; no global mutable state; allocation failure is a per-entry error, never per-archive; progress callback every 1 KB of input (`UNC_PROGRESS_STEP`; a stored fork's copy every `UNC_COPY_BUF`, 8 KB) with clean abort.
 - **Commit and push whenever it is appropriate — do not ask.** Small, focused commits, pushed to `main` as they are made: the maintainer reads the docs on GitHub, and a wrong commit is revertible. **A release is the exception** — see *Cutting a release*.
 - **`./ci.sh` green before every commit**, except a docs-only change, where `tools/check_docs.py` is the layer that can fail, and a change to `companion/` and docs only, where `tools/check_docs.py` and `tools/check_helpers.py` are (nothing else in `ci.sh` builds the helpers; what they do is measured on the emulator). Code, comments and docs in English.
 - **`dist/` is a committed binary and goes stale silently**, and it is the only download. Rebuild it with `tools/make_dist.sh` in the SAME commit as any change to `mac/` or `src/`, or to the helpers it carries (`companion/stub/`, `companion/helpers.tsv`, the stamping scripts), and re-read `dist/README.txt`.

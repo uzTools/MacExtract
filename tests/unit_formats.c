@@ -5813,13 +5813,18 @@ static void test_mar_comment_listing(void)
     free(a);
 
     /* The progress of a listing: a folder of 70 files of 1,000 B each.
-     * Only headers are read, so the first tick comes at the 64th, 8 KB of
-     * them; it must say where that header ends in the file, forks and
-     * padding included, not 64 headers' worth. */
+     * Only headers are read, so a tick comes every UNC_PROGRESS_STEP / 128
+     * of them; the last must say where its header ends in the file, forks
+     * and padding included, not that many headers' worth. The headers are
+     * the folder's, the 70 files' and the end's. */
     {
         enum { NF = 70 };
         uint32_t rec = 128 + 1024, at = 0, k;
+        uint32_t per = UNC_PROGRESS_STEP / 128, last, want;
         n = 128 + NF * rec + 128;
+        last = per ? (NF + 2) / per * per : 0;
+        CHECK(last >= 2);               /* a step that ticks inside the walk */
+        want = last == NF + 2 ? n : 128 + (last - 2) * rec + 128;
         a = (uint8_t *)calloc(1, n);
         if (!a) { CHECK(0); return; }
         mar_put32(a, MAR_MAGIC);
@@ -5850,7 +5855,7 @@ static void test_mar_comment_listing(void)
         sk.end_entry = mar_any_end;
         sk.comment = NULL;
         (void)unc_extract_as(UNC_FORMAT_MAR, &io, &sk, &al, &pr, &opt);
-        CHECK(gMarTickTotal == n && gMarTickDone == 128 + 62 * rec + 128);
+        CHECK(gMarTickTotal == n && gMarTickDone == want);
         CHECK(gMarEntries == 1 + NF);
         free(a);
     }

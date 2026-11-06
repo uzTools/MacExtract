@@ -21,6 +21,7 @@
 
 #include "../mac/mac_mocks.h"
 #include "macextract.h"
+#include "unc_internal.h"   /* UNC_PROGRESS_STEP, for --eta */
 
 #ifdef UNC_AT_OVERLAY
 /* The overlay lane, tests/run_overlay_host.sh. The decoders are not linked in
@@ -1463,17 +1464,16 @@ int main(int argc, char **argv)
     if (argc >= 2 && strcmp(argv[1], "--eta") == 0) {
         /* The time left must not go back up on a run whose rate never
          * changes. Replays an extraction exactly linear in time at the
-         * engine's real cadence: done moves in 8 KB steps and the dialog
-         * reads it at most every 6 ticks. Run on qemu-m68k too, where a
-         * long is the target's 32 bits. The percentage-based formula this
-         * replaced rose by up to 65 minutes here (DECISIONS.md 2026-10-16,
-         * *the estimate that went back up*).
-         *
-         * 2 s of slack: one tick of elapsed time is (t-d)/d ticks of
-         * estimate, 1.65 s at 1%, and that is TickCount's resolution, not
-         * the formula's. It can still turn a rounded minute over — once
-         * in the 4-hour, 400 MB case. Cannot see a rate that really
-         * changes, where a rise is the right answer. */
+         * engine's real cadence: done moves in UNC_PROGRESS_STEP and the
+         * dialog reads it at most every 6 ticks, through ProgressReading
+         * and ProgressShown as prog_tick does. Run on qemu-m68k too, where
+         * a long is the target's 32 bits. Graded on what the window SHOWS,
+         * any rise at all: the percentage-based formula this replaced
+         * rose by up to 65 minutes here (DECISIONS.md 2026-10-16, *the
+         * estimate that went back up*), and with a 1 KB step and no hold
+         * the shown minute rose 547 times in the 4-hour 400 MB case
+         * (2026-11-06, *the step a click waits for*). Cannot see a rate
+         * that really changes, where a rise is the right answer. */
         static const long mins[] = { 2, 16, 60, 240 };
         static const uint32_t totals[] = { 40000UL, 3000000UL, 40000000UL,
                                            400000000UL };
@@ -1481,21 +1481,25 @@ int main(int argc, char **argv)
         unsigned i, j;
         for (i = 0; i < sizeof mins / sizeof mins[0]; i++)
             for (j = 0; j < sizeof totals / sizeof totals[0]; j++) {
-                long ticks = mins[i] * 3600L, last = -1, lastNow = -6;
-                long rises = 0, worst = 0;
+                long ticks = mins[i] * 3600L, lastNow = -6;
+                long rises = 0, worst = 0, shownRem = -1;
+                short shownPct = -1;
                 uint32_t total = totals[j], done;
-                for (done = 8192; done <= total; done += 8192) {
+                for (done = UNC_PROGRESS_STEP; done <= total;
+                     done += UNC_PROGRESS_STEP) {
                     long now = (long)((long long)ticks * done / total);
                     long rem;
+                    short pct;
                     if (now - lastNow < 6) continue;
                     lastNow = now;
-                    (void)ProgressReading(now, done, total, &rem);
-                    if (rem < 0) continue;
-                    if (last >= 0 && rem > last + 2) {
+                    pct = ProgressReading(now, done, total, &rem);
+                    rem = ProgressShown(rem, pct, shownPct, shownRem);
+                    if (rem >= 0 && shownRem >= 0 && rem > shownRem) {
                         rises++;
-                        if (rem - last > worst) worst = rem - last;
+                        if (rem - shownRem > worst) worst = rem - shownRem;
                     }
-                    last = rem;
+                    shownPct = pct;
+                    shownRem = rem;
                 }
                 if (rises) {
                     fprintf(stderr, "eta: %ld min, %lu bytes: the time left "

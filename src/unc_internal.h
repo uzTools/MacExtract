@@ -95,8 +95,14 @@ static inline void unc_free(UncAlloc *al, void *p)
 /* Progress pump                                                      */
 /* ------------------------------------------------------------------ */
 
-/* Decoders call this every UNC_PROGRESS_STEP input bytes.            */
-#define UNC_PROGRESS_STEP 8192u
+/* Decoders call this every UNC_PROGRESS_STEP input bytes. The one     */
+/* place the step is set: how long a click on the Macintosh waits, and  */
+/* nothing else depends on its size (FORMATS.md, *How long a click      */
+/* waits*; DECISIONS.md 2026-11-06, *the step a click waits for*).      */
+#define UNC_PROGRESS_STEP 1024u
+/* The buffer a stored fork is copied through. Its own constant, so the */
+/* step can move without moving a format's memory.                      */
+#define UNC_COPY_BUF 8192u
 
 typedef struct UncProgressState {
     UncProgress *prog;       /* may be NULL */

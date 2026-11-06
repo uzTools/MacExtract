@@ -41,7 +41,7 @@ Then variants, each with what must happen:
     block
   bytes after the archive's end  ignored: the same forks, exit 0
   '----' as the first record     not MAR
-  2,000 empty files in a folder  the progress callback every 8 KB at most
+  2,000 empty files in a folder  the progress callback every 16 KB at most
     (build/*/tick_probe beside   — headers are all there is to count
     the CLI)
   LZW-wrapped, 9, 12 and 16 bits the same forks, through the .Z envelope;
@@ -525,7 +525,7 @@ def lanes(cli, work):
     print(f"run_mar: {cases} damaged, cut and padded variants of the tree")
 
     # An archive that is nothing but headers must still call back
-    # (CLAUDE.md: every 8-16 KB). tick_probe is built beside the CLI.
+    # (CLAUDE.md, the 68000 discipline). tick_probe is built beside the CLI.
     probe = os.path.join(os.path.dirname(os.path.abspath(cli)), "tick_probe")
     if os.path.exists(probe):
         empties = [("fold", b"F", dict(flags=0x10, finfo=bytes(16)),

@@ -917,6 +917,23 @@ static short ProgressReading(long elapsed, uint32_t done, uint32_t total,
     return pct;
 }
 
+/* The time left as it will be SHOWN, from a reading and what is on screen:
+ * -1 while estimating, seconds under a minute (5 at least), else whole
+ * minutes in seconds. Within one percent it only falls: the scaled `d`
+ * above moves in steps of up to 8 KB on a large archive, and a reading
+ * taken between two of them is late by up to one, which a 1 KB progress
+ * step showed as a minute flickering up and down, 547 times in a 4-hour
+ * 400 MB run (DECISIONS.md 2026-11-06, *the step a click waits for*). A
+ * real slowdown shows at the next percent. Outside the fence for --eta. */
+static long ProgressShown(long rem, short pct, short shownPct, long shownRem)
+{
+    if (rem >= 0)
+        rem = rem < 5 ? 5 : rem < 60 ? rem : (rem + 30) / 60 * 60;
+    if (pct == shownPct && shownRem >= 0 && rem > shownRem)
+        rem = shownRem;
+    return rem;
+}
+
 #ifndef UNC_SINK_TEST
 /* ---- progress bar -------------------------------------------------
  * The bar is a DITL userItem. The Dialog Manager will not draw it, so
@@ -1109,13 +1126,11 @@ static int prog_tick(void *ctx, uint32_t done, uint32_t total)
     elapsed = now - pr->startTicks;
     pct = ProgressReading(elapsed, done, total, &rem);
 
-    /* The estimate as it will be SHOWN: -1 while estimating, seconds
-     * under a minute (5 at least), else whole minutes in seconds. Redraw
-     * nothing if that and the percentage have not changed:
-     * SetDialogItemText erases and redraws the item, and redrawing the
-     * same "about 3 minutes" every second flickered on an LC 475. */
-    if (rem >= 0)
-        rem = rem < 5 ? 5 : rem < 60 ? rem : (rem + 30) / 60 * 60;
+    /* Redraw nothing if the estimate as shown and the percentage have
+     * not changed: SetDialogItemText erases and redraws the item, and
+     * redrawing the same "about 3 minutes" every second flickered on an
+     * LC 475. */
+    rem = ProgressShown(rem, pct, pr->shownPct, pr->shownRem);
     if (pct == pr->shownPct && rem == pr->shownRem) return 1;
     pr->shownPct = pct;
     pr->shownRem = rem;
@@ -5327,7 +5342,7 @@ static void at_count_dir(short vol, long dir, int *files, int *dirs)
  * archive is among the CHEAPEST fixtures per byte off-Mac. Two confident
  * explanations for it have already been wrong (host contention, then the
  * read-back), so this measures instead of guessing: the callback already fires
- * every 8-16 KB of input, which is all the resolution needed to tell "slow"
+ * every 1-8 KB of input, which is all the resolution needed to tell "slow"
  * from "stuck". */
 /* THE INSTRUMENT MUST NOT PERTURB THE MEASUREMENT. at_report erases the whole
  * 21,888-byte framebuffer a byte at a time and repaints 272 cells, which costs

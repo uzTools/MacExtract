@@ -516,6 +516,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-05 (the dialog where Standard File last was) — after File > Open... or a part dialog answered on a floppy, the next archive's destination dialog opens on that floppy; a fix setting it to the archive's folder opened System 3.0's first dialog at the volume root, and was not taken
 - 2026-11-06 (the tap the pump read too late) — a press on Cancel is usually over when the progress pump reads it, and System 6 then cancelled even on a press dragged off the button; the release now decides, and a cancel taken without tracking flashes the button, for 160 B
 - 2026-11-06 (the header that spoke for the rest) — a pax `g` header's mtime and comment now apply to every tar member after it that states neither, as POSIX, GNU tar and CPython's tarfile have it; XADMaster keeps each header's own, for 80 B of `ovl_zipold`
+- 2026-11-06 (the step a click waits for) — the progress step goes from 8 KB to 1 KB, which more than halves the slow formats' gaps for under 1 % of time; the stored-fork copies keep 8 KB under a constant of their own, and the time left is held within a percent, which the finer step made flicker
 
 ---
 
@@ -21417,3 +21418,39 @@ grant that keeps `ovl_zipold` or the whole bundle rises 16 B, every other
 the four members' modification dates on the output disk are the engine's,
 moved by the tier's −18,000 s, the first member's being the `g` header's.
 Comments not run on an emulated Mac (no Desktop Manager on that tier).
+
+## 2026-11-06 (the step a click waits for) — the progress step goes from 8 KB to 1 KB, which more than halves the slow formats' gaps for under 1 % of time; the stored-fork copies keep 8 KB under a constant of their own, and the time left is held within a percent, which the finer step made flicker
+
+**Claim (measured).** At a 1 KB `UNC_PROGRESS_STEP` the widest gap between
+two callbacks on a Mac Plus falls from 4.8 to 1.9 s for Compact Pro, 4.2 to
+1.7 for DiskDoubler, 2.5 to 1.0 for StuffIt and 2.4 to 1.2 for Zip; Now
+Compress stays at 6.1 s, its 32 KB block read whole. Extraction time rises
+by at most 4 ticks, +0.43 %, on System 6.0.8, and by at most +0.73 % on
+System 7.0.1, little more than 2026-10-13's 4 KB, because the shell pumps
+at most 10 times a second whatever the engine calls. Both builds the same
+day, `-D UNC_AT_TICKGAP` at 1x, 13 fixtures byte-exact on System 6 and four
+on System 7 (FORMATS.md, *What the step costs*). The maintainer chose 1 KB
+over 4 KB on that table.
+
+**One constant, one meaning.** The three stored-fork copies (AppleSingle,
+MacBinary, a joined segment set) used `UNC_PROGRESS_STEP` as their copy
+buffer's size, so the step could not move without moving their memory.
+They use `UNC_COPY_BUF`, 8 KB, now; the `--eta` replay and the MAR listing
+test derive from `UNC_PROGRESS_STEP` instead of writing 8,192 down, and the
+step is set in one line. **The copy buffer at 1 KB too is not measured**:
+7 KB less peak heap for those formats, eight times the File Manager calls.
+
+**The time left flickered (measured).** `ProgressReading` scales both byte
+counts to 16 bits, so on a 400 MB archive `done` moves in 8 KB units; a 1
+KB step reads it between two of them, late by up to one, and the shown
+"about N minutes" rose by a minute **547 times** in the 4-hour replay (18 in
+the 1-hour one; once at 8 KB). The `--eta` test caught it. `ProgressShown`
+now lets the shown time left fall but not rise within one percent, and a
+real slowdown shows at the next one: no rise in any replayed case at either
+step. **The test grades what the window shows now**, any rise at all,
+where it allowed 2 s on the raw reading, which a 1 KB step exceeds by
+construction; without the hold it fails with the 18, 1 and 547 above.
+
+**Cost (measured).** The step itself: 0 B in every image, resident `CODE`
+and A5. The hold: CODE +16 in all three configurations, shipped and control
+A5 -16 by alignment, so **no budget moves**; `OVL_SAVED` and `TIERS` unmoved.
