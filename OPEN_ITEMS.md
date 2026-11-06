@@ -171,8 +171,7 @@ or measurement before it is read.**
 
 | format | stored, not read | oracle |
 |---|---|---|
-| MacBinary inside ZipIt and MacLHA | the Get Info comment, after both forks | none; none of 14 ZipIt payloads has one (2026-10-17); needs a second decode or a sink contract change, the maintainer's call |
-| zip | ZipIt `0x2805`'s View word: 12 fields, all 0, every one ZipIt 2.x's; ZipIt 2.2.2 writes 0 whatever the folder's Finder view and does not read it into frView (2026-11-06) | ZipIt 2.2.2 saving a folder expanded in its list (one attempt failed, a temporary-file error) |
+| MacBinary inside MacLHA | the Get Info comment, after both forks | none; ZipIt 1.4 writes none even for a file that has one (2026-11-06); needs a second decode or a sink contract change, the maintainer's call |
 | StuffIt 5 | a version-3 entry's Finder info; no version-3 entry here | Expander 5.5 on one |
 | LZH | OS/2's 0x7f/0xff headers; a level 0/1 name's bytes after a NUL | `lsar`; no specimen of the second |
 | AppleSingle entry 11 | ProDOS's access word | none; RFC 1740 gives its size, not its bits |
@@ -291,6 +290,17 @@ grade against.
   the whole bundle and is refused on System 6.0.8 at 512 KB, 2,930 B short
   (DECISIONS.md 2026-11-04, *the frame mar 0.2.0 reads*). Closes with a ring
   that grows with the output, priced against that refusal.
+
+## ZipIt archives: where the engine and ZipIt part
+
+Measured on ZipIt 1.4 and 2.2.2 (DECISIONS.md 2026-11-06, *what ZipIt does
+with a Macintosh file*).
+
+| what | status | what would close it |
+|---|---|---|
+| a text entry (internal attributes bit 0) ZipIt stored with linefeeds added | **the maintainer's call**: ZipIt strips them on extraction, the engine delivers CR LF (`Texty`: 290 B against 320) | a decision to strip them for a ZipIt-marked entry, or not |
+| a segmented archive whose segments the user named freely (ZipIt asks "Save segment #%d as:") | not joined: parts are placed by `.zNN`/`.zip` (FORMATS.md, *Segments*); renamed, the set extracts byte for byte | an order read off the segments themselves, or the user's |
+| ZipIt's encryption | not measured: an unregistered copy can neither set a password nor extract (its own strings) | a registered copy, or a ZipIt-encrypted specimen |
 
 ## The shell's own File Manager blocks, until multiversal's glue is inline
 

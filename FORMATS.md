@@ -3384,12 +3384,27 @@ generated archive here produced), **14** (plus `fdFlags`) and **16**
 (plus the trailing word); `0x2805` always 8, `frFlags` 0x0000, 0x03a0 and
 0x2310, View 0 in all 12 — both length guards do something. **ZipIt 1.4
 neither writes nor reads `0x2805`** and records no folder's Finder info;
-**ZipIt 2.2.2 writes frFlags and View 0** whatever the folder's Finder
-view, and puts no View into frView (DECISIONS.md 2026-11-06, *the field
-ZipIt 1.4 never wrote*). **ZipIt 1.x writes the long
+ZipIt 2.2.2 writes frFlags and **a View bit that says the folder was shown
+expanded in its list** (DECISIONS.md 2026-11-06, *the field ZipIt 1.4 never
+wrote*, *what ZipIt does with a Macintosh file*). **ZipIt 1.x writes the long
 field on directories** (three entries, 1.4 and the Japanese build), whose
 zero bytes are not MacBinary; `zip_mb_peek` refuses anything under 128
 bytes and probes the header, so the claim is verified, not trusted.
+
+**What ZipIt itself writes and restores**, measured 2026-11-06
+(`tools/vmac/zipitmeta.py`; DECISIONS.md, *what ZipIt does with a
+Macintosh file*):
+
+| | ZipIt 1.4 (System 7.0.1) | ZipIt 2.2.2 (Mac OS 9.2, CarbonLib 1.6) |
+|---|---|---|
+| `0x2605` (MacBinary II) or `0x2705` | the "Use MacBinary" preference; its default, "When needed", gave MacBinary to a non-`TEXT` file with a resource fork and to nothing else — a `TEXT` file's resource fork is **dropped** | not measured |
+| `0x2705` | 14 B, type, creator, Finder flags; restored as type and creator, flags 0 | 16 B, the last word the bit below |
+| `0x2805` / its last word | not written, not read | frFlags, then **bit 0: the folder is expanded in ZipIt's list** (`MyItemNotification` sets it, `UpdateBrowser` reads it; saved expanded, 1); frFlags' label bits restored |
+| Get Info comment | **not in its MacBinary** (length 0 with a comment on the file) | — |
+| linefeeds | a `TEXT` entry is stored with LF added after every CR and **internal attributes bit 0 set**; with conversion off, bare CR and the bit clear; on extraction the bit makes it strip the LFs | — |
+| dates | the zip date is the file's modification date; extracted, that date becomes creation and modification alike; a modification date 0 is written as 2032-01-01 | — |
+| made by | host 7, version 2.0 (a preference also offers "Unix zip" and "PKZip") | the same |
+| segments | standard spanned volumes (384 KiB at "Mac single sided"), no leading marker, the end record in the last; each named by the user | — |
 
 **One name differs from `unar`'s since 2026-10-07**, and ZipIt's field
 adjudicates it: the engine extracts under `0x2605`'s "full Macintosh

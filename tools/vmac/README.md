@@ -177,7 +177,7 @@ back **38/69** on 2026-09-05, every "failure" a missing oracle.
 | `ddencode.py` | **grade a method by WRITING it** for Salient's 1991 DiskDoubler |
 | `ndd.py` | DiskDoubler 3.1.2, 4.0 and Norton DiskDoubler Pro 1.1 |
 | `ondesk.py` | what System 7.0.1's Finder does with a file flagged on-desk inside a folder |
-| `zipitmeta.py` | what ZipIt 1.4 writes in, and reads from, its folder fields (`0x2805`); helpers for ZipIt 2.2.2 on Mac OS 9 |
+| `zipitmeta.py` | what ZipIt 1.4 writes and restores — its fields, MacBinary, linefeeds, dates, segments; helpers for ZipIt 2.2.2 on Mac OS 9 |
 | `superdisk.py` | grade SuperDisk! with its own self-extractors |
 | `spacesaver.py` | Aladdin's **SpaceSaver**, and much of StuffIt Deluxe 3.5.1 |
 | `sdcompress.py` | the **SuperDisk! control panel**, which compresses |

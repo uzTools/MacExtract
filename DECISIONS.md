@@ -523,6 +523,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-06 (the field ZipIt 1.4 never wrote) — ZipIt 1.4 neither writes nor reads `0x2805`; ZipIt 2.2.2 writes the folder's frFlags and View 0 whatever its Finder view, and puts no View into frView
 - 2026-11-06 (the 64th character of a password) — the password dialog's buffer was a Str63 and the 64th character typed went one byte past it; it is UNC_PASSWORD_MAX + 1, declared beside `gSegShort` so it costs 0 B where declared with its dialog it cost 16
 - 2026-11-06 (the floppy a 64K ROM reads) — `dist/` ships a 400K MFS floppy, MacExtract and the helpers zip typed `ZIP `/`MExt`, for a Macintosh 512K with a Hard Disk 20
+- 2026-11-06 (what ZipIt does with a Macintosh file) — ZipIt's View bit is a folder's expanded state; its MacBinary is chosen by a preference and carries no comment; a text entry is CR LF with the text bit, stripped on extraction; segments are spanned volumes the user names
 
 ---
 
@@ -21715,3 +21716,55 @@ into MacExtract's (System 3.0, measured).
 
 **What it cannot see.** A 64K ROM with an HD20 (MANUAL_TESTS.md §6); a
 locked floppy, where the Finder cannot write the Desktop file it builds.
+
+## 2026-11-06 (what ZipIt does with a Macintosh file) — ZipIt's View bit is a folder's expanded state; its MacBinary is chosen by a preference and carries no comment; a text entry is CR LF with the text bit, stripped on extraction; segments are spanned volumes the user names
+
+**The brief**: every unknown about ZipIt archives settled. Six boots of
+ZipIt 1.4 on System 7.0.1 (`tools/vmac/zipitmeta.py --facts`, `--facts2`,
+`--facts-read`, `--segments`), two of ZipIt 2.2.2 on Mac OS 9.2 under QEMU,
+and ZipIt's own resources and code read on the host. Specimens and frames:
+the vmac cache, `specimens/zipit/meta/`.
+
+**What ZipIt says before it is run.** 1.4's dialogs and strings name the
+preferences (*Use MacBinary: Always / When needed / Never*; *smart-strip
+linefeeds from text files*; *Zip file marking: Unix zip / PKZip / created
+by ZipIt*; *Rename floppy disks when segmenting*), the per-entry MB and LF
+columns, "Save segment #%d as:", and that an unregistered copy can neither
+set a password nor extract an encrypted file.
+
+**The View word, settled.** 2.2.2's code (PEF, disassembled with
+`llvm-mc-19`): `SetExtras` writes `0x2805` as frFlags (record +0x5E) and
+the zero-extended byte at record +0x62, and `0x2705`'s trailing word from
+the same byte; `FillInMacBinary` reads back bit 0 only; the byte is set to
+1 and 0 in `MyItemNotification`, the Data Browser's item-notification
+callback, and read in `UpdateBrowser`. Run: a new archive saved with
+`Subject` expanded and `Inner` collapsed gives View 1 and 0. It is window
+state; the Finder has no field for it, and the engine reading it as
+nothing is right.
+
+**MacBinary.** "When needed" (the default) gave `0x2605` to a resource-only
+`rsrc` file and `0x2705` to a `TEXT` file with a resource fork, whose fork
+was then **not stored at all**; clicking a blank MB cell changed nothing.
+The MacBinary is II (bytes 122/123 = 129) and its comment length is 0
+with a Get Info comment on the file (the comment is on the disk, in the
+Desktop database, twice).
+
+**Linefeeds.** Every `TEXT` file had conversion on by default: the stored
+data is CR LF and internal attributes bit 0 is set; turned off (Zip ▸
+Add/Strip Linefeeds), bare CR and the bit clear. Extracting, ZipIt strips
+the LFs of a bit-0 entry (`Texty` 320 → 290 B). **The engine delivers the
+320**, as `unar` does: OPEN_ITEMS.md, *ZipIt archives: where the engine and
+ZipIt part*.
+
+**Dates.** The zip date is the modification date, local; extracted, both
+dates become it; a modification date of 0 went out as 2032-01-01.
+
+**Segments.** At "Mac single sided (385K)" a 1 MB file became three files
+of 393,526, 393,216 and 262,134 B, the first beginning with a local header
+(no spanning marker) and the last holding the end record (disk 2, central
+directory on disk 2). Renamed `.z01`, `.z02`, `.zip`, the engine extracts
+it byte for byte; under the names ZipIt took, it refuses, `--part` or not.
+
+**Not measured:** ZipIt's cipher (blocked by registration, which is not
+worked around); the MacBinary preference's other two settings; 2.2.2's
+MacBinary, linefeeds, dates and segments.

@@ -18,8 +18,15 @@ needs a row selected.
                              second after View > by Name); print every 0x2805
     zipitmeta.py --reader    extract a zip whose folders carry 0x2805 with
                              their own frFlags and View; print the folders
+    zipitmeta.py --facts     four files (one forked, one commented), zipped:
+                             fields, MacBinary, linefeeds, dates
+    zipitmeta.py --facts2    the same with a resource-only file, linefeeds
+                             turned off on two entries
+    zipitmeta.py --facts-read   --facts2's archive extracted by ZipIt
+    zipitmeta.py --segments  a 1 MB file in 385K segments
 
-Results: DECISIONS.md 2026-11-06, *the field ZipIt 1.4 never wrote*.
+Results: DECISIONS.md 2026-11-06, *the field ZipIt 1.4 never wrote*,
+*what ZipIt does with a Macintosh file*.
 
 ZipIt 2.2.2 (PowerPC Carbon, CarbonLib 1.5 or later) has no mode here: it
 was driven by hand under QEMU on `sitzip.CARBON_BOOT` (CarbonLib 1.6),
@@ -100,10 +107,10 @@ def zipit_files(work):
     return files
 
 
-def volume(img, work, subject_files=()):
+def volume(img, work, subject_files=(), size_kb=4096):
     """ZipIt at the root, its Plug-ins beside it, and a folder `Subject`."""
     env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
-    make_volume(img, VOL, [], size_kb=4096)
+    make_volume(img, VOL, [], size_kb=size_kb)
     try:
         subprocess.run(["hmount", img], check=True, capture_output=True, env=env)
         files = zipit_files(work) + list(subject_files)
@@ -464,12 +471,372 @@ def os9_paths():
     return os9mouse
 
 
+# ------------------------------------------------------------------
+# --facts: which field ZipIt 1.4 gives a file with a resource fork and one
+# without, whether its MacBinary carries the Get Info comment, how an
+# entry marked for linefeed conversion is stored, and which date a file's
+# zip entry gets.
+# ------------------------------------------------------------------
+
+FACTS_FILES = [
+    ("Subject/Binary", "????", "????", bytes(range(256)) * 8, b""),
+    ("Subject/Forked", "TEXT", "ttxt", b"forked text\r" * 30, None),
+    ("Subject/Plain", "TEXT", "ttxt", b"plain text\r" * 30, b""),
+    ("Subject/Texty", "TEXT", "ttxt", b"line one\rline two\rline three\r" * 10, b""),
+]
+# Each file's creation and modification date, Mac seconds: all distinct,
+# so a date on the zip entry or on an extracted file names its source.
+FACTS_DATES = {"Binary": (0xA0000000, 0xA1000000), "Forked": (0xA2000000, 0xA3000000),
+               "Plain": (0xA4000000, 0xA5000000), "Texty": (0xA6000000, 0xA7000000)}
+COMMENT = "zipitmeta comment"
+ADD_OPEN = (377, 178)                  # the Add dialog's Open, probe/14-add-dialog.png
+ZIP_LINEFEEDS_Y = 155                  # Zip > Add/Strip Linefeeds
+ROW0_Y, ROW_H = 96, 12                 # the archive window's rows, facts/15-archive-window.png
+MB_X, LF_X = 432, 464                  # its MB and LF columns, the same frame
+
+
+def facts_files():
+    import diskdoubler
+    out = []
+    for rel, t, c, data, rsrc in FACTS_FILES:
+        if rsrc is None:
+            rsrc = diskdoubler.make_rsrc(b"\x1ezipitmeta: a resource fork")
+        out.append((rel, t, c, data, rsrc))
+    return out
+
+
+def facts(keep, second=False):
+    """`second`: also a resource-only file `Resy`, no Return after Add
+    All, MacBinary forced on `Forked` and linefeeds turned off on `Plain`
+    by clicking their MB and LF cells."""
+    work = R.work_tmp("zipit-")
+    img = os.path.join(work, "zipwork.img")
+    files = facts_files()
+    if second:
+        import diskdoubler
+        files.append(("Subject/Resy", "rsrc", "RSED", b"",
+                      diskdoubler.make_rsrc(b"\x1ezipitmeta: resources only")))
+    volume(img, work, files, size_kb=8192)
+    for name, (cr, md) in FACTS_DATES.items():
+        key = tuple(x.encode("mac-roman") for x in (VOL, "Subject", name))
+        hfscat.patch(img, key, 44, struct.pack(">II", cr, md))
+    if not os.path.exists(ndd.BOOT):
+        ndd.install()
+    s = Session(ndd.BOOT, [img], os.path.join(SHOTS, "facts2" if second else "facts"))
+    try:
+        s.boot()
+        s.shot("desktop", wait=5.0)
+        s.mac.click(*VOLUME_ICON, double=True)
+        s.shot("volume", wait=10.0)
+        # The Get Info comment, typed into the Finder's own Get Info window.
+        s.mac.key("Escape")
+        time.sleep(0.5)
+        typed(s, "su")
+        s.mac.command_key("o")
+        s.shot("subject", wait=6.0)
+        for who in (("f", "r") if second else ("f",)):
+            s.mac.key("Escape")
+            time.sleep(0.5)
+            typed(s, who)
+            s.mac.command_key("i")
+            s.shot("get-info-" + who, wait=5.0)
+            for ch in COMMENT:
+                s.mac.key("space" if ch == " " else ch)
+                time.sleep(0.12)
+            s.shot("commented-" + who, wait=2.0)
+            s.mac.command_key("w")             # the info window: the comment is kept
+            s.shot("info-closed-" + who, wait=3.0)
+        s.mac.command_key("w")                 # the Subject window
+        s.shot("subject-closed", wait=3.0)
+        s.mac.key("Escape")
+        time.sleep(0.5)
+        s.mac.key("z")
+        time.sleep(1.5)
+        s.mac.command_key("o")
+        s.shot("launched", wait=30.0)
+        personalize(s)
+        s.shot("personalized", wait=5.0)
+        s.mac.click(*NOT_YET)
+        s.shot("not-yet", wait=5.0)
+        s.mac.command_key("g")
+        s.shot("add-dialog", wait=6.0)
+        typed(s, "su")
+        s.mac.click(*ADD_OPEN)                 # into Subject
+        s.shot("in-subject", wait=4.0)
+        s.mac.command_key("a")                 # Add All
+        s.shot("added-all", wait=15.0)
+        if not second:
+            s.mac.key("Return")                # pressed Add again: Binary twice
+            s.shot("after-return", wait=4.0)
+        s.mac.click(*ADD_DONE)
+        s.shot("archive-window", wait=5.0)
+        if second:
+            # Rows: Binary, Forked, Plain, Resy, Texty. Linefeeds by the
+            # menu on a selected row; MacBinary by its cell once Forked
+            # converts no linefeeds (ZipIt refuses both on one entry).
+            for row, tag in ((1, "forked"), (2, "plain")):
+                s.mac.click(60, ROW0_Y + row * ROW_H)
+                time.sleep(1.0)
+                s.menu(MENUS["zip"], ZIP_LINEFEEDS_Y, "pick-lf-" + tag)
+                s.mac.click(250, 185)                  # the pointer off the columns, inside the list
+                s.shot("lf-" + tag, wait=3.0)
+            s.mac.click(MB_X, ROW0_Y + 1 * ROW_H)
+            s.mac.click(250, 185)
+            s.shot("forked-mb", wait=3.0)
+        save_as(s, "Azip", "a")
+        s.mac.command_key("q")
+        s.shot("quit", wait=8.0)
+        s.mac.click(*VOLUME_ICON)
+        s.mac.command_key("y")
+        s.shot("ejected", wait=15.0)
+    finally:
+        time.sleep(5)
+        s.close()
+    report_facts(img, s.shots)
+    if not keep:
+        shutil.rmtree(work, ignore_errors=True)
+
+
+def zip_entries(blob):
+    """Every central-directory record: name, made-by, flags, method, DOS
+    time and date, internal and external attributes, extra fields
+    (APPNOTE.TXT 4.3.12)."""
+    out, i = [], 0
+    while True:
+        i = blob.find(b"PK\x01\x02", i)
+        if i < 0 or i + 46 > len(blob):
+            return out
+        (vmade, vneed, flags, method, mtime, mdate, crc, csz, usz, nl, xl,
+         cl, disk, iattr, eattr, loff) = struct.unpack("<HHHHHHIIIHHHHHII",
+                                                      blob[i + 4:i + 46])
+        name = blob[i + 46:i + 46 + nl].decode("mac-roman")
+        ex = blob[i + 46 + nl:i + 46 + nl + xl]
+        fields, k = [], 0
+        while k + 4 <= len(ex):
+            eid, sz = struct.unpack("<HH", ex[k:k + 4])
+            fields.append((eid, ex[k + 4:k + 4 + sz]))
+            k += 4 + sz
+        out.append(dict(name=name, made=vmade, flags=flags, method=method,
+                        dos=(mdate, mtime), iattr=iattr, eattr=eattr,
+                        loff=loff, csz=csz, usz=usz, fields=fields))
+        i += 4
+
+
+def report_facts(img, shots):
+    import zlib
+    vol = open(img, "rb").read()
+    for r in hfscat.records(vol):
+        if r["kind"] != hfscat.DIR and len(r["path"]) == 3 and r["path"][1] == b"Subject":
+            f = hfscat.fields(r)
+            print("zipitmeta: catalog %-8s crdat=%08x mddat=%08x" % (
+                r["path"][2].decode(), f["crdat"], f["mddat"]))
+    got = ndd.read_forks(img)
+    for path, (t, c, data, rsrc) in sorted(got.items()):
+        if data[:2] != b"PK":
+            continue
+        open(os.path.join(shots, path[-1]), "wb").write(data)
+        print("zipitmeta: %s, %d B, kept" % ("/".join(path), len(data)))
+        for e in zip_entries(data):
+            d, t_ = e["dos"]
+            dos = "%04d-%02d-%02d %02d:%02d:%02d" % (1980 + (d >> 9), (d >> 5) & 15, d & 31,
+                                                    t_ >> 11, (t_ >> 5) & 63, (t_ & 31) * 2)
+            print("zipitmeta:   %-16s made=%04x flags=%04x method=%d %s iattr=%04x "
+                  "eattr=%08x %d->%d" % (e["name"], e["made"], e["flags"], e["method"],
+                                         dos, e["iattr"], e["eattr"], e["usz"], e["csz"]))
+            for eid, f in e["fields"]:
+                print("zipitmeta:     %04x %s" % (eid, f.hex()))
+            lh = e["loff"]
+            nl, xl = struct.unpack("<HH", data[lh + 26:lh + 30])
+            body = data[lh + 30 + nl + xl:lh + 30 + nl + xl + e["csz"]]
+            raw = body if e["method"] == 0 else (
+                zlib.decompress(body, -15) if e["method"] == 8 else b"")
+            if raw[:2] == b"\0" + bytes([len(e["name"].split("/")[-1])]) or \
+                    (len(raw) >= 128 and raw[0] == 0 and raw[74] == 0):
+                dl, rl = struct.unpack(">II", raw[83:91])
+                cl = struct.unpack(">H", raw[99:101])[0]
+                print("zipitmeta:     MacBinary: data %d rsrc %d comment length %d, "
+                      "header byte 122 (version) %d, 123 %d" % (dl, rl, cl, raw[122], raw[123]))
+                end = 128 + ((dl + 127) // 128) * 128 + ((rl + 127) // 128) * 128
+                print("zipitmeta:     after the forks: %r" % raw[end:end + 64])
+            elif raw:
+                print("zipitmeta:     data starts %r" % raw[:40])
+    print("zipitmeta: screenshots in %s" % shots)
+
+
+# ------------------------------------------------------------------
+# --facts-read: ZipIt 1.4 extracting the archive --facts2 made (kept as
+# specimens/zipit/meta/azip-facts2.zip): which dates the files get, and
+# what the text attribute does to the data.
+# ------------------------------------------------------------------
+
+FACTS_ZIP = os.path.join(SHOTS, "azip-facts2.zip")
+
+
+def facts_read(keep):
+    work = R.work_tmp("zipit-")
+    img = os.path.join(work, "zipwork.img")
+    volume(img, work, [("Xdir/Azip", "ZIP ", "ZIP ", open(FACTS_ZIP, "rb").read(), b"")],
+           size_kb=8192)
+    if not os.path.exists(ndd.BOOT):
+        ndd.install()
+    s = Session(ndd.BOOT, [img], os.path.join(SHOTS, "facts-read"))
+    try:
+        s.boot()
+        s.shot("desktop", wait=5.0)
+        s.mac.click(*VOLUME_ICON, double=True)
+        s.shot("volume", wait=10.0)
+        s.mac.key("Escape")
+        time.sleep(0.5)
+        s.mac.key("z")
+        time.sleep(1.5)
+        s.mac.command_key("o")
+        s.shot("launched", wait=30.0)
+        personalize(s)
+        s.shot("personalized", wait=5.0)
+        s.mac.click(*NOT_YET)
+        s.shot("not-yet", wait=5.0)
+        s.mac.command_key("o")                 # File > Open: Standard File
+        s.shot("open-dialog", wait=6.0)
+        typed(s, "x")                          # Xdir
+        s.mac.key("Return")                    # opens the folder
+        s.shot("in-xdir", wait=3.0)
+        typed(s, "a")
+        s.mac.key("Return")                    # opens Azip
+        s.shot("archive-open", wait=10.0)
+        s.mac.click(60, ROW0_Y + 17)           # a row, then Select All
+        s.mac.command_key("a")
+        s.shot("all-selected", wait=2.0)
+        s.mac.command_key("e")
+        s.shot("extract-dialog", wait=6.0)
+        s.mac.key("Return")
+        s.shot("extracting", wait=15.0)
+        s.shot("extracted", wait=10.0)
+        s.mac.command_key("q")
+        s.shot("quit", wait=8.0)
+        s.mac.click(*VOLUME_ICON)
+        s.mac.command_key("y")
+        s.shot("ejected", wait=15.0)
+    finally:
+        time.sleep(5)
+        s.close()
+    vol = open(img, "rb").read()
+    got = ndd.read_forks(img)
+    for r in hfscat.records(vol):
+        if r["kind"] == hfscat.DIR or b"Desktop" in r["path"][-1]:
+            continue
+        p = r["path"]
+        if p[1] in (b"Plug-ins", b"ZipIt") or p[-1] == b"Azip":
+            continue
+        f = hfscat.fields(r)
+        key = tuple(x.decode("mac-roman") for x in p[1:])
+        d, rs = got.get(key, (None, None, b"", b""))[2:]
+        print("zipitmeta: %-14s %s/%s fdFlags=%04x crdat=%08x mddat=%08x data %d %r rsrc %d"
+              % ("/".join(key), f["type"].decode("mac-roman"), f["creator"].decode("mac-roman"),
+                 f["fdFlags"], f["crdat"], f["mddat"], len(d), d[:24], len(rs)))
+    print("zipitmeta: screenshots in %s" % s.shots)
+    if not keep:
+        shutil.rmtree(work, ignore_errors=True)
+
+
+# ------------------------------------------------------------------
+# --segments: what a segmented ZipIt archive is. Its strings say it only
+# segments archives whose entries are all deflated, asks "Save segment #%d
+# as:" for each, and wants the FINAL segment opened to read one.
+# ------------------------------------------------------------------
+
+ZIP_SEGSIZE_Y = 171                    # Zip > Set Segment Size…
+# The dialog is drawn centred, not at DLOG 151's rectangle: its "Mac
+# single sided (385K)" radio and OK, measured off segments/11-segsize-dialog.png.
+SEG_385K = (157, 185)
+SEG_OK = (315, 231)
+
+
+def segments(keep):
+    import hashlib
+    big = b"".join(hashlib.sha256(b"zipitmeta %d" % k).digest()
+                   for k in range(1024 * 1024 // 32))
+    work = R.work_tmp("zipit-")
+    img = os.path.join(work, "zipwork.img")
+    volume(img, work, [("Subject/Big", "????", "????", big, b"")], size_kb=8192)
+    if not os.path.exists(ndd.BOOT):
+        ndd.install()
+    s = Session(ndd.BOOT, [img], os.path.join(SHOTS, "segments"))
+    try:
+        s.boot()
+        s.shot("desktop", wait=5.0)
+        s.mac.click(*VOLUME_ICON, double=True)
+        s.shot("volume", wait=10.0)
+        s.mac.key("Escape")
+        time.sleep(0.5)
+        s.mac.key("z")
+        time.sleep(1.5)
+        s.mac.command_key("o")
+        s.shot("launched", wait=30.0)
+        personalize(s)
+        s.shot("personalized", wait=5.0)
+        s.mac.click(*NOT_YET)
+        s.shot("not-yet", wait=5.0)
+        s.mac.command_key("g")
+        s.shot("add-dialog", wait=6.0)
+        typed(s, "su")
+        s.mac.click(*ADD_OPEN)
+        s.shot("in-subject", wait=4.0)
+        s.mac.command_key("a")                 # Add All: Big
+        s.shot("added", wait=30.0)
+        s.mac.click(*ADD_DONE)
+        s.shot("archive-window", wait=5.0)
+        s.menu(MENUS["zip"], ZIP_SEGSIZE_Y, "pick-segsize")
+        s.shot("segsize-dialog", wait=4.0)
+        s.mac.click(*SEG_385K)
+        s.shot("segsize-385", wait=2.0)
+        s.mac.click(*SEG_OK)
+        s.shot("segsize-set", wait=3.0)
+        s.mac.command_key("s")
+        for n in range(1, 6):
+            s.shot("save-%d" % n, wait=8.0)
+            s.mac.command_key("a")
+            typed(s, "Seg%d" % n)
+            s.mac.key("Return")
+            s.shot("saving-%d" % n, wait=25.0)
+        s.mac.command_key("q")
+        s.shot("quit", wait=8.0)
+        s.mac.click(*VOLUME_ICON)
+        s.mac.command_key("y")
+        s.shot("ejected", wait=15.0)
+    finally:
+        time.sleep(5)
+        s.close()
+    got = ndd.read_forks(img)
+    for path, (t, c, data, rsrc) in sorted(got.items()):
+        if path[0] in ("Plug-ins",) or path[-1] in ("ZipIt", "Big"):
+            continue
+        sig = data[:4]
+        eocd = data.rfind(b"PK\x05\x06")
+        tail = ""
+        if eocd >= 0:
+            (disk, cddisk, n_here, n_all, cdsize, cdoff) = struct.unpack(
+                "<HHHHII", data[eocd + 4:eocd + 20])
+            tail = " EOCD: this disk %d, CD on disk %d, %d/%d entries, CD %d B at %d" % (
+                disk, cddisk, n_here, n_all, cdsize, cdoff)
+        keptp = os.path.join(s.shots, path[-1])
+        open(keptp, "wb").write(data)
+        print("zipitmeta: %-14s %s/%s %8d B starts %s%s" % (
+            "/".join(path), t, c, len(data), sig.hex(), tail))
+    print("zipitmeta: screenshots in %s" % s.shots)
+    if not keep:
+        shutil.rmtree(work, ignore_errors=True)
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--probe", action="store_true")
     ap.add_argument("--writer", action="store_true")
     ap.add_argument("--reader", action="store_true")
+    ap.add_argument("--facts", action="store_true")
+    ap.add_argument("--facts2", action="store_true")
+    ap.add_argument("--facts-read", action="store_true")
+    ap.add_argument("--segments", action="store_true")
     ap.add_argument("--keep", action="store_true")
     a = ap.parse_args()
     if a.keep:
@@ -480,6 +847,14 @@ def main():
         writer(a.keep)
     elif a.reader:
         reader(a.keep)
+    elif a.facts:
+        facts(a.keep)
+    elif a.facts2:
+        facts(a.keep, second=True)
+    elif a.facts_read:
+        facts_read(a.keep)
+    elif a.segments:
+        segments(a.keep)
     else:
         ap.print_help()
     return 0
