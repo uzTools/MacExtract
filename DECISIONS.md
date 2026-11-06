@@ -21588,7 +21588,10 @@ import; `make_icon.py` and both drawing routines are deleted. The
 designer's file is not committed: the `.r` files are the source.
 
 **Seen**: System 6.0.8, `dist/MacExtract.dsk` opened (`mountcheck.py
---open`, the new `docs/screens/0-icon.png`); System 7.5.5 on a 256-colour
+--open`; that frame replaces `docs/screens/0-icon.png` at the next release,
+the maintainer's call, so the README shows what the release ships, and is
+kept until then as `specimens/icons-2026-11-06/opened.png` in the vmac
+cache); System 7.5.5 on a 256-colour
 Mac II (`colouricon.py`), the application and a `SIT!`/`MExt` document.
 Not seen: 16 colours, an icon selected, System 7.0.1, Mac OS 8 and 9.
 
