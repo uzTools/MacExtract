@@ -515,6 +515,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-05 (the bytes a listing never counted) — MAR's progress counted only what it read, so a listing and a skipped entry under-counted; each record now ends at its own end, for 4 B
 - 2026-11-05 (the dialog where Standard File last was) — after File > Open... or a part dialog answered on a floppy, the next archive's destination dialog opens on that floppy; a fix setting it to the archive's folder opened System 3.0's first dialog at the volume root, and was not taken
 - 2026-11-06 (the tap the pump read too late) — a press on Cancel is usually over when the progress pump reads it, and System 6 then cancelled even on a press dragged off the button; the release now decides, and a cancel taken without tracking flashes the button, for 160 B
+- 2026-11-06 (the header that spoke for the rest) — a pax `g` header's mtime and comment now apply to every tar member after it that states neither, as POSIX, GNU tar and CPython's tarfile have it; XADMaster keeps each header's own, for 80 B of `ovl_zipold`
 
 ---
 
@@ -21372,3 +21373,47 @@ the window's 4-pixel X border, so every mark was 4 px off; Standard File's
 selected row crosses the bar's top edge, so a wait on that line alone
 photographed Standard File after the extraction; and an up and a move in
 one tick reach Mini vMac as a release off the button.
+
+## 2026-11-06 (the header that spoke for the rest) — a pax `g` header's mtime and comment now apply to every tar member after it that states neither, as POSIX, GNU tar and CPython's tarfile have it; XADMaster keeps each header's own, for 80 B of `ovl_zipold`
+
+**The problem.** A pax `g` header was stepped over (OPEN_ITEMS.md, *the
+metadata the archives hold and the readers drop*). POSIX: its values
+"affect all subsequent files that do not override that value in their own
+extended header record and until another global extended header record is
+reached that provides another value for the same field"
+(reference/notes/posix_ustar.txt, *pax Header Block*, typeflag g).
+
+**The oracles part, measured 2026-11-06.** A tar with a global
+`mtime=1000000000` and a member whose own header says 1700000000: GNU tar
+1.35 extracts it at 1000000000 and CPython's `tarfile` reads 1000000000;
+`lsar` reports 1700000000 and no comment.
+
+**Decision: POSIX, field by field.** A `g` header sets only what it names
+and holds until another `g` names it again; an `x` header wins over it. The
+comment is applied too, though `git archive` writes a `g` header whose
+`comment` is the commit id, so every file of such a tar now gets it as a
+Get Info comment, wherever the volume has a Desktop Manager
+(OPEN_ITEMS.md, part 1). **Not
+done:** a zero-length `x` value deleting the `g` one ("If the <value> field
+is zero length, it shall delete ... global extended header value of the
+same name"); no writer here makes one (hypothesis, none looked for).
+
+**Graded.** `am-tar-g` (`tools/synth_archmeta.py`): four members, a second
+`g` header in mid-archive; `want` is CPython's `tarfile` reading it back,
+and the rule written out in the builder must agree with it. The engine
+before this change fails 5 fields. No tar in `fixtures/` or the cache
+holds a `g` header (scanned), so the corpus lanes do not move.
+
+**Price** (against 6839757): **shipped (eager) and lazy CODE +0, A5 +0 —
+0 B off any budget for the application**; `ovl_zipold` 15,196 → 15,276,
+bundle 194,688; control CODE +76, A5 +20 (`.data` alignment, no data
+added), so `OVL_SAVED` 165,856, `TIERS_CONTROL` 222,528, `TIERS` −96. A
+grant that keeps `ovl_zipold` or the whole bundle rises 16 B, every other
+96 (`run_tiers.gain()`); `run_tiers.py --check` moves no tally.
+`unc_tar_extract`'s frame 1,292 → 1,296 B; a tar with a comment allocates
+510 B for it, not 255. `dist/MacExtract.bin` stays 251,136 B.
+
+**Emulated** (`tools/vmac/tzrun.py --tier sys6-tz`, the `am-tar-g` tar):
+the four members' modification dates on the output disk are the engine's,
+moved by the tier's −18,000 s, the first member's being the `g` header's.
+Comments not run on an emulated Mac (no Desktop Manager on that tier).

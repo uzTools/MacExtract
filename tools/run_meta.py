@@ -697,6 +697,7 @@ def archive_expectations(cli, work, problems):
 
     gen("am-zip", S.zip_meta(), ".zip")
     gen("am-tar", S.tar_meta(), ".tar")
+    gen("am-tar-g", S.tar_global_meta(), ".tar")
     gen("member", S.gzip_meta(), ".gz")
     gen("am-pf", S.pf_meta(), ".pf", ("-p", "swordfish"))
     gen("am-arcmac", S.arcmac_meta(), ".arc")

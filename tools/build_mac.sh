@@ -722,7 +722,10 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # decided by where it was released, and the flash (DECISIONS.md
 # 2026-11-06, *the tap the pump read too late*); the same code as the
 # shipped pair.
-UNC_MAC_CODE_DEFAULT=185792
+# +76 the same day, 185,792 -> 185,868, A5 +20 below: a pax `g` header
+# applied to the members after it (DECISIONS.md 2026-11-06, *the header
+# that spoke for the rest*); `ovl_zipold` elsewhere.
+UNC_MAC_CODE_DEFAULT=185868
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -959,7 +962,9 @@ UNC_MAC_CODE_DEFAULT=185792
 # listing (above); no data was added.
 # -28 on 2026-11-06, 36,668 -> 36,640: `.data` alignment under the tap on
 # Cancel (above); no data was added or removed.
-UNC_MAC_A5_DEFAULT=36640
+# +20 the same day, 36,640 -> 36,660: `.data` alignment under the pax `g`
+# header (above); no data was added.
+UNC_MAC_A5_DEFAULT=36660
 # A CEILING PER CONFIGURATION, because one ceiling measured on another build
 # cannot fire. The figures above are the RESIDENT control build, which carries
 # every decoder; the shipped build's resident code is a third of that, so

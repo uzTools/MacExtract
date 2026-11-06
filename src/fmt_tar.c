@@ -143,10 +143,12 @@ int unc_tar_extract(UncCtx *c)
     int err = UNC_OK;
     uint8_t *iobuf;
     uint32_t iocap = TAR_BUF;
-    /* What a pax 'x' header said about the member after it: its mtime
-     * (Mac date, 0 for none) and its comment, in a buffer allocated the
-     * first time one turns up. */
-    uint32_t xmtime = 0, xclen = 0;
+    /* What a pax 'x' header said about the member after it, and what
+     * 'g' headers said about every member after them: an mtime (Mac
+     * date, 0 for none) and a comment each, the two comments in one
+     * buffer ('x' first, 'g' at UNC_ENTRY_COMMENT_MAX) allocated the
+     * first time either turns up. */
+    uint32_t xmtime = 0, xclen = 0, gmtime = 0, gclen = 0;
     uint8_t *xcmt = NULL;
     TarSide *ts = NULL;
 
@@ -200,17 +202,29 @@ int unc_tar_extract(UncCtx *c)
          * Source: reference/notes/posix_ustar.txt, *pax Extended Header*
          * ("This record shall override the mtime field in the following
          * header block(s)"; `comment`; *pax Extended Header File Times*:
-         * decimal seconds, an optional fraction). Read: an 'x' header's
-         * mtime and comment. A 'g' header is stepped over and applies
-         * nothing, which is what this reader did with both before: they
-         * were reported as members nobody could extract. */
+         * decimal seconds, an optional fraction). Read: mtime and
+         * comment. A 'g' value holds for "all subsequent files that do
+         * not override that value in their own extended header record and
+         * until another global extended header record is reached that
+         * provides another value for the same field" (*pax Header Block*,
+         * typeflag g), so a 'g' header sets only what it names and an
+         * 'x' header wins over it. GNU tar 1.35 and CPython's tarfile
+         * read a 'g' mtime so; `lsar` keeps the header's own. Not
+         * done: a zero-length 'x' value deleting the 'g' one. */
         if ((typeflag == 'x' || typeflag == 'g') && !oversize) {
-            if (typeflag == 'x' && datalen <= iocap &&
+            if (datalen <= iocap &&
                 unc_read_at(c->io, pos + 512, iobuf, (int32_t)datalen)
                     == UNC_OK) {
                 uint32_t r = 0;
-                xmtime = 0;
-                xclen = 0;
+                uint32_t *pm = &gmtime;
+                uint32_t *pl = &gclen, co = UNC_ENTRY_COMMENT_MAX;
+                if (typeflag == 'x') {
+                    pm = &xmtime;
+                    pl = &xclen;
+                    co = 0;
+                    xmtime = 0;
+                    xclen = 0;
+                }
                 while (r < datalen) {
                     uint32_t len = 0, k = r, key, val;
                     while (k < datalen && iobuf[k] >= '0' && iobuf[k] <= '9'
@@ -232,7 +246,7 @@ int unc_tar_extract(UncCtx *c)
                             t = t * 10u + (uint32_t)(iobuf[q++] - '0');
                         if (q > val && q < r + len &&
                             (iobuf[q] == '.' || iobuf[q] == '\n'))
-                            xmtime = unc_unix_to_mac(t);
+                            *pm = unc_unix_to_mac(t);
                     } else if (val - key == 8 && iobuf[key] == 'c' &&
                                iobuf[key + 1] == 'o' && iobuf[key + 2] == 'm' &&
                                iobuf[key + 3] == 'm' && iobuf[key + 4] == 'e' &&
@@ -240,7 +254,7 @@ int unc_tar_extract(UncCtx *c)
                         uint32_t n = r + len - 1 - val;   /* less '\n' */
                         if (!xcmt)
                             xcmt = (uint8_t *)unc_alloc(c->al,
-                                                        UNC_ENTRY_COMMENT_MAX);
+                                                    2 * UNC_ENTRY_COMMENT_MAX);
                         if (xcmt) {
                             uint32_t q;
                             /* UTF-8 ("the value field for all other
@@ -252,8 +266,9 @@ int unc_tar_extract(UncCtx *c)
                                 while (n && (iobuf[val + n] & 0xC0u) == 0x80u)
                                     n--;
                             }
-                            for (q = 0; q < n; q++) xcmt[q] = iobuf[val + q];
-                            xclen = n;
+                            for (q = 0; q < n; q++)
+                                xcmt[co + q] = iobuf[val + q];
+                            *pl = n;
                         }
                     }
                     r += len;
@@ -309,11 +324,12 @@ int unc_tar_extract(UncCtx *c)
                 e.mod_date = unc_unix_to_mac((uint32_t)mt);
         }
         if (xmtime) e.mod_date = xmtime;
+        else if (gmtime) e.mod_date = gmtime;
         /* Both are Unix times: an instant (macextract.h). */
         if (e.mod_date) e.meta |= UNC_META_MD_UTC;
-        if (xclen) {
-            e.comment = xcmt;
-            e.comment_len = (uint16_t)xclen;
+        if (xclen || gclen) {
+            e.comment = xclen ? xcmt : xcmt + UNC_ENTRY_COMMENT_MAX;
+            e.comment_len = (uint16_t)(xclen ? xclen : gclen);
             e.meta |= UNC_META_CMT_UTF8;
         }
         xmtime = xclen = 0;

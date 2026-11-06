@@ -201,6 +201,54 @@ def tar_meta():
     return out.getvalue(), want
 
 
+def tar_global_meta():
+    """pax 'g' headers: each value holds for every member after it that
+    does not state its own, until a later 'g' gives the same field again
+    (reference/notes/posix_ustar.txt, *pax Header Block*, typeflag g).
+    `want` is CPython's tarfile reading the archive back — a reader that
+    is not the engine's — and the rule written out below must agree with
+    it, or this raises."""
+    out = io.BytesIO()
+    t = tarfile.open(fileobj=out, mode="w", format=tarfile.PAX_FORMAT,
+                     pax_headers={"mtime": "1000000000",
+                                  "comment": "global one"})
+
+    def add(name, mtime, pax=None):
+        ti = tarfile.TarInfo(name)
+        ti.size, ti.mode, ti.mtime = 1, 0o644, mtime
+        if pax:
+            ti.pax_headers = pax
+        t.addfile(ti, io.BytesIO(b"z"))
+
+    add("plain", 1700000000)
+    add("own", 1700000000, {"mtime": "1200000000", "comment": "own"})
+    add("ownmtime", 1700000000, {"mtime": "1300000000"})
+    # A second 'g' header in mid-archive giving the mtime alone: the
+    # comment of the first still holds.
+    blk = tarfile.TarInfo._create_pax_generic_header(
+        {"mtime": "1100000000"}, tarfile.XGLTYPE, "utf-8")
+    t.fileobj.write(blk)
+    t.offset += len(blk)
+    add("later", 1700000000)
+    t.close()
+    rule = {"plain": (1000000000, "global one"), "own": (1200000000, "own"),
+            "ownmtime": (1300000000, "global one"),
+            "later": (1100000000, "global one")}
+    want = {}
+    with tarfile.open(fileobj=io.BytesIO(out.getvalue())) as r:
+        for m in r.getmembers():
+            c = m.pax_headers.get("comment")
+            if (int(m.mtime), c) != rule[m.name]:
+                raise AssertionError("tarfile reads %s as %r, the rule %r"
+                                     % (m.name, (m.mtime, c), rule[m.name]))
+            want[m.name] = dict(lock="n", mtime=mac_of_unix(int(m.mtime)),
+                                comment=h(c.encode()) + "U", ctime="-",
+                                finfo="-")
+    if sorted(want) != sorted(rule):
+        raise AssertionError("tarfile lists %s" % sorted(want))
+    return out.getvalue(), want
+
+
 # ------------------------------------------------------------------
 # gzip: MTIME and FCOMMENT (RFC 1952, 2.3.1)
 # ------------------------------------------------------------------

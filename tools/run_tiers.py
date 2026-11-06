@@ -270,10 +270,14 @@ REPO = os.path.dirname(HERE)
 # it was released, and the flash (DECISIONS.md 2026-11-06, *the tap the
 # pump read too late*), the control's CODE +156 and A5 -28; the shipped
 # pair grew 160, OVL_SAVED -32. They were 190,628 / 95,246 / 619,534.
+# **-96 more each the same day, DERIVED**: a pax `g` header applied to the
+# members after it (DECISIONS.md 2026-11-06, *the header that spoke for
+# the rest*), the control's CODE +76 and A5 +20; the shipped pair 0,
+# OVL_SAVED +96. They were 190,500 / 95,118 / 619,406.
 TIERS = {
-    "sys3-512K": (190500, "System 3.0, Macintosh 512Ke (222,070 B free)"),
-    "sys6-512K": (95118,  "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
-    "floor-1M":  (619406, "System 6.0.8, 1 MB Mac Plus — the floor target"),
+    "sys3-512K": (190404, "System 3.0, Macintosh 512Ke (222,070 B free)"),
+    "sys6-512K": (95022,  "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
+    "floor-1M":  (619310, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
 # **-592 more each 2026-10-24, DERIVED**: SUMacC's `.dl`, the control's
 # CODE +584 and A5 +8 (DECISIONS.md 2026-10-24, *the format before
@@ -477,7 +481,8 @@ TIERS = {
 # data + bss -680. The machine gave +4,204, because the jump table, the
 # stub segments and the relocations trimmed at launch are resident bytes
 # this unit never counted — which is why TIERS was measured, not moved.
-TIERS_CONTROL = 222432     # build/mac-resident, CODE + A5, 2026-11-06
+TIERS_CONTROL = 222528     # build/mac-resident, CODE + A5, 2026-11-06
+# +96 the same day: a pax `g` header applied; TIERS -96.
 # +128 on 2026-11-06: the tap on Cancel and its flash; TIERS -128.
 # +32 the same day: a MAR listing's comment and progress; TIERS -32.
 # +32 the same day: an LZ4 match held to its block; TIERS -32.
@@ -1005,7 +1010,11 @@ EXPECT = {
 # against the control's +128 (CODE +156, A5 -28): the same code in both,
 # and the difference is where each build's `.data` alignment falls
 # (DECISIONS.md 2026-11-06, *the tap the pump read too late*). TIERS -128.
-OVL_SAVED = 165760
+# **+96 the same day, -> 165,856**: a pax `g` header applied to the members
+# after it, the control's +96 (CODE +76, A5 +20, `.data` alignment) against
+# the shipped pair's 0, the reader in `ovl_zipold` (DECISIONS.md
+# 2026-11-06, *the header that spoke for the rest*). TIERS -96.
+OVL_SAVED = 165856
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
 # every kept image is one — as is the bundle an envelope holds on to.
@@ -1154,7 +1163,7 @@ IMAGES = {
     "OVL_ID_SQP":         1736,
     "OVL_ID_SUPERDISK":   6634,
     "OVL_ID_TEXT":        11438,
-    "OVL_ID_ZIPOLD":      15196,
+    "OVL_ID_ZIPOLD":      15276,
     "OVL_ID_SNIFF":       14676,
     "OVL_ID_DESTDLG":     1688,
     "OVL_ID_SEGSETUP":    2364,
@@ -1268,7 +1277,10 @@ IMAGES = {
 # the comment an entry carries, and counts the bytes it does not read
 # (DECISIONS.md 2026-11-05, *the comment a listing read whole*, *the bytes
 # a listing never counted*).
-BUNDLE = 194608
+# **ZIPOLD +80, the bundle +80 B, 2026-11-06**: a pax `g` header's mtime
+# and comment applied to the members after it (DECISIONS.md 2026-11-06,
+# *the header that spoke for the rest*).
+BUNDLE = 194688
 
 # What the SHIPPED lane asserts, and it is the refused fixtures BY NAME
 # rather than a tally: a tier that refuses two different fixtures and still
