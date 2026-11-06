@@ -7,12 +7,14 @@
  * GROWS as output is produced — a new leaf every 64 bytes, so an offset
  * can only be expressed once the output is long enough to hold it.
  *
- * Source: reference/XADMaster/XADLZHOldHandles.m — `LHAdecode_start_dyn`,
- * `LHAdecode_c_dyn`, `LHAdecode_p_dyn` and the tree machinery they share
- * (`LHAreconst`, `LHAswap_inc`, `LHAupdate_c`, `LHAupdate_p`,
- * `LHAmake_new_node`), with the main loop from `LhA_Decrunch`. LGPL, see
- * NOTICE. Cross-read against LHa for UNIX's own `dhuf.c`, which is the
- * original this descends from.
+ * Source: reference/libxad/libxad/portable/clients/LhA.c (Dirk
+ * Stöcker's libxad) — `LHAdecode_start_dyn`, `LHAdecode_c_dyn`,
+ * `LHAdecode_p_dyn` and the tree machinery they share (`LHAreconst`,
+ * `LHAswap_inc`, `LHAupdate_c`, `LHAupdate_p`, `LHAmake_new_node`), with
+ * the main loop from `LhA_Decrunch`. XADMaster's XADLZHOldHandles.m
+ * carries every one of these functions unchanged. LGPL, see NOTICE.
+ * Cross-read against LHa for UNIX's own `dhuf.c`, which is the original
+ * this descends from.
  *
  * The two trees are one array pair: symbols live at ROOT_C..TREESIZE_C-1
  * and positions from ROOT_P up, which is why `reconst` and `swap_inc`
@@ -29,7 +31,7 @@
  * block head is a 16-bit symbol count, then a literal/length tree sent as
  * one 4-bit length per symbol, then either a position tree in the same
  * shape or a fixed one the format keeps for the purpose. Source: the same
- * XADMaster file (`LHAdecode_start_st0`, `_c_st0`, `_p_st0`,
+ * libxad file (`LHAdecode_start_st0`, `_c_st0`, `_p_st0`,
  * `LHAread_tree_c`, `LHAread_tree_p`, `LHAready_made`), cross-read against
  * LHa's `shuf.c`.
  *

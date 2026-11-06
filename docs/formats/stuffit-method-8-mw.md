@@ -68,7 +68,8 @@ here**, and this note does not claim them:
   note cannot confirm — the same 17,005-byte fork that fails to reach
   the restart fails to reach this.
 
-Both came from `XADStuffItOldHandles.m` and still do; they are the part
+Both came from `XADStuffItOldHandles.m` and still do — libxad's
+`SIT_mw`, which that file carries unchanged (NOTICE); they are the part
 of this row that a derivation could not take. **What would close all three:** a method-8 fork whose dictionary fills
 — 16,384 entries against the 7,347 of the largest here, so something
 several times larger than anything in the corpus. Synthesising one

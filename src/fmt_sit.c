@@ -933,15 +933,15 @@ out:
 /* reproduced byte for byte against the oracle                        */
 /* (tools/derive_stuffit8.py).                                        */
 /*                                                                    */
-/* TWO RULES BELOW ARE NOT IN THAT NOTE and remain                    */
-/* Source: reference/XADMaster/XADStuffItOldHandles.m (SIT_mw,        */
-/* SITMW_out) — the only thing in this file that is still anybody     */
-/* else's, and deark names method 8 "MW" with a NULL decoder, so      */
-/* there is nothing to rewrite it from.                               */
-/* reference/XADMaster/XADStuffItOldHandles.m's (SIT_mw, SITMW_out;   */
-/* libxad heritage) — LGPL, see NOTICE: the table RESTART (a code      */
-/* equal to the next free one) and the END of the stream (a code       */
-/* greater than it), with the 14-bit ceiling that goes with them. No   */
+/* THREE RULES BELOW ARE NOT IN THAT NOTE and remain                  */
+/* Source: reference/libxad/libxad/portable/clients/StuffIt.c        */
+/* (SIT_mw, SITMW_out; Dirk Stöcker's libxad, which XADMaster's       */
+/* XADStuffItOldHandles.m carries unchanged) — LGPL, see NOTICE: the   */
+/* table RESTART (a code equal to the next free one) and the END of    */
+/* the stream (a code greater than it), with the 14-bit ceiling that   */
+/* goes with them. They are the only thing in this file that is still  */
+/* anybody else's, and deark names method 8 "MW" with a NULL decoder,  */
+/* so there is nothing to rewrite them from. No                       */
 /* specimen reaches any of the three — the largest fork in the corpus  */
 /* stops at 7,347 entries and 13 bits — so they are the part of this   */
 /* row a derivation could not take.                                   */

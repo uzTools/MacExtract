@@ -312,14 +312,15 @@ header behind its record.
 So that rule, and the record's own fork lengths and checksums that only
 it would use, are read by **no specimen anywhere here**, and nothing in
 this document measures them. They are not one program's opinion either,
-which is worth separating from being measured: **two independent
-readings state them and agree** — XADMaster's
-`XADDiskDoublerParser.m`, which `src/fmt_dd.c` is transcribed from, and
-macutils' `macunpack/dd.h`, whose `D_ISDIR 72`, `D_ENDDIR 73`,
+which is worth separating from being measured: **two readings state
+them and agree** — libxad's `clients/DiskDoubler.c`, which
+`XADDiskDoublerParser.m` restates and `src/fmt_dd.c` is transcribed
+from, and macutils' `macunpack/dd.h`, whose `D_ISDIR 72`, `D_ENDDIR 73`,
 `D_DATALENGTH 74`, `D_RSRCLENGTH 78`, `D_FNDRFLAGS 98`, `D_DATACRC 118`
 and `D_RSRCCRC 120` are the same offsets under their own names.
 Agreement between two readers is evidence about the readers; it is not
-a specimen, and this document does not present it as one.
+a specimen, and this document does not present it as one. (Called independent until 2026-11-06; libxad's file names no source,
+so whether it is independent of macutils is not known.)
 
 **What would close it:** a `DDAR` archive with the flag set, from any
 version that writes one — or a shape of file 3.7 declines that has not

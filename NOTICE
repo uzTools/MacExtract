@@ -17,8 +17,9 @@ here. A file that gains a citation fails the check; so does one that
 sheds its last, which is how a row leaves without anybody noticing by
 hand.
 
-  src/unc_lzdyn.c      -lh2- and -lh3-, the whole file, from
-                       XADLZHOldHandles.m. No permissive implementation
+  src/unc_lzdyn.c      -lh2- and -lh3-, the whole file, from libxad's
+                       clients/LhA.c, which XADLZHOldHandles.m carries
+                       unchanged. No permissive implementation
                        of either method exists: lhasa has neither and
                        LHa for UNIX is under its own licence.
   src/unc_lzah.c       the window preload for -lh1- and StuffIt method
@@ -47,8 +48,10 @@ hand.
                        XADARCCrunchHandle.m and XADARCCrushHandle.m.
   src/fmt_sit.c        three rules of method 8 no specimen reaches —
                        the table restart, the end of the stream and
-                       the 14-bit ceiling — which are
-                       XADStuffItOldHandles.m's. deark names method 8
+                       the 14-bit ceiling — which are libxad's
+                       clients/StuffIt.c's (SIT_mw, SITMW_out),
+                       carried unchanged by XADStuffItOldHandles.m.
+                       deark names method 8
                        "MW" with a NULL decoder, so nothing else
                        implements them. The ENCRYPTED fork's key
                        layout left on 2026-09-27: it is measured
@@ -57,8 +60,10 @@ hand.
                        sixteen bytes are read anywhere but the fork's
                        end.
   src/sit14.c          StuffIt 5's method 14, the whole file, from
-                       SIT_14/SIT14_ReadTree/SIT14_Update in
-                       XADStuffItOldHandles.m (libxad's decoder). No
+                       SIT_14/SIT14_ReadTree/SIT14_Update in libxad's
+                       clients/StuffIt.c, which XADStuffItOldHandles.m
+                       carries unchanged. Nothing in libxad says where
+                       its author took the method from. No
                        other implementation of the method exists to
                        rewrite it from: deark names method 14
                        "installer" and leaves its decompressor NULL,
@@ -78,7 +83,9 @@ hand.
                        against the three archives DropStuff 5.0.1
                        wrote (tools/derive_sit5crypt.py).
   src/fmt_dd.c         the `DDAR` 0x20 raw-fork shape, four offsets
-                       nothing reachable sets.
+                       nothing reachable sets — libxad's
+                       clients/DiskDoubler.c, which
+                       XADDiskDoublerParser.m restates.
   src/fmt_macbinary_probe.c,  five things no specification supports:
   src/fmt_applesingle.c  the MacBinary CRC-16/0xA001 fallback and its
   src/fmt_sitseg.c,    nonzero-date test, the byte-swapped AppleSingle
@@ -304,6 +311,22 @@ This project's decoders are transcriptions/ports of algorithms from:
     Now Compress (`tools/mutate_now.py`).
     Files that transcribe XADMaster code carry a
     "Source: reference/XADMaster/<file>" comment.
+
+  * libxad, by Dirk Stöcker (1998-2005), the Amiga library XADMaster
+    takes its older formats from — LGPL-2.1-or-later. Fetched from
+    https://github.com/ashang/libxad, a one-commit copy of its
+    SourceForge CVS tree, since the project page no longer serves
+    files. Where XADMaster carries libxad's code unchanged — -lh2- and
+    -lh3- (clients/LhA.c), StuffIt methods 8 and 14
+    (clients/StuffIt.c) — and where it restates a libxad rule
+    (DiskDoubler's DDAR records, clients/DiskDoubler.c), the files here
+    credit libxad, with a "Source: reference/libxad/<file>" comment.
+    Compared function by function on 2026-11-06: the seventeen -lh2-
+    and -lh3- functions, SIT14_ReadTree, SIT14_Update and SITMW_out are
+    identical to XADMaster's copies, SIT_14 and SIT_mw differ by one
+    line XADMaster comments out, and XADMaster's LhA_Decrunch is
+    libxad's with the other methods' cases removed. Credited for the history only: moving a citation from
+    XADMaster to libxad does not move the licence, which is the same.
 
   * macutils 2.0b3, by Dik T. Winter et al. (descended from Allan G.
     Weber's unsit and D. J. Perry's unstuffit) — late-80s C. Its README

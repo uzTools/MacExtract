@@ -14,7 +14,9 @@
  * docs/formats/diskdoubler-container.md, "The folder records,
  * measured"). What no specimen here reaches is the 0x20 raw-fork shape,
  * still
- *   Source: reference/XADMaster/XADDiskDoublerParser.m
+ *   Source: reference/libxad/libxad/portable/clients/DiskDoubler.c
+ *           (DDAR_FNDRFLAGS, DDAR_DATACRC, DDAR_RSRCCRC), which
+ *           XADDiskDoublerParser.m restates
  * and the note says what would settle it.
  *
  * Method 7 is transcribed:
@@ -1371,8 +1373,9 @@ static int dd_archive(UncCtx *c)
             unc_get_u32be(hdr + 90) != DD_CREATOR_DDAP) {
             /* The 0x20 flag itself has NO SPECIMEN: five shapes were
              * offered to DiskDoubler 3.7 to provoke it and every one
-             * came back with a full file header. Source:
-             * XADDiskDoublerParser.m parseArchive, with macutils'
+             * came back with a full file header. Source: libxad's
+             * clients/DiskDoubler.c, DiskDoubler1's GETINFO (restated by
+             * XADDiskDoublerParser.m parseArchive), with macutils'
              * macunpack/dd.h stating the same offsets under its own
              * names — two readers agreeing, not a specimen.
              * docs/formats/diskdoubler-container.md, "The 0x20 flag,

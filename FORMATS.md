@@ -1044,9 +1044,9 @@ as its output buffer.
 
 **`-lh2-` since 2026-08-25, with this project's encoder.** Both codes
 adaptive — `-lh1-`'s literal/length tree plus a position tree that GROWS
-with the output, one leaf per 64 bytes. Transcribed from
-`XADLZHOldHandles.m` (`LHAdecode_start_dyn`, `_c_dyn`, `_p_dyn`),
-cross-read against LHa's `dhuf.c`, in `src/unc_lzdyn.c`. Nothing writes
+with the output, one leaf per 64 bytes. Transcribed from libxad's
+`clients/LhA.c` (`LHAdecode_start_dyn`, `_c_dyn`, `_p_dyn`), which
+`XADLZHOldHandles.m` carries unchanged, cross-read against LHa's `dhuf.c`, in `src/unc_lzdyn.c`. Nothing writes
 one, so `tools/build_lha_lh2.sh` teaches the maintained LHa fork to, and
 its own decoder verifies each archive first: **15 `-lh2-` entries across
 three header levels in `ci.sh`**, the run failing if fewer than three

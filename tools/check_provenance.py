@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Keep NOTICE's inventory of borrowed code honest, mechanically.
 
-NOTICE is the single home for "what in this engine is still XADMaster's
-or macutils'" (CLAUDE.md, *one home per finding*).  A prose list goes
+NOTICE is the single home for "what in this engine is still XADMaster's,
+libxad's or macutils'" (CLAUDE.md, *one home per finding*).  A prose list goes
 stale the moment a file sheds its last citation, and this project has
 been bitten three times by exactly that: `unc_lzah.c`'s preloads and
 `fmt_binhex.c`'s macutils rules were both recorded as gone while still
@@ -46,11 +46,11 @@ NOTICE = ROOT / "NOTICE"
 # summary of WHAT. The detail is NOTICE's; OPEN_ITEMS.md holds only the
 # ones with a route left.
 CARRIES = {
-    "unc_lzdyn.c":      "-lh2- and -lh3- (XADLZHOldHandles.m), whole file",
-    "fmt_sit.c":        "three method-8 rules no specimen reaches",
+    "unc_lzdyn.c":      "-lh2- and -lh3- (libxad's LhA.c), whole file",
+    "fmt_sit.c":        "three method-8 rules no specimen reaches (libxad's SIT_mw)",
     "fmt_sit5.c":       "the encrypted header's bit 5, which nothing here sets",
     "sit14.c":          "StuffIt 5's method 14, the whole file (libxad's SIT_14)",
-    "fmt_dd.c":         "the DDAR 0x20 raw-fork shape",
+    "fmt_dd.c":         "the DDAR 0x20 raw-fork shape (libxad's DiskDoubler.c)",
     "fmt_arc.c":        "Crunch 5/6/7 and Crush, and the method numbers",
     "unc_crypt.c":      "StuffItDES, StuffIt 5's hash, ARC's garble",
     "unc_lzah.c":       "the -lh1-/method-5 window preload (resetLZSSHandle)",
@@ -77,7 +77,7 @@ HISTORICAL = {
     "fmt_packit.c", "unc_shrink.c",
 }
 
-MENTION = re.compile(r"XAD|macutils")
+MENTION = re.compile(r"XAD|libxad|macutils")
 
 # A LIVE citation is Source-marked. That is NOTICE's own stated
 # convention ("Files that transcribe XADMaster code carry a
@@ -87,7 +87,7 @@ MENTION = re.compile(r"XAD|macutils")
 # on 2026-09-27 `src/fmt_mime.c` shed its last live citation and kept a
 # historical sentence, and a mention-based check passed it — the check
 # was wrong in exactly the direction it was built to catch.
-LIVE = re.compile(r"Source:[^\n]*(XAD|macutils)")
+LIVE = re.compile(r"Source:[^\n]*(XAD|libxad|macutils)")
 
 
 def main():

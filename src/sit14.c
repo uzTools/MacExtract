@@ -3,9 +3,10 @@
  * its alphabets canonically Huffman-coded and a fresh pair of trees in
  * every block.
  *
- * Source: reference/XADMaster/XADStuffItOldHandles.m — SIT_14,
- * SIT14_ReadTree and SIT14_Update (libxad's decoder, reached through
- * XADStuffIt14Handle). Everything numeric below is that file's: the
+ * Source: reference/libxad/libxad/portable/clients/StuffIt.c (Dirk
+ * Stöcker's libxad) — SIT_14, SIT14_ReadTree and SIT14_Update, which
+ * XADMaster's XADStuffItOldHandles.m carries unchanged and reaches through
+ * XADStuffIt14Handle. Everything numeric below is that file's: the
  * 16-bit block count, each block's skipped 32-bit crunched size and
  * 32-bit uncrunched length read as two LSB-first halves, the 308- and
  * 75-symbol alphabets, the length base/extra ladder built from
@@ -135,7 +136,7 @@ static void sit14_ladders(Sit14 *s)
  * wants at most log2(nsyms). Measured: 7 at nsyms=308 over every shape
  * tried.
  *
- * Source: XADMaster XADStuffItOldHandles.m, SIT14_Update */
+ * Source: libxad clients/StuffIt.c, SIT14_Update */
 static int sit14_sort(uint8_t *key, uint16_t *val, int32_t nsyms)
 {
     /* A range that will not fit is an ERROR and not a dropped partition.

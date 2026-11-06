@@ -8,6 +8,19 @@ mkdir -p reference/notes
 [ -d reference/XADMaster ] || \
     git clone --depth 1 https://github.com/MacPaw/XADMaster reference/XADMaster
 
+# libxad (Dirk Stöcker, 1998-2005, LGPL-2.1-or-later) — the Amiga
+# library XADMaster takes its older formats from. Four of this engine's
+# carriers are libxad's code as XADMaster carries it unchanged
+# (clients/StuffIt.c's SIT_14 and SIT_mw, clients/LhA.c's -lh2-/-lh3-
+# coders, clients/DiskDoubler.c's DDAR records), and cite it. The
+# SourceForge project no longer serves its files; this mirror is its
+# CVS tree in one commit, byte-identical in clients/StuffIt.c to the
+# two other mirrors checked 2026-11-06.
+if [ ! -d reference/libxad ]; then
+    git clone https://github.com/ashang/libxad reference/libxad
+    git -C reference/libxad checkout -q dbe67a865207e49cd917ad9170a11b9eaa83998a
+fi
+
 # btoa 5.2.1 (Paul Rutter, Joe Orost & Stefan Parmark, 1996) — the only
 # implementation of the format there is, and the one `atob.c` this
 # project's src/fmt_btoa.c is transcribed from. Debian carried it in
