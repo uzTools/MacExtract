@@ -3404,6 +3404,7 @@ Macintosh file*):
 | linefeeds | a `TEXT` entry is stored with LF added after every CR and **internal attributes bit 0 set**; with conversion off, bare CR and the bit clear; on extraction the bit makes it strip the LFs | — |
 | dates | the zip date is the file's modification date; extracted, that date becomes creation and modification alike; a modification date 0 is written as 2032-01-01 | — |
 | made by | host 7, version 2.0 (a preference also offers "Unix zip" and "PKZip") | the same |
+| encryption | — | **standard PKWARE ZipCrypto** (`decrypt_byte`/`crypthead`/`UnzipCryptHeader`, Info-ZIP's `crypt.c`, read from the code), which `unc_zip_extract` already decrypts; "US versions only" was the export rule, not a custom cipher |
 | segments | standard spanned volumes (384 KiB at "Mac single sided"), no leading marker, the end record in the last; each named by the user | — |
 
 **One name differs from `unar`'s since 2026-10-07**, and ZipIt's field

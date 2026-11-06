@@ -300,7 +300,7 @@ with a Macintosh file*).
 |---|---|---|
 | a text entry (internal attributes bit 0) ZipIt stored with linefeeds added | **the maintainer's call**: ZipIt strips them on extraction, the engine delivers CR LF (`Texty`: 290 B against 320) | a decision to strip them for a ZipIt-marked entry, or not |
 | a segmented archive whose segments the user named freely (ZipIt asks "Save segment #%d as:") | not joined: parts are placed by `.zNN`/`.zip` (FORMATS.md, *Segments*); renamed, the set extracts byte for byte | an order read off the segments themselves, or the user's |
-| ZipIt's encryption | not measured: an unregistered copy can neither set a password nor extract (its own strings) | a registered copy, or a ZipIt-encrypted specimen |
+| a ZipIt-encrypted archive, byte for byte | **the cipher is known, the engine reads it**: ZipIt 2.2.2's `decrypt_byte`/`crypthead`/`UnzipCryptHeader` are standard PKWARE ZipCrypto, which `unc_zip_extract` already decrypts (DECISIONS.md 2026-11-06, *what ZipIt does with a Macintosh file*) | one ZipIt-made encrypted `.zip` to confirm against a real file (none here; a registered copy would write one) |
 
 ## The shell's own File Manager blocks, until multiversal's glue is inline
 

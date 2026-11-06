@@ -21772,6 +21772,18 @@ of 393,526, 393,216 and 262,134 B, the first beginning with a local header
 directory on disk 2). Renamed `.z01`, `.z02`, `.zip`, the engine extracts
 it byte for byte; under the names ZipIt took, it refuses, `--part` or not.
 
-**Not measured:** ZipIt's cipher (blocked by registration, which is not
-worked around); the MacBinary preference's other two settings; 2.2.2's
+**Encryption: standard PKWARE ZipCrypto**, read from ZipIt 2.2.2's code
+(the maintainer asked, having no registration key, 2026-11-06). Its
+`.decrypt_byte` is `temp = (key2 & 0xffff) | 2; (temp * (temp ^ 1)) >> 8`
+and `.UnzipCryptHeader` runs the 12-byte header and checks the last byte
+against the CRC's or the DOS time's high byte by flag bit 3 — traditional
+zip encryption, byte for byte (its `.crypthead`/`.decrypt_byte` names are
+Info-ZIP's `crypt.c`). ZipIt's "US versions only" was the 1990s crypto
+export rule; the gate is in ZipIt, not the format. So **`unc_zip_extract`
+already decrypts ZipIt-encrypted archives** — verified against a ZipCrypto
+`.zip` that `zip -e` wrote (wrong password refused, right one byte-exact);
+a real ZipIt-made encrypted specimen is the only thing still wanted, and
+needs a registered copy to write.
+
+**Not measured:** the MacBinary preference's other two settings; 2.2.2's
 MacBinary, linefeeds, dates and segments.
