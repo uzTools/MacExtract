@@ -17555,8 +17555,10 @@ calls `FSpSetFLock` from it. Unix-mode hosts are Info-ZIP's list (3, 2, 5,
 **Two rules no reference gives, labelled.** A `0x334d` date within a day of
 the wrap is "never" (rexnebular's backup fields read 0 or 0xFFFFAB9F,
 −21,601 s, beside BkGMTOffs −18,000 — hypothesis: 0 moved by a zone).
-ZipIt's `0x2805` View word is NOT stated (one specimen, value 0, no
-document; OPEN_ITEMS.md).
+ZipIt's `0x2805` View word is NOT stated: APPNOTE.TXT 4.6.6 defines it as
+ZipIt's own display state, bit 0 "the folder is shown expanded (open) when
+the archive contents are viewed in ZipIt" (corrected 2026-11-06: this said
+"no document"; BLOCKERS.md, *Withdrawn claims*).
 
 **Comments travel as the archive's bytes** (zip CP437, gzip Latin-1, pax
 UTF-8, not converted, as names are not), at most UNC_ENTRY_COMMENT_MAX
@@ -21608,9 +21610,12 @@ resource map and every budget are unmoved; CODE and A5 unmoved;
 
 **The question** (OPEN_ITEMS.md, *the metadata the archives hold and the
 readers drop*): what ZipIt's `0x2805` View word means. APPNOTE.TXT 4.6.6
-calls it "ZipIt view flag"; every field here (12, in three archives; the
-row said one) holds 0, and `src/fmt_exo.c` reads only the frFlags before
-it.
+calls it "ZipIt view flag" — **and, in the paragraph after its table, which
+this entry did not read, defines it**: bit 0, "the folder is shown expanded
+(open) when the archive contents are viewed in ZipIt", bits 1-15 reserved
+(`reference/notes/zip_appnote.txt`, 6.3.10; corrected 2026-11-06, BLOCKERS.md,
+*Withdrawn claims*). Every field here (12, in three archives; the row said
+one) holds 0, and `src/fmt_exo.c` reads only the frFlags before it.
 
 **Measured on ZipIt 1.4** (`specimens/zipit/zipit-1.4.sea`, a fat binary,
 on System 7.0.1; `tools/vmac/zipitmeta.py`):
@@ -21738,7 +21743,9 @@ the zero-extended byte at record +0x62, and `0x2705`'s trailing word from
 the same byte; `FillInMacBinary` reads back bit 0 only; the byte is set to
 1 and 0 in `MyItemNotification`, the Data Browser's item-notification
 callback, and read in `UpdateBrowser`. Run: a new archive saved with
-`Subject` expanded and `Inner` collapsed gives View 1 and 0. It is window
+`Subject` expanded and `Inner` collapsed gives View 1 and 0 — **what
+APPNOTE.TXT 4.6.6 already says**, in the paragraph after the line the
+earlier entries quoted (BLOCKERS.md, *Withdrawn claims*). It is window
 state; the Finder has no field for it, and the engine reading it as
 nothing is right.
 

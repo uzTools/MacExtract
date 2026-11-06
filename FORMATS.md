@@ -3399,7 +3399,7 @@ Macintosh file*):
 |---|---|---|
 | `0x2605` (MacBinary II) or `0x2705` | the "Use MacBinary" preference; its default, "When needed", gave MacBinary to a non-`TEXT` file with a resource fork and to nothing else — a `TEXT` file's resource fork is **dropped** | not measured |
 | `0x2705` | 14 B, type, creator, Finder flags; restored as type and creator, flags 0 | 16 B, the last word the bit below |
-| `0x2805` / its last word | not written, not read | frFlags, then **bit 0: the folder is expanded in ZipIt's list** (`MyItemNotification` sets it, `UpdateBrowser` reads it; saved expanded, 1); frFlags' label bits restored |
+| `0x2805` / its last word | not written, not read | frFlags, then **bit 0: the folder is expanded in ZipIt's list**, as APPNOTE.TXT 4.6.6 defines it (`MyItemNotification` sets it, `UpdateBrowser` reads it; saved expanded, 1); frFlags' label bits restored |
 | Get Info comment | **not in its MacBinary** (length 0 with a comment on the file) | — |
 | linefeeds | a `TEXT` entry is stored with LF added after every CR and **internal attributes bit 0 set**; with conversion off, bare CR and the bit clear; on extraction the bit makes it strip the LFs | — |
 | dates | the zip date is the file's modification date; extracted, that date becomes creation and modification alike; a modification date 0 is written as 2032-01-01 | — |

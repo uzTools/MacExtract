@@ -1063,7 +1063,11 @@ static void zip_extra_scan(const uint8_t *ex, uint32_t exlen,
              * flags, and no type or creator — a folder has none.
              * Source: APPNOTE.TXT 4.6.6 — '"ZPIT" beLong, frFlags
              * beShort attributes from DInfo.frFlags, MAY be omitted,
-             * View beShort ZipIt view flag, MAY be omitted'. */
+             * View beShort ZipIt view flag, MAY be omitted' — whose bit 0
+             * is "the folder is shown expanded (open) when the archive
+             * contents are viewed in ZipIt": ZipIt's window, not the
+             * Finder's, so not read (measured on ZipIt 2.2.2,
+             * DECISIONS.md 2026-11-06). */
             z->mflags = unc_get_u16be(ex + 8);
             z->mhave = 1;
         }

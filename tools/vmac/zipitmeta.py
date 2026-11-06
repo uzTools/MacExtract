@@ -3,7 +3,10 @@
 of its directory field `0x2805`.
 
 APPNOTE.TXT 4.6.6 defines `0x2805` as 'ZPIT', the folder's DInfo.frFlags,
-then "View beShort ZipIt view flag", each MAY be omitted. Every `0x2805`
+then "View beShort ZipIt view flag", each MAY be omitted — and, in the
+paragraph after, the View's bit 0 as "the folder is shown expanded (open)
+when the archive contents are viewed in ZipIt", which this harness was
+written without reading (BLOCKERS.md, *Withdrawn claims*). Every `0x2805`
 field this project has seen (12, three archives) holds View 0, so nothing
 says what a non-zero one means, and `src/fmt_exo.c` does not read it
 (OPEN_ITEMS.md, *the metadata the archives hold and the readers drop*).
