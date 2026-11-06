@@ -83,25 +83,62 @@ Nothing is detect-only since 2026-10-18: an unextractable file is
 
 ---
 
-## The licence cannot move, and this is the irreducible core
-
-**Measured and settled** (2026-09-19): five items have no permissive
-statement anywhere, so LGPL-2.1 stays. **Do not re-price these.** The
-per-file inventory is NOTICE's, checked by `tools/check_provenance.py`.
-
-| what | why nothing replaces it |
-|---|---|
-| `unc_lzdyn.c` — `-lh2-` and `-lh3-` | lhasa implements neither; LHa for UNIX has its own licence (DECISIONS.md, *the 3,504 bytes that stay*) |
-| `fmt_sit.c` — three rules of StuffIt method 8 | no specimen reaches them; deark leaves the method NULL (DECISIONS.md, *the layout Aladdin's own output settled*) |
-| `unc_crypt.c` — StuffItDES's key schedule | reads all 64 key bits, so no standard schedule; graded against three StuffIt Deluxe 3.5.1 archives |
-| `unc_lzah.c` — the `-lh1-`/method-5 window preload | the corpus cannot tell XADMaster's reading from lhasa's (DECISIONS.md 2026-09-28, *the preload nothing reaches*) |
-| `src/sit14.c` — StuffIt 5's method 14 | libxad's `SIT_14` is the only implementation (FORMATS.md, *StuffIt 5's method 14*) |
-| `fmt_arc.c` — Crunch 5/6/7 and Crush | no other implementation of 7 or Crush; **not taken, decided 2026-09-22** |
-| five tolerances no specification supports — the MacBinary CRC-16/0xA001 fallback and its nonzero-date test, the byte-swapped AppleSingle header, the StuffIt split header, DiskDoubler's stored header CRC of zero | deark is a checked negative for all four; the two MacBinary ones are unexercised (933 fixtures, 9,330 variants, 2026-09-28); **kept, the maintainer's decision 2026-10-23** (DECISIONS.md 2026-10-23, *the probes next door*) |
-
----
-
 # Part 2 — Open items
+
+## Leaving XADMaster: the original programs as the oracle, and the licence
+
+**Reopened by the maintainer 2026-11-06**, after *the licence cannot
+move* had been settled on 2026-09-19: XADMaster stops being the yardstick
+and the source. Two items. The first changes what grades a fork and does
+not move the licence; only the second does.
+
+### What grades a fork
+
+`unar` 1.10.8 grades most of the 988 fixtures' manifests; `macunpack` and
+deark grade the forks it fails (TESTING.md, *The oracle*). The writers' own
+readers already grade StuffIt Deluxe 2.0.1's output, SuperDisk!'s modules,
+DiskDoubler's methods 3–5, Now Compress, Private File, AppleLink packages
+and the Finder metadata each expander puts back (TESTING.md; FORMATS.md).
+
+- **Not counted:** per format, how many forks only `unar` grades, and
+  which format's writer has a copy on this machine. Closes with that
+  inventory; it runs nothing.
+- **Not decided:** which answer wins where the writer's own reader
+  disagrees with the stored CRC or with another reader — StuffIt Deluxe
+  7.0.3 Classic writes wrong bytes for zip's Reduce (README.md).
+- **Then per format:** its manifests re-recorded with the writer's own
+  reader in `oracle`, one emulator at a time, each run under two hours; a
+  writer this machine has no copy of goes to MANUAL_TESTS.md.
+
+### What still holds the licence
+
+LGPL-2.1-or-later, through the 17 files `tools/check_provenance.py` lists
+as `CARRIES`: 15 owe XADMaster, and `fmt_hecx.c` and `fmt_binhex_probe.c`
+owe macutils' hexbin, whose README puts "some parts" under the GNU licence
+(NOTICE). **A re-citation does not close a row**: the code has to be our
+own, written from facts this project established — a published
+description, the original program's behaviour on chosen input, or its own
+code read as BinHex 2.0's and Packit III's were (NOTICE) — and the file
+moves to `HISTORICAL` in the same commit.
+
+| what | known | what would close it |
+|---|---|---|
+| `unc_lzdyn.c` — `-lh2-` and `-lh3-` | lhasa implements neither; LHa for UNIX has its own licence (DECISIONS.md, *the 3,504 bytes that stay*) | a description written from what the original DOS LHA emits under DOSBox |
+| `fmt_sit.c` — three rules of StuffIt method 8 | no specimen reaches them; deark leaves the method NULL (DECISIONS.md, *the layout Aladdin's own output settled*) | StuffIt made to reach them as an encoder, or shown not to and the rules deleted |
+| `fmt_sit5.c` — the encrypted header's bit 5 | nothing here sets it | a StuffIt 5 archive that sets it, or the rule deleted |
+| `unc_crypt.c` — StuffItDES's key schedule, StuffIt 5's hash, ARC's garble | the schedule reads all 64 key bits, so no standard one; graded against three StuffIt Deluxe 3.5.1 archives | the encryptor's own `DCMP` (512 + id) called as `tools/sdmodule/` calls SuperDisk!'s modules; the other two not looked at |
+| `unc_lzah.c`, `unc_internal.h` — the `-lh1-`/method-5 window preload | the corpus cannot tell XADMaster's reading from lhasa's (DECISIONS.md 2026-09-28, *the preload nothing reaches*) | a writer's specimen that tells the two readings apart |
+| `src/sit14.c` — StuffIt 5's method 14 | libxad's `SIT_14` is the only implementation (FORMATS.md, *StuffIt 5's method 14*) | a description written from StuffIt 5's own engine; the largest row, not priced |
+| `fmt_arc.c` — Crunch 5/6/7, Crush, the method numbers | no other implementation of 7 or Crush; not taken 2026-09-22 | the DOS originals as encoders, and a description |
+| `fmt_dd.c` — the DDAR 0x20 raw-fork shape | — | DiskDoubler's own expander on a fork of that shape |
+| `fmt_sitseg.c`, `fmt_sitseg_probe.c` — the StuffIt split header | Aladdin never published it; nothing else in `reference/` reads it (NOTICE) | its offsets measured off sets StuffIt cuts, as the B0 56 bytes were |
+| `unc_sidecar.c` — which names are Mac OS X sidecars, and the pairing rule | — | not looked for |
+| five tolerances no specification supports — the MacBinary CRC-16/0xA001 fallback and its nonzero-date test, the byte-swapped AppleSingle header, DiskDoubler's stored header CRC of zero (with the split header above) | deark is a checked negative for all four; the two MacBinary ones are unexercised; kept, the maintainer's decision 2026-10-23 (DECISIONS.md 2026-10-23, *the probes next door*) | the writer that made such files, or the tolerance dropped |
+| `fmt_hecx.c`, `fmt_binhex_probe.c` — hexbin's | *BinHex before 4.0*, below | BinHex 2.0's own `CODE`, as that item says |
+
+**The maintainer's, not this file's:** whether the 20 `HISTORICAL` files —
+transcribed once, rewritten from descriptions since — count as clean, and
+which licence follows.
 
 ## A click during an extraction waits for the next progress callback
 
