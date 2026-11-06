@@ -116,10 +116,11 @@ lacks (DECISIONS.md 2026-10-15, *the purge MaxApplZone never did*;
 | 64K ROM **with an HD20 and its driver** | **unknown — the test.** The HD20 start-up software supplies the 128K-ROM File Manager (Inside Macintosh IV, *The Floppy Disk Interface*) |
 | 64K ROM with the `Hard Disk 20` file, no drive | unknown; hangs under emulation — *hypothesis*: the driver hunting for hardware |
 
-**The test:** put `dist/MacExtract.bin` on an MFS floppy
-(`tools/vmac/mkmfs.py`), boot a 512K with an HD20 attached, extract an
-archive to the HD20. Record whether it extracts; if it bombs, the ID and
-the screen; the output's sizes and dates. A pass would not by itself move
+**The test:** write `dist/MacExtract-400K.dsk` to a 400K floppy, start up from
+the HD20, double-click `MacExtract-Helpers.zip` on the floppy and choose
+the HD20; a pass is sixteen helpers in a `MacExtract Helpers` folder.
+Record whether it extracts; if it bombs, the ID and the screen; the
+output's sizes and dates. A pass would not by itself move
 the floor — BLOCKERS.md's tiers would be re-run first.
 
 ## 7. A bug report, written and not posted

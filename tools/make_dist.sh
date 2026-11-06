@@ -14,6 +14,8 @@
 #                    which writes MFM only and so cannot make an 800K GCR disk;
 #                    a SuperDrive Mac mounts it (DECISIONS.md 2026-10-14,
 #                    *the floppy a USB drive can write*).
+#   MacExtract-400K.dsk — a 400K MFS floppy, MacExtract and the helpers zip,
+#                    for a 64K-ROM Macintosh 512K with a Hard Disk 20.
 #   MacExtract-Helpers.zip — the double-click helpers, one per creator
 #                    (companion/helpers.tsv), in one zip MacExtract opens;
 #                    also in a "MacExtract Helpers" folder on both disks.
@@ -103,6 +105,13 @@ for img in dist/MacExtract.dsk "$IMG"; do
     HOME=$HFS_TMP hcopy -m "$HFS_TMP/Desktop.bin" ":Desktop"
     HOME=$HFS_TMP humount >/dev/null
 done
+# A 400K MFS floppy for a Macintosh 512K with a Hard Disk 20: a 64K ROM reads
+# only MFS floppies, and MFS has no folders, so the helpers go as the zip,
+# typed 'ZIP ' with MacExtract's creator to open in it (the maintainer,
+# 2026-11-06; MANUAL_TESTS.md §6).
+MFS=dist/MacExtract-400K.dsk
+python3 tools/vmac/mkmfs.py "$MFS" --name MacExtract dist/MacExtract.bin \
+    --data dist/MacExtract-Helpers.zip MacExtract-Helpers.zip "ZIP MExt" >/dev/null
 VERSION=$(sed -n 's/^#define UNC_VERSION "\(.*\)"/\1/p' include/macextract.h)
 [ -n "$VERSION" ] || { echo "make_dist: no UNC_VERSION in include/macextract.h" >&2; exit 1; }
 
@@ -111,7 +120,7 @@ MacExtract v$VERSION — bootstrap distribution
 ==========================================
 
 A bare Classic Mac has no way to open a .sit/.cpt/.hqx until it HAS an
-unarchiver, so MacExtract ships in three forms that need no unarchiver:
+unarchiver, so MacExtract ships in four forms that need no unarchiver:
 
   MacExtract.bin  The application as uncompressed MacBinary. Transfer it to
                   the Mac with any MacBinary-aware method (ImportFl, a terminal
@@ -134,7 +143,14 @@ unarchiver, so MacExtract ships in three forms that need no unarchiver:
                   work either: it arrives still wrapped, with nothing on the
                   Mac to unwrap it. Not yet tried on a real SuperDrive.
 
-Double-click helpers. Both disks also hold a "MacExtract Helpers" folder,
+  MacExtract-400K.dsk  A 400K MFS floppy, for a Macintosh 512K with a Hard
+                  Disk 20: its 64K ROM reads no other floppy. It holds
+                  MacExtract and MacExtract-Helpers.zip. Write it to a 400K
+                  disk on a Mac with both kinds of drive. Not yet tried on a
+                  real 512K.
+
+Double-click helpers. The 800K and 1.44 MB disks also hold a "MacExtract
+Helpers" folder,
 and MacExtract-Helpers.zip has the same sixteen in one file: open it with
 MacExtract. Each one stands in
 for a program that made archives -- StuffIt, Compact Pro, DiskDoubler and
@@ -158,7 +174,8 @@ Floor target: System 3.0 on a 1 MB Mac Plus (68000) -- the system the Plus
 shipped with in January 1986. It also runs in 512 KB, on a Macintosh 512Ke.
 On a true Macintosh 512K -- the 64K ROM -- it opens and lists a disk, but
 extracting needs HFS, which that machine has only with a Hard Disk 20
-attached; nobody has yet tried it on one. A Macintosh 128K cannot run this
+attached; nobody has yet tried it on one (MacExtract-400K.dsk is the
+disk for it). A Macintosh 128K cannot run this
 at all: the program's code and data do not fit in its memory, whatever the
 system.
 The same binary runs unchanged through Mac OS 9 and adapts its memory use to
@@ -605,7 +622,8 @@ TXT
 
 echo "make_dist: wrote dist/MacExtract.bin ($(wc -c < dist/MacExtract.bin) B),"
 echo "make_dist:       dist/MacExtract.dsk ($(wc -c < dist/MacExtract.dsk) B),"
-echo "make_dist:       $IMG ($(wc -c < "$IMG") B), dist/README.txt"
+echo "make_dist:       $IMG ($(wc -c < "$IMG") B),"
+echo "make_dist:       $MFS ($(wc -c < "$MFS") B), dist/README.txt"
 
 # Cheap proof that the three artifacts carry the same application: each
 # image's copy round-trips back to a MacBinary whose resource fork — which is
@@ -632,3 +650,24 @@ sys.exit(0 if same and flags & 0x2000 else 1)
 PY
     rm -f "$HFS_TMP/roundtrip.bin"
 done
+# The same for the MFS floppy, read back by mkmfs.py's own reader, and its
+# zip byte for byte with its type and creator.
+python3 tools/vmac/mkmfs.py "$MFS" --extract MacExtract "$HFS_TMP/roundtrip.bin" >/dev/null
+python3 tools/vmac/mkmfs.py "$MFS" --extract MacExtract-Helpers.zip "$HFS_TMP/zip.bin" >/dev/null
+python3 - "$HFS_TMP/roundtrip.bin" "$HFS_TMP/zip.bin" "$MFS" <<'PY'
+import sys
+a = open(sys.argv[1], 'rb').read()
+b = open('dist/MacExtract.bin', 'rb').read()
+z = open(sys.argv[2], 'rb').read()
+want = open('dist/MacExtract-Helpers.zip', 'rb').read()
+rl = int.from_bytes(b[87:91], 'big')
+same = a[128:128 + rl] == b[128:128 + rl]
+flags = (a[73] << 8) | a[101]
+zl = int.from_bytes(z[83:87], 'big')
+zsame = z[65:73] == b'ZIP MExt' and z[128:128 + zl] == want
+print(f"make_dist: {sys.argv[3]} round-trip: {rl} B resource fork, "
+      f"{'identical' if same else 'DIFFERENT'} to the MacBinary, "
+      f"Finder flags 0x{flags:04X}; helpers zip {z[65:73].decode('mac_roman')!r}, "
+      f"{'identical' if zsame else 'DIFFERENT'}")
+sys.exit(0 if same and flags & 0x2000 and zsame else 1)
+PY

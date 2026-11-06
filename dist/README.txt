@@ -2,7 +2,7 @@ MacExtract v0.45.0 — bootstrap distribution
 ==========================================
 
 A bare Classic Mac has no way to open a .sit/.cpt/.hqx until it HAS an
-unarchiver, so MacExtract ships in three forms that need no unarchiver:
+unarchiver, so MacExtract ships in four forms that need no unarchiver:
 
   MacExtract.bin  The application as uncompressed MacBinary. Transfer it to
                   the Mac with any MacBinary-aware method (ImportFl, a terminal
@@ -25,7 +25,14 @@ unarchiver, so MacExtract ships in three forms that need no unarchiver:
                   work either: it arrives still wrapped, with nothing on the
                   Mac to unwrap it. Not yet tried on a real SuperDrive.
 
-Double-click helpers. Both disks also hold a "MacExtract Helpers" folder,
+  MacExtract-400K.dsk  A 400K MFS floppy, for a Macintosh 512K with a Hard
+                  Disk 20: its 64K ROM reads no other floppy. It holds
+                  MacExtract and MacExtract-Helpers.zip. Write it to a 400K
+                  disk on a Mac with both kinds of drive. Not yet tried on a
+                  real 512K.
+
+Double-click helpers. The 800K and 1.44 MB disks also hold a "MacExtract
+Helpers" folder,
 and MacExtract-Helpers.zip has the same sixteen in one file: open it with
 MacExtract. Each one stands in
 for a program that made archives -- StuffIt, Compact Pro, DiskDoubler and
@@ -49,7 +56,8 @@ Floor target: System 3.0 on a 1 MB Mac Plus (68000) -- the system the Plus
 shipped with in January 1986. It also runs in 512 KB, on a Macintosh 512Ke.
 On a true Macintosh 512K -- the 64K ROM -- it opens and lists a disk, but
 extracting needs HFS, which that machine has only with a Hard Disk 20
-attached; nobody has yet tried it on one. A Macintosh 128K cannot run this
+attached; nobody has yet tried it on one (MacExtract-400K.dsk is the
+disk for it). A Macintosh 128K cannot run this
 at all: the program's code and data do not fit in its memory, whatever the
 system.
 The same binary runs unchanged through Mac OS 9 and adapts its memory use to

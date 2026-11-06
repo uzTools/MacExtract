@@ -31,6 +31,7 @@ from reference/XADMaster/XADMacArchiveParser.m.
     mkmfs.py --extract System Sys11.img System.bin       # lift a file out
     mkmfs.py out.img --boot Sys11.img --shell TrapTest System.bin app.bin
     mkmfs.py out.img --boot Sys30.img System.bin probe.bin:Finder
+    mkmfs.py out.img app.bin --data Helpers.zip "Helpers.zip" "ZIP MExt"
 """
 
 import argparse
@@ -158,7 +159,12 @@ def build(files, volname, bootblocks=None, geom=G400):
         name = f.name.encode("mac_roman")[:255]
         e = bytearray()
         e += bytes([0x80, 0])                       # flFlags (used), flTyp
-        e += f.type + f.creator + struct.pack(">H", f.flags) + b"\0" * 6
+        # FInfo is type, creator, fdFlags, fdLocation (a Point, v then h),
+        # fdFldr — Source: Retro68's Multiverse.h, `struct FInfo`. A row of
+        # icons, three across: at (0, 0) every one lands on the first, and
+        # 100 apart a long name runs into its neighbour's (System 3.0).
+        v, h = 20 + 70 * ((fnum - 1) // 3), 40 + 150 * ((fnum - 1) % 3)
+        e += f.type + f.creator + struct.pack(">HhhH", f.flags, v, h, 0)
         e += struct.pack(">IHIIHII", fnum, dstart, len(f.data), dphys,
                          rstart, len(f.rsrc), rphys)
         e += struct.pack(">II", f.crdat, f.mddat)
@@ -304,6 +310,11 @@ def main():
                     help="MacBinary files to put on it, each optionally "
                          "PATH:MACNAME to land under a different name — the "
                          "same spelling mkboot.py uses")
+    ap.add_argument("--data", nargs=3, action="append", default=[],
+                    metavar=("PATH", "MACNAME", "TYPECREATOR"),
+                    help="a plain file to put on it as a data fork, with the "
+                         "8-character type and creator given, e.g. 'ZIP MExt' "
+                         "for 'ZIP ' and 'MExt'")
     ap.add_argument("--name", default="Untitled", help="volume name")
     ap.add_argument("--boot", help="image to copy logical blocks 0-1 from, "
                                    "which is what makes the volume bootable")
@@ -341,6 +352,13 @@ def main():
     for spec in a.files:
         path, _, macname = spec.partition(":")
         files.append(MacFile.from_macbinary(path, macname or None))
+    for path, macname, tc in a.data:
+        tc = tc.encode("mac_roman")
+        if len(tc) != 8:
+            raise SystemExit(f"mkmfs: {tc!r} is not four bytes of type and "
+                             "four of creator")
+        files.append(MacFile(macname, tc[:4], tc[4:], 0,
+                             open(path, "rb").read(), b""))
     open(a.image, "wb").write(build(files, a.name, boot))
     print(f"mkmfs: wrote {a.image} — {len(files)} file(s), volume {a.name!r}")
     return 0

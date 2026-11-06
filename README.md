@@ -28,7 +28,8 @@ currently **v0.45.0**, or from the tree:
 | [`dist/MacExtract.bin`](dist/MacExtract.bin) | MacBinary, for any MacBinary-aware transfer |
 | [`dist/MacExtract.dsk`](dist/MacExtract.dsk) | an 800K floppy image, for a real floppy or an emulator |
 | [`dist/MacExtract-1440K.img`](dist/MacExtract-1440K.img) | the same at 1.44 MB, for a USB floppy drive and a SuperDrive Mac |
-| [`dist/MacExtract-Helpers.zip`](dist/MacExtract-Helpers.zip) | the double-click helpers in one file, for MacExtract to open; also on both disks |
+| [`dist/MacExtract-400K.dsk`](dist/MacExtract-400K.dsk) | a 400K MFS floppy, for a Macintosh 512K with a Hard Disk 20 |
+| [`dist/MacExtract-Helpers.zip`](dist/MacExtract-Helpers.zip) | the double-click helpers in one file, for MacExtract to open; also on every disk |
 
 None of them needs an unarchiver to open. [`dist/README.txt`](dist/README.txt)
 has the transfer notes.
@@ -127,7 +128,8 @@ The Deluxes do not run on a Mac Plus. Details in [FORMATS.md](FORMATS.md).
 - **Minimum:** System 3.0, 68000, 512 KB: a Macintosh 512Ke, or a Plus with
   its 1986 system. A true Macintosh 512K (64K ROM) starts it, but extracting
   needs HFS, which that machine has only with a Hard Disk 20; nobody has
-  tried one yet. A Macintosh 128K is too small.
+  tried one yet; the 400K floppy above is the disk for it. A Macintosh 128K
+  is too small.
 - **For everything:** 1 MB. In 512 KB some large StuffIt 5 archives, and a
   few other big ones, skip the entries that do not fit and extract the rest.
 - **Runs on** System 6, System 7, Mac OS 8 and 9, PowerPC included.

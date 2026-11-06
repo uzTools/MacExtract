@@ -522,6 +522,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-06 (the icons a designer drew) — the application and archive icons are a designer's, imported by `tools/icon/import_icons.py`; nothing draws them any more
 - 2026-11-06 (the field ZipIt 1.4 never wrote) — ZipIt 1.4 neither writes nor reads `0x2805`; ZipIt 2.2.2 writes the folder's frFlags and View 0 whatever its Finder view, and puts no View into frView
 - 2026-11-06 (the 64th character of a password) — the password dialog's buffer was a Str63 and the 64th character typed went one byte past it; it is UNC_PASSWORD_MAX + 1, declared beside `gSegShort` so it costs 0 B where declared with its dialog it cost 16
+- 2026-11-06 (the floppy a 64K ROM reads) — `dist/` ships a 400K MFS floppy, MacExtract and the helpers zip typed `ZIP `/`MExt`, for a Macintosh 512K with a Hard Disk 20
 
 ---
 
@@ -21685,3 +21686,32 @@ System 6.0.8, 4 MB, measured): a 65-character wrong password filled the
 field, was refused and asked again, and `hushnow` then gave both forks
 of `Forked` byte-exact. A regression check, not the bug: the old build
 showed no symptom either, and the frame cannot count the bullets.
+
+## 2026-11-06 (the floppy a 64K ROM reads) — `dist/` ships a 400K MFS floppy, MacExtract and the helpers zip typed `ZIP `/`MExt`, for a Macintosh 512K with a Hard Disk 20
+
+**Decision (the maintainer's).** `make_dist.sh` writes
+`dist/MacExtract-400K.dsk` with `tools/vmac/mkmfs.py`: MacExtract, and
+`MacExtract-Helpers.zip` as a data fork typed `ZIP ` with MacExtract's
+creator, because MFS has no folders. It is the only floppy a 64K ROM reads
+(FORMATS.md, *A true Macintosh 512K*); the maintainer writes it to a 400K
+disk on a Mac that has both. Every other Mac reads `MacExtract.dsk`.
+
+**Measured, 2026-11-06,** on `mv-512Ke` under System 3.0 (`Sys30.img`),
+the image in drive 2 and a blank 800K HFS `Out` in drive 3:
+- The Finder drew both files with the bundle's icons.
+- Double-clicking the zip launched MacExtract.
+- MacExtract extracted to `Out` with no report window: 16 helpers, each the
+  same length and type/creator as on `MacExtract.dsk`.
+- The forks were identical except resource-fork bytes 48–125. Those hold
+  the file's name, in the system-reserved bytes 16–127 that
+  `tools/vmac_check.py::mask_reserved` masks.
+
+The application and zip on the image round-trip byte for byte at every
+`make_dist.sh` run.
+
+`mkmfs.py` now writes each file's icon position, three across, 150 apart:
+at none, every icon landed on the first, and 100 apart the zip's name ran
+into MacExtract's (System 3.0, measured).
+
+**What it cannot see.** A 64K ROM with an HD20 (MANUAL_TESTS.md §6); a
+locked floppy, where the Finder cannot write the Desktop file it builds.

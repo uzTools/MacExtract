@@ -71,6 +71,7 @@ digits over the desktop's 50 % grey cannot be read back off a screenshot.
     mkmfs.py $V/AppMFS.img --name MacExtract dist/MacExtract.bin
     mkmfs.py --list $V/AppMFS.img
     mkmfs.py --extract System $V/Sys11.img /tmp/System11.bin
+    mkmfs.py out.img app.bin --data Helpers.zip Helpers.zip "ZIP MExt"   # a plain file, typed
 
 **Use System 3.0, not System 1.1**, and Apple's own MFS disk: `setup.sh`
 fetches `Sys30MFS.img` by unpacking Macintosh Garden's `System_3.x.sit` with
