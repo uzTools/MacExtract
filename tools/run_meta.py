@@ -711,6 +711,9 @@ def archive_expectations(cli, work, problems):
                             % os.path.basename(p))
             return out
     gen("am-sd", S.sd_meta(sd), ".sd")
+    dd = os.path.join(fx, "derived-Terrainman_2.0__.sea")
+    if os.path.exists(dd):
+        gen("am-dda2", S.dd_folder_meta(dd), ".sea")
     gen("am-sit5", S.sit5_meta(s5), ".sit")
     gen("am-sit5-badcrc", S.sit5_meta(s5, break_crc=True), ".sit")
     # A real MacZip archive: its 0x334d records decoded here as
@@ -1149,9 +1152,20 @@ def printable(t):
     return "".join(ch for ch in t if ord(ch) >= 0x20)
 
 
-def as_written(row):
+def as_written(row, top_dir=False):
     """An engine row as a host writes it on a new entry: what is not
-    stated stays zero, and a lock not stated is no lock."""
+    stated stays zero, and a lock not stated is no lock. And the shell's
+    placement rules that Expander also follows (mac/macextract_mac.c,
+    sink_begin; DECISIONS.md 2026-11-06, *the desk no folder is put on*):
+    on-desk cleared everywhere, a top folder at (-1, -1). Not the third,
+    a top folder with a window inited: Expander leaves one uninited, and
+    the shell differs from it there on purpose (mac_sink_test grades it)."""
+    if row["finfo"] != "-":
+        fi = bytearray.fromhex(row["finfo"])
+        fi[9] &= 0xFE
+        if top_dir:
+            fi[10:14] = b"\xff" * 4
+        row = dict(row, finfo=fi.hex())
     return dict(finfo="00" * 16 if row["finfo"] == "-" else row["finfo"],
                 fxinfo="00" * 16 if row["fxinfo"] == "-" else row["fxinfo"],
                 backup="00000000" if row["backup"] == "-" else row["backup"],
@@ -1199,7 +1213,7 @@ def expander(cli):
                            % (a["fixture"], name, leaf))
                 continue
             want = expander_want(e["kind"], bytes.fromhex(e["match"]["rec"]))
-            got = as_written(row)
+            got = as_written(row, e["kind"] == "dir" and "/" not in name)
             label = "%s: %s" % (a["fixture"], name)
             for k in want:
                 n += 1

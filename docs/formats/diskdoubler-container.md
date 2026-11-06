@@ -370,7 +370,17 @@ has a compressed file header, and a folder record has a date.
 A **file** record: a compressed file header at **+56**, its magic there
 in all 93.
 
-A **folder** record: creation at **+54**, modification at **+58**.
+A **folder** record is **88 bytes** (40 of 40 here):
+
+| offset | size | field | how it is pinned |
+|---|---|---|---|
+| 46 | 8 | zero | 40 of 40; Norton DiskDoubler Pro 4.1.1 writes 0 with a backup date and all of DXInfo set on the folder, and its Expand Archive reads nothing from them (`tools/vmac/ndd.py --folders`, `--folders-read`, 2026-11-06) |
+| 54 | 4 | creation date | `--folders`: a 1990 creation planted on the folder lands here |
+| 58 | 4 | modification date | `--folders`: the 1995 modification lands here |
+| 62 | 4 | the folder's number: 2 for the archive's own record, then one more per folder in record order | 19 archives of 19; nothing reads it |
+| 66 | 16 | the folder's DInfo, whole | `--folders`: planted values land here; `--folders-read`: Expand Archive puts a record's back verbatim, flags included |
+| 82 | 4 | frScroll, DXInfo's first field | as +66; the rest of DXInfo comes back zero |
+| 86 | 2 | CRC-16/XMODEM of +0..85 | 40 of 40 |
 
 A record of type `0x1000` carries the file itself instead of pointing
 at a header:

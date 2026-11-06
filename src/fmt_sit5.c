@@ -455,10 +455,10 @@ int unc_sit5_extract(UncCtx *c)
             if (bcrc == want) {
                 int k;
                 for (k = 0; k < 32; k++) e.finder_info[k] = hdr[4 + k];
-                /* The flags as Expander 5.5 writes them, finder_flags
-                 * staying the archive's word (macextract.h): a folder's
-                 * frFlags less 0x0001, as measured. */
-                if (isdir) e.finder_info[9] &= 0xFE;
+                /* Expander 5.5 clears a folder's on-desk (0x0001), as
+                 * measured; the shell does that for every item
+                 * (DECISIONS.md 2026-11-06, *the desk no folder is put
+                 * on*). */
                 e.meta |= UNC_META_FINFO | UNC_META_FXINFO;
             }
         }

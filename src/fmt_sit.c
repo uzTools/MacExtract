@@ -1229,27 +1229,29 @@ static int sit_fork_crypt(UncCtx *c, UncCrypt *cr, uint32_t at,
  *     name leftovers in @34..65, and Expander then restores no position,
  *     rectangle, scroll or lock.
  *   gate "v2": archive byte 14 >= 2, for a folder's flags and view.
- *   file:   type @66, creator @70, fdFlags @74 less 0x0001;
+ *   file:   type @66, creator @70, fdFlags @74;
  *           fdLocation @62..65 (v, h) under "crc", except (-1,-1); where
  *           no location is restored, inited (0x0100) goes too, so the
  *           Finder places the icon; fdFldr 0; locked = bit 15 of @36,
  *           under "crc" (any version).
- *   folder: frRect @38..45 under "crc"; frFlags @74 less 0x0001 under
- *           "v2"; frLocation @70..73 under "crc" for a NESTED folder,
- *           and (-1,-1) for a top-level one or without "crc"; frView
+ *   folder: frRect @38..45 under "crc"; frFlags @74 under "v2";
+ *           frLocation @70..73 under "crc", else (-1,-1); frView
  *           @68 under "v2"; frScroll @100..103 under "crc", stored h
  *           then v. The rest of DXInfo is 0.
  * Nothing in the header becomes FXInfo, a backup date or fdFldr: the
  * measurement found no byte Expander reads for them (DECISIONS.md, same
  * entry). All 16 bytes are stated, the parts Expander does not restore
  * at what it writes, so the shell's inited rule behaves as Expander's.
+ * Expander also clears on-desk (0x0001) everywhere and writes a top
+ * folder at (-1,-1): the shell does both for every format (DECISIONS.md
+ * 2026-11-06, *the desk no folder is put on*), so they are not done here.
  * finder_flags is left as the archive stores it: the flags written are
  * fi[8..9]. */
-static void sit_finder(UncEntryInfo *e, const uint8_t *h, int v2, int top)
+static void sit_finder(UncEntryInfo *e, const uint8_t *h, int v2)
 {
     uint8_t *fi = e->finder_info;
     int crc = unc_crc16_arc(0, h + 2, 32) == unc_get_u16be(h + 34);
-    unsigned fl = unc_get_u16be(h + 74) & 0xFFFEu;
+    unsigned fl = unc_get_u16be(h + 74);
     int k;
 
     if (e->is_dir) {
@@ -1260,7 +1262,7 @@ static void sit_finder(UncEntryInfo *e, const uint8_t *h, int v2, int top)
                 fi[4 + k] = h[42 + k];
                 fi[16 + k] = h[100 + (k ^ 2)];       /* stored h, v */
             }
-            fi[10 + k] = (crc && !top) ? h[70 + k] : 0xFF;
+            fi[10 + k] = crc ? h[70 + k] : 0xFF;
         }
         if (v2) {
             fi[14] = h[68];
@@ -1356,7 +1358,7 @@ int unc_sit_extract(UncCtx *c)
             e.is_dir = 1;
             e.data_size = e.rsrc_size = 0;
             e.comp_data_size = e.comp_rsrc_size = 0;
-            sit_finder(&e, hdr, v2, depth == 0);
+            sit_finder(&e, hdr, v2);
             e.create_date  = unc_get_u32be(hdr + 76);
             e.mod_date     = unc_get_u32be(hdr + 80);
             sret = c->sink->begin_entry(c->sink->ctx, &e);
@@ -1387,7 +1389,7 @@ int unc_sit_extract(UncCtx *c)
         unc_entry_path_append(&e, hdr + 3, namelen);
         e.type         = unc_get_u32be(hdr + 66);
         e.creator      = unc_get_u32be(hdr + 70);
-        sit_finder(&e, hdr, v2, 0);
+        sit_finder(&e, hdr, v2);
         e.create_date  = unc_get_u32be(hdr + 76);
         e.mod_date     = unc_get_u32be(hdr + 80);
         e.rsrc_size = rlen;

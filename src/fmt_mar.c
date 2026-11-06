@@ -38,7 +38,9 @@
  * info whole, a folder's scroll into DXInfo, the lock from bit 0 of the
  * flags — and for the two Finder flags it clears on the first item by
  * default, inited and on-desk (mar_decode_fd, par_clear_first), of
- * which only on-desk is cleared here (below). Its comment block it skips; this reader hands it
+ * which neither is cleared here: the shell clears on-desk on every item
+ * and writes a top folder inited (DECISIONS.md 2026-11-06, *the desk no
+ * folder is put on*). Its comment block it skips; this reader hands it
  * on. Graded against both archives hampa published alongside StuffIt
  * copies of the same files (FORMATS.md, *MAR*).
  *
@@ -156,13 +158,12 @@ int unc_mar_extract(UncCtx *c)
         e.finder_flags = unc_get_u16be(h + 104);
         for (k = 0; k < 16; k++) e.finder_info[k] = h[96 + k];
         e.meta = UNC_META_FINFO;
-        /* On-desk cleared on the first item, as mar 0.2.0's expander
-         * does (mar_dec.c, par_clear_first). Inited is KEPT, where that
-         * expander clears it by default: the shell writes the top item's
-         * location as (-1, -1), and the Finder then places its icon and
-         * still opens its window as stored (DECISIONS.md 2026-10-19, *the
-         * place outside the archive*), which clearing inited loses. */
-        if (top) e.finder_info[9] &= 0xFEu;
+        /* mar's expander clears on-desk and inited on the first item
+         * (mar_dec.c, par_clear_first). Neither here: the shell clears
+         * on-desk on every item, and writes the top item at (-1, -1),
+         * inited if a folder, so the Finder places it and still opens its
+         * window as stored (DECISIONS.md 2026-10-19, *the place outside
+         * the archive*; 2026-11-06, *the desk no folder is put on*). */
 
         if (id == MAR_FOLDER) {
             /* frScroll, and the rest of DXInfo zero: what the expander's

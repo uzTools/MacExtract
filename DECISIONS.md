@@ -517,6 +517,8 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-06 (the tap the pump read too late) — a press on Cancel is usually over when the progress pump reads it, and System 6 then cancelled even on a press dragged off the button; the release now decides, and a cancel taken without tracking flashes the button, for 160 B
 - 2026-11-06 (the header that spoke for the rest) — a pax `g` header's mtime and comment now apply to every tar member after it that states neither, as POSIX, GNU tar and CPython's tarfile have it; XADMaster keeps each header's own, for 80 B of `ovl_zipold`
 - 2026-11-06 (the step a click waits for) — the progress step goes from 8 KB to 1 KB, which more than halves the slow formats' gaps for under 1 % of time; the stored-fork copies keep 8 KB under a constant of their own, and the time left is held within a percent, which the finer step made flicker
+- 2026-11-06 (the folder DiskDoubler Pro put back) — a `DDA2` folder record holds the folder's DInfo whole and its frScroll, as Norton DiskDoubler Pro 4.1.1 writes and restores them; +46..53 is padding, +62 a folder number, +86 a CRC, for 64 B of `ovl_cptdd`
+- 2026-11-06 (the desk no folder is put on) — the shell clears on-desk (0x0001) on every item at every level, in every format, MAR's included, and writes a top folder that has a window inited, for 32 B off every budget
 
 ---
 
@@ -21454,3 +21456,111 @@ construction; without the hold it fails with the 18, 1 and 547 above.
 **Cost (measured).** The step itself: 0 B in every image, resident `CODE`
 and A5. The hold: CODE +16 in all three configurations, shipped and control
 A5 -16 by alignment, so **no budget moves**; `OVL_SAVED` and `TIERS` unmoved.
+
+## 2026-11-06 (the folder DiskDoubler Pro put back) — a `DDA2` folder record holds the folder's DInfo whole and its frScroll, as Norton DiskDoubler Pro 4.1.1 writes and restores them; +46..53 is padding, +62 a folder number, +86 a CRC, for 64 B of `ovl_cptdd`
+
+**The problem.** The `DDA2` reader stated a folder's two dates and nothing
+else; folder bytes +46..53 and +62 onward were nobody's (OPEN_ITEMS.md,
+*the metadata the archives hold and the readers drop*). Norton DiskDoubler
+Pro 4.1.1, which wrote the corpus's `ddtf-ddpro411*` archives, was already
+driven here (DECISIONS.md 2026-08-21, *the Symantec release*).
+
+**Measured, two boots** (`tools/vmac/ndd.py --folders`, `--folders-read`):
+- **Writer.** Two nested folders with a value planted in every field of
+  their catalog records: DInfo lands whole at +66..81, frScroll at
+  +82..85, creation at +54 and modification at +58. The backup date and
+  the rest of DXInfo are written nowhere; +46..53 stays zero.
+- **Reader.** Expand Archive on that archive and on a copy whose folder
+  records carry other values, +46..53 bytes naming their own offsets, CRC
+  recomputed: both folders get +66..81 as their DInfo verbatim (flags
+  0x0102 and 0x0106 included) and +82..85 as frScroll, creation from +54;
+  the rest of DXInfo and the backup date come back zero, and no +46..53
+  byte appears anywhere. The modification date is the expansion's time,
+  so whether +58 is applied before the folder's files reset it is not
+  measured.
+- **The corpus.** +86 is CRC-16/XMODEM of +0..85 and +46..53 is zero in
+  40 folder records of 40; +62 numbers the folders in record order from
+  2, the archive's own record, in 19 archives of 19 (a nested-then-sibling
+  folder in `derived-Terrainman_2.0__.sea` is what tells it from the
+  depth).
+
+**Decision.** State what the application restored: DInfo whole, frScroll,
+the rest of DXInfo zero, `UNC_META_FINFO | UNC_META_FXINFO`, wherever the
+record is 88 bytes. Through the application on System 6.0.8, both folders'
+rectangle, view, scroll, creation and modification date came out as
+archived (*the desk no folder is put on*, below). The CRC is not judged: what DiskDoubler Pro does with
+a disagreeing one was not run, so a gate would be a rule no source gives.
+Flag 0x0001 was not run either; the shell clears it on every item whatever
+the reader states (*the desk no folder is put on*, below).
+
+**Graded.** `am-dda2` (`tools/synth_archmeta.py`): every folder record of
+`derived-Terrainman_2.0__.sea` gets values of its own; wanted is what
+Expand Archive put back. The engine before this change fails 6 fields.
+
+**Price.** `ovl_cptdd` 15,168 → 15,232 B; nothing shipped and resident.
+Priced with the next entry, measured together against 1ff3a94.
+
+## 2026-11-06 (the desk no folder is put on) — the shell clears on-desk (0x0001) on every item at every level, in every format, MAR's included, and writes a top folder that has a window inited, for 32 B off every budget
+
+**The maintainer's rule, 2026-11-06**: on-desk is cleared everywhere. Until
+then it was each reader's: StuffIt classic, StuffIt 5 and SuperDisk! clear
+it because their expanders were measured clearing it (FORMATS.md, *Finder
+info in the archive*), MAR on its first item only, as mar's expander does
+(2026-11-03), and the new `DDA2` folder record passed it through (*the
+folder DiskDoubler Pro put back*, above). The rule now sits where Finder
+flags reach a disk, `sink_begin`; the CLI writes none. **The readers'
+copies are removed**, the maintainer's call: StuffIt classic's on-desk
+mask and its top folder's (−1, −1), StuffIt 5's, SuperDisk!'s and MAR's
+masks. `l --meta` now states the archive's flags as stored, and
+`run_meta.py --expander` applies the shell's two rules Expander also
+follows (`as_written`) before holding a row to what Expander wrote: 241
+archives, 6,627 fields, 0 disagreeing, as before. The three rules sit
+together in `sink_begin`.
+
+**And the top folder is inited**, the maintainer's too: beside the (−1, −1)
+it already gets (2026-10-19, *the place outside the archive*), a top folder
+whose window rectangle is not empty is written with inited set whatever its
+flags say, so the Finder places it and keeps its window. **Not one whose
+rectangle is empty** — no DInfo stated (a plain zip folder), or a zeroed
+one (18 top folders of StuffIt archives whose headers fail the name CRC):
+inited would make that a window of size zero, which the maintainer does
+not want. Expander 4.0.2 leaves a top folder uninited where its header
+says so; the shell differs from it there on purpose, on three sentinel
+archives here (S4, T1, U3) and no corpus one.
+
+**Graded.** `mac_sink_test --meta` states on-desk on the top folder, a
+nested file, an application and a nested folder; each is written without
+it. Three more top folders: stated DInfo with inited clear, written
+0x0100; no DInfo, and a zeroed one, written 0. The shell without the
+on-desk line, without the inited line, or with inited set on every top
+folder, fails the FInfo/DInfo check (0x01).
+
+**Emulated** (`tools/vmac/run.py --keep-disks`, System 6.0.8, the
+application with all three rules): `ndd.py --folders`' archive with its
+two folder records' flags set to 0x0005 (top) and 0x0009 (nested), CRC
+recomputed. On the disk (`hfscat.py`) the top folder is 0x0104 at
+(−1, −1), the nested one 0x0008 at its stored (0x55, 0x56); rectangles,
+views, scrolls and both dates as archived.
+
+**What System 7.0.1's Finder does with one below the top**, the
+maintainer's question (`tools/vmac/ondesk.py`): a file flagged 0x0101 in a
+folder, beside a 0x0100 control, on a volume mounted at boot. It stays in
+its folder (no Desktop Folder is made), the Finder clears the flag itself
+(0x0100 read back) and moves its icon from (40, 40) to (20, 40); the
+control is untouched. So respecting the flag below the top would buy
+nothing there and cost the stored position, which clearing it keeps.
+
+**Price** (with *the folder DiskDoubler Pro put back*, measured together
+against 1ff3a94): **shipped CODE +36, A5 −4: 32 B off every budget**, all
+of it the shell's three rules; a one-long rectangle test instead of the
+exact one was CODE +20, A5 +12, the same 32. Control CODE +112, A5 +16,
+so `OVL_SAVED` 165,952, `TIERS` −128. Images: `cptdd` +64, `stuffit` −12,
+`superdisk` −6, and `zipold` **+16 for an AND removed** (`unc_mar_extract`
+1,126 → 1,144 B, GCC's layout; the same with `top` written out at its
+uses); bundle 194,748. Every grant against the control rises 32 to 108 B
+(`run_tiers.gain()`); `run_tiers.py --check` moves no tally.
+`dist/MacExtract.bin` 251,136 → 251,264 B.
+
+**Not measured:** a file written while the Finder runs (the volume was
+mounted at boot); System 6, 7.5 and later; a folder flagged on-desk below
+the top. None of the 37 `DDA2` folder records here carries the flag.

@@ -5691,9 +5691,10 @@ static void test_mar(void)
     CHECK(cap.rlen[0] == 0);
     CHECK(cap.info[0].name_len == 4 && memcmp(cap.info[0].name, "Note", 4) == 0);
     CHECK(cap.info[0].type == 0x54455854u && cap.info[0].finder_flags == 0x0101);
+    /* The flags as stored, on-desk included: the shell clears it. */
     CHECK((cap.info[0].meta & UNC_META_FINFO) &&
           cap.info[0].finder_info[8] == 0x01 &&
-          cap.info[0].finder_info[9] == 0);
+          cap.info[0].finder_info[9] == 0x01);
     CHECK(cap.info[0].locked == UNC_LOCK_NO);
 
     /* A data byte changed: the entry fails its CRC. */

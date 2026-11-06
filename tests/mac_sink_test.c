@@ -797,6 +797,10 @@ int main(int argc, char **argv)
              * free place (DECISIONS.md 2026-10-19, *the place outside the
              * archive*). */
             info.finder_info[8] = 0x05;
+            /* On-desk (0x0001) stated on every item below: cleared on
+             * each, at every level (DECISIONS.md 2026-11-06, *the desk no
+             * folder is put on*). */
+            info.finder_info[9] = 0x01;
             memcpy(info.finder_info + 16, dxinfo, 16);
             info.meta = UNC_META_FINFO | UNC_META_FXINFO | UNC_META_BACKUP;
             info.comment = (const uint8_t *)fcmt;
@@ -813,6 +817,7 @@ int main(int argc, char **argv)
             info.create_date = 0xA0000011u; info.mod_date = 0xA0000012u;
             info.backup_date = 0xA0000013u;
             memcpy(info.finder_info, finfo, 16);
+            info.finder_info[9] = 0x01;
             memcpy(info.finder_info + 16, fxinfo, 16);
             info.meta = UNC_META_FINFO | UNC_META_FXINFO | UNC_META_BACKUP;
             info.comment = (const uint8_t *)cmt;
@@ -852,6 +857,7 @@ int main(int argc, char **argv)
                 info.finder_flags = 0x2100;
                 memcpy(info.finder_info, finfo, 16);
                 info.finder_info[8] = 0x21;      /* the stated flags too */
+                info.finder_info[9] = 0x01;
                 info.meta = UNC_META_FINFO;
                 info.data_size = 0; info.rsrc_size = flen;
                 gDTRegN = 0;
@@ -869,8 +875,29 @@ int main(int argc, char **argv)
             info.is_dir = 1;
             info.finder_flags = 0x2100;
             memcpy(info.finder_info, dinfo, 16);
-            info.finder_info[8] = 0x21; info.finder_info[9] = 0x00;
+            info.finder_info[8] = 0x21; info.finder_info[9] = 0x01;
             info.meta = UNC_META_FINFO;
+            sink_begin(&sk2, &info);
+
+            /* Three more top folders: one whose stated DInfo has inited
+             * clear, written inited; one with no DInfo and one with a
+             * zeroed DInfo, both left alone: an empty rectangle is no
+             * window (*the desk no folder is put on*). */
+            memset(&info, 0, sizeof info);
+            memcpy(info.name, "Bare", 4); info.name_len = 4;
+            info.is_dir = 1;
+            memcpy(info.finder_info, dinfo, 16);
+            info.finder_info[8] = 0x00; info.finder_info[9] = 0x01;
+            info.meta = UNC_META_FINFO;
+            sink_begin(&sk2, &info);
+            memset(&info, 0, sizeof info);
+            memcpy(info.name, "Nofo", 4); info.name_len = 4;
+            info.is_dir = 1;
+            sink_begin(&sk2, &info);
+            memset(&info, 0, sizeof info);
+            memcpy(info.name, "Zero", 4); info.name_len = 4;
+            info.is_dir = 1;
+            info.meta = UNC_META_FINFO;            /* 16 zero bytes */
             sink_begin(&sk2, &info);
 
             memset(&info, 0, sizeof info);
@@ -943,6 +970,19 @@ int main(int argc, char **argv)
                          gDTReg[w].len != want[w].len ||
                          gDTReg[w].first[0] != want[w].b0)))
                         bad |= DROP_DTREG;
+            }
+            {
+                const char *top[3] = { "Bare", "Nofo", "Zero" };
+                const uint16_t want[3] = { 0x0100, 0x0000, 0x0000 };
+                int t;
+                for (t = 0; t < 3; t++) {
+                    CatRec *rt;
+                    uint16_t ff = 0xFFFF;
+                    snprintf(path, sizeof path, "%s/%s", dir, top[t]);
+                    rt = cat_rec(path, 0);
+                    if (rt) memcpy(&ff, rt->finfo + 8, 2);
+                    if (!rt || ff != want[t]) bad |= DROP_FINFO;
+                }
             }
             snprintf(path, sizeof path, "%s/Fold/Sub", dir);
             {

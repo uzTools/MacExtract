@@ -26,7 +26,8 @@ of it, and the author's own READERS are GPL-2.0-only and are not run
                           that is printed.
   synth-mar-single.mac,   tools/synth_mar.py's items, field for field:
   synth-mar-tree.mar      names, both forks, the 16 bytes of Finder info
-                          (on-desk cleared on the first item, inited kept),
+                          (as stored: the shell, not the reader, clears
+                          on-desk),
                           a folder's scroll, the
                           lock, the comment cut at 255 bytes and both dates
                           (`l --meta`).
@@ -122,8 +123,6 @@ def walk(blob):
         path = "/".join(stack + [name])
         dl, rl, cl, fl, ct, mt = struct.unpack(">IIIIII", h[72:96])
         fi = bytearray(h[96:112])
-        if not items:
-            fi[9] &= 0xFE              # on-desk; inited is kept
         row = {"name": path, "finder_flags": struct.unpack(">H", h[104:106])[0],
                "finfo": fi.hex(), "ctime": ct, "mtime": mt}
         if kind == b"fold":
@@ -308,7 +307,6 @@ def writers(cli, work):
         xrc, forks = extract(cli, p, os.path.join(work, "u-" + name))
         if rc or xrc:
             fail(f"unix {name}: exit {rc}/{xrc}")
-        top = min(want, key=len)
         for path, w in want.items():
             m = rows.get(path)
             if m is None:
@@ -317,7 +315,7 @@ def writers(cli, work):
             fi = bytes.fromhex(m["fi"])
             fl = fi[8] << 8 | fi[9]
             if "flags" in w:
-                wf = w["flags"] & (0xFFFE if path == top else 0xFFFF)
+                wf = w["flags"]
                 if fl != wf:
                     fail(f"unix {name}: {path!r} flags {fl:#06x} != {wf:#06x}")
                 v, h = int.from_bytes(fi[10:12], "big", signed=True), \

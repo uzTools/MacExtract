@@ -324,9 +324,9 @@ def sit5_meta(path, break_crc=False):
             blob[at + 2] ^= 0x5A
         name = "/".join(x.decode("mac-roman") for x in e["path"])
         blk = bytes(blob[at:at + 36])
+        # The block's own 16 bytes: Expander 5.5 clears a folder's
+        # on-desk, and the shell does that for every item, not the reader.
         fi = bytearray(blk[4:20])
-        if e["kind"] == "dir":
-            fi[9] &= 0xFE        # frFlags less 0x0001, as Expander 5.5 wrote
         want[name] = (dict(finfo="-", fxinfo="-") if break_crc else
                       dict(finfo=h(bytes(fi)), fxinfo=h(blk[20:36])))
     return bytes(blob), want
@@ -364,6 +364,41 @@ def now_meta():
 # SuperDisk!: a file's +18..21, a folder's 20 bytes
 # ------------------------------------------------------------------
 
+def dd_folder_meta(fixture):
+    """A corpus `DDA2` archive whose folder records carry a DInfo and
+    frScroll of their own, CRC-16/XMODEM at +86 recomputed. What is
+    wanted is what Norton DiskDoubler Pro 4.1.1's Expand Archive put on
+    a folder from such a record (tools/vmac/ndd.py --folders-read,
+    2026-11-06): +66..81 as the DInfo, verbatim, +82..85 as frScroll,
+    the rest of DXInfo zero."""
+    import binascii
+    out, want, stack, at, n = bytearray(open(fixture, "rb").read()), {}, [], 62, 0
+    while out[at:at + 4] == b"DDA2":
+        kind, = struct.unpack_from(">H", out, at + 4)
+        total, = struct.unpack_from(">I", out, at + 42)
+        if kind == 0xBBBB or not total:
+            break
+        level = struct.unpack_from(">I", out, at + 38)[0] - 2
+        name = bytes(out[at + 7:at + 7 + min(out[at + 6], 31)]).decode(
+            "mac-roman")
+        if kind & 0x8000 and level >= 0:
+            del stack[level:]
+            stack.append(name)
+            n += 1
+            # Every value names its folder and field: no two alike.
+            planted = struct.pack(">hhhhHhhHhh", 0x10 * n + 1, 0x10 * n + 2,
+                                  0x100 + n, 0x200 + n, 0x0100 | (n << 1),
+                                  0x10 * n + 5, 0x10 * n + 6, 0x0100,
+                                  0x10 * n + 7, 0x10 * n + 8)
+            out[at + 66:at + 86] = planted
+            struct.pack_into(">H", out, at + 86,
+                             binascii.crc_hqx(bytes(out[at:at + 86]), 0))
+            want["/".join(stack)] = dict(finfo=h(planted[:16]),
+                                         fxinfo=h(planted[16:] + bytes(12)))
+        at += total
+    return bytes(out), want
+
+
 def sd_meta(fixture):
     """sdmeta.build()'s stream — the one the self-extractor was measured
     on — over the corpus's own SuperDisk! stream."""
@@ -373,8 +408,9 @@ def sd_meta(fixture):
     fi_in = finfo[8:18] + sdmeta.LOC_IN + b"\0\0"
     fi_root = finfo[8:18] + sdmeta.LOC_ROOT + b"\0\0"
     return blob, {
-        # The extractor's flags, less 0x0001 (FORMATS.md).
-        "SentFold": dict(finfo=h(d[:9] + bytes([d[9] & 0xFE]) + d[10:16]),
+        # The record's flags as stored: the extractor's on-desk clear is
+        # the shell's, for every item (DECISIONS.md 2026-11-06).
+        "SentFold": dict(finfo=h(d[:16]),
                          fxinfo=h(d[16:20] + bytes(12))),
         "SentFold/inner.txt": dict(finfo=h(fi_in), fxinfo="-"),
         "outer.txt": dict(finfo=h(fi_root), fxinfo="-"),

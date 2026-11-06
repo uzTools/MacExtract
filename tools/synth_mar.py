@@ -158,18 +158,17 @@ def write(items):
     return bytes(out)
 
 
-def describe(items, prefix="", top=True):
-    """What an extractor must deliver, item by item: the path with '/' in
-    a name swapped to ':', and the Finder info with on-desk cleared on the
-    first item (mar 0.2.0's mar_dec.c, par_clear_first); inited is kept
-    (src/fmt_mar.c says why)."""
+def describe(items, prefix=""):
+    """What the engine must deliver, item by item: the path with '/' in
+    a name swapped to ':', and the Finder info as stored. mar 0.2.0's
+    expander clears on-desk and inited on the first item (mar_dec.c,
+    par_clear_first); the shell clears on-desk on every item instead and
+    writes a top folder inited (src/fmt_mar.c says why)."""
     rows = []
     for it in items:
         kind, name, f = it[0], it[1], it[2]
         path = prefix + name.replace(b"/", b":").decode("mac_roman")
         fi = bytearray(f["finfo"])
-        if top:
-            fi[9] &= 0xFE
         row = {"name": path, "finder_flags": struct.unpack(">H",
                f["finfo"][8:10])[0], "finfo": fi.hex(),
                "ctime": f.get("ctime", 0), "mtime": f.get("mtime", 0)}
@@ -186,7 +185,7 @@ def describe(items, prefix="", top=True):
             row.update(is_dir=True,
                        fxinfo=struct.pack(">hh", sv, sh).hex() + "00" * 12)
             rows.append(row)
-            rows += describe(it[3], path + "/", False)
+            rows += describe(it[3], path + "/")
     return rows
 
 

@@ -2868,15 +2868,33 @@ static void StampCat(MacSink *s)
             pb.hFileInfo.ioFlFndrInfo.fdFlags =
                 (s->cur.meta & UNC_META_FINFO) ? fl : fl & ~0x0100;
         }
-        /* At the top of the output an item's place was in a window this
-         * run does not restore, and kept on the desktop it landed anywhere
-         * (Mac OS 9.2.2): (-1, -1), no place, which the Finder fills with
-         * the next free one. Not inited cleared: a folder then lost its
-         * window's scroll too (System 7.6.1). DECISIONS.md 2026-10-19,
-         * *the place outside the archive*. */
+        /* Where an item lands: three rules, here for every format, and in
+         * no reader (DECISIONS.md 2026-10-19, *the place outside the
+         * archive*; 2026-11-06, *the desk no folder is put on*).
+         * - On-desk (0x0001) is cleared on every item at every level.
+         * - At the top of the output, (-1, -1): the item's place was in a
+         *   window this run does not restore, and kept on the desktop it
+         *   landed anywhere (Mac OS 9.2.2), so the Finder gives it the
+         *   next free one. Not by clearing inited: a folder then lost its
+         *   window's scroll too (System 7.6.1).
+         * - A top folder whose window rectangle is not empty is inited
+         *   whatever its flags say, so the Finder keeps its window. Not
+         *   one whose rectangle is empty — a folder with no DInfo stated,
+         *   or a zeroed one: inited would make that a window of size
+         *   zero. */
+        pb.hFileInfo.ioFlFndrInfo.fdFlags &= ~0x0001;
         if (s->curDirID == s->rootDirID) {
             pb.hFileInfo.ioFlFndrInfo.fdLocation.h =
                 pb.hFileInfo.ioFlFndrInfo.fdLocation.v = -1;
+            if (s->cur.is_dir) {
+                /* frRect, top, left, bottom, right: read as bytes, as the
+                 * flags above are. */
+                const unsigned char *d =
+                    (const unsigned char *)&pb.hFileInfo.ioFlFndrInfo;
+                if ((short)(d[4] << 8 | d[5]) > (short)(d[0] << 8 | d[1]) &&
+                    (short)(d[6] << 8 | d[7]) > (short)(d[2] << 8 | d[3]))
+                    pb.hFileInfo.ioFlFndrInfo.fdFlags |= 0x0100;
+            }
             /* A folder's custom-icon bit, held to the end of the run
              * (IconFlush): the first such folder only, so nothing more
              * runs under the sink's call chain. */

@@ -178,7 +178,6 @@ or measurement before it is read.**
 | zip | ZipIt `0x2805`'s View word: one specimen, value 0 | ZipIt's own expander on a non-zero View |
 | StuffIt 5 | a version-3 entry's Finder info; no version-3 entry here | Expander 5.5 on one |
 | LZH | OS/2's 0x7f/0xff headers; a level 0/1 name's bytes after a NUL | `lsar`; no specimen of the second |
-| DiskDoubler `DDA2` records | bytes no reference assigns (folder +46..53, +62 on) | DiskDoubler Pro's own expander under emulation |
 | AppleSingle entry 11 | ProDOS's access word | none; RFC 1740 gives its size, not its bits |
 
 Closing a row: the reader delivers the field with a `Source:` and a grade,

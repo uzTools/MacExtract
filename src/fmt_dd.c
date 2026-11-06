@@ -1504,6 +1504,25 @@ static int dd_archive2(UncCtx *c)
             e.is_dir = 1;
             e.create_date = unc_get_u32be(hdr + 54);
             e.mod_date    = unc_get_u32be(hdr + 58);
+            /* The record is 88 bytes: +62 the folders' number in record
+             * order, 2 for the archive's own (19 archives of 19), +66..81
+             * the folder's DInfo whole, +82..85 its frScroll,
+             * +86 CRC-16/XMODEM of +0..85; +46..53 is zero and nothing
+             * reads it. MEASURED 2026-11-06 on Norton DiskDoubler Pro
+             * 4.1.1 (`tools/vmac/ndd.py --folders`, `--folders-read`):
+             * planted values went to those bytes, and its Expand
+             * Archive put a sentinel record's back verbatim, flags
+             * included, with the rest of DXInfo zero, which is what is
+             * stated here. Not measured: flag 0x0001, and what it does
+             * with a record whose CRC disagrees, so the CRC is not
+             * judged. */
+            if (totalsize >= 88 && unc_read_full(c->io, hdr + 62, 24)
+                    == UNC_OK) {
+                int k;
+                for (k = 0; k < 20; k++) e.finder_info[k] = hdr[66 + k];
+                e.finder_flags = unc_get_u16be(hdr + 74);
+                e.meta = UNC_META_FINFO | UNC_META_FXINFO;
+            }
             sret = c->sink->begin_entry(c->sink->ctx, &e);
             if (sret < 0) return UNC_ERR_SINK;
             if (sret == 0 && c->sink->end_entry(c->sink->ctx, UNC_OK) < 0)

@@ -946,10 +946,10 @@ int unc_superdisk_extract(UncCtx *c)
                 int k;
                 for (k = 0; k < 16; k++) e.finder_info[k] = info[k];
                 for (k = 0; k < 4; k++) e.finder_info[16 + k] = info[16 + k];
-                /* The archive's word in finder_flags; the one the
-                 * extractor wrote, less 0x0001, in the DInfo. */
+                /* The extractor also clears on-desk (0x0001); the
+                 * shell does that for every item (DECISIONS.md
+                 * 2026-11-06, *the desk no folder is put on*). */
                 e.finder_flags = unc_get_u16be(info + 8);
-                e.finder_info[9] &= 0xFE;
                 e.meta = UNC_META_FINFO | UNC_META_FXINFO;
             }
             sret = c->sink->begin_entry(c->sink->ctx, &e);

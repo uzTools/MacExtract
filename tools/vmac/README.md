@@ -175,6 +175,7 @@ back **38/69** on 2026-09-05, every "failure" a missing oracle.
 | `ddpro.py` | DiskDoubler **Pro** 4.1: `DDA2` and `SPLT` |
 | `ddencode.py` | **grade a method by WRITING it** for Salient's 1991 DiskDoubler |
 | `ndd.py` | DiskDoubler 3.1.2, 4.0 and Norton DiskDoubler Pro 1.1 |
+| `ondesk.py` | what System 7.0.1's Finder does with a file flagged on-desk inside a folder |
 | `superdisk.py` | grade SuperDisk! with its own self-extractors |
 | `spacesaver.py` | Aladdin's **SpaceSaver**, and much of StuffIt Deluxe 3.5.1 |
 | `sdcompress.py` | the **SuperDisk! control panel**, which compresses |
@@ -928,6 +929,8 @@ DiskDoubler Pro 1.1**, Symantec's last, whose application is DiskDoubler
     tools/vmac/ndd.py --stored     what selects the headerless 0x1000 record
     tools/vmac/ndd.py --dates      which of +54 and +58 is the creation
     tools/vmac/ndd.py --archive    seven files, one incompressible with a fork
+    tools/vmac/ndd.py --folders    a DDA2 folder record's Finder info, by sentinel
+    tools/vmac/ndd.py --folders-read   Expand Archive on a sentinel folder record
     tools/vmac/ndd.py --dexvert    a third collector's samples, over the network
 
 `--specimens`, `--harvest` and `--grade` need no emulator and no X server;
@@ -954,6 +957,14 @@ so the mode returns non-zero on any mismatch.
 
 `--stored` grades itself against the bytes that went in, resource forks with
 16..127 masked, non-zero on any mismatch.
+
+**`--folders` / `--folders-read`** plant sentinels on two nested folders'
+catalog records, archive them, then expand the result and a copy whose
+folder records carry other sentinels (CRC at +86 recomputed); `hfscat.py`
+reads both disks (FORMATS.md, *DiskDoubler Pro's `DDA2` folder record*).
+**What they cannot see:** folder flag 0x0001; whether Expand Archive applies
++58 before writing the folder's contents resets it; a record whose CRC
+disagrees; Get Info comments; DiskDoubler 3.7's `DDAR`.
 
 ## SuperDisk!'s compressor — `sdcompress.py`
 

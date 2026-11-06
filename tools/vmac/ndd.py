@@ -30,6 +30,8 @@ the only two method 7 forks anybody here will ever see.
     tools/vmac/ndd.py --methods    write one file per method the menu offers
     tools/vmac/ndd.py --archive    seven files, one incompressible WITH a
                                    resource fork: the `0x1000` record hunt
+    tools/vmac/ndd.py --folders    a DDA2 folder record's Finder info,
+                                   by sentinel; --folders-read expands one
 
 `--install` builds the boot volume out of forks THIS ENGINE DECODED,
 which is the point rather than a shortcut: the application on that disk
@@ -62,6 +64,7 @@ from arcmac import macbinary                           # noqa: E402
 from diskdoubler import (Session, cli, header, describe, make_volume,
                          make_rsrc, VOLUME_ICON)       # noqa: E402
 from superdisk import read_forks                       # noqa: E402
+import hfscat                                          # noqa: E402
 
 # Norton DiskDoubler Pro 1.1, Symantec 1995. A raw 1440K HFS floppy, not
 # a DiskCopy image despite the name. Macintosh Repository hands its
@@ -1026,6 +1029,281 @@ def archive(keep=False, which="norton"):
     return 0
 
 
+
+# ------------------------------------------------------------------
+# A folder's own record: what DiskDoubler Pro keeps of its Finder info
+# ------------------------------------------------------------------
+
+# A `DDA2` folder record is 88 bytes: `dd_archive2()` reads +0..45 and
+# the two dates at +54/+58; +86 is CRC-16/XMODEM of +0..85 (37 of 37
+# corpus folders, 2026-11-06). +46..53 and +62..85 were nobody's. The
+# writer run plants a value on each folder that names the field it was
+# put in, and reads where DiskDoubler copied it.
+# Each tuple: the folder's path under the volume, then the bytes for the
+# catalog record's +18 (backup date), +22 (DInfo, 16) and +38 (DXInfo, 16);
+# +10 and +14, the creation and modification dates, are set apart too.
+FOLDER_SENTINELS = [
+    (("Subjects",),
+     b"\xa5\xa6\xa7\xa8",
+     struct.pack(">hhhhHhhH", 0x21, 0x22, 0x123, 0x124, 0x0104,
+                 0x35, 0x36, 0x0100),
+     struct.pack(">hhIBBHI", 0x41, 0x42, 0x43444546, 0x47, 0x48,
+                 0x494A, 0x4B4C4D4E)),
+    (("Subjects", "Inner"),
+     b"\xb5\xb6\xb7\xb8",
+     struct.pack(">hhhhHhhH", 0x31, 0x32, 0x133, 0x134, 0x0108,
+                 0x55, 0x56, 0x0200),
+     struct.pack(">hhIBBHI", 0x61, 0x62, 0x63646566, 0x67, 0x68,
+                 0x696A, 0x6B6C6D6E)),
+]
+FOLDER_FILES = [
+    (("Subjects",), ("Text A", "TEXT", "ttxt", b"compressible " * 700, b"")),
+    (("Subjects", "Inner"),
+     ("Text B", "TEXT", "ttxt", b"also compressible " * 700, b"")),
+]
+VOLNAME = "NDDwork"
+
+
+def catpath(path):
+    """hfscat's key for a path under the work volume: MacRoman bytes."""
+    return tuple(x.encode("mac-roman") for x in (VOLNAME,) + tuple(path))
+
+
+def folder_volume(img, apps, folders, files):
+    """The application at the root, then `folders` with their files, the
+    folders' catalog records carrying the sentinels."""
+    work = os.path.dirname(img)
+    mbs = []
+    for i, (name, ftype, creator, data, rsrc) in enumerate(apps):
+        p = os.path.join(work, "app%d.bin" % i)
+        open(p, "wb").write(macbinary(name, ftype, creator, data, rsrc))
+        mbs.append(p)
+    make_volume(img, VOLNAME, mbs, size_kb=8192)
+    env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
+    try:
+        subprocess.run(["hmount", img], check=True, capture_output=True,
+                       env=env)
+        for path, *_ in folders:
+            subprocess.run(["hmkdir", VOLNAME + ":" + ":".join(path)],
+                           check=True, capture_output=True, env=env)
+        for i, (path, (name, ftype, creator, data, rsrc)) in enumerate(files):
+            p = os.path.join(work, "file%d.bin" % i)
+            open(p, "wb").write(macbinary(name, ftype, creator, data, rsrc))
+            subprocess.run(["hcopy", "-m", os.path.abspath(p),
+                            VOLNAME + ":" + ":".join(path) + ":"],
+                           check=True, capture_output=True, env=env)
+        subprocess.run(["humount"], check=True, capture_output=True, env=env)
+    finally:
+        shutil.rmtree(env["HOME"], ignore_errors=True)
+    for i, (path, bk, dinfo, dxinfo) in enumerate(folders):
+        full = catpath(path)
+        # Two dates a folder record could hold in either order: a 1990
+        # creation and a 1995 modification, a minute apart per folder.
+        hfscat.patch(img, full, 10, struct.pack(">I", MAC_EPOCH_1990 + 60 * i))
+        hfscat.patch(img, full, 14, struct.pack(">I", MAC_EPOCH_1995 + 60 * i))
+        hfscat.patch(img, full, 18, bk)
+        hfscat.patch(img, full, 22, dinfo)
+        hfscat.patch(img, full, 38, dxinfo)
+
+
+def folder_records(blob):
+    """[(name, record bytes)] for every folder record of a `DDA2`."""
+    out, at = [], 62
+    while at + 46 <= len(blob) and blob[at:at + 4] == b"DDA2":
+        kind = struct.unpack_from(">H", blob, at + 4)[0]
+        total = struct.unpack_from(">I", blob, at + 42)[0]
+        if kind == 0xBBBB or not total:
+            break
+        if kind & 0x8000:
+            nlen = min(blob[at + 6], 31)
+            out.append((blob[at + 7:at + 7 + nlen].decode("mac-roman"),
+                        blob[at:at + total]))
+        at += total
+    return out
+
+
+def where_planted(rec, catrec):
+    """Each catalog byte range planted, and where its bytes sit in the
+    folder record (or that they are not there)."""
+    lines = []
+    for label, off, n in (("bkdat", 18, 4), ("frRect", 22, 8),
+                          ("frFlags", 30, 2), ("frLocation", 32, 4),
+                          ("frView", 36, 2), ("frScroll", 38, 4),
+                          ("frOpenChain", 42, 4), ("frScript", 46, 1),
+                          ("frXFlags", 47, 1), ("frComment", 48, 2),
+                          ("frPutAway", 50, 4), ("crdat", 10, 4),
+                          ("mddat", 14, 4)):
+        want = catrec[off:off + n]
+        hits = [i for i in range(len(rec) - n + 1) if rec[i:i + n] == want]
+        lines.append("%-12s %s -> %s" % (label, want.hex(),
+                                         ",".join("+%d" % i for i in hits)
+                                         or "absent"))
+    return lines
+
+
+def folders(keep=False, which="norton"):
+    """Create Archive… over a folder holding a folder, both stamped with
+    sentinels: which folder-record bytes carry which Finder field."""
+    apps = app_files(which)
+    work = R.work_tmp("nddfold-")
+    img = os.path.join(work, "nddwork.img")
+    folder_volume(img, apps, FOLDER_SENTINELS, FOLDER_FILES)
+    before = {r["path"]: r["rec"] for r in hfscat.records(
+        open(img, "rb").read())}
+    if not os.path.exists(BOOT):
+        install(which)
+    s = Session(BOOT, [img], os.path.join(SPECIMENS, "folders"))
+    try:
+        s.boot()
+        s.shot("desktop", wait=5.0)
+        s.mac.click(*VOLUME_ICON, double=True)
+        s.shot("volume", wait=10.0)
+        select(s, "s")                            # Subjects, at the root
+        s.shot("selected", wait=2.0)
+        menu(s, "archive", "create-archive")
+        s.shot("archive-dialog", wait=8.0)
+        s.mac.key("Return")
+        s.shot("archive-running", wait=40.0)
+        s.shot("archive-done", wait=20.0)
+        s.mac.click(*VOLUME_ICON)
+        s.mac.command_key("y")                    # Put Away: flush
+        s.shot("ejected", wait=15.0)
+    finally:
+        time.sleep(5)
+        s.close()
+    got = report(img, "folders")
+    after = {r["path"]: r["rec"] for r in hfscat.records(
+        open(img, "rb").read())}
+    os.makedirs(s.shots, exist_ok=True)
+    rc = 1
+    for path, (_t, _c, data, _r) in sorted(got.items()):
+        if data[:4] != b"DDA2":
+            continue
+        keptp = os.path.join(s.shots, path[-1].replace("/", "_"))
+        open(keptp, "wb").write(data)
+        print("ndd: kept %s (%d B)" % (keptp, len(data)))
+        for name, rec in folder_records(data):
+            print("ndd: folder %r, %d B: +46 %s  +62 %s"
+                  % (name, len(rec), rec[46:54].hex(), rec[62:88].hex()))
+            for fpath, *_ in FOLDER_SENTINELS:
+                if fpath[-1] != name:
+                    continue
+                full = catpath(fpath)
+                for line in where_planted(rec, before[full]):
+                    print("ndd:   " + line)
+                if after.get(full) != before[full]:
+                    print("ndd:   the catalog record CHANGED during the run")
+                rc = 0
+    if not keep:
+        shutil.rmtree(work, ignore_errors=True)
+    return rc
+
+
+
+def xmodem(data):
+    """CRC-16/XMODEM, a DDA2 folder record's +86 over +0..85."""
+    c = 0
+    for x in data:
+        c ^= x << 8
+        for _ in range(8):
+            c = ((c << 1) ^ 0x1021) & 0xFFFF if c & 0x8000 else (c << 1) & 0xFFFF
+    return c
+
+
+# The reader run's copy: each folder renamed (same length, so nothing
+# else moves), +46..53 holding bytes that name their own offset, and a
+# DInfo and frScroll of its own, so that what the expanded folder gets
+# can only have come from the record.
+READ_RENAME = {"Subjects": "Sentinel", "Inner": "Inneq"}
+READ_DINFO = {
+    "Sentinel": struct.pack(">hhhhHhhHhh", 0x71, 0x72, 0x173, 0x174,
+                            0x0102, 0x75, 0x76, 0x0300, 0x77, 0x78),
+    "Inneq": struct.pack(">hhhhHhhHhh", 0x81, 0x82, 0x183, 0x184,
+                         0x0106, 0x85, 0x86, 0x0100, 0x87, 0x88),
+}
+
+
+def sentinel_archive(blob):
+    out, at = bytearray(blob), 62
+    while at + 46 <= len(out) and out[at:at + 4] == b"DDA2":
+        kind = struct.unpack_from(">H", out, at + 4)[0]
+        total = struct.unpack_from(">I", out, at + 42)[0]
+        if kind == 0xBBBB or not total:
+            break
+        nlen = min(out[at + 6], 31)
+        name = bytes(out[at + 7:at + 7 + nlen]).decode("mac-roman")
+        if kind & 0x8000 and name in READ_RENAME:
+            new = READ_RENAME[name]
+            out[at + 7:at + 7 + nlen] = new.encode("mac-roman")
+            out[at + 46:at + 54] = bytes(range(46, 54))
+            out[at + 66:at + 86] = READ_DINFO[new]
+            struct.pack_into(">H", out, at + 86, xmodem(out[at:at + 86]))
+        at += total
+    return bytes(out)
+
+
+def folders_read(keep=False, which="norton"):
+    """Expand Archive… on the writer run's archive and on its sentinel
+    copy: which folder-record bytes DiskDoubler Pro puts back, and where."""
+    src = os.path.join(SPECIMENS, "folders", "Subjects.dd")
+    if not os.path.exists(src):
+        raise SystemExit("ndd: run --folders first (%s)" % src)
+    blob = open(src, "rb").read()
+    apps = app_files(which)
+    work = R.work_tmp("nddfread-")
+    img = os.path.join(work, "nddwork.img")
+    mbs = []
+    for i, (name, ftype, creator, data, rsrc) in enumerate(
+            apps + [("Subjects.dd", "DDA2", "DDAP", blob, b""),
+                    ("Sentinel.dd", "DDA2", "DDAP", sentinel_archive(blob),
+                     b"")]):
+        p = os.path.join(work, "r%d.bin" % i)
+        open(p, "wb").write(macbinary(name, ftype, creator, data, rsrc))
+        mbs.append(p)
+    make_volume(img, VOLNAME, mbs, size_kb=8192)
+    if not os.path.exists(BOOT):
+        install(which)
+    s = Session(BOOT, [img], os.path.join(SPECIMENS, "folders-read"))
+    try:
+        s.boot()
+        s.shot("desktop", wait=5.0)
+        s.mac.click(*VOLUME_ICON, double=True)
+        s.shot("volume", wait=10.0)
+        for keys, tag in ((("s", "e"), "sentinel"), (("s", "u"), "subjects")):
+            s.mac.key("Escape")
+            time.sleep(0.5)
+            for k in keys:                        # type-select, no Return
+                s.mac.key(k)
+                time.sleep(0.2)
+            s.shot("selected-" + tag, wait=2.0)
+            menu(s, "expandarch", "expand-" + tag)
+            s.shot("expand-dialog-" + tag, wait=8.0)
+            s.mac.key("Return")
+            s.shot("expand-running-" + tag, wait=30.0)
+            s.shot("expand-done-" + tag, wait=15.0)
+        s.mac.click(*VOLUME_ICON)
+        s.mac.command_key("y")                    # Put Away: flush
+        s.shot("ejected", wait=15.0)
+    finally:
+        time.sleep(5)
+        s.close()
+    recs = {r["path"]: r for r in hfscat.records(open(img, "rb").read())}
+    rc = 1
+    for p, r in sorted(recs.items()):
+        if r["kind"] != hfscat.DIR or len(p) < 2:
+            continue
+        f = hfscat.fields(r)
+        print("ndd: %-28s %s" % ("/".join(x.decode("mac-roman") for x in p[1:]),
+              " ".join("%s=%s" % (k, ("%x" % v if isinstance(v, int) else
+                                      "(%s)" % ",".join("%x" % (y & 0xFFFF)
+                                                        for y in v)))
+                       for k, v in f.items())))
+        rc = 0
+    if not keep:
+        shutil.rmtree(work, ignore_errors=True)
+    return rc
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -1050,6 +1328,10 @@ def main():
                     help="what selects the headerless 0x1000 record")
     ap.add_argument("--archive", action="store_true",
                     help="seven files, one incompressible with a fork")
+    ap.add_argument("--folders", action="store_true",
+                    help="a folder record's Finder info, by sentinel")
+    ap.add_argument("--folders-read", action="store_true",
+                    help="DiskDoubler Pro expanding a sentinel folder record")
     ap.add_argument("--app", default="norton", choices=("norton", "dd40"),
                     help="which release to run (default norton)")
     ap.add_argument("--keep", action="store_true", help="keep the work dir")
@@ -1078,6 +1360,10 @@ def main():
         return stored(a.keep, a.app)
     elif a.archive:
         return archive(a.keep, a.app)
+    elif a.folders:
+        return folders(a.keep, a.app)
+    elif a.folders_read:
+        return folders_read(a.keep, a.app)
     else:
         ap.print_help()
     return 0

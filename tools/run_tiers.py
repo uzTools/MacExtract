@@ -274,10 +274,14 @@ REPO = os.path.dirname(HERE)
 # members after it (DECISIONS.md 2026-11-06, *the header that spoke for
 # the rest*), the control's CODE +76 and A5 +20; the shipped pair 0,
 # OVL_SAVED +96. They were 190,500 / 95,118 / 619,406.
+# **-128 more each the same day, DERIVED**: the shell's three placement
+# rules, and the readers' copies of them removed (DECISIONS.md 2026-11-06,
+# *the desk no folder is put on*), the control's CODE +112 and A5 +16; the
+# shipped pair grew 32, OVL_SAVED +96. They were 190,404 / 95,022 / 619,310.
 TIERS = {
-    "sys3-512K": (190404, "System 3.0, Macintosh 512Ke (222,070 B free)"),
-    "sys6-512K": (95022,  "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
-    "floor-1M":  (619310, "System 6.0.8, 1 MB Mac Plus — the floor target"),
+    "sys3-512K": (190276, "System 3.0, Macintosh 512Ke (222,070 B free)"),
+    "sys6-512K": (94894,  "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
+    "floor-1M":  (619182, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
 # **-592 more each 2026-10-24, DERIVED**: SUMacC's `.dl`, the control's
 # CODE +584 and A5 +8 (DECISIONS.md 2026-10-24, *the format before
@@ -481,7 +485,9 @@ TIERS = {
 # data + bss -680. The machine gave +4,204, because the jump table, the
 # stub segments and the relocations trimmed at launch are resident bytes
 # this unit never counted — which is why TIERS was measured, not moved.
-TIERS_CONTROL = 222528     # build/mac-resident, CODE + A5, 2026-11-06
+TIERS_CONTROL = 222656     # build/mac-resident, CODE + A5, 2026-11-06
+# +128 the same day: the shell's placement rules and the DDA2 folder
+# record; TIERS -128.
 # +96 the same day: a pax `g` header applied; TIERS -96.
 # +128 on 2026-11-06: the tap on Cancel and its flash; TIERS -128.
 # +32 the same day: a MAR listing's comment and progress; TIERS -32.
@@ -1014,7 +1020,12 @@ EXPECT = {
 # after it, the control's +96 (CODE +76, A5 +20, `.data` alignment) against
 # the shipped pair's 0, the reader in `ovl_zipold` (DECISIONS.md
 # 2026-11-06, *the header that spoke for the rest*). TIERS -96.
-OVL_SAVED = 165856
+# **+96 the same day, -> 165,952**: the shell's three placement rules, the
+# shipped pair's +32 (CODE +36, A5 -4) against the control's +128 (CODE
+# +112, A5 +16), the control also carrying the DDA2 folder record and the
+# readers' masks removed (DECISIONS.md 2026-11-06, *the folder DiskDoubler Pro put back*, *the desk no folder is put on*).
+# TIERS -128.
+OVL_SAVED = 165952
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
 # every kept image is one — as is the bundle an envelope holds on to.
@@ -1152,18 +1163,18 @@ IMAGES = {
     "OVL_ID_BINHEX":      7422,
     "OVL_ID_BTOA":        2496,
     "OVL_ID_CODECS":      6016,
-    "OVL_ID_CPTDD":       15168,
+    "OVL_ID_CPTDD":       15232,
     "OVL_ID_CRYPT":       9604,
     "OVL_ID_EXO":         30228,
     "OVL_ID_LZH":         10438,
     "OVL_ID_NOW":         4762,
     "OVL_ID_PACKIT":      2180,
     "OVL_ID_SPACESAVER":  16168,
-    "OVL_ID_STUFFIT":     28454,
+    "OVL_ID_STUFFIT":     28442,
     "OVL_ID_SQP":         1736,
-    "OVL_ID_SUPERDISK":   6634,
+    "OVL_ID_SUPERDISK":   6628,
     "OVL_ID_TEXT":        11438,
-    "OVL_ID_ZIPOLD":      15276,
+    "OVL_ID_ZIPOLD":      15292,
     "OVL_ID_SNIFF":       14676,
     "OVL_ID_DESTDLG":     1688,
     "OVL_ID_SEGSETUP":    2364,
@@ -1280,7 +1291,12 @@ IMAGES = {
 # **ZIPOLD +80, the bundle +80 B, 2026-11-06**: a pax `g` header's mtime
 # and comment applied to the members after it (DECISIONS.md 2026-11-06,
 # *the header that spoke for the rest*).
-BUNDLE = 194688
+# **CPTDD +64, STUFFIT -12, SUPERDISK -6, ZIPOLD +16, the bundle +60 B,
+# the same day**: a DDA2 folder record's DInfo and frScroll; the on-desk
+# masks removed from StuffIt classic, StuffIt 5, SuperDisk! and MAR, the
+# shell clearing it for every format (DECISIONS.md 2026-11-06, *the folder DiskDoubler Pro put back*, *the desk no folder is put on*). MAR's image GREW 16 B for
+# an AND removed: `unc_mar_extract` 1,126 -> 1,144 B, GCC's layout.
+BUNDLE = 194748
 
 # What the SHIPPED lane asserts, and it is the refused fixtures BY NAME
 # rather than a tally: a tier that refuses two different fixtures and still
