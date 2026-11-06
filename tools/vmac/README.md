@@ -2578,14 +2578,10 @@ the fixture (as `interactive.py --segments` cuts it) with the second archive,
 parts 2 and 3 alone on a floppy, and answers the part dialog with Drive.
 System 3.0 and 6.0.8: System 7 relabels Drive.
 
-**Where a later archive's files land (measured 2026-11-05, not changed).** A
-destination dialog opens where Standard File last was. After File > Open...
-(6.0.8) or a part dialog answered on a floppy (3.0 and 6.0.8), the next
-archive the Finder handed over extracts onto that floppy unless the user moves
-the dialog. Both modes print it: `second archive's files: on the floppy`. A
-fix pointing the dialog at the archive's folder was measured and not taken: on
-System 3.0 with a second disk mounted it opened the first dialog at the boot
-volume's root, for 80 B.
+**Where a later archive's files land:** after File > Open... or a part
+dialog answered on a floppy, on that floppy; both modes print it
+(`second archive's files: on the floppy`). Not changed (DECISIONS.md
+2026-11-05, *the dialog where Standard File last was*; OPEN_ITEMS.md).
 
 ### Making a segmented Compact Pro archive — `cptsegment.py`
 

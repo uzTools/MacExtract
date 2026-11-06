@@ -117,6 +117,16 @@ by their own constant first. The LC 475's window was "not very reactive"
 while extracting (2026-10-12, format not noted). Holding a menu down pauses
 the extraction — inherent to `MenuSelect`.
 
+## A later archive's destination dialog opens where Standard File last was
+
+After File > Open... or a part dialog answered on a floppy, the next archive
+the Finder handed over extracts onto that floppy unless the user moves the
+dialog (measured, System 3.0 and 6.0.8; DECISIONS.md 2026-11-05, *the dialog where Standard File last was*).
+**What would close it:** pointing the dialog at the archive's folder in a way
+that keeps System 3.0's first dialog where it is with a second disk
+mounted; the two versions measured cost 32 and 80 B and failed that, or
+fixed only half. `relaunch.py --queue` and `--first-set` show it.
+
 ## The metadata the archives hold and the readers drop
 
 Every reader delivers what its format holds and the shell writes all of it

@@ -513,6 +513,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-05 (the match longer than its block) — an LZ4 match is held to its block's size before it is copied: 4 KB of input made 1,019,904 B where its block allowed 64 KB, for 24 B of `ovl_zipold` and +0.5 % on a Mac Plus
 - 2026-11-05 (the comment a listing read whole) — a MAR listing read an entry's whole comment block and judged its CRC, then hid the verdict; it now reads the 255 bytes the entry carries and judges no block, as it judges no fork, for 24 B of `ovl_zipold`
 - 2026-11-05 (the bytes a listing never counted) — MAR's progress counted only what it read, so a listing and a skipped entry under-counted; each record now ends at its own end, for 4 B
+- 2026-11-05 (the dialog where Standard File last was) — after File > Open... or a part dialog answered on a floppy, the next archive's destination dialog opens on that floppy; a fix setting it to the archive's folder opened System 3.0's first dialog at the volume root, and was not taken
 
 ---
 
@@ -21298,3 +21299,31 @@ few huge entries would see the difference.
 
 **Evidence.** `test_mar_comment_listing` asserts the tick at 71,680 of
 the file's 80,896 B; the reader without the fix fails it, at 8,192.
+
+## 2026-11-05 (the dialog where Standard File last was) — after File > Open... or a part dialog answered on a floppy, the next archive's destination dialog opens on that floppy; a fix setting it to the archive's folder opened System 3.0's first dialog at the volume root, and was not taken
+
+**Claim (measured).** "Beside the archive" is not set anywhere: `AskDest`
+relies on Standard File keeping one current folder, which is the archive's
+own for an archive chosen in the Open dialog and for the first the Finder
+hands over. Once another dialog has moved it, the next archive handed over
+opens its destination dialog there, and Return extracts onto that disk.
+`relaunch.py` on the shipped application: `--queue` (System 6.0.8, 1x) puts
+the second and the queued archives' files on the queued archive's floppy;
+`--first-set` (6.0.8, and 3.0 on the 512Ke) puts the second archive's on the
+parts floppy. Nothing is lost; the files are where the dialog showed.
+
+**The fix measured, and not taken.** `AskDest` pointing Standard File at the
+archive's folder first (SFSaveDisk and CurDirStore, the helper the part
+dialog uses): +32 B, and both cases above then put every archive's files
+beside it on 6.0.8. On System 3.0 with the parts floppy mounted it opened
+the launch's FIRST dialog at the boot volume's root, where the build before
+opened it in the archive's folder; with one volume mounted it did not
+(why: not known). Setting it only after File > Open... or the part dialog
+had moved Standard File kept 3.0's first dialog right, for 80 B, and was
+not taken either (the maintainer: not for bytes, on a fix that does not
+fix everywhere). Not run anywhere: System 7.0.1's part dialog, whose Drive
+is Desktop.
+
+**The harness on the way** (7d12314): `relaunch.py` computed every
+archive's expected names in one folder, so an archive after the first took
+in its files and `--queue` could never pass; `--first-set` is new.
