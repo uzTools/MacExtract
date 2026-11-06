@@ -2122,11 +2122,11 @@ def phase_password(args, appbin, workdir, shot):
         if mac.settle(scratch, interval=5.0, timeout=args.boot_timeout) is None:
             raise SystemExit("interactive: the machine never settled")
         shot(mac, "pw-1-sfgetfile.png")
-        # SECOND row: the boot volume has an invisible-to-the-Finder
-        # `Desktop` file that sorts before `Secret.sit`, and clicking
-        # the first row opens that instead — which looks exactly like a
-        # failure to read the archive.
-        mac.click(SF_FIRST_ROW[0], SF_FIRST_ROW[1] + SF_ROW_HEIGHT)
+        # FIRST row. The invisible `Desktop` file sorted before
+        # `Secret.sit` until v0.45.0's Open dialog hid invisible files
+        # (HideInvisible); the second row is now the Expander folder,
+        # which looks exactly like a failure to read the archive.
+        mac.click(*SF_FIRST_ROW)
         mac.key("Return")                     # Open -> destination dialog
         time.sleep(3.0)
         shot(mac, "pw-2-destination.png")
@@ -2279,11 +2279,9 @@ def phase_privatefile(args, appbin, workdir, shot):
             mac.click(*FINDER_APP_ICON, double=True)
             time.sleep(args.launch_wait)
         shot(mac, "pf-1-sfgetfile.png")
-        # System 3.0: the second row, as in --password. System 6.0.8 lists
-        # `Forked.pf` FIRST, above the Expander folder (seen 2026-11-06,
-        # pf-1-sfgetfile.png); the second row opened that folder.
-        mac.click(SF_FIRST_ROW[0],
-                  SF_FIRST_ROW[1] + (SF_ROW_HEIGHT if finder else 0))
+        # First row, as in --password: `Forked.pf` sorts first now that
+        # the Open dialog hides the invisible `Desktop`.
+        mac.click(*SF_FIRST_ROW)
         mac.key("Return")
         time.sleep(3.0)
         shot(mac, "pf-2-destination.png")

@@ -3136,8 +3136,13 @@ encrypted StuffIt classic one, delivered as MacBinary so the **resource
 fork** with `'MKey'` 0 arrives — the only phase exercising the Mac side of
 reading it. The walk answers **wrongly first**, so the retry path is driven,
 and ends by comparing the extracted bytes off the volume. Verified on System
-6.0.8: both asks, the second saying "That password was refused", every entry
-byte-exact.
+6.0.8: both asks, the second saying "Incorrect password.", every entry
+byte-exact; re-run 2026-11-06 for all three kinds.
+
+**Both password walks click the FIRST Standard File row.** Until v0.45.0 the
+invisible `Desktop` file was listed first and they clicked the second; the
+Open dialog now hides invisible files, and the second row is the Expander
+folder on `System6.hfv` and the application on `Sys30.img` (seen 2026-11-06).
 
 `--password-kind zip` and `--password-kind cpt` (2026-10-25) put an encrypted
 zip or Compact Pro archive in its place, as a data fork: the two formats whose
@@ -3161,9 +3166,8 @@ mv-1M-1x`, at 1 MB, and on 2026-10-10 on both 512 KB machines (`--emu
 mv-512Ke`, with `--system System6.hfv` and `--system Sys30.img`): refused,
 asked again, both forks byte-exact. **On `Sys30.img` the phase boots to the
 Finder** and double-clicks the volume and the application, as `--e2e` does;
-`pf-0-volume.png` is that window. `Forked.pf` is the second Standard File row
-on `Sys30.img` and the FIRST on `System6.hfv` (seen 2026-11-06; the second
-there is the Expander folder). `--wrong-password` sets the first answer: 65
+`pf-0-volume.png` is that window; on 2026-11-06 it was re-run at 512 KB on
+`Sys30.img`, both forks byte-exact. `--wrong-password` sets the first answer: 65
 characters, run 2026-11-06 on System 6.0.8 at 4 MB, filled the field, were
 refused, and `hushnow` then gave both forks byte-exact (DECISIONS.md
 2026-11-06, *the 64th character of a password*).
