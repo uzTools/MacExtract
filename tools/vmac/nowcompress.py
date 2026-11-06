@@ -1273,7 +1273,7 @@ def setup6():
     Unlike 5.0.1 there is no installer to drive: what the `.sit` holds is
     a StuffIt archive of the finished files, so this places them. That is
     also why it needs `unar` — the outer archive is StuffIt 5, which this
-    project does not read (OPEN_ITEMS.md, *Out of scope for v1*).
+    project does not read (OPEN_ITEMS.md, *Out of scope*).
 
     The result is `nu6boot.hfv`, and the check that it worked is the
     welcome dialog: Now Utilities asks for a serial number on first boot

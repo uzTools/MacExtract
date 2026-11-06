@@ -23,7 +23,7 @@ claims*):
 
 ---
 
-# Part 1 — Out of scope for v1
+# Part 1 — Out of scope
 
 **Decided, or impossible. Not open.** "Out of scope" is today's answer, not a
 refusal — the brief has grown before, on request.
@@ -50,6 +50,7 @@ refusal — the brief has grown before, on request.
 | A MIME part's `Content-MD5` | **not checked**; a `message/partial` anchor that is not a part comes out wrong with exit 0, as from munpack | priced at **+1,446 B** of `ovl_text`, declined 2026-10-11 (DECISIONS.md 2026-10-11, *the digest our own oracle could not compute*) |
 | Zip64 past 4 GB | **counts and the per-entry escape read; over-4-GB fields refused** (`UNC_ERR_UNSUPPORTED` per archive, `UNC_ERR_TOOLARGE` per entry) | a format change, not a type change (DECISIONS.md 2026-08-28, *what a width costs*; FORMATS.md, *Size limits*) |
 | More archives opened in a quick burst while MacExtract is busy — a second double-click during a helper's stay, archives of several creators at once | **dropped silently** (two `SIT!` archives 2 s apart: both lost, 7.0.1, one run; several creators: not run) | the maintainer, 2026-11-02: a limitation of the application. One more archive at a time is queued: File > Open... on every System, a double-click under MultiFinder and System 7 (DECISIONS.md 2026-11-01, *the Open item MultiFinder looks for*) |
+| A click during an extraction waiting for the next progress callback — 1–2 s on a Mac Plus for most formats at the 1 KB step; a short click on the menu bar lost; a menu held down pausing the extraction | **accepted** | the maintainer, 2026-11-06: input is queued and Cancel flashes when it is taken; the window's lack of responsiveness is known and the user is warned (DECISIONS.md 2026-11-06, *the step a click waits for*). What remains open: *Two waits no progress step reaches* |
 
 Nothing is detect-only since 2026-10-18: an unextractable file is
 `UNC_FORMAT_UNKNOWN` (DECISIONS.md 2026-10-18, *the formats it only named*).
@@ -142,18 +143,14 @@ moves to `HISTORICAL` in the same commit.
 transcribed once, rewritten from descriptions since — count as clean, and
 which licence follows.
 
-## A click during an extraction waits for the next progress callback
+## Two waits no progress step reaches
 
-Events are read only in the progress pump, so a click or Cmd-. waits for the
-next callback, and a click on the menu bar shorter than the gap is lost
-(DECISIONS.md 2026-10-12, *the application nobody could leave*); a cancel
-flashes the button when it is taken (2026-11-06, *the tap the pump read too
-late*). **What is left at the 1 KB step is 6.1 s on a Mac Plus**
-for Now Compress, whose 32 KB block no step reaches, and 1–2 s for Compact
-Pro, DiskDoubler, StuffIt, Zip and gzip (FORMATS.md, *How long a click
-waits*; *What the step costs*, 2026-11-06). The LC 475's window was "not very reactive"
-while extracting (2026-10-12, format not noted). Holding a menu down pauses
-the extraction — inherent to `MenuSelect`.
+Now Compress decodes a 32 KB block whole, so Cancel and Cmd-. wait **6.1 s**
+on a Mac Plus whatever `UNC_PROGRESS_STEP` is; and before any archive's
+first callback, while its decoders load and its directory is read, they
+wait up to **5.4 s** (Now Compress) and 3.8 s (BinHex) (FORMATS.md, *How
+long a click waits*). A callback inside the block's decode would close the
+first; its cost is not measured. The second is not investigated.
 
 ## A later archive's destination dialog opens where Standard File last was
 

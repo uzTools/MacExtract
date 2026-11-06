@@ -4970,8 +4970,8 @@ inside it; the autotest row is the BinHex layer alone.
 ## How long a click waits (Mac Plus, 1x)
 
 The widest gap between two progress callbacks is the longest the window,
-Cancel, Cmd-. and the menu bar go unanswered (OPEN_ITEMS.md, *A click during
-an extraction*). `-D UNC_AT_TICKGAP` at `--emu mv-4M-1x --poll 20`, System
+Cancel, Cmd-. and the menu bar go unanswered (accepted: OPEN_ITEMS.md, Part
+1; what is open: *Two waits no progress step reaches*). `-D UNC_AT_TICKGAP` at `--emu mv-4M-1x --poll 20`, System
 6.0.8, all byte-exact; File Manager time is included, the shipped 10 Hz gate
 (up to 0.1 s) is not. **Before the first callback** holds the decoders' load
 and the archive's directory. **Re-measured 2026-11-06 at the 1 KB step**
