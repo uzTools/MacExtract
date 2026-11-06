@@ -290,13 +290,11 @@ class Pointer:
         """Click where the cursor already IS, holding the button down for
         `hold` seconds.
 
-        The hold is the whole reason this is not one 60 ms tap. An application
-        that only pumps events from a progress callback dequeues a mouseDown
-        up to a tick after it arrives, and `DialogSelect` then calls
-        `TrackControl`, which asks whether the button is STILL down: a tap
-        that is already over reads as a click that ended outside the button
-        and returns no item. The Finder is fast enough not to care; the
-        progress dialog is not necessarily."""
+        `hold` is how long the button stays down. 2026-08-28 held it 0.9 s on
+        the reasoning that a tap already over when the progress dialog pumps
+        would read as released outside; on 2026-11-06 a 50 ms tap cancelled
+        at the first press (os9.py --gesture tap), so that is withdrawn
+        (BLOCKERS.md)."""
         cmds = []
         for i in range(2 if double else 1):
             cmds += ["mouse_button 1", "mouse_button 0"]

@@ -528,7 +528,11 @@ WINDOW_RECT = (600, 500, 200, 100)
 # progress dialog reading "0%  estimating time left" is perfectly still for as
 # long as the first percent takes, and on 2026-08-28 that read as a finished
 # extraction 14 s into a 30 s one.
-PROGRESS_TITLE = (300, 24, 90, 86)
+# Since v0.45.0 the window is 'DLOG' 146 at global (80,80), not autocentred,
+# and the line that does not repaint is item 2, the archive's name, at local
+# (7,10)-(23,270) (mac/macextract_colorbar.r): x 90..350, y 87..103. The
+# rectangle above took one row of the percentage line under the new layout.
+PROGRESS_TITLE = (256, 14, 92, 88)
 
 # The transfer volume's Finder window, measured off 12-volume-open.png: title
 # bar at y=25, bottom edge at y=270, left edge at x=8. Cropped out of the last
@@ -542,7 +546,9 @@ VOLUME_WINDOW = (460, 260, 0, 18)
 # 'DITL' 128 at local (220,78)-(300,98) — so (80+260, 80+88). Confirmed
 # against 15-progress.png, where the button's frame runs x=300..380,
 # y=158..178. Re-derive it from mac/macextract.r if the dialog moves.
-CANCEL_BUTTON = (340, 168)
+# Since v0.45.0 it has: 'DLOG' 146 at (80,80), item 1 of 'DITL' 146 at local
+# (211,51)-(270,71) (mac/macextract_colorbar.r), so (80+240, 80+61).
+CANCEL_BUTTON = (320, 141)
 
 # The password dialog's MESSAGE area — item 4 of 'DITL' 132, local
 # (20,10)-(372,64) inside a 'DLOG' at global (60,80)-(452,214), so
@@ -559,7 +565,7 @@ PASSWORD_MSG = (352, 54, 80, 90)
 
 def launch_by_keyboard(q, outdir, wait=240.0, cancel=False, click=False,
                        click_at=CANCEL_BUTTON, password=None,
-                       wrong_first="wrongone"):
+                       wrong_first="wrongone", gesture="hold"):
     """Drive the Finder to launch the application and extract, using no mouse.
 
     Every step here was measured by tools/vmac/os9probe.py on 2026-08-02 and
@@ -793,6 +799,23 @@ def launch_by_keyboard(q, outdir, wait=240.0, cancel=False, click=False,
         what = "click" if click else "Cmd-."
         sent, hit = 0, 0.0
         deadline = time.time() + wait
+        if click and gesture != "hold":
+            # ONE gesture, from the cursor parked on the button: a 50 ms tap
+            # released there and the pointer moved 40 px off 0.1 s later
+            # (must cancel), or a press dragged 40 px off and released there
+            # (must not). The application reads either after it is over
+            # (DECISIONS.md 2026-11-06, *the tap the pump read too late*).
+            if gesture == "tap":
+                q.burst(["mouse_button 1", "mouse_button 0"], gap=0.05,
+                        wait=0.1)
+                q.burst(["mouse_move 0 40"], gap=0.03, wait=0.4)
+            else:
+                q.burst(["mouse_button 1", "mouse_move 0 20",
+                         "mouse_move 0 20", "mouse_button 0"], gap=0.05,
+                        wait=0.4)
+            sent = 1
+            hit = replaced(prog, wait)
+            deadline = 0
         while time.time() < deadline:
             if click:
                 # No move: the cursor has been on the button since before the
@@ -2056,6 +2079,7 @@ def run_one(fixture, appbin, outdir, args):
                                cancel=args.cancel or args.cancel_click,
                                click=args.cancel_click,
                                click_at=args.click_at,
+                               gesture=args.gesture,
                                password=ENCRYPTED_PW if args.encrypted else None)
         if os.path.exists(scratch):
             os.remove(scratch)
@@ -2079,7 +2103,7 @@ def run_one(fixture, appbin, outdir, args):
     # what the same engine writes on Linux. This is also the check on whether
     # the guest flushed — an unflushed volume shows up here as a failed mount
     # or a missing file, not as a silent pass.
-    cancelled = args.cancel or args.cancel_click
+    cancelled = (args.cancel or args.cancel_click) and args.gesture != "drag"
     ok, lines = verify_output(xfer, fixture, outdir, partial=cancelled,
                               password=ENCRYPTED_PW if args.encrypted else None)
     print(f"\nos9: {'PASS' if ok else 'FAIL'} — "
@@ -2163,6 +2187,13 @@ def main():
                          "destination dialog is still up, because positioning "
                          "costs ~40 s and the progress dialog does not last "
                          "that long. Same pass condition as --cancel")
+    ap.add_argument("--gesture", choices=("hold", "tap", "drag"),
+                    default="hold",
+                    help="with --cancel-click: hold (0.9 s, repeated until the "
+                         "dialog goes), tap (once, released on the button, "
+                         "then moved off: must cancel) or drag (once, dragged "
+                         "off and released: must NOT cancel, graded as a "
+                         "complete extraction)")
     ap.add_argument("--encrypted", action="store_true",
                     help="with --launch: extract an ENCRYPTED archive and "
                          "answer the application's password dialog. Needs no "

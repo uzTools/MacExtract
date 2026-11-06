@@ -3875,12 +3875,14 @@ DECISIONS.md, *the character that was touched three times*).
       destination; every output must be under that folder, none at the
       root.
     - `--cancel-tap`: a press on Cancel already released when the pump
-      reads it — tapped (must cancel and flash), dragged off (must not),
-      and Cmd-. (must flash); graded on the volume and on `xwd` frames of
-      the button. `--app` runs it against another build: the one before
-      2026-11-06 cancels on the drag. It cannot see a release that lands
-      while the pump runs, nor a held press (DECISIONS.md 2026-11-06, *the
-      tap the pump read too late*).
+      reads it — tapped (must cancel and flash), dragged off at a hand's
+      speed (must not), and Cmd-. (must flash); graded on the volume and on
+      `xwd` frames of the button begun before the gesture. `--app` runs it
+      against another build, `--via-finder` on System 3.0. It cannot see a
+      drag faster than the busy emulator replays (a 170 ms one read as a
+      cancel), nor tell which path took a press (DECISIONS.md 2026-11-06,
+      *the tap the pump read too late*). Mac OS 9's counterpart is
+      `os9.py --cancel-click --gesture tap|drag`.
     - **The default phase runs on both Mini vMac tiers**, `--system
       Sys7.img` included: `ProgressPump()`'s `WaitNextEvent` side, Cancel
       through `DialogSelect`, Cmd-., the SFGetFile repaint, and 8-bit names

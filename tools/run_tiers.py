@@ -278,10 +278,14 @@ REPO = os.path.dirname(HERE)
 # rules, and the readers' copies of them removed (DECISIONS.md 2026-11-06,
 # *the desk no folder is put on*), the control's CODE +112 and A5 +16; the
 # shipped pair grew 32, OVL_SAVED +96. They were 190,404 / 95,022 / 619,310.
+# **+96 more each the same day, DERIVED**: the release check on Cancel out
+# again (DECISIONS.md 2026-11-06, *the tap the pump read too late*), the
+# control's CODE -96 and A5 0; the shipped pair fell the same 96, OVL_SAVED
+# unmoved. They were 190,276 / 94,894 / 619,182.
 TIERS = {
-    "sys3-512K": (190276, "System 3.0, Macintosh 512Ke (222,070 B free)"),
-    "sys6-512K": (94894,  "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
-    "floor-1M":  (619182, "System 6.0.8, 1 MB Mac Plus — the floor target"),
+    "sys3-512K": (190372, "System 3.0, Macintosh 512Ke (222,070 B free)"),
+    "sys6-512K": (94990,  "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
+    "floor-1M":  (619278, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
 # **-592 more each 2026-10-24, DERIVED**: SUMacC's `.dl`, the control's
 # CODE +584 and A5 +8 (DECISIONS.md 2026-10-24, *the format before
@@ -485,7 +489,8 @@ TIERS = {
 # data + bss -680. The machine gave +4,204, because the jump table, the
 # stub segments and the relocations trimmed at launch are resident bytes
 # this unit never counted — which is why TIERS was measured, not moved.
-TIERS_CONTROL = 222656     # build/mac-resident, CODE + A5, 2026-11-06
+TIERS_CONTROL = 222560     # build/mac-resident, CODE + A5, 2026-11-06
+# -96 the same day: the release check on Cancel out again; TIERS +96.
 # +128 the same day: the shell's placement rules and the DDA2 folder
 # record; TIERS -128.
 # +96 the same day: a pax `g` header applied; TIERS -96.

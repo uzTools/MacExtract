@@ -731,7 +731,10 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # +112 the same day, 185,884 -> 185,996, A5 +16 below: the shell's
 # placement rules (+36, as the shipped pair), the DDA2 folder record and
 # the readers' on-desk masks removed (DECISIONS.md 2026-11-06, *the folder DiskDoubler Pro put back*, *the desk no folder is put on*).
-UNC_MAC_CODE_DEFAULT=185996
+# -96 the same day, 185,996 -> 185,900, A5 unmoved: the release check on
+# Cancel out again (DECISIONS.md 2026-11-06, *the tap the pump read too
+# late*); the same code as the shipped pair.
+UNC_MAC_CODE_DEFAULT=185900
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -1504,7 +1507,12 @@ UNC_MAC_A5_DEFAULT=36660
 # 2026-11-06, *the desk no folder is put on*). The A5 is `.data`
 # alignment. 32 B off every budget: a one-long rectangle test instead of
 # the exact one was +20 code and +12 A5, the same 32.
-UNC_MAC_CODE_EAGER=39996
+# -96 the same day, 39,996 -> 39,900, A5 unmoved: the release check on
+# Cancel out again, the flash kept, now on a cancel from DialogSelect too
+# (DECISIONS.md 2026-11-06, *the tap the pump read too late*): the drag-off
+# it was for was the harness's. The flash is 60 B over the build before
+# any of it. 96 B back on every budget.
+UNC_MAC_CODE_EAGER=39900
 UNC_MAC_A5_EAGER=16708
 # +8 on 2026-10-02 for the same reason as the eager pair above: the
 # overlay call that now says WHICH of StuffIt 2.x's ciphers an entry
@@ -1633,7 +1641,9 @@ UNC_MAC_A5_EAGER=16708
 # pair; data + bss 16,764, under its ceiling.
 # +36 code the same day: the shell's placement rules, as the eager pair;
 # data + bss 16,760, under its ceiling.
-UNC_MAC_CODE_LAZY=38792
+# -96 code the same day: the release check out again, as the eager pair;
+# data + bss 16,764, under its ceiling.
+UNC_MAC_CODE_LAZY=38696
 UNC_MAC_A5_LAZY=19200
 if [ -n "$UNC_OVL_RESIDENT" ]; then
     UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-$UNC_MAC_CODE_DEFAULT}

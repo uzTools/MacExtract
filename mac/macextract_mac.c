@@ -1027,9 +1027,10 @@ static Boolean gBackground;
 static void QueueAsk(void);
 #endif
 
-/* Cancel taken without tracking it, from Cmd-. or a press already
- * released: the 8-tick flash a dialog gives a button pressed for the user,
- * the only sign it was seen before the outcome. */
+/* A cancel from the button or Cmd-.: the 8-tick flash a dialog gives a
+ * button pressed without tracking, the only sign before the outcome that
+ * it was seen. The press is read from the progress callback, usually
+ * after it is over, when TrackControl has nothing left to highlight. */
 static inline __attribute__((always_inline)) void CancelFlash(ControlHandle c)
 {
     long t;
@@ -1060,47 +1061,29 @@ static void ProgressPump(Progress *pr)
             if (c) CancelFlash(c);
             return;
         }
-        if (ev.what == mouseDown) {
-            if (FindWindow(ev.where, &w) == inMenuBar) {
-                if ((r = MenuSelect(ev.where)) != 0) {
-                    HiliteMenu(0);
-                    if ((short)(r >> 16) == kAppleMENU) {
-                        NoteAlert(kAboutALRT, NULL);
-                        if (pr->dlg) SetPort((GrafPtr)pr->dlg);
+        if (ev.what == mouseDown && FindWindow(ev.where, &w) == inMenuBar &&
+            (r = MenuSelect(ev.where)) != 0) {
+            HiliteMenu(0);
+            if ((short)(r >> 16) == kAppleMENU) {
+                NoteAlert(kAboutALRT, NULL);
+                if (pr->dlg) SetPort((GrafPtr)pr->dlg);
 #ifndef UNC_MAC_AUTOTEST
-                    } else if ((short)r == kOpenITEM) {
-                        QueueAsk();
-                        if (pr->dlg) SetPort((GrafPtr)pr->dlg);
+            } else if ((short)r == kOpenITEM) {
+                QueueAsk();
+                if (pr->dlg) SetPort((GrafPtr)pr->dlg);
 #endif
-                    } else
-                        pr->cancelled = true;
-                    return;
-                }
-            /* A press on Cancel read after the button came up: TrackControl
-             * would test where the pointer is now and drop a tap shorter
-             * than the gap between pumps. The release is queued with where
-             * it happened, so it decides, as tracking would have, in this
-             * pump. No release yet: still held, so DialogSelect tracks it. */
-            } else if (c && w == (WindowPtr)pr->dlg) {
-                EventRecord up;
-                Point p = ev.where;
-                GlobalToLocal(&p);
-                if (TestControl(c, p) && GetNextEvent(mUpMask, &up)) {
-                    GlobalToLocal(&up.where);
-                    if (TestControl(c, up.where)) {
-                        pr->cancelled = true;
-                        CancelFlash(c);
-                    }
-                    return;
-                }
-            }
+            } else
+                pr->cancelled = true;
+            return;
         }
         if (IsDialogEvent(&ev)) {
             DialogPtr hit;
             short item;
             if (DialogSelect(&ev, &hit, &item) &&
-                hit == pr->dlg && item == kCancelItem)
+                hit == pr->dlg && item == kCancelItem) {
                 pr->cancelled = true;
+                CancelFlash(c);
+            }
         }
     }
 }

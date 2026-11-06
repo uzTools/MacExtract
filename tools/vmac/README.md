@@ -1632,8 +1632,10 @@ between sends, because "0%  estimating time left" is perfectly still.
 - **Park the cursor before the dialog exists** (`goto()` costs ~40 s), while
   SFPutFile is up; `14b-parked.png` shows it (DECISIONS.md 2026-08-28,
   *clicking a dialog that does not exist yet*).
-- **HOLD the button**, `Pointer.press(hold=0.9)`: the mouseDown is dequeued up
-  to a tick late and `TrackControl` reads a short tap as released outside.
+- **The default press is held**, `Pointer.press(hold=0.9)`, as on 2026-08-28.
+  "A short tap reads as released outside" is withdrawn: `--gesture tap`, 50 ms
+  and the pointer moved off, cancels at the first press (2026-11-06,
+  BLOCKERS.md, *Withdrawn claims*). `--gesture drag` must not cancel.
 - **A relative `usb-mouse`** (`Qemu(pointer=True)`), never the absolute
   tablet.
 
@@ -2375,10 +2377,13 @@ Saving a SECOND time puts both records in the catalog: the first was
     interactive.py derived-MacPass390.sea --cancel-tap [--taps N]
                                     # a press on Cancel released before the
                                     # pump reads it: tapped (cancels, flashes),
-                                    # dragged off (does not), Cmd-. (flashes)
+                                    # dragged off at a hand's speed (does
+                                    # not), Cmd-. (flashes)
+    interactive.py ... --cancel-tap --via-finder --system Sys30.img
+                                    # System 3.0, launched from the Finder;
+                                    # its 800 KB floppy holds PackIt, not MacPass
     interactive.py ... --cancel-tap --app <MacBinary>
-                                    # the same against another build: the
-                                    # control, which loses the tap
+                                    # the same against another build
 
 Run them one at a time (*This box has two cores*, above) — and every phase
 builds into the same `build/mac-interactive`, so two runs started together

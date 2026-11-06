@@ -4283,9 +4283,10 @@ nothing calls; the linked figure is `tools/code_map.py`'s, below. (The rodata
 half was wrong 2026-09-19 to 09-23: it still counted `unc_crypt.c`'s three
 2,048-byte tables after they moved to key setup — *Where the code is*.)
 
-The application ships as **251,264 B** of MacBinary (`dist/MacExtract.bin`,
-`ls -l` 2026-11-06, with the shell's placement rules and the DDA2 folder
-record; 251,136 B with a tap on Cancel decided by its release before it; 250,880 B
+The application ships as **251,136 B** of MacBinary (`dist/MacExtract.bin`,
+`ls -l` 2026-11-06, with the release check on Cancel out again; 251,264 B
+with the shell's placement rules and the DDA2 folder record before it;
+251,136 B with a tap on Cancel decided by its release before that; 250,880 B
 with File > Open...'s record placed after the last before it, 250,752 B with
 MacBinary I read without padding before that, 250,496 B with Arsenic's
 2.5-byte table before that, 250,240 B before that, CORRECTED the same day
@@ -5036,6 +5037,19 @@ shell holds it within a percent, 16 B of code and 16 B less A5
 see:** System 7's autotest boots the application as the shell, so no other
 process was given time; with the Finder running each pump can switch to it
 (*hypothesis*: more than 7 ms).
+
+**The stored-fork copy at 1 KB too, measured 2026-11-06 and not taken**
+(`UNC_COPY_BUF`, 8 KB; same build, step at 1 KB in both):
+
+| fixture | peak heap, 8 → 1 KB | System 6.0.8 | System 7.0.1 |
+|---|---|---|---|
+| `kermitut9test.bin`, MacBinary, 300 KB | 8,208 → 1,040 B | 91 → 196 ticks, +115 % | 108 → 315, +192 % |
+| `sliptelnet.bin`, MacBinary, 285 KB | 8,208 → 1,040 B | 93 → 192, +106 % | 110 → 304, +176 % |
+| `mystic_8-ball.sit.bin`, MacBinary layer | 8,208 → 1,040 B | 91 → 166, +82 % | 106 → 254, +140 % |
+| `synth-as-meta.as`, AppleSingle | 8,208 → 1,040 B | 11 → 12 | 13 → 13 |
+
+Eight times the File Manager calls for 7 KB that no tier is short of on
+these formats; a joined segment set's peak is the archive under it.
 
 ## What keeping a folder's date costs (Mac Plus, 1x)
 

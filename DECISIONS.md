@@ -514,7 +514,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-05 (the comment a listing read whole) — a MAR listing read an entry's whole comment block and judged its CRC, then hid the verdict; it now reads the 255 bytes the entry carries and judges no block, as it judges no fork, for 24 B of `ovl_zipold`
 - 2026-11-05 (the bytes a listing never counted) — MAR's progress counted only what it read, so a listing and a skipped entry under-counted; each record now ends at its own end, for 4 B
 - 2026-11-05 (the dialog where Standard File last was) — after File > Open... or a part dialog answered on a floppy, the next archive's destination dialog opens on that floppy; a fix setting it to the archive's folder opened System 3.0's first dialog at the volume root, and was not taken
-- 2026-11-06 (the tap the pump read too late) — a press on Cancel is usually over when the progress pump reads it, and System 6 then cancelled even on a press dragged off the button; the release now decides, and a cancel taken without tracking flashes the button, for 160 B
+- 2026-11-06 (the tap the pump read too late) — a cancel from the button or Cmd-. flashes the button, for 60 B; the drag-off cancel a release check was added for was the harness's own drag, CORRECTED the same day, and the check is out again
 - 2026-11-06 (the header that spoke for the rest) — a pax `g` header's mtime and comment now apply to every tar member after it that states neither, as POSIX, GNU tar and CPython's tarfile have it; XADMaster keeps each header's own, for 80 B of `ovl_zipold`
 - 2026-11-06 (the step a click waits for) — the progress step goes from 8 KB to 1 KB, which more than halves the slow formats' gaps for under 1 % of time; the stored-fork copies keep 8 KB under a constant of their own, and the time left is held within a percent, which the finer step made flicker
 - 2026-11-06 (the folder DiskDoubler Pro put back) — a `DDA2` folder record holds the folder's DInfo whole and its frScroll, as Norton DiskDoubler Pro 4.1.1 writes and restores them; +46..53 is padding, +62 a folder number, +86 a CRC, for 64 B of `ovl_cptdd`
@@ -21334,49 +21334,46 @@ is Desktop.
 archive's expected names in one folder, so an archive after the first took
 in its files and `--queue` could never pass; `--first-set` is new.
 
-## 2026-11-06 (the tap the pump read too late) — a press on Cancel is usually over when the progress pump reads it, and System 6 then cancelled even on a press dragged off the button; the release now decides, and a cancel taken without tracking flashes the button, for 160 B
+## 2026-11-06 (the tap the pump read too late) — a cancel from the button or Cmd-. flashes the button, for 60 B; the drag-off cancel a release check was added for was the harness's own drag, CORRECTED the same day, and the check is out again
 
-**Claim (measured).** The progress window's events are read only from the
-progress callback, seconds apart on a slow format (FORMATS.md, *How long a
-click waits*), so a press on Cancel has usually come up before the pump
-dequeues it. `TrackControl` then answers on System 6.0.8 as if the button
-were released where it was pressed: on the build before, a tap whose pointer
-moved off at once **cancelled, 2 of 2**, and a press dragged off Cancel and
-released outside **cancelled too** (`interactive.py --cancel-tap --taps 2
---app`, `derived-MacPass390.sea`, `mv-4M-1x`). The premise the change was
-asked on, a tap LOST when the pointer leaves before the pump, did not
-reproduce there; it came from the Mac OS 9 harness's note (2026-08-28,
-*clicking a dialog that does not exist yet*), and no tap has been tried on
-Mac OS 9 against either build.
+**Claim (measured).** The progress window's events are read from the
+progress callback, so a press on Cancel has usually come up before the pump
+dequeues it, and nothing showed it had been taken until the outcome. Now a
+cancel from `DialogSelect` or Cmd-. flashes the button for 8 ticks
+(`HiliteControl`, `Delay`), the convention for a button pressed without
+tracking. `interactive.py --cancel-tap`, 1x: the tap cancels with the flash
+(~135 ms of frames) on System 6.0.8 and 3.0 (`--via-finder`), Cmd-. too; a
+press dragged off at a hand's speed (~1.4 s) does not cancel, on this build
+and the one before it, with `derived-MacPass390.sea` and
+`derived-PackIt.pit`. Mac OS 9.2 (`os9.py --cancel-click --gesture`): tap,
+drag-off, Cmd-. and the 0.9 s hold all as they should, 1 of 34 entries
+written on a cancel.
 
-**The change.** A mouseDown on Cancel whose mouseUp is already queued is
-decided by the release (`GetNextEvent(mUpMask)`, `TestControl` at both
-points), in the same pump; one still held goes to `DialogSelect`, which
-tracks it live as before. A cancel taken without tracking, that or Cmd-.,
-flashes the button for 8 ticks (`HiliteControl`, `Delay`), the convention
-for a button the application presses. **At the pump, not at the release**:
-none of the application runs at the release, and a VBL task cannot use
-QuickDraw — inverting screen memory under the cursor, at every depth and
-under MultiFinder's windows, was priced in words and not taken. Same
-harness: the tap **cancels**, the button dark in 45 frames ~3 ms apart
-(~135 ms, the 8 ticks); the press dragged off **does not**, 3 of 3 files;
-Cmd-. cancels and flashes (52 frames).
+**CORRECTED the same day: "System 6 cancels on a press dragged off
+Cancel".** It was measured with a 170 ms harness drag, which a busy Mini
+vMac takes late and whole: a frame timeline showed no tracking highlight
+during the drag and the cancel 0.4 s after the host's release, with
+`StillDown` still true. A release check (`GetNextEvent(mUpMask)`,
+`TestControl` at both points, 108 B) went in for it and is out again; the
+build before it never lost a tap either (2 of 2). BLOCKERS.md, *Withdrawn
+claims*. Mac OS 9.2 loses no tap either: this build's Cancel is the one
+before plus the flash, and a 50 ms tap moved off cancelled at the first
+press, so 2026-08-28's "a short tap reads as released outside" is withdrawn
+too.
 
-**Cost (measured).** Shipped CODE +156, all of it `prog_tick`, into which
-ProgressPump is inlined (108 the release, 48 the flash), A5 +4 alignment:
-**160 B off every budget**. Control CODE +156, A5 -28; lazy +156.
-`OVL_SAVED` -32, `TIERS` -128, `run_tiers.py --check` unmoved (74/74,
-72/74, 72/74). The first version was +204: a queued mouseUp in place of
-`StillDown` -16, `TestControl` in place of `PtInRect` on the control's
-rectangle -8, the handle from the window's control list in place of
-`GetDialogItem` -8, the flash forced inline -16. Not run on System 3.0,
-System 7 or Mac OS 9.
+**Cost (measured).** Shipped CODE +60 over the build before any of it
+(+156, then -96), A5 unmoved; control likewise. `OVL_SAVED` unmoved,
+`TIERS` +96 against the day's first figures.
 
 **The harness on the way**, each of which read as a verdict: `xwd` keeps
-the window's 4-pixel X border, so every mark was 4 px off; Standard File's
-selected row crosses the bar's top edge, so a wait on that line alone
-photographed Standard File after the extraction; and an up and a move in
-one tick reach Mini vMac as a release off the button.
+the window's 4-pixel X border; Standard File's selected row crosses the
+bar's top edge; an up and a move in one tick reach Mini vMac as a release
+off the button; a burst begun after `command_key` returns misses a flash
+that is already over (frames now start before the gesture); System 3.0's
+800 KB boot floppy ran out of room for MacPass ("Disk full.", read as a
+cancel by the file count); and the fast drag above. `os9.py`'s
+`CANCEL_BUTTON` and `PROGRESS_TITLE` still had DLOG 128's places from
+before v0.45.0.
 
 ## 2026-11-06 (the header that spoke for the rest) — a pax `g` header's mtime and comment now apply to every tar member after it that states neither, as POSIX, GNU tar and CPython's tarfile have it; XADMaster keeps each header's own, for 80 B of `ovl_zipold`
 
@@ -21440,8 +21437,11 @@ MacBinary, a joined segment set) used `UNC_PROGRESS_STEP` as their copy
 buffer's size, so the step could not move without moving their memory.
 They use `UNC_COPY_BUF`, 8 KB, now; the `--eta` replay and the MAR listing
 test derive from `UNC_PROGRESS_STEP` instead of writing 8,192 down, and the
-step is set in one line. **The copy buffer at 1 KB too is not measured**:
-7 KB less peak heap for those formats, eight times the File Manager calls.
+step is set in one line. **The copy buffer at 1 KB too was measured and not
+taken** (FORMATS.md, *What the step costs*): 8,208 B -> 1,040 B of peak heap
+for MacBinary and AppleSingle, but a 300 KB MacBinary 1.5 -> 3.3 s on System
+6.0.8 and 1.8 -> 5.3 s on 7.0.1, eight times the File Manager calls; no tier
+is short of 8 KB for those formats.
 
 **The time left flickered (measured).** `ProgressReading` scales both byte
 counts to 16 bits, so on a 400 MB archive `done` moves in 8 KB units; a 1

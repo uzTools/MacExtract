@@ -2652,11 +2652,12 @@ def phase_cancel_tap(args, appbin, workdir, shot):
     Each trial is its own boot of a fresh volume:
 
     - **tap**: press and release on Cancel, then move the pointer off at
-      once. Must cancel, and the button must flash. Before 2026-11-06
-      TrackControl tested where the pointer was when the pump ran, and the
-      tap was lost: the control is that build (`--app`), which FAILS here.
-    - **drag**: press on Cancel, drag off, release, all inside one gap.
-      Must NOT cancel, as a button does not.
+      once. Must cancel, and the button must flash; the build before
+      2026-11-06 (`--app`) cancels without one.
+    - **drag**: press on Cancel, drag off at a hand's speed, release. Must
+      NOT cancel, as a button does not. A 170 ms drag did, on every build:
+      the busy emulator replayed it late and whole (DECISIONS.md
+      2026-11-06, *the tap the pump read too late*).
     - **cmd**: Cmd-. Must cancel, and the button must flash.
 
     "Cancelled" is graded on the volume, a strict subset of what the CLI
@@ -2673,12 +2674,13 @@ def phase_cancel_tap(args, appbin, workdir, shot):
     want = expected_names(args.fixture, workdir)
     if not want:
         return False
-    trials = ["tap"] * args.taps + ["drag", "cmd"]
+    trials = ["tap"] * args.taps + ["drag"] * args.drags + ["cmd"]
     ok = True
     for n, kind in enumerate(trials, 1):
         bootimg = os.path.join(workdir, f"boot-tap{n}.hfv")
         R.sh(sys.executable, os.path.join(HERE, "mkboot.py"),
              stock_image(args), appbin, bootimg,
+             *(["--finder"] if args.via_finder else []),
              "--data", f"{args.fixture}:archive.sit")
         scratch = os.path.join(args.outdir, ".settle.png")
         frames = os.path.join(workdir, f"frames{n}")
@@ -2688,7 +2690,15 @@ def phase_cancel_tap(args, appbin, workdir, shot):
             if mac.settle(scratch, interval=5.0,
                           timeout=args.boot_timeout) is None:
                 raise SystemExit("interactive: the machine never settled")
-            sf_to_volume_root(mac, args.system)
+            if args.via_finder:
+                # System 3.0 ignores the boot blocks' shell name: launched
+                # from the Finder, as --e2e does.
+                mac.click(*FINDER_VOLUME_ICON, double=True)
+                time.sleep(4.0)
+                mac.click(*FINDER_APP_ICON, double=True)
+                time.sleep(args.launch_wait)
+            else:
+                sf_to_volume_root(mac, args.system)
             mac.click(*SF_FIRST_ROW)
             mac.key("Return")
             time.sleep(4.0)
@@ -2705,6 +2715,21 @@ def phase_cancel_tap(args, appbin, workdir, shot):
             ox, oy = mac.origin()
             cx = ox + CANCEL_INSIDE[0] + CANCEL_INSIDE[2] // 2
             cy = oy + CANCEL_INSIDE[1] + CANCEL_INSIDE[3] // 2
+            # Frames from BEFORE the gesture: command_key holds its keys
+            # long enough for a cancel and its 8 ticks to be over by the
+            # time it returns, and a burst started after it saw neither
+            # (System 3.0, 2026-11-06).
+            count = [0]
+
+            def burst():
+                t1 = time.time()
+                while time.time() - t1 < args.burst:
+                    xwd(mac, os.path.join(frames, f"{count[0]:04d}.xwd"))
+                    count[0] += 1
+            import threading
+            grab = threading.Thread(target=burst)
+            grab.start()
+            time.sleep(0.2)
             if kind == "cmd":
                 mac.command_key("period")
             else:
@@ -2713,12 +2738,18 @@ def phase_cancel_tap(args, appbin, workdir, shot):
                 mac._xdo("mousedown", "1")
                 time.sleep(0.05)
                 if kind == "drag":
-                    # Stepped: Mini vMac samples the mouse once a tick.
-                    for i in range(1, 5):
+                    # At a hand's speed, ~1.4 s: a 170 ms drag reached a
+                    # busy Mac late and whole, the moves lost, so the Mac saw
+                    # a press held on Cancel and released there (2026-11-06,
+                    # a frame timeline: no tracking highlight during the
+                    # drag, the cancel 0.4 s after the host's release).
+                    time.sleep(0.3)
+                    for i in range(1, 9):
                         mac._xdo("mousemove",
-                                 str(cx + (ox + OFF_CANCEL[0] - cx) * i // 4),
-                                 str(cy + (oy + OFF_CANCEL[1] - cy) * i // 4))
-                        time.sleep(0.03)
+                                 str(cx + (ox + OFF_CANCEL[0] - cx) * i // 8),
+                                 str(cy + (oy + OFF_CANCEL[1] - cy) * i // 8))
+                        time.sleep(0.1)
+                    time.sleep(0.3)
                     mac._xdo("mouseup", "1")
                 else:
                     # Released on the button, then moved off: Mini vMac
@@ -2728,12 +2759,8 @@ def phase_cancel_tap(args, appbin, workdir, shot):
                     time.sleep(0.1)
                     mac._xdo("mousemove", str(ox + OFF_CANCEL[0]),
                              str(oy + OFF_CANCEL[1]))
-            t1 = time.time()
-            got_frames = 0
-            while time.time() - t1 < args.burst:
-                xwd(mac, os.path.join(frames, f"{got_frames:04d}.xwd"))
-                got_frames += 1
-            interval = args.burst / max(got_frames, 1)
+            grab.join()
+            interval = args.burst / max(count[0], 1)
             mac.settle(scratch, interval=2.0,
                        quiet=EXTRACT_QUIET if kind == "drag" else CANCEL_QUIET,
                        timeout=args.complete_timeout)
@@ -2743,7 +2770,7 @@ def phase_cancel_tap(args, appbin, workdir, shot):
             if os.path.exists(scratch):
                 os.remove(scratch)
         shots = sorted(os.listdir(frames))
-        # The window must still be up after the press, or the trial asked
+        # The window must be up as the gesture starts, or the trial asked
         # nothing: an extraction already over is COMPLETE whatever a press
         # does.
         up = bool(shots) and all(
@@ -2759,7 +2786,7 @@ def phase_cancel_tap(args, appbin, workdir, shot):
         outcome = "COMPLETE" if have == want else "CANCELLED"
         expect = "COMPLETE" if kind == "drag" else "CANCELLED"
         if not up:
-            outcome = "VOID (no progress window after the press)"
+            outcome = "VOID (no progress window at the press)"
         good = outcome == expect and (kind == "drag" or flashed > 0)
         ok = ok and good
         print(f"interactive: trial {n} {kind}: {outcome} "
@@ -2919,9 +2946,15 @@ def main():
                          "Cmd-., each its own boot (phase_cancel_tap)")
     ap.add_argument("--taps", type=int, default=1,
                     help="--cancel-tap: how many tap trials")
+    ap.add_argument("--drags", type=int, default=1,
+                    help="--cancel-tap: how many drag-off trials")
     ap.add_argument("--burst", type=float, default=6.0,
                     help="--cancel-tap: seconds of xwd frames after the "
                          "press, longer than the widest gap between pumps")
+    ap.add_argument("--via-finder", action="store_true",
+                    help="--cancel-tap: launch from the Finder, as --e2e "
+                         "does; System 3.0 needs it (it ignores the shell "
+                         "name)")
     ap.add_argument("--app", metavar="MACBINARY",
                     help="drive this application instead of building one "
                          "from the tree: the control build, for instance")
