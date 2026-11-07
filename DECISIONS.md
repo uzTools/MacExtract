@@ -549,6 +549,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-07 (the selector the last layer ignored) — `--only` was exempted on every layer that might unwrap, so on an envelope that did not (a MacBinary text file) it was never applied; such a layer is judged once it turns out to be the last
 - 2026-11-07 (the parts folder that was not ours) — the folder wrapped parts are decoded into had a fixed name, accepted one already there (a link included), and was emptied of every file afterwards; it is `mkdtemp`'s now, and only the parts written there are removed
 - 2026-11-07 (the key past 256 KB) — `load_mkey` read the first 256 KB of the archive's sidecar, and a resource map is at a fork's end, so a larger fork hid its `'MKey'`; the sidecar is read whole now, up to 32 MB
+- 2026-11-07 (the budget that took anything) — `--budget` was `strtoul` with no end or range check: "1M" was one byte, "lots" no cap, and 4G and up wrapped; it takes digits and an optional K/M/G now, and anything else is a usage error
 
 ---
 
@@ -22743,3 +22744,19 @@ the static 256 KB buffer is gone. A sidecar over 32 MB — a ceiling of
 ours, not the format's — is said once and not searched. Reading only the
 16-byte header and seeking to the map would also do; the whole read was
 kept because `unc_resfork_find` takes a buffer.
+
+## 2026-11-07 (the budget that took anything) — `--budget` was `strtoul` with no end or range check: "1M" was one byte, "lots" no cap, and 4G and up wrapped; it takes digits and an optional K/M/G now, and anything else is a usage error
+
+**Claim, confirmed (from a review).** Measured against the parent commit with
+`run_cli_safety.py budget-parse`, `t` on the gzip of 100 KB of text:
+`1M` refused it as `1` does; `lots`, the empty string and
+`4294967296` (the cast's 0) extracted with no cap, exit 0; `-1` became
+0xFFFFFFFF, exit 0; `1X`, `0x10`, `4G`, `5000M`, `1MB` ran with whatever
+the leading digits or the wrap gave.
+
+**The fix.** `parse_budget`: decimal digits, then at most one of K, M, G
+(1024, 1024², 1024³), and the product must fit `uint32_t`; anything else
+prints why and the usage, exit 2. `0` stays "no cap". Hex is gone: no
+caller in `tools/` passed one — every one writes `str(int)` — and the
+only warning about the old parsing was `tools/fuzz.py`'s docstring
+(TESTING.md has none), now corrected.

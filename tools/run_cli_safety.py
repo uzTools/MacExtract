@@ -473,6 +473,31 @@ def case_mkey_past_256k(tmp):
     return probs
 
 
+def case_budget_parse(tmp):
+    """Item 8: --budget went through strtoul with no end or range check:
+    "1M" parsed as 1, "lots" as 0 (no cap at all), and 4G and above
+    wrapped through the uint32_t cast. A gzip of 100 KB of text needs its
+    32 KB window, so 1K must refuse it and 1M must not; every malformed
+    or out-of-range value must be a usage error, exit 2."""
+    import gzip
+    probs = []
+    p = os.path.join(tmp, "t.gz")
+    write(p, gzip.compress(b"budget test line\n" * 6000, mtime=0))
+    for val, want in (("1M", 0), ("1048576", 0), ("1K", 1), ("1024", 1),
+                      ("4095M", 0), ("0", 0)):
+        rc, err = run("t", "--budget", val, p)
+        if rc != want:
+            probs.append(f"--budget {val}: wanted exit {want}, got {rc} "
+                         f"{err.strip()[:100]!r}")
+    for val in ("lots", "1X", "", "-1", "+5", " 5", "1.5M", "0x10", "4G",
+                "4294967296", "99999999999999999999", "5000M", "1MB"):
+        rc, err = run("t", "--budget", val, p)
+        if rc != 2:
+            probs.append(f"--budget {val!r}: wanted a usage error (exit 2), "
+                         f"got {rc}")
+    return probs
+
+
 CASES = {
     "overwrite-self": case_overwrite_self,
     "sidecar-not-ours": case_sidecar_not_ours,
@@ -484,6 +509,7 @@ CASES = {
     "only-last-layer": case_only_last_layer,
     "peel-folder-not-ours": case_peel_folder_not_ours,
     "mkey-past-256k": case_mkey_past_256k,
+    "budget-parse": case_budget_parse,
 }
 
 

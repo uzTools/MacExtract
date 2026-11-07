@@ -7,7 +7,7 @@
  *   macextract t <file>            test (decode + CRC check, no output)
  * Options:
  *   -o <dir>       output directory (default .)
- *   --budget <N>   allocation cap in bytes (simulate a small Mac)
+ *   --budget <N>   allocation cap in bytes, K/M/G allowed (simulate a small Mac)
  *   --raw-names    emit raw MacRoman bytes instead of UTF-8 names
  *   --forks <visible|hidden>  resource-fork sidecar naming
  *   --overwrite    write over existing output files (default: refuse)
@@ -2454,6 +2454,31 @@ static int layer_unwraps(UncFormat f)
            f == UNC_FORMAT_SPLIT || f == UNC_FORMAT_DDSEG;
 }
 
+/* --budget: decimal digits, then optionally K, M or G (powers of 1024),
+ * and nothing else; the result must fit the allocator's uint32_t. Until
+ * 2026-11-07 this was strtoul with no end or range check: "1M" was one
+ * byte, "lots" no cap at all, and 4G wrapped to none (DECISIONS.md
+ * 2026-11-07, *the budget that took anything*). Returns 0 or -1. */
+static int parse_budget(const char *s, uint32_t *out)
+{
+    unsigned long long v = 0, mul = 1;
+    const char *p = s;
+
+    if (*p < '0' || *p > '9') return -1;
+    for (; *p >= '0' && *p <= '9'; p++) {
+        v = v * 10u + (unsigned)(*p - '0');
+        if (v > 0xFFFFFFFFull) return -1;
+    }
+    if (*p == 'K' || *p == 'k') mul = 1024u;
+    else if (*p == 'M' || *p == 'm') mul = 1024u * 1024u;
+    else if (*p == 'G' || *p == 'g') mul = 1024u * 1024u * 1024u;
+    if (mul != 1) p++;
+    if (*p) return -1;
+    if (v > 0xFFFFFFFFull / mul) return -1;
+    *out = (uint32_t)(v * mul);
+    return 0;
+}
+
 static void usage(void)
 {
     fprintf(stderr,
@@ -2464,7 +2489,8 @@ static void usage(void)
         "  sniff  print the detected format\n"
         "options:\n"
         "  -o <dir>       output directory (default .)\n"
-        "  --budget <N>   allocation cap in bytes\n"
+        "  --budget <N>   allocation cap in bytes; K, M or G multiplies\n"
+        "                 by 1024, 1024^2, 1024^3 (under 4G). 0: no cap\n"
         "  --raw-names    keep raw MacRoman bytes in filenames\n"
         "  --forks <visible|hidden>  resource forks as NAME.rsrc "
         "(default) or ._NAME\n"
@@ -2576,8 +2602,15 @@ static int cli_main(int argc, char **argv)
 
     for (i = 2; i < argc; i++) {
         if (strcmp(argv[i], "-o") == 0 && i + 1 < argc) outdir = argv[++i];
-        else if (strcmp(argv[i], "--budget") == 0 && i + 1 < argc)
-            budget = (uint32_t)strtoul(argv[++i], NULL, 0);
+        else if (strcmp(argv[i], "--budget") == 0 && i + 1 < argc) {
+            if (parse_budget(argv[++i], &budget) != 0) {
+                fprintf(stderr, "macextract: --budget %s: not a byte count "
+                        "(digits, then K, M or G at most, under 4G)\n",
+                        argv[i]);
+                usage();
+                return 2;
+            }
+        }
         else if (strcmp(argv[i], "--raw-names") == 0) raw_names = 1;
         else if (strcmp(argv[i], "--forks") == 0 && i + 1 < argc) {
             const char *k = argv[++i];

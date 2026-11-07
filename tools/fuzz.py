@@ -25,10 +25,11 @@ Six generators, seeded and reproducible:
      is a small synthetic one is fuzzed by nothing in practice.
 
 Every case runs `macextract t --budget 4194304 -p <password>` (the
-sanitizer build) with a timeout. The budget is in BYTES and takes no
-suffix — `--budget 4M` parses as four — and a budget too small to hold a
-decoder's buffers refuses every entry, which looks exactly like a
-robustness result and is not one.
+sanitizer build) with a timeout. The budget is in BYTES — `4M` means
+4 MiB since 2026-11-07, and was four bytes before, when anything after
+the digits was dropped — and a budget too small to hold a decoder's
+buffers refuses every entry, which looks exactly like a robustness
+result and is not one.
 
 Any nonzero-but-clean exit is fine; crashes (signals), sanitizer aborts,
 or timeouts fail the run.

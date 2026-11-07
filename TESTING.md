@@ -201,6 +201,9 @@ case for.
 - `mkey-past-256k`: a StuffIt DES archive whose sidecar holds a 300 KB
   resource before its `'MKey'` must decrypt; the control, a small
   sidecar, must too.
+- `budget-parse`: `--budget 1M` must let a 32 KB-window gzip through and
+  `1K` must not; thirteen malformed or out-of-range values must each be a
+  usage error, exit 2.
 
 ### Exact oracle invocation
 
