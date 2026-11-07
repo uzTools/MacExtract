@@ -2537,10 +2537,13 @@ source produced the same payload hash.
 
 **What it cannot see:**
 
-- **`dist/MacExtract.dsk` and `dist/MacExtract-1440K.img`.** `make_dist.sh`
-  writes all three and round-trips each image's application against the
-  `.bin`; the images are HFS volumes with their own dates and are not
-  compared byte for byte.
+- **The floppy images.** `make_dist.sh` round-trips each raw image's
+  application, `Read Me` and (400K) helpers zip against what it wrote, and
+  each Disk Copy `.dsk` against its raw `.img` with `tools/mkdc42.py
+  --check`; the images are volumes with their own dates and are not
+  compared byte for byte across runs. No Disk Copy has opened a `.dsk`,
+  and the `.hqx` is checked by macutils' `hexbin` only, not by StuffIt
+  Expander.
 - **Anything, without a Retro68 toolchain.**
 - **A docs-only change**, which does not run `ci.sh` (CLAUDE.md, Rules).
   `dist/README.txt` — the release notes verbatim — is `tools/check_docs.py`'s

@@ -5656,7 +5656,7 @@ is not positive**, for 0 B and the same budget to the byte on the three
 tiers (DECISIONS.md 2026-11-06, *the two calls a 64K ROM lacks*). The rest
 are in `UNC_AT_*` builds or behind the Desktop Manager. **Measured on the
 emulated 512K**: `MacExtract-Helpers.zip`, double-clicked on
-`dist/MacExtract-400K.dsk` and extracted to `Hard Disk`, 16 of 16 helpers,
+`dist/MacExtract-400K.img` and extracted to `Hard Disk`, 16 of 16 helpers,
 identical to `MacExtract.dsk`'s outside resource-fork bytes 48–125 (the
 system-reserved 16–127). A real HD20 is MANUAL_TESTS.md §6.
 

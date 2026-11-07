@@ -48,7 +48,7 @@ blank HFS image for the HD20 the emulator does not have. What it cannot see
 is that patch. Extract onto `Hard Disk` from the 400K floppy in drive 3:
 
     hd20boot.py boot.img --hfs hd.img
-    $V/mv-512K/minivmac -r $V/Mac512K.ROM boot.img hd.img dist/MacExtract-400K.dsk
+    $V/mv-512K/minivmac -r $V/Mac512K.ROM boot.img hd.img dist/MacExtract-400K.img
 
 `sys30.py --rom64` sweeps it: that boot floppy, the autotest build alone on a
 second MFS disk (the three do not fit on one), In and Out, and two clicks at
@@ -2457,7 +2457,7 @@ menu tracking), and does nothing on System 6.
 application as a person does and to launch what it extracted; it uses
 `derived-ScrollbarPattern.sit`, whose entry is an application drawing its own
 splash screen. `docs/screens/` comes from here, except `0-icon.png`, from
-`mountcheck.py --open` on `dist/MacExtract.dsk`: in the `--e2e` window the
+`mountcheck.py --open` on `dist/MacExtract-800K.img`: in the `--e2e` window the
 undeletable `StuffIt Expander™ 4.0.1 Folder`'s label is painted over
 `MacExtract`'s. The cancel run uses `derived-EmpireBuilderDemo.sit`: after a
 cancel SFGetFile must list exactly `Demo Manual V1.6`, no `EB Sounds`.

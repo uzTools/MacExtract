@@ -7,15 +7,23 @@
 #   MacExtract.bin  — the application as UNCOMPRESSED MacBinary. Drop it on any
 #                    Mac with a MacBinary-aware transfer (ImportFl, most terminal
 #                    programs, or a network mount); no unarchiver required.
-#   MacExtract.dsk  — an 800K HFS floppy image holding the application. Write it
-#                    to a real 800K floppy, or mount it in Mini vMac / Basilisk /
-#                    SheepShaver, then drag the app onto your startup disk.
+#   MacExtract.hqx  — the same application as BinHex 4.0, for a Mac that already
+#                    has StuffIt Expander or BinHex, over a transfer that
+#                    carries only text.
+#   MacExtract-800K.img — an 800K HFS floppy image holding the application,
+#                    the helpers folder and the README as a SimpleText "Read
+#                    Me". Write it to a real 800K floppy, or mount it in Mini
+#                    vMac / Basilisk / SheepShaver.
 #   MacExtract-1440K.img — the same volume at 1.44 MB, for a USB floppy drive,
 #                    which writes MFM only and so cannot make an 800K GCR disk;
 #                    a SuperDrive Mac mounts it (DECISIONS.md 2026-10-14,
 #                    *the floppy a USB drive can write*).
-#   MacExtract-400K.dsk — a 400K MFS floppy, MacExtract and the helpers zip,
-#                    for a 64K-ROM Macintosh 512K with a Hard Disk 20.
+#   MacExtract-400K.img — a 400K MFS floppy, MacExtract, the "Read Me" and the
+#                    helpers zip, for a 64K-ROM Macintosh 512K with a Hard
+#                    Disk 20.
+#   MacExtract-*.dsk — each of the three as a Disk Copy 4.2 image
+#                    (tools/mkdc42.py; DECISIONS.md 2026-11-07, *the floppies
+#                    twice*).
 #   MacExtract-Helpers.zip — the double-click helpers, one per creator
 #                    (companion/helpers.tsv), in one zip MacExtract opens;
 #                    also in a "MacExtract Helpers" folder on both disks.
@@ -35,10 +43,12 @@ cd "$(dirname "$0")/.."
 
 # Checked before anything is built or written, so a machine without hfsutils
 # stops here rather than leaving a dist/ with no 1.44 MB image in it.
-for t in hformat hmount hcopy humount; do
+for t in hformat hmount hcopy hattrib humount; do
     command -v "$t" >/dev/null 2>&1 || {
         echo "make_dist: $t not found — hfsutils is required" >&2; exit 1; }
 done
+command -v binhex >/dev/null 2>&1 || {
+    echo "make_dist: binhex not found — macutils is required" >&2; exit 1; }
 
 # hfsutils keeps its current-volume state in $HOME/.hcwd; each use below
 # gets a scratch HOME of its own rather than the user's.
@@ -59,59 +69,7 @@ if [ ! -f "$SRC/MacExtract.bin" ] || [ ! -f "$SRC/MacExtract.dsk" ]; then
 fi
 
 mkdir -p dist
-cp "$SRC/MacExtract.bin" dist/MacExtract.bin
-cp "$SRC/MacExtract.dsk" dist/MacExtract.dsk
 
-# Built from the MacBinary the way set_bundle_bit.py rebuilds the .dsk:
-# `hcopy -m` carries the Finder flags, hasBundle included.
-IMG=dist/MacExtract-1440K.img
-rm -f "$IMG"
-truncate -s 1474560 "$IMG"
-HOME=$HFS_TMP hformat -l MacExtract "$IMG" >/dev/null
-HOME=$HFS_TMP hmount "$IMG" >/dev/null
-HOME=$HFS_TMP hcopy -m dist/MacExtract.bin ":"
-HOME=$HFS_TMP humount >/dev/null
-# The double-click helpers, one per creator companion/helpers.tsv lists: as
-# one Finder-style zip, dist/MacExtract-Helpers.zip, which MacExtract itself
-# opens, and in a "MacExtract Helpers" folder beside MacExtract on both
-# disks (the maintainer, 2026-11-04; DECISIONS.md 2026-11-04, *the helpers
-# in dist*). tools/check_helpers.py checks them;
-# the toolchain is found as tools/build_mac.sh finds it, which has just
-# succeeded.
-if [ -n "$RETRO68" ] && [ -d "$RETRO68" ]; then
-    TOOLCHAIN="$RETRO68"
-elif command -v m68k-apple-macos-gcc >/dev/null 2>&1; then
-    TOOLCHAIN="$(dirname "$(dirname "$(command -v m68k-apple-macos-gcc)")")"
-else
-    TOOLCHAIN=/opt/Retro68-build/toolchain
-fi
-cmake -B build/stub -S companion/stub \
-    -DCMAKE_TOOLCHAIN_FILE="$TOOLCHAIN/m68k-apple-macos/cmake/retro68.toolchain.cmake" >/dev/null
-cmake --build build/stub >/dev/null
-rm -rf dist/helpers
-python3 companion/make_helpers.py build/stub/Stub.bin -o "$HFS_TMP/helpers" \
-    --zip dist/MacExtract-Helpers.zip
-for img in dist/MacExtract.dsk "$IMG"; do
-    HOME=$HFS_TMP hmount "$img" >/dev/null
-    HOME=$HFS_TMP hmkdir ":MacExtract Helpers"
-    for h in "$HFS_TMP"/helpers/*.bin; do
-        HOME=$HFS_TMP hcopy -m "$h" ":MacExtract Helpers:$(basename "$h" .bin)"
-    done
-    # The Desktop file listing MacExtract and the helpers, so a Mac with
-    # no hard disk finds them on this floppy with it ejected (DECISIONS.md
-    # 2026-11-04, *the floppy that is ready*).
-    DIRID=$(HOME=$HFS_TMP hls -i -a ":" | awk '$2 == "MacExtract" && $3 == "Helpers" {print $1}')
-    python3 companion/make_helpers.py --desktop "$HFS_TMP/Desktop.bin" --dirid "$DIRID"
-    HOME=$HFS_TMP hcopy -m "$HFS_TMP/Desktop.bin" ":Desktop"
-    HOME=$HFS_TMP humount >/dev/null
-done
-# A 400K MFS floppy for a Macintosh 512K with a Hard Disk 20: a 64K ROM reads
-# only MFS floppies, and MFS has no folders, so the helpers go as the zip,
-# typed 'ZIP ' with MacExtract's creator to open in it (the maintainer,
-# 2026-11-06; MANUAL_TESTS.md §6).
-MFS=dist/MacExtract-400K.dsk
-python3 tools/vmac/mkmfs.py "$MFS" --name MacExtract dist/MacExtract.bin \
-    --data dist/MacExtract-Helpers.zip MacExtract-Helpers.zip "ZIP MExt" >/dev/null
 VERSION=$(sed -n 's/^#define UNC_VERSION "\(.*\)"/\1/p' include/macextract.h)
 [ -n "$VERSION" ] || { echo "make_dist: no UNC_VERSION in include/macextract.h" >&2; exit 1; }
 
@@ -120,31 +78,41 @@ MacExtract v$VERSION — bootstrap distribution
 ==========================================
 
 A bare Classic Mac has no way to open a .sit/.cpt/.hqx until it HAS an
-unarchiver, so MacExtract ships in four forms that need no unarchiver:
+unarchiver, so MacExtract ships in forms that need none, and one for a Mac
+that already has one:
 
   MacExtract.bin  The application as uncompressed MacBinary. Transfer it to
                   the Mac with any MacBinary-aware method (ImportFl, a terminal
                   program's MacBinary receive, an AppleShare/AFP mount). The
                   wrapper unpacks to the real application on arrival.
 
-  MacExtract.dsk  An 800K HFS floppy image containing the application. Write it
-                  to a physical 800K floppy (a Mac Plus reads 400K/800K GCR
-                  floppies only), or mount it in an emulator (Mini vMac,
-                  Basilisk II, SheepShaver), then drag MacExtract onto your
-                  startup disk.
+  MacExtract.hqx  The same application as BinHex 4.0, which is plain text.
+                  It needs StuffIt Expander or BinHex on the Mac to open, so
+                  it is for a Mac that already has one, over a transfer that
+                  carries only text (mail, a text-mode transfer). Anything
+                  that carries a .bin intact is the better route.
 
-  MacExtract-1440K.img  The same disk at 1.44 MB, for a USB floppy drive.
-                  Write the image itself, not a copy of the file, to a
-                  high-density disk (dd on Linux or a Mac, a raw image writer
-                  on Windows), and any Mac with a 1.44 MB SuperDrive mounts
-                  it. A USB drive cannot write an 800K Mac disk, and a Mac
-                  Plus, 512Ke or original SE cannot read a 1.44 MB one.
+Each floppy comes twice. The .img is the raw disk: write it with dd or a raw
+image writer, or mount it in an emulator (Mini vMac, Basilisk II,
+SheepShaver). The .dsk is the same disk as a Disk Copy 4.2 image, for
+Apple's Disk Copy to write to a floppy on a Mac; Disk Copy opens it once its
+type is dImg and its creator dCpy. Every floppy holds MacExtract and this
+text as "Read Me"; drag MacExtract onto your startup disk.
+
+  MacExtract-800K.img, .dsk  An 800K HFS floppy, with the "MacExtract
+                  Helpers" folder. A Mac Plus reads 400K/800K floppies only.
+
+  MacExtract-1440K.img, .dsk  The same disk at 1.44 MB, for a USB floppy
+                  drive. Write the image itself, not a copy of the file, to
+                  a high-density disk, and any Mac with a 1.44 MB SuperDrive
+                  mounts it. A USB drive cannot write an 800K Mac disk, and
+                  a Mac Plus, 512Ke or original SE cannot read a 1.44 MB one.
                   Copying MacExtract.bin onto a PC-formatted disk does not
                   work either: it arrives still wrapped, with nothing on the
                   Mac to unwrap it. Not yet tried on a real SuperDrive.
 
-  MacExtract-400K.dsk  A 400K MFS floppy, for a Macintosh 512K with a Hard
-                  Disk 20: its 64K ROM reads no other floppy. It holds
+  MacExtract-400K.img, .dsk  A 400K MFS floppy, for a Macintosh 512K with
+                  a Hard Disk 20: its 64K ROM reads no other floppy. It holds
                   MacExtract and MacExtract-Helpers.zip. Write it to a 400K
                   disk on a Mac with both kinds of drive. Not yet tried on a
                   real 512K; if you have one, this is the test: start up
@@ -181,7 +149,7 @@ shipped with in January 1986. It also runs in 512 KB, on a Macintosh 512Ke.
 On a true Macintosh 512K -- the 64K ROM -- it opens and lists a disk, but
 extracting needs HFS, which that machine has only with a Hard Disk 20
 attached. With one it extracts on an emulator; nobody has yet tried a
-real one (MacExtract-400K.dsk is the disk for it). A Macintosh 128K cannot run this
+real one (MacExtract-400K is the disk for it). A Macintosh 128K cannot run this
 at all: the program's code and data do not fit in its memory, whatever the
 system.
 The same binary runs unchanged through Mac OS 9 and adapts its memory use to
@@ -625,11 +593,93 @@ hardware -- worth knowing before you commit a floppy to it.
 
 License: LGPL-2.1-or-later. See LICENSE and NOTICE in the source tree.
 TXT
+# The README on every disk as a SimpleText document: Mac Roman, CR,
+# 'TEXT'/'ttxt' (the maintainer, 2026-11-07).
+python3 - dist/README.txt "$HFS_TMP/Read Me" <<'PY'
+import sys
+t = open(sys.argv[1], encoding='utf-8').read().replace('\n', '\r').encode('mac_roman')
+# TextEdit, which TeachText and SimpleText are built on, holds 32,767
+# characters at most (Inside Macintosh I; not measured on a Mac here).
+if len(t) > 32767:
+    sys.exit(f"make_dist: README.txt is {len(t)} B as Mac text, over TextEdit's 32,767")
+open(sys.argv[2], 'wb').write(t)
+PY
+
+cp "$SRC/MacExtract.bin" dist/MacExtract.bin
+cp "$SRC/MacExtract.dsk" dist/MacExtract-800K.img
+# macutils writes its own banner and LF; the spec's banner, which
+# MacExtract's own sniffer looks for, and CR every 64 characters
+# (reference/notes/binhex40_lewis.txt).
+binhex dist/MacExtract.bin \
+    | sed '1s/.*/(This file must be converted with BinHex 4.0)/' \
+    | tr '\n' '\r' > dist/MacExtract.hqx
+
+# Built from the MacBinary the way set_bundle_bit.py rebuilds the .dsk:
+# `hcopy -m` carries the Finder flags, hasBundle included.
+IMG=dist/MacExtract-1440K.img
+rm -f "$IMG"
+truncate -s 1474560 "$IMG"
+HOME=$HFS_TMP hformat -l MacExtract "$IMG" >/dev/null
+HOME=$HFS_TMP hmount "$IMG" >/dev/null
+HOME=$HFS_TMP hcopy -m dist/MacExtract.bin ":"
+HOME=$HFS_TMP humount >/dev/null
+# The double-click helpers, one per creator companion/helpers.tsv lists: as
+# one Finder-style zip, dist/MacExtract-Helpers.zip, which MacExtract itself
+# opens, and in a "MacExtract Helpers" folder beside MacExtract on both
+# disks (the maintainer, 2026-11-04; DECISIONS.md 2026-11-04, *the helpers
+# in dist*). tools/check_helpers.py checks them;
+# the toolchain is found as tools/build_mac.sh finds it, which has just
+# succeeded.
+if [ -n "$RETRO68" ] && [ -d "$RETRO68" ]; then
+    TOOLCHAIN="$RETRO68"
+elif command -v m68k-apple-macos-gcc >/dev/null 2>&1; then
+    TOOLCHAIN="$(dirname "$(dirname "$(command -v m68k-apple-macos-gcc)")")"
+else
+    TOOLCHAIN=/opt/Retro68-build/toolchain
+fi
+cmake -B build/stub -S companion/stub \
+    -DCMAKE_TOOLCHAIN_FILE="$TOOLCHAIN/m68k-apple-macos/cmake/retro68.toolchain.cmake" >/dev/null
+cmake --build build/stub >/dev/null
+rm -rf dist/helpers
+python3 companion/make_helpers.py build/stub/Stub.bin -o "$HFS_TMP/helpers" \
+    --zip dist/MacExtract-Helpers.zip
+for img in dist/MacExtract-800K.img "$IMG"; do
+    HOME=$HFS_TMP hmount "$img" >/dev/null
+    HOME=$HFS_TMP hcopy -r "$HFS_TMP/Read Me" ":Read Me"
+    HOME=$HFS_TMP hattrib -t TEXT -c ttxt ":Read Me"
+    HOME=$HFS_TMP hmkdir ":MacExtract Helpers"
+    for h in "$HFS_TMP"/helpers/*.bin; do
+        HOME=$HFS_TMP hcopy -m "$h" ":MacExtract Helpers:$(basename "$h" .bin)"
+    done
+    # The Desktop file listing MacExtract and the helpers, so a Mac with
+    # no hard disk finds them on this floppy with it ejected (DECISIONS.md
+    # 2026-11-04, *the floppy that is ready*).
+    DIRID=$(HOME=$HFS_TMP hls -i -a ":" | awk '$2 == "MacExtract" && $3 == "Helpers" {print $1}')
+    python3 companion/make_helpers.py --desktop "$HFS_TMP/Desktop.bin" --dirid "$DIRID"
+    HOME=$HFS_TMP hcopy -m "$HFS_TMP/Desktop.bin" ":Desktop"
+    HOME=$HFS_TMP humount >/dev/null
+done
+
+# A 400K MFS floppy for a Macintosh 512K with a Hard Disk 20: a 64K ROM reads
+# only MFS floppies, and MFS has no folders, so the helpers go as the zip,
+# typed 'ZIP ' with MacExtract's creator to open in it (the maintainer,
+# 2026-11-06; MANUAL_TESTS.md §6).
+MFS=dist/MacExtract-400K.img
+python3 tools/vmac/mkmfs.py "$MFS" --name MacExtract dist/MacExtract.bin \
+    --data dist/MacExtract-Helpers.zip MacExtract-Helpers.zip "ZIP MExt" \
+    --data "$HFS_TMP/Read Me" "Read Me" "TEXTttxt" >/dev/null
+
+# Each floppy again as a Disk Copy 4.2 image.
+for k in 800K 1440K 400K; do
+    python3 tools/mkdc42.py dist/MacExtract-$k.img dist/MacExtract-$k.dsk --name MacExtract
+done
 
 echo "make_dist: wrote dist/MacExtract.bin ($(wc -c < dist/MacExtract.bin) B),"
-echo "make_dist:       dist/MacExtract.dsk ($(wc -c < dist/MacExtract.dsk) B),"
-echo "make_dist:       $IMG ($(wc -c < "$IMG") B),"
-echo "make_dist:       $MFS ($(wc -c < "$MFS") B), dist/README.txt"
+echo "make_dist:       dist/MacExtract.hqx ($(wc -c < dist/MacExtract.hqx) B),"
+for k in 800K 1440K 400K; do
+    echo "make_dist:       dist/MacExtract-$k.img ($(wc -c < dist/MacExtract-$k.img) B) and .dsk,"
+done
+echo "make_dist:       dist/MacExtract-Helpers.zip, dist/README.txt"
 
 # Cheap proof that the three artifacts carry the same application: each
 # image's copy round-trips back to a MacBinary whose resource fork — which is
@@ -638,10 +688,20 @@ echo "make_dist:       $MFS ($(wc -c < "$MFS") B), dist/README.txt"
 # checked for at the top, because a machine without it used to reach this
 # point and die AFTER writing dist/, which read as "the build failed" when
 # the artifacts were in fact sitting there unverified (2026-08-15).
-for img in dist/MacExtract.dsk "$IMG"; do
+for img in dist/MacExtract-800K.img "$IMG"; do
     HOME=$HFS_TMP hmount "$img" >/dev/null
     HOME=$HFS_TMP hcopy -m "MacExtract:MacExtract" "$HFS_TMP/roundtrip.bin"
+    HOME=$HFS_TMP hcopy -m "MacExtract:Read Me" "$HFS_TMP/readme.bin"
     HOME=$HFS_TMP humount >/dev/null
+    python3 - "$HFS_TMP/readme.bin" "$HFS_TMP/Read Me" "$img" <<'PY'
+import sys
+r = open(sys.argv[1], 'rb').read()
+dl = int.from_bytes(r[83:87], 'big')
+ok = r[65:73] == b'TEXTttxt' and r[128:128 + dl] == open(sys.argv[2], 'rb').read()
+print(f"make_dist: {sys.argv[3]} Read Me: {r[65:73].decode('mac_roman')!r}, "
+      f"{dl} B, {'identical' if ok else 'DIFFERENT'}")
+sys.exit(0 if ok else 1)
+PY
     python3 - "$HFS_TMP/roundtrip.bin" "$img" <<'PY'
 import sys
 a = open(sys.argv[1], 'rb').read()
@@ -660,20 +720,30 @@ done
 # zip byte for byte with its type and creator.
 python3 tools/vmac/mkmfs.py "$MFS" --extract MacExtract "$HFS_TMP/roundtrip.bin" >/dev/null
 python3 tools/vmac/mkmfs.py "$MFS" --extract MacExtract-Helpers.zip "$HFS_TMP/zip.bin" >/dev/null
-python3 - "$HFS_TMP/roundtrip.bin" "$HFS_TMP/zip.bin" "$MFS" <<'PY'
+python3 tools/vmac/mkmfs.py "$MFS" --extract "Read Me" "$HFS_TMP/readme.bin" >/dev/null
+python3 - "$HFS_TMP/roundtrip.bin" "$HFS_TMP/zip.bin" "$MFS" "$HFS_TMP/readme.bin" "$HFS_TMP/Read Me" <<'PY'
 import sys
 a = open(sys.argv[1], 'rb').read()
 b = open('dist/MacExtract.bin', 'rb').read()
 z = open(sys.argv[2], 'rb').read()
 want = open('dist/MacExtract-Helpers.zip', 'rb').read()
+r = open(sys.argv[4], 'rb').read()
 rl = int.from_bytes(b[87:91], 'big')
 same = a[128:128 + rl] == b[128:128 + rl]
 flags = (a[73] << 8) | a[101]
 zl = int.from_bytes(z[83:87], 'big')
 zsame = z[65:73] == b'ZIP MExt' and z[128:128 + zl] == want
+dl = int.from_bytes(r[83:87], 'big')
+rsame = r[65:73] == b'TEXTttxt' and r[128:128 + dl] == open(sys.argv[5], 'rb').read()
 print(f"make_dist: {sys.argv[3]} round-trip: {rl} B resource fork, "
       f"{'identical' if same else 'DIFFERENT'} to the MacBinary, "
       f"Finder flags 0x{flags:04X}; helpers zip {z[65:73].decode('mac_roman')!r}, "
-      f"{'identical' if zsame else 'DIFFERENT'}")
-sys.exit(0 if same and flags & 0x2000 and zsame else 1)
+      f"{'identical' if zsame else 'DIFFERENT'}; Read Me "
+      f"{r[65:73].decode('mac_roman')!r}, {'identical' if rsame else 'DIFFERENT'}")
+sys.exit(0 if same and flags & 0x2000 and zsame and rsame else 1)
 PY
+# And each Disk Copy image read back: its header, its checksum, and the raw
+# disk it was made from.
+for k in 800K 1440K 400K; do
+    python3 tools/mkdc42.py --check dist/MacExtract-$k.dsk dist/MacExtract-$k.img
+done

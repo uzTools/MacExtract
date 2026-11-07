@@ -210,7 +210,7 @@ def check_dist(stub):
                    "builds — run tools/make_dist.sh")
     if shutil.which("hls") and shutil.which("hmount"):
         names = sorted(n for _, n, _ in want)
-        for img in ("MacExtract.dsk", "MacExtract-1440K.img"):
+        for img in ("MacExtract-800K.img", "MacExtract-1440K.img"):
             home = os.path.join(ROOT, ".tmp")
             env = dict(os.environ, HOME=home)
             r = subprocess.run(["hmount", os.path.join(ROOT, "dist", img)], capture_output=True, env=env)

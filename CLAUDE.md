@@ -136,7 +136,10 @@ git push origin v0.12
   ref.
 - **`dist/` must be current**; the workflow publishes what is committed.
 - **The release notes are `dist/README.txt`, verbatim** — a download page, not
-  a changelog. Re-read it before tagging.
+  a changelog, and the "Read Me" on every floppy. Re-read it before tagging.
+- **The maintainer reads `README.md` and `dist/README.txt` before every
+  release.** Hand him both as they will ship and wait for his go; a request
+  to release is not that go.
 - **This machine cannot see the release page, but it can ask the API.**
   Confirm the tag with `git ls-remote --tags origin`, then
   `curl -sS https://api.github.com/repos/uzTools/MacExtract/releases/tags/vX.Y.Z`

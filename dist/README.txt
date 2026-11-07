@@ -2,31 +2,41 @@ MacExtract v0.45.0 — bootstrap distribution
 ==========================================
 
 A bare Classic Mac has no way to open a .sit/.cpt/.hqx until it HAS an
-unarchiver, so MacExtract ships in four forms that need no unarchiver:
+unarchiver, so MacExtract ships in forms that need none, and one for a Mac
+that already has one:
 
   MacExtract.bin  The application as uncompressed MacBinary. Transfer it to
                   the Mac with any MacBinary-aware method (ImportFl, a terminal
                   program's MacBinary receive, an AppleShare/AFP mount). The
                   wrapper unpacks to the real application on arrival.
 
-  MacExtract.dsk  An 800K HFS floppy image containing the application. Write it
-                  to a physical 800K floppy (a Mac Plus reads 400K/800K GCR
-                  floppies only), or mount it in an emulator (Mini vMac,
-                  Basilisk II, SheepShaver), then drag MacExtract onto your
-                  startup disk.
+  MacExtract.hqx  The same application as BinHex 4.0, which is plain text.
+                  It needs StuffIt Expander or BinHex on the Mac to open, so
+                  it is for a Mac that already has one, over a transfer that
+                  carries only text (mail, a text-mode transfer). Anything
+                  that carries a .bin intact is the better route.
 
-  MacExtract-1440K.img  The same disk at 1.44 MB, for a USB floppy drive.
-                  Write the image itself, not a copy of the file, to a
-                  high-density disk (dd on Linux or a Mac, a raw image writer
-                  on Windows), and any Mac with a 1.44 MB SuperDrive mounts
-                  it. A USB drive cannot write an 800K Mac disk, and a Mac
-                  Plus, 512Ke or original SE cannot read a 1.44 MB one.
+Each floppy comes twice. The .img is the raw disk: write it with dd or a raw
+image writer, or mount it in an emulator (Mini vMac, Basilisk II,
+SheepShaver). The .dsk is the same disk as a Disk Copy 4.2 image, for
+Apple's Disk Copy to write to a floppy on a Mac; Disk Copy opens it once its
+type is dImg and its creator dCpy. Every floppy holds MacExtract and this
+text as "Read Me"; drag MacExtract onto your startup disk.
+
+  MacExtract-800K.img, .dsk  An 800K HFS floppy, with the "MacExtract
+                  Helpers" folder. A Mac Plus reads 400K/800K floppies only.
+
+  MacExtract-1440K.img, .dsk  The same disk at 1.44 MB, for a USB floppy
+                  drive. Write the image itself, not a copy of the file, to
+                  a high-density disk, and any Mac with a 1.44 MB SuperDrive
+                  mounts it. A USB drive cannot write an 800K Mac disk, and
+                  a Mac Plus, 512Ke or original SE cannot read a 1.44 MB one.
                   Copying MacExtract.bin onto a PC-formatted disk does not
                   work either: it arrives still wrapped, with nothing on the
                   Mac to unwrap it. Not yet tried on a real SuperDrive.
 
-  MacExtract-400K.dsk  A 400K MFS floppy, for a Macintosh 512K with a Hard
-                  Disk 20: its 64K ROM reads no other floppy. It holds
+  MacExtract-400K.img, .dsk  A 400K MFS floppy, for a Macintosh 512K with
+                  a Hard Disk 20: its 64K ROM reads no other floppy. It holds
                   MacExtract and MacExtract-Helpers.zip. Write it to a 400K
                   disk on a Mac with both kinds of drive. Not yet tried on a
                   real 512K; if you have one, this is the test: start up
@@ -63,7 +73,7 @@ shipped with in January 1986. It also runs in 512 KB, on a Macintosh 512Ke.
 On a true Macintosh 512K -- the 64K ROM -- it opens and lists a disk, but
 extracting needs HFS, which that machine has only with a Hard Disk 20
 attached. With one it extracts on an emulator; nobody has yet tried a
-real one (MacExtract-400K.dsk is the disk for it). A Macintosh 128K cannot run this
+real one (MacExtract-400K is the disk for it). A Macintosh 128K cannot run this
 at all: the program's code and data do not fit in its memory, whatever the
 system.
 The same binary runs unchanged through Mac OS 9 and adapts its memory use to

@@ -26,12 +26,13 @@ currently **v0.45.0**, or from the tree:
 | | |
 |---|---|
 | [`dist/MacExtract.bin`](dist/MacExtract.bin) | MacBinary, for any MacBinary-aware transfer |
-| [`dist/MacExtract.dsk`](dist/MacExtract.dsk) | an 800K floppy image, for a real floppy or an emulator |
-| [`dist/MacExtract-1440K.img`](dist/MacExtract-1440K.img) | the same at 1.44 MB, for a USB floppy drive and a SuperDrive Mac |
-| [`dist/MacExtract-400K.dsk`](dist/MacExtract-400K.dsk) | a 400K MFS floppy, for a Macintosh 512K with a Hard Disk 20 |
+| [`dist/MacExtract.hqx`](dist/MacExtract.hqx) | BinHex, for a Mac that already has StuffIt Expander, over a transfer that carries only text |
+| [`dist/MacExtract-800K.img`](dist/MacExtract-800K.img), [`.dsk`](dist/MacExtract-800K.dsk) | an 800K floppy, for a real floppy or an emulator |
+| [`dist/MacExtract-1440K.img`](dist/MacExtract-1440K.img), [`.dsk`](dist/MacExtract-1440K.dsk) | the same at 1.44 MB, for a USB floppy drive and a SuperDrive Mac |
+| [`dist/MacExtract-400K.img`](dist/MacExtract-400K.img), [`.dsk`](dist/MacExtract-400K.dsk) | a 400K MFS floppy, for a Macintosh 512K with a Hard Disk 20 |
 | [`dist/MacExtract-Helpers.zip`](dist/MacExtract-Helpers.zip) | the double-click helpers in one file, for MacExtract to open; also on every disk |
 
-None of them needs an unarchiver to open. [`dist/README.txt`](dist/README.txt)
+Each floppy is a raw `.img` and a Disk Copy 4.2 `.dsk`, and holds the README as a SimpleText "Read Me". All but the `.hqx` open without an unarchiver. [`dist/README.txt`](dist/README.txt)
 has the transfer notes.
 
 ## What it opens

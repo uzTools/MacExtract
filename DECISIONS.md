@@ -528,6 +528,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-07 (the port a dialog leaves) — after the password dialog, every progress update was drawn at the screen's top-left; BarDraw now sets the port and finds its own item, for 64 B back on every budget
 - 2026-11-07 (bytes as stored, never converted) — extraction is byte-exact: MacExtract never rewrites line endings, in any format; ZipIt is the only Mac unarchiver that does, and off an unreliable bit
 - 2026-11-07 (the ring that grows with the output) — the LZ4 window starts at 4 KB and doubles to 64 KB only as the frame produces, so the peek and a small payload no longer carry a flat 64 KB
+- 2026-11-07 (the floppies twice) — every release carries the application as .bin and .hqx, the helpers zip, and each floppy as a raw .img and a Disk Copy 4.2 .dsk, every floppy with the README as a SimpleText Read Me
 
 ---
 
@@ -21999,3 +22000,42 @@ liblz4 frames.
 
 **Evidence kept**: `.tmp/lz4probe/` (the unnamed 2 KB / 20 KB / 120 KB
 frames and their budgeted runs), the two fixtures' `t --stats` figures.
+
+## 2026-11-07 (the floppies twice) — every release carries the application as .bin and .hqx, the helpers zip, and each floppy as a raw .img and a Disk Copy 4.2 .dsk, every floppy with the README as a SimpleText Read Me
+
+**The decision (the maintainer's).** A release carries nine files:
+`MacExtract.bin`, `MacExtract.hqx`, `MacExtract-Helpers.zip`, and
+`MacExtract-800K`, `-1440K` and `-400K`, each as a raw `.img` and a Disk
+Copy 4.2 `.dsk`. The 800K and 1440K disks hold MacExtract, the helpers
+folder and `Read Me`; the 400K one MacExtract, `Read Me` and the zip, typed
+`ZIP `/`MExt`. Until now the workflow attached only the `.bin`, the 800K
+and the 1440K disk, although `dist/README.txt` described all five files.
+
+**The names.** `.dsk` had meant a raw image (Mini vMac's word for one), so
+the raw 800K and 400K disks became `.img` and `.dsk` now means Disk Copy
+4.2.
+
+**The `.hqx`** adds little over the `.bin` for a download today: both need
+a decoder on the Mac, and only the `.hqx` survives a channel that carries
+text only. It is there because it is the form archive sites use. macutils'
+`binhex` writes a banner of its own ("you knew that already") and LF line
+endings; MacExtract's own probe wants the spec's "(This file must be
+converted with BinHex", so `make_dist.sh` writes that and CR
+(`reference/notes/binhex40_lewis.txt`). Measured: hexbin decodes it to the
+`.bin`'s forks byte for byte, `APPL`/`MExt`, flags 0x2000. Not measured:
+StuffIt Expander or BinHex opening it.
+
+**The Disk Copy header** is `reference/notes/DiskCopy42.md`'s; the checksum
+(add each big-endian word, rotate right one) is the DiscFerret wiki's.
+Measured: it reproduces the stored data checksum of 11 Disk Copy images in
+`~/.cache/macextract` (800K tagless, 800K with tags, one 1440K). It does not
+reproduce `HD 20 Startup.image`'s from `System_3.x.sit`, whose tag checksum
+it does match: that image's data was changed after Disk Copy wrote it
+(hypothesis; nothing else explains a matching tag sum). No tags are written,
+as on the tagless 800K images. The 1440K format byte is the spec's 0x22;
+the one real 1440K image here has 0x02. Not measured: Disk Copy itself
+opening a `.dsk`.
+
+**`Read Me`** is `dist/README.txt` in Mac Roman with CR, `TEXT`/`ttxt`:
+30.0 KB, against TextEdit's 32,767-character limit, which `make_dist.sh`
+enforces (the limit is Inside Macintosh's, not measured in TeachText here).

@@ -24,9 +24,9 @@ twice an item here turned out to need neither hardware nor a stranger
 
 ## Before you start
 
-- **Get the application.** `dist/` holds `MacExtract.dsk` (an 800K floppy
-  image), `MacExtract-1440K.img` (a 1.44 MB one, §9) and a MacBinary
-  `MacExtract.bin`.
+- **Get the application.** `dist/` holds `MacExtract-800K.img` (an 800K floppy
+  image), `MacExtract-1440K.img` (a 1.44 MB one, §9), each also as a Disk
+  Copy 4.2 `.dsk`, and a MacBinary `MacExtract.bin`.
 - **Bring archives over as MacBinary (`.bin`)**, or over AppleShare, which
   keeps both forks and lets the result be graded from Linux (how round 2
   was graded).
@@ -122,7 +122,7 @@ ROM lacks*).
 | 64K ROM with the whole `Hard Disk 20` file, no drive | hangs under emulation — *hypothesis*: its `.Sony` patch against Mini vMac's own floppy driver |
 
 **The test** is the one `dist/README.txt` gives anyone who has the
-machine: write `dist/MacExtract-400K.dsk` to a 400K floppy, start up from
+machine: write `dist/MacExtract-400K.img` (or its Disk Copy `.dsk`) to a 400K floppy, start up from
 the HD20, double-click `MacExtract-Helpers.zip` on the floppy and choose
 the HD20; a pass is sixteen helpers in a `MacExtract Helpers` folder.
 Record whether it extracts; if it bombs, the ID and the screen; the

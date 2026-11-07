@@ -8,7 +8,7 @@ HFS disk image in the next drive stands in for it. This writes the boot
 floppy and, with --hfs, that volume:
 
     hd20boot.py BOOT.img --hfs HD.img
-    $V/mv-512K/minivmac -r $V/Mac512K.ROM BOOT.img HD.img dist/MacExtract-400K.dsk
+    $V/mv-512K/minivmac -r $V/Mac512K.ROM BOOT.img HD.img dist/MacExtract-400K.img
 
 The boot floppy is Apple's MFS System 3.0 (`Sys30MFS.img`: its boot blocks
 and System) and the `Hard Disk 20` file from Apple's *HD 20 Startup* disk
