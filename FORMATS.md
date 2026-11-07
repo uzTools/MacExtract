@@ -5681,6 +5681,26 @@ for StuffIt classic (291,044 B). **With the `Hard Disk 20` file loaded,
 autotest's idle loop bombed in it, `ID = 28`; only that loop asks, and it is
 gated on ROM85 since.
 
+**Why those calls, as a hypothesis** (not from a document; it fits nine
+measurements): the 64K ROM's OS and Toolbox traps share one 512-entry
+table, OS `A000`–`A04F` in entries 0x00–0x4F and Toolbox `A850`–`A9FF` in
+0x50–0x1FF. An OS trap from `A050` up, or a Toolbox trap below `A850`,
+lands in another routine's entry. All six bombs above are such traps;
+`MaxBlock` (A061) lands in a Toolbox routine that returns; and
+`WaitNextEvent` (A860) lands in entry 0x60, `_HFSDispatch`'s, which only
+the `Hard Disk 20` file fills: present with it, absent without.
+
+**An audit of the shipped code by that rule, 2026-11-07** (every A-line word
+in `MacExtract.code.bin`'s functions and the two shell images): every such
+call is guarded by ROM85 (`MaxApplZone`, `PurgeSpace`, `MoveHHi`, `HWPriv`,
+`Gestalt`, `ReadLocation`, `destdlg`'s `Get1Resource` and colour
+QuickDraw); runs before `main` and was passed on every 64K launch
+(`StripAddress`, `FlushCodeCache` in `Retro68Relocate`); waits on a
+MultiFinder suspend System 3.0 never sends (`NMInstall`/`NMRemove`); or
+follows a successful `PBDTGetPath` (`StampCat`'s `Count1`/`Get1` calls),
+which the 16 bundled helpers reached on the 64K rig without a bomb. The
+decoder images make no Toolbox call.
+
 Harness facts: **System 3.0 ignores the boot blocks' shell name on MFS as on
 HFS**, so a probe is launched by being NAMED `Finder` (`mkmfs.py ...
 probe.bin:Finder`); **System 1.1 honours it** (`mkmfs.py --shell TrapTest`),

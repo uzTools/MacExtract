@@ -113,12 +113,12 @@ text as "Read Me"; drag MacExtract onto your startup disk.
 
   MacExtract-400K.img, .dsk  A 400K MFS floppy, for a Macintosh 512K with
                   a Hard Disk 20: its 64K ROM reads no other floppy. It holds
-                  MacExtract and MacExtract-Helpers.zip. Write it to a 400K
-                  disk on a Mac with both kinds of drive. Not yet tried on a
-                  real 512K; if you have one, this is the test: start up
-                  from the Hard Disk 20, put the floppy in, double-click
-                  MacExtract-Helpers.zip and choose the Hard Disk 20. Then
-                  tell us what happened, at
+                  MacExtract, MacExtract-Helpers.zip and the Read Me. Write
+                  it to a 400K disk on a Mac with both kinds of drive. Not
+                  yet tried on a real 512K; if you have one, this is the
+                  test: start up from the Hard Disk 20, put the floppy in,
+                  double-click MacExtract-Helpers.zip and choose the Hard
+                  Disk 20. Then tell us what happened, at
                   https://github.com/uzTools/MacExtract/issues -- sixteen
                   files in a "MacExtract Helpers" folder, or the ID number
                   if it bombs.
