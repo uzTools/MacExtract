@@ -260,11 +260,11 @@ SIT_CASES = [
 ]
 
 
-def build_sit_des(password):
+def build_sit_des(password, cases=SIT_CASES):
     mkey, ak, iv = sit_mkey_and_iv(password)
     body = bytearray()
     ranges = []
-    for n, (name, data, rsrc) in enumerate(SIT_CASES):
+    for n, (name, data, rsrc) in enumerate(cases):
         h = bytearray(112)
         forks = bytearray()
         rcomp = dcomp = 0
@@ -303,7 +303,7 @@ def build_sit_des(password):
         body += bytes(h) + bytes(forks)
     out = bytearray(22)
     out[0:4] = b"SIT!"
-    struct.pack_into(">H", out, 4, len(SIT_CASES))
+    struct.pack_into(">H", out, 4, len(cases))
     struct.pack_into(">I", out, 6, 22 + len(body))
     out[10:14] = b"rLau"
     struct.pack_into(">I", out, 16, 22)

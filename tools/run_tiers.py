@@ -283,10 +283,13 @@ REPO = os.path.dirname(HERE)
 # control's CODE -96 and A5 0; the shipped pair fell the same 96, OVL_SAVED
 # unmoved. They were 190,276 / 94,894 / 619,182.
 TIERS = {
-    "sys3-512K": (190372, "System 3.0, Macintosh 512Ke (222,070 B free)"),
-    "sys6-512K": (94990,  "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
-    "floor-1M":  (619278, "System 6.0.8, 1 MB Mac Plus — the floor target"),
+    "sys3-512K": (190436, "System 3.0, Macintosh 512Ke (222,070 B free)"),
+    "sys6-512K": (95054,  "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
+    "floor-1M":  (619342, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
+# +64 each 2026-11-07, DERIVED from TIERS_CONTROL -64 (BarDraw's port,
+# DECISIONS.md 2026-11-07, *the port a dialog leaves*); they were 190,372 /
+# 94,990 / 619,278.
 # **-592 more each 2026-10-24, DERIVED**: SUMacC's `.dl`, the control's
 # CODE +584 and A5 +8 (DECISIONS.md 2026-10-24, *the format before
 # BinHex*); they were 200,390 / 105,008 / 629,296 since that day's
@@ -489,7 +492,8 @@ TIERS = {
 # data + bss -680. The machine gave +4,204, because the jump table, the
 # stub segments and the relocations trimmed at launch are resident bytes
 # this unit never counted — which is why TIERS was measured, not moved.
-TIERS_CONTROL = 222560     # build/mac-resident, CODE + A5, 2026-11-06
+TIERS_CONTROL = 222496     # build/mac-resident, CODE + A5, 2026-11-07
+# -64 on 2026-11-07: BarDraw sets the port (CODE -60, A5 -4); TIERS +64.
 # -96 the same day: the release check on Cancel out again; TIERS +96.
 # +128 the same day: the shell's placement rules and the DDA2 folder
 # record; TIERS -128.
@@ -1030,6 +1034,9 @@ EXPECT = {
 # +112, A5 +16), the control also carrying the DDA2 folder record and the
 # readers' masks removed (DECISIONS.md 2026-11-06, *the folder DiskDoubler Pro put back*, *the desk no folder is put on*).
 # TIERS -128.
+# **0 on 2026-11-07**: BarDraw sets the port and finds its own item, the
+# control's -64 (CODE -60, A5 -4) and the shipped pair's -64 (CODE -60,
+# A5 -4) (DECISIONS.md 2026-11-07, *the port a dialog leaves*). TIERS +64.
 OVL_SAVED = 165952
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and

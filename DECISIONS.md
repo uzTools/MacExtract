@@ -525,6 +525,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-06 (the floppy a 64K ROM reads) — `dist/` ships a 400K MFS floppy, MacExtract and the helpers zip typed `ZIP `/`MExt`, for a Macintosh 512K with a Hard Disk 20
 - 2026-11-06 (what ZipIt does with a Macintosh file) — ZipIt's View bit is a folder's expanded state; its MacBinary is chosen by a preference and carries no comment; a text entry is CR LF with the text bit, stripped on extraction; segments are spanned volumes the user names
 - 2026-11-06 (the two calls a 64K ROM lacks) — with the `Hard Disk 20` file's HFS a 64K ROM still bombed at `PurgeSpace` and `MoveHHi`; both are skipped where ROM85 is not positive, `GrowApplZone` tests ROM85 too, and the shipped build and every budget are unchanged to the byte
+- 2026-11-07 (the port a dialog leaves) — after the password dialog, every progress update was drawn at the screen's top-left; BarDraw now sets the port and finds its own item, for 64 B back on every budget
 
 ---
 
@@ -21848,3 +21849,41 @@ is 12 B cheaper in `GrowApplZone` alone.
 of one format, so a later 128K-only call on another path is untested;
 `HGetState` and the `Count1`/`Get1` calls, which the shipped extraction
 does not reach on a 64K ROM. A real 512K is MANUAL_TESTS.md §6.
+
+## 2026-11-07 (the port a dialog leaves) — after the password dialog, every progress update was drawn at the screen's top-left; BarDraw now sets the port and finds its own item, for 64 B back on every budget
+
+**Claim, measured 2026-11-07** (found by reading the code, then
+reproduced): `prog_tick` drew the bar and the time-left line without
+setting the port, and a modal dialog the engine asks for mid-extraction
+leaves it wherever it ended. `interactive.py --password --password-big 200`,
+System 6.0.8, Mac Plus at 1x: after the password, "8 %… about 6 minutes
+left" through "85 %" and the bar were drawn at the screen's top-left over
+the desktop, and the progress window sat at "0 % estimating time left"
+until the end. Every entry was still byte-exact, so the phase passed; it
+now also fails on the bar's inside (1.00 white before, 0.15 after) and on
+the desktop strip at 0,0 (2,151 stray pixels before, 0 after). Drawn in
+screen coordinates, so the port left was one whose origin is the screen's
+(hypothesis: the Window Manager's), not the freed dialog's; no heap check
+was run.
+
+**The fix is one SetPort, in BarDraw**, which now takes the dialog and
+looks up its own item: `prog_tick` draws the bar first and its line after,
+and `BarUserItem` hands over the dialog it is given. That also deletes the
+`GetDialogItem` both callers carried, so the pump's two SetPorts after its
+own About and Open go with it (they were already one tail-merged site).
+`--switch` on System 7.0.1 drew 42 % and 57 % in the window after About.
+Not driven: the part dialog and File ▸ Open mid-run, which go through the
+same draw.
+
+**Cost, measured** on top of *the two calls a 64K ROM lacks*: shipped
+CODE −60, A5 −4 (`.data` alignment; no data removed): **64 B back on every
+budget**, and the three tiers' bases +64 with `OVL_SAVED` unmoved, the
+resident control moving the same −64 (CODE −60, A5 −4). Lazy −32 (CODE
+−56, A5 +24). Before that rebase the same source measured shipped −56 and
++24: which side of a 32-byte step the pair lands on is the base's, not the
+change's. Stack: `prog_tick` 354 → 358 B, the path through
+`BarDraw` +18 B, `BarUserItem`'s −16 B. The per-call early return moved
+in register allocation, the TickCount result now through the frame
+(~24 cycles a call by hand count, about 0.05 tick on 287 KB); the tick
+probe read 159 engine ticks of 464 on `derived-PCCTS.tar` before and
+after, twice each, every slot identical.

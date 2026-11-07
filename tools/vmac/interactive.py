@@ -2089,8 +2089,19 @@ def phase_password(args, appbin, workdir, shot):
     kind = args.password_kind
     stock = os.path.join(R.VMAC_HOME, args.system)
     bootimg = os.path.join(workdir, "boot-password.hfv")
+    sitcases = list(SC.SIT_CASES)
+    if args.password_big:
+        # A stored entry big enough that the bar is still moving after the
+        # dialog has gone: the ticks that follow a modal dialog are the
+        # ones that draw through whatever port it left (DECISIONS.md
+        # 2026-11-07, *the port a dialog leaves*). Last, so the first entry
+        # asks and this one only decrypts.
+        sitcases.append(("Big Secret", bytes((i * 7 + (i >> 9)) & 0xFF
+                                             for i in range(args.password_big
+                                                            * 1024)), b""))
     if kind == "sit":
-        sit, rsrc, _ = SC.build_sit_des(password.encode("mac_roman"))
+        sit, rsrc, _ = SC.build_sit_des(password.encode("mac_roman"),
+                                        sitcases)
         binpath = os.path.join(workdir, "secret.bin")
         open(binpath, "wb").write(W.macbinary("Secret.sit", sit, rsrc,
                                               b"SIT!", b"SIT!"))
@@ -2152,6 +2163,10 @@ def phase_password(args, appbin, workdir, shot):
             mac.key(ch)
         shot(mac, "pw-6-typed.png")
         mac.key("Return")
+        if args.password_big:
+            for i, wait in enumerate((2.0, 6.0, 12.0)):
+                time.sleep(wait)
+                shot(mac, "pw-6%c-ticking.png" % "abc"[i])
         mac.settle(scratch, interval=5.0, quiet=EXTRACT_QUIET,
                    timeout=args.complete_timeout)
         shot(mac, "pw-7-complete.png")
@@ -2162,6 +2177,20 @@ def phase_password(args, appbin, workdir, shot):
 
     written = os.path.join(workdir, "boot.hfv")
     bad = 0
+    if args.password_big:
+        # Where the ticks after the dialog drew. The bar's inside (DITL 146
+        # item 3, {55, 10, 66, 198} at DLOG 146's (80, 80)) has filled, and
+        # the desktop at the screen's top-left, where a tick drawing through
+        # the Window Manager's port lands, is untouched. Before 2026-11-07
+        # both failed: the bar stayed white and the line was drawn at 0,0.
+        last = os.path.join(args.outdir, "pw-6c-ticking.png")
+        inside = frame_mean(last, (91, 136, 186, 9))
+        stray = off_pattern(last, (0, 24, 280, 70))
+        print("interactive: after the dialog, bar inside %.2f white, "
+              "%d stray pixels at the top-left" % (inside, stray))
+        if inside > 0.9 or stray:
+            print("interactive: progress drawn outside its window")
+            bad += 1
     if kind != "sit":
         # A resource fork is compared with bytes 16..127 masked, the
         # convention every on-Mac check here uses: the system stamps that
@@ -2195,7 +2224,7 @@ def phase_password(args, appbin, workdir, shot):
         print("interactive: password dialog, %s: " % kind
               + ("WORKS — every entry decrypted" if not bad else "FAILED"))
         return bad == 0
-    for name, data, rsrcfork in SC.SIT_CASES:
+    for name, data, rsrcfork in sitcases:
         got = read_joined(written, name.encode("mac_roman"), workdir)
         if got is None:
             print(f"interactive: {name!r} is not on the volume")
@@ -2887,6 +2916,10 @@ def main():
                          "Ignores the fixture argument: the archive is "
                          "generated, because nothing in the corpus is "
                          "encrypted.")
+    ap.add_argument("--password-big", type=int, default=0, metavar="KB",
+                    help="with --password (sit): add a last entry of this "
+                         "many KB, so progress is still drawn after the "
+                         "dialog closes; shots pw-6a..c are taken then")
     ap.add_argument("--privatefile", action="store_true",
                     help="extract a Private File that PF Encrypt wrote "
                          "(tools/vmac/privatefile.py), answering the "

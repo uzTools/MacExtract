@@ -3144,6 +3144,15 @@ invisible `Desktop` file was listed first and they clicked the second; the
 Open dialog now hides invisible files, and the second row is the Expander
 folder on `System6.hfv` and the application on `Sys30.img` (seen 2026-11-06).
 
+`--password-big KB` adds a last entry of that size, so the bar still moves
+after the dialog: `pw-6a..c` are taken then, and the phase fails unless the
+bar's inside has filled and the desktop at the screen's top-left is
+untouched. At 200 KB on System 6.0.8, 1x: before the fix the line and bar
+were drawn at 0,0 (bar 1.00 white, 2,151 stray pixels), after it 0.15 and 0
+(DECISIONS.md 2026-11-07, *the port a dialog leaves*). **What it cannot
+see**: the part dialog and File ▸ Open mid-run, which leave the port the
+same way; About is `--switch`'s.
+
 `--password-kind zip` and `--password-kind cpt` (2026-10-25) put an encrypted
 zip or Compact Pro archive in its place, as a data fork: the two formats whose
 ciphers the shipped build keeps only when `unc_archive_encrypted` says an

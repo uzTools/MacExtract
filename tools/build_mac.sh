@@ -737,7 +737,11 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # -8 the same day, 185,900 -> 185,892, A5 +8 below: PurgeSpace and MoveHHi
 # skipped on a 64K ROM, GrowApplZone's test on ROM85 (DECISIONS.md
 # 2026-11-06, *the two calls a 64K ROM lacks*); the shipped pair +0.
-UNC_MAC_CODE_DEFAULT=185892
+# -60 on 2026-11-07, 185,892 -> 185,832, A5 -4 below: BarDraw sets the
+# port and finds its own item, for the line a modal dialog left at the
+# screen's top-left (DECISIONS.md 2026-11-07, *the port a dialog leaves*);
+# the same code as the shipped pair.
+UNC_MAC_CODE_DEFAULT=185832
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -982,7 +986,9 @@ UNC_MAC_CODE_DEFAULT=185892
 # rules (above); no data was added.
 # +8 the same day, 36,660 -> 36,668: `.data` alignment under the 64K ROM's
 # two calls (above); no data was added.
-UNC_MAC_A5_DEFAULT=36668
+# -4 on 2026-11-07, 36,668 -> 36,664: `.data` alignment under BarDraw's
+# port (above); no data was removed.
+UNC_MAC_A5_DEFAULT=36664
 # A CEILING PER CONFIGURATION, because one ceiling measured on another build
 # cannot fire. The figures above are the RESIDENT control build, which carries
 # every decoder; the shipped build's resident code is a third of that, so
@@ -1517,8 +1523,13 @@ UNC_MAC_A5_DEFAULT=36668
 # (DECISIONS.md 2026-11-06, *the tap the pump read too late*): the drag-off
 # it was for was the harness's. The flash is 60 B over the build before
 # any of it. 96 B back on every budget.
-UNC_MAC_CODE_EAGER=39900
-UNC_MAC_A5_EAGER=16708
+# -60 code and -4 A5 on 2026-11-07, 39,900 -> 39,840 and 16,708 ->
+# 16,704: BarDraw sets the port and finds its own item, and the pump's two
+# SetPorts after its own dialogs go (DECISIONS.md 2026-11-07, *the port a
+# dialog leaves*). No data was removed: the A5 is `.data` alignment after
+# CODE. 64 B back on every budget.
+UNC_MAC_CODE_EAGER=39840
+UNC_MAC_A5_EAGER=16704
 # +8 on 2026-10-02 for the same reason as the eager pair above: the
 # overlay call that now says WHICH of StuffIt 2.x's ciphers an entry
 # wants. A5 fell to 19,096 and its ceiling is left where it was.
@@ -1650,7 +1661,9 @@ UNC_MAC_A5_EAGER=16708
 # data + bss 16,764, under its ceiling.
 # -8 code the same day: the 64K ROM's two calls, as the eager pair; data +
 # bss 16,736, under its ceiling.
-UNC_MAC_CODE_LAZY=38688
+# -56 code on 2026-11-07: BarDraw's port, as the eager pair; data + bss
+# 16,760, under its ceiling.
+UNC_MAC_CODE_LAZY=38632
 UNC_MAC_A5_LAZY=19200
 if [ -n "$UNC_OVL_RESIDENT" ]; then
     UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-$UNC_MAC_CODE_DEFAULT}

@@ -971,11 +971,19 @@ static const RGBColor kBarDone = { 0x4444, 0x4444, 0x4444 };
 static const RGBColor kBarLeft = { 0xCCCC, 0xCCCC, 0xFFFF };
 #define BarInColour() ((LMGetROM85() & 0x4000) == 0)
 
-static void BarDraw(const Rect *box)
+/* Sets the port as well: every modal dialog since the last draw — the
+ * password, a missing part, the pump's own About and Open — leaves it
+ * wherever it ended, and after the password on System 6.0.8 the bar and
+ * prog_tick's line after it were drawn at the screen's top-left
+ * (DECISIONS.md 2026-11-07, *the port a dialog leaves*). */
+static void BarDraw(DialogPtr d)
 {
-    Rect r = *box, fill;
-    short w;
+    Rect r, fill;
+    short w, kind;
+    Handle h;
 
+    SetPort((GrafPtr)d);
+    GetDialogItem(d, kBarItem, &kind, &h, &r);
     PenNormal();
     FrameRect(&r);
     r.left++; r.top++; r.right--; r.bottom--;   /* inside the frame */
@@ -999,11 +1007,8 @@ static void BarDraw(const Rect *box)
 static pascal void BarUserItem(WindowPtr w, short item)
 {
     StackSample();   /* inside ModalDialog: the Toolbox's frames are below us */
-    short kind;
-    Handle h;
-    Rect box;
-    GetDialogItem((DialogPtr)w, item, &kind, &h, &box);
-    BarDraw(&box);
+    (void)item;      /* the bar is the only userItem it is installed on */
+    BarDraw((DialogPtr)w);
 }
 
 /* Pascal-string builders. NumToString is the only number formatter the
@@ -1081,12 +1086,10 @@ static void ProgressPump(Progress *pr)
             (r = MenuSelect(ev.where)) != 0) {
             HiliteMenu(0);
             if ((short)(r >> 16) == kAppleMENU) {
-                NoteAlert(kAboutALRT, NULL);
-                if (pr->dlg) SetPort((GrafPtr)pr->dlg);
+                NoteAlert(kAboutALRT, NULL);   /* prog_tick sets the port */
 #ifndef UNC_MAC_AUTOTEST
             } else if ((short)r == kOpenITEM) {
                 QueueAsk();
-                if (pr->dlg) SetPort((GrafPtr)pr->dlg);
 #endif
             } else
                 pr->cancelled = true;
@@ -1135,8 +1138,7 @@ static int prog_tick(void *ctx, uint32_t done, uint32_t total)
     pr->shownRem = rem;
 
     gBarPct = pct;
-    GetDialogItem(pr->dlg, kBarItem, &kind, &h, &box);
-    BarDraw(&box);
+    BarDraw(pr->dlg);   /* and sets the port for the line below */
 
     {
         Str255 s;
