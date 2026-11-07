@@ -31,7 +31,7 @@
  ],
  "fixture": "derived-Pict2Pict_0.6.3.cpt",
  "format": "Compact Pro",
- "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "oracle": "StuffIt Expander 4.0.2 reproduces this archive's forks (tools/vmac/cptexp.py; TESTING.md, *Compact Pro against StuffIt Expander 4.0.2*): every data fork matches this manifest as a set, every resource fork masked-equal; the bytes recorded by unar -nr -D -f -q -k hidden -e macintosh (v1.10.8).",
  "sha256": "142a82704106fc63be15b9a4271543daefabc0c4a2149483226582f33be0a2ff",
  "size": 7188
 }

@@ -27,7 +27,7 @@
  ],
  "fixture": "derived-SitToCpt_v1.10.cpt",
  "format": "Compact Pro",
- "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "oracle": "StuffIt Expander 4.0.2 reproduces this archive's forks (tools/vmac/cptexp.py; TESTING.md, *Compact Pro against StuffIt Expander 4.0.2*): every data fork matches this manifest as a set, every resource fork masked-equal; the bytes recorded by unar -nr -D -f -q -k hidden -e macintosh (v1.10.8).",
  "sha256": "92ad62f40ce899362037fe2c5324ea42c0d720d58d3fb735d7d4971547f884a9",
  "size": 18386
 }

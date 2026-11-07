@@ -31,7 +31,7 @@
  ],
  "fixture": "derived-PopChar.cpt",
  "format": "Compact Pro",
- "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "oracle": "StuffIt Expander 4.0.2 reproduces this archive's forks (tools/vmac/cptexp.py; TESTING.md, *Compact Pro against StuffIt Expander 4.0.2*): every data fork matches this manifest as a set, every resource fork masked-equal; the bytes recorded by unar -nr -D -f -q -k hidden -e macintosh (v1.10.8).",
  "sha256": "8e3fa975f7012274c4f00d9b50a0976cb0a7e96dc8f15cf14b786dfcf302f942",
  "size": 26699
 }

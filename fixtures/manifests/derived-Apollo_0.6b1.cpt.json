@@ -63,7 +63,7 @@
  ],
  "fixture": "derived-Apollo_0.6b1.cpt",
  "format": "Compact Pro",
- "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "oracle": "StuffIt Expander 4.0.2 reproduces this archive's forks (tools/vmac/cptexp.py; TESTING.md, *Compact Pro against StuffIt Expander 4.0.2*): every data fork matches this manifest as a set, every resource fork masked-equal; the bytes recorded by unar -nr -D -f -q -k hidden -e macintosh (v1.10.8).",
  "sha256": "0c57c7a14d7ff2d1b07d4b2cd5843ab1fd2093f786364a75a1e9b124cf76b4d3",
  "size": 58809
 }

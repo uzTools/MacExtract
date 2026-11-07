@@ -15,7 +15,7 @@
  ],
  "fixture": "derived-SpectreGCR3.0keymap.cpt",
  "format": "Compact Pro",
- "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "oracle": "StuffIt Expander 4.0.2 reproduces this archive's forks (tools/vmac/cptexp.py; TESTING.md, *Compact Pro against StuffIt Expander 4.0.2*): every data fork matches this manifest as a set, every resource fork masked-equal; the bytes recorded by unar -nr -D -f -q -k hidden -e macintosh (v1.10.8).",
  "sha256": "70d0046f02751d6a8dec7acf7394e8c8181a5620fe9d1e5c2096fc1167a9da7d",
  "size": 6158
 }

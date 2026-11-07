@@ -15,7 +15,7 @@
  ],
  "fixture": "derived-macToVax.sea",
  "format": "Compact Pro",
- "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "oracle": "StuffIt Expander 4.0.2 reproduces this archive's forks (tools/vmac/cptexp.py; TESTING.md, *Compact Pro against StuffIt Expander 4.0.2*): every data fork matches this manifest as a set, every resource fork masked-equal; the bytes recorded by unar -nr -D -f -q -k hidden -e macintosh (v1.10.8).",
  "sha256": "b6750bca379b266b3e55fb594243fd54e0311b2f880876e4ffc94597352ba6ac",
  "size": 41151
 }

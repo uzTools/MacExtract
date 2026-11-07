@@ -15,7 +15,7 @@
  ],
  "fixture": "derived-BinHex_5.0.sea",
  "format": "Compact Pro",
- "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "oracle": "StuffIt Expander 4.0.2 reproduces this archive's forks (tools/vmac/cptexp.py; TESTING.md, *Compact Pro against StuffIt Expander 4.0.2*): every data fork matches this manifest as a set, every resource fork masked-equal; the bytes recorded by unar -nr -D -f -q -k hidden -e macintosh (v1.10.8).",
  "sha256": "e7305afd1ad19d0261526ac6ddb6194927d34d6f2d534a6d59c2e143cfd4f2e1",
  "size": 5007
 }

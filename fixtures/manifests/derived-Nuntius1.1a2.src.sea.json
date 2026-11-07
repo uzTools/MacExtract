@@ -1527,7 +1527,7 @@
  ],
  "fixture": "derived-Nuntius1.1a2.src.sea",
  "format": "Compact Pro",
- "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "oracle": "StuffIt Expander 4.0.2 reproduces this archive's forks (tools/vmac/cptexp.py; TESTING.md, *Compact Pro against StuffIt Expander 4.0.2*): every data fork matches this manifest as a set, every resource fork masked-equal; the bytes recorded by unar -nr -D -f -q -k hidden -e macintosh (v1.10.8).",
  "sha256": "85ddeff5bf66f3e25344c073f62385efcdd8288a5d3f30677d7296abc448b010",
  "size": 254268
 }

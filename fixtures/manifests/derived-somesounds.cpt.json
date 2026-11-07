@@ -92,7 +92,7 @@
  ],
  "fixture": "derived-somesounds.cpt",
  "format": "Compact Pro",
- "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "oracle": "StuffIt Expander 4.0.2 reproduces this archive's forks (tools/vmac/cptexp.py; TESTING.md, *Compact Pro against StuffIt Expander 4.0.2*): every data fork matches this manifest as a set, every resource fork masked-equal; the bytes recorded by unar -nr -D -f -q -k hidden -e macintosh (v1.10.8).",
  "sha256": "7e5f0bca551a9859ab2b1298a050f1b8222ee7bae5d1dfc946c878b3a684d5d8",
  "size": 109294
 }

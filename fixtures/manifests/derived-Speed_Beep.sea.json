@@ -27,7 +27,7 @@
  ],
  "fixture": "derived-Speed_Beep.sea",
  "format": "Compact Pro",
- "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "oracle": "StuffIt Expander 4.0.2 reproduces this archive's forks (tools/vmac/cptexp.py; TESTING.md, *Compact Pro against StuffIt Expander 4.0.2*): every data fork matches this manifest as a set, every resource fork masked-equal; the bytes recorded by unar -nr -D -f -q -k hidden -e macintosh (v1.10.8).",
  "sha256": "d77fe4af2947c7cbf8ae60b09de9018749658ac0359b9927b21271b2d47cb4c0",
  "size": 39129
 }

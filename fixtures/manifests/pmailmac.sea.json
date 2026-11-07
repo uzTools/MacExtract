@@ -53,7 +53,7 @@
  ],
  "fixture": "pmailmac.sea",
  "format": "Compact Pro",
- "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "oracle": "StuffIt Expander 4.0.2 reproduces this archive's forks (tools/vmac/cptexp.py; TESTING.md, *Compact Pro against StuffIt Expander 4.0.2*): every data fork matches this manifest as a set, every resource fork masked-equal; the bytes recorded by unar -nr -D -f -q -k hidden -e macintosh (v1.10.8).",
  "sha256": "2698c114dc096fa90e80f831f9a48154fc2aeff789044adefd4d537eb45f35c0",
  "size": 138135
 }

@@ -27,7 +27,7 @@
  ],
  "fixture": "derived-BinHqx_DA_1.02.cpt",
  "format": "Compact Pro",
- "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "oracle": "StuffIt Expander 4.0.2 reproduces this archive's forks (tools/vmac/cptexp.py; TESTING.md, *Compact Pro against StuffIt Expander 4.0.2*): every data fork matches this manifest as a set, every resource fork masked-equal; the bytes recorded by unar -nr -D -f -q -k hidden -e macintosh (v1.10.8).",
  "sha256": "92cf45aaece130741ae84da5a9fe367643ae699415560b4cd9c874b37a833ad5",
  "size": 23924
 }

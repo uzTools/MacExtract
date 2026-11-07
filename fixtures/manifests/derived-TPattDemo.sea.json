@@ -83,7 +83,7 @@
  ],
  "fixture": "derived-TPattDemo.sea",
  "format": "Compact Pro",
- "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "oracle": "StuffIt Expander 4.0.2 reproduces this archive's forks (tools/vmac/cptexp.py; TESTING.md, *Compact Pro against StuffIt Expander 4.0.2*): every data fork matches this manifest as a set, every resource fork masked-equal; the bytes recorded by unar -nr -D -f -q -k hidden -e macintosh (v1.10.8).",
  "sha256": "a7e7c7febe35c2214849ed21cd9aa2f510f6dea77dceb85943199875de6df2b9",
  "size": 196157
 }

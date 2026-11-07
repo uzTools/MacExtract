@@ -377,18 +377,20 @@ whole-archive far more often than `unar`.
 
 ### What `unar` alone vouches for, per format (inventory, 2026-11-07)
 
-Counted from the manifests' per-fork oracles, to size the move off XADMaster
-(OPEN_ITEMS.md, *What grades a fork*). Of **7,633 graded forks**, **6,827
+Counted from the manifests' oracles, to size the move off XADMaster
+(OPEN_ITEMS.md, *What grades a fork*). Of **7,633 graded forks**, **5,357
 have `unar` as their sole oracle of record**; the rest already carry a
-second byte-oracle — deark 78, `macunpack`+deark 23, a writer or synthesiser
-697, MacBinary container arithmetic 8. The per-fork `data_oracle`/`rsrc_oracle`
-is the record; a writer-reader suite that grades the SAME bytes in its own
-`ci.sh` run (right column) is a second check the manifest does not show.
+second byte-oracle — deark 78, `macunpack`+deark 23, a writer, synthesiser
+or expander 2,167, MacBinary container arithmetic 8. The manifest's `oracle`
+(archive-level, as for DiskDoubler and Compact Pro, or per-fork
+`data_oracle`/`rsrc_oracle`) is the record; a writer-reader suite that grades
+the SAME bytes in its own `ci.sh` run (right column) is a second check the
+manifest does not show.
 
 | format | forks | `unar` sole | writer/expander ON THIS MACHINE |
 |---|---|---|---|
 | StuffIt | 2,731 | 2,708 | Expander 4.0.2 + Deluxe 2.0.1 (`sitmeta.py`); Deluxe 2.0.1 grades the Optimizer subset's forks (`run_sitopt.py`) |
-| Compact Pro | 1,470 | 1,470 | StuffIt Expander 4.0.2 reads `.cpt` — present, not yet a fork oracle |
+| Compact Pro | 1,470 | 0 | **StuffIt Expander 4.0.2** corroborates all 108 archives fork-for-fork (`cptexp.py`); recorded in the manifests' `oracle` 2026-11-07 |
 | StuffIt 5 | 820 | 820 | Expander 5.5 (`exp55`, `sitzip.py`) — present, metadata only so far |
 | Zip | 646 | 598 | cross-platform (Info-ZIP, ZipIt); 48 forks deark |
 | MacBinary | 474 | 466 | lossless framing; 8 forks by container arithmetic, payloads by `unar` |
@@ -408,18 +410,19 @@ is the record; a writer-reader suite that grades the SAME bytes in its own
 | BinHex `.hex`/`.hcx` | 14 | 0 | `hexbin`; BinHex 2.0 itself (`binhex2.py`) |
 | uuencode / LZ4 / SUMacC `.dl` | 12 | 0 | `hexbin` / liblz4 / SUMacC's own `tohex` |
 
-**What it says.** The `unar`-sole exposure is almost all StuffIt (2,708),
-Compact Pro (1,470) and StuffIt 5 (820) — and every one of those three has a
-reader for it ON THIS MACHINE (Expander 4.0.2 for StuffIt and Compact Pro,
-Expander 5.5 for StuffIt 5), so the forks could be re-graded here rather than
-filed to MANUAL_TESTS.md. PackIt (38) and LZH (24) likewise (Expander, MacLHA).
+**What it says.** The `unar`-sole exposure is now almost all StuffIt (2,708)
+and StuffIt 5 (820) — Compact Pro (1,470) left it 2026-11-07, Expander 4.0.2
+recorded in its manifests' `oracle` (below). Both remaining blocks have a
+reader for them ON THIS MACHINE (Expander 4.0.2 for StuffIt, Expander 5.5 for
+StuffIt 5), so the forks can be re-graded here rather than filed to
+MANUAL_TESTS.md. PackIt (38) and LZH (24) likewise (Expander, MacLHA).
 The cross-platform formats — Zip, Tar, Compress, Gzip, MacBinary payloads,
 AppleSingle — have no Mac writer and `unar` is their natural oracle. The
-formats already carrying a writer's own fork grade (DiskDoubler, SuperDisk!,
-SpaceSaver, Now Compress, MAR) are at or near zero `unar`-sole. **No writer
-is missing from this machine for any format with committed fixtures** — the
-"writer this machine has no copy of" case (OPEN_ITEMS.md) does not arise in
-the corpus as it stands.
+formats already carrying a writer's own fork grade (Compact Pro, DiskDoubler,
+SuperDisk!, SpaceSaver, Now Compress, MAR) are at or near zero `unar`-sole.
+**No writer is missing from this machine for any format with committed
+fixtures** — the "writer this machine has no copy of" case (OPEN_ITEMS.md)
+does not arise in the corpus as it stands.
 
 ### Asking the third oracle about everything (`tools/sweep_deark.py`)
 
@@ -3017,9 +3020,13 @@ hash cannot express. The first pass compared it per file, masked
 (`vmac_check.mask_reserved`), against `macextract x`, and every resource fork
 agreed.
 
-**Left** (OPEN_ITEMS.md, *What grades a fork*): the manifests re-recorded
-with Expander in the oracle. **No contradiction was found anywhere in Compact
-Pro**, so the engine, `unar` and Expander agree across the whole format.
+**Recorded 2026-11-07** (OPEN_ITEMS.md, *What grades a fork*): all 108
+manifests' `oracle` now leads with Expander 4.0.2 and names `unar` second,
+the DiskDoubler/DD-Expand convention — so `make_manifests.py` keeps them
+rather than regenerating from `unar`, and the 1,470 forks leave `unar`-sole
+(*What `unar` alone vouches for, per format*). **No contradiction was found
+anywhere in Compact Pro**, so the engine, `unar` and Expander agree across
+the whole format.
 
 ## PKZIP's own distributions (`tools/specimens/implode.tsv`, one of three in `ci.sh`)
 

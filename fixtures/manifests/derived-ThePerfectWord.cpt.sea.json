@@ -31,7 +31,7 @@
  ],
  "fixture": "derived-ThePerfectWord.cpt.sea",
  "format": "Compact Pro",
- "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "oracle": "StuffIt Expander 4.0.2 reproduces this archive's forks (tools/vmac/cptexp.py; TESTING.md, *Compact Pro against StuffIt Expander 4.0.2*): every data fork matches this manifest as a set, every resource fork masked-equal; the bytes recorded by unar -nr -D -f -q -k hidden -e macintosh (v1.10.8).",
  "sha256": "63cfc9bc31f9cc46d4d718f1d1c9f393910fe34ee7b429bca8c117426b4523e1",
  "size": 4293
 }

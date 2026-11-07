@@ -55,7 +55,7 @@
  ],
  "fixture": "derived-Termulator_2.03.sea",
  "format": "Compact Pro",
- "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "oracle": "StuffIt Expander 4.0.2 reproduces this archive's forks (tools/vmac/cptexp.py; TESTING.md, *Compact Pro against StuffIt Expander 4.0.2*): every data fork matches this manifest as a set, every resource fork masked-equal; the bytes recorded by unar -nr -D -f -q -k hidden -e macintosh (v1.10.8).",
  "sha256": "cb7efd116045d65a510691abb784760e8b133c097f394b58d5e97c5a9e9aaa8a",
  "size": 72253
 }
