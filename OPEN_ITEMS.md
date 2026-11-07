@@ -283,14 +283,6 @@ grade against.
   writer, and reading the layout out of it is the route Packit III 1.3 gave
   PackIt's ciphers (NOTICE).
 
-## MAR: what is not read or not run
-
-- **An LZ4 frame's 64 KB ring is allocated whole**, 69,816 B of heap
-  whatever the payload: an LZ4 frame of anything the peek cannot name keeps
-  the whole bundle and is refused on System 6.0.8 at 512 KB, 2,930 B short
-  (DECISIONS.md 2026-11-04, *the frame mar 0.2.0 reads*). Closes with a ring
-  that grows with the output, priced against that refusal.
-
 ## ZipIt archives: where the engine and ZipIt part
 
 Measured on ZipIt 1.4 and 2.2.2 (DECISIONS.md 2026-11-06, *what ZipIt does

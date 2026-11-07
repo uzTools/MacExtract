@@ -2530,11 +2530,17 @@ specification (`reference/notes`). Every frame graded is liblz4's own
 | `synth-mar020.mar.lz4` | 64K linked blocks, block and content checksums | `mar-wild-mar020.mar` |
 
 **Cost** (measured 2026-11-04): shipped CODE + A5 +48; `ovl_zipold`
-12,564 → 15,144 B, `ovl_sniff` +112. **Peak heap 69,816 B, whatever the
-payload**: one 64 KB ring. A `.mar.lz4` is named by the envelope peek and
-its layer keeps only `ovl_zipold`, the sniffer and the codecs (*What each
-format is granted*); an LZ4 frame of anything the peek cannot name keeps
-the whole bundle, and System 6.0.8 at 512 KB refuses it, 2,930 B short.
+12,564 → 15,144 B, `ovl_sniff` +112. **Peak heap grows with the output**
+since 2026-11-07 (+216 B of `ovl_zipold`; DECISIONS.md 2026-11-07, *the ring
+that grows with the output*): the ring starts at 4 KB and doubles to the
+64 KB a match reach needs only as the frame produces, so the peek pays
+~8,392 B (was 69,816), a 9.9 KB payload 28,872 B, and a 191 KB one 102,600 B
+(both buffers live across the last grow). A `.mar.lz4` is named by the
+envelope peek and its layer keeps only `ovl_zipold`, the sniffer and the
+codecs (*What each format is granted*), granted 224,460 B at System 6.0.8 /
+512 KB — room to spare; an LZ4 frame the peek cannot name keeps the whole
+bundle, leaving 65,712 B there, which now fits any payload under ~32 KB and
+refuses a larger one per entry (it was a flat 69,816 B, refused for all).
 
 ## Finder info in the archive: what each format's own expander puts back
 
@@ -4124,12 +4130,12 @@ Measured 2026-09-27:
 whose tallies it is quoted beside. It cancels in a difference taken from
 one probe pair (*What it buys, against the control*): **117,040 B saved
 between the shipped pair against 116,720 B between the probe pair**, both
-2026-09-27. The shipped pair is **165,952 B** (`OVL_SAVED`,
-`tools/run_tiers.py`) since 2026-11-06 (*the desk no folder is put on*); the
-probe pair has not been re-measured, so the 320 B is that day's
-difference, not today's.
+2026-09-27. The shipped pair is **166,176 B** (`OVL_SAVED`,
+`tools/run_tiers.py`) since 2026-11-07 (*the ring that grows with the
+output*); the probe pair has not been re-measured, so the 320 B is that
+day's difference, not today's.
 
-The bundle is **194,748 B** — the nineteen images sum to 194,504 B, so its
+The bundle is **194,964 B** — the nineteen images sum to 194,720 B, so its
 index costs **244 B** (`tools/run_tiers.py` `BUNDLE`, `IMAGES`): a
 4-byte header, 12 bytes of directory per image and padding of each image to
 a multiple of 4 — the padding is why the index is not a constant. The
@@ -4190,7 +4196,7 @@ carries, and they were read again from the floppy (DECISIONS.md 2026-11-04,
 
 A tier's budget for a format is the resident build's budget for that tier
 (`TIERS`; *512 KB machines*, *Floor target verification*), plus
-the 165,952 B of `CODE` and A5 the shipped build does not carry (`OVL_SAVED`;
+the 166,176 B of `CODE` and A5 the shipped build does not carry (`OVL_SAVED`;
 *Three configurations, one tree*), less the images the format keeps and 8 B of
 block header each, less a **322 B residue** (`OVL_RESIDUE`, re-taken
 2026-10-22 from the shipped and resident budget probes on all three tiers;
@@ -4223,21 +4229,21 @@ day**: the rows had missed the same day's Arsenic table and fuzzer fixes
 
 | sniffed format | images kept | granted, against the control |
 |---|---|---|
-| **AppleLink package** | **sqp, codecs** | **+157,862 B** (arithmetic: no `.pkg` is in the Mac sample) — the largest grant, because `ovl_sqp` is the smallest decoder image at 1,736 B |
-| Now Compress | now, codecs | **+154,836 B** (measured) |
-| SuperDisk! | superdisk, codecs | +152,970 B (arithmetic: no SuperDisk! fixture is in the Mac sample) |
-| LZH | lzh, codecs | **+149,160 B** (measured) |
-| PackIt | packit, ciphers, codecs | **+147,806 B** (measured) |
-| DiskDoubler | cptdd, codecs | **+144,366 B** (measured) |
-| StuffIt SpaceSaver | spacesaver, codecs | +143,430 B (arithmetic: no SpaceSaver fixture is in the Mac sample) |
-| ARC | arc, ciphers, codecs | **+142,290 B** (measured) |
-| Compact Pro, Compact Pro segment | cptdd, ciphers, codecs | +134,754 B (arithmetic), and **+144,366 B** where the directory says no entry is encrypted (measured) |
-| Tar | zipold, codecs | **+144,306 B** (measured) |
-| MAR | zipold, codecs | +144,306 B (arithmetic: no MAR fixture is in the Mac sample) |
-| StuffIt, StuffIt 5 | stuffit, ciphers, codecs | **+121,544 B** (measured), and **+131,156 B** for a StuffIt 5 archive whose header carries no password hash (measured, 2026-11-03) |
-| Zip, spanned zip | exo, zipold, ciphers, codecs | +104,458 B (arithmetic), **+114,070 B** unencrypted (measured) |
-| an envelope whose payload's first bytes name its format (`unc_envelope_peek`), since 2026-11-03 | its own reader, the sniffer, and what that format keeps | **+99,386 B** for a `.tar.Z` or `.tar.gz`, and an LZW-compressed MAR, which keeps the same (arithmetic), **+129,622 B** for a `.mar.lz4` (arithmetic), **+99,430 B** for a StuffIt archive in BinHex or MacBinary (measured) |
-| any other envelope, and every segment scheme that joins to a file | the whole bundle, kept | **−29,126 B** (measured) |
+| **AppleLink package** | **sqp, codecs** | **+158,086 B** (arithmetic: no `.pkg` is in the Mac sample) — the largest grant, because `ovl_sqp` is the smallest decoder image at 1,736 B |
+| Now Compress | now, codecs | **+155,060 B** (measured) |
+| SuperDisk! | superdisk, codecs | +153,194 B (arithmetic: no SuperDisk! fixture is in the Mac sample) |
+| LZH | lzh, codecs | **+149,384 B** (measured) |
+| PackIt | packit, ciphers, codecs | **+148,030 B** (measured) |
+| DiskDoubler | cptdd, codecs | **+144,590 B** (measured) |
+| StuffIt SpaceSaver | spacesaver, codecs | +143,654 B (arithmetic: no SpaceSaver fixture is in the Mac sample) |
+| ARC | arc, ciphers, codecs | **+142,514 B** (measured) |
+| Compact Pro, Compact Pro segment | cptdd, ciphers, codecs | +134,978 B (arithmetic), and **+144,590 B** where the directory says no entry is encrypted (measured) |
+| Tar | zipold, codecs | **+144,314 B** (measured) |
+| MAR | zipold, codecs | +144,314 B (arithmetic: no MAR fixture is in the Mac sample) |
+| StuffIt, StuffIt 5 | stuffit, ciphers, codecs | **+121,768 B** (measured), and **+131,380 B** for a StuffIt 5 archive whose header carries no password hash (measured, 2026-11-03) |
+| Zip, spanned zip | exo, zipold, ciphers, codecs | +104,466 B (arithmetic), **+114,078 B** unencrypted (measured) |
+| an envelope whose payload's first bytes name its format (`unc_envelope_peek`), since 2026-11-03 | its own reader, the sniffer, and what that format keeps | **+99,394 B** for a `.tar.Z` or `.tar.gz`, and an LZW-compressed MAR, which keeps the same (arithmetic), **+129,630 B** for a `.mar.lz4` (arithmetic), **+99,654 B** for a StuffIt archive in BinHex or MacBinary (measured) |
+| any other envelope, and every segment scheme that joins to a file | the whole bundle, kept | **−29,118 B** (measured) |
 
 A change to resident code moves every row by the control's growth less the
 shipped build's; a change to an image moves only the rows that keep it — so a
@@ -4248,7 +4254,7 @@ left*).
 
 **The last row is the one no tally had shown**: a wrapper whose payload the
 peek cannot name keeps the bundle, and that layer runs with **less** memory than
-a resident build would give it — 194,748 B held against 165,952 B saved. Until
+a resident build would give it — 194,964 B held against 166,176 B saved. Until
 2026-11-03 that was every envelope, and it refused `a2ps.V4.3.tar.Z` and
 `popper-1.7.tar.Z` at System 6.0.8 / 512 KB; the peek names Tar from the first
 512 bytes and the `.Z` layer is granted 200,022 B there instead of 72,090 B
@@ -4311,7 +4317,7 @@ with File > Open...'s record placed after the last before it, 250,752 B with
 MacBinary I read without padding before that, 250,496 B with Arsenic's
 2.5-byte table before that, 250,240 B before that, CORRECTED the same day
 from 250,112). **48,000 B** is
-`MacExtract.code.bin`, read at launch and never purged, and **194,748 B** is
+`MacExtract.code.bin`, read at launch and never purged, and **194,964 B** is
 the `'OVLY'` bundle, read at launch and mostly given back before the engine
 takes its budget (*Overlays*). What stays costs the heap one for one: the
 link produces a single `MacExtract.code.bin`, and `Elf2Mac/LdScript.cc`
@@ -5718,7 +5724,7 @@ data and relocations. 63,744 B was measured against 2026-09-01's build;
 `ApplLimit − ApplZone` = **78,568 B**, leaving 20,956 B for every buffer
 (*derived*; DECISIONS.md 2026-10-22, *the runtime the application did not
 need*). `CODE` has since fallen 2,584 B; the sum has not been re-derived. The
-eager loader then asks for the `'OVLY'` bundle as ONE **194,748 B** block
+eager loader then asks for the `'OVLY'` bundle as ONE **194,964 B** block
 (*Overlays*). The bound is the RAM under the screen buffer, so no smaller
 System moves it (*What the application costs the engine*); the margin is
 kilobytes, which is why MANUAL_TESTS.md §6's HD20 question is about a

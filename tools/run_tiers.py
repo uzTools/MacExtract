@@ -283,9 +283,9 @@ REPO = os.path.dirname(HERE)
 # control's CODE -96 and A5 0; the shipped pair fell the same 96, OVL_SAVED
 # unmoved. They were 190,276 / 94,894 / 619,182.
 TIERS = {
-    "sys3-512K": (190436, "System 3.0, Macintosh 512Ke (222,070 B free)"),
-    "sys6-512K": (95054,  "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
-    "floor-1M":  (619342, "System 6.0.8, 1 MB Mac Plus — the floor target"),
+    "sys3-512K": (190212, "System 3.0, Macintosh 512Ke (222,070 B free)"),
+    "sys6-512K": (94830,  "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
+    "floor-1M":  (619118, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
 # +64 each 2026-11-07, DERIVED from TIERS_CONTROL -64 (BarDraw's port,
 # DECISIONS.md 2026-11-07, *the port a dialog leaves*); they were 190,372 /
@@ -492,7 +492,13 @@ TIERS = {
 # data + bss -680. The machine gave +4,204, because the jump table, the
 # stub segments and the relocations trimmed at launch are resident bytes
 # this unit never counted — which is why TIERS was measured, not moved.
-TIERS_CONTROL = 222496     # build/mac-resident, CODE + A5, 2026-11-07
+TIERS_CONTROL = 222720     # build/mac-resident, CODE + A5, 2026-11-07
+# +224 on 2026-11-07: the LZ4 ring grows with the output (`lz_grow`,
+# DECISIONS.md 2026-11-07, *the ring that grows with the output*); the
+# resident control's CODE +244 and A5 -20, so CODE + A5 +224. All of it is
+# in `ovl_zipold` on the shipped pair (+216), so TIERS above -224 and
+# OVL_SAVED +224, which cancel: no shipped budget moves but a zipold-keeper's,
+# by the image's +216.
 # -64 on 2026-11-07: BarDraw sets the port (CODE -60, A5 -4); TIERS +64.
 # -96 the same day: the release check on Cancel out again; TIERS +96.
 # +128 the same day: the shell's placement rules and the DDA2 folder
@@ -1037,7 +1043,12 @@ EXPECT = {
 # **0 on 2026-11-07**: BarDraw sets the port and finds its own item, the
 # control's -64 (CODE -60, A5 -4) and the shipped pair's -64 (CODE -60,
 # A5 -4) (DECISIONS.md 2026-11-07, *the port a dialog leaves*). TIERS +64.
-OVL_SAVED = 165952
+# **+224 the same day, -> 166,176**: the LZ4 ring grows with the output, the
+# control's +224 (CODE +244, A5 -20) against the shipped pair's 0, the reader
+# in `ovl_zipold` (+216; DECISIONS.md 2026-11-07, *the ring that grows with
+# the output*). TIERS -224; the two cancel, so no shipped budget moves but a
+# zipold-keeper's, by +216 of kept image.
+OVL_SAVED = 166176
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
 # every kept image is one — as is the bundle an envelope holds on to.
@@ -1186,7 +1197,7 @@ IMAGES = {
     "OVL_ID_SQP":         1736,
     "OVL_ID_SUPERDISK":   6628,
     "OVL_ID_TEXT":        11438,
-    "OVL_ID_ZIPOLD":      15292,
+    "OVL_ID_ZIPOLD":      15508,
     "OVL_ID_SNIFF":       14676,
     "OVL_ID_DESTDLG":     1688,
     "OVL_ID_SEGSETUP":    2364,
@@ -1308,7 +1319,10 @@ IMAGES = {
 # masks removed from StuffIt classic, StuffIt 5, SuperDisk! and MAR, the
 # shell clearing it for every format (DECISIONS.md 2026-11-06, *the folder DiskDoubler Pro put back*, *the desk no folder is put on*). MAR's image GREW 16 B for
 # an AND removed: `unc_mar_extract` 1,126 -> 1,144 B, GCC's layout.
-BUNDLE = 194748
+# **ZIPOLD +216, the bundle +216 B, 2026-11-07**: the LZ4 ring grows with the
+# output instead of a flat 64 KB (`lz_grow`; DECISIONS.md 2026-11-07, *the ring
+# that grows with the output*).
+BUNDLE = 194964
 
 # What the SHIPPED lane asserts, and it is the refused fixtures BY NAME
 # rather than a tally: a tier that refuses two different fixtures and still

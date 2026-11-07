@@ -741,7 +741,10 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # port and finds its own item, for the line a modal dialog left at the
 # screen's top-left (DECISIONS.md 2026-11-07, *the port a dialog leaves*);
 # the same code as the shipped pair.
-UNC_MAC_CODE_DEFAULT=185832
+# +244 on 2026-11-07, 185,832 -> 186,076, A5 unmoved (36,644, under): the LZ4
+# ring grows with the output (`lz_grow`; DECISIONS.md 2026-11-07, *the ring
+# that grows with the output*). In `ovl_zipold` on the shipped pair, +216.
+UNC_MAC_CODE_DEFAULT=186076
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the

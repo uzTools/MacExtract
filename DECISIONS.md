@@ -527,6 +527,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-06 (the two calls a 64K ROM lacks) — with the `Hard Disk 20` file's HFS a 64K ROM still bombed at `PurgeSpace` and `MoveHHi`; both are skipped where ROM85 is not positive, `GrowApplZone` tests ROM85 too, and the shipped build and every budget are unchanged to the byte
 - 2026-11-07 (the port a dialog leaves) — after the password dialog, every progress update was drawn at the screen's top-left; BarDraw now sets the port and finds its own item, for 64 B back on every budget
 - 2026-11-07 (bytes as stored, never converted) — extraction is byte-exact: MacExtract never rewrites line endings, in any format; ZipIt is the only Mac unarchiver that does, and off an unreliable bit
+- 2026-11-07 (the ring that grows with the output) — the LZ4 window starts at 4 KB and doubles to 64 KB only as the frame produces, so the peek and a small payload no longer carry a flat 64 KB
 
 ---
 
@@ -21929,3 +21930,72 @@ convention, like `unzip -a`, never an automatic transform.
 
 **Evidence kept**: `specimens/zipit/meta/` (the ZipIt runs, SimpleText
 frames, the StuffIt Expander run).
+
+## 2026-11-07 (the ring that grows with the output) — the LZ4 window starts at 4 KB and doubles to 64 KB only as the frame produces, so the peek and a small payload no longer carry a flat 64 KB
+
+**The open item, priced against the refusal it named.** An LZ4 frame
+(`src/fmt_lz4.c`) decodes through one ring that is both the window a match
+can reach back into and the output's staging. A match offset is at most
+65,535, so the window never needs more than 64 KB — but it was *allocated*
+at 64 KB whatever the frame produced, a declared ceiling, not a figure the
+data drove (DECISIONS.md 2026-11-04, *the frame mar 0.2.0 reads*; the smell
+is CLAUDE.md's constant in the peak-RAM matrix). A match also cannot reach
+before what the frame has produced, so a frame that makes *N* bytes needs a
+window of only `min(N, 64 KB)`.
+
+**The change.** The ring starts at `LZ4_INIT` (4 KB) and doubles — 8, 16,
+32, 64 KB — as `pos` reaches its current size (`lz_grow`). It grows on a
+flush boundary, where `pos` is a multiple of 4 KB and so of the ring size:
+the ring is exactly full and has never wrapped, so its live window is
+`ring[0..cap)` in order and a straight copy moves it. The per-byte path is
+untouched — the grow check rides the flush the output already does every
+4 KB. The ring is its own allocation now, not a tail of the frame struct, so
+it can be replaced. Every ring size is a power of two that divides evenly
+into 4 KB flushes, so a flush chunk never straddles a wrap once the ring is
+circular at 64 KB.
+
+**What it buys (measured 2026-11-07, host high-water via `t --stats`; peak
+heap was a flat 69,816 B).**
+
+| payload | out | peak heap now |
+|---|---|---|
+| the envelope peek (stops at 512 B of output) | ≤512 B | ~8,392 B — never leaves `LZ4_INIT` |
+| `synth-mar-tree.mar.lz4` | 9.9 KB | 28,872 B |
+| `synth-mar020.mar.lz4` | 191 KB | 102,600 B |
+
+The peek — run on every LZ4 file before the release, to name what is inside
+(unc_peek.c) — drops from 69,816 B to ~8 KB. A `.mar.lz4` the peek names
+keeps only `ovl_zipold`, the sniffer and the codecs, and its layer is
+granted 129,630 B over the base at System 6.0.8 / 512 KB (224,460 B of heap),
+so 102,600 B fits with 122 KB to spare: the 64 KB case is left where it was.
+
+**The refusal it closes.** An LZ4 frame the peek *cannot* name keeps the
+whole bundle (194,964 B of images), and at System 6.0.8 / 512 KB that leaves
+65,712 B of heap for the decode. The flat 64 KB ring needed 69,816 B and was
+refused, ~3 KB short (OPEN_ITEMS.md). Now an unnamed payload under ~32 KB
+fits (a 2 KB payload peaks at 8,392 B, a 20 KB one at 53,448 B, both under
+65,712 B, both run at that budget on the host); one over 64 KB still needs
+the full ring and, with the whole bundle kept, is still refused — correctly,
+it is too large for 512 KB (the grow hits the budget cap and fails that
+entry with UNC_ERR_MEM, `block too large for memory budget`, not a crash).
+
+**The transient.** A grow allocates the new ring before freeing the old, so
+peak momentarily holds both. The step to 64 KB (from 32 KB) peaks at
+102,600 B — above the old 69,816 B — but only for a frame that produces more
+than 32 KB, which either has a large named grant (as above) or, unnamed,
+keeps a bundle too big for 512 KB regardless. Every payload a 512 KB machine
+could hold unnamed (≤32 KB) tops out at the 16→32 KB step, 53,448 B, below
+the old flat ring. So the change never makes the case it is meant to help
+worse, and the case it makes bigger was already out of reach there.
+
+**Price (measured 2026-11-07).** `ovl_zipold` 15,292 → 15,508 B (+216), the
+bundle +216; the resident control's CODE +244 and A5 −20, so OVL_SAVED and
+TIERS_CONTROL both +224 and TIERS −224, which cancel — no shipped budget
+moves but a zipold-keeper's, by the image's +216 (run_tiers.py). The shipped
+resident pair is unchanged (eager CODE 39,840 = ceiling), so no runtime
+budget on the machine moves except by that kept image. `run_tiers.py
+--check` and `--check-saved` green; `run_lz4.py` byte-exact across its 165
+liblz4 frames.
+
+**Evidence kept**: `.tmp/lz4probe/` (the unnamed 2 KB / 20 KB / 120 KB
+frames and their budgeted runs), the two fixtures' `t --stats` figures.

@@ -23,21 +23,29 @@
  * either, and a frame that names a dictionary — there is none to give it
  * (UNC_ERR_UNSUPPORTED).
  *
- * Memory: one 64 KB ring, which is the window a match can reach back
- * into and the output's staging at once, so a block of any size streams
- * through it; and one input buffer.
+ * Memory: a ring that is the window a match can reach back into and the
+ * output's staging at once, so a block of any size streams through it; and
+ * one input buffer. The ring starts at LZ4_INIT and doubles up to the
+ * LZ4_RING a 64 KB match reach needs, so a frame that makes less pays for
+ * less — the envelope peek stops at 512 B of output and never leaves
+ * LZ4_INIT, and a small payload the peek cannot name no longer carries a
+ * flat 64 KB (DECISIONS.md 2026-11-07, *the ring that grows with the
+ * output*; OPEN_ITEMS.md). It grows only at a flush boundary, where it has
+ * not wrapped and a straight copy moves the window.
  *
  * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
  */
 #include "fmt_lz4_priv.h"
 
-#define LZ4_RING 65536u
-#define LZ4_MASK (LZ4_RING - 1u)
+#define LZ4_RING 65536u       /* the most the window ever needs: a 64 KB reach */
+#define LZ4_INIT 4096u        /* and where it starts; a power of two, >= LZ4_FLUSH */
 /* The output goes to the sink every 4 KB, not only when the ring wraps:
  * the envelope peek sees the first 8 KB of the file and stops at 512 B of
  * output, and a first block larger than 8 KB compressed never reached a
  * wrap there — `A.mar.lz4` named nothing and its layer kept the whole
- * bundle, which System 6.0.8 at 512 KB refused (measured 2026-11-03). */
+ * bundle, which System 6.0.8 at 512 KB refused (measured 2026-11-03). The
+ * ring grows on these same boundaries, so every ring size is a multiple of
+ * it and a 4 KB flush chunk never straddles a wrap. */
 #define LZ4_FLUSH 4096u
 
 /* ------------------------------------------------------------------ */
@@ -123,6 +131,9 @@ typedef struct {
     UncCtx   *c;
     UncBufIn  in;
     uint8_t  *ring;
+    uint32_t  cap;        /* the ring's size now, a power of two <= LZ4_RING */
+    uint32_t  mask;       /* cap - 1 */
+    uint32_t  grow_at;    /* `pos` at which to double the ring; ~0 when full */
     uint32_t  pos;        /* total bytes out of this frame, mod nothing */
     uint32_t  flushed;    /* how many of them the sink has */
     uint32_t  bstart;     /* `pos` where the current block began */
@@ -150,11 +161,29 @@ static int lz_in(Lz4 *z)
     return b;
 }
 
+/* Double the ring, up to LZ4_RING. Called from lz_flush at pos == grow_at,
+ * which is a multiple of LZ4_FLUSH and so of cap: the ring is exactly full
+ * and has never wrapped, so its live window is ring[0..cap) in order and a
+ * straight copy moves it. Out of line: off the per-byte path. */
+__attribute__((noinline)) static int lz_grow(Lz4 *z)
+{
+    uint32_t ncap = z->cap << 1, i;
+    uint8_t *nr = (uint8_t *)unc_alloc(z->c->al, ncap);
+    if (!nr) return UNC_ERR_MEM;
+    for (i = 0; i < z->cap; i++) nr[i] = z->ring[i];
+    unc_free(z->c->al, z->ring);
+    z->ring = nr;
+    z->cap = ncap;
+    z->mask = ncap - 1u;
+    z->grow_at = ncap < LZ4_RING ? ncap : 0xFFFFFFFFu;
+    return UNC_OK;
+}
+
 /* Hand the ring's unflushed bytes to the sink: every LZ4_FLUSH bytes, and
- * at the end. */
+ * at the end. Grows the ring here, after the chunk is away, when it is full. */
 static int lz_flush(Lz4 *z)
 {
-    uint32_t from = z->flushed & LZ4_MASK, n = z->pos - z->flushed;
+    uint32_t from = z->flushed & z->mask, n = z->pos - z->flushed;
     if (n == 0) return UNC_OK;
     xxh_update(&z->content, z->ring + from, n);
     if (!z->c->opt.test_only &&
@@ -162,12 +191,12 @@ static int lz_flush(Lz4 *z)
                           (int32_t)n) < 0)
         return UNC_ERR_SINK;
     z->flushed = z->pos;
-    return UNC_OK;
+    return z->pos == z->grow_at ? lz_grow(z) : UNC_OK;
 }
 
 static int lz_put(Lz4 *z, uint8_t b)
 {
-    z->ring[z->pos & LZ4_MASK] = b;
+    z->ring[z->pos & z->mask] = b;
     z->pos++;
     return (z->pos & (LZ4_FLUSH - 1u)) == 0 ? lz_flush(z) : UNC_OK;
 }
@@ -220,7 +249,7 @@ __attribute__((noinline)) static int lz_block(Lz4 *z, int linked)
          * stops at UNC_MAC_MAX. */
         if (z->pos - z->bstart + mlen > z->bmax) return UNC_ERR_CORRUPT;
         while (mlen--) {
-            uint8_t b = z->ring[(z->pos - off) & LZ4_MASK];
+            uint8_t b = z->ring[(z->pos - off) & z->mask];
             if ((err = lz_put(z, b)) != UNC_OK) return err;
         }
     }
@@ -317,11 +346,17 @@ int unc_lz4_extract(UncCtx *c)
     uint8_t *iobuf;
     int sret, est = UNC_OK, frames = 0;
 
-    z = (Lz4 *)unc_alloc(c->al, (uint32_t)sizeof *z + UNC_IOBUF + LZ4_RING);
+    z = (Lz4 *)unc_alloc(c->al, (uint32_t)sizeof *z + UNC_IOBUF);
     if (!z) return UNC_ERR_MEM;
     iobuf = (uint8_t *)(z + 1);
-    z->ring = iobuf + UNC_IOBUF;
     z->c = c;
+    /* The ring is its own block so it can grow; it starts small and doubles
+     * to LZ4_RING as the frame produces (lz_grow). */
+    z->ring = (uint8_t *)unc_alloc(c->al, LZ4_INIT);
+    if (!z->ring) { unc_free(c->al, z); return UNC_ERR_MEM; }
+    z->cap = LZ4_INIT;
+    z->mask = LZ4_INIT - 1u;
+    z->grow_at = LZ4_INIT;          /* < LZ4_RING: the first grow is armed */
 
     unc_entry_clear(&e);
     if (c->opt.name_hint && c->opt.name_hint_len)
@@ -329,10 +364,11 @@ int unc_lz4_extract(UncCtx *c)
     e.data_size = UNC_SIZE_UNKNOWN;
     e.rsrc_size = 0;
     sret = c->sink->begin_entry(c->sink->ctx, &e);
-    if (sret < 0) { unc_free(c->al, z); return UNC_ERR_SINK; }
+    if (sret < 0) { unc_free(c->al, z->ring); unc_free(c->al, z); return UNC_ERR_SINK; }
     if (sret > 0 || c->opt.list_only) {
         if (sret == 0 && c->sink->end_entry(c->sink->ctx, UNC_OK) < 0)
             est = UNC_ERR_SINK;
+        unc_free(c->al, z->ring);
         unc_free(c->al, z);
         return est == UNC_ERR_SINK ? est : UNC_OK;
     }
@@ -370,6 +406,7 @@ int unc_lz4_extract(UncCtx *c)
         frames++;
     }
     if (c->sink->end_entry(c->sink->ctx, est) < 0) est = UNC_ERR_SINK;
+    unc_free(c->al, z->ring);
     unc_free(c->al, z);
     return unc_fatal(est) || est == UNC_ERR_FORMAT ? est : UNC_OK;
 }
