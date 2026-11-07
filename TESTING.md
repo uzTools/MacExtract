@@ -2988,13 +2988,28 @@ is not). The manifest already matches `unar`, so agreement makes Expander
 corroborate it; a data fork Expander produces that the manifest lacks
 (`expander_only`) would be a contradiction.
 
-**68 plain `.cpt` fixtures, 2026-11-07** (`--all`; one boot each): **68/68
-clean, 0 contradictions** — every data fork Expander wrote is byte-identical
-to the record. (The first pass read 46 clean with 22 `hcopy` pull gaps on
-`∏`/`™`/`π` names and two false "contradictions" from leaf-name collisions —
-two `curves.c`, two `patches.c` in `macvoglalpha1.cpt`, and GNU Chess's real
-`gnuchess.∏.rsrc`; the MacRoman `hcopy` and the by-content manifest match
-closed all of them, with zero real differences throughout.)
+A `.sea`, `.cmp` or extensionless package is typed PACT too: a Compact Pro
+self-extractor carries the archive after its stub, with the directory at the
+end, so Expander expands it in place like a self-extracting zip (the APPL a
+`.sea` really is is hidden from Standard File's filter — measured 2026-11-07).
+
+**The whole corpus, 2026-11-07, 108 fixtures** (70 `.cpt`, 30 `.sea`, 1
+`.cmp`, 6 packages, 1 `.sit`): **108/108 clean, 0 contradictions** — every
+data fork Expander wrote is byte-identical to the record, and none needed a
+password (no committed Compact Pro fixture is encrypted). Three kinds of
+false alarm were run down and closed, each an artifact of the harness or of
+Expander, never of the engine:
+
+- **`hcopy` pull gaps** on names with `∏`/`™`/`π` — fixed by copying the name
+  in MacRoman (22 archives);
+- **leaf-name collisions** where an archive repeats a name across folders
+  (two `curves.c`, two `patches.c` in `macvoglalpha1.cpt`) or holds a file
+  literally named `gnuchess.∏.rsrc` — fixed by comparing the data fork by
+  content against the manifest, not by the CLI's `.rsrc` sidecar output;
+- **Expander's own extra file for a package**: it writes the package's
+  comment as a "Comments about …" text file beside the extracted folder,
+  which the engine and `unar` keep as a Get Info comment, not a file — 5
+  packages, now filtered out like the Preferences file.
 
 **The resource fork** is not multiset-compared here: Expander writes its own
 map reserved bytes, so it agrees only after masking, which the manifest's raw
@@ -3002,12 +3017,9 @@ hash cannot express. The first pass compared it per file, masked
 (`vmac_check.mask_reserved`), against `macextract x`, and every resource fork
 agreed.
 
-**Not yet done** (OPEN_ITEMS.md, *What grades a fork*): the `.sea`, `.cmp`
-and encrypted Compact Pro variants (each its own pass — a `.sea` is run, not
-Expanded, and an encrypted archive needs its password), and then the
-manifests re-recorded with Expander in the oracle. **No contradiction has
-been found**, so the engine, `unar` and Expander agree wherever all three
-have been asked.
+**Left** (OPEN_ITEMS.md, *What grades a fork*): the manifests re-recorded
+with Expander in the oracle. **No contradiction was found anywhere in Compact
+Pro**, so the engine, `unar` and Expander agree across the whole format.
 
 ## PKZIP's own distributions (`tools/specimens/implode.tsv`, one of three in `ci.sh`)
 

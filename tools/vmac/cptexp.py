@@ -92,6 +92,11 @@ def run_one(fixture, args):
     boot = os.path.join(work, "boot-in.hfv")
     macname = label[:31]
     mb = os.path.join(work, macname + ".bin")
+    # Typed as a Compact Pro document (PACT/CPCT) so Standard File's filter
+    # shows it. A `.sea` carries the same archive after a self-extractor
+    # prefix, with the directory at the end, so Expander expands it in place
+    # like a self-extracting zip — the APPL type a `.sea` really has is hidden
+    # from the filter (measured 2026-11-07).
     open(mb, "wb").write(macbinary(macname, "PACT", "CPCT",
                                    open(fixture, "rb").read()))
     R.sh(sys.executable, os.path.join(HERE, "mkboot.py"),
@@ -130,9 +135,13 @@ def run_one(fixture, args):
         mac.close()
     img = os.path.join(work, "boot.hfv")
     # Expander drops its own "StuffIt Expander Preferences" into the System
-    # Folder on first run; the archive's files extract to the volume root.
+    # Folder on first run; and for a Compact Pro PACKAGE it writes the
+    # package's comment as a "Comments about <name>" text file beside the
+    # extracted folder — the engine and `unar` keep that as a Get Info
+    # comment, not a file (measured 2026-11-07). Neither is an archived file.
     new = [n for n in names_on(img)
-           if n not in before and ":System Folder:" not in n]
+           if n not in before and ":System Folder:" not in n
+           and not n.split(":")[-1].startswith("Comments about ")]
     got = pull(img, new, work)
     refdata, refn = reference(fixture)
     # Compare Expander's data-fork sha256 multiset against the manifest's.

@@ -106,12 +106,12 @@ and the Finder metadata each expander puts back (TESTING.md; FORMATS.md).
   StuffIt, Compact Pro and StuffIt 5 — each with a reader on this machine
   (Expander 4.0.2 / 5.5), so none goes to MANUAL_TESTS.md. No writer is
   missing for any format with committed fixtures.
-- **Compact Pro, underway** 2026-11-07 (`tools/vmac/cptexp.py`; TESTING.md,
-  *Compact Pro against StuffIt Expander 4.0.2*): Expander 4.0.2 booted over
-  the 68 plain `.cpt` fixtures corroborates the engine — **68/68 clean, 0
-  contradictions** on the data fork (vs the manifest), every resource fork
-  masked-equal. Left: the `.sea`/`.cmp`/encrypted variants, then re-record
-  the manifests with Expander in `oracle`.
+- **Compact Pro, corroborated** 2026-11-07 (`tools/vmac/cptexp.py`;
+  TESTING.md, *Compact Pro against StuffIt Expander 4.0.2*): Expander 4.0.2
+  booted over the **whole corpus — 108/108 clean, 0 contradictions** on the
+  data fork (vs the manifest), every resource fork masked-equal, none
+  encrypted. **Left: re-record the manifests with Expander in `oracle`** —
+  the writer's reader now has it, so the 1,470 forks leave `unar`-sole.
 - **Not decided:** which answer wins where the writer's own reader
   disagrees with the stored CRC or with another reader — StuffIt Deluxe
   7.0.3 Classic writes wrong bytes for zip's Reduce (README.md).
