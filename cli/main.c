@@ -347,6 +347,8 @@ typedef struct {
     int         overwrite;      /* write over existing output files    */
     int         clobber;        /* last open refused: path existed     */
     const char *unwrap_src;     /* envelope being unwrapped, or NULL   */
+    const char *unwrap_rsrc;    /* ITS sidecar, only if the layer before
+                                 * wrote one; "" or NULL otherwise      */
     int         deferred[2];    /* a fork written beside unwrap_src,
                                  * renamed onto it once it is deleted  */
     /* Every file this layer READS — the layer itself and, for a
@@ -397,6 +399,8 @@ typedef struct {
     /* For envelope auto-unwrap: shape of what was extracted. */
     int         file_count, dir_count;
     char        last_ok_path[PATHBUF];
+    char        last_ok_rsrc[PATHBUF];  /* its sidecar, if this run wrote
+                                         * one; "" otherwise */
     uint32_t    last_ok_type;  /* its Mac type, 0 if none */
 } DiskSink;
 
@@ -896,11 +900,13 @@ static int cli_ask_password(void *ctx, uint8_t *buf, uint16_t cap,
 #define DEFER_SUFFIX ".unwrap~"
 static int sink_unwrap_exempt(DiskSink *s, const char *path)
 {
-    char rp[1100];
     if (!s->unwrap_src || !s->unwrap_src[0]) return 0;
     if (strcmp(path, s->unwrap_src) == 0) return 1;
-    rsrc_path(s->unwrap_src, s->hidden_forks, rp, sizeof rp);
-    return strcmp(path, rp) == 0;
+    /* The sidecar only if the layer before WROTE it: a file of that name
+     * that this run did not write is the user's, and is neither exempt
+     * nor deleted (DECISIONS.md 2026-11-07, *what the CLI may delete*). */
+    return s->unwrap_rsrc && s->unwrap_rsrc[0] &&
+           strcmp(path, s->unwrap_rsrc) == 0;
 }
 
 /* Is `st` one of the files this layer is reading? By inode, not by
@@ -1048,6 +1054,8 @@ static int sink_end(void *ctx, int status)
     DiskSink *s = (DiskSink *)ctx;
     char name[FS_NAME_MAX];
 
+    int wrote_rsrc = s->rsrc_f != NULL;
+
     if (!s->test_only && !s->list_only) {
         /* An entry with a data fork of size 0 still gets an empty file.
          * That open can hit the clobber check too — a resource-only
@@ -1165,6 +1173,13 @@ static int sink_end(void *ctx, int status)
         {
             snprintf(s->last_ok_path, sizeof s->last_ok_path, "%s",
                      s->cur_path);
+            /* Recorded, never inferred from the name: what the next
+             * layer may delete is what this one wrote. */
+            if (wrote_rsrc)
+                rsrc_path(s->cur_path, s->hidden_forks, s->last_ok_rsrc,
+                          sizeof s->last_ok_rsrc);
+            else
+                s->last_ok_rsrc[0] = 0;
             s->last_ok_type = s->cur.type;
         }
     }
@@ -2291,7 +2306,7 @@ int main(int argc, char **argv)
     int ret;
     int no_recurse = 0, depth = 0;
     const char *origfile;       /* the file named on the command line */
-    char curfile[PATHBUF], delfile[PATHBUF];
+    char curfile[PATHBUF], delfile[PATHBUF], delrsrc[PATHBUF];
     struct stat st;
     SegHost seg;
     const char *partargs[UNC_SEG_MAX_PARTS];
@@ -2369,6 +2384,7 @@ int main(int argc, char **argv)
     origfile = file;
     snprintf(curfile, sizeof curfile, "%s", file);
     delfile[0] = 0;
+    delrsrc[0] = 0;
 
 nextlayer:
     file = curfile;
@@ -2410,6 +2426,7 @@ nextlayer:
     sink.hidden_forks = hidden_forks;
     sink.overwrite = overwrite;
     sink.unwrap_src = delfile;   /* "" until a layer is being unwrapped */
+    sink.unwrap_rsrc = delrsrc;
     sink_note_reading(&sink, file);
     sink.verbose = verbose;
     sink.show_finder = show_finder;
@@ -3083,19 +3100,19 @@ nextlayer:
     /* This layer extracted cleanly: the previous layer's envelope file
      * (if any) is no longer needed. */
     if (delfile[0]) {
-        char rp[1100], tmp[1200];
+        char tmp[1200];
         remove(delfile);
-        rsrc_path(delfile, hidden_forks, rp, sizeof rp);
-        remove(rp);
+        if (delrsrc[0]) remove(delrsrc);
         if (sink.deferred[0]) {
             snprintf(tmp, sizeof tmp, "%s" DEFER_SUFFIX, delfile);
             rename(tmp, delfile);
         }
-        if (sink.deferred[1]) {
-            snprintf(tmp, sizeof tmp, "%s" DEFER_SUFFIX, rp);
-            rename(tmp, rp);
+        if (sink.deferred[1] && delrsrc[0]) {
+            snprintf(tmp, sizeof tmp, "%s" DEFER_SUFFIX, delrsrc);
+            rename(tmp, delrsrc);
         }
         delfile[0] = 0;
+        delrsrc[0] = 0;
     }
 
     /* Envelope auto-unwrap (real-world files are chained: .sit.hqx,
@@ -3133,11 +3150,13 @@ nextlayer:
                     fprintf(stderr, "unwrapping: %s (%s)\n",
                             sink.last_ok_path, unc_format_name(pfmt));
                 snprintf(delfile, sizeof delfile, "%s", sink.last_ok_path);
+                snprintf(delrsrc, sizeof delrsrc, "%s", sink.last_ok_rsrc);
                 snprintf(curfile, sizeof curfile, "%s", sink.last_ok_path);
                 depth++;
                 force = NULL;
                 sink.file_count = sink.dir_count = 0;
                 sink.last_ok_path[0] = 0;
+                sink.last_ok_rsrc[0] = 0;
                 sink.entries = sink.errors = 0;
                 goto nextlayer;
             }

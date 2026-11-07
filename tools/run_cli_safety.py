@@ -113,8 +113,60 @@ def case_overwrite_self(tmp):
     return probs
 
 
+def case_sidecar_not_ours(tmp):
+    """Item 2A: the envelope's sidecar (NAME.rsrc, ._NAME) was removed at
+    the end of an unwrap whether or not this run wrote it, and was exempt
+    from the no-overwrite rule. MacBinary "Foo.tar" with NO resource fork,
+    holding a tar; the user's own o/Foo.tar.rsrc (or o/._Foo.tar) beside
+    it must survive, and an inner entry of that name must be refused."""
+    probs = []
+    for forks, side in (("visible", "Foo.tar.rsrc"), ("hidden", "._Foo.tar")):
+        mine = b"the user's own file\n"
+        # (a) the unwrap's cleanup alone
+        d = os.path.join(tmp, forks + "-a")
+        os.makedirs(os.path.join(d, "o"))
+        write(os.path.join(d, "Foo.bin"),
+              macbinary(b"Foo.tar", tar_of([("inner.txt", b"in\n" * 300)])))
+        write(os.path.join(d, "o", side), mine)
+        rc, err = run("x", "Foo.bin", "-o", "o", "--forks", forks, cwd=d)
+        got = os.path.join(d, "o", side)
+        if not os.path.exists(got) or read(got) != mine:
+            probs.append(f"{forks} cleanup: the user's {side} was removed "
+                         f"(exit {rc})")
+        if rc != 0 or not os.path.exists(os.path.join(d, "o", "inner.txt")):
+            probs.append(f"{forks} cleanup: wanted a clean unwrap, exit {rc} "
+                         f"{err.strip()[:160]!r}")
+        # (b) an inner entry carrying the sidecar's name, no --overwrite
+        d = os.path.join(tmp, forks + "-b")
+        os.makedirs(os.path.join(d, "o"))
+        write(os.path.join(d, "Foo.bin"),
+              macbinary(b"Foo.tar", tar_of([(side, b"inner\n" * 200)])))
+        write(os.path.join(d, "o", side), mine)
+        rc, err = run("x", "Foo.bin", "-o", "o", "--forks", forks, cwd=d)
+        if not os.path.exists(got.replace(forks + "-a", forks + "-b")) or \
+           read(os.path.join(d, "o", side)) != mine:
+            probs.append(f"{forks} entry: an inner {side} replaced the "
+                         f"user's without --overwrite (exit {rc})")
+        elif rc != 1 or "already exists" not in err:
+            probs.append(f"{forks} entry: wanted the clobber refusal, exit 1;"
+                         f" got exit {rc} {err.strip()[:160]!r}")
+        # (c) the control: a sidecar this run DID write still goes
+        d = os.path.join(tmp, forks + "-c")
+        os.makedirs(os.path.join(d, "o"))
+        write(os.path.join(d, "Foo.bin"),
+              macbinary(b"Foo.tar", tar_of([("inner.txt", b"in\n" * 300)]),
+                        rsrc=b"R" * 300))
+        rc, err = run("x", "Foo.bin", "-o", "o", "--forks", forks, cwd=d)
+        left = sorted(os.listdir(os.path.join(d, "o")))
+        if rc != 0 or left != ["inner.txt"]:
+            probs.append(f"{forks} control: wanted only inner.txt, got "
+                         f"{left} exit {rc}")
+    return probs
+
+
 CASES = {
     "overwrite-self": case_overwrite_self,
+    "sidecar-not-ours": case_sidecar_not_ours,
 }
 
 

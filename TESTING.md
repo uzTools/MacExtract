@@ -171,6 +171,10 @@ case for.
 - `overwrite-self`: an entry carrying the input archive's own name, under
   `--overwrite`, small and 1 MB, and a hard link of the input where the
   entry lands: the input must survive, exit 1.
+- `sidecar-not-ours`: the user's own `Foo.tar.rsrc` / `._Foo.tar` beside
+  an envelope that has no resource fork must survive the unwrap, and an
+  inner entry of that name is refused; the control, an envelope that has
+  one, must leave nothing behind.
 
 ### Exact oracle invocation
 

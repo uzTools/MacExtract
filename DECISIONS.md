@@ -541,6 +541,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-07 (the folder numbered past a file) — a folder whose name a file holds is numbered past it at every level, not only the top, in the application and the CLI; the CLI failed every entry under it, for 0 B
 - 2026-11-07 (the comment the Desktop Manager cut) — a Get Info comment longer than the Desktop Manager keeps is cut to its 199 bytes by the shell and reported "<name>: comment shortened"; a Spotlight comment that runs past the sidecar's window is cut, not dropped
 - 2026-11-07 (what the CLI may delete) — `--overwrite` opened the input archive for writing when its only entry carried the archive's own name; a file being read is now refused by inode on every layer
+- 2026-11-07 (the sidecar the run did not write) — an unwrap removed the envelope's `NAME.rsrc` / `._NAME` whether or not it had written one, and exempted it from the no-overwrite rule; both now follow what was written
 
 ---
 
@@ -22574,3 +22575,20 @@ this run's own intermediate and is deleted anyway, which is what
 `DEFER_SUFFIX` already does. On the first layer nothing deletes the input,
 so a deferred rename would replace the user's original with its own
 contents — and if a later layer then failed, the original would be gone.
+
+## 2026-11-07 (the sidecar the run did not write) — an unwrap removed the envelope's `NAME.rsrc` / `._NAME` whether or not it had written one, and exempted it from the no-overwrite rule; both now follow what was written
+
+**Claim, confirmed (from a review).** The cleanup after a clean layer
+built the envelope's sidecar path from its name and `remove()`d it, and
+`sink_unwrap_exempt` exempted that path. Measured against the parent commit with
+`run_cli_safety.py sidecar-not-ours`, both conventions: a MacBinary
+`Foo.tar` with no resource fork holding a tar, the user's own
+`o/Foo.tar.rsrc` (or `o/._Foo.tar`) beside it — exit 0 and the file gone;
+an inner entry of that name replaced it without `--overwrite`, exit 0.
+
+**The fix.** `sink_end` records the sidecar path of the last good entry
+only if it opened that fork for writing (`last_ok_rsrc`), and the next
+layer exempts and deletes that path and nothing else. A user's file of
+that name is then an ordinary existing path: kept, and an inner entry
+landing on it is the usual clobber refusal. The control — an envelope
+WITH a resource fork — still leaves only the inner entry.
