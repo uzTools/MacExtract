@@ -3401,7 +3401,7 @@ Macintosh file*):
 | `0x2705` | 14 B, type, creator, Finder flags; restored as type and creator, flags 0 | 16 B, the last word the bit below |
 | `0x2805` / its last word | not written, not read | frFlags, then **bit 0: the folder is expanded in ZipIt's list**, as APPNOTE.TXT 4.6.6 defines it (`MyItemNotification` sets it, `UpdateBrowser` reads it; saved expanded, 1); frFlags' label bits restored |
 | Get Info comment | **not in its MacBinary** (length 0 with a comment on the file) | — |
-| linefeeds | a `TEXT` entry is stored with LF added after every CR and **internal attributes bit 0 set**; with conversion off, bare CR and the bit clear; on extraction the bit makes it strip the LFs | — |
+| linefeeds | a `TEXT` entry is stored with LF added after every CR and **internal attributes bit 0 set**; with conversion off, bare CR and the bit clear; on extraction the bit makes it strip the LFs | **not converted — byte-exact** (DECISIONS.md 2026-11-07, *bytes as stored, never converted*) |
 | dates | the zip date is the file's modification date; extracted, that date becomes creation and modification alike; a modification date 0 is written as 2032-01-01 | — |
 | made by | host 7, version 2.0 (a preference also offers "Unix zip" and "PKZip") | the same |
 | encryption | — | **standard PKWARE ZipCrypto** (`decrypt_byte`/`crypthead`/`UnzipCryptHeader`, Info-ZIP's `crypt.c`, read from the code), which `unc_zip_extract` already decrypts; "US versions only" was the export rule, not a custom cipher |

@@ -526,6 +526,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-06 (what ZipIt does with a Macintosh file) — ZipIt's View bit is a folder's expanded state; its MacBinary is chosen by a preference and carries no comment; a text entry is CR LF with the text bit, stripped on extraction; segments are spanned volumes the user names
 - 2026-11-06 (the two calls a 64K ROM lacks) — with the `Hard Disk 20` file's HFS a 64K ROM still bombed at `PurgeSpace` and `MoveHHi`; both are skipped where ROM85 is not positive, `GrowApplZone` tests ROM85 too, and the shipped build and every budget are unchanged to the byte
 - 2026-11-07 (the port a dialog leaves) — after the password dialog, every progress update was drawn at the screen's top-left; BarDraw now sets the port and finds its own item, for 64 B back on every budget
+- 2026-11-07 (bytes as stored, never converted) — extraction is byte-exact: MacExtract never rewrites line endings, in any format; ZipIt is the only Mac unarchiver that does, and off an unreliable bit
 
 ---
 
@@ -21766,8 +21767,8 @@ Desktop database, twice).
 data is CR LF and internal attributes bit 0 is set; turned off (Zip ▸
 Add/Strip Linefeeds), bare CR and the bit clear. Extracting, ZipIt strips
 the LFs of a bit-0 entry (`Texty` 320 → 290 B). **The engine delivers the
-320**, as `unar` does: OPEN_ITEMS.md, *ZipIt archives: where the engine and
-ZipIt part*.
+320** — extraction is byte-exact (*bytes as stored, never converted*,
+below).
 
 **Dates.** The zip date is the modification date, local; extracted, both
 dates become it; a modification date of 0 went out as 2032-01-01.
@@ -21887,3 +21888,44 @@ in register allocation, the TickCount result now through the frame
 (~24 cycles a call by hand count, about 0.05 tick on 287 KB); the tick
 probe read 159 engine ticks of 464 on `derived-PCCTS.tar` before and
 after, twice each, every slot identical.
+
+## 2026-11-07 (bytes as stored, never converted) — extraction is byte-exact: MacExtract never rewrites line endings, in any format; ZipIt is the only Mac unarchiver that does, and off an unreliable bit
+
+**The decision (the maintainer's).** MacExtract writes each entry's bytes
+as the archive stored them and never converts line endings — CR, CR LF or
+LF come out as they went in, for every format. The engine already does
+this; this records it as policy.
+
+**Why it came up.** ZipIt converts a text entry's line endings to Mac CR on
+extraction, by default, keyed on the zip "text" bit (internal attributes
+bit 0) — and does so even on archives it did not write (measured on an
+Info-ZIP zip, *what ZipIt does with a Macintosh file*). So a ZipIt-made
+text file comes out of ZipIt as bare CR but out of MacExtract as the stored
+CR LF; the question was whether to mimic ZipIt.
+
+**The field, measured** (`tools/vmac/zipitmeta.py`, and `unzip` on Linux,
+2026-11-06/07):
+
+| unarchiver | converts line endings? |
+|---|---|
+| ZipIt 1.4 / 2.2.2 | **yes — automatically, by default**, off the text bit |
+| StuffIt Expander 5.5 | no — byte-faithful (a foreign zip's CR LF, LF and CR all came back unchanged) |
+| The Unarchiver / `unar` | no — byte-faithful |
+| Info-ZIP `unzip` / MacZip | only on `-a`, which honours the text bit (no detection at unzip time; `-aa` forces all and corrupts binaries) |
+
+So ZipIt is the only Mac unarchiver that converts by default; the others
+are byte-faithful or ask first.
+
+**Why not mimic it.** The text bit is unreliable: Info-ZIP's `zip` sets it,
+Python's `zipfile` and 7-Zip do not (measured), so "set" is not "convert
+me" and "clear" is not "binary". And the right target differs by host — a
+classic Mac wants CR, the Linux CLI wants LF — which byte-exact sidesteps
+and the one-behaviour rule forbids guessing. The cosmetic cost is accepted:
+on classic Mac, SimpleText draws a stray LF as a hollow box, so a CR LF
+file shows a box at each line start and an LF-only file is one long line
+(measured, Mac OS 9.2; `specimens/zipit/meta/linefeeds/`). If conversion is
+ever wanted it is an explicit opt-in text-mode flag that targets the host's
+convention, like `unzip -a`, never an automatic transform.
+
+**Evidence kept**: `specimens/zipit/meta/` (the ZipIt runs, SimpleText
+frames, the StuffIt Expander run).

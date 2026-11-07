@@ -830,6 +830,104 @@ def segments(keep):
         shutil.rmtree(work, ignore_errors=True)
 
 
+# ------------------------------------------------------------------
+# --foreign: does ZipIt 1.4 convert linefeeds in an archive it did NOT
+# make? A zip in Info-ZIP's shape (dos = CR LF, unix = LF, mac = CR, bin =
+# binary; the three text entries carry the zip text bit, bin does not),
+# extracted by ZipIt, the bytes read back. Answer: yes, both CR LF and LF
+# become Mac CR (DECISIONS.md 2026-11-07, *bytes as stored, never
+# converted*, which is why MacExtract does not).
+# ------------------------------------------------------------------
+
+def foreign_zip():
+    """A zip in the shape Info-ZIP writes: three text entries with the
+    zip text bit (internal attributes bit 0) set, one binary without it,
+    none converted. `dos` is CR LF, `unix` LF, `mac` CR, `bin` binary.
+    What ZipIt does to these on extraction answers whether it converts
+    archives it did not make (DECISIONS.md 2026-11-07, *bytes as stored,
+    never converted*)."""
+    import io
+    import zipfile
+    out = io.BytesIO()
+    z = zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED)
+    for name, data, text in (
+            ("dos", b"line one\r\nline two\r\nline three\r\n", True),
+            ("unix", b"line one\nline two\nline three\n", True),
+            ("mac", b"alpha\rbeta\rgamma\r", True),
+            ("bin", bytes(range(256)) * 4, False)):
+        zi = zipfile.ZipInfo(name, (1999, 1, 1, 0, 0, 0))
+        zi.internal_attr = 1 if text else 0
+        z.writestr(zi, data)
+    z.close()
+    return out.getvalue()
+
+
+def foreign(keep):
+    work = R.work_tmp("zipit-")
+    img = os.path.join(work, "zipwork.img")
+    volume(img, work, [("Xdir/Foreign", "ZIP ", "ZIP ",
+                        foreign_zip(), b"")], size_kb=8192)
+    if not os.path.exists(ndd.BOOT):
+        ndd.install()
+    s = Session(ndd.BOOT, [img], os.path.join(SHOTS, "foreign"))
+    try:
+        s.boot()
+        s.shot("desktop", wait=5.0)
+        s.mac.click(*VOLUME_ICON, double=True)
+        s.shot("volume", wait=10.0)
+        s.mac.key("Escape")
+        time.sleep(0.5)
+        s.mac.key("z")
+        time.sleep(1.5)
+        s.mac.command_key("o")
+        s.shot("launched", wait=30.0)
+        personalize(s)
+        s.shot("personalized", wait=5.0)
+        s.mac.click(*NOT_YET)
+        s.shot("not-yet", wait=5.0)
+        s.mac.command_key("o")                 # File > Open
+        s.shot("open-dialog", wait=6.0)
+        typed(s, "x")                          # Xdir
+        s.mac.key("Return")
+        s.shot("in-xdir", wait=3.0)
+        typed(s, "f")                          # Foreign
+        s.mac.key("Return")
+        s.shot("archive-open", wait=10.0)
+        s.mac.click(60, ROW0_Y + 3)
+        s.mac.command_key("a")                 # Select All
+        s.shot("all-selected", wait=2.0)
+        s.mac.command_key("e")                 # Extract
+        s.shot("extract-dialog", wait=6.0)
+        s.mac.key("Return")                    # extract into the folder shown
+        s.shot("extracting", wait=15.0)
+        s.shot("extracted", wait=10.0)
+        s.mac.command_key("q")
+        s.shot("quit", wait=8.0)
+        s.mac.click(*VOLUME_ICON)
+        s.mac.command_key("y")
+        s.shot("ejected", wait=15.0)
+    finally:
+        time.sleep(5)
+        s.close()
+    got = ndd.read_forks(img)
+    want = {"dos": b"line one\r\nline two\r\nline three\r\n",
+            "unix": b"line one\nline two\nline three\n",
+            "mac": b"alpha\rbeta\rgamma\r"}
+    for path, (t, c, data, rsrc) in sorted(got.items()):
+        leaf = path[-1]
+        if leaf in ("ZipIt", "Foreign") or path[1] in ("Plug-ins",) or b"Desktop" in leaf.encode():
+            continue
+        if leaf not in want and len(data) > 300:
+            continue
+        print("zipitmeta: %-8s %d B  CR=%d LF=%d CRLF=%d  %r%s"
+              % (leaf, len(data), data.count(b"\r"), data.count(b"\n"),
+                 data.count(b"\r\n"), data[:28],
+                 "  (== source)" if data == want.get(leaf) else ""))
+    print("zipitmeta: screenshots in %s" % s.shots)
+    if not keep:
+        shutil.rmtree(work, ignore_errors=True)
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -840,6 +938,7 @@ def main():
     ap.add_argument("--facts2", action="store_true")
     ap.add_argument("--facts-read", action="store_true")
     ap.add_argument("--segments", action="store_true")
+    ap.add_argument("--foreign", action="store_true")
     ap.add_argument("--keep", action="store_true")
     a = ap.parse_args()
     if a.keep:
@@ -858,6 +957,8 @@ def main():
         facts_read(a.keep)
     elif a.segments:
         segments(a.keep)
+    elif a.foreign:
+        foreign(a.keep)
     else:
         ap.print_help()
     return 0
