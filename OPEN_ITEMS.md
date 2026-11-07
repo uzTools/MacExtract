@@ -165,6 +165,17 @@ perhaps one 32-byte step less (an estimate), but it changes the heap's
 layout on every machine. What would settle it: the three tiers' budgets
 and largest free block, and the two 512 KB sweeps on a 128K ROM.
 
+## Two archives the 64K ROM's budget probe still refuses
+
+On the emulated 64K-ROM 512K, the shipped build extracts Cool Tools and
+a2basic byte-exact since `high_handle` (DECISIONS.md 2026-11-07, *the
+decoders a 64K ROM kept low*), but a `-D UNC_AT_BUDGET` build refuses both
+there, `why=1`, short by 542,367 and 522,159 B, more than either archive
+needs. Not investigated: whether the probe misreports or that build's
+layout differs. Until it is, the 64K ROM's budgets for those two are
+unmeasured. What would settle it: the probe's first refused request,
+size and caller, on `sys30.py --rom64`.
+
 ## A later archive's destination dialog opens where Standard File last was
 
 After File > Open... or a part dialog answered on a floppy, the next archive
