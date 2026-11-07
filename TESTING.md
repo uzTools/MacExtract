@@ -155,6 +155,10 @@ default forks `derived-Unzip101.sit` must fail the one entry whose data
 fork lands on another entry's sidecar and keep the fork already written,
 with `--forks hidden` it must extract whole, and `--overwrite` must
 restore write-over-anything. It fails against the pre-fix binary.
+`tools/run_fileandfolder.py` (in `ci.sh`) covers a file and a folder that
+want one name: the folder numbered past a file at every level, a file
+past a folder, on generated zips and BinHex; 15 problems against the CLI
+before 2026-11-07 (DECISIONS.md, *the folder numbered past a file*).
 
 ### Exact oracle invocation
 
@@ -2079,6 +2083,9 @@ noted. Cases:
 - **a FILE holding the top folder's name** (the layer above, or the
   archive beside itself): the folder numbered `Foo~1`, the file untouched
   (DECISIONS.md 2026-11-07, *the file in the folder's place*);
+- **one archive holding a file `X` and a folder `X/`**, both orders, at the
+  top and one folder down: the second numbered `X~1` (DECISIONS.md
+  2026-11-07, *the folder numbered past a file*);
 - **101 folders whose names shorten alike**: numbering runs out at `~99`
   and the hundred-and-first merges, reported as *combined with*;
 - **250 folders against a 200-row memo**: no folder is SPLIT;

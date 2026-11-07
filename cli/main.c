@@ -411,16 +411,55 @@ static void fourcc_str(uint32_t v, char *out)
     out[o] = 0;
 }
 
-/* mkdir -p for the directory part of path (below outdir). */
-static void mkdirs_for(char *path)
+/* Make the folders of s->cur_path below outdir: all of it when `whole`,
+ * else all but the leaf. A FILE in a folder's place is not touched: the
+ * folder is numbered past it, `X~1`, the first such name that is free or
+ * already a folder, so every entry of that folder finds the same one.
+ * That is a layer this run unwrapped (`Foo.hqx` holding `Foo` holding
+ * `Foo/`), an archive extracted beside itself, or an archive holding
+ * both `X` and `X/` (DECISIONS.md 2026-11-07, *the folder numbered past
+ * a file*). Returns 0, or -1 when a folder could not be made. */
+static int sink_make_dirs(DiskSink *s, int whole)
 {
-    char *p;
-    for (p = path + 1; *p; p++) {
-        if (*p == '/') {
-            *p = 0;
-            mkdir(path, 0777);
-            *p = '/';
+    size_t base = strlen(s->outdir);
+    size_t i;
+    struct stat st;
+
+    for (i = base + 1;; i++) {
+        char c = s->cur_path[i];
+        if (c != '/' && !(c == 0 && whole)) {
+            if (c == 0) return 0;
+            continue;
         }
+        s->cur_path[i] = 0;
+        if (mkdir(s->cur_path, 0777) != 0 &&
+            (stat(s->cur_path, &st) != 0 || !S_ISDIR(st.st_mode))) {
+            char rest[PATHBUF], was[PATHBUF];
+            int n;
+            if (stat(s->cur_path, &st) != 0) { s->cur_path[i] = c; return -1; }
+            snprintf(rest, sizeof rest, "%s", c ? s->cur_path + i + 1 : "");
+            snprintf(was, sizeof was, "%s", s->cur_path + base + 1);
+            for (n = 1; n <= 99; n++) {
+                int k = snprintf(s->cur_path + i, PATHBUF - i, "~%d", n);
+                if (k < 0 || (size_t)k >= PATHBUF - i) return -1;
+                if (stat(s->cur_path, &st) != 0) {
+                    if (mkdir(s->cur_path, 0777) != 0) return -1;
+                    fprintf(stderr, "macextract: %s: a file has this name; "
+                                    "the folder is %s\n",
+                            was, s->cur_path + base + 1);
+                    break;
+                }
+                if (S_ISDIR(st.st_mode)) break;
+                s->cur_path[i] = 0;
+            }
+            if (n > 99) { s->cur_path[i] = c; return -1; }
+            i = strlen(s->cur_path);
+            if (c && (size_t)snprintf(s->cur_path + i, PATHBUF - i, "/%s",
+                                      rest) >= PATHBUF - i)
+                return -1;
+        }
+        s->cur_path[i] = c;
+        if (c == 0) return 0;
     }
 }
 
@@ -741,12 +780,28 @@ static int sink_begin(void *ctx, const UncEntryInfo *info)
         }
     }
 
-    if (info->is_dir) {
-        mkdirs_for(s->cur_path);
-        mkdir(s->cur_path, 0777);
+    if (sink_make_dirs(s, info->is_dir) != 0) {
+        fprintf(stderr, "macextract: %s: a folder of its path could not be "
+                        "made\n", name);
+        s->errors++;
         return 1;
     }
-    mkdirs_for(s->cur_path);
+    if (info->is_dir) return 1;
+    /* A folder already has the leaf's name: the file is numbered past it,
+     * as past any name taken, rather than refused. */
+    {
+        struct stat st;
+        if (stat(s->cur_path, &st) == 0 && S_ISDIR(st.st_mode)) {
+            size_t reserve = info->rsrc_size == 0 ? 0u
+                           : (s->hidden_forks ? 2u : 5u);
+            if (!sink_number_path(s, (size_t)s->fs_name_max > reserve
+                                     ? (size_t)s->fs_name_max - reserve : 1u))
+                return 1;           /* every number taken: open refuses */
+            fprintf(stderr, "macextract: %s: a folder has this name; written "
+                            "as %s\n", name,
+                    s->cur_path + strlen(s->outdir) + 1);
+        }
+    }
     return 0;
 }
 

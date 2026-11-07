@@ -70,6 +70,10 @@ python3 tools/run_unwrap.py build/san/macextract || fail "envelope unwrap tests"
 python3 tools/run_multihqx.py --macextract build/san/macextract \
     || fail "multi-document BinHex tests"
 MACEXTRACT=build/san/macextract sh tests/run_collide.sh || fail "collision tests"
+# A file and a folder that want one name: the folder is numbered past a
+# file, a file past a folder (DECISIONS.md 2026-11-07, *the folder
+# numbered past a file*).
+python3 tools/run_fileandfolder.py --cli build/san/macextract || fail "file/folder name tests"
 python3 tools/fuzz.py -n 150 --seed 7 --macextract build/san/macextract || fail "fuzz smoke"
 python3 tools/run_segments.py --macextract build/san/macextract \
     || fail "segmented-archive tests"

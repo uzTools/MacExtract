@@ -224,6 +224,44 @@ def file_in_place_case(sink, tmp, problems):
     return 1
 
 
+
+def file_and_folder_case(sink, tmp, problems):
+    """An archive holding a file `X` and a folder `X/` side by side, which
+    one HFS folder cannot hold. Whichever comes second is numbered `X~1`
+    and the first keeps its name: a folder past a file as past a folder
+    already there, a file past a folder as past any name taken. Until
+    2026-11-07 a file first and its folder one level down failed every
+    entry under `X/` (DECISIONS.md 2026-11-07, *the folder numbered past a
+    file*). Such an archive is not a Mac one; written as zips, at the top
+    and one folder down."""
+    for order in ("file-first", "folder-first"):
+        for where in ("", "In/"):
+            ents = [(where + "X", b"the file\n"), (where + "X/y.txt", b"y\n")]
+            if order == "folder-first":
+                ents.reverse()
+            tag = "%s%s" % (order, "-below" if where else "")
+            p = os.path.join(tmp, "macname-xx-%s.zip" % tag)
+            with zipfile.ZipFile(p, "w") as z:
+                for n, b in ents:
+                    z.writestr(n, b)
+            out = os.path.join(tmp, "macname-xx-%s.out" % tag)
+            os.mkdir(out)
+            got, rc, rep = run(sink, p, out)
+            if order == "file-first":
+                want = {where + "X": b"the file\n", where + "X~1/y.txt": b"y\n"}
+                line = "Folder X renamed to X~1"
+            else:
+                want = {where + "X~1": b"the file\n", where + "X/y.txt": b"y\n"}
+                line = "X renamed to X~1"
+            check(problems, rc == 0, "xx %s: exit was %d, report %r"
+                  % (tag, rc, rep))
+            check(problems, got == want, "xx %s: wrote %r, wanted %r"
+                  % (tag, sorted(got), sorted(want)))
+            check(problems, rep == [line],
+                  "xx %s: wanted the one line %r: %r" % (tag, line, rep))
+    return 1
+
+
 def folder_crowd_case(sink, tmp, problems):
     """More FOLDERS alike than the numbering has digits for. `BumpName`
     writes two, so the hundred-and-first is where numbering stops — and
@@ -510,6 +548,7 @@ CASES = [
     ("path-folder", lambda *a: path_folder_case(*a)),
     ("folder-again", lambda *a: folder_again_case(*a)),
     ("file-in-place", lambda *a: file_in_place_case(*a)),
+    ("file-and-folder", lambda *a: file_and_folder_case(*a)),
     ("folder-crowd", lambda *a: folder_crowd_case(*a)),
     ("folder-table-full", lambda *a: folder_table_full_case(*a)),
     ("engine-cap", lambda *a: engine_cap_case(*a)),

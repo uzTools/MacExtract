@@ -1815,14 +1815,15 @@ static OSErr EnsureDir(MacSink *s, long parent, Str63 name, uint32_t hash,
         }
         if (err != noErr) return err;
         if (!(pb.dirInfo.ioFlAttrib & ioDirMask)) {
-            /* A FILE holds the name. At the top it is numbered past, as
-             * a folder already there is: the layer this archive came out
-             * of is a file beside it under the name of the folder inside
-             * (`Foo.hqx` holding `Foo` holding `Foo/`), and so is an
-             * archive extracted beside itself. Until 2026-11-07 every
-             * entry under it failed, on System 6.0.8 (DECISIONS.md
-             * 2026-11-07, *the file in the folder's place*). */
-            if (!top || attempt >= 99) return dupFNErr;
+            /* A FILE holds the name: the folder is numbered past it, as
+             * past a folder already there, and the file is not touched.
+             * At the top that is the layer this archive came out of
+             * (`Foo.hqx` holding `Foo` holding `Foo/`), or the archive
+             * extracted beside itself (DECISIONS.md 2026-11-07, *the
+             * file in the folder's place*); below it, an archive holding
+             * both `X` and `X/`, whose every entry under `X/` failed
+             * until the same day (*the folder numbered past a file*). */
+            if (attempt >= 99) return dupFNErr;
         } else {
             *dirID = pb.dirInfo.ioDrDirID;
             seen = (uint32_t)RepDirKnown(*dirID, hash);

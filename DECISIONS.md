@@ -538,6 +538,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-07 (the file in the folder's place) — a file holding a top-level folder's name failed every entry under it; the folder is numbered past it now, as past a folder already there, for 32 B off every budget
 - 2026-11-07 (the request a signed long could not hold) — `mal_alloc` summed size + 16 in a signed long: from 0x7FFFFFF0 the budget test passed, and from 0xFFFFFFF0 NewPtr granted a few bytes; refused first now, for 0 B
 - 2026-11-07 (the size a damaged header asked the disk for) — a refused pre-size ended the run on "Disk full.", so a header claiming 900 MB lost the rest of the archive; the fork now grows as it is written instead, for 0 B
+- 2026-11-07 (the folder numbered past a file) — a folder whose name a file holds is numbered past it at every level, not only the top, in the application and the CLI; the CLI failed every entry under it, for 0 B
 
 ---
 
@@ -22413,3 +22414,36 @@ files; after, 0 and 6 files.
 Lazy −4/+4, resident control −4/+4: 0. `OVL_SAVED`, `TIERS` and the grant
 rows unmoved. Heap 0. Stack: every frame unchanged (`-fstack-usage`).
 Time: not re-measured; the same `SetEOF` is made.
+
+## 2026-11-07 (the folder numbered past a file) — a folder whose name a file holds is numbered past it at every level, not only the top, in the application and the CLI; the CLI failed every entry under it, for 0 B
+
+**Claim, measured.** Below the top, `EnsureDir` still returned
+`dupFNErr` when a file held a folder's name, so a zip holding `In/X` and
+then `In/X/y.txt` failed every entry under `X/`: on System 6.0.8, Mac Plus
+4 MB (`interactive.py --chain`), "X: folder could not be created". After:
+"Folder X renamed to X~1" and "Extraction complete.". The CLI made its
+folders with a bare `mkdir -p` and failed the same way at every level,
+the chain and the archive beside itself included ("Not a directory",
+exit 1). Its `sink_make_dirs` now numbers the folder too, and a file whose
+name a folder has is numbered past it instead of refused.
+
+**The rule, and what it cost to choose.** A file in a folder's way is not
+touched; the folder is numbered, as past a folder already there. The
+maintainer's first rule was the opposite where the file is this run's: a
+file inside one archive yields to its folder, and a chain's layer is a
+temporary file that gets its name back at the destination, so that
+`MacGzip.hqx` ends as `MacGzip` and not `MacGzip~1`. Priced on the
+shipped build: **464 B** in full (480 B lazy, 528 B resident), **224 B**
+for the chain alone; this is **0 B**. Every case that lost files is fixed
+by it; what the other two would add is names. Shrinking the full version
+by sharing a parameter-block fill and choosing what inlines saved 32 B of
+496.
+
+**Tests.** `run_macnames.py`'s `file-and-folder`: both orders, at the top
+and one folder down, 3 problems before (the file first, below the top).
+`tools/run_fileandfolder.py` for the CLI: seven cases from generated zips
+and BinHex, 15 problems against the CLI before.
+
+**Price (measured).** Shipped eager CODE −4, A5 +4 (`.data` alignment): 0.
+Lazy −8/+8, resident control −4/+4: 0. `OVL_SAVED`, `TIERS` and the grant
+rows unmoved. Heap 0. Stack: every frame unchanged (`-fstack-usage`).
