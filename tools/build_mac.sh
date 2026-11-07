@@ -1531,8 +1531,13 @@ UNC_MAC_A5_DEFAULT=36664
 # SetPorts after its own dialogs go (DECISIONS.md 2026-11-07, *the port a
 # dialog leaves*). No data was removed: the A5 is `.data` alignment after
 # CODE. 64 B back on every budget.
-UNC_MAC_CODE_EAGER=39840
-UNC_MAC_A5_EAGER=16704
+# +40 and +24 the same day, 39,840 -> 39,880 and 16,704 -> 16,728: a 64K
+# ROM's MoveHHi, called in the segsetup image from ovl_keep (DECISIONS.md
+# 2026-11-07, *the decoders a 64K ROM kept low*). The A5 is `.data`
+# alignment. 64 B off every budget, as the probe build measured on the
+# three tiers.
+UNC_MAC_CODE_EAGER=39880
+UNC_MAC_A5_EAGER=16728
 # +8 on 2026-10-02 for the same reason as the eager pair above: the
 # overlay call that now says WHICH of StuffIt 2.x's ciphers an entry
 # wants. A5 fell to 19,096 and its ceiling is left where it was.

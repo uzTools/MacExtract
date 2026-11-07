@@ -24,6 +24,7 @@ int  ovlbox_load_manifest(const char *path);
  * this. mac/ovl_reloc.c is compiled with
  * -DOVL_LOWMEM_ROM85=ovlbox_rom85() so the file itself needs no change. */
 const void *ovlbox_rom85(void);
+void ovlbox_set_rom85(short v);    /* after the flush route is latched */
 
 /* Which flush route the mock offers: 1 _HWPriv (the default, the documented
  * one), 2 FlushCodeCache, 0 neither — a 64K ROM, where ovl_flush_code must

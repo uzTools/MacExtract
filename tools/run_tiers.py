@@ -1048,7 +1048,11 @@ EXPECT = {
 # in `ovl_zipold` (+216; DECISIONS.md 2026-11-07, *the ring that grows with
 # the output*). TIERS -224; the two cancel, so no shipped budget moves but a
 # zipold-keeper's, by +216 of kept image.
-OVL_SAVED = 166176
+# **-64 the same day, -> 166,112**: a 64K ROM's MoveHHi in the segsetup
+# image, the shipped pair's +64 (CODE +40, A5 +24, `.data` alignment), the
+# control unmoved (DECISIONS.md 2026-11-07, *the decoders a 64K ROM kept
+# low*); the probe build's three budgets fell 64 B each. TIERS unmoved.
+OVL_SAVED = 166112
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
 # every kept image is one — as is the bundle an envelope holds on to.
@@ -1200,7 +1204,7 @@ IMAGES = {
     "OVL_ID_ZIPOLD":      15508,
     "OVL_ID_SNIFF":       14676,
     "OVL_ID_DESTDLG":     1688,
-    "OVL_ID_SEGSETUP":    2364,
+    "OVL_ID_SEGSETUP":    2446,
 }
 # **ZIPOLD +3,374 B and EXO +972 B, the bundle +4,344 B, 2026-10-17**:
 # Mac OS X's sidecars, the shared code in ZIPOLD and zip's half in EXO,
@@ -1322,7 +1326,9 @@ IMAGES = {
 # **ZIPOLD +216, the bundle +216 B, 2026-11-07**: the LZ4 ring grows with the
 # output instead of a flat 64 KB (`lz_grow`; DECISIONS.md 2026-11-07, *the ring
 # that grows with the output*).
-BUNDLE = 194964
+# **SEGSETUP +82, the bundle +84 B, the same day**: `high_handle`, a 64K
+# ROM's MoveHHi (DECISIONS.md 2026-11-07, *the decoders a 64K ROM kept low*).
+BUNDLE = 195048
 
 # What the SHIPPED lane asserts, and it is the refused fixtures BY NAME
 # rather than a tally: a tier that refuses two different fixtures and still

@@ -529,6 +529,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-07 (bytes as stored, never converted) — extraction is byte-exact: MacExtract never rewrites line endings, in any format; ZipIt is the only Mac unarchiver that does, and off an unreliable bit
 - 2026-11-07 (the ring that grows with the output) — the LZ4 window starts at 4 KB and doubles to 64 KB only as the frame produces, so the peek and a small payload no longer carry a flat 64 KB
 - 2026-11-07 (the floppies twice) — every release carries the application as .bin and .hqx, the helpers zip, and each floppy as a raw .img and a Disk Copy 4.2 .dsk, every floppy with the README as a SimpleText Read Me
+- 2026-11-07 (the decoders a 64K ROM kept low) — on a 64K ROM `ovl_keep` places a kept image high with `high_handle`, a filler routine in the `segsetup` image; 72/74 there, for 64 B of every budget
 
 ---
 
@@ -22039,3 +22040,47 @@ opening a `.dsk`.
 **`Read Me`** is `dist/README.txt` in Mac Roman with CR, `TEXT`/`ttxt`:
 30.0 KB, against TextEdit's 32,767-character limit, which `make_dist.sh`
 enforces (the limit is Inside Macintosh's, not measured in TeachText here).
+
+## 2026-11-07 (the decoders a 64K ROM kept low) — on a 64K ROM `ovl_keep` places a kept image high with `high_handle`, a filler routine in the `segsetup` image; 72/74 there, for 64 B of every budget
+
+**Decision (the maintainer's), after pricing.** The 64K ROM's sweep was
+70/74. Cool Tools and a2basic were refused with `why=2` on a heap split by
+kept images that `NewHandle` left in the middle: the case `MoveHHi` is for,
+and a 64K ROM has no `MoveHHi` (FORMATS.md, *A true Macintosh 512K*).
+
+**The routine.** `high_handle` in `tools/overlay/ovl_segsetup.c`:
+1. `CompactMem` returns the largest free block without purging.
+2. A `NewPtr` fills all of that block but the handle's room plus 1 KB, and
+   `NewPtr` places a block as low as it can.
+3. `NewHandle` then takes the top, and the filler goes.
+4. If that fails, a plain `NewHandle`.
+
+`ovl_keep` calls it where ROM85 ≤ 0. Where ROM85 > 0 it keeps `NewHandle`
+and `MoveHHi`. `ResrvMem` was not taken: it places a block low, beside the
+bundle, which is low itself, so the bundle's release would leave the
+copies an island.
+
+**In an image, so a 128K ROM carries the routine only in the bundle it
+gives back.** What stays resident is the call: +40 B of CODE in `ovl_keep`.
+The first form passed `&h` and was +48, the handle then living on the
+stack. The A5 is +24 of `.data` alignment, so +64 B in all. The probe
+build measured the same 64 B off all three tiers' budgets: 719,864,
+290,980 and 195,576 B against 719,928, 291,044 and 195,640 on
+`adobenumbers.sit`.
+
+`segsetup` is +82 B and the bundle +84 B: the `OVL_SAVED`, `IMAGES` and
+`BUNDLE` values are re-taken from the builds. `run_tiers.py --check` moves
+no tally. The resident control and the lazy build are unmoved.
+
+**On the 64K ROM:** **72/74**. The two refusals are the 512Ke's, both over
+budget, and Cool Tools (8 files) and a2basic are byte-exact.
+
+**Not chased:** the `-D UNC_AT_BUDGET` build still refuses those two on the
+64K ROM, `why=1` with shortfalls of about 530 KB. The plain build passes
+both.
+
+**The single path** — `high_handle` on every ROM, no test and no
+`MoveHHi` — is OPEN_ITEMS.md's (*One way to keep a decoder high, on every
+ROM*). It would cost less resident code but changes every machine's heap
+layout.
+

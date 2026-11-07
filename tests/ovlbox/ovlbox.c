@@ -378,6 +378,8 @@ void ovlbox_set_flush_route(int route)
     gROM85 = route ? 1 : -1;       /* route 0 is a 64K ROM: neither trap */
 }
 
+void ovlbox_set_rom85(short v) { gROM85 = v; }
+
 void ovlbox_set_shuffle(int on) { gShuffle = on; }
 
 void ovlbox_stats(long *live, long *peak)

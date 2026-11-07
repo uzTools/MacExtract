@@ -169,6 +169,8 @@ typedef int32_t (*OverlayEntry)(const OverlayHost *host, int32_t which,
                                     * returns (enc + 1) << 8 | the UncFormat */
 #define OVL_MAR_EXTRACT        62
 #define OVL_LZ4_EXTRACT        63
+#define OVL_HIGH_HANDLE        64  /* a 64K ROM's NewHandle + MoveHHi: b = the size;
+                                    * returns the Handle, or 0 */
 
 /* OVL_DEST_ASK's argument. Plain integers, so this header needs no Mac
  * one: `v`/`h` are the dialog's top left, `vol` is the reply's vRefNum. */
