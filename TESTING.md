@@ -39,7 +39,11 @@
    until 2026-11-07), and `--ioerr` fails the mock's `SetFPos` and `FSRead`
    under it, one case per branch, then part way through a run, which must
    end on "read error" (DECISIONS.md 2026-11-07, *the read error that read
-   as end of file*). **What it cannot see:** a read that fails inside the
+   as end of file*). `--allocwrap` asks `mal_alloc` for 0x7FFFFFF0 to
+   0xFFFFFFFF: refused by the budget, no shortfall. Only the qemu-m68k
+   lane, where a long is 32 bits, sees a grant; natively it sees the
+   shortfall alone (DECISIONS.md 2026-11-07, *the request a signed long
+   could not hold*). **What it cannot see:** a read that fails inside the
    sniff, which `unc_sniff` has no way to report;
    `RunExtract`, `ExtractOne`, the other dialogs and the Toolbox glue, which
    the mock never calls — it builds its own `UncOptions`. Nor a read of

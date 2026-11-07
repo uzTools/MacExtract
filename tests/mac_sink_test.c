@@ -1594,6 +1594,51 @@ int main(int argc, char **argv)
                         "against a %ld budget\n", gShortBy, want, 40000L);
         return ok ? 0 : 1;
     }
+    if (argc >= 2 && strcmp(argv[1], "--allocwrap") == 0) {
+        /* A request within 16 bytes of 2 GB or more. With a 32-bit long,
+         * which is the Macintosh's and this file's under qemu-m68k,
+         * `(long)size + 16` went negative from 0x7FFFFFF0 and passed the
+         * budget test, and from 0xFFFFFFF0 it wrapped to a few bytes that
+         * NewPtr granted. Each must be refused by the BUDGET — never reach
+         * NewPtr — and record no shortfall: no memory size covers it.
+         * Natively a long is 64 bits: the old test refused all four there
+         * but recorded a shortfall of 2 GB and more, which is all this lane
+         * can fail on; the grants show only under qemu-m68k (DECISIONS.md
+         * 2026-11-07, *the request a signed long could not hold*). */
+        static const uint32_t big[] = { 0x7FFFFFF0UL, 0x80000000UL,
+                                        0xFFFFFFF0UL, 0xFFFFFFFFUL };
+        MacAlloc a;
+        unsigned k;
+        int ok = 1;
+        a.budget = a.initial = 40000L;
+        a.lowmark = a.budget;
+        a.taken = 1;
+        for (k = 0; k < sizeof big / sizeof big[0]; k++) {
+            void *p;
+            gShortBy = 0;
+            gShortPiece = 0;
+            p = mal_alloc(&a, big[k]);
+            if (p != NULL || gShortPiece || a.budget != 40000L || gShortBy) {
+                fprintf(stderr, "allocwrap: %#lx was %s, budget %ld, "
+                        "shortfall %ld\n", (unsigned long)big[k],
+                        p ? "GRANTED" : gShortPiece ? "passed to NewPtr"
+                                                    : "refused",
+                        a.budget, gShortBy);
+                ok = 0;
+            }
+        }
+        /* The control: the test above must not refuse everything. */
+        {
+            void *p = mal_alloc(&a, 1000);
+            if (p == NULL || a.budget != 40000L - 1016) {
+                fprintf(stderr, "allocwrap: a 1,000-byte request failed\n");
+                ok = 0;
+            }
+            if (p) mal_free(&a, p);
+        }
+        fprintf(stderr, "allocwrap: %s\n", ok ? "all four refused" : "FAILED");
+        return ok ? 0 : 1;
+    }
     if (argc >= 2 && strcmp(argv[1], "--eta") == 0) {
         /* The time left must not go back up on a run whose rate never
          * changes. Replays an extraction exactly linear in time at the

@@ -536,6 +536,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-07 (the read error that read as end of file) — `fio_read` answered every File Manager failure as end of file, so a bad sector read as "archive incomplete"; it returns -1 now, and the shipped budget is unchanged
 - 2026-11-07 (the folder count that never counted) — `dirCount` was always 0, because a folder entry never reaches `sink_end`; deleted rather than made to count, for 32 B onto every budget
 - 2026-11-07 (the file in the folder's place) — a file holding a top-level folder's name failed every entry under it; the folder is numbered past it now, as past a folder already there, for 32 B off every budget
+- 2026-11-07 (the request a signed long could not hold) — `mal_alloc` summed size + 16 in a signed long: from 0x7FFFFFF0 the budget test passed, and from 0xFFFFFFF0 NewPtr granted a few bytes; refused first now, for 0 B
 
 ---
 
@@ -22342,3 +22343,33 @@ shipped budget**, the 32 `dirCount`'s deletion gave the same day. Lazy
 grant row −32 (`gain()`), `TIERS` unmoved. Heap 0. Stack: `sink_begin`
 424 B, unchanged (`-fstack-usage`). Time: the new branch runs only where
 a file holds the name.
+
+## 2026-11-07 (the request a signed long could not hold) — `mal_alloc` summed size + 16 in a signed long: from 0x7FFFFFF0 the budget test passed, and from 0xFFFFFFF0 NewPtr granted a few bytes; refused first now, for 0 B
+
+**Claim, confirmed (from a review).** `(long)size + 16 > a->budget` and
+`NewPtr((long)size + 16)`: with a 32-bit long the sum overflows for size ≥
+0x7FFFFFF0. Measured with `mac_sink_test --allocwrap` under qemu-m68k
+against a 40,000 B budget: 0x80000000 reached `NewPtr`, and 0xFFFFFFF0 and
+0xFFFFFFFF were **granted** (blocks of 0 and 15 B, the 4-byte size header
+written into them; the budget fell 15). 0x7FFFFFF0 was refused there only
+because GCC rewrote the overflowing comparison. Natively, a 64-bit long,
+all four were refused but recorded shortfalls of 2 GB and more, which the
+low-memory alert quotes.
+
+**Reachable from an archive? Not shown (hypothesis: no).** The header
+fields that reach `unc_alloc` are bounded where they are read — zip and
+StuffIt 5 comments by 16 bits, the zip directory by `UNC_READ_MAX`,
+StuffIt's fork extents with wrap checks, DiskDoubler's literals by
+0x10000. That is a reading of the callers that take a header field, not
+an audit of every call.
+
+**The fix.** `size >= 0x7FFFFFF0UL` returns NULL before any signed sum,
+recording no shortfall: no memory size covers it. Below that bound every
+sum in `mal_alloc` fits. The rest stays signed: an unsigned shortfall had
+to special-case a budget under 16 B. `--allocwrap`, run in both lanes:
+fails before (above), passes after, with a 1,000 B control granted.
+
+**Price (measured).** Shipped eager CODE +8, A5 −8 (`.data` alignment):
+0. Lazy +12/−12: 0. Resident control +8/−8: 0. `OVL_SAVED`, `TIERS` and
+the grant rows unmoved. Heap 0. Stack: `mal_alloc` 12 B, unchanged. Time:
+one compare per allocation, not per byte; not measured.

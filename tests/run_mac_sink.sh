@@ -153,6 +153,10 @@ verify ./build/mac_sink_asan ram   # the RAM-slurp/xio_* path (UNC_MAC_SLURP_ARC
 # The figure the low-memory alert quotes. UI cannot be tested here; the
 # arithmetic behind it can, and it is the half that can go wrong quietly.
 ./build/mac_sink_asan --shortfall || { echo "mac-sink: shortfall FAILED"; exit 1; }
+# A request a signed 32-bit long cannot hold with its header: refused by
+# the budget, no shortfall recorded. Natively this sees the shortfall only;
+# the m68k lane below is where a long is 32 bits and the grant showed.
+./build/mac_sink_asan --allocwrap || { echo "mac-sink: allocwrap FAILED"; exit 1; }
 # The archive reader, fio_read, against a File Manager that fails: <0 for
 # an error with nothing read, a short count for eofErr, and a run whose
 # reads fail part way ends on "read error", not "archive incomplete"
@@ -256,6 +260,7 @@ if [ "$HAVE_M68K" = yes ]; then
     # The estimate's products are sized for a 32-bit long; this is the
     # lane where a long is 32 bits.
     qemu-m68k build/mac_sink_m68k --eta || { echo "mac-sink: m68k eta FAILED"; exit 1; }
+    qemu-m68k build/mac_sink_m68k --allocwrap || { echo "mac-sink: m68k allocwrap FAILED"; exit 1; }
     echo "mac-sink: m68k big-endian OK (file + RAM paths)"
     verify "qemu-m68k build/mac_sink_m68k" "" "$BOTHFORK_FIXTURES"
     wait $pid_sb68 || { echo "mac-sink: m68k shared-block build FAILED"; exit 1; }

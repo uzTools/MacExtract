@@ -791,6 +791,13 @@ static void *mal_alloc(void *ctx, uint32_t size)
     MacAlloc *a = (MacAlloc *)ctx;
     Ptr p;
     if (!a->taken) mal_take_budget(a);
+    /* Compared unsigned, before any signed sum: with a 32-bit long,
+     * `(long)size + 16` went negative from 0x7FFFFFF0 and passed the
+     * budget, and from 0xFFFFFFF0 wrapped to a block NewPtr granted.
+     * Below this bound every sum here fits. No shortfall is recorded: no
+     * memory size covers it (DECISIONS.md 2026-11-07, *the request a
+     * signed long could not hold*). */
+    if (size >= 0x7FFFFFF0UL) return NULL;
     if ((long)size + 16 > a->budget) {
         /* How much more the budget would have had to be, at this moment.
          * The engine already holds initial - budget, so this is exactly
