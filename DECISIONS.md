@@ -531,6 +531,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-07 (the floppies twice) — every release carries the application as .bin and .hqx, the helpers zip, and each floppy as a raw .img and a Disk Copy 4.2 .dsk, every floppy with the README as a SimpleText Read Me
 - 2026-11-07 (the decoders a 64K ROM kept low) — on a 64K ROM `ovl_keep` places a kept image high with `high_handle`, a filler routine in the `segsetup` image; 72/74 there, for 64 B of every budget
 - 2026-11-07 (the create the disk was too full for) — a file or folder the catalog cannot take ended on "Extraction stopped part way" with nothing named; now "Disk full." under the entry, for 32 B off every budget
+- 2026-11-07 (the block a click waited for) — Now Compress polls Cancel inside a block, not only once it is decoded whole
 
 ---
 
@@ -22120,3 +22121,68 @@ DERIVED. Heap 0. Stack: `sink_begin` 420 → 424 B (`-fstack-usage`), called
 from a reader's top level, so the deepest chain (*Stack*) is unmoved
 (derived from the call graph). Storing `err` unconditionally was +16 and
 was not taken: the global would then hold a name collision too.
+
+## 2026-11-07 (the block a click waited for) — Now Compress polls Cancel inside a block, not only once it is decoded whole
+
+**The open item (OPEN_ITEMS.md, *Two waits no progress step reaches*),
+measured.** Now Compress reads a compressed block whole and decodes it into
+up to 32 KB of output before `now_next_block` fires its one progress tick.
+On classic Mac OS the tick is the only place the application pumps events,
+so for a full block — **6.1 s on a 7 MHz Mac Plus** — the progress window,
+Cancel and Cmd-. all go unanswered, whatever `UNC_PROGRESS_STEP` is (it is
+input-based and the block is read in one `unc_read_full`). This is the wait
+the 2026-08-28 freeze fix (`the bar that counted the peek`) left behind, and
+it is why `run_ticks.py`'s `MAX_GAP` is 32 KB: that suite measures the gap in
+*input consumed*, and a whole-block read is one 32 KB gap it accepts — it
+never saw the 6.1 s of *decode* after the read.
+
+**The poll rides the decode's own loop bound.** Each of the three decode
+loops (`now_huffman`, `now_lzss`, `now_newlzss`) already tests a monotonic
+input position every symbol — `now_bit_offset(&b) < numbits` for the two
+Huffman loops, `at < srclen` for the LZSS flag-byte loop. The poll splits
+that one bound into a moving sub-target: an inner loop runs to
+`now_bit_offset(&b) < target` (or `at < target`), the outer loop advances
+`target` by NOW_POLL_BITS / NOW_POLL_BYTES (≈1 KB of input) and calls
+`unc_progress_at` between symbols. **The per-symbol work is unchanged to the
+instruction** — the inner test compares the same quantity against a register
+local, `target` instead of `numbits` — so this is not the per-byte abort
+check a naïve fix would add (and which this file's own notes price at 2.7 %
+for far less). `unc_progress_at` reports the block's standing `done`, so the
+bar does not jump mid-block; it is the *call* that pumps events and polls
+Cancel, which is all the wait needed.
+
+**Measured** (`run.py -D UNC_AT_TICKGAP --emu mv-4M-1x`, System 6.0.8,
+`derived-Expand_Now_1.0.1.sea`, 2026-11-07):
+
+| | before | after |
+|---|---|---|
+| widest wait between callbacks | 6.1 s | **1.1 s** |
+| before the first callback | 5.4 s | **1.9 s** |
+| callbacks | 3 | 66 |
+| `RunExtract` | 851 ticks | 860 ticks (**+9, +1.06 %**) |
+
+The widest Cancel wait falls to a fifth, into the band every other format is
+already in (FORMATS.md, *How long a click waits*), and the first callback
+now lands during block 1 rather than after it, so the before-first wait
+falls too. The +1.06 % is **not** the decode loop — that is unchanged — but
+the 63 extra event pumps themselves; a pump checks the event queue and
+redraws the bar, and polling Cancel 63 more times cannot cost less than
+that. For cutting a 6.1 s dead window to 1.1 s it is a trade worth making,
+unlike the 2.7 % a bare function split once cost for nothing
+(2026-09-21, *asking the program that wrote it*).
+
+**Price (measured 2026-11-07, over the concurrent 64K-ROM and disk-full
+changes of the same day).** `ovl_now` 4,762 → 4,948 B (+186), the bundle
++184; the resident control's CODE +180 and A5 +12, so OVL_SAVED and
+TIERS_CONTROL both +192 and TIERS −192, which cancel — no shipped budget
+moves but a now-keeper's, by the image's +186 (run_tiers.py). Shipped
+resident pair unchanged (eager CODE 39,912 = ceiling). `run_tiers.py
+--check/--check-saved/--check-images`, the Now Compress differential (3/3
+byte-exact) and the full `ci.sh` green; `dist/` rebuilt.
+
+**Still open** (OPEN_ITEMS.md): the before-first wait that is genuinely the
+decoders' load and the directory read — BinHex's 3.8 s, and whatever is left
+of Now Compress's 1.9 s — is not what this touched.
+
+**Evidence kept**: `.tmp/now_before.json`, `.tmp/now_after.json` (the two
+1x TICKGAP runs).

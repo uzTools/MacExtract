@@ -747,7 +747,10 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # +32 the same day, 186,076 -> 186,108, A5 unmoved: a file or folder the
 # catalog cannot take is named and ends on "Disk full." (DECISIONS.md
 # 2026-11-07, *the create the disk was too full for*); the shipped pair +32.
-UNC_MAC_CODE_DEFAULT=186108
+# +180 on 2026-11-07, 186,108 -> 186,288, A5 +12 below (36,656, under): Now
+# Compress polls Cancel inside a block (DECISIONS.md 2026-11-07, *the block a
+# click waited for*). In `ovl_now` on the shipped pair, +186.
+UNC_MAC_CODE_DEFAULT=186288
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the

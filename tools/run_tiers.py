@@ -283,9 +283,9 @@ REPO = os.path.dirname(HERE)
 # control's CODE -96 and A5 0; the shipped pair fell the same 96, OVL_SAVED
 # unmoved. They were 190,276 / 94,894 / 619,182.
 TIERS = {
-    "sys3-512K": (190180, "System 3.0, Macintosh 512Ke (222,070 B free)"),
-    "sys6-512K": (94798,  "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
-    "floor-1M":  (619086, "System 6.0.8, 1 MB Mac Plus — the floor target"),
+    "sys3-512K": (189988, "System 3.0, Macintosh 512Ke (222,070 B free)"),
+    "sys6-512K": (94606,  "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
+    "floor-1M":  (618894, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
 # -32 each 2026-11-07, DERIVED from TIERS_CONTROL +32 (the disk-full
 # create, DECISIONS.md 2026-11-07, *the create the disk was too full for*);
@@ -495,7 +495,10 @@ TIERS = {
 # data + bss -680. The machine gave +4,204, because the jump table, the
 # stub segments and the relocations trimmed at launch are resident bytes
 # this unit never counted — which is why TIERS was measured, not moved.
-TIERS_CONTROL = 222752     # build/mac-resident, CODE + A5, 2026-11-07
+# +192 2026-11-07: Now Compress polls Cancel inside a block (`ovl_now` +186;
+# DECISIONS.md 2026-11-07, *the block a click waited for*); CODE +180, A5 +12.
+# TIERS -192 and OVL_SAVED +192, which cancel: only a now-keeper moves.
+TIERS_CONTROL = 222944     # build/mac-resident, CODE + A5, 2026-11-07
 # +32 the same day: the disk-full create (CODE +32, A5 0); TIERS -32.
 # +224 on 2026-11-07: the LZ4 ring grows with the output (`lz_grow`,
 # DECISIONS.md 2026-11-07, *the ring that grows with the output*); the
@@ -1059,7 +1062,11 @@ EXPECT = {
 # **0 the same day**: the disk-full create, the control's +32 and the
 # shipped pair's +32, CODE alone (DECISIONS.md 2026-11-07, *the create the
 # disk was too full for*). TIERS -32.
-OVL_SAVED = 166112
+# **+192 2026-11-07, -> 166,304**: Now Compress polls Cancel inside a block,
+# the control's +192 (CODE +180, A5 +12) against the shipped pair's 0, the
+# reader in `ovl_now` (+186; DECISIONS.md 2026-11-07, *the block a click
+# waited for*). TIERS -192, which cancels: only a now-keeper's budget moves, -186.
+OVL_SAVED = 166304
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
 # every kept image is one — as is the bundle an envelope holds on to.
@@ -1201,7 +1208,7 @@ IMAGES = {
     "OVL_ID_CRYPT":       9604,
     "OVL_ID_EXO":         30228,
     "OVL_ID_LZH":         10438,
-    "OVL_ID_NOW":         4762,
+    "OVL_ID_NOW":         4948,
     "OVL_ID_PACKIT":      2180,
     "OVL_ID_SPACESAVER":  16168,
     "OVL_ID_STUFFIT":     28442,
@@ -1335,7 +1342,9 @@ IMAGES = {
 # that grows with the output*).
 # **SEGSETUP +82, the bundle +84 B, the same day**: `high_handle`, a 64K
 # ROM's MoveHHi (DECISIONS.md 2026-11-07, *the decoders a 64K ROM kept low*).
-BUNDLE = 195048
+# **NOW +186, the bundle +184 B, 2026-11-07**: Now Compress polls Cancel
+# inside a block (DECISIONS.md 2026-11-07, *the block a click waited for*).
+BUNDLE = 195232
 
 # What the SHIPPED lane asserts, and it is the refused fixtures BY NAME
 # rather than a tally: a tier that refuses two different fixtures and still

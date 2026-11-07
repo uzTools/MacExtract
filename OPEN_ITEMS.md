@@ -50,7 +50,7 @@ refusal — the brief has grown before, on request.
 | A MIME part's `Content-MD5` | **not checked**; a `message/partial` anchor that is not a part comes out wrong with exit 0, as from munpack | priced at **+1,446 B** of `ovl_text`, declined 2026-10-11 (DECISIONS.md 2026-10-11, *the digest our own oracle could not compute*) |
 | Zip64 past 4 GB | **counts and the per-entry escape read; over-4-GB fields refused** (`UNC_ERR_UNSUPPORTED` per archive, `UNC_ERR_TOOLARGE` per entry) | a format change, not a type change (DECISIONS.md 2026-08-28, *what a width costs*; FORMATS.md, *Size limits*) |
 | More archives opened in a quick burst while MacExtract is busy — a second double-click during a helper's stay, archives of several creators at once | **dropped silently** (two `SIT!` archives 2 s apart: both lost, 7.0.1, one run; several creators: not run) | the maintainer, 2026-11-02: a limitation of the application. One more archive at a time is queued: File > Open... on every System, a double-click under MultiFinder and System 7 (DECISIONS.md 2026-11-01, *the Open item MultiFinder looks for*) |
-| A click during an extraction waiting for the next progress callback — 1–2 s on a Mac Plus for most formats at the 1 KB step; a short click on the menu bar lost; a menu held down pausing the extraction | **accepted** | the maintainer, 2026-11-06: input is queued and Cancel flashes when it is taken; the window's lack of responsiveness is known and the user is warned (DECISIONS.md 2026-11-06, *the step a click waits for*). What remains open: *Two waits no progress step reaches* |
+| A click during an extraction waiting for the next progress callback — 1–2 s on a Mac Plus for most formats at the 1 KB step; a short click on the menu bar lost; a menu held down pausing the extraction | **accepted** | the maintainer, 2026-11-06: input is queued and Cancel flashes when it is taken; the window's lack of responsiveness is known and the user is warned (DECISIONS.md 2026-11-06, *the step a click waits for*). What remains open: *The wait before the first callback* |
 
 Nothing is detect-only since 2026-10-18: an unextractable file is
 `UNC_FORMAT_UNKNOWN` (DECISIONS.md 2026-10-18, *the formats it only named*).
@@ -143,14 +143,16 @@ moves to `HISTORICAL` in the same commit.
 transcribed once, rewritten from descriptions since — count as clean, and
 which licence follows.
 
-## Two waits no progress step reaches
+## The wait before the first callback
 
-Now Compress decodes a 32 KB block whole, so Cancel and Cmd-. wait **6.1 s**
-on a Mac Plus whatever `UNC_PROGRESS_STEP` is; and before any archive's
-first callback, while its decoders load and its directory is read, they
-wait up to **5.4 s** (Now Compress) and 3.8 s (BinHex) (FORMATS.md, *How
-long a click waits*). A callback inside the block's decode would close the
-first; its cost is not measured. The second is not investigated.
+Before any archive's first callback, while its decoders load and its
+directory is read, the window, Cancel and Cmd-. wait up to **3.8 s**
+(BinHex) on a Mac Plus (FORMATS.md, *How long a click waits*). Not
+investigated. Now Compress's whole-block wait of 6.1 s, and its own 5.4 s
+here, were closed when its decode began polling Cancel on its block loop
+(6.1 → 1.1 s, 5.4 → 1.9 s; DECISIONS.md 2026-11-07, *the block a click
+waited for*); what is left of its 1.9 s, like BinHex's 3.8 s, is the load
+and the directory read before any decode.
 
 ## One way to keep a decoder high, on every ROM
 

@@ -42,6 +42,12 @@
 #define NOW_MAXBLOCKS 0x2000u     /* a table walk's sanity bound: 8,192
                                    * records is 64 KB of block table  */
 #define NOW_MAXSYMS   0x122u      /* the largest alphabet: shape 3's main */
+/* How much a decode loop may run between Cancel polls, in bits of input for
+ * the Huffman loops and bytes for the LZSS flag-byte loop — ~1 KB of input
+ * either way (DECISIONS.md 2026-11-07, *the block a click waited for*). The
+ * poll rides each loop's own bound, so it costs no per-symbol work. */
+#define NOW_POLL_BITS  8192u
+#define NOW_POLL_BYTES 1024u
 /* Block slots after the history, tried first and halved on refusal. Four
  * is where the tick probe put the knee on a 7 MHz Mac Plus: the window
  * slide was 19 % of the largest Now Compress run on Linux, and with four
@@ -111,7 +117,7 @@ static uint32_t now_bit_offset(const NowBits *b)
  * *A code length past 15*). */
 static int32_t now_huffman(const uint8_t *src, uint32_t srclen,
                            uint8_t *dst, uint32_t dstcap, int32_t nsyms,
-                           UncCanon *code, int *err)
+                           UncCanon *code, UncProgressState *ps, int *err)
 {
     uint8_t lengths[NOW_MAXSYMS];
     NowBits b;
@@ -157,13 +163,28 @@ static int32_t now_huffman(const uint8_t *src, uint32_t srclen,
      * instruction counts said it was FASTER. It runs 32,768 times for a
      * full block (DECISIONS.md 2026-09-21, asking the program that
      * wrote it). */
+    /* Poll Cancel inside the block, not only once it is decoded whole: a
+     * full block is 32 KB of output and 6.1 s on a Mac Plus, and the one
+     * tick per block in now_next_block left both Cancel routes out of reach
+     * for that long (DECISIONS.md 2026-11-07, *the block a click waited
+     * for*). The yield rides the decode's OWN loop bound: the inner `while`
+     * stops at a sub-target of the same `now_bit_offset` the full decode
+     * tests, so the per-symbol work is unchanged to the instruction, and the
+     * poll falls between symbols every NOW_POLL_BITS of input. */
     now_bits_start(&b, src + at, srclen - at);
     while (now_bit_offset(&b) < numbits) {
-        int sym;
-        if ((uint32_t)out >= dstcap) { *err = UNC_ERR_CORRUPT; return -1; }
-        sym = unc_canon_decode(code, &b.bi);
-        if (sym < 0) { *err = b.bi.err ? b.bi.err : UNC_ERR_CORRUPT; return -1; }
-        dst[out++] = (uint8_t)sym;
+        uint32_t target = now_bit_offset(&b) + NOW_POLL_BITS;
+        if (target > numbits) target = numbits;
+        while (now_bit_offset(&b) < target) {
+            int sym;
+            if ((uint32_t)out >= dstcap) { *err = UNC_ERR_CORRUPT; return -1; }
+            sym = unc_canon_decode(code, &b.bi);
+            if (sym < 0) { *err = b.bi.err ? b.bi.err : UNC_ERR_CORRUPT; return -1; }
+            dst[out++] = (uint8_t)sym;
+        }
+        if ((e = unc_progress_at(ps, ps ? ps->done : 0u)) != UNC_OK) {
+            *err = e; return -1;
+        }
     }
     if (now_bit_offset(&b) != numbits) { *err = UNC_ERR_CORRUPT; return -1; }
     return out;
@@ -194,14 +215,22 @@ struct NowCodes {
  * *Shape 1* — where that rule is now measured rather than borrowed,
  * against shape 2's 1,340 match tokens whose offsets pass 255. */
 static int32_t now_lzss(const uint8_t *src, uint32_t srclen,
-                        uint8_t *dst, uint32_t dstcap, int *err)
+                        uint8_t *dst, uint32_t dstcap, UncProgressState *ps,
+                        int *err)
 {
     uint32_t at = 2;                /* the first two bytes are skipped */
+    uint32_t target;
     int32_t out = 0;
-    int bits = 0, numbits = 0;
+    int bits = 0, numbits = 0, e;
 
     *err = UNC_OK;
+    /* Cancel is polled every NOW_POLL_BYTES of input, between tokens, on the
+     * loop's own `at < ...` bound — no per-token cost (DECISIONS.md
+     * 2026-11-07, *the block a click waited for*). */
     while (at < srclen) {
+      target = at + NOW_POLL_BYTES;
+      if (target > srclen) target = srclen;
+      while (at < target) {
         if (!numbits) {
             bits = src[at++];
             numbits = 8;
@@ -234,6 +263,10 @@ static int32_t now_lzss(const uint8_t *src, uint32_t srclen,
         }
         bits <<= 1;
         numbits--;
+      }
+      if ((e = unc_progress_at(ps, ps ? ps->done : 0u)) != UNC_OK) {
+          *err = e; return -1;
+      }
     }
     return out;
 }
@@ -281,14 +314,14 @@ static const uint16_t now_off_base[0x38] = {
  * PLUS TWO. Twenty symbols code them, because that plus-two runs the
  * values to 19. Source: docs/formats/now-compress.md, *The header*. */
 static int now_tables(const uint8_t *src, uint32_t headersize,
-                      struct NowCodes *cd)
+                      struct NowCodes *cd, UncProgressState *ps)
 {
     uint8_t *t = cd->tables;
     int32_t i, n;
     int e;
 
     n = now_huffman(src, headersize, t, (uint32_t)sizeof cd->tables, 20,
-                    &cd->one, &e);
+                    &cd->one, ps, &e);
     if (n < 0) return e;
     /* 290 + 56 is the whole region: the two tables are all it carries */
     if (n != (int32_t)sizeof cd->tables) return UNC_ERR_CORRUPT;
@@ -301,10 +334,10 @@ static int now_tables(const uint8_t *src, uint32_t headersize,
 
 static int32_t now_newlzss(const uint8_t *src, uint32_t srclen,
                            uint8_t *base, uint8_t *dst, uint32_t dstcap,
-                           struct NowCodes *cd, int *err)
+                           struct NowCodes *cd, UncProgressState *ps, int *err)
 {
     NowBits b;
-    uint32_t at, headersize, numbits;
+    uint32_t at, headersize, numbits, target;
     int32_t out = 0;
     int sym, e;
 
@@ -319,7 +352,7 @@ static int32_t now_newlzss(const uint8_t *src, uint32_t srclen,
     headersize = (uint32_t)((unc_get_u16be(src) - 0x2F59u) & 0xFFFFu);
     at = 4;
     if (headersize > srclen - at) { *err = UNC_ERR_TRUNCATED; return -1; }
-    if ((e = now_tables(src + at, headersize, cd)) != UNC_OK) {
+    if ((e = now_tables(src + at, headersize, cd, ps)) != UNC_OK) {
         *err = e; return -1;
     }
 
@@ -341,7 +374,13 @@ static int32_t now_newlzss(const uint8_t *src, uint32_t srclen,
     }
     now_bits_start(&b, src + at, srclen - at);
 
+    /* Poll Cancel between tokens, every NOW_POLL_BITS of input, on the
+     * decode's own `now_bit_offset` bound — no per-token cost (DECISIONS.md
+     * 2026-11-07, *the block a click waited for*). */
     while (now_bit_offset(&b) < numbits) {
+      target = now_bit_offset(&b) + NOW_POLL_BITS;
+      if (target > numbits) target = numbits;
+      while (now_bit_offset(&b) < target) {
         uint32_t length, offset, k;
         int sel;
         sym = unc_canon_decode(&cd->main, &b.bi);
@@ -385,6 +424,10 @@ static int32_t now_newlzss(const uint8_t *src, uint32_t srclen,
             dst[out] = dst[out - (int32_t)offset];
             out++;
         }
+      }
+      if ((e = unc_progress_at(ps, ps ? ps->done : 0u)) != UNC_OK) {
+          *err = e; return -1;
+      }
     }
     return out;
 }
@@ -627,27 +670,27 @@ static int now_next_block(NowStream *st)
             if (unc_read_full(c->io, outstart, (int32_t)length) != UNC_OK)
                 return UNC_ERR_TRUNCATED;
             mid = now_huffman(outstart, length, st->inblock, st->incap,
-                              0x100, &st->cd->one, &err);
+                              0x100, &st->cd->one, &c->ps, &err);
             if (mid < 0) return err;
             out = now_lzss(st->inblock, (uint32_t)mid, outstart,
-                           st->blkcap, &err);
+                           st->blkcap, &c->ps, &err);
         } else {                                  /* Huffman only */
             if (unc_read_full(c->io, st->inblock, (int32_t)length) != UNC_OK)
                 return UNC_ERR_TRUNCATED;
             out = now_huffman(st->inblock, length, outstart,
                               st->blkcap, 0x100,
-                              &st->cd->one, &err);
+                              &st->cd->one, &c->ps, &err);
         }
     } else if (flags & 0x40) {                    /* new LZSS */
         if (unc_read_full(c->io, st->inblock, (int32_t)length) != UNC_OK)
             return UNC_ERR_TRUNCATED;
         out = now_newlzss(st->inblock, length, outstart - st->hist, outstart,
-                          st->blkcap, st->cd, &err);
+                          st->blkcap, st->cd, &c->ps, &err);
     } else if (flags & 0x1F) {                    /* LZSS only */
         if (unc_read_full(c->io, st->inblock, (int32_t)length) != UNC_OK)
             return UNC_ERR_TRUNCATED;
         out = now_lzss(st->inblock, length, outstart,
-                       st->blkcap, &err);
+                       st->blkcap, &c->ps, &err);
     } else {                                      /* stored */
         if (length > st->blkcap) return UNC_ERR_CORRUPT;
         if (unc_read_full(c->io, outstart, (int32_t)length) != UNC_OK)
