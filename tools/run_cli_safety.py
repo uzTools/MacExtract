@@ -66,9 +66,17 @@ def read(path):
         return f.read()
 
 
-def run(*args, cwd=None):
+def run(*args, cwd=None, fsize=None):
+    """`fsize`: RLIMIT_FSIZE for the child, with SIGXFSZ ignored, so a
+    write past it fails with EFBIG — the one write error this machine can
+    raise in an unprivileged process without a link, a preload or a seam."""
+    def limit():
+        import resource, signal
+        signal.signal(signal.SIGXFSZ, signal.SIG_IGN)
+        resource.setrlimit(resource.RLIMIT_FSIZE, (fsize, fsize))
     r = subprocess.run([MACEXTRACT] + list(args), capture_output=True,
-                       timeout=120, cwd=cwd)
+                       timeout=120, cwd=cwd,
+                       preexec_fn=limit if fsize is not None else None)
     return r.returncode, r.stderr.decode("utf-8", "replace")
 
 
@@ -244,11 +252,47 @@ def case_long_paths(tmp):
     return probs
 
 
+def case_write_error(tmp):
+    """Item 3: a write error that stdio reports only at fclose() was
+    ignored: the entry counted as OK and the layer above was deleted.
+    MacBinary "Foo.gz" holding a gzip of a compressible text, so the
+    envelope's own output is small and the inner entry is not; the
+    child's RLIMIT_FSIZE sits between them. 1,500 B is buffered whole and
+    fails at fclose; 200 KB fails inside fwrite. Either way: exit 1, the
+    errno text, and Foo.gz kept."""
+    import gzip
+    probs = []
+    for label, size in (("fclose", 1500), ("fwrite", 200000)):
+        d = os.path.join(tmp, label)
+        os.makedirs(os.path.join(d, "o"))
+        text = (b"compressible line of text\n" * (size // 26 + 1))[:size]
+        gz = gzip.compress(text, mtime=0)
+        assert len(gz) + 128 < 1000
+        write(os.path.join(d, "Foo.bin"), macbinary(b"Foo.gz", gz))
+        rc, err = run("x", "Foo.bin", "-o", "o", cwd=d, fsize=1000)
+        left = sorted(os.listdir(os.path.join(d, "o")))
+        if rc != 1 or "File too large" not in err:
+            probs.append(f"{label}: wanted exit 1 naming the error, got exit "
+                         f"{rc} {err.strip()[:160]!r}, left {left}")
+        if "Foo.gz" not in left:
+            probs.append(f"{label}: the layer above, Foo.gz, was deleted "
+                         f"(left {left})")
+    # And a listing sent to a full device is as lost as a file.
+    with open("/dev/full", "wb") as full:
+        r = subprocess.run([MACEXTRACT, "l", os.path.join(d, "Foo.bin")],
+                           stdout=full, stderr=subprocess.PIPE, timeout=60)
+    if r.returncode != 1 or b"No space left" not in r.stderr:
+        probs.append(f"l > /dev/full: wanted exit 1, got {r.returncode} "
+                     f"{r.stderr.decode()[:120]!r}")
+    return probs
+
+
 CASES = {
     "overwrite-self": case_overwrite_self,
     "sidecar-not-ours": case_sidecar_not_ours,
     "deferred-by-path": case_deferred_by_path,
     "long-paths": case_long_paths,
+    "write-error": case_write_error,
 }
 
 

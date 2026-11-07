@@ -544,6 +544,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-07 (the sidecar the run did not write) — an unwrap removed the envelope's `NAME.rsrc` / `._NAME` whether or not it had written one, and exempted it from the no-overwrite rule; both now follow what was written
 - 2026-11-07 (the deferral keyed by fork) — a write deferred beside the envelope was renamed back by which fork it was, not which path it matched; an inner data fork carrying the sidecar's name was left as `NAME.rsrc.unwrap~`
 - 2026-11-07 (the path a buffer cut) — fixed 1,100–1,300-byte buffers cut a long sidecar or deferral path, and `remove()`/`rename()` then acted on a different file; every path buffer is `PATHBUF` and a cut path is an error
+- 2026-11-07 (the error only fclose saw) — a write error that stdio reported only at `fclose` was ignored: the entry counted as written and the layer above was deleted; it fails the entry now, with the system's words
 
 ---
 
@@ -22630,3 +22631,25 @@ removed, a write refused, a lookup skipped. Every path buffer in the file
 is `PATHBUF`; the deferral's own is `PATHBUF` plus the suffix, which a
 deferred path always fits, since `sink_open_fork` refuses one that does
 not. A command-line path longer than `PATHBUF` is refused rather than cut.
+
+## 2026-11-07 (the error only fclose saw) — a write error that stdio reported only at `fclose` was ignored: the entry counted as written and the layer above was deleted; it fails the entry now, with the system's words
+
+**Claim, confirmed (from a review).** `sink_end` discarded `fclose`'s
+result, and stdio holds a small file whole, so a full disk or a quota
+error appears there and nowhere else. Measured against the parent commit with
+`run_cli_safety.py write-error`: MacBinary `Foo.gz` holding the gzip of
+1,500 B of text, the child's `RLIMIT_FSIZE` at 1,000 B — exit 0, `Foo.gz`
+deleted, `Foo` cut to 1,000 B. At 200 KB the error comes from `fwrite`
+and was caught, as "output error" with no reason given. `l > /dev/full`
+exited 0.
+
+**The trigger.** `RLIMIT_FSIZE` with `SIGXFSZ` ignored, set in the
+child: the kernel's `EFBIG`, unprivileged, with no link (which the
+output-folder rule forbids), no `LD_PRELOAD` (which ASan refuses) and no
+test seam in the binary. A tmpfs or a quota needs root here.
+
+**The fix.** Each fork is closed through `sink_close_fork`: `fflush`,
+`ferror` and `fclose` are all checked, and a failure is a per-entry
+`UNC_ERR_SINK` with `strerror`'s text, so the layer above is kept. A
+failed `fwrite` says its reason too. `main` checks stdout once on the way
+out, which covers every listing line at once.

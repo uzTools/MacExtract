@@ -346,6 +346,7 @@ typedef struct {
     int         hidden_forks;   /* "._NAME" sidecars, not "NAME.rsrc" */
     int         overwrite;      /* write over existing output files    */
     int         clobber;        /* last open refused: path existed     */
+    int         write_err;      /* this entry's write error was said   */
     const char *unwrap_src;     /* envelope being unwrapped, or NULL   */
     const char *unwrap_rsrc;    /* ITS sidecar, only if the layer before
                                  * wrote one; "" or NULL otherwise      */
@@ -694,6 +695,7 @@ static int sink_begin(void *ctx, const UncEntryInfo *info)
 
     s->cur = *info;
     s->data_written = s->rsrc_written = 0;
+    s->write_err = 0;
     s->entries++;
 
     if (s->list_only && s->show_meta) {
@@ -1008,6 +1010,41 @@ static FILE *sink_open_fork(DiskSink *s, UncFork fork)
     return fopen(path, "wb");
 }
 
+/* A write that failed, said once per entry with what the system said:
+ * "output error" alone does not tell a full disk from a quota. */
+static void sink_say_write_error(DiskSink *s, UncFork fork)
+{
+    char rp[PATHBUF];
+    const char *path = s->cur_path;
+    int e = errno;
+    if (s->write_err) return;
+    s->write_err = 1;
+    if (fork == UNC_FORK_RSRC &&
+        rsrc_path(s->cur_path, s->hidden_forks, rp, sizeof rp) == 0)
+        path = rp;
+    fprintf(stderr, "macextract: %s: %s\n", path, strerror(e));
+}
+
+/* Close one fork, and fail the entry if the close does: stdio holds a
+ * small file whole, so a full disk or a quota is reported HERE and
+ * nowhere else. Ignored until 2026-11-07, the entry counted as written
+ * and the layer above it was deleted (DECISIONS.md 2026-11-07, *the
+ * error only fclose saw*). */
+static int sink_close_fork(DiskSink *s, FILE **fp, UncFork fork)
+{
+    int bad;
+    if (!*fp) return 0;
+    errno = 0;
+    bad = fflush(*fp) != 0 || ferror(*fp);
+    if (bad) sink_say_write_error(s, fork);
+    if (fclose(*fp) != 0 && !bad) {
+        bad = 1;
+        sink_say_write_error(s, fork);
+    }
+    *fp = NULL;
+    return bad;
+}
+
 static int sink_write(void *ctx, UncFork fork, const void *buf, int32_t len)
 {
     DiskSink *s = (DiskSink *)ctx;
@@ -1027,7 +1064,10 @@ static int sink_write(void *ctx, UncFork fork, const void *buf, int32_t len)
             return -1;
         }
     }
-    if (len > 0 && fwrite(buf, 1, (size_t)len, *fp) != (size_t)len) return -1;
+    if (len > 0 && fwrite(buf, 1, (size_t)len, *fp) != (size_t)len) {
+        sink_say_write_error(s, fork);
+        return -1;
+    }
     if (fork == UNC_FORK_DATA) s->data_written += (uint32_t)len;
     else s->rsrc_written += (uint32_t)len;
     return 0;
@@ -1094,8 +1134,12 @@ static int sink_end(void *ctx, int status)
             if (f) s->data_f = f;
             else if (s->clobber) status = UNC_ERR_SINK;
         }
-        if (s->data_f) { fclose(s->data_f); s->data_f = NULL; }
-        if (s->rsrc_f) { fclose(s->rsrc_f); s->rsrc_f = NULL; }
+        if (sink_close_fork(s, &s->data_f, UNC_FORK_DATA) &&
+            status == UNC_OK)
+            status = UNC_ERR_SINK;
+        if (sink_close_fork(s, &s->rsrc_f, UNC_FORK_RSRC) &&
+            status == UNC_OK)
+            status = UNC_ERR_SINK;
     }
 
     name_to_fs(s->cur.name, s->cur.name_len, NAME_IS_MACROMAN(s, &s->cur),
@@ -2308,7 +2352,7 @@ static void usage(void)
         "  --version      print the version and exit\n");
 }
 
-int main(int argc, char **argv)
+static int cli_main(int argc, char **argv)
 {
     const char *cmd, *file = NULL, *outdir = ".", *force = NULL;
     int raw_names = 0, verbose = 0, stats = 0, hidden_forks = 0, overwrite = 0;
@@ -3196,4 +3240,18 @@ nextlayer:
         }
     }
     return 0;
+}
+
+/* A listing is the output of `l`, and one sent to a full disk is as lost
+ * as an extracted file: stdout's own write errors fail the run too, for
+ * every return of cli_main at once. */
+int main(int argc, char **argv)
+{
+    int ret = cli_main(argc, argv);
+    if (fflush(stdout) != 0 || ferror(stdout)) {
+        fprintf(stderr, "macextract: standard output: %s\n",
+                strerror(errno));
+        if (ret == 0) ret = 1;
+    }
+    return ret;
 }

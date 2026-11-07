@@ -180,6 +180,11 @@ case for.
 - `long-paths`: an output folder 1,207 and 1,190 bytes deep, with a file
   planted where a 1,100- or 1,200-byte buffer would cut the sidecar or the
   deferral path: the planted file must be untouched.
+- `write-error`: the child's `RLIMIT_FSIZE` (with `SIGXFSZ` ignored) sits
+  between an envelope's output and its inner entry, at a size stdio holds
+  whole (fails only at `fclose`) and at one it does not (fails in
+  `fwrite`): exit 1 with the errno text, the envelope kept. And `l >
+  /dev/full` must exit 1.
 
 ### Exact oracle invocation
 
