@@ -269,7 +269,7 @@ costs the engine*).
 |---|---|---|
 | segment joining: `unc_segment.c`, the five `fmt_*seg.c`, their shared parsers | 6,498 B of code | an image kept by the release for every set scheme; how much can move is not measured |
 | the shell's set code (`SegAskUser`, `SegPartOf`, the part dialog's scans) | 3,166 B of code on 2026-10-22, not re-measured since the setup half (`SegScanWrapped` and the rest of `mac/seg_setup.inc.c`) left as `ovl_segsetup` in v0.45.0 | the same table of function pointers the setup image is given (DECISIONS.md 2026-11-02, *the dialogs that became the application*); not priced |
-| the report window's buffers, `gRepBuf` and the row arrays | 8,730 B of bss, 1,568 B of code | a handle grown as lines arrive; `interactive.py` must still read the same box |
+| the report window's buffers, `gRepBuf` and the row arrays | 6,539 B of bss (measured 2026-11-07, `nm` on `build/mac`) | **not a free saving**: the pool is fixed bss ON PURPOSE — the budget is `FreeMem()` taken once at the run's start, so a handle grown as lines arrive would eat the Toolbox/File-Manager reserve the budget holds back (the comment at `gRepBuf`). A smaller fixed pool trades report capacity; either is the maintainer's call |
 | the relocator, `Retro68Relocate` and `Retro68ApplyRelocations` | 1,656 B of code | Elf2Mac places it at the start of `.text`; needs a layout Elf2Mac does not offer |
 
 ## Formats classic Mac programs wrote that nothing here opens — leads, not findings
