@@ -270,7 +270,6 @@ costs the engine*).
 | segment joining: `unc_segment.c`, the five `fmt_*seg.c`, their shared parsers | 6,498 B of code | an image kept by the release for every set scheme; how much can move is not measured |
 | the shell's set code (`SegAskUser`, `SegPartOf`, the part dialog's scans) | 3,166 B of code on 2026-10-22, not re-measured since the setup half (`SegScanWrapped` and the rest of `mac/seg_setup.inc.c`) left as `ovl_segsetup` in v0.45.0 | the same table of function pointers the setup image is given (DECISIONS.md 2026-11-02, *the dialogs that became the application*); not priced |
 | the report window's buffers, `gRepBuf` and the row arrays | 8,730 B of bss, 1,568 B of code | a handle grown as lines arrive; `interactive.py` must still read the same box |
-| the overlay shims, `mac/ovl_shim.c` | 2,462 B of code | ~25 dispatchers of one shape; a table might be a third of that |
 | the relocator, `Retro68Relocate` and `Retro68ApplyRelocations` | 1,656 B of code | Elf2Mac places it at the start of `.text`; needs a layout Elf2Mac does not offer |
 
 ## Formats classic Mac programs wrote that nothing here opens — leads, not findings
