@@ -5652,7 +5652,26 @@ are in `UNC_AT_*` builds or behind the Desktop Manager. **Measured on the
 emulated 512K**: `MacExtract-Helpers.zip`, double-clicked on
 `dist/MacExtract-400K.dsk` and extracted to `Hard Disk`, 16 of 16 helpers,
 identical to `MacExtract.dsk`'s outside resource-fork bytes 48–125 (the
-system-reserved 16–127). One archive; a real HD20 is MANUAL_TESTS.md §6.
+system-reserved 16–127). A real HD20 is MANUAL_TESTS.md §6.
+
+**The 512 KB sample, 2026-11-07** (`tools/vmac/sys30.py --rom64`, the
+autotest build on that machine): **70/74**, against 72/74 on the 512Ke
+under the same System 3.0. `-D UNC_AT_BUDGET` on the four:
+
+| fixture | 64K ROM | 512Ke | `why` |
+|---|---|---|---|
+| `synth-dd-m5.dd` | refused, short 1,378 B | refused | 1, over budget |
+| `derived-Library_ISBN_Barcoder.sit` | refused, short 77,203 B | refused | 1, over budget |
+| `derived-Cool_Tools__.sit` | refused | extracts | **2, `NewPtr` failed inside the budget** |
+| `derived-a2basic.dmg.sit` | refused | extracts | **2** |
+
+The two `why=2` are a heap split by a kept image left where `NewHandle` put
+it: the case `MoveHHi` is in `ovl_keep` for. The granted budget is about
+34 KB below the 512Ke's: 288,500 B for StuffIt 5 (321,528 B) and 256,774 B
+for StuffIt classic (291,044 B). **With the `Hard Disk 20` file loaded,
+`TrapAvailable` calls `WaitNextEvent` present on the 64K ROM**, and the
+autotest's idle loop bombed in it, `ID = 28`; only that loop asks, and it is
+gated on ROM85 since.
 
 Harness facts: **System 3.0 ignores the boot blocks' shell name on MFS as on
 HFS**, so a probe is launched by being NAMED `Finder` (`mkmfs.py ...

@@ -50,6 +50,10 @@ is that patch. Extract onto `Hard Disk` from the 400K floppy in drive 3:
     hd20boot.py boot.img --hfs hd.img
     $V/mv-512K/minivmac -r $V/Mac512K.ROM boot.img hd.img dist/MacExtract-400K.dsk
 
+`sys30.py --rom64` sweeps it: that boot floppy, the autotest build alone on a
+second MFS disk (the three do not fit on one), In and Out, and two clicks at
+coordinates measured on 2026-11-07. Every fixture's grading is `run.py`'s.
+
 **A Macintosh 128K — `mv-128K` — is too small to run it**, and that is the
 RAM rather than the ROM: `ID = 03` on launch (FORMATS.md, *A Macintosh
 128K*). `tools/vmac/memtest` measures the machine instead — it prints the

@@ -54,6 +54,10 @@ SYSTEM = "Sys30.img"        # System 3.0 / Finder 5.1, "System Tools" (800K)
 # MacExtract).
 VOL_ICON = (472, 45)
 APP_ICON = (170, 97)
+# --rom64: the application's own disk is the second icon down, and its one
+# file sits where mkmfs.py places the first (measured 2026-11-07).
+APP_DISK_64 = (472, 112)
+APP_ICON_64 = (55, 130)
 # The desktop is up in under 3 s at "all out" speed; 8 s is slack, not a
 # measurement. Both waits are host seconds and neither belongs in a timing
 # claim — see run.py's header.
@@ -61,9 +65,16 @@ DESKTOP_WAIT = 8.0
 WINDOW_WAIT = 5.0
 
 
-def build_boot(appbin, dest):
+def build_boot(appbin, dest, rom64=False):
     """A System 3.0 boot volume with the Finder left in place and the
-    application at the volume root, for double-clicking."""
+    application at the volume root, for double-clicking. With `rom64`,
+    hd20boot.py's MFS floppy instead, and the application alone on a second
+    400K MFS disk, DEST + ".app": the three files do not fit on one."""
+    if rom64:
+        R.sh(sys.executable, os.path.join(HERE, "hd20boot.py"), dest)
+        R.sh(sys.executable, os.path.join(HERE, "mkmfs.py"), dest + ".app",
+             "--name", "MacExtract", appbin)
+        return
     stock = os.path.join(R.VMAC_HOME, SYSTEM)
     if not os.path.exists(stock):
         raise SystemExit(f"sys30: no {stock} — see tools/vmac/README.md")
@@ -92,13 +103,13 @@ def _dclick(env, ox, oy, x, y):
 
 
 def run_one(fixture, bootimg, emu_dir, png, timeout, poll, probe=False,
-            keep=None):
+            keep=None, rom64=False):
     """Boot, click the application into life, and wait for its grid.
 
     With `probe`, also returns run.py's budget_probe() of the In volume,
     read after the emulator is gone and before the disks are."""
     emu = os.path.join(R.VMAC_HOME, emu_dir, "minivmac")
-    rom = os.path.join(R.VMAC_HOME, "vMac.ROM")
+    rom = os.path.join(R.VMAC_HOME, "Mac512K.ROM" if rom64 else "vMac.ROM")
     if not os.path.exists(emu):
         raise SystemExit(f"sys30: no emulator at {emu} — run tools/vmac/setup.sh")
 
@@ -118,12 +129,16 @@ def run_one(fixture, bootimg, emu_dir, png, timeout, poll, probe=False,
         # qcow2, so this is a copy -- sparse, in this run's directory,
         # deleted with it.
         R.sh("cp", "--sparse=always", bootimg, boot)
+        disks = [boot]
+        if rom64:
+            R.sh("cp", bootimg + ".app", boot + ".app")
+            disks.append(boot + ".app")
         R.make_floppy(indsk, "In", payload=fixture)
         R.make_floppy(outdsk, "Out")
         dpy = R.Display(limit=limit + 30)
         env = dict(os.environ, DISPLAY=dpy.name)
         started = time.time()
-        proc = guard.spawn([emu, "-r", rom, boot, indsk, outdsk], limit=limit,
+        proc = guard.spawn([emu, "-r", rom, *disks, indsk, outdsk], limit=limit,
                            env=env, stdout=subprocess.DEVNULL,
                            stderr=subprocess.DEVNULL)
         for _ in range(120):
@@ -143,9 +158,9 @@ def run_one(fixture, bootimg, emu_dir, png, timeout, poll, probe=False,
             return None, time.time() - started, None
         ox, oy = _origin(dpy, env)
         time.sleep(DESKTOP_WAIT)
-        _dclick(env, ox, oy, *VOL_ICON)     # open the boot volume
+        _dclick(env, ox, oy, *(APP_DISK_64 if rom64 else VOL_ICON))
         time.sleep(WINDOW_WAIT)
-        _dclick(env, ox, oy, *APP_ICON)     # launch MacExtract
+        _dclick(env, ox, oy, *(APP_ICON_64 if rom64 else APP_ICON))
         while time.time() - started < timeout:
             time.sleep(poll)
             if proc.poll() is not None:
@@ -194,6 +209,9 @@ def main():
     ap.add_argument("--json", help="write per-fixture results here")
     ap.add_argument("--keep-disks", action="store_true",
                     help="keep each run's in.dsk and out.dsk under .tmp/")
+    ap.add_argument("--rom64", action="store_true",
+                    help="a Macintosh 512K's 64K ROM (mv-512K) booted off "
+                         "hd20boot.py's floppy, HFS from the Hard Disk 20 file")
     ap.add_argument("-D", dest="defines", action="append", default=[],
                     help="extra UNC_* build switch (repeatable), e.g. "
                          "-D UNC_AT_BUDGET — same meaning as run.py's")
@@ -212,7 +230,7 @@ def main():
     os.makedirs(a.outdir, exist_ok=True)
     work = tempfile.mkdtemp(prefix="sys30-boot-")
     bootimg = os.path.join(work, "boot30.hfv")
-    emu_dir = a.emu or f"mv-{a.mem}"
+    emu_dir = a.emu or ("mv-512K" if a.rom64 else f"mv-{a.mem}")
     # The machine is the EMULATOR BUILD, not --mem: --emu overrides it, and a
     # summary that reports --mem's default while a different machine ran is
     # how a 512 KB result gets filed as a 4 MB one.
@@ -225,13 +243,14 @@ def main():
         keep = tempfile.mkdtemp(prefix="sys30kept-",
                                 dir=os.path.join(R.REPO, ".tmp"))
     try:
-        build_boot(R.build_autotest_app(tuple(a.defines)), bootimg)
+        build_boot(R.build_autotest_app(tuple(a.defines)), bootimg, a.rom64)
         for fixture in fixtures:
             base = os.path.basename(fixture)
             png = os.path.join(a.outdir, base + ".png")
             probe = "UNC_AT_BUDGET" in a.defines
             vals, secs, fields = run_one(fixture, bootimg, emu_dir, png,
-                                         a.timeout, a.poll, probe, keep)
+                                         a.timeout, a.poll, probe, keep,
+                                         a.rom64)
             man = os.path.join(manifests, base + ".json")
             if vals is None:
                 verdict = "NOGRID"
@@ -258,7 +277,8 @@ def main():
     finally:
         shutil.rmtree(work, ignore_errors=True)
 
-    print(f"\n{npass}/{len(fixtures)} PASS on System 3.0 ({machine})")
+    print(f"\n{npass}/{len(fixtures)} PASS on System 3.0 ({machine}"
+          f"{', 64K ROM + Hard Disk 20' if a.rom64 else ''})")
     if a.json:
         with open(a.json, "w") as f:
             json.dump(results, f, indent=1)

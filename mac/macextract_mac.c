@@ -5500,7 +5500,11 @@ int main(void)
     InitDialogs(NULL);
     InitCursor();
     FlushEvents(everyEvent, 0);
-    gHasWNE = TrapAvailable(_WaitNextEvent);
+    /* Not on a 64K ROM: with the Hard Disk 20 file loaded, TrapAvailable
+     * calls WaitNextEvent present there, and at_idle's first wait bombed
+     * (measured 2026-11-07, tools/vmac/sys30.py --rom64). ROM85, as
+     * GrowApplZone reads it. */
+    gHasWNE = *(const short *)0x028EL > 0 && TrapAvailable(_WaitNextEvent);
 #ifdef UNC_AT_OVERLAY
     { extern void ovl_preload(void); ovl_preload(); }   /* while the boot disk is in */
 #endif
