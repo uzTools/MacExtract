@@ -183,6 +183,27 @@ fi
 # The time left in the progress dialog: it must not go back up while the
 # rate holds (DECISIONS.md 2026-10-16, *the estimate that went back up*).
 ./build/mac_sink_asan --eta || { echo "mac-sink: eta FAILED"; exit 1; }
+# A header claiming more than the disk holds: `derived-Unzip101.sit` with its
+# first entry's data length set to 900,000,000 (CRC fixed), onto a mock disk
+# of 200 MB. The pre-size's refusal ended the run there, 0 of 7 files, until
+# 2026-11-07; now that entry alone fails and the other six come out
+# (DECISIONS.md 2026-11-07, *the size a damaged header asked the disk for*).
+# The mock's limit is per fork, not the volume's sum (mac_sink_test.c).
+if [ -f fixtures/derived-Unzip101.sit ]; then
+    python3 -c 'import sys, struct; sys.path.insert(0, "tools")
+from synth_sit1 import crc16_arc
+b = bytearray(open(sys.argv[1], "rb").read()); h = 22   # the first entry
+b[h + 88:h + 92] = struct.pack(">I", 900000000)         # its data length
+b[h + 110:h + 112] = struct.pack(">H", crc16_arc(bytes(b[h:h + 110])))
+open(sys.argv[2], "wb").write(b)' fixtures/derived-Unzip101.sit build/presize-900M.sit
+    out="$(mktemp -d)"
+    UNC_MOCK_FORK_MAX=200000000 ./build/mac_sink_asan build/presize-900M.sit \
+        "$out" 2> build/presize.log || true
+    n=$(find "$out" -type f ! -name '._*' | wc -l)
+    rm -rf "$out"
+    grep -q 'unc_extract -> 0, entries=8 errors=1$' build/presize.log && [ "$n" = 6 ] \
+        || { echo "mac-sink: presize FAILED ($n files; $(grep unc_extract build/presize.log))"; exit 1; }
+fi
 # The password dialog's key filter, 64 and 65 characters typed: the 64th
 # went past a Str63 until 2026-11-06 (DECISIONS.md, *the 64th character of
 # a password*). It is Toolbox-only code mac_sink_test.c compiles out, so

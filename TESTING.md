@@ -43,7 +43,10 @@
    0xFFFFFFFF: refused by the budget, no shortfall. Only the qemu-m68k
    lane, where a long is 32 bits, sees a grant; natively it sees the
    shortfall alone (DECISIONS.md 2026-11-07, *the request a signed long
-   could not hold*). **What it cannot see:** a read that fails inside the
+   could not hold*). A header claiming 900 MB onto a mock disk of 200 MB
+   (`UNC_MOCK_FORK_MAX`) must lose that entry alone; the limit is per
+   fork, not a volume's sum (DECISIONS.md 2026-11-07, *the size a damaged
+   header asked the disk for*). **What it cannot see:** a read that fails inside the
    sniff, which `unc_sniff` has no way to report;
    `RunExtract`, `ExtractOne`, the other dialogs and the Toolbox glue, which
    the mock never calls — it builds its own `UncOptions`. Nor a read of

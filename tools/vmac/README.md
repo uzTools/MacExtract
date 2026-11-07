@@ -2125,9 +2125,10 @@ every extractor ends the archive on a sink failure (the withdrawn
 one-error-per-entry claim, BLOCKERS.md).
 
 **The default is a 1,440 KB floppy, a limit in the OTHER direction too.** A
-single entry larger than the volume fails at `SetEOF` about twenty seconds
-in, `ret` −9, and reads like a per-entry memory refusal unless the `ret` slot
-is read: `derived-EasyFind.dmg.sit`, one entry of 1,851,907 B, needs
+single entry larger than the volume fails at the `FSWrite` that fills it,
+`ret` −9 (at `SetEOF`, before decoding, until 2026-11-07: DECISIONS.md,
+*the size a damaged header asked the disk for*), and reads like a
+per-entry memory refusal unless the `ret` slot is read: `derived-EasyFind.dmg.sit`, one entry of 1,851,907 B, needs
 `--out-kb 2400` (BLOCKERS.md, *Withdrawn claims*, 2026-09-18). A fixture
 capped near its memory minimum walks a low rung of Arsenic's sampled index,
 long even all-out — XMenu 704 s, EasyFind 1,427 s at 562,000 B — so use

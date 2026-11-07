@@ -2422,15 +2422,11 @@ static OSErr StreamSelect(MacSink *s, int isRsrc)
 
     /* Ask for the whole fork at once, the first time it is opened.
      *
-     * Two things fall out of one call. HFS allocates the extent (or as few
-     * as the volume's fragmentation allows) ONCE, instead of extending the
-     * fork and rewriting the extent record every 8 KB — this is a streaming
-     * writer, so without it a 300 KB fork is 37 separate extensions.
-     *
-     * And a volume that cannot hold the fork says so HERE, before the entry
-     * is decoded, rather than at some FSWrite twenty minutes in. That is the
-     * difference between "this entry will not fit" and a hundred identical
-     * unexplained failures, one per remaining entry.
+     * HFS allocates the extent (or as few as the volume's fragmentation
+     * allows) ONCE, instead of extending the fork every 8 KB as this
+     * streaming writer goes. Measured on a Mac Plus at 1x: a 303 KB fork
+     * onto an empty floppy, 91 ticks against 94 without it (DECISIONS.md
+     * 2026-11-07, *the size a damaged header asked the disk for*).
      *
      * Only when the size is known: UNC_SIZE_UNKNOWN is a real case (a
      * streamed gzip has no length until it ends), and those forks keep the
@@ -2442,10 +2438,15 @@ static OSErr StreamSelect(MacSink *s, int isRsrc)
         uint32_t want = isRsrc ? s->cur.rsrc_size : s->cur.data_size;
         if (!*sized) {
             *sized = 1;
-            if (want != UNC_SIZE_UNKNOWN && want > 0) {
-                err = SetEOF(s->openRef, (long)want);
-                if (err != noErr) return err;   /* dskFulErr lands here */
-            }
+            /* A refusal is not the end of the run: the size is the
+             * archive's word, and a damaged header claiming 900 MB ended
+             * the run on "Disk full." with 0 of 7 files out, on System
+             * 6.0.8. The fork grows as it is written instead, and a disk
+             * that really fills says so at FSWrite (DECISIONS.md
+             * 2026-11-07, *the size a damaged header asked the disk
+             * for*). */
+            if (want != UNC_SIZE_UNKNOWN && want > 0)
+                (void)SetEOF(s->openRef, (long)want);
         }
     }
 

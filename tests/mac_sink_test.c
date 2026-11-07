@@ -170,6 +170,12 @@ static long gMockZone;   /* the machine's offset east of GMT (ZoneProbe) */
 static int gHasDT = 1;                 /* the volume has a Desktop Manager */
 static int gDTSetCalls;
 static OSErr gSetCatErr;               /* PBSetCatInfo refuses with it */
+/* UNC_MOCK_FORK_MAX: the most bytes one fork may hold before SetEOF and
+ * FSWrite say dskFulErr, as a volume with that much free would. One fork
+ * at a time, not the volume's sum: it stands in for a disk the fork
+ * alone could fill, which is what the pre-size asks about (DECISIONS.md
+ * 2026-11-07, *the size a damaged header asked the disk for*). */
+static long gForkMax;
 
 static CatRec *cat_rec(const char *path, int make)
 {
@@ -467,6 +473,8 @@ OSErr FSWrite(short ref, long *count, const void *buf)
 {
     ssize_t w;
     if (ref < 0 || ref >= MAX_OPEN || !gFiles[ref].used) return -1;
+    if (gForkMax && lseek(gFiles[ref].fd, 0, SEEK_CUR) + *count > gForkMax)
+        { *count = 0; return dskFulErr; }
     w = write(gFiles[ref].fd, buf, (size_t)*count);
     if (w < 0) return -1;
     *count = (long)w;
@@ -511,6 +519,7 @@ OSErr GetEOF(short ref, long *eof)
 OSErr SetEOF(short ref, long eof)
 {
     if (ref < 0 || ref >= MAX_OPEN || !gFiles[ref].used) return -1;
+    if (gForkMax && eof > gForkMax) return dskFulErr;
     return ftruncate(gFiles[ref].fd, eof) < 0 ? -1 : noErr;
 }
 OSErr FlushVol(ConstStringPtr v, short r) { (void)v; (void)r; return noErr; }
@@ -1700,6 +1709,8 @@ int main(int argc, char **argv)
     }
     ovl_preload();
 #endif
+    if (getenv("UNC_MOCK_FORK_MAX"))
+        gForkMax = atol(getenv("UNC_MOCK_FORK_MAX"));
     snprintf(gOutDir, sizeof gOutDir, "%s", argv[2]);
     mkdir(gOutDir, 0755);
     snprintf(gDirs[0], sizeof gDirs[0], "%s", gOutDir);   /* dir id 0 */

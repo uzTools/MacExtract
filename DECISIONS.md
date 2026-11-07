@@ -537,6 +537,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-07 (the folder count that never counted) — `dirCount` was always 0, because a folder entry never reaches `sink_end`; deleted rather than made to count, for 32 B onto every budget
 - 2026-11-07 (the file in the folder's place) — a file holding a top-level folder's name failed every entry under it; the folder is numbered past it now, as past a folder already there, for 32 B off every budget
 - 2026-11-07 (the request a signed long could not hold) — `mal_alloc` summed size + 16 in a signed long: from 0x7FFFFFF0 the budget test passed, and from 0xFFFFFFF0 NewPtr granted a few bytes; refused first now, for 0 B
+- 2026-11-07 (the size a damaged header asked the disk for) — a refused pre-size ended the run on "Disk full.", so a header claiming 900 MB lost the rest of the archive; the fork now grows as it is written instead, for 0 B
 
 ---
 
@@ -22373,3 +22374,42 @@ fails before (above), passes after, with a 1,000 B control granted.
 0. Lazy +12/−12: 0. Resident control +8/−8: 0. `OVL_SAVED`, `TIERS` and
 the grant rows unmoved. Heap 0. Stack: `mal_alloc` 12 B, unchanged. Time:
 one compare per allocation, not per byte; not measured.
+
+## 2026-11-07 (the size a damaged header asked the disk for) — a refused pre-size ended the run on "Disk full.", so a header claiming 900 MB lost the rest of the archive; the fork now grows as it is written instead, for 0 B
+
+**Claim, confirmed (from a review), on System 6.0.8.** `StreamSelect`
+pre-sizes each fork with `SetEOF` to its declared size at first open
+(2026-08-24) and returned the refusal, which ends the archive.
+`derived-Unzip101.sit` with its first entry's data length set to
+900,000,000 (header CRC recomputed), `run.py --expect` onto the 1,440 KB
+Out floppy, Mac Plus 4 MB: `ret` −9, errors 1, **0 of 7 files**.
+
+**What the pre-size buys, measured first.** `kermitut9test.bin`, one
+303 KB resource fork behind MacBinary (a copy, so writing is most of the
+work), `run.py --emu mv-4M-1x -D UNC_AT_TICKGAP`, twice each, onto an
+empty floppy: **91 ticks with it, 94 without**, each pair the same to the
+tick. The first attempt measured nothing: `run.py -D` reaches the compiler
+only for switches `mac/CMakeLists.txt` lists, and 91/91 came from two
+identical builds; the 900 MB specimen, which the switch changes, is what
+showed it live. Not seen: a fragmented volume, a hard disk. The pre-size's
+other reason, "a volume that cannot hold it says so before the entry
+decodes", is what this reverses.
+
+**The fix.** The pre-size stays and its refusal is ignored: the fork grows
+as it is written, and a disk that really fills ends the run at `FSWrite`,
+as before 2026-08-24. `StreamTrim` cuts a fork whose pre-size failed back
+to what was written, as it does a short one. Measured on the fixed build:
+the 900 MB specimen gives 6 files, `ret` 0, errors 1, data 51,815 B with a
+CRC sum equal to the healthy archive's six other entries;
+`derived-OTCFM68KGlue.sit` onto `--out-kb 800` still stops at 9 files,
+errors 1, `ret` −9. Not taken: capping the pre-size by free space (a
+`PBHGetVInfo` call, bytes) or by the archive's size (a compressed fork
+outgrows its archive). A genuine too-big entry now decodes until the disk
+fills instead of failing before it starts. `run_mac_sink.sh` derives the
+specimen and extracts it onto a 200 MB mock disk: before, `-9` and 0
+files; after, 0 and 6 files.
+
+**Price (measured).** Shipped eager CODE −4, A5 +4 (`.data` alignment): 0.
+Lazy −4/+4, resident control −4/+4: 0. `OVL_SAVED`, `TIERS` and the grant
+rows unmoved. Heap 0. Stack: every frame unchanged (`-fstack-usage`).
+Time: not re-measured; the same `SetEOF` is made.
