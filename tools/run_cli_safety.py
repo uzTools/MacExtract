@@ -186,10 +186,69 @@ def case_deferred_by_path(tmp):
     return probs
 
 
+def long_dir(base, total):
+    """A directory under `base` whose path is exactly `total` bytes, in
+    components short enough for any filesystem."""
+    p = base
+    while len(p) < total:
+        room = total - len(p) - 1
+        if room < 1:
+            raise ValueError("cannot pad to that length")
+        n = min(200, room) if room - min(200, room) != 1 else 199
+        p = os.path.join(p, "d" * n)
+    os.makedirs(p)
+    assert len(p) == total
+    return p
+
+
+def case_long_paths(tmp):
+    """Item 2C: fixed buffers (rp[1100], tmp[1200]) cut a long sidecar or
+    deferral path, and remove()/rename() then acted on a DIFFERENT file.
+    (a) the review's shape: -o 1,207 bytes long, MacBinary "Foo.tar" with
+    no resource fork; the 1,099-byte cut of OUT/Foo.tar.rsrc lands inside
+    the output path, where a sibling file is planted. (b) the deferral
+    rename: two nameless gzip layers in "Same", -o 1,190 bytes, so
+    OUT/Same.unwrap~ cut to 1,199 is OUT/Same.unw, a planted sibling."""
+    import gzip
+    probs = []
+    mine = b"a sibling the user owns\n"
+    # (a)
+    out = long_dir(os.path.join(tmp, "a"), 1207)
+    cut = (out + "/Foo.tar.rsrc")[:1099]
+    write(cut, mine)
+    src = os.path.join(tmp, "Foo.bin")
+    write(src, macbinary(b"Foo.tar", tar_of([("inner.txt", b"in\n" * 300)])))
+    rc, err = run("x", src, "-o", out)
+    if not os.path.exists(cut) or read(cut) != mine:
+        probs.append(f"(a) the sibling at the 1,099-byte cut was removed "
+                     f"(exit {rc})")
+    elif rc != 0 or not os.path.exists(os.path.join(out, "inner.txt")):
+        probs.append(f"(a) wanted a clean unwrap, exit {rc} "
+                     f"{err.strip()[-160:]!r}")
+    # (b)
+    out = long_dir(os.path.join(tmp, "b"), 1190)
+    cut = (out + "/Same.unwrap~")[:1199]
+    write(cut, mine)
+    payload = b"two nameless layers\n" * 50
+    src = os.path.join(tmp, "Same")
+    write(src, gzip.compress(gzip.compress(payload, mtime=0), mtime=0))
+    rc, err = run("x", src, "-o", out)
+    left = sorted(os.listdir(out))
+    if not os.path.exists(cut) or read(cut) != mine:
+        probs.append(f"(b) the sibling {os.path.basename(cut)} was renamed "
+                     f"onto the output (left {left}, exit {rc})")
+    elif rc != 0 or read(os.path.join(out, "Same")) != payload or \
+            len(left) != 2:
+        probs.append(f"(b) wanted Same holding the payload beside the "
+                     f"sibling, got {left} exit {rc} {err.strip()[-160:]!r}")
+    return probs
+
+
 CASES = {
     "overwrite-self": case_overwrite_self,
     "sidecar-not-ours": case_sidecar_not_ours,
     "deferred-by-path": case_deferred_by_path,
+    "long-paths": case_long_paths,
 }
 
 

@@ -177,6 +177,9 @@ case for.
   one, must leave nothing behind.
 - `deferred-by-path`: an inner data fork carrying the name of the
   sidecar the envelope did write must end up under that name, alone.
+- `long-paths`: an output folder 1,207 and 1,190 bytes deep, with a file
+  planted where a 1,100- or 1,200-byte buffer would cut the sidecar or the
+  deferral path: the planted file must be untouched.
 
 ### Exact oracle invocation
 

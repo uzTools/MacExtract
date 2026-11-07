@@ -476,7 +476,7 @@ static int sink_make_dirs(DiskSink *s, int whole)
 }
 
 /* Both are defined below, next to the conventions they implement. */
-static void rsrc_path(const char *path, int hidden, char *out, size_t outsz);
+static int rsrc_path(const char *path, int hidden, char *out, size_t outsz);
 static int sink_unwrap_exempt(DiskSink *s, const char *path);
 
 /* Is this path (or its resource-fork sidecar) already on disk? The
@@ -487,7 +487,7 @@ static int path_taken(DiskSink *s, const char *path)
     struct stat st;
     char rp[PATHBUF];
     if (stat(path, &st) == 0 && !sink_unwrap_exempt(s, path)) return 1;
-    rsrc_path(path, s->hidden_forks, rp, sizeof rp);
+    if (rsrc_path(path, s->hidden_forks, rp, sizeof rp) != 0) return 1;
     return stat(rp, &st) == 0 && !sink_unwrap_exempt(s, rp);
 }
 
@@ -824,19 +824,25 @@ static int sink_begin(void *ctx, const UncEntryInfo *info)
  * shape — so the differential harness uses the prefix form, whose
  * namespace is disjoint from real archive names.
  * DECISIONS.md, 2026-08-08. */
-static void rsrc_path(const char *path, int hidden, char *out, size_t outsz)
+/* Returns 0, or -1 with `out` emptied where the path does not fit: a
+ * cut path names a DIFFERENT file, and remove() on one deleted a
+ * sibling (DECISIONS.md 2026-11-07, *the path a buffer cut*). */
+static int rsrc_path(const char *path, int hidden, char *out, size_t outsz)
 {
     const char *slash;
-    if (!hidden) {
-        snprintf(out, outsz, "%s.rsrc", path);
-        return;
-    }
-    slash = strrchr(path, '/');
-    if (slash)
-        snprintf(out, outsz, "%.*s._%s", (int)(slash - path + 1), path,
-                 slash + 1);
+    int n;
+    if (!hidden)
+        n = snprintf(out, outsz, "%s.rsrc", path);
+    else if ((slash = strrchr(path, '/')) != NULL)
+        n = snprintf(out, outsz, "%.*s._%s", (int)(slash - path + 1), path,
+                     slash + 1);
     else
-        snprintf(out, outsz, "._%s", path);
+        n = snprintf(out, outsz, "._%s", path);
+    if (n < 0 || (size_t)n >= outsz) {
+        if (outsz) out[0] = 0;
+        return -1;
+    }
+    return 0;
 }
 
 /* StuffIt classic keeps the block that verifies a password in the
@@ -848,14 +854,15 @@ static void rsrc_path(const char *path, int hidden, char *out, size_t outsz)
 static int load_mkey(const char *path, int hidden, uint8_t out[8])
 {
     static uint8_t fork[256 * 1024];
-    char rp[1100];
+    char rp[PATHBUF];
     int which;
 
     for (which = 0; which < 2; which++) {
         FILE *f;
         size_t n;
         uint32_t off = 0, len = 0;
-        rsrc_path(path, which == 0 ? hidden : !hidden, rp, sizeof rp);
+        if (rsrc_path(path, which == 0 ? hidden : !hidden, rp, sizeof rp))
+            continue;
         f = fopen(rp, "rb");
         if (!f) continue;
         n = fread(fork, 1, sizeof fork, f);
@@ -952,11 +959,15 @@ static FILE *sink_open_fork(DiskSink *s, UncFork fork)
     char path[PATHBUF];
     struct stat st;
     int ex;
+    s->clobber = 0;
     if (fork == UNC_FORK_DATA)
         snprintf(path, sizeof path, "%s", s->cur_path);
-    else
-        rsrc_path(s->cur_path, s->hidden_forks, path, sizeof path);
-    s->clobber = 0;
+    else if (rsrc_path(s->cur_path, s->hidden_forks, path, sizeof path)) {
+        s->clobber = 1;
+        fprintf(stderr, "macextract: %s: the resource fork's path is too "
+                "long to write\n", s->cur_path);
+        return NULL;
+    }
     /* Keyed by the PATH that matched, not by the fork being written: an
      * inner data fork can carry the envelope's sidecar name, and keyed by
      * fork it was renamed onto the envelope's data path, which was gone —
@@ -1192,8 +1203,8 @@ static int sink_end(void *ctx, int status)
             /* Recorded, never inferred from the name: what the next
              * layer may delete is what this one wrote. */
             if (wrote_rsrc)
-                rsrc_path(s->cur_path, s->hidden_forks, s->last_ok_rsrc,
-                          sizeof s->last_ok_rsrc);
+                (void)rsrc_path(s->cur_path, s->hidden_forks, s->last_ok_rsrc,
+                                sizeof s->last_ok_rsrc);  /* "" if cut */
             else
                 s->last_ok_rsrc[0] = 0;
             s->last_ok_type = s->cur.type;
@@ -1224,7 +1235,7 @@ static int sink_comment(void *ctx, const uint8_t *buf, uint16_t len)
      * sizing a buffer by it would put 192 KB on the stack. Three bytes
      * is the most one input byte can produce. */
     char text[384];
-    char path[1200];
+    char path[PATHBUF];
     const char *base;
     size_t o = 0;
     uint16_t i;
@@ -1457,11 +1468,11 @@ static int32_t env_peek(const char *path, uint8_t *head, int32_t cap)
 static int env_peel(const char *path, const char *dest)
 {
     EnvSink es;
-    char rp[1300];
+    char rp[PATHBUF];
     int ok;
 
     memset(&es, 0, sizeof es);
-    rsrc_path(dest, 0, rp, sizeof rp);
+    if (rsrc_path(dest, 0, rp, sizeof rp)) return 0;
     es.rsrc_dest = rp;
     es.out = fopen(dest, "wb");
     if (!es.out) return 0;
@@ -1498,7 +1509,7 @@ typedef struct {
     /* Parts that arrived inside an envelope are decoded to here before
      * the join; see seg_wrapped_part_of. Empty until one has been. */
     const char *outdir;
-    char     peeldir[1024];
+    char     peeldir[PATHBUF];
     DiskSink *sink;     /* told of each part as it is located, so that no
                          * entry is written over a part (sink_is_reading) */
 } SegHost;
@@ -1510,7 +1521,7 @@ static uint32_t seg_file_len(const SegHost *h, int part)
 {
     struct stat st;
     uint32_t len;
-    char rp[1100];
+    char rp[PATHBUF];
     int which;
 
     if (stat(h->path[part], &st) != 0) return UNC_SIZE_UNKNOWN;
@@ -1520,7 +1531,7 @@ static uint32_t seg_file_len(const SegHost *h, int part)
         FileIO rf;
         UncIO rio;
         uint32_t end;
-        rsrc_path(h->path[part], which, rp, sizeof rp);
+        if (rsrc_path(h->path[part], which, rp, sizeof rp)) continue;
         if (stat(rp, &st) != 0 || !S_ISREG(st.st_mode)) continue;
         rf.f = fopen(rp, "rb");
         if (!rf.f) continue;
@@ -1682,7 +1693,7 @@ static void seg_peel_clean(SegHost *h)
     d = opendir(h->peeldir);
     if (d) {
         while ((de = readdir(d)) != NULL) {
-            char p[1200];
+            char p[PATHBUF];
             if (strcmp(de->d_name, ".") == 0 || strcmp(de->d_name, "..") == 0)
                 continue;
             if ((size_t)snprintf(p, sizeof p, "%s/%s", h->peeldir, de->d_name)
@@ -1727,7 +1738,7 @@ static int seg_have_all(const SegHost *h)
 static int seg_wrapped_part_of(SegHost *h, const char *path)
 {
     uint8_t head[UNC_SEG_HEAD];
-    char dest[1200];
+    char dest[PATHBUF];
     struct stat st;
     int32_t got;
     int part;
@@ -1751,10 +1762,9 @@ static int seg_wrapped_part_of(SegHost *h, const char *path)
         >= sizeof dest)
         return 0;
     if (!env_peel(path, dest)) {
-        char rp[1300];
-        rsrc_path(dest, 0, rp, sizeof rp);
+        char rp[PATHBUF];
         remove(dest);
-        remove(rp);
+        if (rsrc_path(dest, 0, rp, sizeof rp) == 0) remove(rp);
         return 0;
     }
 
@@ -1769,7 +1779,7 @@ static int seg_wrapped_part_of(SegHost *h, const char *path)
  * tried as an envelope holding one. */
 static void seg_scan_dir(SegHost *h, const char *anchor, int wrapped)
 {
-    char dir[1024], cand[1200];
+    char dir[PATHBUF], cand[PATHBUF];
     const char *slash = strrchr(anchor, '/');
     DIR *d;
     struct dirent *de;
@@ -1891,7 +1901,7 @@ static int zipfam_split(const char *path, char *dir, size_t dirsz,
 static void seg_scan_zip_family(SegHost *h, const char *anchor, int nparts,
                                 char *lastbuf, size_t lastsz)
 {
-    char dir[1024], cand[1200];
+    char dir[PATHBUF], cand[PATHBUF];
     const char *stem;
     size_t stemlen;
     DIR *d;
@@ -2005,7 +2015,7 @@ static int splitfam_split(const char *path, char *dir, size_t dirsz,
  * checks below and is reported as the missing part it is. */
 static int split_family_present(const char *path)
 {
-    char dir[1024];
+    char dir[PATHBUF];
     const char *stem;
     size_t stemlen;
     DIR *d;
@@ -2017,7 +2027,7 @@ static int split_family_present(const char *path)
     d = opendir(dir);
     if (!d) return 0;
     while (!found && (de = readdir(d)) != NULL) {
-        char cand[1200];
+        char cand[PATHBUF];
         struct stat st;
         int p = splitfam_part_of(stem, stemlen, de->d_name);
         if (p < 1 || p == self) continue;
@@ -2035,7 +2045,7 @@ static int split_family_present(const char *path)
  * parts were collected from different directories. */
 static int split_part_offered(const char *path, const char **args, int n)
 {
-    char dir[1024];
+    char dir[PATHBUF];
     const char *stem;
     size_t stemlen;
     int self = splitfam_split(path, dir, sizeof dir, &stem, &stemlen), i;
@@ -2054,7 +2064,7 @@ static int split_part_offered(const char *path, const char **args, int n)
  * record, so the caller can tell a 300-part set from a 256-part one. */
 static int seg_scan_split_family(SegHost *h, const char *anchor)
 {
-    char dir[1024], cand[1200];
+    char dir[PATHBUF], cand[PATHBUF];
     const char *stem;
     size_t stemlen;
     DIR *d;
@@ -2099,7 +2109,7 @@ static int split_run_length(const SegHost *h, int *beyond)
  * gives up (empty line or EOF). */
 static int seg_ask(SegHost *h, int part)
 {
-    char line[1200];
+    char line[PATHBUF];
 
     for (;;) {
         size_t n;
@@ -2398,7 +2408,10 @@ int main(int argc, char **argv)
     }
     if (!file) { usage(); return 2; }
     origfile = file;
-    snprintf(curfile, sizeof curfile, "%s", file);
+    if ((size_t)snprintf(curfile, sizeof curfile, "%s", file) >= sizeof curfile) {
+        fprintf(stderr, "macextract: %s: path too long\n", file);
+        return 1;
+    }
     delfile[0] = 0;
     delrsrc[0] = 0;
 
@@ -2844,7 +2857,7 @@ nextlayer:
             /* Only the LAST part carries the part count, so it has to be
              * found before anything else can be — and for this scheme
              * "found" means "named .zip in the same folder". */
-            char lastpath[1200];
+            char lastpath[PATHBUF];
             const char *stem;
             size_t stemlen;
             char dirbuf[PATHBUF];
@@ -3116,17 +3129,21 @@ nextlayer:
     /* This layer extracted cleanly: the previous layer's envelope file
      * (if any) is no longer needed. */
     if (delfile[0]) {
-        char tmp[1200];
+        char tmp[PATHBUF + sizeof DEFER_SUFFIX];
+        const char *was[2];
+        int k;
+        was[0] = delfile;
+        was[1] = delrsrc;
         remove(delfile);
         if (delrsrc[0]) remove(delrsrc);
-        if (sink.deferred[0]) {
-            snprintf(tmp, sizeof tmp, "%s" DEFER_SUFFIX, delfile);
-            rename(tmp, delfile);
-        }
-        if (sink.deferred[1]) {
-            snprintf(tmp, sizeof tmp, "%s" DEFER_SUFFIX, delrsrc);
-            rename(tmp, delrsrc);
-        }
+        /* sink_open_fork deferred only a path that fit with the suffix,
+         * so a cut here would be a bug; it is skipped rather than renaming
+         * a file nobody wrote. */
+        for (k = 0; k < 2; k++)
+            if (sink.deferred[k] &&
+                (size_t)snprintf(tmp, sizeof tmp, "%s" DEFER_SUFFIX, was[k])
+                    < sizeof tmp)
+                rename(tmp, was[k]);
         delfile[0] = 0;
         delrsrc[0] = 0;
     }

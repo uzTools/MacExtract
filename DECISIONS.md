@@ -543,6 +543,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-07 (what the CLI may delete) — `--overwrite` opened the input archive for writing when its only entry carried the archive's own name; a file being read is now refused by inode on every layer
 - 2026-11-07 (the sidecar the run did not write) — an unwrap removed the envelope's `NAME.rsrc` / `._NAME` whether or not it had written one, and exempted it from the no-overwrite rule; both now follow what was written
 - 2026-11-07 (the deferral keyed by fork) — a write deferred beside the envelope was renamed back by which fork it was, not which path it matched; an inner data fork carrying the sidecar's name was left as `NAME.rsrc.unwrap~`
+- 2026-11-07 (the path a buffer cut) — fixed 1,100–1,300-byte buffers cut a long sidecar or deferral path, and `remove()`/`rename()` then acted on a different file; every path buffer is `PATHBUF` and a cut path is an error
 
 ---
 
@@ -22608,3 +22609,24 @@ deferral is keyed by that. A second entry onto a path already deferred is
 an ordinary taken path: refused, or with `--overwrite` written over the
 deferred copy — before, `--overwrite` wrote the sidecar in place and the
 cleanup then deleted it (read from the code, not run).
+
+## 2026-11-07 (the path a buffer cut) — fixed 1,100–1,300-byte buffers cut a long sidecar or deferral path, and `remove()`/`rename()` then acted on a different file; every path buffer is `PATHBUF` and a cut path is an error
+
+**Claim, confirmed (from a review), two shapes.** `run_cli_safety.py
+long-paths`: (a) against `db78470`, `-o` 1,207 bytes long, MacBinary
+`Foo.tar` with no resource fork — the cleanup's `rp[1100]` cut
+`OUT/Foo.tar.rsrc` to 1,099 bytes, inside the output path, and removed the
+sibling planted there, exit 0. Since the sidecar fix (*the sidecar the run
+did not write*) the cleanup no longer builds that path (it
+deletes only a recorded sidecar), so (a) passes from that commit on. (b) against
+the parent commit, the deferral rename's `tmp[1200]`: two nameless gzip layers in
+`Same`, `-o` 1,190 bytes, cut `OUT/Same.unwrap~` to `OUT/Same.unw` — the
+planted sibling was renamed onto `Same`, the real entry left as
+`Same.unwrap~`, exit 0.
+
+**The fix.** `rsrc_path` returns −1 and empties its output where the path
+does not fit, and every caller treats that as "no such path": nothing
+removed, a write refused, a lookup skipped. Every path buffer in the file
+is `PATHBUF`; the deferral's own is `PATHBUF` plus the suffix, which a
+deferred path always fits, since `sink_open_fork` refuses one that does
+not. A command-line path longer than `PATHBUF` is refused rather than cut.
