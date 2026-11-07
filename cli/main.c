@@ -371,6 +371,11 @@ typedef struct {
     const char **only;
     unsigned char *only_hit;
     int         nonly;
+    /* --only on a layer written whole because it may unwrap (main): the
+     * files it wrote, judged once it turns out to be the last layer. */
+    int         only_late;
+    struct LateFile { char *path, *rsrc, *name; } *late;
+    int         nlate, latecap;
     int         mac_encoding;   /* names are MacRoman */
     int         verbose;
     int         show_finder;    /* --finder: the Finder metadata as hex
@@ -517,6 +522,8 @@ static int sink_make_dirs(DiskSink *s, int whole)
         if (c == 0) return 0;
     }
 }
+
+static char *seg_dup(const char *s);
 
 /* Both are defined below, next to the conventions they implement. */
 static int rsrc_path(const char *path, int hidden, char *out, size_t outsz);
@@ -1166,6 +1173,81 @@ static const char *module_name(unsigned kind, unsigned id)
     return NULL;
 }
 
+/* Remember a file a layer under `only_late` wrote: its path, its
+ * sidecar if one was written, and the name `l` would print for it. */
+static void sink_note_late(DiskSink *s, const char *name, int wrote_rsrc)
+{
+    char rp[PATHBUF];
+    struct LateFile *e;
+    if (s->nlate == s->latecap) {
+        int cap = s->latecap ? s->latecap * 2 : 4;
+        struct LateFile *p = (struct LateFile *)realloc(s->late,
+                                                       (size_t)cap * sizeof *p);
+        if (!p) return;
+        s->late = p;
+        s->latecap = cap;
+    }
+    e = &s->late[s->nlate];
+    e->path = seg_dup(s->cur_path);
+    e->name = seg_dup(name);
+    e->rsrc = wrote_rsrc &&
+              rsrc_path(s->cur_path, s->hidden_forks, rp, sizeof rp) == 0
+            ? seg_dup(rp) : NULL;
+    if (e->path && e->name) s->nlate++;
+    else { free(e->path); free(e->name); free(e->rsrc); }
+}
+
+/* The layer turned out to be the last one: apply --only to what it
+ * wrote, as `l` applies it to what it lists. A file not asked for is
+ * removed — it is this run's own, written moments ago — and the hits are
+ * recorded so the usual report names a selector that matched nothing
+ * (DECISIONS.md 2026-11-07, *the selector the last layer ignored*). With
+ * judge 0 the list is only freed. */
+static void sink_late_done(DiskSink *s, int judge)
+{
+    int i;
+    for (i = 0; i < s->nlate; i++) {
+        struct LateFile *e = &s->late[i];
+        if (judge && !only_wanted(s, e->name)) {
+            remove(e->path);
+            if (e->rsrc) remove(e->rsrc);
+        }
+        free(e->path);
+        free(e->rsrc);
+        free(e->name);
+    }
+    free(s->late);
+    s->late = NULL;
+    s->nlate = s->latecap = 0;
+}
+
+/* Name each selector that matched nothing; returns how many. */
+static int only_report_misses(const char **only, const unsigned char *hit,
+                              int nonly)
+{
+    int i, miss = 0;
+    for (i = 0; i < nonly; i++)
+        if (!hit[i]) {
+            fprintf(stderr, "macextract: --only \"%s\": no entry of this "
+                    "archive has that name\n", only[i]);
+            miss++;
+        }
+    return miss;
+}
+
+/* A layer under `only_late` that is the last one: judge what it wrote,
+ * and report what matched nothing. Returns the number of misses. */
+static int sink_late_final(DiskSink *s, const char **only,
+                           unsigned char *only_hit, int nonly)
+{
+    if (!s->only_late) return 0;
+    s->only = only;
+    s->only_hit = only_hit;
+    s->nonly = nonly;
+    sink_late_done(s, 1);
+    return only_report_misses(only, only_hit, nonly);
+}
+
 static int sink_end(void *ctx, int status)
 {
     DiskSink *s = (DiskSink *)ctx;
@@ -1290,6 +1372,8 @@ static int sink_end(void *ctx, int status)
     if (s->cur.is_dir) s->dir_count++;
     else {
         s->file_count++;
+        if (status == UNC_OK && s->cur_path[0] && s->only_late)
+            sink_note_late(s, name, wrote_rsrc);
         if (status == UNC_OK && s->cur_path[0])
         {
             snprintf(s->last_ok_path, sizeof s->last_ok_path, "%s",
@@ -2423,7 +2507,7 @@ static int cli_main(int argc, char **argv)
     UncOptions opt;
     static uint8_t *longname;      /* freed at exit by the OS: one buffer
                                     * for every layer of an envelope */
-    UncFormat fmt;
+    UncFormat fmt, nextfmt;
     int ret;
     int no_recurse = 0, depth = 0;
     const char *origfile;       /* the file named on the command line */
@@ -2658,10 +2742,16 @@ nextlayer:
      * listing, and exempting it made --only silently do nothing.
      * A layer that filters is a layer that does not recurse, which is
      * what makes the report at the end fire exactly once. */
+    /* Unless it then does NOT unwrap — a MacBinary of a text file — when
+     * its files are judged after the fact (sink_late_done); until
+     * 2026-11-07 --only was simply never applied there, and `x` wrote
+     * what `l` refused with exit 1. */
     if (nonly && !(strcmp(cmd, "x") == 0 && !no_recurse && layer_unwraps(fmt))) {
         sink.only     = only;
         sink.only_hit = only_hit;
         sink.nonly    = nonly;
+    } else if (nonly) {
+        sink.only_late = 1;
     }
 
     /* Mac formats carry MacRoman names; zip/tar/gzip do not — nor does
@@ -3154,6 +3244,7 @@ nextlayer:
          * this path leaked until 2026-10-03 (found by UBSan/ASan on a
          * mutated archive, TESTING.md, *Method 14*). */
         sink_report_cuts(&sink);
+        sink_late_final(&sink, only, only_hit, nonly);
         return 1;
     }
     if (sink.unsupported) {
@@ -3181,14 +3272,7 @@ nextlayer:
     sink_report_cuts(&sink);
     /* A selector that matched nothing is a typo, and a typo must not
      * extract nothing and exit 0. */
-    if (sink.nonly) {
-        for (i = 0; i < nonly; i++)
-            if (!only_hit[i]) {
-                fprintf(stderr, "macextract: --only \"%s\": no entry of this "
-                        "archive has that name\n", only[i]);
-                onlymiss++;
-            }
-    }
+    if (sink.nonly) onlymiss = only_report_misses(only, only_hit, nonly);
     /* Said once at the end as well as once per entry: a long run's
      * per-entry lines scroll away, and this is the one thing about the
      * output that a user has to know afterwards. Not an error — the
@@ -3217,6 +3301,7 @@ nextlayer:
         if (ba.shortby)
             fprintf(stderr, "macextract: at least %u bytes more memory "
                             "would have been needed\n", (unsigned)ba.shortby);
+        sink_late_final(&sink, only, only_hit, nonly);
         return 1;
     }
     if (onlymiss) return 1;
@@ -3243,9 +3328,10 @@ nextlayer:
         delrsrc[0] = 0;
     }
 
-    /* Envelope auto-unwrap (real-world files are chained: .sit.hqx,
-     * .cpt.bin, .tar.Z ...): when an envelope format yielded exactly
-     * one file, sniff it and extract in place. -nr disables. */
+    /* Does the chain go on? Asked only now, once a write deferred beside
+     * the envelope has been renamed into place: before, the path still
+     * held the envelope's bytes. */
+    nextfmt = UNC_FORMAT_UNKNOWN;
     if (strcmp(cmd, "x") == 0 && !no_recurse && depth < 8 &&
         layer_unwraps(fmt) &&
         sink.file_count == 1 && sink.dir_count == 0 &&
@@ -3260,7 +3346,6 @@ nextlayer:
         if (pf) {
             FileIO pio_f;
             UncIO pio;
-            UncFormat pfmt;
             struct stat pst;
             memset(&pio_f, 0, sizeof pio_f);
             pio_f.f = pf;
@@ -3271,24 +3356,33 @@ nextlayer:
             pio.seek = fio_seek;
             pio.tell = fio_tell;
             pio.size = fio_size;
-            pfmt = unc_sniff(&pio);
+            nextfmt = unc_sniff(&pio);
             fclose(pf);
-            if (pfmt != UNC_FORMAT_UNKNOWN) {
-                if (verbose)
-                    fprintf(stderr, "unwrapping: %s (%s)\n",
-                            sink.last_ok_path, unc_format_name(pfmt));
-                snprintf(delfile, sizeof delfile, "%s", sink.last_ok_path);
-                snprintf(delrsrc, sizeof delrsrc, "%s", sink.last_ok_rsrc);
-                snprintf(curfile, sizeof curfile, "%s", sink.last_ok_path);
-                depth++;
-                force = NULL;
-                sink.file_count = sink.dir_count = 0;
-                sink.last_ok_path[0] = 0;
-                sink.last_ok_rsrc[0] = 0;
-                sink.entries = sink.errors = 0;
-                goto nextlayer;
-            }
         }
+    }
+    if (sink.only_late) {
+        if (nextfmt != UNC_FORMAT_UNKNOWN) sink_late_done(&sink, 0);
+        else if (sink_late_final(&sink, only, only_hit, nonly)) return 1;
+    }
+
+    /* Envelope auto-unwrap (real-world files are chained: .sit.hqx,
+     * .cpt.bin, .tar.Z ...): when an envelope format yielded exactly
+     * one file that sniffs as something (nextfmt, above), extract it in
+     * place. -nr disables. */
+    if (nextfmt != UNC_FORMAT_UNKNOWN) {
+        if (verbose)
+            fprintf(stderr, "unwrapping: %s (%s)\n",
+                    sink.last_ok_path, unc_format_name(nextfmt));
+        snprintf(delfile, sizeof delfile, "%s", sink.last_ok_path);
+        snprintf(delrsrc, sizeof delrsrc, "%s", sink.last_ok_rsrc);
+        snprintf(curfile, sizeof curfile, "%s", sink.last_ok_path);
+        depth++;
+        force = NULL;
+        sink.file_count = sink.dir_count = 0;
+        sink.last_ok_path[0] = 0;
+        sink.last_ok_rsrc[0] = 0;
+        sink.entries = sink.errors = 0;
+        goto nextlayer;
     }
     return 0;
 }

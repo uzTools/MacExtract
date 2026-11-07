@@ -191,6 +191,10 @@ case for.
   it the links are replaced by the entries.
 - `unwrap-temp-not-ours`: the user's own `Same.unwrap~` where the
   deferral writes must survive.
+- `only-last-layer`: `--only` on a MacBinary of a text file, naming
+  nothing and naming the payload: `x` must write what `l` lists and exit
+  as `l` does; and through a layer that does unwrap, only the selected
+  member of the tar inside.
 
 ### Exact oracle invocation
 

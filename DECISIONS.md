@@ -546,6 +546,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-07 (the path a buffer cut) — fixed 1,100–1,300-byte buffers cut a long sidecar or deferral path, and `remove()`/`rename()` then acted on a different file; every path buffer is `PATHBUF` and a cut path is an error
 - 2026-11-07 (the error only fclose saw) — a write error that stdio reported only at `fclose` was ignored: the entry counted as written and the layer above was deleted; it fails the entry now, with the system's words
 - 2026-11-07 (the links in the output folder) — links already in the output folder were followed by `stat`, `mkdir` and `fopen("wb")`, so a tar's entries landed outside `-o`; files are created `O_EXCL|O_NOFOLLOW` now and folders checked with `lstat`
+- 2026-11-07 (the selector the last layer ignored) — `--only` was exempted on every layer that might unwrap, so on an envelope that did not (a MacBinary text file) it was never applied; such a layer is judged once it turns out to be the last
 
 ---
 
@@ -22683,3 +22684,23 @@ component is safe (`O_NOFOLLOW|O_EXCL` fail rather than follow); a folder
 component replaced between its `lstat` and the open is not — that needs
 an `openat` walk from a descriptor of `-o`. Hypothesis: nothing here runs
 beside an adversary writing into the output folder.
+
+## 2026-11-07 (the selector the last layer ignored) — `--only` was exempted on every layer that might unwrap, so on an envelope that did not (a MacBinary text file) it was never applied; such a layer is judged once it turns out to be the last
+
+**Claim, confirmed (from a review).** Measured against the parent commit with
+`run_cli_safety.py only-last-layer`: `x Note.bin -o o --only nosuchentry`
+(MacBinary of a text file) wrote `Note.txt` and exited 0, where `l` with
+the same arguments exits 1. The exemption was decided from the format
+before the layer ran; whether it unwraps is only known after, from what
+its one file sniffs as.
+
+**The fix.** Such a layer still writes whole, and records each file it
+wrote (`sink_note_late`). If the chain goes on, the record is dropped and
+the next layer filters as before; if not, `--only` is applied to the
+record as `l` applies it to the listing: a file not asked for is removed
+— this run's own, written moments before — and an unmatched selector is
+reported, exit 1. Under `--overwrite` a removed file may have replaced
+one of the user's of that name, as any unwrap's intermediate may; not
+covered. Folder entries of such a layer are not judged (no envelope here
+yields one). The sniff that decides the chain moved into a single place,
+after the deferred rename, which is where it has to read.

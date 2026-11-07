@@ -357,6 +357,42 @@ def case_unwrap_temp_not_ours(tmp):
     return []
 
 
+def case_only_last_layer(tmp):
+    """Item 5: --only was exempted on every layer that MIGHT unwrap, so on
+    an envelope whose payload is not an archive (MacBinary of a text
+    file) it was never applied: `x --only nosuchentry` wrote Note.txt and
+    exited 0, where `l` with the same arguments exits 1. x must write
+    only what was asked for and exit as l does; the control, --only
+    naming the payload, must write it, exit 0. And the selector still
+    reaches through a layer that DOES unwrap."""
+    probs = []
+    d = os.path.join(tmp, "d")
+    os.makedirs(d)
+    note = b"just a note, not an archive\r" * 20
+    write(os.path.join(d, "Note.bin"),
+          macbinary(b"Note.txt", note, typ=b"TEXT", creator=b"ttxt"))
+    for sel, want_rc, want_files in (("nosuchentry", 1, []),
+                                     ("Note.txt", 0, ["Note.txt"])):
+        o = os.path.join(d, "o-" + sel)
+        rcl, _ = run("l", "Note.bin", "--only", sel, cwd=d)
+        rc, err = run("x", "Note.bin", "-o", o, "--only", sel, cwd=d)
+        left = sorted(os.listdir(o)) if os.path.isdir(o) else []
+        if rc != want_rc or rcl != want_rc or left != want_files:
+            probs.append(f"--only {sel}: wanted x and l exit {want_rc} and "
+                         f"{want_files}; got x {rc}, l {rcl}, {left} "
+                         f"{err.strip()[:120]!r}")
+    # through a layer that unwraps: Foo.bin -> Foo.tar -> a.txt, b.txt
+    write(os.path.join(d, "Foo.bin"), macbinary(
+        b"Foo.tar", tar_of([("a.txt", b"a\n"), ("b.txt", b"b\n")])))
+    o = os.path.join(d, "o-tar")
+    rc, err = run("x", "Foo.bin", "-o", o, "--only", "b.txt", cwd=d)
+    left = sorted(os.listdir(o)) if os.path.isdir(o) else []
+    if rc != 0 or left != ["b.txt"]:
+        probs.append(f"through a tar: wanted only b.txt, exit 0; got {left} "
+                     f"exit {rc} {err.strip()[:120]!r}")
+    return probs
+
+
 CASES = {
     "overwrite-self": case_overwrite_self,
     "sidecar-not-ours": case_sidecar_not_ours,
@@ -365,6 +401,7 @@ CASES = {
     "write-error": case_write_error,
     "planted-links": case_planted_links,
     "unwrap-temp-not-ours": case_unwrap_temp_not_ours,
+    "only-last-layer": case_only_last_layer,
 }
 
 
