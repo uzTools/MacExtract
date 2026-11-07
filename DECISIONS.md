@@ -534,6 +534,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-07 (the block a click waited for) — Now Compress polls Cancel inside a block, not only once it is decoded whole
 - 2026-11-07 (the FXInfo byte System 7.0.1 locks in) — System 7.0.1 sets fdXFlags to 0x70 as it locks a file; the lock alone, not the comment
 - 2026-11-07 (the read error that read as end of file) — `fio_read` answered every File Manager failure as end of file, so a bad sector read as "archive incomplete"; it returns -1 now, and the shipped budget is unchanged
+- 2026-11-07 (the folder count that never counted) — `dirCount` was always 0, because a folder entry never reaches `sink_end`; deleted rather than made to count, for 32 B onto every budget
 
 ---
 
@@ -22280,3 +22281,28 @@ unmoved (`--check-images`). **Time** (`run.py --emu mv-4M-1x -D
 UNC_AT_TIMING`, `mar-wild-mar020src.mar`, 715 KB, one run each):
 `RunExtract` **2,616 → 2,616 ticks**. The read, write and meta buckets moved
 88/41/690 → 82/32/712, which is per-call tick rounding (the total holds).
+
+## 2026-11-07 (the folder count that never counted) — `dirCount` was always 0, because a folder entry never reaches `sink_end`; deleted rather than made to count, for 32 B onto every budget
+
+**Claim, confirmed (from a review).** `sink_begin` returns 1 for every
+folder entry, and a `begin_entry` that returns >0 is not followed by
+`end_entry` (`include/macextract.h`), so `sink_end`'s `dirCount++` never
+ran and `ExtractShape.dirCount` was always 0. Measured through the mock
+with the two counts printed: `derived-BootTime.cpt`,
+`derived-Unzip101.sit` and `derived-800saywhat301j.sit` made 2, 1 and 9
+folders and counted 0 each.
+
+**Deleted, not made to count.** Its one reader was the unwrap test in
+`ExtractOne`, `fileCount != 1 || dirCount != 0`, and the unwrap goes on
+only through an envelope row of `unc_engine.c`'s table, `SITSEG`, `DDSEG`
+or `SPLIT`. None of those readers sets `is_dir` (read: the formats that
+do are LZH, MAR, Now, StuffIt, Compact Pro, DiskDoubler, zip, StuffIt 5,
+AppleLink, SuperDisk! and tar), so a working count would read 0 there
+too. Harmless, as the review said; it cost bytes.
+
+**Price (measured).** Shipped eager CODE −32, A5 0: **32 B onto every
+shipped budget**. Lazy −32/0. Resident control CODE −28, A5 −4:
+`TIERS_CONTROL` −32 and `TIERS` +32 (derived); `OVL_SAVED` and the grant
+rows unmoved. Heap 0. Stack: `ExtractOne` 1,460 → 1,452 B
+(`-fstack-usage`, the shipped flags); no other frame moves. Time not
+measured: one branch per entry fewer.

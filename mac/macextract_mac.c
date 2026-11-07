@@ -1182,9 +1182,12 @@ typedef struct {
     int          vetoed;         /* PBSetCatInfo refusals (StampCat) */
     int          inexact;    /* restored, but not the original file */
     /* The shape of what was written, for the envelope unwrap in
-     * ExtractOne: one file and no folders is what an envelope layer
-     * looks like, and lastName/lastDir say where it landed. */
-    int          fileCount, dirCount;
+     * ExtractOne: one file is what an envelope layer yields, and
+     * lastName/lastDir say where it landed. Files only: a folder entry
+     * never reaches sink_end (sink_begin returns 1 for it), and no format
+     * the unwrap goes on through makes one (DECISIONS.md 2026-11-07, *the
+     * folder count that never counted*). */
+    int          fileCount;
     Str63        lastName;
     long         lastDir;
     OSType       lastType;
@@ -3030,8 +3033,7 @@ static int SINK_END(void *ctx, int status)
         RepEntry(s, S_REP_INEXACT);
         s->inexact++;
     }
-    if (s->cur.is_dir) s->dirCount++;
-    else s->fileCount++;
+    s->fileCount++;
     return 0;
 }
 
@@ -4190,7 +4192,7 @@ static long gFreeAtStart;  /* FreeMem() before the reserve is taken off */
 /* `out` is filled with where a single-file extraction landed, so the
  * caller can take the next envelope off it; pass NULL not to care. */
 typedef struct {
-    int       fileCount, dirCount;
+    int       fileCount;
     Str63     name;
     long      dirID;
     UncFormat fmt;        /* what this layer turned out to be */
@@ -4686,7 +4688,7 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
     sink.rootDirID = outDir;
     sink.entries = sink.errors = sink.unsupported = sink.vetoed = 0;
     gUnsupported = 0;
-    sink.fileCount = sink.dirCount = 0;
+    sink.fileCount = 0;
     sink.lastName[0] = 0;
     sink.lastType = 0;
     sink.lastDir = 0;
@@ -4861,7 +4863,6 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
     gVetoed += sink.vetoed;    /* ExtractOne says what to do, once */
     if (shape) {
         shape->fileCount = sink.fileCount;
-        shape->dirCount = sink.dirCount;
         shape->dirID = sink.lastDir;
         shape->type = sink.lastType;
         shape->fmt = sh ? sh->desc.scheme : extractedAs;
@@ -6513,9 +6514,9 @@ static void ExtractOne(short vRefNum, long dirID, ConstStr255Param name,
      * single-layer semantics, because every manifest it is graded
      * against describes one layer (tools/vmac_check.py).
      *
-     * The test is the same one the CLI uses: exactly one file and no
-     * folders is what an envelope yields, and the file is then sniffed
-     * rather than trusted by name. */
+     * The test is the same one the CLI uses: exactly one file is what
+     * an envelope yields, and the file is then sniffed rather than
+     * trusted by name. */
     {
         short curVol = vRefNum;
         long curDir = dirID;
@@ -6567,8 +6568,7 @@ static void ExtractOne(short vRefNum, long dirID, ConstStr255Param name,
                 FlushVol(NULL, delVol);
             }
             if (ret != UNC_OK || errors || pr.cancelled) break;
-            if (shape.fileCount != 1 || shape.dirCount != 0 ||
-                !shape.name[0]) break;
+            if (shape.fileCount != 1 || !shape.name[0]) break;
             /* Only an envelope — or a segmented set, which yields the
              * file it was cut from — has another layer under it. */
             if (!unc_format_is_envelope(shape.fmt) &&
