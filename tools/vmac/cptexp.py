@@ -36,7 +36,6 @@ sys.path.insert(0, HERE)
 sys.path.insert(0, os.path.join(REPO, "tools"))
 import run as R                                              # noqa: E402
 from interactive import Mac                                  # noqa: E402
-from vmac_check import mask_reserved                         # noqa: E402
 from arcmac import macbinary                                 # noqa: E402
 from expander import (APP_NAME, EXPAND_BUTTON, forks, names_on,  # noqa: E402
                       select_by_name)
@@ -44,38 +43,23 @@ from expander import (APP_NAME, EXPAND_BUTTON, forks, names_on,  # noqa: E402
 FIXDIR = os.path.join(REPO, "fixtures")
 
 
-def md5(b):
-    return hashlib.md5(b).hexdigest()[:12]
+MANDIR = os.path.join(FIXDIR, "manifests")
 
 
-def fork_key(d, r):
-    """A fork pair as it is compared: the data exact, the resource masked of
-    its map's reserved bytes, which Expander writes to its own taste
-    (exp402opt.py; vmac_check.mask_reserved)."""
-    return (md5(d), md5(mask_reserved(r)))
-
-
-def reference(fixture, work):
-    """The engine's forks for the archive, as a multiset of fork_key — keyed
-    by content, not name, so duplicate leaf names across folders and the Mac
-    `:`/Linux `/` split do not matter (`macextract x` writes the resource as
-    a `.rsrc` sidecar)."""
-    out = os.path.join(work, "ref")
-    shutil.rmtree(out, ignore_errors=True)
-    subprocess.run([os.path.join(REPO, "build", "macextract"), "x",
-                    "-o", out, fixture], capture_output=True)
-    keys = Counter()
-    n = 0
-    for root, _, files in os.walk(out):
-        for f in files:
-            if f.endswith(".rsrc") and os.path.exists(os.path.join(root, f[:-5])):
-                continue   # the sidecar of a file we read below
-            p = os.path.join(root, f)
-            r = p + ".rsrc"
-            keys[fork_key(open(p, "rb").read(),
-                          open(r, "rb").read() if os.path.exists(r) else b"")] += 1
-            n += 1
-    return keys, n
+def reference(fixture):
+    """The engine+unar record for this archive, from its manifest: the
+    multiset of data-fork sha256 over its files (an empty fork is the sha256
+    of no bytes), and the file count. The manifest has full paths and clean
+    hashes, so duplicate leaf names across folders and a file literally named
+    `*.rsrc` (GNU Chess's `gnuchess.∏.rsrc`) are unambiguous — unlike the
+    CLI's `.rsrc` sidecar output, where they collide. The resource fork is
+    not multiset-compared here: Expander writes its own map reserved bytes,
+    so it agrees only AFTER masking, which the manifest's raw hash cannot
+    express; the first full run compared them per file, masked, and every one
+    agreed (TESTING.md, *Compact Pro against StuffIt Expander 4.0.2*)."""
+    man = json.load(open(os.path.join(MANDIR, os.path.basename(fixture) + ".json")))
+    files = [e for e in man["entries"] if not e.get("is_dir")]
+    return Counter(e["data_sha256"] for e in files), len(files)
 
 
 def pull(img, names, work):
@@ -87,8 +71,12 @@ def pull(img, names, work):
         subprocess.run(["hmount", img], env=env, capture_output=True)
         for i, n in enumerate(names):
             dst = os.path.join(work, f"pull{i}.bin")
-            r = subprocess.run(["hcopy", "-m", n, dst], env=env,
-                               capture_output=True)
+            # hcopy wants the name in the volume's encoding (MacRoman), not
+            # the UTF-8 of a `∏`/`™`/`π`; `names_on` handed it back decoded
+            # (checkdisk.py does the same for its own forks).
+            r = subprocess.run(
+                ["hcopy", "-m", n.encode("mac_roman", "replace"), dst.encode()],
+                env=env, capture_output=True)
             if r.returncode == 0 and os.path.exists(dst):
                 got[n] = forks(dst)
         subprocess.run(["humount"], env=env, capture_output=True)
@@ -146,20 +134,19 @@ def run_one(fixture, args):
     new = [n for n in names_on(img)
            if n not in before and ":System Folder:" not in n]
     got = pull(img, new, work)
-    refkeys, refn = reference(fixture, work)
-    # Compare by fork content, not name: Expander's multiset of (data, masked
-    # resource) against the engine's. Equal means every fork agrees, whatever
-    # the names; a short pull (hcopy cannot copy a `∏`/`™` name off the
-    # volume) leaves `missing` files uncompared rather than failing.
-    expkeys = Counter(fork_key(d, r) for d, r in got.values())
-    agree = expkeys == refkeys
-    missing = refn - len(got)
+    refdata, refn = reference(fixture)
+    # Compare Expander's data-fork sha256 multiset against the manifest's.
+    # Equal means every data fork agrees, whatever its name or folder; a
+    # short pull (hcopy could not copy a name off the volume) shows as
+    # `engine_only` with nothing in `expander_only` — a gap, not a difference.
+    expdata = Counter(hashlib.sha256(d).hexdigest() for d, _ in got.values())
+    agree = expdata == refdata
     res = {"fixture": label, "pulled": len(got), "engine_files": refn,
-           "missing": missing, "agree": agree,
-           # the forks Expander produced that the engine never did (a real
-           # difference, if any) and vice versa
-           "expander_only": [list(k) for k in (expkeys - refkeys)],
-           "engine_only": [list(k) for k in (refkeys - expkeys)]}
+           "agree": agree,
+           # a data fork Expander produced that the engine did not — a real
+           # difference, if any; and the reverse, usually an hcopy pull gap
+           "expander_only": [h[:16] for h in (expdata - refdata)],
+           "engine_only": [h[:16] for h in (refdata - expdata)]}
     print(json.dumps(res), flush=True)
     if not args.keep:
         shutil.rmtree(work, ignore_errors=True)

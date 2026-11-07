@@ -2970,29 +2970,34 @@ Compact Pro was the largest block of forks `unar` alone vouched for (*What
 and is already on this machine, so it is a second implementation. This boots
 it over each Compact Pro fixture on the System 6.0.8 Mac Plus (`expander.py`;
 the flow and blind spots are `exp402opt.py`'s), pulls every file it wrote off
-the volume with `hcopy -m`, and compares each by CONTENT, not name: the data
-fork exact, the resource fork with its map's reserved bytes masked
-(`vmac_check.mask_reserved`), as a multiset against what `macextract x` writes
-for the same archive — which already matches `unar`. Agreement makes Expander
-corroborate the engine; a fork Expander produces that the engine does not
+the volume with `hcopy -m` — the name in MacRoman, so a `∏`/`™`/`π` copies —
+and compares the DATA fork by sha256, as a multiset, against the archive's
+manifest (full paths and clean hashes, so duplicate leaf names and a file
+literally named `*.rsrc` are unambiguous — the CLI's `.rsrc` sidecar output
+is not). The manifest already matches `unar`, so agreement makes Expander
+corroborate it; a data fork Expander produces that the manifest lacks
 (`expander_only`) would be a contradiction.
 
-**68 plain `.cpt` fixtures, 2026-11-07** (`--all`; one boot each, ~75 min):
-**46 clean, 22 with a pull gap, 0 contradictions.** Every fork compared was
-byte-identical to the engine's. The 22 are `hcopy -m` failing on names with
-`∏`/`™`/`π`: those files are left uncompared, not failed — the engine
-produced more files than were pulled, never a fork Expander made and the
-engine did not. Matching is by content because several archives repeat a
-leaf name across folders (two `curves.c`, two `patches.c` in
-`macvoglalpha1.cpt`); a name match had called those differences until the
-data multisets were shown equal.
+**68 plain `.cpt` fixtures, 2026-11-07** (`--all`; one boot each): **68/68
+clean, 0 contradictions** — every data fork Expander wrote is byte-identical
+to the record. (The first pass read 46 clean with 22 `hcopy` pull gaps on
+`∏`/`™`/`π` names and two false "contradictions" from leaf-name collisions —
+two `curves.c`, two `patches.c` in `macvoglalpha1.cpt`, and GNU Chess's real
+`gnuchess.∏.rsrc`; the MacRoman `hcopy` and the by-content manifest match
+closed all of them, with zero real differences throughout.)
 
-**Not yet done** (OPEN_ITEMS.md, *What grades a fork*): the `∏`/`™`/`π`-named
-files (an `hcopy` limit to close), the `.sea`, `.cmp` and encrypted Compact
-Pro variants (each its own pass — a `.sea` is run, not Expanded, and an
-encrypted archive needs its password), and then the manifests re-recorded
-with Expander in the oracle. **No contradiction has been found**, so the
-engine and `unar` and Expander agree wherever all three have been asked.
+**The resource fork** is not multiset-compared here: Expander writes its own
+map reserved bytes, so it agrees only after masking, which the manifest's raw
+hash cannot express. The first pass compared it per file, masked
+(`vmac_check.mask_reserved`), against `macextract x`, and every resource fork
+agreed.
+
+**Not yet done** (OPEN_ITEMS.md, *What grades a fork*): the `.sea`, `.cmp`
+and encrypted Compact Pro variants (each its own pass — a `.sea` is run, not
+Expanded, and an encrypted archive needs its password), and then the
+manifests re-recorded with Expander in the oracle. **No contradiction has
+been found**, so the engine, `unar` and Expander agree wherever all three
+have been asked.
 
 ## PKZIP's own distributions (`tools/specimens/implode.tsv`, one of three in `ci.sh`)
 

@@ -108,10 +108,10 @@ and the Finder metadata each expander puts back (TESTING.md; FORMATS.md).
   missing for any format with committed fixtures.
 - **Compact Pro, underway** 2026-11-07 (`tools/vmac/cptexp.py`; TESTING.md,
   *Compact Pro against StuffIt Expander 4.0.2*): Expander 4.0.2 booted over
-  the 68 plain `.cpt` fixtures corroborates the engine fork for fork — 46
-  clean, 22 with an `hcopy` pull gap on `∏`/`™`/`π` names, **0
-  contradictions**. Left: close the pull gap, the `.sea`/`.cmp`/encrypted
-  variants, then re-record the manifests with Expander in `oracle`.
+  the 68 plain `.cpt` fixtures corroborates the engine — **68/68 clean, 0
+  contradictions** on the data fork (vs the manifest), every resource fork
+  masked-equal. Left: the `.sea`/`.cmp`/encrypted variants, then re-record
+  the manifests with Expander in `oracle`.
 - **Not decided:** which answer wins where the writer's own reader
   disagrees with the stored CRC or with another reader — StuffIt Deluxe
   7.0.3 Classic writes wrong bytes for zip's Reduce (README.md).
