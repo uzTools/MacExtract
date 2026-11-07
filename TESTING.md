@@ -2963,6 +2963,37 @@ them (*SpaceSaver's own codecs*, above). The unit tests carry the per-ENTRY
 refusal (method 5, which no SpaceSaver wrote) and a resource fork whose
 stream precedes the data fork's.
 
+## Compact Pro against StuffIt Expander 4.0.2 (`tools/vmac/cptexp.py`, by hand)
+
+Compact Pro was the largest block of forks `unar` alone vouched for (*What
+`unar` alone vouches for, per format*, 1,470). Expander 4.0.2 reads `.cpt`
+and is already on this machine, so it is a second implementation. This boots
+it over each Compact Pro fixture on the System 6.0.8 Mac Plus (`expander.py`;
+the flow and blind spots are `exp402opt.py`'s), pulls every file it wrote off
+the volume with `hcopy -m`, and compares each by CONTENT, not name: the data
+fork exact, the resource fork with its map's reserved bytes masked
+(`vmac_check.mask_reserved`), as a multiset against what `macextract x` writes
+for the same archive — which already matches `unar`. Agreement makes Expander
+corroborate the engine; a fork Expander produces that the engine does not
+(`expander_only`) would be a contradiction.
+
+**68 plain `.cpt` fixtures, 2026-11-07** (`--all`; one boot each, ~75 min):
+**46 clean, 22 with a pull gap, 0 contradictions.** Every fork compared was
+byte-identical to the engine's. The 22 are `hcopy -m` failing on names with
+`∏`/`™`/`π`: those files are left uncompared, not failed — the engine
+produced more files than were pulled, never a fork Expander made and the
+engine did not. Matching is by content because several archives repeat a
+leaf name across folders (two `curves.c`, two `patches.c` in
+`macvoglalpha1.cpt`); a name match had called those differences until the
+data multisets were shown equal.
+
+**Not yet done** (OPEN_ITEMS.md, *What grades a fork*): the `∏`/`™`/`π`-named
+files (an `hcopy` limit to close), the `.sea`, `.cmp` and encrypted Compact
+Pro variants (each its own pass — a `.sea` is run, not Expanded, and an
+encrypted archive needs its password), and then the manifests re-recorded
+with Expander in the oracle. **No contradiction has been found**, so the
+engine and `unar` and Expander agree wherever all three have been asked.
+
 ## PKZIP's own distributions (`tools/specimens/implode.tsv`, one of three in `ci.sh`)
 
 Three self-extractors, fetched and hash-checked like every other specimen
