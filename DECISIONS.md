@@ -550,6 +550,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-07 (the parts folder that was not ours) — the folder wrapped parts are decoded into had a fixed name, accepted one already there (a link included), and was emptied of every file afterwards; it is `mkdtemp`'s now, and only the parts written there are removed
 - 2026-11-07 (the key past 256 KB) — `load_mkey` read the first 256 KB of the archive's sidecar, and a resource map is at a fork's end, so a larger fork hid its `'MKey'`; the sidecar is read whole now, up to 32 MB
 - 2026-11-07 (the budget that took anything) — `--budget` was `strtoul` with no end or range check: "1M" was one byte, "lots" no cap, and 4G and up wrapped; it takes digits and an optional K/M/G now, and anything else is a usage error
+- 2026-11-07 (every path the CLI deletes, renames or creates) — the audit after the review: each `remove`, `rename`, `unlink` and file creation in `cli/main.c`, and why it can only touch what this run wrote
 
 ---
 
@@ -22760,3 +22761,28 @@ prints why and the usage, exit 2. `0` stays "no cap". Hex is gone: no
 caller in `tools/` passed one — every one writes `str(int)` — and the
 only warning about the old parsing was `tools/fuzz.py`'s docstring
 (TESTING.md has none), now corrected.
+
+## 2026-11-07 (every path the CLI deletes, renames or creates) — the audit after the review: each `remove`, `rename`, `unlink` and file creation in `cli/main.c`, and why it can only touch what this run wrote
+
+Read from the tree of the `--budget` fix; each row is a call site, the rule that makes it safe,
+and the case in `tools/run_cli_safety.py` that fails without that rule.
+
+| site | acts on | safe because | case |
+|---|---|---|---|
+| `create_file` (every output file, the comment, peeled parts) | the entry's own path | `O_EXCL|O_NOFOLLOW`; `unlink` first only under `--overwrite`, never the input (`sink_is_reading` before) | `planted-links`, `overwrite-self` |
+| `sink_make_dirs` `unlink` | a link where a folder is wanted | only under `--overwrite`, only a link | `planted-links` |
+| the deferral (`NAME.unwrap~`) | a temp beside the envelope | created `O_EXCL`; marked deferred only once created | `unwrap-temp-not-ours` |
+| cleanup `remove(delfile)` | the previous layer's file | `last_ok_path`, a file that layer wrote; an inner entry on it is deferred or, by inode, refused | `overwrite-self` |
+| cleanup `remove(delrsrc)` | its sidecar | only if that layer opened the fork (`last_ok_rsrc`) | `sidecar-not-ours` |
+| cleanup `rename` | the deferred temp | keyed by the path it matched; buffer `PATHBUF` + suffix | `deferred-by-path`, `long-paths` |
+| `sink_late_done` `remove` | files a final envelope layer wrote that `--only` did not select | recorded in `sink_end` from what was written | `only-last-layer` |
+| `env_peel` `remove` on failure | a part it just created | created `O_EXCL` in the same call | — |
+| `seg_peel_clean` `remove`, `rmdir` | decoded parts | recorded per part, in a `mkdtemp` folder; `rmdir` refuses a folder holding anything else | `peel-folder-not-ours` |
+| `mkdir(outdir)` | `-o` itself | creates only; the user's own choice | — |
+
+Every row but `env_peel` and `mkdir(outdir)` was changed by the items
+above. `env_peel` was already safe in effect — its caller removed a path
+it had just built — and now cleans up after itself. Not covered, said where it was found:
+a folder link swapped in during the run (*the links in the output
+folder*), and a file a removed `--only` reject had replaced under
+`--overwrite` (*the selector the last layer ignored*).
