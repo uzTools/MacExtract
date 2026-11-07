@@ -1807,25 +1807,34 @@ static OSErr EnsureDir(MacSink *s, long parent, Str63 name, uint32_t hash,
             return noErr;
         }
         if (err != noErr) return err;
-        if (!(pb.dirInfo.ioFlAttrib & ioDirMask))
-            return dupFNErr;             /* a FILE holds the name */
-        *dirID = pb.dirInfo.ioDrDirID;
-        seen = (uint32_t)RepDirKnown(*dirID, hash);
-        if (top && seen == 0 && !gTopLost)
-            seen = 1;                    /* already there: not ours */
-        if (seen != 1) return noErr;     /* not ours, or the same folder */
-        /* Ours, under another name: a different folder. Number it —
-         * unless the numbers have run out, where merging is what is
-         * left and is what this shell did with every one of them
-         * before. `BumpName` writes two digits and no more.
-         *
-         * The merged folder is memoed under its own name too, so the
-         * files inside it descend quietly instead of announcing the
-         * merge once each. */
-        if (attempt >= 99) {
-            *merged = 1;
-            RepDirMemo(*dirID, hash);
-            return noErr;
+        if (!(pb.dirInfo.ioFlAttrib & ioDirMask)) {
+            /* A FILE holds the name. At the top it is numbered past, as
+             * a folder already there is: the layer this archive came out
+             * of is a file beside it under the name of the folder inside
+             * (`Foo.hqx` holding `Foo` holding `Foo/`), and so is an
+             * archive extracted beside itself. Until 2026-11-07 every
+             * entry under it failed, on System 6.0.8 (DECISIONS.md
+             * 2026-11-07, *the file in the folder's place*). */
+            if (!top || attempt >= 99) return dupFNErr;
+        } else {
+            *dirID = pb.dirInfo.ioDrDirID;
+            seen = (uint32_t)RepDirKnown(*dirID, hash);
+            if (top && seen == 0 && !gTopLost)
+                seen = 1;                /* already there: not ours */
+            if (seen != 1) return noErr; /* not ours, or the same folder */
+            /* Ours, under another name: a different folder. Number it —
+             * unless the numbers have run out, where merging is what is
+             * left and is what this shell did with every one of them
+             * before. `BumpName` writes two digits and no more.
+             *
+             * The merged folder is memoed under its own name too, so the
+             * files inside it descend quietly instead of announcing the
+             * merge once each. */
+            if (attempt >= 99) {
+                *merged = 1;
+                RepDirMemo(*dirID, hash);
+                return noErr;
+            }
         }
         BlockMoveData(base, name, base[0] + 1);
         BumpName(name, attempt + 1);

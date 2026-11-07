@@ -1081,7 +1081,12 @@ EXPECT = {
 # **0 the same day**: `dirCount` deleted, the control's -32 (CODE -28, A5
 # -4) and the shipped pair's -32 (CODE alone; DECISIONS.md 2026-11-07, *the
 # folder count that never counted*). TIERS +32: 32 B onto every budget.
-OVL_SAVED = 166336
+# **-32 the same day, -> 166,304**: a file holding a top-level folder's
+# name is numbered past, the shipped pair's +32 (CODE +12, A5 +20,
+# alignment) against the control's 0 (CODE +12, A5 -12; DECISIONS.md
+# 2026-11-07, *the file in the folder's place*). TIERS unmoved; every
+# grant row -32.
+OVL_SAVED = 166304
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
 # every kept image is one — as is the bundle an envelope holds on to.

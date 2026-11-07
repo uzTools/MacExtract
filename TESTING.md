@@ -2066,6 +2066,9 @@ noted. Cases:
 - **the same archive extracted TWICE into one destination**: the existing
   top-level folder's twin is numbered `~1` (the maintainer's rule since
   2026-10-11);
+- **a FILE holding the top folder's name** (the layer above, or the
+  archive beside itself): the folder numbered `Foo~1`, the file untouched
+  (DECISIONS.md 2026-11-07, *the file in the folder's place*);
 - **101 folders whose names shorten alike**: numbering runs out at `~99`
   and the hundred-and-first merges, reported as *combined with*;
 - **250 folders against a 200-row memo**: no folder is SPLIT;

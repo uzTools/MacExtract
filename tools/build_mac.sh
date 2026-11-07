@@ -756,7 +756,10 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # -28 the same day, 186,308 -> 186,280, A5 -4 below: `dirCount`, which
 # never counted, deleted (DECISIONS.md 2026-11-07, *the folder count that
 # never counted*); the shipped pair -32.
-UNC_MAC_CODE_DEFAULT=186280
+# +12 the same day, 186,280 -> 186,292, A5 -12 below: a file holding a
+# top-level folder's name is numbered past (DECISIONS.md 2026-11-07, *the
+# file in the folder's place*); the shipped pair +32.
+UNC_MAC_CODE_DEFAULT=186292
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -1007,7 +1010,9 @@ UNC_MAC_CODE_DEFAULT=186280
 # alignment under fio_read's I/O error (above); no data was added.
 # -4 the same day, 36,668 -> 36,664: `.data` alignment under `dirCount`'s
 # deletion (above); no data was removed.
-UNC_MAC_A5_DEFAULT=36664
+# -12 the same day, 36,664 -> 36,652: `.data` alignment under the file in
+# the folder's place (above); no data was removed.
+UNC_MAC_A5_DEFAULT=36652
 # A CEILING PER CONFIGURATION, because one ceiling measured on another build
 # cannot fire. The figures above are the RESIDENT control build, which carries
 # every decoder; the shipped build's resident code is a third of that, so
@@ -1564,8 +1569,13 @@ UNC_MAC_A5_DEFAULT=36664
 # -32 the same day, 39,936 -> 39,904, A5 unmoved: `dirCount`, which never
 # counted, deleted (DECISIONS.md 2026-11-07, *the folder count that never
 # counted*). 32 B onto every budget.
-UNC_MAC_CODE_EAGER=39904
-UNC_MAC_A5_EAGER=16704
+# +12 and +20 the same day, 39,904 -> 39,916 and 16,704 -> 16,724: a file
+# holding a top-level folder's name is numbered past (DECISIONS.md
+# 2026-11-07, *the file in the folder's place*). The A5 is `.data`
+# alignment: the code ended on a 32-byte boundary. 32 B off every budget,
+# the 32 `dirCount` gave.
+UNC_MAC_CODE_EAGER=39916
+UNC_MAC_A5_EAGER=16724
 # +8 on 2026-10-02 for the same reason as the eager pair above: the
 # overlay call that now says WHICH of StuffIt 2.x's ciphers an entry
 # wants. A5 fell to 19,096 and its ceiling is left where it was.
@@ -1705,7 +1715,9 @@ UNC_MAC_A5_EAGER=16704
 # bss 16,740, under its ceiling.
 # -32 code the same day: `dirCount` deleted, as the eager pair; data + bss
 # 16,740, under its ceiling.
-UNC_MAC_CODE_LAZY=38652
+# +12 code the same day: the file in the folder's place, as the eager
+# pair; data + bss 16,760, under its ceiling.
+UNC_MAC_CODE_LAZY=38664
 UNC_MAC_A5_LAZY=19200
 if [ -n "$UNC_OVL_RESIDENT" ]; then
     UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-$UNC_MAC_CODE_DEFAULT}

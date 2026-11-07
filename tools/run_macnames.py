@@ -197,6 +197,33 @@ def folder_again_case(sink, tmp, problems):
     return 1
 
 
+def file_in_place_case(sink, tmp, problems):
+    """A FILE already holding a top-level folder's name: the envelope
+    layer this archive came out of (`Foo.hqx` holding `Foo` holding
+    `Foo/`), or the archive itself extracted beside itself. The folder is
+    numbered past it as past a folder already there, every file inside
+    keeps its name, and the file is left alone. Until 2026-11-07 every
+    entry failed `folder could not be created` and nothing came out, on
+    System 6.0.8 as here (DECISIONS.md 2026-11-07, *the file in the
+    folder's place*)."""
+    tree = [synth_dd.folder("Foo", [synth_dd.file("x.txt", data=b"x\n"),
+                                    synth_dd.file("y.txt", data=b"y\n")])]
+    p, _ = synth_dd.write_one(tmp, "macname-fileinplace", tree)
+    out = os.path.join(tmp, "macname-fileinplace.out")
+    os.mkdir(out)
+    with open(os.path.join(out, "Foo"), "wb") as f:
+        f.write(b"the layer above\n")
+    got, rc, rep = run(sink, p, out)
+    check(problems, rc == 0, "fileinplace: exit was %d, report %r" % (rc, rep))
+    check(problems, got == {"Foo": b"the layer above\n",
+                            "Foo~1/x.txt": b"x\n", "Foo~1/y.txt": b"y\n"},
+          "fileinplace: wrote %r, wanted the folder as Foo~1 beside the "
+          "untouched file" % sorted(got))
+    check(problems, rep == ["Folder Foo renamed to Foo~1"],
+          "fileinplace: the numbered folder must be reported, once: %r" % rep)
+    return 1
+
+
 def folder_crowd_case(sink, tmp, problems):
     """More FOLDERS alike than the numbering has digits for. `BumpName`
     writes two, so the hundred-and-first is where numbering stops — and
@@ -482,6 +509,7 @@ CASES = [
     ("folder-collision", lambda *a: folder_collision_case(*a)),
     ("path-folder", lambda *a: path_folder_case(*a)),
     ("folder-again", lambda *a: folder_again_case(*a)),
+    ("file-in-place", lambda *a: file_in_place_case(*a)),
     ("folder-crowd", lambda *a: folder_crowd_case(*a)),
     ("folder-table-full", lambda *a: folder_table_full_case(*a)),
     ("engine-cap", lambda *a: engine_cap_case(*a)),

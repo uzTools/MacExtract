@@ -535,6 +535,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-07 (the FXInfo byte System 7.0.1 locks in) — System 7.0.1 sets fdXFlags to 0x70 as it locks a file; the lock alone, not the comment
 - 2026-11-07 (the read error that read as end of file) — `fio_read` answered every File Manager failure as end of file, so a bad sector read as "archive incomplete"; it returns -1 now, and the shipped budget is unchanged
 - 2026-11-07 (the folder count that never counted) — `dirCount` was always 0, because a folder entry never reaches `sink_end`; deleted rather than made to count, for 32 B onto every budget
+- 2026-11-07 (the file in the folder's place) — a file holding a top-level folder's name failed every entry under it; the folder is numbered past it now, as past a folder already there, for 32 B off every budget
 
 ---
 
@@ -22306,3 +22307,38 @@ shipped budget**. Lazy −32/0. Resident control CODE −28, A5 −4:
 rows unmoved. Heap 0. Stack: `ExtractOne` 1,460 → 1,452 B
 (`-fstack-usage`, the shipped flags); no other frame moves. Time not
 measured: one branch per entry fewer.
+
+## 2026-11-07 (the file in the folder's place) — a file holding a top-level folder's name failed every entry under it; the folder is numbered past it now, as past a folder already there, for 32 B off every budget
+
+**Claim, confirmed (from a review), on System 6.0.8.** `EnsureDir`
+returned `dupFNErr` when a FILE held a folder's name, and `sink_begin`
+named every entry under it `folder could not be created`. Both ways there,
+`interactive.py --chain`, Mac Plus 4 MB: `MacGzip.hqx` (BinHex name
+`MacGzip`) holding `derived-MacGzip.sit`, every entry in `MacGzip/`, whose
+layer is written beside it as the file `MacGzip` — six such lines, nothing
+extracted, the intermediate left; and a zip named `Achain` holding
+`Achain/`, extracted beside itself — three lines, nothing extracted. After:
+`Folder MacGzip renamed to MacGzip~1` and "Extraction complete.", the
+intermediate deleted (only a layer with no errors is); `Achain~1` the same.
+
+**The fix.** At the top, a file holding the name is numbered past as a
+folder already there is (DECISIONS.md 2026-10-11, *the folder that is
+already there*), and is not touched. Below the top it is still
+`dupFNErr`: there it is the archive's own file and folder of one name,
+which nothing here has measured. `run_macnames.py`'s `file-in-place`
+case: 3 problems before; after, `Foo~1/x.txt` and `Foo~1/y.txt` beside the
+untouched `Foo`, one report line.
+
+**The harness said MATCH on the broken run.** The Linux CLI fails on the
+same specimen, so the volume and the CLI held the intermediate alone;
+`--chain` now fails when the CLI exits non-zero, and lists the volume
+instead of dying on `R.sh` (OPEN_ITEMS.md, *The CLI fails where a file
+holds a top-level folder's name*).
+
+**Price (measured).** Shipped eager CODE +12, A5 +20 (`.data`
+alignment: the code ended on a 32-byte boundary): **32 B off every
+shipped budget**, the 32 `dirCount`'s deletion gave the same day. Lazy
++12/+20. Resident control +12/−12, 0: `OVL_SAVED` −32 → 166,304 and every
+grant row −32 (`gain()`), `TIERS` unmoved. Heap 0. Stack: `sink_begin`
+424 B, unchanged (`-fstack-usage`). Time: the new branch runs only where
+a file holds the name.

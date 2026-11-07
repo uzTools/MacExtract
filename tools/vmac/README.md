@@ -3265,7 +3265,9 @@ fam=0` said the application had never seen a family).
 
 `--chain` and `--wrapped` compare NAMES on the volume against what the Linux
 CLI produces, and require the application to have tidied up (the intermediate
-layer for `--chain`, the decoded parts for `--wrapped`). `--chain` is what
+layer for `--chain`, the decoded parts for `--wrapped`). A CLI that exits
+non-zero fails `--chain`: on 2026-11-07 the CLI and the Mac both left the
+intermediate alone and it read MATCH. `--chain` is what
 tests README.md's envelope claim, and **the only harness that can see a
 chain**: `run.py` drives the `-DUNC_MAC_AUTOTEST` build, which calls
 `RunExtract` once; the unwrap loop is in the interactive application only. A

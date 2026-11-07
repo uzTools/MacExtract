@@ -337,6 +337,17 @@ before its format is known ends on "not a recognized archive", not on
 as end of file*). What would close it: an error out of the sniff, priced
 on the resident sniffer and the shipped budget.
 
+## The CLI fails where a file holds a top-level folder's name
+
+`macextract x` on `MacGzip.hqx` (BinHex name `MacGzip`, holding
+`derived-MacGzip.sit`, all in `MacGzip/`) and on a zip `Achain` holding
+`Achain/` extracted beside itself: `cannot create output ... Not a
+directory` for every entry, exit 1 (measured 2026-11-07). The Macintosh
+shell numbers the folder past the file since that day (DECISIONS.md
+2026-11-07, *the file in the folder's place*). What would close it: the
+same rule in the CLI's writer, with a case like `run_macnames.py`'s
+`file-in-place`.
+
 ## The double-click helpers: what is left
 
 `companion/` works (DECISIONS.md 2026-10-11, *the stub that hands it on*);

@@ -1859,10 +1859,18 @@ def phase_chain(args, appbin, workdir, shot):
     # A resource fork is part of the file on the Mac and a NAME.rsrc beside
     # it from the CLI by default, so every chain ending in a file with one
     # read MISMATCH until 2026-11-03. Hidden forks are `._NAME`, left out.
-    R.sh(CD.CLI, "x", "--forks", "hidden", "-o", ref, args.fixture)
+    # Not R.sh: a CLI that exits 1 raised there, and the Mac's volume was
+    # never listed (2026-11-07, a folder named like the layer above it,
+    # which the CLI also fails on). Its exit is printed instead.
+    cli = subprocess.run([CD.CLI, "x", "--forks", "hidden", "-o", ref,
+                          args.fixture], capture_output=True)
+    if cli.returncode:
+        print(f"interactive: the Linux CLI exited {cli.returncode}")
     want = {n for n in os.listdir(ref) if not n.startswith("._")}
 
-    ok = got == want
+    # A reference that failed is no reference: on 2026-11-07 a CLI that
+    # left only the intermediate and a Mac that did the same read MATCH.
+    ok = got == want and cli.returncode == 0
     print(f"interactive: after the chain, the volume holds {sorted(got)}")
     print(f"interactive: the Linux CLI produces           {sorted(want)}")
     print("interactive: " + ("MATCH" if ok else "MISMATCH")
