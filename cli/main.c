@@ -27,6 +27,10 @@
  *
  * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
  */
+/* lstat, fdopen, O_NOFOLLOW and mkdtemp are POSIX.1-2008, which
+ * -std=c99 -pedantic does not expose by itself. */
+#define _POSIX_C_SOURCE 200809L
+
 #include "macextract.h"
 
 #include <stdio.h>
@@ -34,6 +38,7 @@
 #include <string.h>
 #include <errno.h>
 #include <dirent.h>
+#include <fcntl.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -424,6 +429,29 @@ static void fourcc_str(uint32_t v, char *out)
     out[o] = 0;
 }
 
+/* Create `path` for writing and never write through a link: an existing
+ * path is an error, or with `overwrite` is unlinked first — a link is
+ * replaced, not followed, and a hard link no longer shares what is
+ * written. O_NOFOLLOW|O_EXCL is what makes a link planted there between
+ * the check and the open fail rather than be followed. DECISIONS.md
+ * 2026-11-07, *the links in the output folder*. */
+static FILE *create_file(const char *path, int overwrite)
+{
+    struct stat st;
+    FILE *f;
+    int fd;
+    if (lstat(path, &st) == 0) {
+        if (!overwrite) { errno = EEXIST; return NULL; }
+        if (S_ISDIR(st.st_mode)) { errno = EISDIR; return NULL; }
+        if (unlink(path) != 0) return NULL;
+    }
+    fd = open(path, O_WRONLY | O_CREAT | O_EXCL | O_NOFOLLOW, 0666);
+    if (fd < 0) return NULL;
+    f = fdopen(fd, "wb");
+    if (!f) close(fd);
+    return f;
+}
+
 /* Make the folders of s->cur_path below outdir: all of it when `whole`,
  * else all but the leaf. A FILE in a folder's place is not touched: the
  * folder is numbered past it, `X~1`, the first such name that is free or
@@ -431,7 +459,11 @@ static void fourcc_str(uint32_t v, char *out)
  * That is a layer this run unwrapped (`Foo.hqx` holding `Foo` holding
  * `Foo/`), an archive extracted beside itself, or an archive holding
  * both `X` and `X/` (DECISIONS.md 2026-11-07, *the folder numbered past
- * a file*). Returns 0, or -1 when a folder could not be made. */
+ * a file*). A LINK there is never followed: it fails the entry, or with
+ * --overwrite is replaced by a real folder, and a link where a numbered
+ * name would go is passed over like a file (DECISIONS.md 2026-11-07, *the
+ * links in the output folder*). Returns 0, or -1 when a folder could not
+ * be made. */
 static int sink_make_dirs(DiskSink *s, int whole)
 {
     size_t base = strlen(s->outdir);
@@ -445,17 +477,27 @@ static int sink_make_dirs(DiskSink *s, int whole)
             continue;
         }
         s->cur_path[i] = 0;
+        if (lstat(s->cur_path, &st) == 0 && S_ISLNK(st.st_mode)) {
+            if (!s->overwrite) {
+                fprintf(stderr, "macextract: %s: is a symbolic link, which is "
+                        "not followed (--overwrite replaces it)\n",
+                        s->cur_path);
+                s->cur_path[i] = c;
+                return -1;
+            }
+            if (unlink(s->cur_path) != 0) { s->cur_path[i] = c; return -1; }
+        }
         if (mkdir(s->cur_path, 0777) != 0 &&
-            (stat(s->cur_path, &st) != 0 || !S_ISDIR(st.st_mode))) {
+            (lstat(s->cur_path, &st) != 0 || !S_ISDIR(st.st_mode))) {
             char rest[PATHBUF], was[PATHBUF];
             int n;
-            if (stat(s->cur_path, &st) != 0) { s->cur_path[i] = c; return -1; }
+            if (lstat(s->cur_path, &st) != 0) { s->cur_path[i] = c; return -1; }
             snprintf(rest, sizeof rest, "%s", c ? s->cur_path + i + 1 : "");
             snprintf(was, sizeof was, "%s", s->cur_path + base + 1);
             for (n = 1; n <= 99; n++) {
                 int k = snprintf(s->cur_path + i, PATHBUF - i, "~%d", n);
                 if (k < 0 || (size_t)k >= PATHBUF - i) return -1;
-                if (stat(s->cur_path, &st) != 0) {
+                if (lstat(s->cur_path, &st) != 0) {
                     if (mkdir(s->cur_path, 0777) != 0) return -1;
                     fprintf(stderr, "macextract: %s: a file has this name; "
                                     "the folder is %s\n",
@@ -487,9 +529,9 @@ static int path_taken(DiskSink *s, const char *path)
 {
     struct stat st;
     char rp[PATHBUF];
-    if (stat(path, &st) == 0 && !sink_unwrap_exempt(s, path)) return 1;
+    if (lstat(path, &st) == 0 && !sink_unwrap_exempt(s, path)) return 1;
     if (rsrc_path(path, s->hidden_forks, rp, sizeof rp) != 0) return 1;
-    return stat(rp, &st) == 0 && !sink_unwrap_exempt(s, rp);
+    return lstat(rp, &st) == 0 && !sink_unwrap_exempt(s, rp);
 }
 
 /* A name we had to shorten can collide with one already written, and
@@ -797,6 +839,7 @@ static int sink_begin(void *ctx, const UncEntryInfo *info)
     if (sink_make_dirs(s, info->is_dir) != 0) {
         fprintf(stderr, "macextract: %s: a folder of its path could not be "
                         "made\n", name);
+        s->cur_path[0] = 0;
         s->errors++;
         return 1;
     }
@@ -805,7 +848,7 @@ static int sink_begin(void *ctx, const UncEntryInfo *info)
      * as past any name taken, rather than refused. */
     {
         struct stat st;
-        if (stat(s->cur_path, &st) == 0 && S_ISDIR(st.st_mode)) {
+        if (lstat(s->cur_path, &st) == 0 && S_ISDIR(st.st_mode)) {
             size_t reserve = info->rsrc_size == 0 ? 0u
                            : (s->hidden_forks ? 2u : 5u);
             if (!sink_number_path(s, (size_t)s->fs_name_max > reserve
@@ -960,6 +1003,7 @@ static FILE *sink_open_fork(DiskSink *s, UncFork fork)
 {
     char path[PATHBUF];
     struct stat st;
+    FILE *f;
     int ex;
     s->clobber = 0;
     if (fork == UNC_FORK_DATA)
@@ -987,27 +1031,33 @@ static FILE *sink_open_fork(DiskSink *s, UncFork fork)
             return NULL;
         }
         memcpy(path + n, DEFER_SUFFIX, sizeof DEFER_SUFFIX);
-        s->deferred[ex - 1] = 1;
-        return fopen(path, "wb");
+        /* A NAME.unwrap~ already there is somebody's file like any
+         * other; marked only once created, so the rename can only ever
+         * move what this run wrote. */
+        f = create_file(path, s->overwrite);
+        if (f) s->deferred[ex - 1] = 1;
+        return f;
     }
     /* Refused, not deferred, even with --overwrite: on the first layer
      * the file being read is the user's archive, which nothing deletes,
      * so writing beside it and renaming would replace their original with
      * its own contents. */
-    if (stat(path, &st) == 0 && sink_is_reading(s, &st)) {
-        s->clobber = 1;
-        fprintf(stderr, "macextract: %s: is the archive being read; not "
-                "written over\n", path);
-        return NULL;
+    if (lstat(path, &st) == 0) {
+        if (!S_ISLNK(st.st_mode) && sink_is_reading(s, &st)) {
+            s->clobber = 1;
+            fprintf(stderr, "macextract: %s: is the archive being read; not "
+                    "written over\n", path);
+            return NULL;
+        }
+        if (!s->overwrite) {
+            s->clobber = 1;
+            fprintf(stderr, "macextract: %s: output path already exists; "
+                    "re-run with --forks hidden to keep both forks, or "
+                    "--overwrite\n", path);
+            return NULL;
+        }
     }
-    if (!s->overwrite && stat(path, &st) == 0) {
-        s->clobber = 1;
-        fprintf(stderr, "macextract: %s: output path already exists; re-run "
-                "with --forks hidden to keep both forks, or --overwrite\n",
-                path);
-        return NULL;
-    }
-    return fopen(path, "wb");
+    return create_file(path, s->overwrite);
 }
 
 /* A write that failed, said once per entry with what the system said:
@@ -1320,18 +1370,19 @@ static int sink_comment(void *ctx, const uint8_t *buf, uint16_t len)
         fprintf(stderr, "macextract: comment: output path too long\n");
         return 0;
     }
-    if (stat(path, &st) == 0 && sink_is_reading(s, &st)) {
+    if (lstat(path, &st) == 0 && !S_ISLNK(st.st_mode) &&
+        sink_is_reading(s, &st)) {
         fprintf(stderr, "macextract: %s: is the archive being read; "
                 "the archive comment was not written\n", path);
         return 0;
     }
-    if (!s->overwrite && stat(path, &st) == 0) {
+    if (!s->overwrite && lstat(path, &st) == 0) {
         fprintf(stderr, "macextract: %s: output path already exists; "
                 "the archive comment was not written (use --overwrite)\n",
                 path);
         return 0;
     }
-    f = fopen(path, "wb");
+    f = create_file(path, s->overwrite);
     if (!f || fwrite(buf, 1, len, f) != len) {
         fprintf(stderr, "macextract: %s: %s\n", path, strerror(errno));
         if (f) fclose(f);

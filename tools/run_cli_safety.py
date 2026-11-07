@@ -287,12 +287,84 @@ def case_write_error(tmp):
     return probs
 
 
+def case_planted_links(tmp):
+    """Item 4: links already in the output folder were followed: stat,
+    mkdir and fopen("wb") went through them, a dangling file link even
+    without --overwrite. A tar holding evil.txt and lnk/x.txt, extracted
+    into o/ where evil.txt -> ../outside.txt and lnk -> ../outsidedir were
+    planted. Nothing outside o/ may change; --overwrite replaces the link
+    itself, and without it the entry is refused."""
+    probs = []
+    tar = tar_of([("evil.txt", b"entry evil\n"), ("lnk/x.txt", b"entry x\n")])
+    for ow in (False, True):
+        tag = "--overwrite" if ow else "default"
+        d = os.path.join(tmp, tag.strip("-"))
+        os.makedirs(os.path.join(d, "o"))
+        os.mkdir(os.path.join(d, "outsidedir"))
+        if ow:      # a link to a file that exists; default: a dangling one
+            write(os.path.join(d, "outside.txt"), b"outside\n")
+        os.symlink("../outside.txt", os.path.join(d, "o", "evil.txt"))
+        os.symlink("../outsidedir", os.path.join(d, "o", "lnk"))
+        write(os.path.join(d, "a.tar"), tar)
+        args = ["x", "a.tar", "-o", "o"] + (["--overwrite"] if ow else [])
+        rc, err = run(*args, cwd=d)
+        out_txt = os.path.join(d, "outside.txt")
+        if ow and read(out_txt) != b"outside\n":
+            probs.append(f"{tag}: outside.txt was written through the link")
+        if not ow and os.path.exists(out_txt):
+            probs.append(f"{tag}: outside.txt was created through the "
+                         f"dangling link")
+        if os.listdir(os.path.join(d, "outsidedir")):
+            probs.append(f"{tag}: lnk/x.txt landed in outsidedir")
+        o = os.path.join(d, "o")
+        if ow:
+            if rc != 0 or os.path.islink(os.path.join(o, "evil.txt")) or \
+               os.path.islink(os.path.join(o, "lnk")) or \
+               read(os.path.join(o, "evil.txt")) != b"entry evil\n" or \
+               read(os.path.join(o, "lnk", "x.txt")) != b"entry x\n":
+                probs.append(f"{tag}: wanted both links replaced by the "
+                             f"entries, exit 0; got exit {rc} "
+                             f"{err.strip()[:160]!r}")
+        else:
+            if rc != 1 or not os.path.islink(os.path.join(o, "evil.txt")) \
+               or not os.path.islink(os.path.join(o, "lnk")):
+                probs.append(f"{tag}: wanted both entries refused and the "
+                             f"links left, exit 1; got exit {rc} "
+                             f"{err.strip()[:160]!r}")
+    return probs
+
+
+def case_unwrap_temp_not_ours(tmp):
+    """Found auditing item 2's fopen("wb") calls: the deferral beside the
+    envelope opened NAME.unwrap~ "wb" whatever was there. Two nameless
+    gzip layers in "Same", with the user's own o/Same.unwrap~ in place:
+    without --overwrite that file must survive (the entry is refused)."""
+    import gzip
+    mine = b"the user's own .unwrap~ file\n"
+    d = os.path.join(tmp, "d")
+    os.makedirs(os.path.join(d, "o"))
+    payload = b"two nameless layers\n" * 50
+    write(os.path.join(d, "Same"),
+          gzip.compress(gzip.compress(payload, mtime=0), mtime=0))
+    write(os.path.join(d, "o", "Same.unwrap~"), mine)
+    rc, err = run("x", "Same", "-o", "o", cwd=d)
+    got = os.path.join(d, "o", "Same.unwrap~")
+    if not os.path.exists(got) or read(got) != mine:
+        return [f"o/Same.unwrap~ was written over (exit {rc}, left "
+                f"{sorted(os.listdir(os.path.join(d, 'o')))})"]
+    if rc != 1:
+        return [f"wanted the entry refused, exit 1; got {rc}"]
+    return []
+
+
 CASES = {
     "overwrite-self": case_overwrite_self,
     "sidecar-not-ours": case_sidecar_not_ours,
     "deferred-by-path": case_deferred_by_path,
     "long-paths": case_long_paths,
     "write-error": case_write_error,
+    "planted-links": case_planted_links,
+    "unwrap-temp-not-ours": case_unwrap_temp_not_ours,
 }
 
 

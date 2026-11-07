@@ -545,6 +545,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-07 (the deferral keyed by fork) — a write deferred beside the envelope was renamed back by which fork it was, not which path it matched; an inner data fork carrying the sidecar's name was left as `NAME.rsrc.unwrap~`
 - 2026-11-07 (the path a buffer cut) — fixed 1,100–1,300-byte buffers cut a long sidecar or deferral path, and `remove()`/`rename()` then acted on a different file; every path buffer is `PATHBUF` and a cut path is an error
 - 2026-11-07 (the error only fclose saw) — a write error that stdio reported only at `fclose` was ignored: the entry counted as written and the layer above was deleted; it fails the entry now, with the system's words
+- 2026-11-07 (the links in the output folder) — links already in the output folder were followed by `stat`, `mkdir` and `fopen("wb")`, so a tar's entries landed outside `-o`; files are created `O_EXCL|O_NOFOLLOW` now and folders checked with `lstat`
 
 ---
 
@@ -22653,3 +22654,32 @@ test seam in the binary. A tmpfs or a quota needs root here.
 `UNC_ERR_SINK` with `strerror`'s text, so the layer above is kept. A
 failed `fwrite` says its reason too. `main` checks stdout once on the way
 out, which covers every listing line at once.
+
+## 2026-11-07 (the links in the output folder) — links already in the output folder were followed by `stat`, `mkdir` and `fopen("wb")`, so a tar's entries landed outside `-o`; files are created `O_EXCL|O_NOFOLLOW` now and folders checked with `lstat`
+
+**Claim, confirmed (from a review).** Measured against the parent commit with
+`run_cli_safety.py planted-links`: `o/evil.txt -> ../outside.txt` and
+`o/lnk -> ../outsidedir` planted, a tar holding `evil.txt` and
+`lnk/x.txt`. Without `--overwrite` the dangling file link created
+`outside.txt` and `x.txt` landed in `outsidedir`, exit 0; with it,
+`outside.txt` was written through. The CLI never creates a link itself,
+so a link there is never one of this run's.
+
+**The fix.** Every output file goes through `create_file`: `lstat` for
+"exists", then `open(O_WRONLY|O_CREAT|O_EXCL|O_NOFOLLOW)` and `fdopen`;
+`--overwrite` unlinks what is there first, so a link is replaced and a
+hard link no longer shares the new bytes. Each folder below `-o` is
+checked with `lstat` (`sink_make_dirs`): a link fails the entry, or with
+`--overwrite` is replaced by a real folder; a link where a numbered name
+would go is passed over like a file (the numbering is `4b0b7ae`'s, *the
+folder numbered past a file*). `-o` itself is the user's and is
+followed. The same
+audit found the deferral opening `NAME.unwrap~` "wb" over the user's own
+file of that name (`unwrap-temp-not-ours`, fails on the parent commit); it is
+created the same way, and marked deferred only once created.
+
+**Not covered: a link swapped in while the run is going.** The last
+component is safe (`O_NOFOLLOW|O_EXCL` fail rather than follow); a folder
+component replaced between its `lstat` and the open is not — that needs
+an `openat` walk from a descriptor of `-o`. Hypothesis: nothing here runs
+beside an adversary writing into the output folder.

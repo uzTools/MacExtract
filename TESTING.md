@@ -185,6 +185,12 @@ case for.
   whole (fails only at `fclose`) and at one it does not (fails in
   `fwrite`): exit 1 with the errno text, the envelope kept. And `l >
   /dev/full` must exit 1.
+- `planted-links`: a file link and a folder link planted in `-o`, both
+  pointing outside it, with and without `--overwrite`: nothing outside
+  changes; without it both entries are refused and the links stay, with
+  it the links are replaced by the entries.
+- `unwrap-temp-not-ours`: the user's own `Same.unwrap~` where the
+  deferral writes must survive.
 
 ### Exact oracle invocation
 
