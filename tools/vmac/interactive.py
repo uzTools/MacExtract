@@ -1086,7 +1086,12 @@ def phase_dest(args, appbin, workdir, shot):
     R.sh(sys.executable, os.path.join(HERE, "mkboot.py"), stock, appbin, bootimg,
          "--data", f"{args.fixture}:archive.sit")
     destdsk = os.path.join(workdir, "dest.dsk")
-    R.make_floppy(destdsk, "Dest")
+    if args.dest_from:
+        # A destination that is not blank — one already full, to drive the
+        # disk-full outcome (`--dest-from`). Copied sparse.
+        R.sh("cp", "--sparse=always", args.dest_from, destdsk)
+    else:
+        R.make_floppy(destdsk, "Dest")
 
     scratch = os.path.join(args.outdir, ".settle.png")
     elapsed = None
@@ -2873,6 +2878,10 @@ def main():
                          "dialog to a second volume and check on the HOST "
                          "that the files landed there and not beside the "
                          "archive. Asserts; does not just photograph.")
+    ap.add_argument("--dest-from", metavar="IMG",
+                    help="with --dest: start the second volume as a copy of "
+                         "IMG (its name must be Dest) instead of a blank "
+                         "floppy, e.g. one already full")
     ap.add_argument("--diskswap", action="store_true",
                     help="the disk-swap phase: hold the fixture's parts on "
                          "a floppy that is NOT in the machine, let the "

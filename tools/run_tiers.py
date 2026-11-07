@@ -283,10 +283,13 @@ REPO = os.path.dirname(HERE)
 # control's CODE -96 and A5 0; the shipped pair fell the same 96, OVL_SAVED
 # unmoved. They were 190,276 / 94,894 / 619,182.
 TIERS = {
-    "sys3-512K": (190212, "System 3.0, Macintosh 512Ke (222,070 B free)"),
-    "sys6-512K": (94830,  "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
-    "floor-1M":  (619118, "System 6.0.8, 1 MB Mac Plus — the floor target"),
+    "sys3-512K": (190180, "System 3.0, Macintosh 512Ke (222,070 B free)"),
+    "sys6-512K": (94798,  "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
+    "floor-1M":  (619086, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
+# -32 each 2026-11-07, DERIVED from TIERS_CONTROL +32 (the disk-full
+# create, DECISIONS.md 2026-11-07, *the create the disk was too full for*);
+# they were 190,212 / 94,830 / 619,118.
 # +64 each 2026-11-07, DERIVED from TIERS_CONTROL -64 (BarDraw's port,
 # DECISIONS.md 2026-11-07, *the port a dialog leaves*); they were 190,372 /
 # 94,990 / 619,278.
@@ -492,7 +495,8 @@ TIERS = {
 # data + bss -680. The machine gave +4,204, because the jump table, the
 # stub segments and the relocations trimmed at launch are resident bytes
 # this unit never counted — which is why TIERS was measured, not moved.
-TIERS_CONTROL = 222720     # build/mac-resident, CODE + A5, 2026-11-07
+TIERS_CONTROL = 222752     # build/mac-resident, CODE + A5, 2026-11-07
+# +32 the same day: the disk-full create (CODE +32, A5 0); TIERS -32.
 # +224 on 2026-11-07: the LZ4 ring grows with the output (`lz_grow`,
 # DECISIONS.md 2026-11-07, *the ring that grows with the output*); the
 # resident control's CODE +244 and A5 -20, so CODE + A5 +224. All of it is
@@ -1052,6 +1056,9 @@ EXPECT = {
 # image, the shipped pair's +64 (CODE +40, A5 +24, `.data` alignment), the
 # control unmoved (DECISIONS.md 2026-11-07, *the decoders a 64K ROM kept
 # low*); the probe build's three budgets fell 64 B each. TIERS unmoved.
+# **0 the same day**: the disk-full create, the control's +32 and the
+# shipped pair's +32, CODE alone (DECISIONS.md 2026-11-07, *the create the
+# disk was too full for*). TIERS -32.
 OVL_SAVED = 166112
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and

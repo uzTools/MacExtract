@@ -2479,6 +2479,16 @@ switches the DESTINATION dialog to the floppy with its own Drive button
 **both** volumes: every output name on the chosen one, none on the archive's.
 Use `derived-Downer.sit`; it waits out `EXTRACT_QUIET`.
 
+**`--dest-from IMG` starts that floppy as a copy of IMG** (named `Dest`), to
+reach the disk-full outcome of a create (DECISIONS.md 2026-11-07, *the
+create the disk was too full for*). IMG is an 800 KB `hformat -l Dest`
+volume with one `hcopy -r` filler as large as `hvol` says is free: 0
+blocks, and a catalog with room for about twenty more records. Extract a
+zip of 60 empty files, or of 60 empty folders: `dest-4-complete.png` is
+the report, an entry `could not be created` over **Disk full.** The phase
+prints `destination WRONG` by construction and asserts nothing about this
+run: the frame is the result.
+
 ### What the Finder does with a dropped archive — `interactive.py --drop`
 
     interactive.py <fixture> --drop --system Sys30.img --emu mv-4M

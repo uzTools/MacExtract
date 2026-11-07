@@ -530,6 +530,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-07 (the ring that grows with the output) — the LZ4 window starts at 4 KB and doubles to 64 KB only as the frame produces, so the peek and a small payload no longer carry a flat 64 KB
 - 2026-11-07 (the floppies twice) — every release carries the application as .bin and .hqx, the helpers zip, and each floppy as a raw .img and a Disk Copy 4.2 .dsk, every floppy with the README as a SimpleText Read Me
 - 2026-11-07 (the decoders a 64K ROM kept low) — on a 64K ROM `ovl_keep` places a kept image high with `high_handle`, a filler routine in the `segsetup` image; 72/74 there, for 64 B of every budget
+- 2026-11-07 (the create the disk was too full for) — a file or folder the catalog cannot take ended on "Extraction stopped part way" with nothing named; now "Disk full." under the entry, for 32 B off every budget
 
 ---
 
@@ -22084,3 +22085,38 @@ both.
 ROM*). It would cost less resident code but changes every machine's heap
 layout.
 
+## 2026-11-07 (the create the disk was too full for) — a file or folder the catalog cannot take ended on "Extraction stopped part way" with nothing named; now "Disk full." under the entry, for 32 B off every budget
+
+**Claim, confirmed on the emulator.** `sink_begin` returned -1 on
+`dskFulErr` from `PBDirCreate` (in `EnsureDir`) and from `HCreate` without
+setting `gLastWriteErr`, which only `sink_write` set; and a -1 from
+`begin_entry` ends the archive without `end_entry`, where a failed write is
+named. Measured with `interactive.py --dest --dest-from` on System 6.0.8,
+Mac Plus 4 MB: a Dest floppy filled by hfsutils to 0 free blocks, then zips
+of 60 empty files and of 60 empty folders. Before: the bare alert
+"Extraction stopped part way through this archive.", both runs. After: the
+report `f027: could not be created` / `d019: folder could not be created`,
+then **Disk full.**
+
+**"Free blocks but a full catalog" does not happen on HFS**: the catalog
+grows into free blocks. Measured with hfsutils on an 800 KB volume: 3,000
+empty files and 189,440 B still free; filled to 0 free blocks first, 21
+empty files and then "volume full". The state that reaches these two calls
+is a disk out of blocks whose catalog is out of nodes — every non-empty
+entry stops at `SetEOF` first, which `sink_write` already reported.
+
+**The fix.** Both sites name the entry with the reason they already had
+(`S_REP_DIR_FAILED`, `S_REP_NOT_CREATED`), count it, set `gLastWriteErr`
+and still stop the run. The other `dskFulErr` paths, read: `SetEOF` returns
+through `sink_write`; the archive comment never stops the run and names
+itself (`S_REP_NOTE_LOST`), so it does not set the global — "Disk full."
+over a complete extraction would be wrong; a segmented part's copy beside
+the output falls back to reading the part in place; `StageFlush` is the
+unshipped `UNC_MAC_STAGE_WRITES` build. No `Allocate` call exists.
+
+**Price.** Shipped CODE +32, A5 0, **32 B off every budget**; lazy +32/0;
+control +32/0. `OVL_SAVED` and the grant rows unmoved, `TIERS` −32
+DERIVED. Heap 0. Stack: `sink_begin` 420 → 424 B (`-fstack-usage`), called
+from a reader's top level, so the deepest chain (*Stack*) is unmoved
+(derived from the call graph). Storing `err` unconditionally was +16 and
+was not taken: the global would then hold a name collision too.

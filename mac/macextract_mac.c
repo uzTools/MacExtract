@@ -2018,6 +2018,10 @@ static void DirHold(MacSink *s, long dir)
     if (s->heldMd) s->heldDir = dir;
 }
 
+/* Set where a create fails with dskFulErr as well as where a write does;
+ * defined below, with the reason it is file-scope. */
+static OSErr gLastWriteErr;
+
 /* Under UNC_AT_TIMING only, the two entry points that do catalog work are
  * wrapped so their ticks are billed to the File Manager rather than to the
  * engine. The shipping build has no wrapper and no extra frame: the sink
@@ -2225,14 +2229,20 @@ static int SINK_BEGIN(void *ctx, const UncEntryInfo *info)
                 int isNew = 0, merged = 0, numbered = 0;
                 long parent = dir;
                 uint32_t h = DirHash(nm + start, i - start);
-                OSErr derr = EnsureDir(s, dir, comp, h,
-                                       dir == s->rootDirID, &dir,
-                                       &isNew, &merged, &numbered);
-                if (derr != noErr) {
-                    if (derr == dskFulErr) return -1;   /* the run is over */
+                err = EnsureDir(s, dir, comp, h,
+                                dir == s->rootDirID, &dir,
+                                &isNew, &merged, &numbered);
+                if (err != noErr) {
+                    /* Named either way: a full catalog stops the run
+                     * here, before end_entry, which is where a failed
+                     * write is named, and the alert says "Disk full." */
                     RepEntryFailed(nm + start, i - start,
                                    S_REP_DIR_FAILED);
                     s->errors++;
+                    if (err == dskFulErr) {             /* the run is over */
+                        gLastWriteErr = err;
+                        return -1;
+                    }
                     return 1;                           /* this entry only */
                 }
                 /* A folder is reported once, where it is made: the name
@@ -2292,7 +2302,6 @@ static int SINK_BEGIN(void *ctx, const UncEntryInfo *info)
                   ? kTooBig
                   : MyHCreate(s->vRefNum, s->curDirID, s->curName);
             if (err == noErr) break;
-            if (err == dskFulErr) return -1;     /* nothing else will fit */
             if (err != dupFNErr || attempt >= 99) {
                 /* One entry's name, not the archive's run: until
                  * 2026-08-29 this returned -1, which the engine reads as
@@ -2306,6 +2315,10 @@ static int SINK_BEGIN(void *ctx, const UncEntryInfo *info)
                                ? S_REP_OVER_2GB
                                : S_REP_NOT_CREATED);
                 s->errors++;
+                if (err == dskFulErr) {          /* nothing else will fit */
+                    gLastWriteErr = err;
+                    return -1;
+                }
                 return 1;
             }
             BlockMoveData(base, s->curName, base[0] + 1);
