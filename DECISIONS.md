@@ -548,6 +548,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-07 (the links in the output folder) — links already in the output folder were followed by `stat`, `mkdir` and `fopen("wb")`, so a tar's entries landed outside `-o`; files are created `O_EXCL|O_NOFOLLOW` now and folders checked with `lstat`
 - 2026-11-07 (the selector the last layer ignored) — `--only` was exempted on every layer that might unwrap, so on an envelope that did not (a MacBinary text file) it was never applied; such a layer is judged once it turns out to be the last
 - 2026-11-07 (the parts folder that was not ours) — the folder wrapped parts are decoded into had a fixed name, accepted one already there (a link included), and was emptied of every file afterwards; it is `mkdtemp`'s now, and only the parts written there are removed
+- 2026-11-07 (the key past 256 KB) — `load_mkey` read the first 256 KB of the archive's sidecar, and a resource map is at a fork's end, so a larger fork hid its `'MKey'`; the sidecar is read whole now, up to 32 MB
 
 ---
 
@@ -22726,3 +22727,19 @@ writes. Cost: one test case, dropped.
 which refuses one holding anything else. `run_segments.py` looked for the
 old fixed name to assert nothing was left behind, so it would have passed
 whatever the CLI left; it looks for the prefix now (`peel_left`).
+
+## 2026-11-07 (the key past 256 KB) — `load_mkey` read the first 256 KB of the archive's sidecar, and a resource map is at a fork's end, so a larger fork hid its `'MKey'`; the sidecar is read whole now, up to 32 MB
+
+**Claim, confirmed (from a review; it was filed as a hypothesis).**
+Measured against the parent commit with `run_cli_safety.py mkey-past-256k`: the
+StuffIt DES archive `tools/synth_crypt.py` writes, its sidecar rebuilt
+with a 300 KB `'PICT'` before the `'MKey'` (307,542 B) — every entry
+"encrypted by a scheme we cannot read", exit 1. The same archive with
+its small sidecar decrypts. (The review quoted the message for a named
+encryptor module; this archive's entries carry the built-in scheme.)
+
+**The fix.** The sidecar is `malloc`'d at its own size and read whole;
+the static 256 KB buffer is gone. A sidecar over 32 MB — a ceiling of
+ours, not the format's — is said once and not searched. Reading only the
+16-byte header and seeking to the map would also do; the whole read was
+kept because `unc_resfork_find` takes a buffer.

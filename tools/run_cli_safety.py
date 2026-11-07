@@ -444,6 +444,35 @@ def case_peel_folder_not_ours(tmp):
     return probs
 
 
+def case_mkey_past_256k(tmp):
+    """Item 7: load_mkey read the first 256 KB of the archive's sidecar
+    and nothing more, and a resource map sits at a fork's END, so a
+    larger fork hid its 'MKey'. A StuffIt classic archive encrypted with
+    StuffIt's DES scheme (tools/synth_crypt.py, as run_crypt.py builds
+    it) beside a sidecar holding a 300 KB resource before the 'MKey':
+    it must decrypt. The control, the same 'MKey' in a small sidecar,
+    decrypts either way."""
+    import synth_crypt as sc
+    pw = b"hush"
+    probs = []
+    sit, small, _ = sc.build_sit_des(pw)
+    mkey = sc.sit_mkey_and_iv(pw)[0]
+    big = sc.resource_fork([(b"PICT", 128, bytes(300 * 1024)),
+                            (b"MKey", 0, mkey)])
+    for label, rsrc in (("small", small), ("past 256 KB", big)):
+        d = os.path.join(tmp, label.replace(" ", "-"))
+        os.makedirs(d)
+        write(os.path.join(d, "Secret.sit"), sit)
+        write(os.path.join(d, "Secret.sit.rsrc"), rsrc)
+        rc, err = run("x", "Secret.sit", "-o", "o", "-p", pw.decode(), cwd=d)
+        memo = os.path.join(d, "o", "Secret Memo")
+        if rc != 0 or not os.path.exists(memo) or \
+           read(memo) != sc.SIT_CASES[0][1]:
+            probs.append(f"{label} sidecar ({len(rsrc)} B): wanted a clean "
+                         f"decryption, got exit {rc} {err.strip()[:160]!r}")
+    return probs
+
+
 CASES = {
     "overwrite-self": case_overwrite_self,
     "sidecar-not-ours": case_sidecar_not_ours,
@@ -454,6 +483,7 @@ CASES = {
     "unwrap-temp-not-ours": case_unwrap_temp_not_ours,
     "only-last-layer": case_only_last_layer,
     "peel-folder-not-ours": case_peel_folder_not_ours,
+    "mkey-past-256k": case_mkey_past_256k,
 }
 
 

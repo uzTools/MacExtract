@@ -198,6 +198,9 @@ case for.
 - `peel-folder-not-ours`: a BinHex-wrapped StuffIt set extracted where
   `.macextract-parts` is already the user's folder, or a link to one
   elsewhere: the file in it must survive, and no peel folder is left.
+- `mkey-past-256k`: a StuffIt DES archive whose sidecar holds a 300 KB
+  resource before its `'MKey'` must decrypt; the control, a small
+  sidecar, must too.
 
 ### Exact oracle invocation
 

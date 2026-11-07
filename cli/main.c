@@ -903,27 +903,43 @@ static int rsrc_path(const char *path, int hidden, char *out, size_t outsz)
  * survives as the sidecar file this program itself writes when it takes
  * a MacBinary or BinHex envelope off — so look for it under both
  * spellings, and say nothing if there is none. */
+/* A ceiling of ours, not the format's: the largest sidecar read whole
+ * looking for an 'MKey'. The fork is read WHOLE because its map is at its
+ * end; a fixed 256 KB read hid the 'MKey' of any larger fork
+ * (DECISIONS.md 2026-11-07, *the key past 256 KB*). */
+#define MKEY_FORK_MAX (32ul * 1024 * 1024)
+
 static int load_mkey(const char *path, int hidden, uint8_t out[8])
 {
-    static uint8_t fork[256 * 1024];
     char rp[PATHBUF];
     int which;
 
     for (which = 0; which < 2; which++) {
         FILE *f;
+        struct stat st;
+        uint8_t *fork;
         size_t n;
         uint32_t off = 0, len = 0;
+        int found;
         if (rsrc_path(path, which == 0 ? hidden : !hidden, rp, sizeof rp))
             continue;
-        f = fopen(rp, "rb");
-        if (!f) continue;
-        n = fread(fork, 1, sizeof fork, f);
-        fclose(f);
-        if (unc_resfork_find(fork, (uint32_t)n, 0x4D4B6579u /* 'MKey' */, 0,
-                             &off, &len) == UNC_OK && len == 8) {
-            memcpy(out, fork + off, 8);
-            return 1;
+        if (stat(rp, &st) != 0 || !S_ISREG(st.st_mode) || st.st_size <= 0)
+            continue;
+        if ((unsigned long)st.st_size > MKEY_FORK_MAX) {
+            fprintf(stderr, "macextract: %s: over %lu MB, not searched for "
+                    "the archive's key\n", rp, MKEY_FORK_MAX >> 20);
+            continue;
         }
+        fork = (uint8_t *)malloc((size_t)st.st_size);
+        if (!fork) continue;
+        f = fopen(rp, "rb");
+        n = f ? fread(fork, 1, (size_t)st.st_size, f) : 0;
+        if (f) fclose(f);
+        found = unc_resfork_find(fork, (uint32_t)n, 0x4D4B6579u /* 'MKey' */,
+                                 0, &off, &len) == UNC_OK && len == 8;
+        if (found) memcpy(out, fork + off, 8);
+        free(fork);
+        if (found) return 1;
     }
     return 0;
 }
