@@ -226,15 +226,6 @@ time, measured on Mac OS 9.2.2 and 7.6.1 on 2026-10-18 (DECISIONS.md
 |---|---|---|
 | AppleSingle/AppleDouble by mpack, whose entry 8 is the writer's wall clock, not RFC 1740's GMT | **the maintainer's decision**: the RFC is followed, so such a file moves by the reader's offset | a rule to tell the writer apart, or a decision to treat entry 8 as wall clock |
 
-## System 7.0.1 rewrites one byte of FXInfo
-
-FXInfo +9 (`fdXFlags`) reads 0x70 on a System 7.0.1 output disk where the
-shell wrote 0x00 (measured 2026-10-17, `tools/vmac/metarun.py`); 6.0.8 and 3.0
-keep it. **Not `fdScript`, not the comment alone** (DECISIONS.md, *the comment
-Spotlight kept*); the two that changed were both locked, so the lock is left
-(hypothesis). Closes with a locked file and no comment, read back before the
-Finder sees it.
-
 ## Hand-written 68000 assembly: candidates, held for one VM pass
 
 **Not started, by decision (2026-10-09)**: collect the candidates, then

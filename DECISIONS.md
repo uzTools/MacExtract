@@ -532,6 +532,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-07 (the decoders a 64K ROM kept low) — on a 64K ROM `ovl_keep` places a kept image high with `high_handle`, a filler routine in the `segsetup` image; 72/74 there, for 64 B of every budget
 - 2026-11-07 (the create the disk was too full for) — a file or folder the catalog cannot take ended on "Extraction stopped part way" with nothing named; now "Disk full." under the entry, for 32 B off every budget
 - 2026-11-07 (the block a click waited for) — Now Compress polls Cancel inside a block, not only once it is decoded whole
+- 2026-11-07 (the FXInfo byte System 7.0.1 locks in) — System 7.0.1 sets fdXFlags to 0x70 as it locks a file; the lock alone, not the comment
 
 ---
 
@@ -22186,3 +22187,52 @@ of Now Compress's 1.9 s — is not what this touched.
 
 **Evidence kept**: `.tmp/now_before.json`, `.tmp/now_after.json` (the two
 1x TICKGAP runs).
+
+## 2026-11-07 (the FXInfo byte System 7.0.1 locks in) — System 7.0.1 sets fdXFlags to 0x70 as it locks a file; the lock alone, not the comment
+
+**Settled** (OPEN_ITEMS.md had it open as *System 7.0.1 rewrites one byte of
+FXInfo*). FXInfo +9 (`fdXFlags`) read back 0x70 on a System 7.0.1 output
+disk where the shell wrote 0x00; 6.0.8 and 3.0 kept the 0x00 (*the metadata,
+carried to the disk*). Two hypotheses had been tried and withdrawn —
+`fdScript` 0x81 (a zip entry with `fdScript` 0 still got 0x70), and the
+Get Info comment alone (six commented, unlocked files kept 0x00) — leaving
+the lock, never separated from the comment because the files that got it
+carried both.
+
+**Measured, the lock separated from the comment** (`run.py --system
+Sys7.img`, four AppleSingle files identical but for lock × comment, built
+from `synth_as.CASES["meta"]`, read back with `hfscat`):
+
+| | lock | comment | locked on disk | fdXFlags |
+|---|---|---|---|---|
+| Lx | yes | **no** | 1 | **0x70** |
+| LC | yes | yes | 1 | **0x70** |
+| xx | no | no | 0 | 0x00 |
+| xC | no | yes | 0 | 0x00 |
+
+The comment does not matter (locked-no-comment still 0x70, unlocked-comment
+still 0x00); the lock is necessary and sufficient. The shell writes 0x00
+(the four FXInfos read `…8100…` unlocked, `…8170…` locked), so it is
+**System 7.0.1's File Manager, writing 0x70 into fdXFlags as `SetFLock`
+locks the file** — not MacExtract, and not 6.0.8 or 3.0, which the locked
+`meta` fixture already reads 0x00 on. What 0x70 (bits 4–6) means to the
+Finder is not pursued; it is System 7.0.1's to write, and the engine's
+0x00 is correct.
+
+**`metarun.py` grades it rather than failing on it.** `expected(seven=…)`
+now wants fdXFlags 0x70 for a locked file on the 7.0.1 tier, 0x00 elsewhere.
+
+**And the top-item placement it had gone stale on.** Confirming the above
+surfaced a cross-file contradiction: `metarun` had been failing four
+`finfo` values on *every* tier — the top item of a destination is placed at
+(-1, -1) and a top folder is written inited (2026-10-19, *the place the
+Finder is left to choose*; 2026-11-06, *the desk no folder is put on*), but
+`shell_finfo` still expected the stored position and flags. It is a manual
+harness, outside `ci.sh`, so the staleness since the placement rule landed
+had gone unseen. `expected()` now models it: a top item (no parent in the
+path) gets fdLocation/frLocation (-1, -1), and a top folder gets frFlags
+0x0100. **91/91 values exact on 6.0.8 and 7.0.1** (`--check` on the kept
+disks); the rule is global, so System 3.0 follows it too.
+
+**Evidence kept**: `.tmp/meta7/` (the four matrix fixtures, the 6.0.8 and
+7.0.1 runs' kept disks).

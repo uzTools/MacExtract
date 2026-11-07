@@ -107,8 +107,13 @@ def shell_fxinfo(b, is_dir=False):
     return bytes(b)
 
 
-def expected():
-    """{fixture: {path: {field: value}}} in hfscat's vocabulary, paths below the volume."""
+def expected(seven=False):
+    """{fixture: {path: {field: value}}} in hfscat's vocabulary, paths below the volume.
+
+    `seven` grades the System 7.0.1 tier, where the File Manager sets FXInfo
+    +9 (`fdXFlags`) to 0x70 as it locks a file; 6.0.8 and 3.0 leave the 0x00
+    the shell wrote (DECISIONS.md 2026-11-07, *the FXInfo byte System 7.0.1
+    locks in*)."""
     c = synth_as.CASES["meta"]
     d = c["dates"]
     exp = {"synth-as-meta.as": {
@@ -178,6 +183,34 @@ def expected():
                          "A:B": dict(cr=0xB0000010, md=0xB0000002),
                          "A:x": dict(locked=0), "A:B:y": dict(locked=0),
                          "A:z": dict(locked=0)}
+    # The top item of a destination is placed at (-1, -1) so the Finder lays
+    # it out, and a top FOLDER is written inited (frFlags 0x0100) with its
+    # rectangle kept — on every tier, every format (DECISIONS.md 2026-10-19,
+    # *the place the Finder is left to choose*; 2026-11-06, *the desk no
+    # folder is put on*). FInfo's fdLocation and DInfo's frLocation are both
+    # the four bytes at +10; a nested item keeps what it was stored with.
+    # A folder is the finfo-bearing entry with no `locked` field (only files
+    # carry one). Measured 2026-11-07 on 6.0.8 and 7.0.1.
+    for fixture in exp.values():
+        for path, w in fixture.items():
+            if ":" not in path and "finfo" in w:
+                b = bytearray(bytes.fromhex(w["finfo"]))
+                b[10:14] = b"\xff\xff\xff\xff"
+                if "locked" not in w:          # a folder: write it inited
+                    b[8] |= 0x01               # frFlags |= 0x0100, big-endian
+                w["finfo"] = bytes(b).hex()
+    if seven:
+        # System 7.0.1 locks a file with SetFLock and, doing so, writes 0x70
+        # into FXInfo +9 (`fdXFlags`) over the 0x00 the shell left. Measured
+        # 2026-11-07 and isolated to the lock alone: a locked file with no
+        # comment gets it, an unlocked commented file does not (DECISIONS.md
+        # 2026-11-07, *the FXInfo byte System 7.0.1 locks in*).
+        for fixture in exp.values():
+            for w in fixture.values():
+                if w.get("locked") == 1 and "fxinfo" in w:
+                    b = bytearray(bytes.fromhex(w["fxinfo"]))
+                    b[9] = 0x70
+                    w["fxinfo"] = bytes(b).hex()
     return exp
 
 
@@ -228,8 +261,8 @@ def read_trailer(indsk):
     return vperr, attrib, dterr, recs
 
 
-def check(rundir):
-    exp = expected()
+def check(rundir, seven=False):
+    exp = expected(seven)
     bad, n = [], 0
     dirs = sorted(glob.glob(os.path.join(rundir, "fixture-*")))
     if len(dirs) != len(FIX):
@@ -484,7 +517,8 @@ def main():
             print("metarun: the run kept no disks")
             return 1
         rundir = os.path.dirname(kept[0])
-    bad, n = check(rundir)
+    seven = not a.sys30 and a.system == "Sys7.img"
+    bad, n = check(rundir, seven)
     for b in bad:
         print("metarun: FAIL %s" % b)
     print("metarun: %d value(s) read back, %s" % (
