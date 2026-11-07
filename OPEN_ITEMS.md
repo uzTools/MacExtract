@@ -101,9 +101,11 @@ readers already grade StuffIt Deluxe 2.0.1's output, SuperDisk!'s modules,
 DiskDoubler's methods 3–5, Now Compress, Private File, AppleLink packages
 and the Finder metadata each expander puts back (TESTING.md; FORMATS.md).
 
-- **Not counted:** per format, how many forks only `unar` grades, and
-  which format's writer has a copy on this machine. Closes with that
-  inventory; it runs nothing.
+- **Counted** 2026-11-07 (TESTING.md, *What `unar` alone vouches for, per
+  format*): 6,827 of 7,633 forks have `unar` as their sole oracle, almost all
+  StuffIt, Compact Pro and StuffIt 5 — each with a reader on this machine
+  (Expander 4.0.2 / 5.5), so none goes to MANUAL_TESTS.md. No writer is
+  missing for any format with committed fixtures.
 - **Not decided:** which answer wins where the writer's own reader
   disagrees with the stored CRC or with another reader — StuffIt Deluxe
   7.0.3 Classic writes wrong bytes for zip's Reduce (README.md).

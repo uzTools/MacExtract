@@ -362,6 +362,52 @@ whole-archive far more often than `unar`.
   `tools/run_sitopt.py` grades them three other ways. The number
   `run_diff.py` prints is the measured one.
 
+### What `unar` alone vouches for, per format (inventory, 2026-11-07)
+
+Counted from the manifests' per-fork oracles, to size the move off XADMaster
+(OPEN_ITEMS.md, *What grades a fork*). Of **7,633 graded forks**, **6,827
+have `unar` as their sole oracle of record**; the rest already carry a
+second byte-oracle — deark 78, `macunpack`+deark 23, a writer or synthesiser
+697, MacBinary container arithmetic 8. The per-fork `data_oracle`/`rsrc_oracle`
+is the record; a writer-reader suite that grades the SAME bytes in its own
+`ci.sh` run (right column) is a second check the manifest does not show.
+
+| format | forks | `unar` sole | writer/expander ON THIS MACHINE |
+|---|---|---|---|
+| StuffIt | 2,731 | 2,708 | Expander 4.0.2 + Deluxe 2.0.1 (`sitmeta.py`); Deluxe 2.0.1 grades the Optimizer subset's forks (`run_sitopt.py`) |
+| Compact Pro | 1,470 | 1,470 | StuffIt Expander 4.0.2 reads `.cpt` — present, not yet a fork oracle |
+| StuffIt 5 | 820 | 820 | Expander 5.5 (`exp55`, `sitzip.py`) — present, metadata only so far |
+| Zip | 646 | 598 | cross-platform (Info-ZIP, ZipIt); 48 forks deark |
+| MacBinary | 474 | 466 | lossless framing; 8 forks by container arithmetic, payloads by `unar` |
+| BinHex (4.0) | 408 | 408 | macutils `hexbin` (second impl, present); not a Mac writer |
+| Tar | 172 | 172 | cross-platform (bsdtar) |
+| DiskDoubler | 472 | 55 | **DD 3.7.7 / Salient 3.1.2** — 417 forks already its own (`ddencode.py`, methods 3–5 and the own-expander fixtures) |
+| PackIt | 38 | 38 | StuffIt Expander 4.0.2 reads `.pit` — present, not yet a fork oracle |
+| ARC | 50 | 32 | deark (18); `arcmac.py` writes ARC |
+| LZH | 24 | 24 | **MacLHA** (`maclha.py`) — present, not yet a fork oracle |
+| Self-extracting Zip | 26 | 14 | deark (12); as Zip |
+| Compress / Gzip | 14 | 14 | cross-platform |
+| AppleSingle | 4 | 4 | `tools/synth_as.py` (the bytes that went in) |
+| Now Compress | 4 | 4 | **own extractor adjudicates the forks** (`nowcompress.py --adjudicate`), not in the manifest oracle |
+| MAR | 216 | 0 | mar 0.2.0 / liblz4 (`run_mar.py`, `synth_lz4.py`) |
+| StuffIt SpaceSaver | — | — | Aladdin's own expander (`run_spacesaver.py`); specimens, no committed fixtures |
+| SqueezePlay (SuperDisk!) | 38 | 0 | the DCMP modules (`tools/sdmodule/`) |
+| BinHex `.hex`/`.hcx` | 14 | 0 | `hexbin`; BinHex 2.0 itself (`binhex2.py`) |
+| uuencode / LZ4 / SUMacC `.dl` | 12 | 0 | `hexbin` / liblz4 / SUMacC's own `tohex` |
+
+**What it says.** The `unar`-sole exposure is almost all StuffIt (2,708),
+Compact Pro (1,470) and StuffIt 5 (820) — and every one of those three has a
+reader for it ON THIS MACHINE (Expander 4.0.2 for StuffIt and Compact Pro,
+Expander 5.5 for StuffIt 5), so the forks could be re-graded here rather than
+filed to MANUAL_TESTS.md. PackIt (38) and LZH (24) likewise (Expander, MacLHA).
+The cross-platform formats — Zip, Tar, Compress, Gzip, MacBinary payloads,
+AppleSingle — have no Mac writer and `unar` is their natural oracle. The
+formats already carrying a writer's own fork grade (DiskDoubler, SuperDisk!,
+SpaceSaver, Now Compress, MAR) are at or near zero `unar`-sole. **No writer
+is missing from this machine for any format with committed fixtures** — the
+"writer this machine has no copy of" case (OPEN_ITEMS.md) does not arise in
+the corpus as it stands.
+
 ### Asking the third oracle about everything (`tools/sweep_deark.py`)
 
 `make_manifests.py` offers deark only what the others left open. This
