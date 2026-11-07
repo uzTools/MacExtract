@@ -533,6 +533,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-07 (the create the disk was too full for) — a file or folder the catalog cannot take ended on "Extraction stopped part way" with nothing named; now "Disk full." under the entry, for 32 B off every budget
 - 2026-11-07 (the block a click waited for) — Now Compress polls Cancel inside a block, not only once it is decoded whole
 - 2026-11-07 (the FXInfo byte System 7.0.1 locks in) — System 7.0.1 sets fdXFlags to 0x70 as it locks a file; the lock alone, not the comment
+- 2026-11-07 (the read error that read as end of file) — `fio_read` answered every File Manager failure as end of file, so a bad sector read as "archive incomplete"; it returns -1 now, and the shipped budget is unchanged
 
 ---
 
@@ -22236,3 +22237,46 @@ disks); the rule is global, so System 3.0 follows it too.
 
 **Evidence kept**: `.tmp/meta7/` (the four matrix fixtures, the 6.0.8 and
 7.0.1 runs' kept disks).
+
+## 2026-11-07 (the read error that read as end of file) — `fio_read` answered every File Manager failure as end of file, so a bad sector read as "archive incomplete"; it returns -1 now, and the shipped budget is unchanged
+
+**Claim, confirmed.** `UncIO.read` returns "<0 on error"
+(`include/macextract.h`), and the engine tells the two apart:
+`unc_read_full` and `unc_bufin_next_slow` turn <0 into `UNC_ERR_IO` and 0
+into `UNC_ERR_TRUNCATED`. `fio_read`, the reader `RunExtract` and `seg_need`
+install, returned 0 when `SetFPos` failed and `cnt` (0) when `FSRead` did,
+so `S_REP_IO` and `S_OUT_CANNOT_OPEN` could not be reached from the archive.
+Measured with `mac_sink_test --ioerr`, which fails the mock's `SetFPos` and
+`FSRead`. Before: both error branches returned 0, and a run whose reads fail
+after the third (`derived-ASCbeep.sit`, `alpha401.cpt`) reported
+`: archive incomplete` and returned `UNC_OK`. After: -1 for each branch,
+`: read error`, and `UNC_ERR_IO`. `eofErr` with bytes, `eofErr` with none
+and an error with 100 bytes delivered still return 100, 0 and 100.
+
+**The fix.** `SetFPos`'s error goes into the same test as `FSRead`'s, and
+nothing read is end of file only on `eofErr`: `FSRead` answers `noErr`
+only with every byte asked for (n > 0 there). Testing for `noErr` too and
+returning -1 straight from `SetFPos` came to +28 B of CODE where this is
++22. The other File Manager readers that ship are fine as they are:
+`SegCopyIn` deletes its copy on anything but `eofErr`, and the part-header
+and `MKey` probes treat a failure as "no match". `at_fork_crc` and the
+interleave probe are autotest builds only. `mio_*` had no caller in the
+application, only in `mac_sink_test`. That lane now reads through
+`fio_*`, and `mio_*` is deleted, for 0 B.
+
+**Not closed: a failure inside the sniff.** `unc_sniff` returns a format and
+nothing else, so on `derived-MUSFMT10.ZIP`, whose sniff is still reading
+when the reads begin to fail, the run ends on "not a recognized archive"
+(OPEN_ITEMS.md, *A read error inside the sniff*). The ci case uses
+`derived-ASCbeep.sit`.
+
+**Price (measured).** `fio_read` 118 → 140 B. Shipped eager CODE +24 and
+A5 −24 (`.data` alignment), so CODE + A5 is unchanged, and so is every
+shipped budget. Lazy +20/−20. The resident control +20/+12, +32, so
+`OVL_SAVED` and `TIERS_CONTROL` rise 32 and `TIERS` falls 32, which cancel;
+every grant row reads 32 B higher (re-taken from `gain()`). Heap 0. Stack:
+`fio_read`'s frame is unchanged (4 B of locals, D3 saved). Images
+unmoved (`--check-images`). **Time** (`run.py --emu mv-4M-1x -D
+UNC_AT_TIMING`, `mar-wild-mar020src.mar`, 715 KB, one run each):
+`RunExtract` **2,616 → 2,616 ticks**. The read, write and meta buckets moved
+88/41/690 → 82/32/712, which is per-call tick rounding (the total holds).

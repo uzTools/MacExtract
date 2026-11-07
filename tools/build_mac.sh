@@ -750,7 +750,10 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # +180 on 2026-11-07, 186,108 -> 186,288, A5 +12 below (36,656, under): Now
 # Compress polls Cancel inside a block (DECISIONS.md 2026-11-07, *the block a
 # click waited for*). In `ovl_now` on the shipped pair, +186.
-UNC_MAC_CODE_DEFAULT=186288
+# +20 the same day, 186,288 -> 186,308, A5 +12 below: fio_read returns -1
+# for an I/O error (DECISIONS.md 2026-11-07, *the read error that read as
+# end of file*); the shipped pair +24.
+UNC_MAC_CODE_DEFAULT=186308
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -997,7 +1000,9 @@ UNC_MAC_CODE_DEFAULT=186288
 # two calls (above); no data was added.
 # -4 on 2026-11-07, 36,668 -> 36,664: `.data` alignment under BarDraw's
 # port (above); no data was removed.
-UNC_MAC_A5_DEFAULT=36664
+# +12 on 2026-11-07, 36,656 -> 36,668 (ceiling 36,664 -> 36,668): `.data`
+# alignment under fio_read's I/O error (above); no data was added.
+UNC_MAC_A5_DEFAULT=36668
 # A CEILING PER CONFIGURATION, because one ceiling measured on another build
 # cannot fire. The figures above are the RESIDENT control build, which carries
 # every decoder; the shipped build's resident code is a third of that, so
@@ -1547,8 +1552,12 @@ UNC_MAC_A5_DEFAULT=36664
 # (DECISIONS.md 2026-11-07, *the create the disk was too full for*). 32 B
 # off every budget; an unconditional store was +16 and let a name
 # collision stand in the disk-full global.
-UNC_MAC_CODE_EAGER=39912
-UNC_MAC_A5_EAGER=16728
+# +24 and -24 the same day, 39,912 -> 39,936 and 16,728 -> 16,704:
+# fio_read returns -1 for an I/O error, so a bad sector reads as one and
+# not as a damaged archive (DECISIONS.md 2026-11-07, *the read error that
+# read as end of file*). The A5 is `.data` alignment; no budget moves.
+UNC_MAC_CODE_EAGER=39936
+UNC_MAC_A5_EAGER=16704
 # +8 on 2026-10-02 for the same reason as the eager pair above: the
 # overlay call that now says WHICH of StuffIt 2.x's ciphers an entry
 # wants. A5 fell to 19,096 and its ceiling is left where it was.
@@ -1684,7 +1693,9 @@ UNC_MAC_A5_EAGER=16728
 # 16,760, under its ceiling.
 # +32 code the same day: the disk-full create, as the eager pair; data +
 # bss 16,760, under its ceiling.
-UNC_MAC_CODE_LAZY=38664
+# +20 code the same day: fio_read's I/O error, as the eager pair; data +
+# bss 16,740, under its ceiling.
+UNC_MAC_CODE_LAZY=38684
 UNC_MAC_A5_LAZY=19200
 if [ -n "$UNC_OVL_RESIDENT" ]; then
     UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-$UNC_MAC_CODE_DEFAULT}

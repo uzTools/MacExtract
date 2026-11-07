@@ -83,7 +83,7 @@ BOTHFORK_FIXTURES="3d_windows.sea.bin compact-pro-134.bin \
 
 verify() {  # <runner...> [mode] [fixture-list] ; defaults to $FIXTURES
     runner="$1"
-    mode="$2"        # empty = file-backed mio_*; "ram" = slurp-to-RAM xio_*
+    mode="$2"        # empty = file-backed fio_*; "ram" = slurp-to-RAM xio_*
     list="${3:-$FIXTURES}"
     for fx in $list; do
         [ -f "fixtures/$fx" ] || continue
@@ -146,13 +146,22 @@ fi
 echo "mac-sink: native x86-64 (ASan+UBSan)"
 wait $pid_asan || { echo "mac-sink: native ASan build FAILED"; exit 1; }
 verify ./build/mac_sink_asan
-verify ./build/mac_sink_asan ram   # exercise the Mac app's RAM-slurp/xio_* path
+verify ./build/mac_sink_asan ram   # the RAM-slurp/xio_* path (UNC_MAC_SLURP_ARCHIVE)
 # Cmd-. / per-entry-error cleanup: sink_end must delete the file an aborted
 # entry created in sink_begin (no partial output left behind).
 ./build/mac_sink_asan --cancel "$(mktemp -d)" || { echo "mac-sink: cancel-cleanup FAILED"; exit 1; }
 # The figure the low-memory alert quotes. UI cannot be tested here; the
 # arithmetic behind it can, and it is the half that can go wrong quietly.
 ./build/mac_sink_asan --shortfall || { echo "mac-sink: shortfall FAILED"; exit 1; }
+# The archive reader, fio_read, against a File Manager that fails: <0 for
+# an error with nothing read, a short count for eofErr, and a run whose
+# reads fail part way ends on "read error", not "archive incomplete"
+# (DECISIONS.md 2026-11-07, *the read error that read as end of file*).
+# Cannot see a failure inside the sniff: unc_sniff has no error to return.
+if [ -f fixtures/derived-ASCbeep.sit ]; then
+    ./build/mac_sink_asan --ioerr fixtures/derived-ASCbeep.sit "$(mktemp -d)" \
+        || { echo "mac-sink: ioerr FAILED"; exit 1; }
+fi
 # Every metadata field the shell writes — Finder info, extended Finder info,
 # backup date, comment, lock, and a folder's date kept across what is
 # written inside it — each with a control in which the mock drops that

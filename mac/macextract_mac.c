@@ -313,49 +313,6 @@ static Boolean TrapAvailable(short trap)
 #endif
 
 /* ------------------------------------------------------------------ */
-/* UncIO over the File Manager                                        */
-/* ------------------------------------------------------------------ */
-
-typedef struct {
-    short  refNum;
-    long   size;
-} MacIO;
-
-static int32_t mio_read(void *ctx, void *buf, int32_t len)
-{
-    MacIO *io = (MacIO *)ctx;
-    long count = len;
-    OSErr err = FSRead(io->refNum, &count, buf);
-    if (err != noErr && err != eofErr) return -1;
-    return (int32_t)count;
-}
-
-static int mio_seek(void *ctx, unc_off_t pos)
-{
-    MacIO *io = (MacIO *)ctx;
-    OSErr err = SetFPos(io->refNum, fsFromStart, (long)pos);
-    /* SetFPos past EOF returns eofErr but still positions at EOF; a
-     * following read then returns 0 and the engine treats it as
-     * truncation. Treating eofErr as a hard error made valid seeks to
-     * end-of-file fail with a spurious I/O error. */
-    return (err == noErr || err == eofErr) ? 0 : -1;
-}
-
-static unc_off_t mio_tell(void *ctx)
-{
-    MacIO *io = (MacIO *)ctx;
-    long pos = 0;
-    GetFPos(io->refNum, &pos);
-    return (uint32_t)pos;
-}
-
-static unc_off_t mio_size(void *ctx)
-{
-    MacIO *io = (MacIO *)ctx;
-    return (uint32_t)io->size;
-}
-
-/* ------------------------------------------------------------------ */
 /* UncIO over a RAM buffer                                            */
 /*                                                                    */
 /* The whole archive is slurped into RAM up front and decoded from    */
@@ -433,15 +390,21 @@ static int32_t fio_read(void *ctx, void *buf, int32_t len)
     if (n == 0) return 0;
     {
     TK_T0;
-    if (SetFPos(f->refNum, fsFromStart, (long)f->pos) != noErr) return 0;
-    cnt = (long)n;
-    err = FSRead(f->refNum, &cnt, buf);
+    cnt = 0;
+    err = SetFPos(f->refNum, fsFromStart, (long)f->pos);
+    if (err == noErr) {
+        cnt = (long)n;
+        err = FSRead(f->refNum, &cnt, buf);
+    }
     TK_ADD(gTkRead);
     }
     if (cnt < 0) cnt = 0;
     f->pos += (uint32_t)cnt;
-    /* eofErr with bytes delivered is a normal short read, not a failure. */
-    if (err != noErr && err != eofErr) return (int32_t)cnt;
+    /* Nothing read is end of file only on eofErr: FSRead answers noErr
+     * only with all n bytes, so any other answer with none is an I/O
+     * error, SetFPos's included. Bytes delivered are returned, and the
+     * next read fails. */
+    if (cnt == 0 && err != eofErr) return -1;
     return (int32_t)cnt;
 }
 static int fio_seek(void *ctx, unc_off_t pos)

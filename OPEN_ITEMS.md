@@ -323,6 +323,15 @@ seven glue routines linked today total 298 B (`FSRead` 58, `FSWrite` 58,
 `SetFPos` 42, `GetEOF` 38, `SetEOF` 36, `FlushVol` 36, `FSClose` 30;
 measured, `nm -S`).
 
+## A read error inside the sniff reads as "not a recognized archive"
+
+`unc_sniff` returns a format, not an error, so an archive whose reads fail
+before its format is known ends on "not a recognized archive", not on
+"Could not open the archive." Measured with `mac_sink_test --ioerr` on
+`derived-MUSFMT10.ZIP` (DECISIONS.md 2026-11-07, *the read error that read
+as end of file*). What would close it: an error out of the sniff, priced
+on the resident sniffer and the shipped budget.
+
 ## The double-click helpers: what is left
 
 `companion/` works (DECISIONS.md 2026-10-11, *the stub that hands it on*);

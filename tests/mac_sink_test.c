@@ -441,10 +441,22 @@ void HLock(Handle h) { (void)h; }
 Size GetHandleSize(Handle h) { long n; memcpy(&n, *h - sizeof(long), sizeof n); return n; }
 #endif
 
+/* Read failures for --ioerr. After gReadsOk more good FSReads, every
+ * FSRead answers gFailRead having delivered at most gFailCnt bytes; every
+ * SetFPos answers gFailFPos. 0 is the File Manager behaving. */
+static OSErr gFailRead, gFailFPos;
+static long  gFailCnt, gReadsOk;
+
 OSErr FSRead(short ref, long *count, void *buf)
 {
     ssize_t r;
     if (ref < 0 || ref >= MAX_OPEN || !gFiles[ref].used) return -1;
+    if (gFailRead && gReadsOk-- <= 0) {
+        if (*count > gFailCnt) *count = gFailCnt;
+        r = *count ? read(gFiles[ref].fd, buf, (size_t)*count) : 0;
+        *count = r < 0 ? 0 : (long)r;
+        return gFailRead;
+    }
     r = read(gFiles[ref].fd, buf, (size_t)*count);
     if (r < 0) return -1;
     if (r == 0) { *count = 0; return eofErr; }
@@ -471,6 +483,7 @@ OSErr SetFPos(short ref, short mode, long off)
 {
     off_t end;
     if (ref < 0 || ref >= MAX_OPEN || !gFiles[ref].used) return -1;
+    if (gFailFPos) return gFailFPos;
     end = lseek(gFiles[ref].fd, 0, SEEK_END);
     if (mode == fsFromLEOF) {                 /* seek relative to EOF (append) */
         return lseek(gFiles[ref].fd, end + off, SEEK_SET) < 0 ? -1 : noErr;
@@ -659,7 +672,7 @@ static unsigned build_fork(uint8_t *o, const MockRes *r, unsigned n)
 
 int main(int argc, char **argv)
 {
-    MacIO mio;
+    FileIO fio;
     UncIO io;
     MacAlloc ma;
     UncAlloc al;
@@ -1464,6 +1477,86 @@ int main(int argc, char **argv)
         }
         return 0;
     }
+    if (argc >= 2 && strcmp(argv[1], "--ioerr") == 0) {
+        /* fio_read, the shell's archive reader, against a File Manager
+         * that fails: <0 for an error with nothing read (UncIO's contract,
+         * include/macextract.h), a short count for eofErr or for an error
+         * after some bytes arrived. Then a whole run whose reads start
+         * failing part way, which must end on the I/O error and not on
+         * "archive incomplete": until 2026-11-07 fio_read answered every
+         * failure as end of file. */
+        static const struct {
+            const char *what; OSErr fpos, rd; long cnt; int32_t want;
+        } cases[] = {
+            { "clean read",               0,     0,      0,   512 },
+            { "SetFPos fails",            ioErr, 0,      0,   -1  },
+            { "FSRead fails, 0 bytes",    0,     ioErr,  0,   -1  },
+            { "FSRead eofErr, 100 bytes", 0,     eofErr, 100, 100 },
+            { "FSRead eofErr, 0 bytes",   0,     eofErr, 0,   0   },
+            { "FSRead fails, 100 bytes",  0,     ioErr,  100, 100 },
+        };
+        static uint8_t buf[512];
+        FileIO f;
+        size_t c;
+        int ok = 1, i, sawIO = 0, sawTrunc = 0;
+        if (argc < 4) { fprintf(stderr, "usage: --ioerr <archive> <outdir>\n"); return 2; }
+        srcfd = open(argv[2], O_RDONLY);
+        if (srcfd < 0) { perror("open source"); return 1; }
+        fstat(srcfd, &st);
+        f.refNum = (short)alloc_slot(srcfd);
+        f.size = (uint32_t)st.st_size;
+        for (c = 0; c < sizeof cases / sizeof cases[0]; c++) {
+            int32_t got;
+            f.pos = 0;
+            gFailFPos = cases[c].fpos; gFailRead = cases[c].rd;
+            gFailCnt = cases[c].cnt; gReadsOk = 0;
+            got = fio_read(&f, buf, (int32_t)sizeof buf);
+            gFailFPos = gFailRead = 0;
+            fprintf(stderr, "ioerr [%s]: %ld, wanted %s%ld\n", cases[c].what,
+                    (long)got, cases[c].want < 0 ? "<0, " : "",
+                    (long)cases[c].want);
+            if (cases[c].want < 0 ? got >= 0 : got != cases[c].want) ok = 0;
+            if (f.pos != (uint32_t)(got > 0 ? got : 0)) {
+                fprintf(stderr, "ioerr [%s]: position %lu after %ld\n",
+                        cases[c].what, (unsigned long)f.pos, (long)got);
+                ok = 0;
+            }
+        }
+        snprintf(gOutDir, sizeof gOutDir, "%s", argv[3]);
+        mkdir(gOutDir, 0755);
+        snprintf(gDirs[0], sizeof gDirs[0], "%s", gOutDir);
+        f.pos = 0;
+        io.ctx = &f; io.read = fio_read; io.seek = fio_seek;
+        io.tell = fio_tell; io.size = fio_size;
+        ma.budget = ma.initial = ma.lowmark = 4L * 1024 * 1024;
+        ma.taken = 1;
+        al.ctx = &ma; al.alloc = mal_alloc; al.free = mal_free;
+        memset(&sink, 0, sizeof sink);
+        sink.vRefNum = 1; sink.rootDirID = 0;
+        memset(&sk, 0, sizeof sk);
+        sk.ctx = &sink; sk.begin_entry = sink_begin;
+        sk.write = sink_write; sk.end_entry = sink_end;
+        memset(&opt, 0, sizeof opt);
+        gFailRead = ioErr; gFailCnt = 0; gReadsOk = 3;
+        ret = unc_extract(&io, &sk, &al, NULL, &opt);
+        gFailRead = 0;
+        DirFlush(&sink);
+        IconFlush(&sink);
+        for (i = 0; i < gRepN; i++) {
+            const char *l = gRepBuf + gRepStart[i];
+            int n = (int)gRepLen[i];
+            fprintf(stderr, "ioerr report: %.*s\n", n, l);
+            if (memmem(l, (size_t)n, S_REP_IO, strlen(S_REP_IO))) sawIO = 1;
+            if (memmem(l, (size_t)n, S_REP_TRUNCATED,
+                       strlen(S_REP_TRUNCATED))) sawTrunc = 1;
+        }
+        fprintf(stderr, "ioerr run: unc_extract -> %d (%s), entries=%d\n",
+                ret, unc_strerror(ret), sink.entries);
+        if (!(ret == UNC_ERR_IO || sawIO) || sawTrunc || ret == UNC_ERR_TRUNCATED)
+            ok = 0;
+        fprintf(stderr, "ioerr: %s\n", ok ? "ok" : "FAILED");
+        return ok ? 0 : 1;
+    }
     if (argc >= 2 && strcmp(argv[1], "--shortfall") == 0) {
         /* The number the low-memory alert quotes.
          *
@@ -1570,12 +1663,14 @@ int main(int argc, char **argv)
     if (srcfd < 0) { perror("open source"); return 1; }
     fstat(srcfd, &st);
     srcslot = alloc_slot(srcfd);
-    mio.refNum = (short)srcslot;
-    mio.size = (long)st.st_size;
+    fio.refNum = (short)srcslot;
+    fio.size = (uint32_t)st.st_size;
+    fio.pos = 0;
 
-    /* Default: file-backed mio_* IO. If argv[3]=="ram", exercise the exact
-     * RAM-slurp + xio_* path the real Mac app uses (RunExtract), which the
-     * file-backed path never covers. */
+    /* Default: the file-backed fio_* IO RunExtract and seg_need use. Until
+     * 2026-11-07 this lane read through mio_*, which nothing in the
+     * application calls. If argv[3]=="ram", exercise the RAM-slurp + xio_*
+     * path of an UNC_MAC_SLURP_ARCHIVE build instead. */
     {
         static MemIO mem;   /* static so it stays valid through the call */
         if (argc >= 4 && strcmp(argv[3], "ram") == 0) {
@@ -1584,7 +1679,7 @@ int main(int argc, char **argv)
             long c;
             while (remaining > 0) {
                 c = remaining;
-                if (FSRead(mio.refNum, &c, abuf + off) != noErr && c <= 0) break;
+                if (FSRead(fio.refNum, &c, abuf + off) != noErr && c <= 0) break;
                 off += c; remaining -= c;
             }
             mem.data = (const uint8_t *)abuf;
@@ -1593,8 +1688,8 @@ int main(int argc, char **argv)
             io.ctx = &mem; io.read = xio_read; io.seek = xio_seek;
             io.tell = xio_tell; io.size = xio_size;
         } else {
-            io.ctx = &mio; io.read = mio_read; io.seek = mio_seek;
-            io.tell = mio_tell; io.size = mio_size;
+            io.ctx = &fio; io.read = fio_read; io.seek = fio_seek;
+            io.tell = fio_tell; io.size = fio_size;
         }
     }
 

@@ -283,10 +283,13 @@ REPO = os.path.dirname(HERE)
 # control's CODE -96 and A5 0; the shipped pair fell the same 96, OVL_SAVED
 # unmoved. They were 190,276 / 94,894 / 619,182.
 TIERS = {
-    "sys3-512K": (189988, "System 3.0, Macintosh 512Ke (222,070 B free)"),
-    "sys6-512K": (94606,  "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
-    "floor-1M":  (618894, "System 6.0.8, 1 MB Mac Plus — the floor target"),
+    "sys3-512K": (189956, "System 3.0, Macintosh 512Ke (222,070 B free)"),
+    "sys6-512K": (94574,  "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
+    "floor-1M":  (618862, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
+# -32 each 2026-11-07, DERIVED from TIERS_CONTROL +32 (fio_read's I/O
+# error, DECISIONS.md 2026-11-07, *the read error that read as end of
+# file*); they were 189,988 / 94,606 / 618,894.
 # -32 each 2026-11-07, DERIVED from TIERS_CONTROL +32 (the disk-full
 # create, DECISIONS.md 2026-11-07, *the create the disk was too full for*);
 # they were 190,212 / 94,830 / 619,118.
@@ -498,7 +501,8 @@ TIERS = {
 # +192 2026-11-07: Now Compress polls Cancel inside a block (`ovl_now` +186;
 # DECISIONS.md 2026-11-07, *the block a click waited for*); CODE +180, A5 +12.
 # TIERS -192 and OVL_SAVED +192, which cancel: only a now-keeper moves.
-TIERS_CONTROL = 222944     # build/mac-resident, CODE + A5, 2026-11-07
+TIERS_CONTROL = 222976     # build/mac-resident, CODE + A5, 2026-11-07
+# +32 the same day: fio_read's I/O error (CODE +20, A5 +12); TIERS -32.
 # +32 the same day: the disk-full create (CODE +32, A5 0); TIERS -32.
 # +224 on 2026-11-07: the LZ4 ring grows with the output (`lz_grow`,
 # DECISIONS.md 2026-11-07, *the ring that grows with the output*); the
@@ -1066,7 +1070,11 @@ EXPECT = {
 # the control's +192 (CODE +180, A5 +12) against the shipped pair's 0, the
 # reader in `ovl_now` (+186; DECISIONS.md 2026-11-07, *the block a click
 # waited for*). TIERS -192, which cancels: only a now-keeper's budget moves, -186.
-OVL_SAVED = 166304
+# **+32 2026-11-07, -> 166,336**: fio_read reports an I/O error, the
+# control's +32 (CODE +20, A5 +12) against the shipped pair's 0 (CODE +24,
+# A5 -24; DECISIONS.md 2026-11-07, *the read error that read as end of
+# file*). TIERS -32, which cancels: no shipped budget moves.
+OVL_SAVED = 166336
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
 # every kept image is one — as is the bundle an envelope holds on to.

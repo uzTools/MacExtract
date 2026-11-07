@@ -34,7 +34,13 @@
    filter is the one piece of dialog code it runs, lifted out of the source
    into `tests/pass_filter_test.c`: 64 and 65 characters typed, the bytes
    after the buffer checked (DECISIONS.md 2026-11-06, *the 64th character
-   of a password*). **What it cannot see:**
+   of a password*). The file-backed lane reads through `fio_read`, the
+   application's reader (through `mio_read`, which nothing shipped calls,
+   until 2026-11-07), and `--ioerr` fails the mock's `SetFPos` and `FSRead`
+   under it, one case per branch, then part way through a run, which must
+   end on "read error" (DECISIONS.md 2026-11-07, *the read error that read
+   as end of file*). **What it cannot see:** a read that fails inside the
+   sniff, which `unc_sniff` has no way to report;
    `RunExtract`, `ExtractOne`, the other dialogs and the Toolbox glue, which
    the mock never calls — it builds its own `UncOptions`. Nor a read of
    state nobody set: ASan reports writes past a block, not a load from
