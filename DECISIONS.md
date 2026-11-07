@@ -540,6 +540,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-07 (the size a damaged header asked the disk for) — a refused pre-size ended the run on "Disk full.", so a header claiming 900 MB lost the rest of the archive; the fork now grows as it is written instead, for 0 B
 - 2026-11-07 (the folder numbered past a file) — a folder whose name a file holds is numbered past it at every level, not only the top, in the application and the CLI; the CLI failed every entry under it, for 0 B
 - 2026-11-07 (the comment the Desktop Manager cut) — a Get Info comment longer than the Desktop Manager keeps is cut to its 199 bytes by the shell and reported "<name>: comment shortened"; a Spotlight comment that runs past the sidecar's window is cut, not dropped
+- 2026-11-07 (what the CLI may delete) — `--overwrite` opened the input archive for writing when its only entry carried the archive's own name; a file being read is now refused by inode on every layer
 
 ---
 
@@ -22551,3 +22552,25 @@ layout is assumed) and a line for a dropped comment (the third option).
   decode chain.
 - **Extractions lost: none** — `run_tiers.py --check` 74/74, 72/74, 72/74,
   the same two refusals at the 512 KB tiers.
+## 2026-11-07 (what the CLI may delete) — `--overwrite` opened the input archive for writing when its only entry carried the archive's own name; a file being read is now refused by inode on every layer
+
+**Claim, confirmed (from a review).** `sink_open_fork` exempted only the
+envelope a LATER layer unwraps (`unwrap_src`, empty on the first), so the
+user's own archive had no protection. Measured with
+`tools/run_cli_safety.py overwrite-self` against `db78470`: a MacBinary
+`Self.bin` whose stored name is `Self.bin`, holding a tar, `x Self.bin
+--overwrite` exits 0 with only the tar's `inner.txt` left; with a 1 MB tar
+the read is cut short, "file is truncated", exit 1, `Self.bin` gone. A
+hard link of the input placed where the entry lands is destroyed the same
+way, exit 0.
+
+**The fix: refused, not deferred.** Every file a layer reads — the layer
+itself and each part of a segmented set as it is located — is recorded
+by `st_dev`/`st_ino`, and an output path that `stat()`s to one of them is
+a per-entry error ("is the archive being read"), with or without
+`--overwrite`; the comment file is checked the same way. Deferring (write
+beside, rename once read) is right only for a later layer, whose input is
+this run's own intermediate and is deleted anyway, which is what
+`DEFER_SUFFIX` already does. On the first layer nothing deletes the input,
+so a deferred rename would replace the user's original with its own
+contents — and if a later layer then failed, the original would be gone.

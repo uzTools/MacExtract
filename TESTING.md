@@ -160,6 +160,18 @@ want one name: the folder numbered past a file at every level, a file
 past a folder, on generated zips and BinHex; 15 problems against the CLI
 before 2026-11-07 (DECISIONS.md, *the folder numbered past a file*).
 
+**What the CLI may delete or write through** is `tools/run_cli_safety.py`
+(in `ci.sh`): each case builds its own input — a MacBinary II header with
+its CRC-16/XMODEM, a `tarfile` payload — and asserts that no file this run
+did not write is removed, truncated or written through. Every case was
+run against the binary before its fix and failed there (DECISIONS.md
+2026-11-07, *what the CLI may delete*). It cannot see a shape it has no
+case for.
+
+- `overwrite-self`: an entry carrying the input archive's own name, under
+  `--overwrite`, small and 1 MB, and a hard link of the input where the
+  entry lands: the input must survive, exit 1.
+
 ### Exact oracle invocation
 
 ```

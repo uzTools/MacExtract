@@ -349,6 +349,12 @@ typedef struct {
     const char *unwrap_src;     /* envelope being unwrapped, or NULL   */
     int         deferred[2];    /* a fork written beside unwrap_src,
                                  * renamed onto it once it is deleted  */
+    /* Every file this layer READS — the layer itself and, for a
+     * segmented set, each part located — by device and inode, so that no
+     * spelling, link or hard link of one is ever opened for writing
+     * (sink_is_reading). */
+    struct { dev_t dev; ino_t ino; } reading[UNC_SEG_MAX_PARTS + 1];
+    int         nreading;
     /* --only: the entries the user named, and one flag each recording
      * whether anything matched. NULL/0 means "every entry", which is
      * what every run did before 2026-08-28. */
@@ -897,6 +903,33 @@ static int sink_unwrap_exempt(DiskSink *s, const char *path)
     return strcmp(path, rp) == 0;
 }
 
+/* Is `st` one of the files this layer is reading? By inode, not by
+ * name: `--overwrite` once opened the input archive itself "wb" when
+ * its only entry carried its filename, and a hard link or another
+ * spelling of the same file is the same file. DECISIONS.md 2026-11-07,
+ * *what the CLI may delete*. */
+static int sink_is_reading(const DiskSink *s, const struct stat *st)
+{
+    int i;
+    for (i = 0; i < s->nreading; i++)
+        if (s->reading[i].dev == st->st_dev && s->reading[i].ino == st->st_ino)
+            return 1;
+    return 0;
+}
+
+/* Remember a file this layer reads. A path that cannot be stat()ed is
+ * not one the engine can be reading. */
+static void sink_note_reading(DiskSink *s, const char *path)
+{
+    struct stat st;
+    if (s->nreading >= (int)(sizeof s->reading / sizeof s->reading[0]) ||
+        stat(path, &st) != 0 || sink_is_reading(s, &st))
+        return;
+    s->reading[s->nreading].dev = st.st_dev;
+    s->reading[s->nreading].ino = st.st_ino;
+    s->nreading++;
+}
+
 /* Never write over a file that is already there. Two entries can want
  * the same path — an archive holding both "X" and "X.rsrc" puts the
  * second one on the first one's sidecar — and letting the last writer
@@ -921,6 +954,16 @@ static FILE *sink_open_fork(DiskSink *s, UncFork fork)
         memcpy(path + n, DEFER_SUFFIX, sizeof DEFER_SUFFIX);
         s->deferred[fork == UNC_FORK_RSRC] = 1;
         return fopen(path, "wb");
+    }
+    /* Refused, not deferred, even with --overwrite: on the first layer
+     * the file being read is the user's archive, which nothing deletes,
+     * so writing beside it and renaming would replace their original with
+     * its own contents. */
+    if (stat(path, &st) == 0 && sink_is_reading(s, &st)) {
+        s->clobber = 1;
+        fprintf(stderr, "macextract: %s: is the archive being read; not "
+                "written over\n", path);
+        return NULL;
     }
     if (!s->overwrite && stat(path, &st) == 0) {
         s->clobber = 1;
@@ -1191,6 +1234,11 @@ static int sink_comment(void *ctx, const uint8_t *buf, uint16_t len)
         fprintf(stderr, "macextract: comment: output path too long\n");
         return 0;
     }
+    if (stat(path, &st) == 0 && sink_is_reading(s, &st)) {
+        fprintf(stderr, "macextract: %s: is the archive being read; "
+                "the archive comment was not written\n", path);
+        return 0;
+    }
     if (!s->overwrite && stat(path, &st) == 0) {
         fprintf(stderr, "macextract: %s: output path already exists; "
                 "the archive comment was not written (use --overwrite)\n",
@@ -1420,6 +1468,8 @@ typedef struct {
      * the join; see seg_wrapped_part_of. Empty until one has been. */
     const char *outdir;
     char     peeldir[1024];
+    DiskSink *sink;     /* told of each part as it is located, so that no
+                         * entry is written over a part (sink_is_reading) */
 } SegHost;
 
 /* How much of part `part`'s file is the part: its size, except that a
@@ -2099,6 +2149,7 @@ static int seg_need(void *ctx, const UncSegmentDesc *desc, int part, UncIO *io)
     }
     if (!h->path[part] && h->ask && !seg_ask(h, part)) return UNC_ERR_SEGMENTED;
     if (!h->path[part]) return UNC_ERR_SEGMENTED;
+    if (h->sink) sink_note_reading(h->sink, h->path[part]);
 
     f = fopen(h->path[part], "rb");
     if (!f) return UNC_ERR_SEGMENTED;
@@ -2359,6 +2410,7 @@ nextlayer:
     sink.hidden_forks = hidden_forks;
     sink.overwrite = overwrite;
     sink.unwrap_src = delfile;   /* "" until a layer is being unwrapped */
+    sink_note_reading(&sink, file);
     sink.verbose = verbose;
     sink.show_finder = show_finder;
     sink.show_meta = show_meta;
@@ -2568,6 +2620,7 @@ nextlayer:
         seg.ask = ask;
         seg.verbose = verbose;
         seg.outdir = outdir;
+        seg.sink = &sink;
 
         if (fmt == UNC_FORMAT_SPLIT) {
             /* Nothing in these files says anything, so the descriptor is
@@ -2914,6 +2967,11 @@ nextlayer:
                 seg_scan_dir(&seg, file, 1);
             }
         }
+
+        /* Every part the joiner may open is as much the input as the
+         * file named: none of them may be written over mid-join. */
+        for (i = 1; i <= UNC_SEG_MAX_PARTS; i++)
+            if (seg.path[i]) sink_note_reading(&sink, seg.path[i]);
 
         memset(&vs, 0, sizeof vs);   /* optional members are NULL ones */
         vs.ctx = &seg;

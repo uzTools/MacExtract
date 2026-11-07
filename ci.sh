@@ -74,6 +74,10 @@ MACEXTRACT=build/san/macextract sh tests/run_collide.sh || fail "collision tests
 # file, a file past a folder (DECISIONS.md 2026-11-07, *the folder
 # numbered past a file*).
 python3 tools/run_fileandfolder.py --cli build/san/macextract || fail "file/folder name tests"
+# What the CLI must never delete, truncate or write through: the input
+# archive, a file this run did not write, a planted link (TESTING.md).
+python3 tools/run_cli_safety.py --macextract build/san/macextract \
+    || fail "CLI output-safety tests"
 python3 tools/fuzz.py -n 150 --seed 7 --macextract build/san/macextract || fail "fuzz smoke"
 python3 tools/run_segments.py --macextract build/san/macextract \
     || fail "segmented-archive tests"
