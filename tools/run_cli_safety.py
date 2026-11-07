@@ -164,9 +164,32 @@ def case_sidecar_not_ours(tmp):
     return probs
 
 
+def case_deferred_by_path(tmp):
+    """Item 2B: the write deferred beside the envelope was keyed by which
+    FORK was written, not which path matched, so an inner DATA fork named
+    like the envelope's sidecar went to Foo.tar.rsrc.unwrap~ and was
+    never renamed back. MacBinary "Foo.tar" WITH a resource fork, holding
+    a tar whose one member carries the sidecar's name."""
+    probs = []
+    for forks, side in (("visible", "Foo.tar.rsrc"), ("hidden", "._Foo.tar")):
+        d = os.path.join(tmp, forks)
+        os.makedirs(os.path.join(d, "o"))
+        body = b"the inner entry\n" * 100
+        write(os.path.join(d, "Foo.bin"),
+              macbinary(b"Foo.tar", tar_of([(side, body)]), rsrc=b"R" * 300))
+        rc, err = run("x", "Foo.bin", "-o", "o", "--forks", forks, cwd=d)
+        left = sorted(os.listdir(os.path.join(d, "o")))
+        p = os.path.join(d, "o", side)
+        if rc != 0 or left != [side] or read(p) != body:
+            probs.append(f"{forks}: wanted only {side} holding the entry, "
+                         f"got {left} exit {rc} {err.strip()[:120]!r}")
+    return probs
+
+
 CASES = {
     "overwrite-self": case_overwrite_self,
     "sidecar-not-ours": case_sidecar_not_ours,
+    "deferred-by-path": case_deferred_by_path,
 }
 
 

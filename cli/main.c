@@ -349,8 +349,10 @@ typedef struct {
     const char *unwrap_src;     /* envelope being unwrapped, or NULL   */
     const char *unwrap_rsrc;    /* ITS sidecar, only if the layer before
                                  * wrote one; "" or NULL otherwise      */
-    int         deferred[2];    /* a fork written beside unwrap_src,
-                                 * renamed onto it once it is deleted  */
+    int         deferred[2];    /* a write landed beside unwrap_src [0]
+                                 * or unwrap_rsrc [1], whichever PATH it
+                                 * matched, and is renamed onto it once
+                                 * that is deleted                     */
     /* Every file this layer READS — the layer itself and, for a
      * segmented set, each part located — by device and inode, so that no
      * spelling, link or hard link of one is ever opened for writing
@@ -898,6 +900,8 @@ static int cli_ask_password(void *ctx, uint8_t *buf, uint16_t cap,
  * nothing on disk, measured 2026-10-14 on a .hcx inside a .hex, where the
  * name hint gives both layers the same name. */
 #define DEFER_SUFFIX ".unwrap~"
+/* Which of the two exempt paths `path` is: 1 for the envelope, 2 for
+ * its sidecar, 0 for neither. */
 static int sink_unwrap_exempt(DiskSink *s, const char *path)
 {
     if (!s->unwrap_src || !s->unwrap_src[0]) return 0;
@@ -906,7 +910,7 @@ static int sink_unwrap_exempt(DiskSink *s, const char *path)
      * that this run did not write is the user's, and is neither exempt
      * nor deleted (DECISIONS.md 2026-11-07, *what the CLI may delete*). */
     return s->unwrap_rsrc && s->unwrap_rsrc[0] &&
-           strcmp(path, s->unwrap_rsrc) == 0;
+           strcmp(path, s->unwrap_rsrc) == 0 ? 2 : 0;
 }
 
 /* Is `st` one of the files this layer is reading? By inode, not by
@@ -947,18 +951,30 @@ static FILE *sink_open_fork(DiskSink *s, UncFork fork)
 {
     char path[PATHBUF];
     struct stat st;
+    int ex;
     if (fork == UNC_FORK_DATA)
         snprintf(path, sizeof path, "%s", s->cur_path);
     else
         rsrc_path(s->cur_path, s->hidden_forks, path, sizeof path);
     s->clobber = 0;
-    /* Whether or not the envelope HAS that fork: the deletion below
-     * removes both of its paths either way. */
-    if (sink_unwrap_exempt(s, path) && !s->deferred[fork == UNC_FORK_RSRC]) {
+    /* Keyed by the PATH that matched, not by the fork being written: an
+     * inner data fork can carry the envelope's sidecar name, and keyed by
+     * fork it was renamed onto the envelope's data path, which was gone —
+     * left as NAME.rsrc.unwrap~ with exit 0. A second entry onto the same
+     * path is taken like any written path: refused, or with --overwrite
+     * written over the deferred copy. */
+    if ((ex = sink_unwrap_exempt(s, path)) != 0) {
         size_t n = strlen(path);
         if (n + sizeof DEFER_SUFFIX > sizeof path) return NULL;
+        if (s->deferred[ex - 1] && !s->overwrite) {
+            s->clobber = 1;
+            fprintf(stderr, "macextract: %s: output path already exists; "
+                    "re-run with --forks hidden to keep both forks, or "
+                    "--overwrite\n", path);
+            return NULL;
+        }
         memcpy(path + n, DEFER_SUFFIX, sizeof DEFER_SUFFIX);
-        s->deferred[fork == UNC_FORK_RSRC] = 1;
+        s->deferred[ex - 1] = 1;
         return fopen(path, "wb");
     }
     /* Refused, not deferred, even with --overwrite: on the first layer
@@ -3107,7 +3123,7 @@ nextlayer:
             snprintf(tmp, sizeof tmp, "%s" DEFER_SUFFIX, delfile);
             rename(tmp, delfile);
         }
-        if (sink.deferred[1] && delrsrc[0]) {
+        if (sink.deferred[1]) {
             snprintf(tmp, sizeof tmp, "%s" DEFER_SUFFIX, delrsrc);
             rename(tmp, delrsrc);
         }

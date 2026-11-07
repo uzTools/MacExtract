@@ -542,6 +542,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-07 (the comment the Desktop Manager cut) — a Get Info comment longer than the Desktop Manager keeps is cut to its 199 bytes by the shell and reported "<name>: comment shortened"; a Spotlight comment that runs past the sidecar's window is cut, not dropped
 - 2026-11-07 (what the CLI may delete) — `--overwrite` opened the input archive for writing when its only entry carried the archive's own name; a file being read is now refused by inode on every layer
 - 2026-11-07 (the sidecar the run did not write) — an unwrap removed the envelope's `NAME.rsrc` / `._NAME` whether or not it had written one, and exempted it from the no-overwrite rule; both now follow what was written
+- 2026-11-07 (the deferral keyed by fork) — a write deferred beside the envelope was renamed back by which fork it was, not which path it matched; an inner data fork carrying the sidecar's name was left as `NAME.rsrc.unwrap~`
 
 ---
 
@@ -22592,3 +22593,18 @@ layer exempts and deletes that path and nothing else. A user's file of
 that name is then an ordinary existing path: kept, and an inner entry
 landing on it is the usual clobber refusal. The control — an envelope
 WITH a resource fork — still leaves only the inner entry.
+
+## 2026-11-07 (the deferral keyed by fork) — a write deferred beside the envelope was renamed back by which fork it was, not which path it matched; an inner data fork carrying the sidecar's name was left as `NAME.rsrc.unwrap~`
+
+**Claim, confirmed (from a review).** `deferred[]` was indexed by fork and
+the cleanup renamed index 0 onto the envelope's data path, 1 onto its
+sidecar. Measured against the parent commit with `run_cli_safety.py
+deferred-by-path`: MacBinary `Foo.tar` with a resource fork, holding a tar
+whose one member is `Foo.tar.rsrc` (`._Foo.tar` under `--forks hidden`) —
+exit 0, and the only file left was `Foo.tar.rsrc.unwrap~`.
+
+**The fix.** `sink_unwrap_exempt` says WHICH path matched and the
+deferral is keyed by that. A second entry onto a path already deferred is
+an ordinary taken path: refused, or with `--overwrite` written over the
+deferred copy — before, `--overwrite` wrote the sidecar in place and the
+cleanup then deleted it (read from the code, not run).

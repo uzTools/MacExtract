@@ -175,6 +175,8 @@ case for.
   an envelope that has no resource fork must survive the unwrap, and an
   inner entry of that name is refused; the control, an envelope that has
   one, must leave nothing behind.
+- `deferred-by-path`: an inner data fork carrying the name of the
+  sidecar the envelope did write must end up under that name, alone.
 
 ### Exact oracle invocation
 
