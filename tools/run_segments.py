@@ -99,6 +99,16 @@ def read_tree(d, appledouble=False):
     return out
 
 
+def peel_left(outdir):
+    """The folders the CLI decodes wrapped parts into, if any is left. Its
+    name is unique per run (`.macextract-parts-XXXXXX`, mkdtemp) since
+    2026-11-07, so a check for the old fixed name would pass whatever the
+    CLI left behind."""
+    if not os.path.isdir(outdir):
+        return []
+    return [f for f in os.listdir(outdir) if f.startswith(".macextract-parts")]
+
+
 def run(cmd, **kw):
     return subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                           **kw)
@@ -996,14 +1006,14 @@ def real_sitseg_run(macextract, case, workroot, fails):
                         "failed: %s" % (case, ext, wtxt.strip()))
             wouts = [f for f in os.listdir(wout)
                      if not f.startswith("._") and
-                     f != ".macextract-parts"] if os.path.isdir(wout) else []
+                     not f.startswith(".macextract-parts")] \
+                if os.path.isdir(wout) else []
             wgot = open(os.path.join(wout, wouts[0]), "rb").read() if wouts \
                 else b""
             fails.check(hashlib.sha256(wgot).hexdigest() == want,
                         "%s: part 1 unwrapped from %s joins to %d bytes, "
                         "not the file StuffIt cut" % (case, ext, len(wgot)))
-            fails.check(not os.path.exists(os.path.join(wout,
-                                                        ".macextract-parts")),
+            fails.check(not peel_left(wout),
                         "%s: the peel left its decoded part 1 behind" % case)
     return rc == 0
 
@@ -1320,8 +1330,7 @@ def wrapped_case_run(macextract, case, workroot, fails):
                 "%s: wrapped and unwrapped reads disagree" % case)
 
     # Nothing of ours is left in the output directory.
-    fails.check(not os.path.exists(os.path.join(d, "_ours",
-                                                ".macextract-parts")),
+    fails.check(not peel_left(os.path.join(d, "_ours")),
                 "%s: the decoded parts were left behind" % case)
 
     rc, out = oracle_extract(first, os.path.join(d, "_oracle"))
@@ -1353,8 +1362,7 @@ def wrapped_behaviours(macextract, case, d, plain, wrapped, first, want, fails):
     fails.check(rc != 0, "%s: a foreign wrapped part was accepted" % case)
     fails.check("segment" in out.lower(),
                 "%s: foreign wrapped part reported as %r" % (case, out.strip()))
-    fails.check(not os.path.exists(os.path.join(d, "_decoy",
-                                                ".macextract-parts")),
+    fails.check(not peel_left(os.path.join(d, "_decoy")),
                 "%s: a failed join left its decoded parts behind" % case)
 
     # Parts collected from three directories, under three names, in two

@@ -393,6 +393,57 @@ def case_only_last_layer(tmp):
     return probs
 
 
+def wrapped_set(d, name=b"Test.sit"):
+    """A three-part StuffIt segmented set, each part in a BinHex envelope
+    (tools/synth_sitsplit.py, tools/synth_wrapped.py), so the join has to
+    peel parts into its own folder. Returns part 1's wrapper."""
+    import synth_sitsplit as ss, synth_wrapped as sw
+    plain = os.path.join(d, "plain")
+    os.makedirs(plain)
+    rsrc, data = ss.blob(9000, 1), ss.blob(21000, 2)
+    ss.write_set(plain, ["Test.sit.1", "Test.sit.2", "Test.sit.3"],
+                 rsrc + data, len(rsrc), len(data), [11000, 22000], name=name)
+    sw.wrap_dir(plain, os.path.join(d, "w"), "hqx")
+    return os.path.join(d, "w", "Test.sit.1.hqx")
+
+
+def case_peel_folder_not_ours(tmp):
+    """Item 6: the decoded parts went in OUT/.macextract-parts, whose
+    mkdir accepted EEXIST (a link to a folder too), and the cleanup then
+    deleted every regular file in it. (a) the user's own folder of that
+    name holding a file; (b) a link of that name to a folder elsewhere
+    holding a file. Each user file must survive. (The review's third
+    shape, a joined file named ".macextract-parts/x", is not reachable:
+    name_to_fs writes a Mac name's '/' as ':', and the folder is cleaned
+    before any later layer writes — DECISIONS.md 2026-11-07, *the parts
+    folder that was not ours*.)"""
+    probs = []
+    for label in ("own-folder", "link"):
+        d = os.path.join(tmp, label)
+        first = wrapped_set(d)
+        o = os.path.join(d, "o")
+        os.makedirs(o)
+        keep_dir = os.path.join(o, ".macextract-parts")
+        if label == "link":
+            keep_dir = os.path.join(d, "elsewhere")
+            os.makedirs(keep_dir)
+            os.symlink("../elsewhere", os.path.join(o, ".macextract-parts"))
+        else:
+            os.makedirs(keep_dir)
+        write(os.path.join(keep_dir, "keep.txt"), b"mine\n")
+        rc, err = run("x", first, "-o", o)
+        if not os.path.exists(os.path.join(keep_dir, "keep.txt")):
+            probs.append(f"{label}: the user's keep.txt was deleted "
+                         f"(exit {rc})")
+        if rc != 0 or not os.path.exists(os.path.join(o, "Test.sit")):
+            probs.append(f"{label}: wanted the set joined, exit 0; got "
+                         f"{rc} {err.strip()[:160]!r}")
+        left = [f for f in os.listdir(o) if f.startswith(".macextract-parts-")]
+        if left:
+            probs.append(f"{label}: the peel folder was left: {left}")
+    return probs
+
+
 CASES = {
     "overwrite-self": case_overwrite_self,
     "sidecar-not-ours": case_sidecar_not_ours,
@@ -402,6 +453,7 @@ CASES = {
     "planted-links": case_planted_links,
     "unwrap-temp-not-ours": case_unwrap_temp_not_ours,
     "only-last-layer": case_only_last_layer,
+    "peel-folder-not-ours": case_peel_folder_not_ours,
 }
 
 

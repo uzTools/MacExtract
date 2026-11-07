@@ -1545,7 +1545,7 @@ static int env_write(void *ctx, UncFork fork, const void *buf, int32_t len)
          * leaves no empty sidecar; an empty fork says nothing either. */
         if (!e->out || !e->rsrc_dest) return 0;
         if (!e->rout) {
-            e->rout = fopen(e->rsrc_dest, "wb");
+            e->rout = create_file(e->rsrc_dest, 0);
             if (!e->rout) { e->err = 1; return -1; }
         }
         if (fwrite(buf, 1, (size_t)len, e->rout) != (size_t)len) {
@@ -1642,23 +1642,31 @@ static int32_t env_peek(const char *path, uint8_t *head, int32_t cap)
 }
 
 /* Take one envelope off `path`, writing the payload's data fork to
- * `dest` and its resource fork, if any, to the sidecar `dest.rsrc`.
- * Returns 1 on success. */
-static int env_peel(const char *path, const char *dest)
+ * `dest` and its resource fork, if any, to the sidecar `dest.rsrc`, both
+ * created new (create_file). Returns 1 on success, setting *wrote_rsrc;
+ * on failure removes what it created, and only that. */
+static int env_peel(const char *path, const char *dest, int *wrote_rsrc)
 {
     EnvSink es;
     char rp[PATHBUF];
     int ok;
 
+    *wrote_rsrc = 0;
     memset(&es, 0, sizeof es);
     if (rsrc_path(dest, 0, rp, sizeof rp)) return 0;
     es.rsrc_dest = rp;
-    es.out = fopen(dest, "wb");
+    es.out = create_file(dest, 0);
     if (!es.out) return 0;
     ok = env_run(path, &es);
     if (fclose(es.out) != 0) es.err = 1;
     if (es.rout && fclose(es.rout) != 0) es.err = 1;
-    return ok && !es.err;
+    if (ok && !es.err) {
+        *wrote_rsrc = es.rout != NULL;
+        return 1;
+    }
+    remove(dest);
+    if (es.rout) remove(rp);
+    return 0;
 }
 
 /* ------------------------------------------------------------------ */
@@ -1689,6 +1697,9 @@ typedef struct {
      * the join; see seg_wrapped_part_of. Empty until one has been. */
     const char *outdir;
     char     peeldir[PATHBUF];
+    unsigned char peeled[UNC_SEG_MAX_PARTS + 1];  /* 1: part-NNN written
+                                                   * there, 3: and its
+                                                   * .rsrc sidecar     */
     DiskSink *sink;     /* told of each part as it is located, so that no
                          * entry is written over a part (sink_is_reading) */
 } SegHost;
@@ -1838,21 +1849,21 @@ static void seg_record(SegHost *h, int part, const char *path)
 /* what rule #1 forbids.                                              */
 /* ------------------------------------------------------------------ */
 
-#define SEG_PEELDIR ".macextract-parts"
+#define SEG_PEELDIR ".macextract-parts-XXXXXX"
 
 /* Make the directory decoded parts go in. It is inside the output
  * directory, which the caller has already created and is the one place
- * this program knows it may write. */
+ * this program knows it may write — and it is a NEW one, named by
+ * mkdtemp: a fixed name accepted one already there, a link to a folder
+ * elsewhere included, and the cleanup then emptied it (DECISIONS.md
+ * 2026-11-07, *the parts folder that was not ours*). */
 static int seg_peel_dir(SegHost *h)
 {
     if (h->peeldir[0]) return 1;
     if (!h->outdir) return 0;
     if ((size_t)snprintf(h->peeldir, sizeof h->peeldir, "%s/%s",
-                         h->outdir, SEG_PEELDIR) >= sizeof h->peeldir) {
-        h->peeldir[0] = 0;
-        return 0;
-    }
-    if (mkdir(h->peeldir, 0700) != 0 && errno != EEXIST) {
+                         h->outdir, SEG_PEELDIR) >= sizeof h->peeldir ||
+        !mkdtemp(h->peeldir)) {
         h->peeldir[0] = 0;
         return 0;
     }
@@ -1863,25 +1874,26 @@ static int seg_peel_dir(SegHost *h)
  * whatever the join did: they are this program's own litter, and an
  * archive that failed to join is exactly when a user is least helped
  * by finding pieces of it lying around. */
+/* The files removed are the ones seg_wrapped_part_of recorded writing,
+ * and the folder goes with rmdir, which refuses one that is not empty:
+ * nothing else in it is this program's to delete. */
 static void seg_peel_clean(SegHost *h)
 {
-    DIR *d;
-    struct dirent *de;
+    int part;
 
     if (!h->peeldir[0]) return;
-    d = opendir(h->peeldir);
-    if (d) {
-        while ((de = readdir(d)) != NULL) {
-            char p[PATHBUF];
-            if (strcmp(de->d_name, ".") == 0 || strcmp(de->d_name, "..") == 0)
-                continue;
-            if ((size_t)snprintf(p, sizeof p, "%s/%s", h->peeldir, de->d_name)
-                < sizeof p)
-                remove(p);
-        }
-        closedir(d);
+    for (part = 1; part <= UNC_SEG_MAX_PARTS; part++) {
+        char p[PATHBUF], rp[PATHBUF];
+        if (!h->peeled[part]) continue;
+        if ((size_t)snprintf(p, sizeof p, "%s/part-%03d", h->peeldir, part)
+            >= sizeof p)
+            continue;
+        remove(p);
+        if ((h->peeled[part] & 2) && rsrc_path(p, 0, rp, sizeof rp) == 0)
+            remove(rp);
+        h->peeled[part] = 0;
     }
-    remove(h->peeldir);
+    rmdir(h->peeldir);
     h->peeldir[0] = 0;
 }
 
@@ -1920,7 +1932,7 @@ static int seg_wrapped_part_of(SegHost *h, const char *path)
     char dest[PATHBUF];
     struct stat st;
     int32_t got;
-    int part;
+    int part, wrote_rsrc;
 
     /* Same gate seg_part_of applies: directories and unreadable things
      * are not candidates, and fopen() on a directory succeeds here. */
@@ -1940,12 +1952,8 @@ static int seg_wrapped_part_of(SegHost *h, const char *path)
     if ((size_t)snprintf(dest, sizeof dest, "%s/part-%03d", h->peeldir, part)
         >= sizeof dest)
         return 0;
-    if (!env_peel(path, dest)) {
-        char rp[PATHBUF];
-        remove(dest);
-        if (rsrc_path(dest, 0, rp, sizeof rp) == 0) remove(rp);
-        return 0;
-    }
+    if (!env_peel(path, dest, &wrote_rsrc)) return 0;
+    h->peeled[part] = (unsigned char)(wrote_rsrc ? 3 : 1);
 
     if (h->verbose)
         fprintf(stderr, "unwrapping part %d: %s\n", part, path);

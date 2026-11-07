@@ -547,6 +547,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-07 (the error only fclose saw) — a write error that stdio reported only at `fclose` was ignored: the entry counted as written and the layer above was deleted; it fails the entry now, with the system's words
 - 2026-11-07 (the links in the output folder) — links already in the output folder were followed by `stat`, `mkdir` and `fopen("wb")`, so a tar's entries landed outside `-o`; files are created `O_EXCL|O_NOFOLLOW` now and folders checked with `lstat`
 - 2026-11-07 (the selector the last layer ignored) — `--only` was exempted on every layer that might unwrap, so on an envelope that did not (a MacBinary text file) it was never applied; such a layer is judged once it turns out to be the last
+- 2026-11-07 (the parts folder that was not ours) — the folder wrapped parts are decoded into had a fixed name, accepted one already there (a link included), and was emptied of every file afterwards; it is `mkdtemp`'s now, and only the parts written there are removed
 
 ---
 
@@ -22704,3 +22705,24 @@ one of the user's of that name, as any unwrap's intermediate may; not
 covered. Folder entries of such a layer are not judged (no envelope here
 yields one). The sniff that decides the chain moved into a single place,
 after the deferred rename, which is where it has to read.
+
+## 2026-11-07 (the parts folder that was not ours) — the folder wrapped parts are decoded into had a fixed name, accepted one already there (a link included), and was emptied of every file afterwards; it is `mkdtemp`'s now, and only the parts written there are removed
+
+**Claim, confirmed (from a review; it was filed as a hypothesis).**
+Measured against the parent commit with `run_cli_safety.py peel-folder-not-ours`,
+a three-part StuffIt set with each part in BinHex: the user's own
+`o/.macextract-parts/keep.txt` was deleted, exit 0; with
+`o/.macextract-parts -> ../elsewhere`, `elsewhere/keep.txt` was.
+
+**Withdrawn: the third shape.** "A segment named `.macextract-parts/x`
+is extracted, then deleted": the same set with that name extracts to
+`o/.macextract-parts:x` (`name_to_fs` writes a Mac name's `/` as `:`), and
+the folder is cleaned straight after the join, before any later layer
+writes. Cost: one test case, dropped.
+
+**The fix.** `seg_peel_dir` makes `OUT/.macextract-parts-XXXXXX` with
+`mkdtemp`; each part is created there new (`create_file`) and recorded,
+`seg_peel_clean` removes the recorded files and then `rmdir`s the folder,
+which refuses one holding anything else. `run_segments.py` looked for the
+old fixed name to assert nothing was left behind, so it would have passed
+whatever the CLI left; it looks for the prefix now (`peel_left`).

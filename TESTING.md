@@ -195,6 +195,9 @@ case for.
   nothing and naming the payload: `x` must write what `l` lists and exit
   as `l` does; and through a layer that does unwrap, only the selected
   member of the tar inside.
+- `peel-folder-not-ours`: a BinHex-wrapped StuffIt set extracted where
+  `.macextract-parts` is already the user's folder, or a link to one
+  elsewhere: the file in it must survive, and no peel folder is left.
 
 ### Exact oracle invocation
 
