@@ -120,8 +120,8 @@ forks of classic StuffIt and Compact Pro (TESTING.md; FORMATS.md).
 
 ### What still holds the licence
 
-LGPL-2.1-or-later, through the 17 files `tools/check_provenance.py` lists
-as `CARRIES`: 11 owe XADMaster, 4 owe libxad, the Amiga library
+LGPL-2.1-or-later, through the 18 files `tools/check_provenance.py` lists
+as `CARRIES`: 12 owe XADMaster, 4 owe libxad, the Amiga library
 XADMaster carries them from (`unc_lzdyn.c`, `fmt_sit.c`, `sit14.c`,
 `fmt_dd.c`; same licence), and `fmt_hecx.c` and `fmt_binhex_probe.c`
 owe macutils' hexbin, whose README puts "some parts" under the GNU licence
@@ -143,6 +143,7 @@ moves to `HISTORICAL` in the same commit.
 | `fmt_dd.c` — the DDAR 0x20 raw-fork shape, libxad's | — | DiskDoubler's own expander on a fork of that shape |
 | `fmt_sitseg.c`, `fmt_sitseg_probe.c` — the StuffIt split header | Aladdin never published it; nothing else in `reference/` reads it (NOTICE) | its offsets measured off sets StuffIt cuts, as the B0 56 bytes were |
 | `unc_sidecar.c` — which names are Mac OS X sidecars, and the pairing rule | — | not looked for |
+| `unc_segment.c` — the part names of a spanned zip (`NAME.zNN`, `NAME.zip` last) and a `.NNN` split, since 2026-11-08 | facts, not code (NOTICE) | not looked for |
 | five tolerances no specification supports — the MacBinary CRC-16/0xA001 fallback and its nonzero-date test, the byte-swapped AppleSingle header, DiskDoubler's stored header CRC of zero (with the split header above) | deark is a checked negative for all four; the two MacBinary ones are unexercised; kept, the maintainer's decision 2026-10-23 (DECISIONS.md 2026-10-23, *the probes next door*) | the writer that made such files, or the tolerance dropped |
 | `fmt_hecx.c`, `fmt_binhex_probe.c` — hexbin's | *BinHex before 4.0*, below | BinHex 2.0's own `CODE`, as that item says |
 
