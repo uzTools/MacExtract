@@ -35,7 +35,7 @@
  * `LHAread_tree_c`, `LHAread_tree_p`, `LHAready_made`), cross-read against
  * LHa's `shuf.c`.
  *
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 #include "unc_internal.h"
 

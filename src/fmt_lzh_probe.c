@@ -7,7 +7,7 @@
  *
  * Source: unchanged from fmt_lzh.c, whose provenance comments stand.
  *
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: 0BSD
  */
 #include "unc_internal.h"
 

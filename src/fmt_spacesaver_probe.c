@@ -9,7 +9,7 @@
  *
  * Source: unchanged from fmt_spacesaver.c, whose provenance comment stands.
  *
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: 0BSD
  */
 #include "fmt_spacesaver_priv.h"
 

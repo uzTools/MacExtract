@@ -39,7 +39,7 @@
  *                      heap fragmentation is the classic explanation for a
  *                      QuickDraw allocation failing with megabytes free
  *
- * License: LGPL-2.1-or-later, like the rest of macextract.
+ * SPDX-License-Identifier: 0BSD
  */
 
 #include <Devices.h>

@@ -6,7 +6,7 @@
  * a flush was needed is real 68020-and-up silicon's answer and
  * MANUAL_TESTS.md's.
  *
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: 0BSD
  */
 #ifndef OVLBOX_OSUTILS_H
 #define OVLBOX_OSUTILS_H

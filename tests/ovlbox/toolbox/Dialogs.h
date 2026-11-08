@@ -4,7 +4,7 @@
  * The loader raises one alert, when the bundle cannot be read again under an
  * envelope whose peek was wrong (mac/ovl_load_eager.c); the mock counts it.
  *
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: 0BSD
  */
 #ifndef OVLBOX_DIALOGS_H
 #define OVLBOX_DIALOGS_H

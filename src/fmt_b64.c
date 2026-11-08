@@ -31,7 +31,7 @@
  * The payload is almost always another archive (a MacBinary file, a
  * .sit), so the CLI's envelope unwrapping takes the next layer off.
  *
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: 0BSD
  */
 #include "unc_internal.h"
 #include "fmt_b64_priv.h"

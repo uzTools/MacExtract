@@ -8,7 +8,7 @@
  * Build (native ASan): see tests/run_mac_sink.sh
  * Build (big-endian m68k): m68k-linux-gnu-gcc ... then qemu-m68k
  *
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: 0BSD
  */
 #include <stdio.h>
 #include <stdlib.h>

@@ -6,7 +6,7 @@
  * The header checksum is left to the reader: the magic and these bits are
  * already a test no other format here passes.
  *
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: 0BSD
  */
 #include "fmt_lz4_priv.h"
 

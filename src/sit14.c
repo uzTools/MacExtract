@@ -55,7 +55,7 @@
  * MEMORY PER FORK: the window — min(0x40000, the fork rounded up to a
  * power of two) — plus 4.7 KB of trees and ladders.
  *
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 #include "unc_internal.h"
 

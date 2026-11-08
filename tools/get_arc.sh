@@ -13,7 +13,7 @@
 # ignored; run_arc.py picks it up if it is there and says so if it is
 # not.
 #
-# License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+# SPDX-License-Identifier: 0BSD
 set -e
 cd "$(dirname "$0")/.."
 

@@ -23,7 +23,7 @@
  * own problem and its answer says so at the line that makes it.
  * Deflate decoding uses vendored zlib (third_party/zlib).
  *
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: 0BSD
  */
 #include "unc_internal.h"
 #include "unc_date.h"

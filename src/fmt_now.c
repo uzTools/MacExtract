@@ -31,7 +31,7 @@
  * A stream is a table of blocks, each up to 32 KB of output, decoded
  * against a 32 KB sliding history.
  *
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: 0BSD
  */
 #include "unc_internal.h"
 

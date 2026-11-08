@@ -13,7 +13,7 @@
  * only (no glue links), nothing resident by name, no .bss (S, below, is
  * initialised so that it lands in .data).
  *
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: 0BSD
  */
 #include "overlay.h"
 #include <Dialogs.h>

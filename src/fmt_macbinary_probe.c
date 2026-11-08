@@ -28,7 +28,7 @@
  *     MacBinary I header has no checksum, so without it the whole of
  *     the evidence is a handful of zero bytes.
  *
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 #include "fmt_macbinary_priv.h"
 

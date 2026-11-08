@@ -16,7 +16,7 @@
  * Built on demand by tools/sit_mkey_oracle.py, whose self-test grades it
  * against the Python verifier; nothing links it into the CLI.
  *
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: 0BSD
  */
 #include "../src/unc_crypt.c"
 #include <stdio.h>

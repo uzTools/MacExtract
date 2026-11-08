@@ -7,7 +7,7 @@
  * PC-relative references span (DECISIONS.md 2026-10-17, *dates in the
  * Macintosh's own zone*; FORMATS.md, *Implode*).
  *
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: 0BSD
  */
 #include "unc_internal.h"
 

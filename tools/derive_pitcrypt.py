@@ -45,7 +45,7 @@ cleanly without any of them. What IS in `ci.sh` is `tools/run_crypt.py`,
 which replays the specimens `--make` leaves in
 `$UNC_VMAC_HOME/specimens/pitcrypt/` whenever they are there.
 
-License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+SPDX-License-Identifier: 0BSD
 """
 import argparse
 import contextlib

@@ -1,8 +1,8 @@
 /*
  * macextract_partdlg.r — the part of a segmented set that was not found is
  * asked for in ONE dialog, Standard File's Open with a prompt, instead of
- * an alert whose Find... opened it (until v0.45.0). License:
- * LGPL-2.1-or-later.
+ * an alert whose Find... opened it (until v0.45.0).
+ * SPDX-License-Identifier: 0BSD
  *
  * Items 1-10 are Apple's own Open dialog, DITL -4000, as read out of System
  * 3.0's and 6.0.8's System files (identical in both), numbered as Standard

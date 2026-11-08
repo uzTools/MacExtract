@@ -73,7 +73,7 @@
  * grid, which is the only thing possible, since an undecodable entry
  * does not say where it ends.
  *
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: 0BSD
  */
 #include "unc_internal.h"
 

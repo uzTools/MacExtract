@@ -46,7 +46,7 @@
  * panel under Mini vMac (`tools/vmac/sdcompress.py --specimens`), and
  * graded against the bytes that went in. DECISIONS.md 2026-08-22.
  *
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: 0BSD
  */
 #include "unc_internal.h"
 #include "fmt_superdisk_priv.h"

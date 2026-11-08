@@ -32,8 +32,8 @@ BLOCKERS.md's (*Status*). The interactive UI is driven end to end on System
 | `tools/vmac/README.md` | how to run the emulator harnesses and probes | before booting anything |
 | `MANUAL_TESTS.md` | what only somebody outside this machine can do — hardware, a copy of the software, an account to post from | when something needs one of those |
 
-That session-start reading is **~12.6k tokens** (PROGRESS 3.2k,
-OPEN_ITEMS 6.6k, BLOCKERS' first two sections 2.8k); BLOCKERS'
+That session-start reading is **~12.7k tokens** (PROGRESS 3.2k,
+OPEN_ITEMS 6.7k, BLOCKERS' first two sections 2.8k); BLOCKERS'
 withdrawn-claims archive is another **~41.0k** and is reference, not
 orientation. All five are ESTIMATES (bytes ÷ 3.93, ±5 %, 2026-11-08; no
 tokenizer is installed). `tools/check_docs.py` only fails at 25 % drift, and
@@ -108,7 +108,7 @@ usually a declared ceiling nobody questioned.
 - **Commit and push whenever it is appropriate — do not ask.** Small, focused commits, pushed to `main` as they are made: the maintainer reads the docs on GitHub, and a wrong commit is revertible. **A release is the exception** — see *Cutting a release*.
 - **`./ci.sh` green before every commit**, except a docs-only change, where `tools/check_docs.py` is the layer that can fail, and a change to `companion/` and docs only, where `tools/check_docs.py` and `tools/check_helpers.py` are (nothing else in `ci.sh` builds the helpers; what they do is measured on the emulator). Code, comments and docs in English.
 - **`dist/` is a committed binary and goes stale silently**, and it is the only download. Rebuild it with `tools/make_dist.sh` in the SAME commit as any change to `mac/` or `src/`, or to the helpers it carries (`companion/stub/`, `companion/helpers.tsv`, the stamping scripts), and re-read `dist/README.txt`.
-- **LGPL-2.1-or-later**, forced by transcribing XADMaster; keep `NOTICE` accurate.
+- **0BSD for everything we wrote; LGPL-2.1-or-later only for the files that still carry XADMaster's, libxad's or macutils' code or facts** — `tools/check_provenance.py`'s `CARRIES`, each with an `SPDX-License-Identifier: LGPL-2.1-or-later` line, which that check enforces. A file that sheds its last citation moves to `HISTORICAL` and to `0BSD` in the same commit; keep `NOTICE` accurate.
 - Fixture archives are copyrighted and never committed — only `fixtures/SOURCES.md` and the manifests. Same rule for the Mac ROM and System image under `tools/vmac/`.
 - Work autonomously through a task list; log non-obvious decisions in `DECISIONS.md`; if something cannot be made to pass after genuine effort, write it up in `BLOCKERS.md` and move on rather than stalling.
 

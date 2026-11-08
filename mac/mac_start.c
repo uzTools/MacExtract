@@ -17,7 +17,7 @@
  * reads them again, and the resource is locked for the life of the run, so
  * without this they would sit in the heap until ExitToShell.
  *
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: 0BSD
  */
 #include <Memory.h>
 #include <Resources.h>

@@ -7,7 +7,7 @@
  * The format, and where every rule here comes from, is in fmt_pf.c's
  * header comment.
  *
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: 0BSD
  */
 #include "unc_internal.h"
 #include "fmt_pf_priv.h"

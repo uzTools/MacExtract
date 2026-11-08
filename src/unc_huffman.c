@@ -28,7 +28,7 @@
  *     decode(), the counts-and-offsets build and the walk that carries
  *     `first` and `index` along with the code.
  *
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: 0BSD
  */
 #include "unc_internal.h"
 

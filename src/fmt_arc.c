@@ -59,7 +59,7 @@
  *     0x0a as Crushed, which is what PAK wrote; a Trimmed member is
  *     caught by its CRC rather than by its header (OPEN_ITEMS.md).
  *
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 #include "unc_internal.h"
 #include "fmt_arc_priv.h"

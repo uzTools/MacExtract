@@ -6,7 +6,7 @@
  * sink glue are caught deterministically.  Test build only
  * (UNC_SINK_TEST); never part of the real Mac app.
  *
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: 0BSD
  */
 #ifndef MAC_MOCKS_H
 #define MAC_MOCKS_H

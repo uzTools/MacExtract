@@ -17,7 +17,7 @@
  * before `name`, is held and put on it (src/unc_sidecar.c; DECISIONS.md
  * 2026-10-17, *the sidecars Mac OS X left beside the file*).
  *
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: 0BSD
  */
 #include "unc_internal.h"
 #include "fmt_tar_priv.h"

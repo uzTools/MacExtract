@@ -46,7 +46,7 @@
  * segment carrying an index offset, or a final segment claiming to be
  * volume 1.
  *
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: 0BSD
  */
 #include "fmt_cptseg_priv.h"
 

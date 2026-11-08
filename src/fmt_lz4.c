@@ -33,7 +33,7 @@
  * output*; OPEN_ITEMS.md). It grows only at a flush boundary, where it has
  * not wrapped and a straight copy moves the window.
  *
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: 0BSD
  */
 #include "fmt_lz4_priv.h"
 

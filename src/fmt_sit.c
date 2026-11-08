@@ -72,7 +72,7 @@
  * Get Info pane reads*, has why it is a reading and not an
  * observation.
  *
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 #include "unc_internal.h"
 

@@ -23,7 +23,7 @@
  * here would be indistinguishable from a Mac that ignored the disk,
  * which is the thing being tested.
  *
- * License: LGPL-2.1-or-later, as the rest of this repository.
+ * SPDX-License-Identifier: 0BSD
  */
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>

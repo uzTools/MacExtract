@@ -10,7 +10,7 @@
  * Its forwards file leaves out unc_macbinary_probe, which this image
  * defines itself (tools/overlay/mkforwards.py, SNIFF).
  *
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: 0BSD
  */
 #include "overlay.h"
 #include "ovl_host_gen.h"

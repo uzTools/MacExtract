@@ -1,6 +1,6 @@
 /* fmt_ddseg_priv.h — what a DiskDoubler `SPLT` part's probe and its reader share.
  *
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: 0BSD
  */
 #ifndef UNC_FMT_DDSEG_PRIV_H
 #define UNC_FMT_DDSEG_PRIV_H

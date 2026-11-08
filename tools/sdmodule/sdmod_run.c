@@ -67,7 +67,7 @@
  * One line of key=value goes to stdout, and the whole parameter block with
  * it, so the caller can read fields this program does not name.
  *
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: 0BSD
  */
 #include <stdio.h>
 #include <stdlib.h>

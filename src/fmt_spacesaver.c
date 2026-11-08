@@ -38,7 +38,7 @@
  * name is the entry's. The data fork holds an 84-byte header, then one
  * compressed stream per fork; the resource fork is emptied.
  *
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: 0BSD
  */
 #include "unc_internal.h"
 #include "fmt_spacesaver_priv.h"

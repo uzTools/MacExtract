@@ -9,7 +9,7 @@
  * (tools/overlay/mkforwards.py). The probes are the sniffer's image's; what
  * a reader shares with them is resident (fmt_*_probe.c).
  *
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: 0BSD
  */
 #include "overlay.h"
 #include "ovl_host_gen.h"

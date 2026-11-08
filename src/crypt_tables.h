@@ -10,7 +10,7 @@
  * its XADStuffItDESHandle.m (DES_SPtrans), Crypto/md5.c (the
  * STEP list) and Crypto/aestab.c (sb_data) are read only to
  * agree with what the standards give.
- * LGPL / public domain — see NOTICE.
+ * SPDX-License-Identifier: 0BSD
  */
 #ifndef UNC_CRYPT_TABLES_H
 #define UNC_CRYPT_TABLES_H

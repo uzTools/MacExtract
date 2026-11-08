@@ -1,6 +1,6 @@
 /*
  * unc_internal.h — shared internals of libmacextract.
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 #ifndef UNC_INTERNAL_H
 #define UNC_INTERNAL_H

@@ -3,7 +3,7 @@
  * Compiled into different places: the probe stays resident, the decoder can
  * be an overlay. One definition, in the probe file, declared here.
  *
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: 0BSD
  */
 #ifndef UNC_FMT_B64_PRIV_H
 #define UNC_FMT_B64_PRIV_H

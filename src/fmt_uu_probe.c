@@ -10,7 +10,7 @@
  *
  * Source: unchanged from fmt_uu.c, whose provenance comments stand.
  *
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: 0BSD
  */
 #include "fmt_uu_priv.h"
 /* Used by the probe AND by the decoder, so it lives with the probe —

@@ -104,7 +104,7 @@ PowerPC only.
 | Icon positions, folder windows, Get Info comments, the Locked box | ✅ for StuffIt | partial: windows ✅, some icons one folder down misplaced | partial: comments and custom icons ✅, icon positions and StuffIt windows lost | ✅ |
 | A zip made by the Mac OS X Finder (`__MACOSX`) | 🔴 | 🔴 refused | 🔴 forks, types and creators lost, `__MACOSX` left behind | ✅ |
 | What you install | an application and an extension | an installer, seven applications, the StuffIt Engine, Magic Menu and seventeen translators | an installer, twelve applications, CarbonLib and twenty-three format plug-ins | one application |
-| Source | free, closed | paid, closed | paid, closed | free, open (LGPL) |
+| Source | free, closed | paid, closed | paid, closed | free, open (0BSD; a few decoders LGPL) |
 
 \* StuffIt discards the type and creator a MacZip archive stores, and guesses
 from the name instead (seen with Expander 3.5.2; the three 🔴 are from
@@ -187,10 +187,12 @@ coffee at [ko-fi.com/khaz1](https://ko-fi.com/khaz1).
 
 ## License
 
-LGPL-2.1-or-later. Format details are transcribed from
-[XADMaster](https://github.com/MacPaw/XADMaster); see `NOTICE`.
+0BSD: everything this project wrote itself. The few decoders and probes
+that still carry code or facts from [XADMaster](https://github.com/MacPaw/XADMaster),
+libxad or macutils are LGPL-2.1-or-later and say so in their header, and zlib's
+inflate keeps the zlib licence; `NOTICE` lists them all.
 
 One exception, marked as one in `NOTICE`: `src/ss_dict.h` holds about 9.7 KB
 that are **copyright Aladdin Systems, Inc.** — the tables SpaceSaver primes its
 compression with, which its files cannot be decoded without. Carried for
-interoperability, and not covered by the LGPL grant.
+interoperability, and not covered by either licence.

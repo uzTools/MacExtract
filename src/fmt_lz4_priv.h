@@ -3,7 +3,7 @@
  * Source: reference/notes/lz4_Frame_format.md (*General Structure*, *Frame
  * Descriptor*, *Skippable Frames*).
  *
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: 0BSD
  */
 #ifndef UNC_FMT_LZ4_PRIV_H
 #define UNC_FMT_LZ4_PRIV_H

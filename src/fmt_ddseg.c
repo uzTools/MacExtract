@@ -57,7 +57,7 @@
  * and the only assignment under which the one specimen pair that
  * differs reads as a file modified AFTER it was created.
  *
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: 0BSD
  */
 #include "fmt_ddseg_priv.h"
 

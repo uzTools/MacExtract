@@ -24,7 +24,7 @@ still 35 % wrong against the specimen, so a scaling step somewhere
 between dequantisation and the first pass — or between the passes — is
 not in the region traced. Widening it is the next move.
 
-License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+SPDX-License-Identifier: 0BSD
 """
 import re, sys
 

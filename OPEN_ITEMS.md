@@ -125,11 +125,14 @@ as `CARRIES`: 12 owe XADMaster, 4 owe libxad, the Amiga library
 XADMaster carries them from (`unc_lzdyn.c`, `fmt_sit.c`, `sit14.c`,
 `fmt_dd.c`; same licence), and `fmt_hecx.c` and `fmt_binhex_probe.c`
 owe macutils' hexbin, whose README puts "some parts" under the GNU licence
-(NOTICE). **A re-citation does not close a row**: the code has to be our
+(NOTICE). Ten files outside `src/` that cite a layout or rule there,
+`cli/main.c` among them, are LGPL with them (NOTICE); facts, not code, so
+they go with the maintainer's word that a fact does not carry it, or with
+their citations. **A re-citation does not close a row**: the code has to be our
 own, written from facts this project established — a published
 description, the original program's behaviour on chosen input, or its own
 code read as BinHex 2.0's and Packit III's were (NOTICE) — and the file
-moves to `HISTORICAL` in the same commit.
+moves to `HISTORICAL` and its SPDX line to `0BSD` in the same commit.
 
 | what | known | what would close it |
 |---|---|---|
@@ -147,10 +150,8 @@ moves to `HISTORICAL` in the same commit.
 | five tolerances no specification supports — the MacBinary CRC-16/0xA001 fallback and its nonzero-date test, the byte-swapped AppleSingle header, DiskDoubler's stored header CRC of zero (with the split header above) | deark is a checked negative for all four; the two MacBinary ones are unexercised; kept, the maintainer's decision 2026-10-23 (DECISIONS.md 2026-10-23, *the probes next door*) | the writer that made such files, or the tolerance dropped |
 | `fmt_hecx.c`, `fmt_binhex_probe.c` — hexbin's | *BinHex before 4.0*, below | BinHex 2.0's own `CODE`, as that item says |
 
-**The 20 `HISTORICAL` files are the project's own code, under 0BSD**
-(the maintainer, 2026-11-08; DECISIONS.md 2026-11-08, *the code rewritten
-from descriptions*). Not yet marked: `LICENSE` and NOTICE still say
-LGPL-2.1-or-later for the whole tree.
+**Everything else is 0BSD**, the 20 `HISTORICAL` files with it (the
+maintainer, 2026-11-08; DECISIONS.md 2026-11-08, *the code we wrote*).
 
 ## The wait before the first callback
 

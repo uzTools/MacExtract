@@ -56,7 +56,7 @@
  * its bytes, so the alternative would be emitting Mac files with no
  * type — an extracted application that does not launch.
  *
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: 0BSD
  */
 #include "unc_internal.h"
 #include "fmt_uu_priv.h"

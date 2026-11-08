@@ -93,7 +93,7 @@
  *   - a one-part set is just a file with a 100-byte hat: it extracts
  *     with no volume source at all.
  *
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 #include "fmt_sitseg_priv.h"
 

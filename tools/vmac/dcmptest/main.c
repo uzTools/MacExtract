@@ -44,7 +44,7 @@
  * (tools/vmac/sitopt.py --dcmpdata). Built by hand, not by ci.sh —
  * tools/vmac/README.md.
  *
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: 0BSD
  */
 #include <Quickdraw.h>
 #include <Fonts.h>

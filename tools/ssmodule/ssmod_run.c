@@ -77,7 +77,7 @@
  * record); for compress it is the input's own length. One line of key=value
  * goes to stdout.
  *
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: 0BSD
  */
 #include <stdio.h>
 #include <stdlib.h>

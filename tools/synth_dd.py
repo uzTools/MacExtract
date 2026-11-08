@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: LGPL-2.1-or-later
 """synth_dd.py — write DiskDoubler `DDAR` and `DDA2` archives.
 
 The corpus's nine real DiskDoubler archives reach one folder between

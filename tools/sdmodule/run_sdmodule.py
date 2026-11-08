@@ -51,7 +51,7 @@ What it CANNOT see, and each of these is a real gap:
     error shows up; a misunderstanding of what the ORIGINAL COMPRESSOR emits
     does not.
 
-License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+SPDX-License-Identifier: 0BSD
 """
 import argparse
 import glob

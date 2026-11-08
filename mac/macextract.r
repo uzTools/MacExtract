@@ -1,6 +1,6 @@
 /*
  * macextract.r — resources for the macextract Macintosh shell.
- * Compiled with Retro68's Rez. License: LGPL-2.1-or-later.
+ * Compiled with Retro68's Rez. SPDX-License-Identifier: 0BSD
  */
 #include "Dialogs.r"
 #include "Processes.r"

@@ -22,7 +22,7 @@
  *   - Engine memory goes through NewPtr with a FreeMem()-derived
  *     budget: allocation failures surface as clean per-entry errors.
  *
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: 0BSD
  */
 
 #ifdef UNC_SINK_TEST

@@ -69,7 +69,7 @@
  * definition in FIPS 197 section 5.1.1. They are precomputed because
  * this engine may not have global mutable state. LGPL — see NOTICE.
  *
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 #include "unc_internal.h"
 #include "crypt_tables.h"

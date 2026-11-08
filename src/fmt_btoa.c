@@ -16,7 +16,7 @@
  * NOT a transcription, and that is a licence matter rather than a
  * stylistic one: btoa's README allows use "as long as ... you don't use
  * it to earn money", which is why Debian shipped it in non-free and why
- * its code cannot be carried into an LGPL engine. What is taken here is
+ * its code cannot be carried into this engine. What is taken here is
  * what a format IS — the two headers, the alphabet, the escapes, the
  * checksum recurrences, the padding rule — and every one of those is
  * cited below to the routine it was read from. No function, buffer or
@@ -49,7 +49,7 @@
  * bytes of padding, and `(len - 1) & 3` says how many of its four bytes
  * are real.
  *
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: 0BSD
  */
 #include "unc_internal.h"
 

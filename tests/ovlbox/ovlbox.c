@@ -41,7 +41,7 @@
  *     is the same COMPILER FAMILY and not the same compiler;
  *   - nothing about the interface: no alert, no grid, no report.
  *
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: 0BSD
  */
 #include <stdio.h>
 #include <stdlib.h>

@@ -232,7 +232,7 @@ one `src/fmt_binhex.c` already implements. A second implementation of a
 rule this project had from one source the day before, found while
 asking about a different rule.
 
-License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+SPDX-License-Identifier: 0BSD
 """
 import argparse
 import os

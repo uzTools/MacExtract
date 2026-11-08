@@ -1,6 +1,6 @@
 /* fmt_cptseg_priv.h — what a Compact Pro segment's probe and its reader share.
  *
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: 0BSD
  */
 #ifndef UNC_FMT_CPTSEG_PRIV_H
 #define UNC_FMT_CPTSEG_PRIV_H

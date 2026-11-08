@@ -11,7 +11,7 @@
  *   - No recursion; bounded stack (< 4 KB call-chain depth).
  *   - All multi-byte reads via byte-wise big-endian helpers.
  *
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: 0BSD
  */
 #ifndef MACEXTRACT_H
 #define MACEXTRACT_H

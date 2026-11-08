@@ -30,7 +30,7 @@
  *   - an index past a follower set's count is refused: 5.2.4 defines
  *     S(j)[I] only for I < N(j). ozur reads its zeroed table and gives 0.
  *
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: 0BSD
  */
 #include "unc_internal.h"
 

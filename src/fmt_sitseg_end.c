@@ -7,7 +7,7 @@
  * StuffIt set keeps the bundle whole while it joins (mac/ovl_shim.c).
  * Everywhere else it is linked like the rest.
  *
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: 0BSD
  */
 #include "unc_internal.h"
 

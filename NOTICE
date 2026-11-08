@@ -1,5 +1,11 @@
 MacExtract — a universal unarchiver for Classic Mac OS formats
-Licensed under LGPL-2.1-or-later (see LICENSE).
+0BSD (see LICENSE): everything this project wrote itself, the maintainer's
+decision of 2026-11-08 (DECISIONS.md, *the code we wrote*). The exceptions:
+the files listed below as still somebody else's are LGPL-2.1-or-later (see
+LICENSE-LGPL-2.1) and say so in an SPDX-License-Identifier line;
+third_party/zlib is zlib's; and src/ss_dict.h holds Aladdin's bytes (below).
+The application and the CLI link all three, so a binary carries their
+licences too.
 
 WHAT IS STILL SOMEBODY ELSE'S, IN FULL
 -------------------------------------
@@ -154,6 +160,16 @@ hand.
                        state — the archives adjudicate it, with no
                        reference implementation in the loop
                        (tools/derive_dd8.py).
+
+Outside src/, these cite a reference for a layout or a rule they use,
+none for code, and are LGPL-2.1-or-later on the same terms; the check
+fails a file that gains or sheds such a citation without its SPDX line
+following it:
+
+  cli/main.c, tests/unit_formats.c, tools/derive_now.py,
+  tools/make_manifests.py, tools/synth_arc.py, tools/synth_dd.py,
+  tools/synth_now.py, tools/synth_wrapped.py, tools/vmac/sitmeta.py,
+  tools/xadmaster-ddn-repro/make_repro_unchecked.py
 
 Everything else this engine does that these references also do is
 written from a published description or measured here; the rest of
@@ -399,8 +415,8 @@ This project's decoders are transcriptions/ports of algorithms from:
     -lz5- and not for -lh1-, and lhasa fills the -lh1- buffer with
     spaces instead (`lh1_decoder.c`), so neither is a second statement
     of what this file does. The
-    change was made for speed and heap, not licence: this engine
-    remains LGPL through its other XADMaster transcriptions.
+    change was made for speed and heap, not licence: the files that
+    still carry XADMaster's code stay LGPL-2.1-or-later.
 
   * deark, by Jason Summers — https://github.com/jsummers/deark, MIT.
     Two ARC methods in `src/fmt_arc.c` follow deark rather than
@@ -673,8 +689,8 @@ This project's decoders are transcriptions/ports of algorithms from:
     names of the developers are mentioned and you don't use it to earn
     money. It may NOT be used commercially without my permission."
     That is a non-commercial restriction, and Debian shipped it in
-    `non-free` for exactly that reason; it is incompatible with this
-    project's LGPL grant, under which somebody may charge for what they
+    `non-free` for exactly that reason; it is incompatible with both of this
+    project's licences, under which somebody may charge for what they
     do with MacExtract.
 
     So `src/fmt_btoa.c` implements the FORMAT — the two headers, the
@@ -693,7 +709,7 @@ This project's decoders are transcriptions/ports of algorithms from:
     http://www.hampa.ch/pub/pce/misc/ — and this one is a REFERENCE ONLY
     as well, because both are released under the GNU General Public
     License version 2 alone, with no "or later", which cannot be relicensed
-    as this project's LGPL-2.1-or-later.
+    under either of this project's licences.
 
     So `src/fmt_mar.c`, `src/fmt_mar_probe.c` and `src/fmt_mar_priv.h`
     implement the FORMAT — the 128-byte record, its three ids and its field
@@ -736,8 +752,8 @@ This project's decoders are transcriptions/ports of algorithms from:
     LArc's two methods with their window preloads. The canonical-code
     table and the bit reader those feed are this project's own, as is
     the window sizing and MacLHA's MacBinary split. The change was made
-    for speed: this engine remains LGPL through its other XADMaster
-    transcriptions, of which `src/fmt_lzh.c` is no longer one — its
+    for speed: the files that still carry XADMaster's code stay
+    LGPL-2.1-or-later, and `src/fmt_lzh.c` is no longer one — its
     header walk left on 2026-09-22 for LHa's own `header.doc` and for
     lhasa.
     lhasa is also read for the header levels and used at test time as a
@@ -905,9 +921,10 @@ DATA THAT IS NOT OURS AND IS SHIPPED ANYWAY
     2026-08-25): the tail of the `CMod 4` resource, which is the string
     every unfilled entry of method 2's dictionary points at, so a
     method 2 fork that names one cannot be decoded without it either.
-    Everything else in this repository is either ours, LGPL, CC0, or
-    fetched rather than committed. This is the exception, it is marked
-    as one, and it is not covered by this project's LGPL grant.
+    Everything else in this repository is either ours (0BSD), LGPL,
+    zlib's, CC0, or fetched rather than committed. This is the
+    exception, it is marked as one, and it is not covered by either of
+    this project's licences.
 
 The `DDA2` entry that carries no file header of its own — DiskDoubler
 Pro's form for a file it could not compress — and the whole of the

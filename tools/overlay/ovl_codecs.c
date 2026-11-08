@@ -24,7 +24,7 @@
  * RAM, measured when there were six images rather than fifteen. This costs
  * nothing but the mechanism.
  *
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: 0BSD
  */
 #include "overlay.h"
 #include "ovl_host_gen.h"

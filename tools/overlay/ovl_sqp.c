@@ -11,7 +11,7 @@
  * then the 1,972 B of this image and nothing else (FORMATS.md, *Overlays*;
  * DECISIONS.md 2026-10-05).
  *
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: 0BSD
  */
 #include "overlay.h"
 #include "ovl_host_gen.h"

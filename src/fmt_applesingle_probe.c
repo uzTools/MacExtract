@@ -11,7 +11,7 @@
  * fmt_applesingle_priv.h's; what accepting them rests on is
  * fmt_applesingle.c's file comment.
  *
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: 0BSD
  */
 #include "fmt_applesingle_priv.h"
 

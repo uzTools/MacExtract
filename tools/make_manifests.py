@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: LGPL-2.1-or-later
 """make_manifests.py — build oracle manifests for every fixture.
 
 For each file in fixtures/ (non-recursive, excluding manifests/ etc.),

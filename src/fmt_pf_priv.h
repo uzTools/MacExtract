@@ -1,6 +1,6 @@
 /* fmt_pf_priv.h — what fmt_pf.c and its resident probe share.
  *
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: 0BSD
  */
 #ifndef UNC_FMT_PF_PRIV_H
 #define UNC_FMT_PF_PRIV_H

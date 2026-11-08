@@ -24,7 +24,7 @@
  *             param & 1)
  *   SUPERDISK sd_fork over a sequence of blocks
  *
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: 0BSD
  */
 #include "fz_common.h"
 

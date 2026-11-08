@@ -6,7 +6,7 @@
  * looks at — that is the whole difference between loading a decoder on demand
  * and loading it always (BRANCH_NOTES.md).
  *
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: 0BSD
  */
 #ifndef UNC_FMT_SPACESAVER_PRIV_H
 #define UNC_FMT_SPACESAVER_PRIV_H

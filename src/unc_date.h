@@ -22,7 +22,7 @@
  * represent — before 1904, after 2040-02-06 06:28:15, or a field out of
  * range — comes back 0 rather than wrapped.
  *
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: 0BSD
  */
 #ifndef UNC_DATE_H
 #define UNC_DATE_H

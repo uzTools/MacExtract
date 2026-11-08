@@ -47,7 +47,7 @@ Not in `ci.sh`: it needs fixtures, which are copyrighted and not
 committed. What IS in `ci.sh` is `tools/run_multihqx.py`, which carries
 the same posting as a generated case.
 
-License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+SPDX-License-Identifier: 0BSD
 """
 import argparse
 import os

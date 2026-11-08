@@ -28,7 +28,7 @@ not do, so `--check` MEASURES what came out and prints it rather than
 asserting either (DECISIONS.md 2026-08-29, *a Macintosh wrote a MIME
 message*).
 
-License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+SPDX-License-Identifier: 0BSD
 """
 import argparse
 import os

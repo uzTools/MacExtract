@@ -5,7 +5,7 @@
  * (tools/overlay/mkforwards.py). The PROBE is not here: it stays resident, or
  * sniffing a file would load the decoder in order to decide it is not one.
  *
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: 0BSD
  */
 #include "overlay.h"
 #include "ovl_host_gen.h"

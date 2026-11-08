@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: LGPL-2.1-or-later
 """synth_now.py — write Now Compress archives.
 
 The corpus holds two real Now Compress archives, and the only one `unar`

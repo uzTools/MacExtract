@@ -39,7 +39,7 @@
  * specimen of any of them has been found, so an implementation could not
  * be graded — the same reason LZH extraction stays out of scope.
  *
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 #include "unc_internal.h"
 

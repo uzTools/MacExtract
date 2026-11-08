@@ -18,7 +18,7 @@
  *                          pass when it has no buffer — the fix)
  *
  * Build and run: run.sh.
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: 0BSD
  */
 #include <stdio.h>
 #include <stdlib.h>

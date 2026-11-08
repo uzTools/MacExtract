@@ -72,7 +72,7 @@ Nothing here fails when the prerequisites are absent: no cross
 compiler, no `qemu-m68k` or no installed SpaceSaver image prints what
 was skipped and returns 0, so a fresh clone stays green.
 
-License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+SPDX-License-Identifier: 0BSD
 """
 import argparse
 import os

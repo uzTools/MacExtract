@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: LGPL-2.1-or-later
 """derive_now.py — one of Now Compress's stream shapes, derived from
 the application's own output, and a tool that re-runs the reading.
 
@@ -613,7 +614,9 @@ def table_delta(d, st, stored):
 
     Source: reference/XADMaster/XADNowCompressHandle.m,
     -findFileHeaderDeltaWithHeaderOffset:firstOffset:, which
-    `now_find_delta` in src/fmt_now.c transcribes. Candidates are
+    `now_find_delta` in src/fmt_now.c transcribed until 2026-09-21, when
+    the search was measured against Now Compress itself (that file's
+    header). Candidates are
     st+16, st+24, ... — the least a table can hold is one record — and
     the bound is the same 0x2000.
     """

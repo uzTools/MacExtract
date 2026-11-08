@@ -10,7 +10,7 @@
  * The scheme's layout, and why it is DERIVED rather than transcribed, is
  * fmt_cptseg.c's file comment.
  *
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: 0BSD
  */
 #include "fmt_cptseg_priv.h"
 

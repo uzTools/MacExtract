@@ -6,7 +6,7 @@
  * (mac/macextract_mac.c, UNC_SHELL_IMAGES); here every resident call goes
  * through the SegSetupFns the application passes as `b`.
  *
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: 0BSD
  */
 #include "overlay.h"
 #include <Files.h>

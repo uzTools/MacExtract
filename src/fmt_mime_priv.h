@@ -3,7 +3,7 @@
  * The probes stay resident and the decoder can be an overlay, so the struct a
  * probe fills and the constants it reads live here rather than in either.
  *
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: 0BSD
  */
 #ifndef UNC_FMT_MIME_PRIV_H
 #define UNC_FMT_MIME_PRIV_H

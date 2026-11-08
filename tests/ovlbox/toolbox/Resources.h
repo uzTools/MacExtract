@@ -5,7 +5,7 @@
  * files the build just wrote (ovlbox_add_resource), so the loader reads the
  * same bytes a Macintosh does.
  *
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: 0BSD
  */
 #ifndef OVLBOX_RESOURCES_H
 #define OVLBOX_RESOURCES_H

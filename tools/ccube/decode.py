@@ -53,7 +53,7 @@ fork*; `tools/run_sitcombo.py` grades the engine on all of them):
 WHAT IT CANNOT SEE: widths over 512, heights over 300, and any quality
 the module's dialog refuses (it takes 5..255 and refuses 1..3).
 
-License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+SPDX-License-Identifier: 0BSD
 """
 import argparse
 import struct

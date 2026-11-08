@@ -4,7 +4,7 @@
  * decoder can be an overlay (BRANCH_NOTES.md). This is the one thing they
  * both need.
  *
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: 0BSD
  */
 #ifndef UNC_FMT_ARC_PRIV_H
 #define UNC_FMT_ARC_PRIV_H

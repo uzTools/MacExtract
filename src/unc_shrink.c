@@ -5,7 +5,7 @@
  * beside Reduce in the one image only zip keeps (FORMATS.md, *Shrink*,
  * *Reduce*). It shares no code with compress(1)'s LZW.
  *
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: 0BSD
  */
 #include "unc_internal.h"
 

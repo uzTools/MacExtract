@@ -1,7 +1,7 @@
 /*
  * unit_formats.c — per-format unit tests, included by unit_main.c.
  * Grows milestone by milestone.
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 /* Helpers from unit_main.c */

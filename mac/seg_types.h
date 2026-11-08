@@ -4,7 +4,7 @@
  * see the same layout, so nothing in it depends on a -D: an image is
  * built without one.
  *
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: 0BSD
  */
 #ifndef UNC_SEG_TYPES_H
 #define UNC_SEG_TYPES_H

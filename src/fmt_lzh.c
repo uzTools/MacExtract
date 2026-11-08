@@ -38,7 +38,7 @@
  *   -lhx-, PMarc (-pm0-/-pm1-/-pm2-)  A different container family
  *       sharing this one's shape; out of scope (OPEN_ITEMS.md, part 1).
  *
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: 0BSD
  */
 #include "unc_internal.h"
 #include "unc_date.h"

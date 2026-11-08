@@ -37,7 +37,7 @@
  * that only existed to undo the pairs the format had already given us
  * — on a one-drive Mac, a disk swap each (DECISIONS.md 2026-08-09).
  *
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 #include "unc_internal.h"
 

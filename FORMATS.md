@@ -6054,7 +6054,7 @@ StuffIt Engine to work with this archive."*
 | Self-mounting disk images (`.img`, `.smi`) | **no, read from its own files 2026-10-11**: the `open` 128 resource lists the 21 types it accepts (`SIT!`, `SITD`, `PACT`, `HBSF`, `TEXT`, five segment types, `SPSV`, `mArc`, `m@rc`, `ZIVU`, `ZIVM`, `Gzip`, `pZIP`, `ZIP `, `fold`, `disk`, `****`) and none is a disk image; no disk-image string occurs in the application or its documents. Not run on a `.img` | no — disk images are out of scope (OPEN_ITEMS.md, Part 1) |
 | StuffIt Deluxe 2.0's Optimizers and ciphers | **measured 2026-10-11**: `Text 1` extracts, byte-identical to this engine's; the other four Optimizers and all five ciphers are refused with *"Unable to decompress some items due to use of optimizers."* | all ten (*StuffIt 2.0's pluggable modules*, above) |
 | Verification | none published | 988 fixtures byte-exact against `unar`/`macunpack` — bar the three uuencode fixtures, which `unar` cannot read at all: one is its generator's input with `hexbin` agreeing, and the two wild ones are graded by `hexbin` and by the CRCs of the archive one of them decodes to |
-| Licence | free, closed | free, LGPL-2.1-or-later |
+| Licence | free, closed | free, 0BSD; the files NOTICE lists LGPL-2.1-or-later |
 | Memory partition | **512 KB preferred, 384 KB minimum** (`SIZE` (-1), measured 2026-08-29; BLOCKERS.md) | 2,048 KB preferred, 400 KB minimum (`SIZE` (-1) of `dist/MacExtract.bin`, re-read 2026-10-25); engine peak heap per format in the matrix above |
 
 ### The paid box: StuffIt Deluxe 3.5.1 (2026-09-27)

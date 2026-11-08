@@ -36,7 +36,7 @@
  * malformed stream into a per-entry error instead of into plausible
  * output.
  *
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: 0BSD
  */
 #include "unc_internal.h"
 #include "fmt_binhex_priv.h"

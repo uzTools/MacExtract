@@ -15,7 +15,7 @@
  * words) and a structure that could not be read both deserve, and the caller
  * is expected to treat it exactly as "yes".
  *
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: 0BSD
  */
 #include "unc_internal.h"
 

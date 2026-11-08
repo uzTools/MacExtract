@@ -23,7 +23,7 @@
  * handed straight to the MIME walk, and part 1's body already begins
  * with the enclosed message's own headers. DECISIONS.md 2026-08-29.
  *
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: 0BSD
  */
 #include "fmt_mimeseg_priv.h"
 

@@ -52,7 +52,7 @@
  * block at its fill, and either the 3-bytes-per-byte transform vector or
  * the sampled index — see "Inverse BWT" below, which is unchanged.
  *
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: 0BSD
  */
 #include "unc_internal.h"
 

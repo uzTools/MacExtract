@@ -4,7 +4,7 @@
  * decoder goes into an overlay. One definition, in the probe, declared here
  * — rather than a copy in each, which is what rule #1 forbids.
  *
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: 0BSD
  */
 #ifndef UNC_FMT_BINHEX_PRIV_H
 #define UNC_FMT_BINHEX_PRIV_H

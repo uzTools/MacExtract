@@ -76,7 +76,7 @@
  * goes through the same driver below: one document, counted, then
  * written.
  *
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 #include "unc_internal.h"
 #include "fmt_binhex_priv.h"

@@ -38,7 +38,7 @@ HEAD = '''/*
  * produces wrong output rather than no output. See NOTICE, and
  * DECISIONS.md 2026-08-23 (the dictionary) for the decision and who
  * took it. They are data required for interoperability, not part of
- * this project's LGPL source.
+ * this project's source or its licences.
  *
  * The fork record's byte at +12 selects one: 0 is `PrAm` -4048 and 1 is
  * `PrAm` -4047. Everything SpaceSaver writes uses 0.

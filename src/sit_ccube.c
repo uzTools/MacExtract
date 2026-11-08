@@ -75,7 +75,7 @@
  * arithmetic in the transform, every allocation through the caller's
  * UncAlloc and a per-entry error if one fails.
  *
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: 0BSD
  */
 #include "unc_internal.h"
 

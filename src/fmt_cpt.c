@@ -38,7 +38,7 @@
  * Compression is RLE, optionally preceded by an LZSS+Huffman stage
  * ("LZH"); see cpt_rle_* and cpt_lzh_* below.
  *
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: 0BSD
  */
 #include "unc_internal.h"
 

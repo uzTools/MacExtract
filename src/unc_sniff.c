@@ -7,7 +7,7 @@
  * 2026-10-21, *the probes that left with the bundle*). Nothing here
  * changed in the move; the resident control build links it as before.
  *
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: 0BSD
  */
 #include "unc_internal.h"
 

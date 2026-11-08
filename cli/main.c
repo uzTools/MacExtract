@@ -25,7 +25,7 @@
  * The CLI is the only place libc I/O and malloc are used; the engine
  * sees callbacks only.
  *
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 /* lstat, fdopen, O_NOFOLLOW and mkdtemp are POSIX.1-2008, which
  * -std=c99 -pedantic does not expose by itself. */

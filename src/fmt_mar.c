@@ -44,7 +44,7 @@
  * on. Graded against both archives hampa published alongside StuffIt
  * copies of the same files (FORMATS.md, *MAR*).
  *
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: 0BSD
  */
 #include "fmt_mar_priv.h"
 

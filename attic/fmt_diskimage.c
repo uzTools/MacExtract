@@ -27,7 +27,7 @@
  * `tools/run_diskimage.py` in `ci.sh`). The sources it was transcribed
  * from are named in the comments below and are still in reference/.
  *
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: 0BSD
  */
 #include "unc_internal.h"
 

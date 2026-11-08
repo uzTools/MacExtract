@@ -7,7 +7,7 @@
  * bundle*). What a probe and its reader share is defined once, here, and
  * stays resident for the reader.
  *
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 #include "unc_internal.h"
 

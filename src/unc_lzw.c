@@ -28,7 +28,7 @@
  * be full already, so nothing is skipped there (fmtutil-lzw.c,
  * delzw_unixcompress_end_bitgroup).
  *
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: 0BSD
  */
 #include "unc_internal.h"
 

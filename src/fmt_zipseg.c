@@ -55,7 +55,7 @@
  * reads either value; the displacement is all that is tested, so both
  * markers and any third one behave identically.
  *
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: 0BSD
  */
 #include "fmt_zipseg_priv.h"
 

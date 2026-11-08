@@ -1,6 +1,6 @@
 /*
  * macextract_strings.h — every piece of text the Macintosh application
- * shows, in one place. License: LGPL-2.1-or-later.
+ * shows, in one place. SPDX-License-Identifier: 0BSD
  *
  * Included by BOTH macextract.r (Rez) and macextract_mac.c (C), so it holds
  * nothing but #defines of plain string literals. The two languages do not

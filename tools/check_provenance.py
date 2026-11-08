@@ -32,11 +32,24 @@ direction the script was written to catch (BLOCKERS.md).
 
 Moving a file from CARRIES to HISTORICAL is the act of shedding it:
 do it in the same commit as the re-citation, with NOTICE.
+
+THE LICENCE FOLLOWS THE CITATION (the maintainer, 2026-11-08; DECISIONS.md
+2026-11-08, *the code we wrote*). Everything this project wrote is 0BSD,
+the tree's default in LICENSE; a file that carries somebody else's code or
+facts keeps LGPL-2.1-or-later and says so in an SPDX-License-Identifier
+line. Under src/, that line must be in exactly the CARRIES files. Outside
+src/ there is no list: a file with a live citation must carry the line,
+and a file with the line must have a live citation, so no file stays LGPL
+after its last citation goes. Every such file is named in NOTICE.
+
+What this cannot see: a borrowing nobody marked with a Source: line, and
+a file whose citation names a reference other than these three.
 """
 
 import re
 import sys
 import pathlib
+import subprocess
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 SRC = ROOT / "src"
@@ -79,6 +92,13 @@ HISTORICAL = {
 }
 
 MENTION = re.compile(r"XAD|libxad|macutils")
+# The tag opens a comment line (" * ", "# ", "/* "), so prose that quotes
+# it, this file's included, is not a tag.
+LGPL_TAG = re.compile(r"^[ \t/*#]*SPDX-License-Identifier:[ \t]*"
+                      r"LGPL-2\.1-or-later[ \t]*(\*/)?[ \t]*$", re.M)
+# Outside src/: every tracked text file but the fetched, vendored and
+# shipped trees, and the Markdown and NOTICE, which cite rather than carry.
+OUTSIDE_SKIP = re.compile(r"^(src|reference|fixtures|third_party|dist)/|\.md$|^NOTICE$")
 
 # A LIVE citation is Source-marked. That is NOTICE's own stated
 # convention ("Files that transcribe XADMaster code carry a
@@ -91,17 +111,56 @@ MENTION = re.compile(r"XAD|libxad|macutils")
 LIVE = re.compile(r"Source:[^\n]*(XAD|libxad|macutils)")
 
 
+def tracked_outside_src():
+    out = subprocess.run(["git", "ls-files"], cwd=ROOT, capture_output=True,
+                         text=True, check=True).stdout.split("\n")
+    me = pathlib.Path(__file__).resolve()
+    # This file quotes a Source: line in its own docstring.
+    return [ROOT / f for f in out
+            if f and not OUTSIDE_SKIP.search(f) and (ROOT / f).resolve() != me]
+
+
 def main():
     found = set()      # mentions either reference at all
     live = set()       # carries a Source-marked citation
+    tagged = set()     # carries the LGPL tag
     for p in sorted(SRC.glob("*.c")) + sorted(SRC.glob("*.h")):
         text = p.read_text(errors="replace")
         if MENTION.search(text):
             found.add(p.name)
         if LIVE.search(text):
             live.add(p.name)
+        if LGPL_TAG.search(text):
+            tagged.add(p.name)
+
+    out_live, out_tagged = set(), set()
+    for p in tracked_outside_src():
+        try:
+            text = p.read_text(errors="replace")
+        except (IsADirectoryError, FileNotFoundError):
+            continue
+        rel = str(p.relative_to(ROOT))
+        if LIVE.search(text):
+            out_live.add(rel)
+        if LGPL_TAG.search(text):
+            out_tagged.add(rel)
 
     bad = []
+
+    for name in sorted(set(CARRIES) - tagged):
+        bad.append("src/%s carries \"%s\" but has no "
+                   "\"SPDX-License-Identifier: LGPL-2.1-or-later\" line."
+                   % (name, CARRIES[name]))
+    for name in sorted(tagged - set(CARRIES)):
+        bad.append("src/%s says LGPL-2.1-or-later but is not in CARRIES; "
+                   "what this project wrote is 0BSD." % name)
+    for rel in sorted(out_live - out_tagged):
+        bad.append("%s has a Source-marked citation of XADMaster, libxad or "
+                   "macutils but no \"SPDX-License-Identifier: "
+                   "LGPL-2.1-or-later\" line." % rel)
+    for rel in sorted(out_tagged - out_live):
+        bad.append("%s says LGPL-2.1-or-later but cites nothing it carries; "
+                   "what this project wrote is 0BSD." % rel)
 
     for name in sorted(found - set(CARRIES) - HISTORICAL):
         bad.append("%s mentions a reference and is in neither set. If it "
@@ -130,6 +189,10 @@ def main():
         if name not in notice:
             bad.append("NOTICE does not name src/%s, which carries \"%s\"."
                        % (name, CARRIES[name]))
+    for rel in sorted(out_tagged):
+        if rel not in notice:
+            bad.append("NOTICE does not name %s, which is LGPL-2.1-or-later."
+                       % rel)
 
     if "--selftest" in sys.argv:
         # A checker that matched nothing would pass forever.
@@ -148,8 +211,14 @@ def main():
                              "mention counts as live, so a file that sheds "
                              "its last citation and keeps a historical note "
                              "would pass")
+        # The licence scan must see the carriers, or it passes on nothing.
+        if not tagged or not out_live:
+            raise SystemExit("check_provenance: SELFTEST FAILED — the "
+                             "licence scan found no SPDX line under src/ or "
+                             "no citation outside it")
         print("check_provenance: selftest ok (%d mention, %d carry a live "
-              "Source: citation)" % (len(found), len(live)))
+              "Source: citation, %d outside src/)"
+              % (len(found), len(live), len(out_live)))
 
     if bad:
         for b in bad:
@@ -157,7 +226,8 @@ def main():
         return 1
 
     print("check_provenance: ok (%d carrying a live citation, %d historical, "
-          "all in NOTICE)" % (len(CARRIES), len(HISTORICAL)))
+          "%d outside src/, all LGPL-tagged and in NOTICE)"
+          % (len(CARRIES), len(HISTORICAL), len(out_tagged)))
     return 0
 
 

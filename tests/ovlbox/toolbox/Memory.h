@@ -8,7 +8,7 @@
  * The shared types and the Ptr-level calls are mac/mac_mocks.h's, which the
  * sink test has used since 2026-08 for exactly this reason.
  *
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: 0BSD
  */
 #ifndef OVLBOX_MEMORY_H
 #define OVLBOX_MEMORY_H

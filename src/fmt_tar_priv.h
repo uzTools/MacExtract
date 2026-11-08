@@ -1,6 +1,6 @@
 /* fmt_tar_priv.h — what tar's probe and its reader share.
  *
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: 0BSD
  */
 #ifndef UNC_FMT_TAR_PRIV_H
 #define UNC_FMT_TAR_PRIV_H

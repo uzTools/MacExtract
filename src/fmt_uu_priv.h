@@ -1,6 +1,6 @@
 /* fmt_uu_priv.h — what uuencode's probe and its decoder both need.
  *
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: 0BSD
  */
 #ifndef UNC_FMT_UU_PRIV_H
 #define UNC_FMT_UU_PRIV_H

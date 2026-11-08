@@ -38,7 +38,7 @@
  *   120  secondary header length (2) — data starts at 128 + pad128(it)
  *   124  CRC-16/XMODEM of bytes 0..123 (MacBinary II/III)
  *
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: 0BSD
  */
 #include "fmt_macbinary_priv.h"
 

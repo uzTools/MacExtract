@@ -1,6 +1,6 @@
 /* ovlbox.h — what a harness asks of the mock Toolbox under tests/ovlbox/.
  *
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: 0BSD
  */
 #ifndef OVLBOX_H
 #define OVLBOX_H

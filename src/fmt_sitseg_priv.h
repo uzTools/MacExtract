@@ -1,6 +1,6 @@
 /* fmt_sitseg_priv.h — what a StuffIt segment's probe and its reader share.
  *
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: 0BSD
  */
 #ifndef UNC_FMT_SITSEG_PRIV_H
 #define UNC_FMT_SITSEG_PRIV_H

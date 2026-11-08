@@ -59,7 +59,7 @@ committed. What IS in `ci.sh` is `tools/run_uu.py`, which generates both
 alphabets with `tools/synth_uu.py` and grades the two wild specimens
 whenever they are in `fixtures/`.
 
-License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+SPDX-License-Identifier: 0BSD
 """
 import argparse
 import hashlib

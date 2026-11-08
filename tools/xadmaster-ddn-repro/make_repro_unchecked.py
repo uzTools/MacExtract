@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: LGPL-2.1-or-later
 """Five crafted DDn (DiskDoubler method 10) blocks for the checks
 `XADDiskDoublerDDnHandle.m` is missing, each one 148-225 bytes: one
 `0xABCD0054` container, one DDn data fork, no reference to any fixture.

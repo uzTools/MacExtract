@@ -42,7 +42,7 @@
  * and no writer here produces either, so they are named and refused per
  * entry — the reading of them would be a guess.
  *
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: 0BSD
  */
 #include "unc_internal.h"
 #include "fmt_pf_priv.h"

@@ -7,7 +7,7 @@
  *
  * Source: unchanged from fmt_sit5.c, whose provenance comments stand.
  *
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: 0BSD
  */
 #include "fmt_sit5_priv.h"
 

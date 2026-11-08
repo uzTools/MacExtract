@@ -1,7 +1,7 @@
 /*
  * unc_engine.c — the format table and the dispatch. The sniffer is
  * unc_sniff.c's since 2026-10-21.
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: 0BSD
  */
 #include "unc_internal.h"
 

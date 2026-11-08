@@ -46,7 +46,7 @@
  * in this engine may recurse (CLAUDE.md, 68000 discipline). The walk is
  * linear in the file either way: a part's end is the next boundary line.
  *
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: 0BSD
  */
 #include "unc_internal.h"
 #include "fmt_mime_priv.h"

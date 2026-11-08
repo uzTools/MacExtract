@@ -4,7 +4,7 @@
  * walk they share is declared here and defined once, in the probe file, which
  * that overlay compiles too.
  *
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: 0BSD
  */
 #ifndef UNC_FMT_SUPERDISK_PRIV_H
 #define UNC_FMT_SUPERDISK_PRIV_H

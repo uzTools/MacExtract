@@ -24,7 +24,7 @@
  * Calling them is tests/run_mac_sink.sh's overlay lane, which extracts
  * fixtures byte-exact through the same images under qemu-m68k.
  *
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: 0BSD
  */
 #include <stdio.h>
 #include <stdlib.h>

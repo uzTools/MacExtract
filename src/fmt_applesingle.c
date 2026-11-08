@@ -33,7 +33,7 @@
  * header said, because the RFC defines them as Macintosh structures
  * rather than as header fields.
  *
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 #include "fmt_applesingle_priv.h"
 

@@ -17,7 +17,7 @@
  *
  * Built on demand by tools/run_crypt.py; nothing links it into the CLI.
  *
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: 0BSD
  */
 #include "../src/unc_internal.h"
 #include <stdio.h>

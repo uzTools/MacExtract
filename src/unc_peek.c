@@ -30,7 +30,7 @@
  * nothing — Compact Pro and SuperDisk! say what they are only at the end.
  * A 2 KB window named no BinHex at all: bh_fork writes 4 KB at a time.
  *
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: 0BSD
  */
 #include "unc_internal.h"
 

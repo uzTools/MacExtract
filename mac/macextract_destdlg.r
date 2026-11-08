@@ -2,7 +2,7 @@
  * macextract_destdlg.r — the destination dialog with a New Folder button on
  * every System, run by the image tools/overlay/ovl_destdlg.c (the eager
  * build's; mac/macextract_mac.c, UNC_SHELL_IMAGES). In a file of its own
- * because Retro68's Rez rule takes no -D. License: LGPL-2.1-or-later.
+ * because Retro68's Rez rule takes no -D. SPDX-License-Identifier: 0BSD
  */
 #include "Dialogs.r"
 #include "macextract_strings.h"

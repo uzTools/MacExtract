@@ -11,8 +11,8 @@
  * this repository invented.
  *
  * Built by tools/build_neoaa.sh; not part of the engine, and not
- * compiled by ci.sh's build. License: LGPL-2.1-or-later (the library it
- * links is MIT).
+ * compiled by ci.sh's build; the library it links is MIT.
+ * SPDX-License-Identifier: 0BSD
  *
  * Usage: neoaa_write <input-dir> <output-file> raw|lzfse|zlib|lzbitmap
  */

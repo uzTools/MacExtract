@@ -17,7 +17,7 @@
  * The sink discards what it is given: a harness is graded by ASan and
  * UBSan, not by its output (the differential suite grades output).
  *
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: 0BSD
  */
 #ifndef FZ_COMMON_H
 #define FZ_COMMON_H

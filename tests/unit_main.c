@@ -1,7 +1,7 @@
 /*
  * unit_main.c — unit tests for libmacextract internals.
  * Uses libc freely (test code runs on Linux only).
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: 0BSD
  */
 #include "macextract.h"
 #include "unc_internal.h"

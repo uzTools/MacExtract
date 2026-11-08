@@ -49,7 +49,7 @@ file published at `alysis.us/sdtechnology.htm` (Wayback, 2024 snapshot):
 2 compress, 3 decompress`. Everything `tools/sdmodule/` derived by
 disassembly agrees with it field for field.
 
-License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+SPDX-License-Identifier: 0BSD
 """
 import argparse
 import os

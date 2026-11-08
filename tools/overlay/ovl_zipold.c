@@ -22,7 +22,7 @@
  * from inside it (DECISIONS.md 2026-10-17, *the sidecars Mac OS X left
  * beside the file*).
  *
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: 0BSD
  */
 #include "overlay.h"
 #include "ovl_host_gen.h"

@@ -1,6 +1,6 @@
 /*
  * unc_util.c — I/O helpers, progress pump, CRC primitives.
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: 0BSD
  */
 #include "unc_internal.h"
 

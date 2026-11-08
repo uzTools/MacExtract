@@ -5,7 +5,7 @@
  * (mar_calc_crc, mar_is_mar). The rest of the layout, and where each field
  * comes from, is in fmt_mar.c's header comment.
  *
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: 0BSD
  */
 #ifndef UNC_FMT_MAR_PRIV_H
 #define UNC_FMT_MAR_PRIV_H

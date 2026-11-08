@@ -389,7 +389,7 @@ def main():
     print(" * its XADStuffItDESHandle.m (DES_SPtrans), Crypto/md5.c (the")
     print(" * STEP list) and Crypto/aestab.c (sb_data) are read only to")
     print(" * agree with what the standards give.")
-    print(" * LGPL / public domain — see NOTICE.")
+    print(" * SPDX-License-Identifier: 0BSD")
     print(" */")
     print("#ifndef UNC_CRYPT_TABLES_H")
     print("#define UNC_CRYPT_TABLES_H")

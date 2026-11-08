@@ -5,7 +5,7 @@
  * through UncAlloc; input comes from an UncBufIn (which drives the
  * progress pump) and output goes through the caller's chunk callback.
  *
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: 0BSD
  * zlib itself is vendored unmodified in third_party/zlib (zlib
  * license).
  */

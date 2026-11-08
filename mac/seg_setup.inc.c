@@ -10,7 +10,7 @@
  * when it is compiled into the application, the entry in SegSetupFns when
  * it is an image, which cannot name an application symbol.
  *
- * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ * SPDX-License-Identifier: 0BSD
  */
 /* ------------------------------------------------------------------ */
 /* Parts that arrived inside an envelope                               */
