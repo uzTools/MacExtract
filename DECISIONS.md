@@ -561,6 +561,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-08 (the reader that disagrees) — where a writer's own reader disagrees with the stored CRC or with another reader, the case is decided on its own; there is no general rule
 - 2026-11-08 (the report pool that stays) — the report window's 6,539 B of fixed buffers stay until something needs the bytes
 - 2026-11-08 (the code we wrote) — everything this project wrote is 0BSD, the 20 `HISTORICAL` files with it; only the files that carry somebody else's code or facts stay LGPL-2.1-or-later
+- 2026-11-08 (the refusals the probe counted) — the probe build extracts Cool Tools and a2basic on the 64K ROM; its `short` and `why` count the requests Arsenic falls back from, and `e1` is its verdict
 
 ---
 
@@ -22108,9 +22109,9 @@ no tally. The resident control and the lazy build are unmoved.
 **On the 64K ROM:** **72/74**. The two refusals are the 512Ke's, both over
 budget, and Cool Tools (8 files) and a2basic are byte-exact.
 
-**Not chased:** the `-D UNC_AT_BUDGET` build still refuses those two on the
-64K ROM, `why=1` with shortfalls of about 530 KB. The plain build passes
-both.
+**The probe build does not refuse them** (corrected 2026-11-08): `e1=0` on
+both; `why=1` and the ~530 KB shortfalls are Arsenic's 3-byte table, refused
+and fallen back from (2026-11-08, *the refusals the probe counted*).
 
 **The single path** — `high_handle` on every ROM, no test and no
 `MoveHHi` — is OPEN_ITEMS.md's (*One way to keep a decoder high, on every
@@ -23075,3 +23076,36 @@ other file under `src/` with one, and, outside `src/`, a live citation
 without the line or the line without a citation; all four mutations fail
 it, and the tree passes. `third_party/zlib` keeps the zlib licence and
 `src/ss_dict.h`'s Aladdin bytes stay theirs, as before.
+
+## 2026-11-08 (the refusals the probe counted) — the probe build extracts Cool Tools and a2basic on the 64K ROM; its `short` and `why` count the requests Arsenic falls back from, and `e1` is its verdict
+
+**The open item** (OPEN_ITEMS.md, *Two archives the 64K ROM's budget probe
+still refuses*, now deleted) read `why=1` and shortfalls of 542,367 and
+522,159 B as a refusal. **Measured, `sys30.py --rom64 -D UNC_AT_BUDGET`, at
+7533d2a:**
+
+| fixture | `e1` | `why` | `short` | budget |
+|---|---|---|---|---|
+| `adobenumbers.sit` (control) | 0 | 0 | 0 | 256,790 |
+| `derived-Cool_Tools__.sit` | **0** | 1 | 542,287 | 288,516 |
+| `derived-a2basic.dmg.sit` | **0** | 1 | 522,079 | 288,516 |
+| `synth-dd-m5.dd` (refused per entry, BLOCKERS.md) | **−3** | 1 | 1,362 | 301,726 |
+
+`e1` is the first per-entry status; the last row shows it can fail. Every
+row is FAIL to `vmac_check`, the control included: the probe overwrites seven
+grid slots (`tools/vmac/README.md`, *Why an entry is refused*).
+
+**What the two numbers are.** `ars_bwt_prepare` asks for the 3-byte inverse-BWT
+table first, then the 2.5-byte one, then builds the sampled index. The CLI's
+trace (`UNC_TRACE_ALLOC=1 macextract t --budget 290980`) puts the first
+refusals at 610,662 and 592,545 B, three times each block (203,554 and
+197,515 B), and each `short` is that request + 16 less 68,391 and 70,482 B of budget
+left at the ask.
+`gShortBy` keeps the largest shortfall of the run and `gRefusedWhy` the
+first, so a recovered request sets both. The 2026-11-07 figures are 80 B
+higher, on that day's budget.
+
+**Why it was misread.** The harness README described `short` as the *first*
+refused request's need and said both fields are 0 on a healthy run. Both
+sentences are corrected; the README now names `e1` as the verdict. The 64K
+ROM's budget for the two is 288,516 B, with both extracting.

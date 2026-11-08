@@ -2150,7 +2150,7 @@ probe overwrites the slots:
 | grid slot | carries |
 |---|---|
 | `nfiles` | address of the largest live block |
-| `ret` | **`gShortBy`** — how much more budget the first refused request needed |
+| `ret` | **`gShortBy`** — the LARGEST shortfall of any refused request, including one the engine fell back from |
 | `sumDataCRC` | `FreeMem()` at the start of the run, before the reserve |
 | `peak heap` | **the budget** — what the engine was actually given |
 | `errors` | `MaxBlock()` at the first refusal |
@@ -2170,8 +2170,12 @@ autotest writes `e1` (first per-entry status) and the overlay diagnostics `wa
 kf rf fc fn` (`mac/ovl_load.h`) to the report FILE on `In` after the eight
 grid values, and `run.py`, `sys30.py` and `os9.py --autotest` print them as
 `[e1= wa= kf= rf= fc= fn= bg= short= why= free0=]`. The probe build ejects
-`In` after writing it (Mini vMac flushes on eject). On a healthy run `wa`,
-`kf`, `short` and `why` are 0; `rf` is the `UncFormat` the release kept for,
+`In` after writing it (Mini vMac flushes on eject). **`e1` is the verdict:
+0 is no entry failed, `-3` (`UNC_ERR_MEM`) one refused.** On a healthy run `wa` and `kf`
+are 0; `short` and `why` are 0 only if nothing was refused, and an engine
+that falls back is refused first: on the 512K, Arsenic's 3-byte table gives
+`why=1` and a shortfall of ~540 KB with `e1=0` (DECISIONS.md 2026-11-08,
+*the refusals the probe counted*). `rf` is the `UncFormat` the release kept for,
 0 when no layer released (an envelope keeps the bundle); `fc` is the flush
 route (0 none, 1 `_HWPriv`, 2 `FlushCodeCache`) and `fn` its calls. **What it
 cannot see:** `rf` is the last releasing layer's only, and `bg`/`short` the
