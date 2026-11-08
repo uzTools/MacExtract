@@ -2086,40 +2086,129 @@ static int seg_wrapped_part_of(SegHost *h, const char *path)
     return part;
 }
 
-/* Scan the directory holding `anchor` for parts of the set. With
- * `wrapped`, a candidate that is not a part in its own right is also
- * tried as an envelope holding one. */
-static void seg_scan_dir(SegHost *h, const char *anchor, int wrapped)
+/* ------------------------------------------------------------------ */
+/* A set's folder, and the one walk over it                            */
+/*                                                                    */
+/* Every way this file finds parts beside the one it was given is the */
+/* same walk: the folder that file is in, each entry, a path to it.   */
+/* What admits an entry is the only difference. A scheme placed by    */
+/* NAME (ZIPSEG, SPLIT) admits a regular file whose name is a member  */
+/* of the family, by the engine's unc_segment_name_part — the rule    */
+/* the Mac shell uses too. A scheme placed by CONTENT (UNKNOWN here)  */
+/* admits every entry and leaves the judging to the visitor.          */
+/* ------------------------------------------------------------------ */
+
+typedef struct Family {
+    char        dir[PATHBUF];   /* the folder to walk                    */
+    const char *stem;           /* NAME of NAME.zNN or NAME.NNN, unterminated */
+    size_t      stemlen;
+    UncFormat   scheme;         /* ZIPSEG or SPLIT; UNKNOWN: by content  */
+} Family;
+
+/* Which member of f's family the file called `name` is, or 0. */
+static int family_member(const Family *f, const char *name)
 {
-    char dir[PATHBUF], cand[PATHBUF];
-    const char *slash = strrchr(anchor, '/');
-    DIR *d;
+    return unc_segment_name_part(f->scheme, (const uint8_t *)f->stem,
+                                 (uint32_t)f->stemlen, (const uint8_t *)name,
+                                 (uint32_t)strlen(name));
+}
+
+/* The part a file's own name makes it, its folder aside: what --part
+ * has to go on when a file was given from elsewhere. A member's
+ * extension is three bytes in both schemes, so its stem is all of the
+ * name but the last four. */
+static int own_part(UncFormat scheme, const char *path)
+{
+    const char *slash = strrchr(path, '/');
+    const char *base = slash ? slash + 1 : path;
+    size_t n = strlen(base);
+
+    if (n < 5) return 0;                       /* "x.001" is the shortest */
+    return unc_segment_name_part(scheme, (const uint8_t *)base,
+                                 (uint32_t)(n - 4), (const uint8_t *)base,
+                                 (uint32_t)n);
+}
+
+/* Fill `f` for the family of `path`: the folder it is in, and for a
+ * named scheme the stem it shares. Returns the part `path` itself is
+ * (UNC_SEG_NAME_LAST for a zip's .zip), 1 for UNKNOWN, or 0 when its
+ * name is no member or its folder does not fit. */
+static int family_of(Family *f, const char *path, UncFormat scheme)
+{
+    const char *slash = strrchr(path, '/');
+    const char *base = slash ? slash + 1 : path;
+    size_t n = slash ? (size_t)(slash - path) : 0;
+    int self = 1;
+
+    f->scheme = scheme;
+    f->stem = base;
+    f->stemlen = 0;
+    if (scheme != UNC_FORMAT_UNKNOWN) {
+        self = own_part(scheme, base);
+        if (!self) return 0;
+        f->stemlen = strlen(base) - 4;
+    }
+    if (n + 2 >= sizeof f->dir) return 0;     /* "." and "/" take two */
+    if (!slash) { f->dir[0] = '.'; f->dir[1] = 0; }
+    else if (n == 0) { f->dir[0] = '/'; f->dir[1] = 0; }
+    else { memcpy(f->dir, path, n); f->dir[n] = 0; }
+    return self;
+}
+
+/* Called for each admitted entry with its path and, for a named
+ * scheme, its part (0 under UNKNOWN). Nonzero ends the walk. */
+typedef int (*FamilyVisit)(void *ctx, int part, const char *path);
+
+static void family_scan(const Family *f, FamilyVisit visit, void *ctx)
+{
+    char cand[PATHBUF];
+    DIR *d = opendir(f->dir);
     struct dirent *de;
 
-    if (slash) {
-        size_t n = (size_t)(slash - anchor);
-        if (n >= sizeof dir) return;
-        memcpy(dir, anchor, n);
-        dir[n] = 0;
-        if (n == 0) { dir[0] = '/'; dir[1] = 0; }
-    } else {
-        dir[0] = '.'; dir[1] = 0;
-    }
-
-    d = opendir(dir);
     if (!d) return;
     while ((de = readdir(d)) != NULL) {
-        int part;
-        if (strcmp(de->d_name, ".") == 0 || strcmp(de->d_name, "..") == 0)
+        int part = 0;
+        if (f->scheme == UNC_FORMAT_UNKNOWN) {
+            if (strcmp(de->d_name, ".") == 0 || strcmp(de->d_name, "..") == 0)
+                continue;
+        } else if ((part = family_member(f, de->d_name)) == 0) {
             continue;
-        if ((size_t)snprintf(cand, sizeof cand, "%s/%s", dir, de->d_name)
+        }
+        if ((size_t)snprintf(cand, sizeof cand, "%s/%s", f->dir, de->d_name)
             >= sizeof cand)
             continue;
-        part = seg_part_of(h, cand);
-        if (part) { seg_record(h, part, cand); continue; }
-        if (wrapped) (void)seg_wrapped_part_of(h, cand);
+        if (f->scheme != UNC_FORMAT_UNKNOWN) {
+            struct stat st;
+            if (stat(cand, &st) != 0 || !S_ISREG(st.st_mode)) continue;
+        }
+        if (visit(ctx, part, cand)) break;
     }
     closedir(d);
+}
+
+/* Scan the directory holding `anchor` for parts of the set, by
+ * content. With `wrapped`, a candidate that is not a part in its own
+ * right is also tried as an envelope holding one. */
+typedef struct { SegHost *h; int wrapped; } DirScan;
+
+static int dir_visit(void *ctx, int part, const char *path)
+{
+    DirScan *s = (DirScan *)ctx;
+    part = seg_part_of(s->h, path);
+    if (part) seg_record(s->h, part, path);
+    else if (s->wrapped) (void)seg_wrapped_part_of(s->h, path);
+    return 0;
+}
+
+static void seg_scan_dir(SegHost *h, const char *anchor, int wrapped)
+{
+    Family f;
+    DirScan s;
+
+    if (!family_of(&f, anchor, UNC_FORMAT_UNKNOWN)) return;
+    s.h = h;
+    s.wrapped = wrapped;
+    family_scan(&f, dir_visit, &s);
 }
 
 /* ------------------------------------------------------------------ */
@@ -2128,128 +2217,54 @@ static void seg_scan_dir(SegHost *h, const char *anchor, int wrapped)
 /* A spanned zip fingerprints nothing, so unc_segment_match cannot be  */
 /* asked and the parts are ordered the only way the format allows —    */
 /* by the extension Info-ZIP gives them, NAME.z01 ... NAME.z99 with    */
-/* the last part called NAME.zip. (Source: the volume regex in         */
-/* reference/XADMaster/XADZipParser.m +volumesForHandle:,              */
-/* `^NAME\.(zip|z[0-9]{2})$`, matched case-insensitively against the   */
-/* directory the opened part came from.) What keeps a wrong file out   */
-/* is not this scan but the structural check the engine makes on the   */
-/* assembled set; see unc_extract_segments in macextract.h.            */
+/* the last part called NAME.zip (unc_segment_name_part has the rule   */
+/* and its source). What keeps a wrong file out is not this scan but   */
+/* the structural check the engine makes on the assembled set; see     */
+/* unc_extract_segments in macextract.h.                               */
 /* ------------------------------------------------------------------ */
-
-static int ascii_lower(int ch)
-{
-    return (ch >= 'A' && ch <= 'Z') ? ch - 'A' + 'a' : ch;
-}
-
-/* Which part of the family `name` is, given the stem the family shares:
- * NN for a ".zNN" extension, ZIPFAM_LAST for ".zip", 0 for no match. */
-#define ZIPFAM_LAST (-1)
-
-static int zipfam_part_of(const char *stem, size_t stemlen, const char *name)
-{
-    size_t i;
-    const char *ext;
-
-    for (i = 0; i < stemlen; i++)
-        if (ascii_lower((unsigned char)name[i]) !=
-            ascii_lower((unsigned char)stem[i]) || name[i] == 0)
-            return 0;
-    if (name[stemlen] != '.') return 0;
-    ext = name + stemlen + 1;
-
-    if (ascii_lower((unsigned char)ext[0]) == 'z' &&
-        ascii_lower((unsigned char)ext[1]) == 'i' &&
-        ascii_lower((unsigned char)ext[2]) == 'p' && ext[3] == 0)
-        return ZIPFAM_LAST;
-    if (ascii_lower((unsigned char)ext[0]) == 'z' &&
-        ext[1] >= '0' && ext[1] <= '9' &&
-        ext[2] >= '0' && ext[2] <= '9' && ext[3] == 0) {
-        int n = (ext[1] - '0') * 10 + (ext[2] - '0');
-        return n >= 1 ? n : 0;      /* there is no part zero */
-    }
-    return 0;
-}
-
-/* Which part a path's own extension names, independent of any family:
- * what --part has to go on when the file was given from elsewhere. */
-static int zip_ext_part(const char *path)
-{
-    const char *slash = strrchr(path, '/');
-    const char *base = slash ? slash + 1 : path;
-    const char *dot = strrchr(base, '.');
-    if (!dot || dot == base) return 0;
-    return zipfam_part_of(base, (size_t)(dot - base), base);
-}
-
-/* Split a path into the directory to scan and the stem its family
- * shares. Returns the part the given file itself is, or 0 if its name
- * is not of the family shape at all. */
-static int zipfam_split(const char *path, char *dir, size_t dirsz,
-                        const char **stem, size_t *stemlen)
-{
-    const char *slash = strrchr(path, '/');
-    const char *base = slash ? slash + 1 : path;
-    const char *dot = strrchr(base, '.');
-    size_t n;
-
-    if (!dot || dot == base) return 0;
-    *stem = base;
-    *stemlen = (size_t)(dot - base);
-
-    n = slash ? (size_t)(slash - path) : 0;
-    if (n + 2 >= dirsz) return 0;
-    if (!slash) { dir[0] = '.'; dir[1] = 0; }
-    else if (n == 0) { dir[0] = '/'; dir[1] = 0; }
-    else { memcpy(dir, path, n); dir[n] = 0; }
-
-    return zipfam_part_of(*stem, *stemlen, base);
-}
 
 /* Walk the family's directory and record every member. `nparts` says
  * which slot the ".zip" member belongs in; pass 0 while that is still
  * unknown, which records every other member and leaves that one out.
  * `lastbuf` receives the ".zip" member's path either way, since it has
  * to be described before the count can be known at all. */
+typedef struct { SegHost *h; int nparts; char *lastbuf; size_t lastsz; } ZipScan;
+
+static int zip_visit(void *ctx, int part, const char *path)
+{
+    ZipScan *s = (ZipScan *)ctx;
+    if (part == UNC_SEG_NAME_LAST) {
+        if (s->lastbuf && s->lastsz) snprintf(s->lastbuf, s->lastsz, "%s", path);
+        part = s->nparts;
+        if (part < 1) return 0;          /* count not established yet */
+    }
+    seg_record(s->h, part, path);
+    return 0;
+}
+
 static void seg_scan_zip_family(SegHost *h, const char *anchor, int nparts,
                                 char *lastbuf, size_t lastsz)
 {
-    char dir[PATHBUF], cand[PATHBUF];
-    const char *stem;
-    size_t stemlen;
-    DIR *d;
-    struct dirent *de;
+    Family f;
+    ZipScan s;
 
     if (lastbuf && lastsz) lastbuf[0] = 0;
-    if (!zipfam_split(anchor, dir, sizeof dir, &stem, &stemlen)) return;
-
-    d = opendir(dir);
-    if (!d) return;
-    while ((de = readdir(d)) != NULL) {
-        struct stat st;
-        int part = zipfam_part_of(stem, stemlen, de->d_name);
-        if (!part) continue;
-        if ((size_t)snprintf(cand, sizeof cand, "%s/%s", dir, de->d_name)
-            >= sizeof cand)
-            continue;
-        if (stat(cand, &st) != 0 || !S_ISREG(st.st_mode)) continue;
-        if (part == ZIPFAM_LAST) {
-            if (lastbuf && lastsz) snprintf(lastbuf, lastsz, "%s", cand);
-            part = nparts;
-            if (part < 1) continue;      /* count not established yet */
-        }
-        seg_record(h, part, cand);
-    }
-    closedir(d);
+    if (!family_of(&f, anchor, UNC_FORMAT_ZIPSEG)) return;
+    s.h = h;
+    s.nparts = nparts;
+    s.lastbuf = lastbuf;
+    s.lastsz = lastsz;
+    family_scan(&f, zip_visit, &s);
 }
 
 /* ------------------------------------------------------------------ */
 /* Plain NAME.001 splits: the scheme IS the filename                    */
 /*                                                                    */
 /* (Source: reference/XADMaster/XADSplitFileParser.m. Its              */
-/* +recognizeFileWithHandle: matches ^(.*)\.([0-9]{3})$ case-          */
-/* insensitively and requires the sibling to exist — .001 looks for    */
-/* .002, any other part looks for .001 — and its +volumesForHandle:    */
-/* scans the directory for ^STEM\.[0-9]{3}$.)                          */
+/* +recognizeFileWithHandle: requires the sibling to exist — .001      */
+/* looks for .002, any other part looks for .001 — and its             */
+/* +volumesForHandle: scans the directory for the family; the name     */
+/* rule itself is unc_segment_name_part's.)                            */
 /*                                                                    */
 /* Two departures, both because the reference concatenates whatever    */
 /* the scan returns, sorted by name:                                   */
@@ -2263,59 +2278,6 @@ static void seg_scan_zip_family(SegHost *h, const char *anchor, int nparts,
 /*     exactly like a complete one.                                    */
 /* ------------------------------------------------------------------ */
 
-/* The part number a NAME.NNN filename ends in, or 0 (which is also
- * what ".000" gives, and there is no part zero). */
-static int split_ext_part(const char *name)
-{
-    size_t n = strlen(name);
-    const char *e;
-
-    if (n < 5) return 0;                       /* "x.001" is the shortest */
-    e = name + n - 4;
-    if (e[0] != '.') return 0;
-    if (e[1] < '0' || e[1] > '9' || e[2] < '0' || e[2] > '9' ||
-        e[3] < '0' || e[3] > '9') return 0;
-    return (e[1] - '0') * 100 + (e[2] - '0') * 10 + (e[3] - '0');
-}
-
-/* Does `name` belong to the family sharing `stem`? Part number, or 0. */
-static int splitfam_part_of(const char *stem, size_t stemlen, const char *name)
-{
-    size_t i;
-
-    if (strlen(name) != stemlen + 4) return 0;
-    for (i = 0; i < stemlen; i++)
-        if (ascii_lower((unsigned char)name[i]) !=
-            ascii_lower((unsigned char)stem[i]))
-            return 0;
-    return split_ext_part(name);
-}
-
-/* Split a path into the directory to scan and the stem its family
- * shares (its name without ".NNN"). Returns the part the given file
- * itself is, or 0 when the name is not of the family shape. */
-static int splitfam_split(const char *path, char *dir, size_t dirsz,
-                          const char **stem, size_t *stemlen)
-{
-    const char *slash = strrchr(path, '/');
-    const char *base = slash ? slash + 1 : path;
-    size_t n;
-    int part = split_ext_part(base);
-
-    if (part < 1) return 0;
-    *stem = base;
-    *stemlen = strlen(base) - 4;
-    if (*stemlen == 0) return 0;               /* ".001" is all extension */
-
-    n = slash ? (size_t)(slash - path) : 0;
-    if (n + 2 >= dirsz) return 0;
-    if (!slash) { dir[0] = '.'; dir[1] = 0; }
-    else if (n == 0) { dir[0] = '/'; dir[1] = 0; }
-    else { memcpy(dir, path, n); dir[n] = 0; }
-
-    return part;
-}
-
 /* What makes this file a segment rather than a file whose name happens
  * to end in three digits: another member of its family is there.
  *
@@ -2325,47 +2287,42 @@ static int splitfam_split(const char *path, char *dir, size_t dirsz,
  * the format is unknown — with the .003 sitting right beside it. Any
  * other member will do here, so that case reaches the part-numbering
  * checks below and is reported as the missing part it is. */
+typedef struct { int self, found; } SplitPresent;
+
+static int present_visit(void *ctx, int part, const char *path)
+{
+    SplitPresent *s = (SplitPresent *)ctx;
+    (void)path;
+    if (part == s->self) return 0;
+    s->found = 1;
+    return 1;
+}
+
 static int split_family_present(const char *path)
 {
-    char dir[PATHBUF];
-    const char *stem;
-    size_t stemlen;
-    DIR *d;
-    struct dirent *de;
-    int self = splitfam_split(path, dir, sizeof dir, &stem, &stemlen);
-    int found = 0;
+    Family f;
+    SplitPresent s;
 
-    if (self < 1) return 0;
-    d = opendir(dir);
-    if (!d) return 0;
-    while (!found && (de = readdir(d)) != NULL) {
-        char cand[PATHBUF];
-        struct stat st;
-        int p = splitfam_part_of(stem, stemlen, de->d_name);
-        if (p < 1 || p == self) continue;
-        if ((size_t)snprintf(cand, sizeof cand, "%s/%s", dir, de->d_name)
-            >= sizeof cand)
-            continue;
-        if (stat(cand, &st) == 0 && S_ISREG(st.st_mode)) found = 1;
-    }
-    closedir(d);
-    return found;
+    s.self = family_of(&f, path, UNC_FORMAT_SPLIT);
+    s.found = 0;
+    if (s.self < 1) return 0;
+    family_scan(&f, present_visit, &s);
+    return s.found;
 }
 
 /* Was another member of this family handed over with --part? That is
  * the second way a set proves it is one, and the only way when the
  * parts were collected from different directories. */
-static int split_part_offered(const char *path, const char **args, int n)
+static int split_part_offered(const char *path, const char *const *args,
+                              int n)
 {
-    char dir[PATHBUF];
-    const char *stem;
-    size_t stemlen;
-    int self = splitfam_split(path, dir, sizeof dir, &stem, &stemlen), i;
+    Family f;
+    int self = family_of(&f, path, UNC_FORMAT_SPLIT), i;
 
     if (self < 1) return 0;
     for (i = 0; i < n; i++) {
         const char *slash = strrchr(args[i], '/');
-        int p = splitfam_part_of(stem, stemlen, slash ? slash + 1 : args[i]);
+        int p = family_member(&f, slash ? slash + 1 : args[i]);
         if (p >= 1 && p != self) return 1;
     }
     return 0;
@@ -2374,33 +2331,26 @@ static int split_part_offered(const char *path, const char **args, int n)
 /* Record every member of the family in the anchor's directory.
  * Returns the highest part number SEEN, including numbers too large to
  * record, so the caller can tell a 300-part set from a 256-part one. */
+typedef struct { SegHost *h; int highest; } SplitScan;
+
+static int split_visit(void *ctx, int part, const char *path)
+{
+    SplitScan *s = (SplitScan *)ctx;
+    if (part > s->highest) s->highest = part;
+    seg_record(s->h, part, path);
+    return 0;
+}
+
 static int seg_scan_split_family(SegHost *h, const char *anchor)
 {
-    char dir[PATHBUF], cand[PATHBUF];
-    const char *stem;
-    size_t stemlen;
-    DIR *d;
-    struct dirent *de;
-    int highest = 0;
+    Family f;
+    SplitScan s;
 
-    if (splitfam_split(anchor, dir, sizeof dir, &stem, &stemlen) < 1)
-        return 0;
-
-    d = opendir(dir);
-    if (!d) return 0;
-    while ((de = readdir(d)) != NULL) {
-        struct stat st;
-        int part = splitfam_part_of(stem, stemlen, de->d_name);
-        if (part < 1) continue;
-        if ((size_t)snprintf(cand, sizeof cand, "%s/%s", dir, de->d_name)
-            >= sizeof cand)
-            continue;
-        if (stat(cand, &st) != 0 || !S_ISREG(st.st_mode)) continue;
-        if (part > highest) highest = part;
-        seg_record(h, part, cand);
-    }
-    closedir(d);
-    return highest;
+    if (family_of(&f, anchor, UNC_FORMAT_SPLIT) < 1) return 0;
+    s.h = h;
+    s.highest = 0;
+    family_scan(&f, split_visit, &s);
+    return s.highest;
 }
 
 /* Length of the consecutive run .001 .. .N that was found. *beyond is
@@ -3042,14 +2992,11 @@ static int layer_format(const CliArgs *a, const LayerState *st, Layer *L)
      * 94-byte headers into a file would be silent and wrong. */
     if (!a->no_parts && L->fmt != UNC_FORMAT_DDSEG &&
         (split_family_present(file) ||
-         /* the cast: split_part_offered is not const-qualified, and
-          * reads its list only */
-         split_part_offered(file, (const char **)a->partargs, a->nparts) ||
+         split_part_offered(file, a->partargs, a->nparts) ||
          /* --ask: a NAME.001 alone is the first of a set whose
           * other parts the user is standing by to produce, as when
           * each part is on a floppy of its own. */
-         (a->ask && split_ext_part(strrchr(file, '/') ? strrchr(file, '/') + 1
-                                                      : file) == 1)))
+         (a->ask && own_part(UNC_FORMAT_SPLIT, file) == 1)))
         L->fmt = UNC_FORMAT_SPLIT;
     /* A spanned zip's middle part has nothing to recognise it by but
      * its name, NAME.zNN (the first carries the spanning signature,
@@ -3057,7 +3004,8 @@ static int layer_format(const CliArgs *a, const LayerState *st, Layer *L)
      * the set already is when it is opened from the .zip, and as the
      * Mac shell does: the engine's structural check on the assembled
      * set is what keeps a wrong file out, whichever part was opened. */
-    if (!a->no_parts && L->fmt == UNC_FORMAT_UNKNOWN && zip_ext_part(file) >= 1)
+    if (!a->no_parts && L->fmt == UNC_FORMAT_UNKNOWN &&
+        own_part(UNC_FORMAT_ZIPSEG, file) >= 1)
         L->fmt = UNC_FORMAT_ZIPSEG;
     return 0;
 }
@@ -3132,12 +3080,14 @@ static int is_segmented(UncFormat f)
 static int seg_setup_split(const CliArgs *a, Layer *L, SegHost *seg)
 {
     const char *file = L->file;
+    Family fam;
     const char *stem;
     size_t stemlen;
-    char dirbuf[PATHBUF];
     int i, self, highest, beyond = 0, run;
 
-    self = splitfam_split(file, dirbuf, sizeof dirbuf, &stem, &stemlen);
+    self = family_of(&fam, file, UNC_FORMAT_SPLIT);
+    stem = fam.stem;
+    stemlen = fam.stemlen;
     if (self < 1) {
         fprintf(stderr, "macextract: %s: not a NAME.NNN part\n", file);
         return 1;
@@ -3153,8 +3103,7 @@ static int seg_setup_split(const CliArgs *a, Layer *L, SegHost *seg)
 
     highest = seg_scan_split_family(seg, file);
     for (i = 0; i < a->nparts; i++) {
-        const char *slash = strrchr(a->partargs[i], '/');
-        int p = split_ext_part(slash ? slash + 1 : a->partargs[i]);
+        int p = own_part(UNC_FORMAT_SPLIT, a->partargs[i]);
         if (p >= 1) {
             if (p > highest) highest = p;
             seg_record(seg, p, a->partargs[i]);
@@ -3313,9 +3262,9 @@ static int seg_setup_zip(const CliArgs *a, Layer *L, SegHost *seg)
 {
     const char *file = L->file;
     char lastpath[PATHBUF];
+    Family fam;
     const char *stem;
     size_t stemlen;
-    char dirbuf[PATHBUF];
     FILE *lf;
     FileIO lio_f;
     UncIO lio;
@@ -3351,7 +3300,9 @@ static int seg_setup_zip(const CliArgs *a, Layer *L, SegHost *seg)
 
     /* The engine has no filename to put in a prompt, because the
      * format stores none. Borrow the family's stem for display. */
-    if (zipfam_split(file, dirbuf, sizeof dirbuf, &stem, &stemlen)) {
+    if (family_of(&fam, file, UNC_FORMAT_ZIPSEG)) {
+        stem = fam.stem;
+        stemlen = fam.stemlen;
         if (stemlen > UNC_NAME_MAX) stemlen = UNC_NAME_MAX;
         memcpy(seg->desc.name, stem, stemlen);
         seg->desc.name[stemlen] = 0;
@@ -3359,8 +3310,8 @@ static int seg_setup_zip(const CliArgs *a, Layer *L, SegHost *seg)
     }
 
     for (i = 0; i < a->nparts; i++) {
-        int p = zip_ext_part(a->partargs[i]);
-        if (p == ZIPFAM_LAST) p = (int)seg->desc.nparts;
+        int p = own_part(UNC_FORMAT_ZIPSEG, a->partargs[i]);
+        if (p == UNC_SEG_NAME_LAST) p = (int)seg->desc.nparts;
         if (p) seg_record(seg, p, a->partargs[i]);
         else fprintf(stderr, "macextract: %s: no .zNN or .zip "
                      "extension to place it by, ignored\n",

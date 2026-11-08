@@ -557,6 +557,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-08 (the password the second layer never got) — `-p -` read stdin on every layer, so an archive inside an envelope was opened with end-of-file for its password; it is read once per run
 - 2026-11-08 (one layer at a time) — `cli_main` was 906 lines and two `goto`s, and what it carried from one layer to the next was where the last two rounds of CLI bugs were; one layer is `run_layer` now, and each rule about what crosses a layer is a named function
 - 2026-11-08 (the forks the first sweep never compared) — Expander 4.0.2's StuffIt verdict counts both forks; the resource fork is compared masked against the engine's bytes, checked equal to the record first, and a fork `unar` failed is adjudicated against the engine's at the same path
+- 2026-11-08 (the CLI's walks that were one walk) — the CLI's copies of the naming rules gave way to `unc_segment_name_part`, and its four folder walks and three path splitters to one `family_of` and one `family_scan`
 
 ---
 
@@ -22984,3 +22985,42 @@ byte is reported, not adjudicated.
 filter was `cptexp.py`'s, for a file Expander writes beside a Compact Pro
 package; `derived-InfoStack_folder.sit` holds one as a real archived entry,
 and with the filter it showed as a pull gap.
+
+## 2026-11-08 (the CLI's walks that were one walk) — the CLI's copies of the naming rules gave way to `unc_segment_name_part`, and its four folder walks and three path splitters to one `family_of` and one `family_scan`
+
+**Claim, measured.** After *the naming rules in one place*, `cli/main.c`
+still held `zipfam_part_of`, `splitfam_part_of`, `split_ext_part`,
+`zip_ext_part` and `ascii_lower`, four folder walks (`seg_scan_dir`,
+`seg_scan_zip_family`, `seg_scan_split_family`, `split_family_present`)
+and three copies of "the folder a path is in" (`seg_scan_dir`,
+`zipfam_split`, `splitfam_split`). They are `own_part` (a file's own
+name), `family_of` (its folder and stem), `family_scan` (the walk, one
+`opendir`/`closedir`) and a visitor per caller; the region went 317 → 267
+lines, the file 3,758 → 3,709. `split_part_offered` walks the `--part`
+list, not a folder, and keeps its loop. Every bound is unchanged: a part
+reaches `seg_record` as before, and only the split walk counts past
+`UNC_SEG_MAX_PARTS`.
+
+**The one bound that was not the same.** `seg_scan_dir` refused a folder
+of `PATHBUF` bytes or more; the two splitters refused one of
+`PATHBUF − 2`. `family_of` keeps the splitters'. For `seg_scan_dir` the
+two folder lengths in between admit no entry either way — folder, `/`, a
+name and the terminator do not fit `PATHBUF` — so the walk that is no
+longer made found nothing before.
+
+**Behaviour.** The old splitters and own-name parsers, copied from the
+parent commit, against the new ones over 3,000,000 generated paths
+(folders of 0 to 4,201 bytes, 342,284 naming a family): 0 disagreements,
+and 15,566 with `seg_scan_dir`'s bound put into `family_of`. The CLI's
+own output, the fixture sweep and twelve CLI suites, recorded per call
+(stdout, stderr, exit, output trees) by the parent commit's binary and
+this one: identical, past the records that vary run to run.
+
+**The test it was missing.** A mutant whose split-presence visitor
+counted the file itself as its sibling passed every suite — and the
+fixture sweep cannot see it, both binaries being right. It turns a lone
+`data.001` of no format from "format not recognized", exit 1, into a
+one-part "set" written out as `data`, exit 0. `run_segments.py`'s
+`split_alone_cases` asserts the refusal and a two-member control that
+must join; it fails that mutant and passes the parent commit's binary
+and this one.
