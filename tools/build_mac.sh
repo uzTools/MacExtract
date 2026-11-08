@@ -765,7 +765,12 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # -4 the same day, 186,300 -> 186,296, A5 +4 below: a refused pre-size no
 # longer ends the run (DECISIONS.md 2026-11-07, *the size a damaged header
 # asked the disk for*); the shipped pair 0.
-UNC_MAC_CODE_DEFAULT=186296
+# +684 the same day, 186,296 -> 186,980, A5 +52 below: a comment longer
+# than the Desktop Manager keeps is cut and reported, and a Spotlight list
+# past the sidecar's window is followed to its trailer (DECISIONS.md
+# 2026-11-07, *the comment the Desktop Manager cut*); `ovl_zipold`'s
+# image +612; the shipped pair +64.
+UNC_MAC_CODE_DEFAULT=186980
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -1022,7 +1027,9 @@ UNC_MAC_CODE_DEFAULT=186296
 # bound (above); no data was removed.
 # +4 the same day, 36,644 -> 36,648: `.data` alignment under the pre-size
 # (above); no data was added.
-UNC_MAC_A5_DEFAULT=36648
+# +52 the same day, 36,648 -> 36,700: the report's ": comment shortened"
+# and the comment cut's code ahead of `.data` (above).
+UNC_MAC_A5_DEFAULT=36700
 # A CEILING PER CONFIGURATION, because one ceiling measured on another build
 # cannot fire. The figures above are the RESIDENT control build, which carries
 # every decoder; the shipped build's resident code is a third of that, so
@@ -1592,8 +1599,12 @@ UNC_MAC_A5_DEFAULT=36648
 # pre-size no longer ends the run (DECISIONS.md 2026-11-07, *the size a
 # damaged header asked the disk for*). The A5 is `.data` alignment; no
 # budget moves.
-UNC_MAC_CODE_EAGER=39920
-UNC_MAC_A5_EAGER=16720
+# +40 and +24 the same day, 39,920 -> 39,960 and 16,720 -> 16,744: a
+# comment over the Desktop Manager's 199 bytes is cut to them and the
+# entry reported, ": comment shortened" the A5 (DECISIONS.md 2026-11-07,
+# *the comment the Desktop Manager cut*). 64 B off every budget.
+UNC_MAC_CODE_EAGER=39960
+UNC_MAC_A5_EAGER=16744
 # +8 on 2026-10-02 for the same reason as the eager pair above: the
 # overlay call that now says WHICH of StuffIt 2.x's ciphers an entry
 # wants. A5 fell to 19,096 and its ceiling is left where it was.
@@ -1739,7 +1750,9 @@ UNC_MAC_A5_EAGER=16720
 # under its ceiling, so no budget moves.
 # -4 code the same day: the pre-size; data + bss 16,752 (+4), under its
 # ceiling, so no budget moves.
-UNC_MAC_CODE_LAZY=38672
+# +40 code the same day: the comment cut, as the eager pair; data + bss
+# 16,760 (+8), under its ceiling.
+UNC_MAC_CODE_LAZY=38712
 UNC_MAC_A5_LAZY=19200
 if [ -n "$UNC_OVL_RESIDENT" ]; then
     UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-$UNC_MAC_CODE_DEFAULT}

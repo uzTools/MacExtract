@@ -154,6 +154,7 @@
 #define S_REP_NOT_CREATED   ": could not be created"
 #define S_REP_INEXACT       ": not identical to the original"
 #define S_REP_FINFO_REFUSED ": Finder info refused"
+#define S_REP_CMT_CUT       ": comment shortened"
 /* After the lines above, once a run: the File Manager took the file and
  * both its forks, and only the Finder info was refused, which is what a
  * guard does (GateKeeper 1.3, measured; DECISIONS.md 2026-10-25, *the two

@@ -450,6 +450,12 @@ typedef struct UncEntryInfo {
  * Mac OS X's Spotlight comment, a property-list string the engine turns
  * from UTF-16 into UTF-8 (src/unc_sidecar.c). */
 #define UNC_META_CMT_UTF8 0x40
+/* The comment was cut: the archive states more of it than `comment`
+ * holds. Set where a UTF-8 comment is cut, because its MacRoman fold
+ * can come out shorter than a host's own limit; a comment in the
+ * archive's 8-bit encoding that was cut is UNC_ENTRY_COMMENT_MAX bytes
+ * long, and is not marked. */
+#define UNC_META_CMT_CUT  0x80
 
 #define UNC_LOCK_UNKNOWN 0
 #define UNC_LOCK_NO      1

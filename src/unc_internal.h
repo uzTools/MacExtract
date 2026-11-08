@@ -1204,6 +1204,7 @@ void unc_as_record(UncEntryInfo *e, uint32_t id, const uint8_t *p,
 /* Mac OS X's AppleDouble sidecars (unc_sidecar.c): the header of one,
  * captured out of a stream, and the names that pair it with its file. */
 #define UNC_AD_WIN     1024u  /* the head of a sidecar kept (unc_sidecar.c) */
+#define UNC_AD_TAIL    40u    /* a Spotlight list's end, past the window */
 #define UNC_AD_READING 0
 #define UNC_AD_YES     1      /* a sidecar: the table is in, and sane  */
 #define UNC_AD_NOT     2      /* not one: it comes out as a file       */
@@ -1211,8 +1212,12 @@ typedef struct UncAdCap {
     uint32_t got;             /* bytes of the sidecar kept in `win`     */
     uint32_t size;            /* its declared length                    */
     uint32_t roff, rlen;      /* entry 2, the resource fork             */
+    uint32_t at;              /* bytes seen; 0 until the window is full */
+    uint32_t tend;            /* where a Spotlight list ends past it    */
+    uint32_t hi;              /* the first byte past it with bit 7 set  */
     uint8_t  state;
     uint8_t  win[UNC_AD_WIN];
+    uint8_t  tail[UNC_AD_TAIL];   /* the list's last bytes, up to tend  */
 } UncAdCap;
 void unc_ad_init(UncAdCap *a, uint32_t size);
 int  unc_ad_feed(UncAdCap *a, const uint8_t *p, uint32_t n); /* 1: done */

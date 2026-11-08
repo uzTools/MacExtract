@@ -261,14 +261,16 @@ int unc_tar_extract(UncCtx *c)
                              * keywords ... shall be encoded using UTF-8",
                              * reference/notes/posix_ustar.txt, pax), so
                              * the cut backs off a continuation byte. */
+                            uint32_t cut = 0;
                             if (n > UNC_ENTRY_COMMENT_MAX) {
                                 n = UNC_ENTRY_COMMENT_MAX;
                                 while (n && (iobuf[val + n] & 0xC0u) == 0x80u)
                                     n--;
+                                cut = 0x100u;
                             }
                             for (q = 0; q < n; q++)
                                 xcmt[co + q] = iobuf[val + q];
-                            *pl = n;
+                            *pl = n | cut;   /* bit 8: UNC_META_CMT_CUT */
                         }
                     }
                     r += len;
@@ -328,9 +330,10 @@ int unc_tar_extract(UncCtx *c)
         /* Both are Unix times: an instant (macextract.h). */
         if (e.mod_date) e.meta |= UNC_META_MD_UTC;
         if (xclen || gclen) {
+            uint32_t l = xclen ? xclen : gclen;
             e.comment = xclen ? xcmt : xcmt + UNC_ENTRY_COMMENT_MAX;
-            e.comment_len = (uint16_t)(xclen ? xclen : gclen);
-            e.meta |= UNC_META_CMT_UTF8;
+            e.comment_len = (uint16_t)(l & 0xFFu);
+            e.meta |= (uint8_t)(UNC_META_CMT_UTF8 | ((l >> 1) & UNC_META_CMT_CUT));
         }
         xmtime = xclen = 0;
         e.rsrc_size = 0;

@@ -174,6 +174,9 @@ SPOT_FOLDER = "A folder's Spotlight comment."
 SPOT_LONG_A = "".join("%04d" % i for i in range(75))           # 300 chars
 SPOT_LONG_U = "\u00e9" * 130                     # 260 UTF-8 bytes: cut to 254
 SPOT_HUGE = "x" * 900       # the list ends past the sidecar's first 1,024 B
+SPOT_HUGE_U = "\u00e9" * 900                      # the same, as UTF-16
+SPOT_LATE = "y" * 900       # after a 700-byte attribute: the window cuts it
+AD_WIN = 1024               # the engine's window (src/unc_internal.h)
 SPOT_ENTRY4 = b"The sidecar's own entry 4, which wins."
 
 
@@ -202,6 +205,15 @@ def spot_cases():
         xa = sorted([(SPOT_NAME, v)] + list(others))
         return copyfile_sidecar(fin, b"", xa, extra)
     trunc = bplist("A comment cut short")
+    pad = [("com.apple.Big", b"\x00" * 700)]
+    late = side(bplist(SPOT_LATE), pad)
+    at = late.find(SPOT_LATE.encode()[:300])
+    # An ASCII string whose one byte with its top bit set lies past the
+    # window: refused, as the same byte inside it is (HighBit).
+    high = bytearray(side(bplist(SPOT_HUGE)))
+    hat = high.find(SPOT_HUGE.encode()[:300]) + 880
+    assert hat >= AD_WIN
+    high[hat] = 0x80
     return {
         # Between two other attributes, in copyfile's sorted order.
         "Spot/Ascii": (side(bplist(SPOT_ASCII), [
@@ -214,7 +226,13 @@ def spot_cases():
         "Spot/LongA": (side(bplist(SPOT_LONG_A)),
                        SPOT_LONG_A.encode()[:255]),
         "Spot/LongU": (side(bplist(SPOT_LONG_U)), utf8_cut(SPOT_LONG_U)),
-        "Spot/Huge": (side(bplist(SPOT_HUGE)), None),
+        # Lists that end past the window: cut, at the engine's 255 bytes
+        # or where the window ends (DECISIONS.md 2026-11-07, *the
+        # comment the Desktop Manager cut*).
+        "Spot/Huge": (side(bplist(SPOT_HUGE)), SPOT_HUGE.encode()[:255]),
+        "Spot/HugeU": (side(bplist(SPOT_HUGE_U)), utf8_cut(SPOT_HUGE_U)),
+        "Spot/Late": (late, SPOT_LATE.encode()[:min(255, AD_WIN - at)]),
+        "Spot/HighLate": (bytes(high), None),
         "Spot/Array": (side(bplist(["An array, not a string"])), None),
         "Spot/Number": (side(bplist(1990)), None),
         "Spot/Cut": (side(trunc[:-5]), None),

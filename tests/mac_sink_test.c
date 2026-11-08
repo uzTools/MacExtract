@@ -1250,6 +1250,68 @@ int main(int argc, char **argv)
                             : "marked, folded", (int)want);
             }
         }
+        /* The Desktop Manager keeps 199 bytes of a comment (StampCat;
+         * DECISIONS.md 2026-11-07, *the comment the Desktop Manager
+         * cut*): a longer one is handed over cut to 199, and the report
+         * says so; one the engine marks as cut (UNC_META_CMT_CUT) is
+         * reported at any length. 199 bytes and an unmarked short comment
+         * are the controls, which must say nothing, as must a volume
+         * without a Desktop Manager, where no comment is written. This
+         * mock keeps up to 255 bytes, so it sees what the shell hands
+         * over, not what a Desktop Manager keeps. */
+        {
+            static const struct { int len, meta, dt, want, line; } cs[] = {
+                { 255, 0, 1, 199, 1 },
+                { 199, 0, 1, 199, 0 },
+                {  40, UNC_META_CMT_UTF8 | UNC_META_CMT_CUT, 1, 40, 1 },
+                {  40, UNC_META_CMT_UTF8, 1, 40, 0 },
+                { 255, 0, 0, 0, 0 },
+            };
+            int i, hadDT = gHasDT;
+            for (i = 0; i < (int)(sizeof cs / sizeof cs[0]); i++) {
+                MacSink sk2; UncEntryInfo info;
+                char dir[600], path[900];
+                uint8_t buf[255];
+                CatRec *r;
+                int got, line;
+                snprintf(dir, sizeof dir, "%s/cmtcut%d", base, i);
+                mkdir(dir, 0755);
+                snprintf(gOutDir, sizeof gOutDir, "%s", dir);
+                snprintf(gDirs[0], sizeof gDirs[0], "%s", gOutDir);
+                gNumDirs = 1;
+                memset(gCat, 0, sizeof gCat);
+                RepReset();
+                gHasDT = cs[i].dt;
+                memset(&sk2, 0, sizeof sk2); sk2.vRefNum = 1; sk2.rootDirID = 0;
+                memset(&info, 0, sizeof info);
+                memcpy(info.name, "Doc", 3); info.name_len = 3;
+                memset(buf, 'a', sizeof buf);
+                info.comment = buf;
+                info.comment_len = (uint16_t)cs[i].len;
+                info.meta = (uint8_t)cs[i].meta;
+                if (sink_begin(&sk2, &info) == 0) sink_end(&sk2, UNC_OK);
+                snprintf(path, sizeof path, "%s/Doc", dir);
+                r = cat_rec(path, 0);
+                got = r ? r->clen : -1;
+                line = gRepN == 1 && gRepLen[0] == 3 + sizeof S_REP_CMT_CUT - 1
+                       && memcmp(gRepBuf + gRepStart[0],
+                                 "Doc" S_REP_CMT_CUT, gRepLen[0]) == 0;
+                if (got != cs[i].want || line != cs[i].line ||
+                    (int)gRepN != cs[i].line) {
+                    fprintf(stderr, "meta [comment cut, %d B, case %d]: the "
+                            "Desktop Manager got %d byte(s), wanted %d; %d "
+                            "report line(s), wanted %d (\"%.*s\")\n", cs[i].len,
+                            i, got, cs[i].want, (int)gRepN, cs[i].line,
+                            gRepN ? (int)gRepLen[0] : 0,
+                            gRepN ? (char *)gRepBuf + gRepStart[0] : "");
+                    ok = 0;
+                } else
+                    fprintf(stderr, "meta [comment cut, %d B, case %d]: %d "
+                            "byte(s), %s\n", cs[i].len, i, got,
+                            line ? "\"Doc: comment shortened\"" : "no line");
+            }
+            gHasDT = hadDT;
+        }
         fprintf(stderr, "meta: %s\n", ok ? "every field written, every "
                 "control caught" : "FAILED");
         return ok ? 0 : 1;

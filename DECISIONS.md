@@ -538,6 +538,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-07 (the file in the folder's place) — a file holding a top-level folder's name failed every entry under it; the folder is numbered past it now, as past a folder already there, for 32 B off every budget
 - 2026-11-07 (the request a signed long could not hold) — `mal_alloc` summed size + 16 in a signed long: from 0x7FFFFFF0 the budget test passed, and from 0xFFFFFFF0 NewPtr granted a few bytes; refused first now, for 0 B
 - 2026-11-07 (the size a damaged header asked the disk for) — a refused pre-size ended the run on "Disk full.", so a header claiming 900 MB lost the rest of the archive; the fork now grows as it is written instead, for 0 B
+- 2026-11-07 (the comment the Desktop Manager cut) — a Get Info comment longer than the Desktop Manager keeps is cut to its 199 bytes by the shell and reported "<name>: comment shortened"; a Spotlight comment that runs past the sidecar's window is cut, not dropped
 
 ---
 
@@ -22413,3 +22414,105 @@ files; after, 0 and 6 files.
 Lazy −4/+4, resident control −4/+4: 0. `OVL_SAVED`, `TIERS` and the grant
 rows unmoved. Heap 0. Stack: every frame unchanged (`-fstack-usage`).
 Time: not re-measured; the same `SetEOF` is made.
+
+## 2026-11-07 (the comment the Desktop Manager cut) — a Get Info comment longer than the Desktop Manager keeps is cut to its 199 bytes by the shell and reported "<name>: comment shortened"; a Spotlight comment that runs past the sidecar's window is cut, not dropped
+
+**The maintainer's call, 2026-11-07:** "Any comment that is longer than
+allowed on the system it is extracted on should be cleanly truncated with a
+line documenting it in the report"; and, of the three ways to treat a
+Spotlight list that ends past the window, the one that keeps every CF check.
+
+**What each Desktop Manager keeps, measured.** An AppleSingle file with a
+255-byte comment whose every 4-byte group states its own offset
+(`000,004,…`), extracted by the autotest build with `-D UNC_AT_DTCOMMENT`
+onto an 8 MB volume, read back with `PBDTGetComment` asked for 255: **199
+bytes, the first 199, on System 6.0.8 with AppleShare's Desktop Mgr INIT
+(`run.py --keep-inits`), System 7.0.1 and Mac OS 9.2 (`os9.py
+--autotest`)** — 7.0.1's figure as on 2026-10-18 (*the comment Spotlight
+kept*). One number on every System that has a Desktop Manager, so one
+constant and no question asked of the System. Whether the cut is
+`PBDTSetComment`'s or `PBDTGetComment`'s is not separated; what is read
+back is what the Finder is given. Not measured: System 7.5–8.6 and real
+hardware.
+
+**Where a comment was cut with nothing said.** The engine at
+UNC_ENTRY_COMMENT_MAX (255) in each reader that carries one; the Desktop Manager at 199;
+and a Spotlight comment whose list ended past byte 1,024 of its sidecar was
+dropped whole. A volume without a Desktop Manager (System 3.0, plain 6.0.8)
+gets no comment at all, which is not a cut and stays silent (2026-10-17,
+*the metadata, carried to the disk*).
+
+**Decision: the shell cuts to 199 and says so.** In `StampCat`, on the
+Desktop Manager path only, a comment over `DT_COMMENT_MAX` (199) is cut to
+it before `PBDTSetComment` and the entry gets `S_REP_CMT_CUT` (": comment
+shortened"). MacRoman is a byte a character, so the cut is between
+characters. Every engine cut in an 8-bit encoding is 255 bytes and so
+already over 199; a UTF-8 one is not, because its MacRoman fold can come
+out shorter (130 é, 260 bytes, cut to 254, fold to 127). So the engine
+marks a cut UTF-8 comment **`UNC_META_CMT_CUT`** (0x80, the last free
+`meta` bit) at its two sources — tar's pax `comment`, carried in bit 8 of
+its stored length, and the Spotlight reader — and the shell reports a
+marked one at any length. Marking every cut site was not needed.
+
+**The Spotlight list past the window.** When the 1,024-byte window fills,
+`side_reach` finds entry 9's Spotlight attribute (`side_attr`, the walk
+`side_spot` already made, factored out). If its list starts inside the
+window and ends past it, inside the sidecar, the feed goes on to that end
+— a zip's peek decodes that far instead of 1,024 bytes, tar's loop reads
+that far — keeping the last `UNC_AD_TAIL` (40) bytes and the position of
+the first byte past the window with its top bit set. `side_spot` then
+reads the trailer and offset table from the tail, makes every check CF
+makes, refuses an offset table over 8 bytes, checks an ASCII string's
+bytes past the window by that position, and cuts the string at what the
+window holds of it and at 255, marked cut. Still dropped: a list or string
+header that starts past the window, and a standalone `._name`
+(OPEN_ITEMS.md, *Mac OS X's sidecars*). Rejected: reading the string at
+offset 8 without the trailer (cheaper, but CF's checks go and Apple's
+layout is assumed) and a line for a dropped comment (the third option).
+
+**Evidence**, each check shown able to fail:
+- `tools/run_meta.py`: three new `-spot` cases (`HugeU`, UTF-16 past the
+  window; `Late`, the list behind a 700-byte attribute, cut where the
+  window ends at 112 bytes; `HighLate`, a high byte 880 into a 900-byte
+  ASCII string, refused) and `Huge` now cut to 255, in zip and tar;
+  `spot_comment`, the second reader, states the new rule; `lsar` grades
+  `Huge` (10 cases now). The tail removed fails 13 rows; the high-byte
+  check removed fails 5.
+- `tests/unit_formats.c` (`test_comment_cut`): a 900- and a 100-character
+  list fed a byte at a time and whole (255 marked cut; 100 unmarked), the
+  tail's last byte spoiled (refused), pax comments of 300 and 255 bytes
+  (marked; unmarked). The mark removed fails 3; the tail removed, 6. The
+  test's list is one plistlib reads; a first version had a one-byte offset
+  table CF refuses for an offset of 912, and the engine refused it too.
+- `tests/mac_sink_test.c --meta`: 255 bytes handed over as 199 with
+  `Doc: comment shortened`; 40 marked reported uncut; 199, 40 unmarked and
+  255 without a Desktop Manager silent. The cut removed fails 2 of 5.
+- `tools/vmac/metarun.py --system Sys7.img --out-kb 8192`: 103 values read
+  back, all as the archive states; `Huge` and `LongA` come back 199 bytes,
+  `HugeU` and `LongU` 127 (folded), `Late` 112. It cannot see the report
+  line: the autotest report carries the comments read back, not the
+  report's text, which is `mac_sink_test`'s alone.
+
+**Price** (against `main` at d118385):
+- **shipped (eager) CODE +40, A5 +24 (`": comment shortened"`), 64 B off
+  every extraction's budget**; lazy CODE +40, A5 under its ceiling; a
+  variant setting the mark instead of testing twice was the same 40 B.
+- **resident control CODE +684, A5 +52**; `OVL_SAVED` +672 to 166,976,
+  `TIERS_CONTROL` +736, `TIERS` −736, DERIVED; every grant row +672, a row
+  that keeps `ovl_zipold` +60.
+- **Images**: `ovl_zipold` +612 (15,508 → 16,120), the bundle 195,232 →
+  195,844. Per function (overlay flags): `side_attr` 218 B, new;
+  `unc_ad_feed` 70 → 414 (`side_reach` inlined); `unc_ad_init` +12;
+  `unc_tar_extract` +36. Two trims measured and not taken: dropping the
+  window-to-tail copy saved 16 B for a new hole; the feed loop's counters in
+  locals cost 16.
+- **Heap +52 B per sidecar capture** (`UncAdCap`: three words and the
+  40-byte tail), in `UncSideZip` and tar's `TarSide`. A zip's peek of a
+  sidecar whose list ends past the window decodes to that end, uncounted.
+- **Stack**: `unc_ad_feed` 4 → 56 B and `side_attr` 48 on zip's capture
+  path (`exo_emit` → `unc_ad_feed` → `side_attr`, +68 against `exo_emit`
+  → `unc_ad_feed` → `unc_ad_end`), about 2,100 B through Implode against
+  the engine's deepest 3,350 (*Stack*); `unc_ad_apply` 80 → 96, off any
+  decode chain.
+- **Extractions lost: none** — `run_tiers.py --check` 74/74, 72/74, 72/74,
+  the same two refusals at the 512 KB tiers.

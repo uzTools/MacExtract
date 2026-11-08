@@ -418,6 +418,128 @@ static void test_sidecar(void)
     }
 }
 
+/* A copyfile sidecar whose only attribute is a Spotlight comment of `n`
+ * ASCII 'x's, laid out as copyfile does (unc_sidecar.c): entry 9 at 50,
+ * the attribute block at 84, its one entry at 120, the property list at
+ * 172 — `bplist00`, the string at 8 with a two-byte count, an offset
+ * table of offsets wide enough to reach it (CF refuses narrower) and the
+ * trailer — and an empty entry 2 after it. */
+static uint32_t spot_sidecar(uint8_t *b, uint32_t n)
+{
+    static const char nm[] = "com.apple.metadata:kMDItemFinderComment";
+    uint32_t L = 172, otab = 12 + n, ois = otab > 255 ? 2 : 1;
+    uint32_t dlen = otab + ois + 32, end = L + dlen;
+    memset(b, 0, end);
+    put32(b, 0x00051607u);
+    put32(b + 4, 0x00020000u);
+    b[25] = 2;
+    put32(b + 26, 9); put32(b + 30, 50); put32(b + 34, end - 50);
+    put32(b + 38, 2); put32(b + 42, end); put32(b + 46, 0);
+    memcpy(b + 50, "TEXTttxt", 8);
+    memcpy(b + 84, "ATTR", 4);
+    b[119] = 1;                                     /* num_attrs */
+    put32(b + 120, L); put32(b + 124, dlen);
+    b[130] = (uint8_t)sizeof nm;                    /* the NUL counted */
+    memcpy(b + 131, nm, sizeof nm);
+    memcpy(b + L, "bplist00", 8);
+    b[L + 8] = 0x5F; b[L + 9] = 0x11;
+    b[L + 10] = (uint8_t)(n >> 8); b[L + 11] = (uint8_t)n;
+    memset(b + L + 12, 'x', n);
+    b[L + otab + ois - 1] = 8;                      /* the string's offset */
+    otab += ois;                                    /* now the trailer's */
+    b[L + otab + 6] = (uint8_t)ois; b[L + otab + 7] = 1;
+    b[L + otab + 15] = 1;                           /* one object */
+    put32(b + L + otab + 28, otab - ois);
+    return end;
+}
+
+/* A comment the engine cuts is marked UNC_META_CMT_CUT where it is UTF-8,
+ * whose fold can come out under the shell's own limit (DECISIONS.md
+ * 2026-11-07, *the comment the Desktop Manager cut*): a Spotlight list
+ * that ends past the sidecar's window, fed a byte at a time and whole,
+ * and a pax `comment` over 255 bytes. Neither at the limit is marked. */
+static void test_comment_cut(void)
+{
+    static uint8_t b[1200];
+    static const uint32_t ns[2] = { 900, 100 };
+    UncAdCap a;
+    UncEntryInfo e;
+    uint32_t i, k, step, sz;
+
+    for (k = 0; k < 2; k++)
+        for (step = 1; step <= 2; step++) {
+            sz = spot_sidecar(b, ns[k]);
+            CHECK(ns[k] < 255 || sz > UNC_AD_WIN);
+            unc_ad_init(&a, sz);
+            if (step == 1) {
+                for (i = 0; i < sz && !unc_ad_feed(&a, b + i, 1); i++) {}
+            } else {
+                CHECK(unc_ad_feed(&a, b, sz) == 1);
+            }
+            CHECK(a.state == UNC_AD_YES);
+            unc_entry_clear(&e);
+            unc_ad_apply(&a, &e);
+            CHECK(e.comment_len == (ns[k] < 255 ? ns[k] : 255));
+            CHECK(e.comment && e.comment[0] == 'x' &&
+                  e.comment[e.comment_len - 1] == 'x');
+            CHECK((e.meta & (UNC_META_CMT_UTF8 | UNC_META_CMT_CUT)) ==
+                  (ns[k] < 255 ? UNC_META_CMT_UTF8
+                               : UNC_META_CMT_UTF8 | UNC_META_CMT_CUT));
+        }
+    /* The trailer past the window, one byte of it wrong: refused. */
+    sz = spot_sidecar(b, 900);
+    b[sz - 1] ^= 1;
+    unc_ad_init(&a, sz);
+    (void)unc_ad_feed(&a, b, sz);
+    unc_entry_clear(&e);
+    unc_ad_apply(&a, &e);
+    CHECK(a.state == UNC_AD_YES && e.comment_len == 0);
+
+    /* pax: "NNN comment=<n x>\n", then the member it describes. */
+    for (k = 0; k < 2; k++) {
+        static uint8_t arc[512 * 5];
+        uint32_t n = k ? 255 : 300, len = n + 10, sum, j;
+        uint8_t *h;
+        char rec[400];
+        MemIO m;
+        UncIO io;
+        UncAlloc al;
+        UncSink sk;
+        CapSink cap;
+
+        len += len + 3 >= 1000 ? 4 : 3;   /* ' ', "comment=", '\n', digits */
+        memset(arc, 0, sizeof arc);
+        sprintf(rec, "%u comment=", (unsigned)len);
+        memset(rec + strlen(rec), 'x', n);
+        rec[len - 1] = '\n';
+        for (j = 0; j < 2; j++) {
+            h = arc + 1024 * j;
+            memcpy(h, j ? "f" : "PaxHeader/f", j ? 1 : 11);
+            memcpy(h + 100, "0000644", 7);
+            snprintf((char *)h + 124, 12, "%011o", j ? 0u : (unsigned)len);
+            memcpy(h + 136, "00000000000", 11);
+            h[156] = j ? '0' : 'x';
+            memcpy(h + 257, "ustar", 5);
+            h[263] = '0'; h[264] = '0';
+            memset(h + 148, ' ', 8);
+            for (i = 0, sum = 0; i < 512; i++) sum += h[i];
+            snprintf((char *)h + 148, 8, "%06o", (unsigned)sum);
+            h[155] = ' ';
+        }
+        memcpy(arc + 512, rec, len);
+        test_make_memio(&io, &m, arc, sizeof arc);
+        test_make_alloc(&al);
+        cap_make(&sk, &cap);
+        CHECK(unc_extract_as(UNC_FORMAT_TAR, &io, &sk, &al, NULL, NULL)
+              == UNC_OK);
+        CHECK(cap.count == 1 && cap.info[0].comment_len == 255 &&
+              cap.ecomment[0][0] == 'x' && cap.ecomment[0][254] == 'x');
+        CHECK((cap.info[0].meta & (UNC_META_CMT_UTF8 | UNC_META_CMT_CUT))
+              == (k ? UNC_META_CMT_UTF8
+                    : UNC_META_CMT_UTF8 | UNC_META_CMT_CUT));
+    }
+}
+
 static void test_applesingle(void)
 {
     /* AppleSingle with name, Finder info, data + rsrc forks. */
@@ -6388,6 +6510,7 @@ void run_format_tests(void)
     test_macbinary_meta();
     test_applesingle();
     test_sidecar();
+    test_comment_cut();
     test_appledouble_noname();
     test_bitin();
     test_huffman_tree();

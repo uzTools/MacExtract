@@ -307,10 +307,11 @@ def check(rundir, seven=False):
             print("metarun:   %-12s PBDTGetComment %d %r" % (nm, err, cm))
             if want is None:
                 continue
-            # The Desktop Manager gives back 199 bytes of a comment: a
-            # 255-byte one, written whole, read back as its first 199 on
-            # System 7.0.1 (PBDTGetComment asked for 255), measured
-            # 2026-10-18 (DECISIONS.md, *the comment Spotlight kept*).
+            # The Desktop Manager keeps 199 bytes of a comment, measured on
+            # System 6.0.8 with AppleShare's INIT, 7.0.1 and Mac OS 9.2,
+            # and the shell cuts a longer one to that before handing it
+            # over (DECISIONS.md 2026-11-07, *the comment the Desktop
+            # Manager cut*).
             want = want[:199]
             n += 1
             if hasdt and cm != want:

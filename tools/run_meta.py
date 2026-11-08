@@ -1285,9 +1285,11 @@ def spot_comment(blob, foff, flen):
     parseAppleDoubleExtendedAttributes: 2 bytes of pad, 'ATTR', 32 bytes,
     the count, then 4-aligned entries of offset, length, flags, namelen,
     name), and the property list by Python's plistlib — not the engine's
-    reader. One rule is the engine's and is stated, not derived: a list
-    that does not end inside the sidecar's first 1,024 bytes (UNC_AD_WIN)
-    is not read (DECISIONS.md 2026-10-18, *the comment Spotlight kept*)."""
+    reader. One rule is the engine's and is stated, not derived: of a
+    string that runs past the sidecar's first 1,024 bytes (UNC_AD_WIN),
+    the characters inside them are read, and of a list that starts past
+    them, nothing (DECISIONS.md 2026-11-07, *the comment the Desktop
+    Manager cut*)."""
     import plistlib
     if flen <= 70:
         return None
@@ -1301,7 +1303,7 @@ def spot_comment(blob, foff, flen):
             return None
         off, ln, _f, nl = struct.unpack(">IIHB", blob[p:p + 11])
         if blob[p + 11:p + 11 + nl] == SPOT_NAME:
-            if off + ln > 1024:
+            if off >= 1024:
                 return None
             try:
                 v = plistlib.loads(blob[off:off + ln],
@@ -1310,6 +1312,18 @@ def spot_comment(blob, foff, flen):
                 return None
             if not isinstance(v, str):
                 return None
+            if off + ln > 1024:
+                # Where the string's bytes start, found by its own first
+                # bytes, and the characters wholly before byte 1,024.
+                wide = not v.isascii()
+                enc = v.encode("utf-16-be" if wide else "ascii")
+                at = blob.find(enc[:16], off, off + ln)
+                held, k = 1024 - at, 0
+                for i, ch in enumerate(v):
+                    k += (len(ch.encode("utf-16-be")) if wide else 1)
+                    if k > held:
+                        v = v[:i]
+                        break
             out = b""
             for ch in v:
                 try:
@@ -1371,8 +1385,9 @@ def spot_lsar(cli, work, problems):
     cannot parse), held against `lsar`: XADMaster's attribute walk and
     GNUstep's property-list reader, a whole second chain. Left out by
     design: `Both`, whose entry-4 comment XADMaster does not read, and
-    `Huge`, past the window (DECISIONS.md 2026-10-18, *the comment
-    Spotlight kept*). Returns (compared, lsar could not read)."""
+    `Late` and `HighLate`, which the engine's window cuts or refuses where
+    XADMaster reads on (DECISIONS.md 2026-11-07, *the comment the Desktop
+    Manager cut*). Returns (compared, lsar could not read)."""
     import zipfile
     import synth_macosx as sm
     n = unread = 0
@@ -1380,7 +1395,7 @@ def spot_lsar(cli, work, problems):
     os.makedirs(d, exist_ok=True)
     for p, (b, _w) in sorted(sm.spot_cases().items()):
         leaf = p.rpartition("/")[2]
-        if p == "Spot" or leaf in ("Both", "Huge"):
+        if p == "Spot" or leaf in ("Both", "Late", "HighLate"):
             continue
         fx = os.path.join(d, leaf + ".zip")
         with zipfile.ZipFile(fx, "w") as z:
