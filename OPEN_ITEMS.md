@@ -50,6 +50,7 @@ refusal — the brief has grown before, on request.
 | A MIME part's `Content-MD5` | **not checked**; a `message/partial` anchor that is not a part comes out wrong with exit 0, as from munpack | priced at **+1,446 B** of `ovl_text`, declined 2026-10-11 (DECISIONS.md 2026-10-11, *the digest our own oracle could not compute*) |
 | Zip64 past 4 GB | **counts and the per-entry escape read; over-4-GB fields refused** (`UNC_ERR_UNSUPPORTED` per archive, `UNC_ERR_TOOLARGE` per entry) | a format change, not a type change (DECISIONS.md 2026-08-28, *what a width costs*; FORMATS.md, *Size limits*) |
 | More archives opened in a quick burst while MacExtract is busy — a second double-click during a helper's stay, archives of several creators at once | **dropped silently** (two `SIT!` archives 2 s apart: both lost, 7.0.1, one run; several creators: not run) | the maintainer, 2026-11-02: a limitation of the application. One more archive at a time is queued: File > Open... on every System, a double-click under MultiFinder and System 7 (DECISIONS.md 2026-11-01, *the Open item MultiFinder looks for*) |
+| The report window's 6,539 B of fixed buffers (`gRepBuf` and the row arrays) | **kept** | the maintainer, 2026-11-08: until something needs the bytes; neither 512 KB refusal is within them (DECISIONS.md 2026-11-08, *the report pool that stays*) |
 | A click during an extraction waiting for the next progress callback — 1–2 s on a Mac Plus for most formats at the 1 KB step; a short click on the menu bar lost; a menu held down pausing the extraction | **accepted** | the maintainer, 2026-11-06: input is queued and Cancel flashes when it is taken; the window's lack of responsiveness is known and the user is warned (DECISIONS.md 2026-11-06, *the step a click waits for*). What remains open: *The wait before the first callback* |
 
 Nothing is detect-only since 2026-10-18: an unextractable file is
@@ -111,12 +112,11 @@ forks of classic StuffIt and Compact Pro (TESTING.md; FORMATS.md).
   largest block StuffIt 5's 820 — with a reader on this machine (Expander
   5.5), so none goes to MANUAL_TESTS.md. No writer is missing for any format
   with committed fixtures.
-- **Not decided:** which answer wins where the writer's own reader
-  disagrees with the stored CRC or with another reader — StuffIt Deluxe
-  7.0.3 Classic writes wrong bytes for zip's Reduce (README.md).
 - **Then per format:** its manifests re-recorded with the writer's own
   reader in `oracle`, one emulator at a time, each run under two hours; a
-  writer this machine has no copy of goes to MANUAL_TESTS.md.
+  writer this machine has no copy of goes to MANUAL_TESTS.md. Where that
+  reader disagrees with the stored CRC or another reader, each case is
+  decided on its own (DECISIONS.md 2026-11-08, *the reader that disagrees*).
 
 ### What still holds the licence
 
@@ -146,9 +146,10 @@ moves to `HISTORICAL` in the same commit.
 | five tolerances no specification supports — the MacBinary CRC-16/0xA001 fallback and its nonzero-date test, the byte-swapped AppleSingle header, DiskDoubler's stored header CRC of zero (with the split header above) | deark is a checked negative for all four; the two MacBinary ones are unexercised; kept, the maintainer's decision 2026-10-23 (DECISIONS.md 2026-10-23, *the probes next door*) | the writer that made such files, or the tolerance dropped |
 | `fmt_hecx.c`, `fmt_binhex_probe.c` — hexbin's | *BinHex before 4.0*, below | BinHex 2.0's own `CODE`, as that item says |
 
-**The maintainer's, not this file's:** whether the 20 `HISTORICAL` files —
-transcribed once, rewritten from descriptions since — count as clean, and
-which licence follows.
+**The 20 `HISTORICAL` files are the project's own code, under 0BSD**
+(the maintainer, 2026-11-08; DECISIONS.md 2026-11-08, *the code rewritten
+from descriptions*). Not yet marked: `LICENSE` and NOTICE still say
+LGPL-2.1-or-later for the whole tree.
 
 ## The wait before the first callback
 
@@ -265,7 +266,6 @@ costs the engine*).
 |---|---|---|
 | segment joining: `unc_segment.c`, the five `fmt_*seg.c`, their shared parsers | 6,498 B of code | an image kept by the release for every set scheme; how much can move is not measured |
 | the shell's set code (`SegAskUser`, `SegPartOf`, the part dialog's scans) | 3,166 B of code on 2026-10-22, not re-measured since the setup half (`SegScanWrapped` and the rest of `mac/seg_setup.inc.c`) left as `ovl_segsetup` in v0.45.0 | the same table of function pointers the setup image is given (DECISIONS.md 2026-11-02, *the dialogs that became the application*); not priced |
-| the report window's buffers, `gRepBuf` and the row arrays | 6,539 B of bss (measured 2026-11-07, `nm` on `build/mac`) | **not a free saving**: the pool is fixed bss ON PURPOSE — the budget is `FreeMem()` taken once at the run's start, so a handle grown as lines arrive would eat the Toolbox/File-Manager reserve the budget holds back (the comment at `gRepBuf`). A smaller fixed pool trades report capacity; either is the maintainer's call |
 | the relocator, `Retro68Relocate` and `Retro68ApplyRelocations` | 1,656 B of code | Elf2Mac places it at the start of `.text`; needs a layout Elf2Mac does not offer |
 
 ## Formats classic Mac programs wrote that nothing here opens — leads, not findings

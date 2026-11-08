@@ -558,6 +558,9 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-08 (one layer at a time) — `cli_main` was 906 lines and two `goto`s, and what it carried from one layer to the next was where the last two rounds of CLI bugs were; one layer is `run_layer` now, and each rule about what crosses a layer is a named function
 - 2026-11-08 (the forks the first sweep never compared) — Expander 4.0.2's StuffIt verdict counts both forks; the resource fork is compared masked against the engine's bytes, checked equal to the record first, and a fork `unar` failed is adjudicated against the engine's at the same path
 - 2026-11-08 (the CLI's walks that were one walk) — the CLI's copies of the naming rules gave way to `unc_segment_name_part`, and its four folder walks and three path splitters to one `family_of` and one `family_scan`
+- 2026-11-08 (the reader that disagrees) — where a writer's own reader disagrees with the stored CRC or with another reader, the case is decided on its own; there is no general rule
+- 2026-11-08 (the report pool that stays) — the report window's 6,539 B of fixed buffers stay until something needs the bytes
+- 2026-11-08 (the code rewritten from descriptions) — the 20 `HISTORICAL` files are the project's own code, under 0BSD
 
 ---
 
@@ -23026,3 +23029,32 @@ one-part "set" written out as `data`, exit 0. `run_segments.py`'s
 `split_alone_cases` asserts the refusal and a two-member control that
 must join; it fails that mutant and passes the parent commit's binary
 and this one.
+
+## 2026-11-08 (the reader that disagrees) — where a writer's own reader disagrees with the stored CRC or with another reader, the case is decided on its own; there is no general rule
+
+**The maintainer's decision, 2026-11-08.** Moving the oracle from `unar` to
+the writers' own readers (OPEN_ITEMS.md, *What grades a fork*) needed a rule
+for a disagreement. There is none: "it depends on the disagreement". The one
+known case is StuffIt Deluxe 7.0.3 Classic writing wrong bytes for zip's
+Reduce (README.md). Each disagreement is written up as its own entry here
+before a manifest records either answer.
+
+## 2026-11-08 (the report pool that stays) — the report window's 6,539 B of fixed buffers stay until something needs the bytes
+
+**The maintainer's decision, 2026-11-08.** `gRepBuf` and the row arrays are
+fixed bss on purpose (the comment at `gRepBuf`), so the only saving was a
+smaller pool and fewer report lines. Neither 512 KB refusal is near enough
+for 6,539 B to matter: `synth-dd-m5.dd` peaks at 401,408 B against a
+235,142 B grant at System 6.0.8 / 512Ke, 166,266 B short on 2026-10-22 (FORMATS.md, *512
+KB machines*), and Library_ISBN's first refused request alone is 77,203 B
+on the 64K ROM (FORMATS.md, *A true Macintosh 512K*), a lower bound.
+
+## 2026-11-08 (the code rewritten from descriptions) — the 20 `HISTORICAL` files are the project's own code, under 0BSD
+
+**The maintainer's decision, 2026-11-08**, the question *What still holds
+the licence* left to him (OPEN_ITEMS.md). A file `tools/check_provenance.py`
+lists as `HISTORICAL` was transcribed from XADMaster, libxad or macutils
+once and rewritten since from a published description, the original
+program's behaviour, or its own code; nothing borrowed is left. Such a
+file is clean, the purest code here, and is 0BSD. The 17 `CARRIES` files
+stay LGPL-2.1-or-later.
