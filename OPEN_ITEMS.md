@@ -99,21 +99,14 @@ not move the licence; only the second does.
 deark grade the forks it fails (TESTING.md, *The oracle*). The writers' own
 readers already grade StuffIt Deluxe 2.0.1's output, SuperDisk!'s modules,
 DiskDoubler's methods 3–5, Now Compress, Private File, AppleLink packages
-and the Finder metadata each expander puts back (TESTING.md; FORMATS.md).
+and the Finder metadata each expander puts back; StuffIt Expander 4.0.2, both
+forks of classic StuffIt and Compact Pro (TESTING.md; FORMATS.md).
 
-- **Counted** 2026-11-07 (TESTING.md, *What `unar` alone vouches for, per
-  format*): now 5,357 of 7,633 forks have `unar` as their sole oracle, almost
-  all StuffIt and StuffIt 5 — each with a reader on this machine (Expander
-  4.0.2 / 5.5), so none goes to MANUAL_TESTS.md. No writer is missing for any
-  format with committed fixtures. (Was 6,827 before Compact Pro's 1,470 were
-  re-recorded, below.)
-- **Compact Pro, corroborated and recorded** 2026-11-07 (`tools/vmac/cptexp.py`;
-  TESTING.md, *Compact Pro against StuffIt Expander 4.0.2*): Expander 4.0.2
-  booted over the **whole corpus — 108/108 clean, 0 contradictions** on the
-  data fork (vs the manifest), every resource fork masked-equal, none
-  encrypted. All 108 manifests' `oracle` now leads with Expander 4.0.2 (the
-  DiskDoubler/DD-Expand convention, so `make_manifests.py` keeps them), so the
-  1,470 forks have left `unar`-sole. **Done.**
+- **Counted** 2026-11-08 (TESTING.md, *What `unar` alone vouches for, per
+  format*): now 2,662 of 7,633 forks have `unar` as their sole oracle, the
+  largest block StuffIt 5's 820 — with a reader on this machine (Expander
+  5.5), so none goes to MANUAL_TESTS.md. No writer is missing for any format
+  with committed fixtures.
 - **Not decided:** which answer wins where the writer's own reader
   disagrees with the stored CRC or with another reader — StuffIt Deluxe
   7.0.3 Classic writes wrong bytes for zip's Reduce (README.md).

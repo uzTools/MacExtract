@@ -15,7 +15,7 @@
  ],
  "fixture": "derived-Computer_Terms.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "oracle": "StuffIt Expander 4.0.2 reproduces this archive's forks (tools/vmac/sitexp.py; TESTING.md, *StuffIt against StuffIt Expander 4.0.2*): every data fork matches this manifest as a set, every resource fork masked-equal; the bytes recorded by unar -nr -D -f -q -k hidden -e macintosh (v1.10.8).",
  "sha256": "2be9f92b83b1a2e5ae64416c1a0fbfc16f6e7394a4044f6fda7973c157f8d919",
  "size": 22503
 }

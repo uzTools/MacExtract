@@ -103,7 +103,7 @@
  ],
  "fixture": "derived-seasons_greetings.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "oracle": "StuffIt Expander 4.0.2 reproduces this archive's forks (tools/vmac/sitexp.py; TESTING.md, *StuffIt against StuffIt Expander 4.0.2*): every data fork matches this manifest as a set, every resource fork masked-equal; the bytes recorded by unar -nr -D -f -q -k hidden -e macintosh (v1.10.8).",
  "sha256": "8cc2e3f647d6f2c69ef2e655562f98981525994a975af928dbce23551500d6a1",
  "size": 77966
 }

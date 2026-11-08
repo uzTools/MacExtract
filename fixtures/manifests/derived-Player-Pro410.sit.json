@@ -99,7 +99,7 @@
  ],
  "fixture": "derived-Player-Pro410.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "oracle": "StuffIt Expander 4.0.2 reproduces this archive's forks (tools/vmac/sitexp.py; TESTING.md, *StuffIt against StuffIt Expander 4.0.2*): every data fork matches this manifest as a set, every resource fork masked-equal; the bytes recorded by unar -nr -D -f -q -k hidden -e macintosh (v1.10.8).",
  "sha256": "997916ccd32aa43ffb04f61354651f20f4b7cfa75c1476db63171c497f8bfd75",
  "size": 196401
 }

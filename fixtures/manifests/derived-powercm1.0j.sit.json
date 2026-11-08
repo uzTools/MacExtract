@@ -43,7 +43,7 @@
  ],
  "fixture": "derived-powercm1.0j.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "oracle": "StuffIt Expander 4.0.2 reproduces this archive's forks (tools/vmac/sitexp.py; TESTING.md, *StuffIt against StuffIt Expander 4.0.2*): every data fork matches this manifest as a set, every resource fork masked-equal; the bytes recorded by unar -nr -D -f -q -k hidden -e macintosh (v1.10.8).",
  "sha256": "b3c5f02930f70f09e45ead9d6c74d680f3d986a98e5a1cd98f7a1dda4cb03c99",
  "size": 11367
 }

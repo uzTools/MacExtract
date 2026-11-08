@@ -556,6 +556,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-08 (the original on every layer) — from layer 2 on, `--overwrite` could replace the archive named on the command line; it and every part located that this run did not decode are on every layer's reading list now
 - 2026-11-08 (the password the second layer never got) — `-p -` read stdin on every layer, so an archive inside an envelope was opened with end-of-file for its password; it is read once per run
 - 2026-11-08 (one layer at a time) — `cli_main` was 906 lines and two `goto`s, and what it carried from one layer to the next was where the last two rounds of CLI bugs were; one layer is `run_layer` now, and each rule about what crosses a layer is a named function
+- 2026-11-08 (the forks the first sweep never compared) — Expander 4.0.2's StuffIt verdict counts both forks; the resource fork is compared masked against the engine's bytes, checked equal to the record first, and a fork `unar` failed is adjudicated against the engine's at the same path
 
 ---
 
@@ -22949,3 +22950,37 @@ timestamps, which differ the same way between two runs of ONE binary. The split'
 only ever take one side and are gone. A set whose setup fails now frees
 its part list and removes any part it had already decoded, which the
 early returns skipped; no recorded case reaches that.
+## 2026-11-08 (the forks the first sweep never compared) — Expander 4.0.2's StuffIt verdict counts both forks; the resource fork is compared masked against the engine's bytes, checked equal to the record first, and a fork `unar` failed is adjudicated against the engine's at the same path
+
+**What was found.** `sitexp.py`, like `cptexp.py` since 27a4b9b, compared the
+DATA fork only. Of StuffIt's 2,731 graded forks the 1,120 non-empty resource
+forks were never set against Expander's, and 36 archives have no non-empty
+data fork at all, so their "agree" was two empty forks matching —
+`derived-Poly2.sit` is a 168 KB application, all resource fork. Recording
+Expander in those manifests would have claimed what was never measured. The
+same overclaim was already committed for Compact Pro (BLOCKERS.md).
+
+**Why against the engine, and why that is still the record.** The manifest
+holds raw hashes, and Expander writes header bytes 16..127 to its own taste,
+so a raw hash cannot express "equal after masking". The bytes have to come
+from somewhere, and `macextract x --forks hidden` writes each fork raw as
+`._NAME`, with no `.rsrc` name to collide with an archived one. Its raw
+multiset is checked against the manifest's first — all 1,458 StuffIt and
+Compact Pro forks equal, 2026-11-08 — so masking the engine's bytes is
+masking the record's. Without that check the tolerance would rest on our own
+output.
+
+**A fork the oracle failed** has no hash. Expander's leftover fork is set
+against the engine's at the same path and counted `adjudicated` only where
+they agree. The two StuffIt cases are Optimizer remnants Expander did not
+write, so neither was adjudicated. A file Expander wrote nothing for no
+longer reads as agreement (`sitopt-wild-Phantom.sit`).
+
+**Shown to fail** before use: a byte changed past the mask fails the
+comparison, a byte inside it does not; an adjudicated fork changed by one
+byte is reported, not adjudicated.
+
+**"Comments about …" files are kept for StuffIt** (`--keep-comments`). The
+filter was `cptexp.py`'s, for a file Expander writes beside a Compact Pro
+package; `derived-InfoStack_folder.sit` holds one as a real archived entry,
+and with the filter it showed as a pull gap.

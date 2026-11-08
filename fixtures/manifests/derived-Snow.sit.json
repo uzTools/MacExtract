@@ -41,7 +41,7 @@
  ],
  "fixture": "derived-Snow.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "oracle": "StuffIt Expander 4.0.2 reproduces this archive's forks (tools/vmac/sitexp.py; TESTING.md, *StuffIt against StuffIt Expander 4.0.2*): every data fork matches this manifest as a set, every resource fork masked-equal; the bytes recorded by unar -nr -D -f -q -k hidden -e macintosh (v1.10.8).",
  "sha256": "90d1b6a5a27144a3f0271c5ae8f1d6444392193b70d3272a6fd30a7d9a765a90",
  "size": 7087
 }

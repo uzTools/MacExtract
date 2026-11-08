@@ -27,7 +27,7 @@
  ],
  "fixture": "derived-TIFF_AFE.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "oracle": "StuffIt Expander 4.0.2 reproduces this archive's forks (tools/vmac/sitexp.py; TESTING.md, *StuffIt against StuffIt Expander 4.0.2*): every data fork matches this manifest as a set, every resource fork masked-equal; the bytes recorded by unar -nr -D -f -q -k hidden -e macintosh (v1.10.8).",
  "sha256": "158bc5660b090129698dc29e61d2be33fcc90f2b3007bcd1075f0676fd37b687",
  "size": 23628
 }

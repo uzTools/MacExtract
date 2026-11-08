@@ -52,7 +52,7 @@
  ],
  "fixture": "derived-Mews_1.4.1.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "oracle": "StuffIt Expander 4.0.2 reproduces this archive's forks (tools/vmac/sitexp.py; TESTING.md, *StuffIt against StuffIt Expander 4.0.2*): every data fork matches this manifest as a set, every resource fork masked-equal; the bytes recorded by unar -nr -D -f -q -k hidden -e macintosh (v1.10.8).",
  "sha256": "3b134349f68755f76922eef521b09c1b3da4719bf99c9008945c6c1c2b88411f",
  "size": 270231
 }

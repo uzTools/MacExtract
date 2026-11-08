@@ -167,7 +167,7 @@
  ],
  "fixture": "derived-RIPEM_Mac_0.8b2_folder.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "oracle": "StuffIt Expander 4.0.2 reproduces this archive's forks (tools/vmac/sitexp.py; TESTING.md, *StuffIt against StuffIt Expander 4.0.2*): every data fork matches this manifest as a set, every resource fork masked-equal; the bytes recorded by unar -nr -D -f -q -k hidden -e macintosh (v1.10.8).",
  "sha256": "71b0254320dcf6d7674d459a2e1a81fcdaac1a9f03308753ef8a20922dbb8c65",
  "size": 136377
 }

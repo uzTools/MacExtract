@@ -43,7 +43,7 @@
  ],
  "fixture": "derived-3D_Terrain_Modeling_0.1.7.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "oracle": "StuffIt Expander 4.0.2 reproduces this archive's forks (tools/vmac/sitexp.py; TESTING.md, *StuffIt against StuffIt Expander 4.0.2*): every data fork matches this manifest as a set, every resource fork masked-equal; the bytes recorded by unar -nr -D -f -q -k hidden -e macintosh (v1.10.8).",
  "sha256": "e5a1529de71e9f14e724ebd75136aec24276ac04b8e18194734c609c7bbb5d83",
  "size": 164711
 }

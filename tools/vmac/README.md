@@ -205,6 +205,7 @@ back **38/69** on 2026-09-05, every "failure" a missing oracle.
 | `expander.py` | **the yardstick**: StuffIt Expander 4.0.2 against this application, timed |
 | `macclock.py` | **the stopwatch** `expander.py` times with; `clockcal/` is its known duration |
 | `sitmeta.py` | which header bytes become Finder info, read back with `hfscat.py`; `ddmeta.py`, `nowmeta.py`, `sdmeta.py` are its siblings |
+| `cptexp.py`, `sitexp.py` | Expander 4.0.2 over the Compact Pro / StuffIt corpus, both forks against the record (TESTING.md); one boot per archive; `sitexp.py --offset`/`--limit` keeps a run under two hours. `touch .tmp/emu-pause` holds either between archives for another agent's emulator run; `rm` resumes |
 | `hfscat.py` | every catalog record on an HFS image, whole; `patch()` plants values before a boot |
 | `macmime.py` | **a MIME message written BY a Macintosh**, with mpack's own Mac port (`tools/macmime/`) |
 | `mkcollide.py` | an archive whose names collide on HFS, and a check of what `BumpName` did |

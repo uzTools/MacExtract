@@ -431,7 +431,7 @@
  ],
  "fixture": "derived-back-slide-12.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "oracle": "StuffIt Expander 4.0.2 reproduces this archive's forks (tools/vmac/sitexp.py; TESTING.md, *StuffIt against StuffIt Expander 4.0.2*): every data fork matches this manifest as a set, every resource fork masked-equal; the bytes recorded by unar -nr -D -f -q -k hidden -e macintosh (v1.10.8).",
  "sha256": "25ea952d09dbe1642c9077deb93b76aa9b55a800d9c9b5ebd6e8f9df5c7e51ae",
  "size": 87064
 }

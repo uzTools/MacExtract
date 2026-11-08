@@ -27,7 +27,7 @@
  ],
  "fixture": "derived-UnStuff_PC__Install",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "oracle": "StuffIt Expander 4.0.2 reproduces this archive's forks (tools/vmac/sitexp.py; TESTING.md, *StuffIt against StuffIt Expander 4.0.2*): every data fork matches this manifest as a set, every resource fork masked-equal; the bytes recorded by unar -nr -D -f -q -k hidden -e macintosh (v1.10.8).",
  "sha256": "44ee43f380dd62f27499aa728de41094bae0112d7a83ce353c4f73ef4290c8a3",
  "size": 80789
 }

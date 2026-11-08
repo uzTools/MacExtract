@@ -31,7 +31,7 @@
  ],
  "fixture": "derived-CoDec105.sea",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "oracle": "StuffIt Expander 4.0.2 reproduces this archive's forks (tools/vmac/sitexp.py; TESTING.md, *StuffIt against StuffIt Expander 4.0.2*): every data fork matches this manifest as a set, every resource fork masked-equal; the bytes recorded by unar -nr -D -f -q -k hidden -e macintosh (v1.10.8).",
  "sha256": "de5ea05507eb101bc6d654a4369500c00ae12703f51dfc4cfb34bce99f6f0efa",
  "size": 36477
 }

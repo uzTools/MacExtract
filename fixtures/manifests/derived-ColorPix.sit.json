@@ -63,7 +63,7 @@
  ],
  "fixture": "derived-ColorPix.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "oracle": "StuffIt Expander 4.0.2 reproduces this archive's forks (tools/vmac/sitexp.py; TESTING.md, *StuffIt against StuffIt Expander 4.0.2*): every data fork matches this manifest as a set, every resource fork masked-equal; the bytes recorded by unar -nr -D -f -q -k hidden -e macintosh (v1.10.8).",
  "sha256": "59c5af8e1f606e1761a7683b582fe3dba6628015d975a162decf5c8ee5dc39a3",
  "size": 6997
 }

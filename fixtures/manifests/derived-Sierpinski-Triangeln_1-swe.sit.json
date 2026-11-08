@@ -31,7 +31,7 @@
  ],
  "fixture": "derived-Sierpinski-Triangeln_1-swe.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "oracle": "StuffIt Expander 4.0.2 reproduces this archive's forks (tools/vmac/sitexp.py; TESTING.md, *StuffIt against StuffIt Expander 4.0.2*): every data fork matches this manifest as a set, every resource fork masked-equal; the bytes recorded by unar -nr -D -f -q -k hidden -e macintosh (v1.10.8).",
  "sha256": "38b4cee885741059f6c887184403d188247262720800a55449df0da4d5aa6c6e",
  "size": 6505
 }

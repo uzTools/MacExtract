@@ -440,18 +440,19 @@ whole-archive far more often than `unar`.
 ### What `unar` alone vouches for, per format (inventory, 2026-11-07)
 
 Counted from the manifests' oracles, to size the move off XADMaster
-(OPEN_ITEMS.md, *What grades a fork*). Of **7,633 graded forks**, **5,357
-have `unar` as their sole oracle of record**; the rest already carry a
-second byte-oracle — deark 78, `macunpack`+deark 23, a writer, synthesiser
-or expander 2,167, MacBinary container arithmetic 8. The manifest's `oracle`
-(archive-level, as for DiskDoubler and Compact Pro, or per-fork
+(OPEN_ITEMS.md, *What grades a fork*). Of **7,633 graded forks**, **2,662
+have `unar` as their sole oracle of record** (recounted 2026-11-08, was
+5,357); the rest already carry a second byte-oracle — deark 78,
+`macunpack`+deark 23, a writer, synthesiser or expander 4,862, MacBinary
+container arithmetic 8. The manifest's `oracle`
+(archive-level, as for DiskDoubler, Compact Pro and StuffIt, or per-fork
 `data_oracle`/`rsrc_oracle`) is the record; a writer-reader suite that grades
 the SAME bytes in its own `ci.sh` run (right column) is a second check the
 manifest does not show.
 
 | format | forks | `unar` sole | writer/expander ON THIS MACHINE |
 |---|---|---|---|
-| StuffIt | 2,731 | 2,708 | Expander 4.0.2 + Deluxe 2.0.1 (`sitmeta.py`); Deluxe 2.0.1 grades the Optimizer subset's forks (`run_sitopt.py`) |
+| StuffIt | 2,731 | 13 | **StuffIt Expander 4.0.2** corroborates 230 of 233 archives on both forks (`sitexp.py`); recorded in the manifests' `oracle` 2026-11-08. Deluxe 2.0.1 grades the Optimizer subset's forks (`run_sitopt.py`) |
 | Compact Pro | 1,470 | 0 | **StuffIt Expander 4.0.2** corroborates all 108 archives fork-for-fork (`cptexp.py`); recorded in the manifests' `oracle` 2026-11-07 |
 | StuffIt 5 | 820 | 820 | Expander 5.5 (`exp55`, `sitzip.py`) — present, metadata only so far |
 | Zip | 646 | 598 | cross-platform (Info-ZIP, ZipIt); 48 forks deark |
@@ -472,12 +473,11 @@ manifest does not show.
 | BinHex `.hex`/`.hcx` | 14 | 0 | `hexbin`; BinHex 2.0 itself (`binhex2.py`) |
 | uuencode / LZ4 / SUMacC `.dl` | 12 | 0 | `hexbin` / liblz4 / SUMacC's own `tohex` |
 
-**What it says.** The `unar`-sole exposure is now almost all StuffIt (2,708)
-and StuffIt 5 (820) — Compact Pro (1,470) left it 2026-11-07, Expander 4.0.2
-recorded in its manifests' `oracle` (below). Both remaining blocks have a
-reader for them ON THIS MACHINE (Expander 4.0.2 for StuffIt, Expander 5.5 for
-StuffIt 5), so the forks can be re-graded here rather than filed to
-MANUAL_TESTS.md. PackIt (38) and LZH (24) likewise (Expander, MacLHA).
+**What it says.** The largest `unar`-sole block is now StuffIt 5 (820) —
+Compact Pro (1,470) left it 2026-11-07 and StuffIt (2,695 of 2,708)
+2026-11-08, Expander 4.0.2 recorded in their manifests' `oracle` (below).
+StuffIt 5 has a reader ON THIS MACHINE (Expander 5.5), so its forks can be
+re-graded here rather than filed to MANUAL_TESTS.md. PackIt (38) and LZH (24) likewise (Expander, MacLHA).
 The cross-platform formats — Zip, Tar, Compress, Gzip, MacBinary payloads,
 AppleSingle — have no Mac writer and `unar` is their natural oracle. The
 formats already carrying a writer's own fork grade (Compact Pro, DiskDoubler,
@@ -3082,11 +3082,11 @@ Expander, never of the engine:
   which the engine and `unar` keep as a Get Info comment, not a file — 5
   packages, now filtered out like the Preferences file.
 
-**The resource fork** is not multiset-compared here: Expander writes its own
-map reserved bytes, so it agrees only after masking, which the manifest's raw
-hash cannot express. The first pass compared it per file, masked
-(`vmac_check.mask_reserved`), against `macextract x`, and every resource fork
-agreed.
+**The resource fork, 2026-11-08: all 108 archives agree, 338/338 non-empty
+forks**, compared masked against the record as *StuffIt against StuffIt
+Expander 4.0.2* describes (`compare_rsrc`; Expander writes its own header
+reserved bytes, which the manifest's raw hash cannot express). Before that
+it had been compared on 46 archives only (BLOCKERS.md).
 
 **Recorded 2026-11-07** (OPEN_ITEMS.md, *What grades a fork*): all 108
 manifests' `oracle` now leads with Expander 4.0.2 and names `unar` second,
@@ -3095,6 +3095,49 @@ rather than regenerating from `unar`, and the 1,470 forks leave `unar`-sole
 (*What `unar` alone vouches for, per format*). **No contradiction was found
 anywhere in Compact Pro**, so the engine, `unar` and Expander agree across
 the whole format.
+
+## StuffIt against StuffIt Expander 4.0.2 (`tools/vmac/sitexp.py`, by hand)
+
+`cptexp.py`'s flow for classic StuffIt: one boot of Expander 4.0.2 per
+archive on the System 6.0.8 Mac Plus, the fixture typed `SIT!`/`SIT!`, every
+file it wrote pulled off the volume with `hcopy -m`. Both forks are compared
+as multisets, by content, so names and folders do not matter:
+
+- **the data fork**, by sha256, against the manifest;
+- **the resource fork**, by sha256 with bytes 16..127 of its header zeroed
+  (`vmac_check.mask_reserved`; Expander writes its own there), against
+  `macextract x --forks hidden` — whose RAW forks are checked equal to the
+  manifest's first, so the comparison is with the record (all 1,458 StuffIt
+  and Compact Pro forks, 2026-11-08). A byte changed past the mask fails it,
+  one inside it does not (measured);
+- **a fork `unar` failed** (`unadjudicated`, no hash): Expander's is set
+  against the engine's at the same path, and counted `adjudicated` only
+  where they agree.
+
+**All 233 fixtures, 2026-11-08: 230/233 agree on both forks, 0
+contradictions** — every data fork the record holds and 1,108 of its 1,120
+non-empty resource forks. The three that do not:
+
+- `synth-sit-rle90.sit`, `synth-sit-fixhuf.sit`: Expander answers "This
+  archive is damaged." (screenshot, 2026-11-07) — its refusal, not a
+  difference; their forks keep `unar` and `macunpack`+deark;
+- `sitopt-wild-Phantom.sit`: Expander wrote no file (why is not recorded;
+  no screenshot was taken). Deluxe 2.0.1 grades it (`run_sitopt.py`).
+
+`sitopt-wild-DNAnalyze.sit` agrees on its four recorded files; the fifth, the
+Optimizer remnant `unar` failed, Expander did not write, so its two forks stay
+unadjudicated.
+
+**What it cannot see:** names and Finder metadata (`sitmeta.py`'s), the
+resource fork's bytes 16..127, and a fork both readers decode wrong the same
+way. Archived "Comments about …" files are compared (`--keep-comments`):
+`InfoStack_folder.sit` holds one as a real entry, which `cptexp.py`'s filter
+had hidden.
+
+**Recorded 2026-11-08** (OPEN_ITEMS.md, *What grades a fork*): the 230
+manifests' `oracle` leads with Expander 4.0.2 and names `unar` second, so
+`make_manifests.py` keeps them and 2,695 forks leave `unar`-sole (*What
+`unar` alone vouches for, per format*).
 
 ## PKZIP's own distributions (`tools/specimens/implode.tsv`, one of three in `ci.sh`)
 

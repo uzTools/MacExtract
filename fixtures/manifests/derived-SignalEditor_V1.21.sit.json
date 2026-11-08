@@ -39,7 +39,7 @@
  ],
  "fixture": "derived-SignalEditor_V1.21.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "oracle": "StuffIt Expander 4.0.2 reproduces this archive's forks (tools/vmac/sitexp.py; TESTING.md, *StuffIt against StuffIt Expander 4.0.2*): every data fork matches this manifest as a set, every resource fork masked-equal; the bytes recorded by unar -nr -D -f -q -k hidden -e macintosh (v1.10.8).",
  "sha256": "8bfeb8a611f6e1327228bdcf14500819bf2cd542983688e0c316d1b527b3d5f9",
  "size": 113524
 }

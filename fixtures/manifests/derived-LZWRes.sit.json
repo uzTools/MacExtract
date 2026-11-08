@@ -27,7 +27,7 @@
  ],
  "fixture": "derived-LZWRes.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "oracle": "StuffIt Expander 4.0.2 reproduces this archive's forks (tools/vmac/sitexp.py; TESTING.md, *StuffIt against StuffIt Expander 4.0.2*): every data fork matches this manifest as a set, every resource fork masked-equal; the bytes recorded by unar -nr -D -f -q -k hidden -e macintosh (v1.10.8).",
  "sha256": "770df3b9da24b51e0dbd5ccf58998cff170f5266fca9c95b2f6103aea526513c",
  "size": 16427
 }

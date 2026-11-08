@@ -27,7 +27,7 @@
  ],
  "fixture": "derived-MacAClock101.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "oracle": "StuffIt Expander 4.0.2 reproduces this archive's forks (tools/vmac/sitexp.py; TESTING.md, *StuffIt against StuffIt Expander 4.0.2*): every data fork matches this manifest as a set, every resource fork masked-equal; the bytes recorded by unar -nr -D -f -q -k hidden -e macintosh (v1.10.8).",
  "sha256": "8f0327452e821601f4c19fc511427c01abe1b5f8d2b4720833dc16507929e1df",
  "size": 22430
 }

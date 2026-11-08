@@ -43,7 +43,7 @@
  ],
  "fixture": "derived-iPuzzle_v1.0_68k.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "oracle": "StuffIt Expander 4.0.2 reproduces this archive's forks (tools/vmac/sitexp.py; TESTING.md, *StuffIt against StuffIt Expander 4.0.2*): every data fork matches this manifest as a set, every resource fork masked-equal; the bytes recorded by unar -nr -D -f -q -k hidden -e macintosh (v1.10.8).",
  "sha256": "840bb3ae4157b3cd0f24cb13d88e3a387c75d1f78f7efea6f023aefea6a6d8b7",
  "size": 66114
 }

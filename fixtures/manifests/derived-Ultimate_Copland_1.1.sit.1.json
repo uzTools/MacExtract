@@ -115,7 +115,7 @@
  ],
  "fixture": "derived-Ultimate_Copland_1.1.sit.1",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "oracle": "StuffIt Expander 4.0.2 reproduces this archive's forks (tools/vmac/sitexp.py; TESTING.md, *StuffIt against StuffIt Expander 4.0.2*): every data fork matches this manifest as a set, every resource fork masked-equal; the bytes recorded by unar -nr -D -f -q -k hidden -e macintosh (v1.10.8).",
  "sha256": "d68f7bc1d369fff7d1361b9e50c54347fb51188b02ea5fced5ad3c7e52a55d6e",
  "size": 154432
 }

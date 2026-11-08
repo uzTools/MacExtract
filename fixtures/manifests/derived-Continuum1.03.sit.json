@@ -39,7 +39,7 @@
  ],
  "fixture": "derived-Continuum1.03.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "oracle": "StuffIt Expander 4.0.2 reproduces this archive's forks (tools/vmac/sitexp.py; TESTING.md, *StuffIt against StuffIt Expander 4.0.2*): every data fork matches this manifest as a set, every resource fork masked-equal; the bytes recorded by unar -nr -D -f -q -k hidden -e macintosh (v1.10.8).",
  "sha256": "dcee1caed9261f4ce1b79d93b6507f6dffd077e3e8df824b196bda1ad8263bb4",
  "size": 137485
 }
