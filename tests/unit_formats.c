@@ -2983,6 +2983,128 @@ static uint32_t segsrc_size(void *ctx, const UncSegmentDesc *desc, int part)
     return p->len[part - 1];
 }
 
+/* unc_segment_name_part over C strings: the stem and name as given, with
+ * the name copied into a buffer of exactly its length, so ASan sees any
+ * read past `namelen`. */
+static int seg_np(UncFormat scheme, const char *stem, const char *name)
+{
+    size_t nl = strlen(name);
+    uint8_t *buf = (uint8_t *)malloc(nl ? nl : 1);
+    int r;
+    memcpy(buf, name, nl);
+    r = unc_segment_name_part(scheme, (const uint8_t *)stem,
+                              (uint32_t)strlen(stem), buf, (uint32_t)nl);
+    free(buf);
+    return r;
+}
+
+static void test_segment_names(void)
+{
+    const UncFormat Z = UNC_FORMAT_ZIPSEG, S = UNC_FORMAT_SPLIT;
+    char stem[256], name[256];
+    int b, c, bad;
+
+    /* A spanned zip: .zNN, and .zip as the last part. */
+    CHECK(seg_np(Z, "Archive", "Archive.zip") == UNC_SEG_NAME_LAST);
+    CHECK(seg_np(Z, "Archive", "Archive.z01") == 1);
+    CHECK(seg_np(Z, "Archive", "Archive.z99") == 99);
+    CHECK(seg_np(Z, "Archive", "Archive.z10") == 10);
+    /* both cases, on either side */
+    CHECK(seg_np(Z, "archive", "ARCHIVE.ZIP") == UNC_SEG_NAME_LAST);
+    CHECK(seg_np(Z, "ARCHIVE", "archive.Z07") == 7);
+    CHECK(seg_np(Z, "Archive", "Archive.zIp") == UNC_SEG_NAME_LAST);
+    /* no part zero, and two digits exactly */
+    CHECK(seg_np(Z, "Archive", "Archive.z00") == 0);
+    CHECK(seg_np(Z, "Archive", "Archive.z1") == 0);
+    CHECK(seg_np(Z, "Archive", "Archive.z001") == 0);
+    CHECK(seg_np(Z, "Archive", "Archive.zipx") == 0);
+    CHECK(seg_np(Z, "Archive", "Archive.zap") == 0);
+    CHECK(seg_np(Z, "Archive", "Archive.zio") == 0);
+    CHECK(seg_np(Z, "Archive", "Archive.a01") == 0);
+    CHECK(seg_np(Z, "Archive", "Archive.z0:") == 0);   /* '9' + 1 */
+    CHECK(seg_np(Z, "Archive", "Archive.z/1") == 0);   /* '0' - 1 */
+    CHECK(seg_np(Z, "Archive", "Archive_z01") == 0);
+    /* the other scheme's names are not this one's */
+    CHECK(seg_np(Z, "Archive", "Archive.001") == 0);
+
+    /* A plain split: .NNN, three digits exactly. */
+    CHECK(seg_np(S, "Set", "Set.001") == 1);
+    CHECK(seg_np(S, "Set", "Set.002") == 2);
+    CHECK(seg_np(S, "Set", "Set.999") == 999);
+    CHECK(seg_np(S, "Set", "Set.256") == 256);
+    CHECK(seg_np(S, "SET", "set.010") == 10);
+    CHECK(seg_np(S, "set", "SET.100") == 100);
+    CHECK(seg_np(S, "Set", "Set.000") == 0);
+    CHECK(seg_np(S, "Set", "Set.01") == 0);
+    CHECK(seg_np(S, "Set", "Set.0001") == 0);
+    CHECK(seg_np(S, "Set", "Set.00:") == 0);
+    CHECK(seg_np(S, "Set", "Set./01") == 0);
+    CHECK(seg_np(S, "Set", "Set.0a1") == 0);
+    CHECK(seg_np(S, "Set", "Set-001") == 0);
+    CHECK(seg_np(S, "Set", "Set.z01") == 0);
+    CHECK(seg_np(S, "Set", "Set.zip") == 0);
+
+    /* A stem that is a prefix of another names neither's family. */
+    CHECK(seg_np(Z, "Arch", "Archive.z01") == 0);
+    CHECK(seg_np(Z, "Archive", "Arch.z01") == 0);
+    CHECK(seg_np(S, "Set", "Settle.001") == 0);
+    CHECK(seg_np(S, "Settle", "Set.001") == 0);
+    CHECK(seg_np(S, "Set", "Set.1.001") == 0);
+    CHECK(seg_np(S, "Set.1", "Set.1.001") == 1);
+    CHECK(seg_np(Z, "a.b", "a.b.zip") == UNC_SEG_NAME_LAST);
+    CHECK(seg_np(S, "Set", "Sex.001") == 0);
+    CHECK(seg_np(S, "Set", "Seu.001") == 0);
+
+    /* A name that is all extension is no family's. */
+    CHECK(seg_np(S, "", ".001") == 0);
+    CHECK(seg_np(Z, "", ".zip") == 0);
+    CHECK(seg_np(Z, "", ".z01") == 0);
+    CHECK(seg_np(S, "", "001") == 0);
+    CHECK(seg_np(S, "Set", "") == 0);
+
+    /* Neither scheme's: nothing is named. */
+    CHECK(seg_np(UNC_FORMAT_SITSEG, "Set", "Set.001") == 0);
+    CHECK(seg_np(UNC_FORMAT_SITSEG, "Archive", "Archive.z01") == 0);
+
+    /* 255-byte names, the longest either host has: 251 + ".NNN". */
+    memset(stem, 'a', 251); stem[251] = 0;
+    memcpy(name, stem, 251); memcpy(name + 251, ".007", 5);
+    CHECK(strlen(name) == 255);
+    CHECK(seg_np(S, stem, name) == 7);
+    memcpy(name, stem, 251); memcpy(name + 251, ".z42", 5);
+    CHECK(seg_np(Z, stem, name) == 42);
+    memcpy(name, stem, 251); memcpy(name + 251, ".ZIP", 5);
+    CHECK(seg_np(Z, stem, name) == UNC_SEG_NAME_LAST);
+    stem[250] = 'A';                  /* the last stem byte, folded */
+    CHECK(seg_np(S, stem, name) == 0);
+    memcpy(name, stem, 251); memcpy(name + 251, ".z42", 5);
+    stem[250] = 'a';
+    CHECK(seg_np(Z, stem, name) == 42);
+    stem[250] = 'b';
+    CHECK(seg_np(Z, stem, name) == 0);
+    stem[250] = 'a';
+    stem[0] = 'B';                    /* and the first */
+    CHECK(seg_np(Z, stem, name) == 0);
+
+    /* Every byte pair: a stem byte matches a name byte when they are
+     * equal or the same letter in A-Z/a-z, and in no other case. MacRoman
+     * above 0x7F is compared exactly (0x83 E-acute, 0x8E e-acute). */
+    bad = 0;
+    for (b = 1; b < 256; b++)
+        for (c = 1; c < 256; c++) {
+            uint8_t st[1], nm[5];
+            int want = b == c ||
+                (b >= 'A' && b <= 'Z' && c == b + 32) ||
+                (c >= 'A' && c <= 'Z' && b == c + 32);
+            st[0] = (uint8_t)b;
+            nm[0] = (uint8_t)c; nm[1] = '.'; nm[2] = '0'; nm[3] = '0'; nm[4] = '3';
+            if ((unc_segment_name_part(S, st, 1, nm, 5) == 3) != want) bad++;
+        }
+    CHECK(bad == 0);
+    CHECK(seg_np(S, "\x83", "\x8E.001") == 0);
+    CHECK(seg_np(S, "\x8E", "\x8E.001") == 1);
+}
+
 static void split_desc(UncSegmentDesc *d, int nparts, uint32_t total)
 {
     memset(d, 0, sizeof *d);
@@ -6533,6 +6655,7 @@ void run_format_tests(void)
     test_sitseg();
     test_zipseg();
     test_split();
+    test_segment_names();
     test_binhex_multi();
     test_diskdoubler();
     test_nowcompress();

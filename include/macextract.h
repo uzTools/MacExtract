@@ -836,6 +836,18 @@ int unc_segment_describe_as(UncIO *io, UncFormat scheme,
 int unc_segment_match(const UncSegmentDesc *desc,
                       const uint8_t *head, int32_t len);
 
+/* Which member of the family sharing `stem` the file called `name` is,
+ * for the two schemes a host orders by name alone. ZIPSEG: NN for
+ * NAME.zNN, UNC_SEG_NAME_LAST for NAME.zip (its number is the set's
+ * count). SPLIT: NNN for NAME.NNN. Anything else answers 0, as does
+ * part zero. Case-insensitive in A-Z only. Lengths, not terminators, so
+ * a C string and a Pascal string's body both fit; nothing past
+ * `namelen` is read. */
+#define UNC_SEG_NAME_LAST (-1)
+int unc_segment_name_part(UncFormat scheme,
+                          const uint8_t *stem, uint32_t stemlen,
+                          const uint8_t *name, uint32_t namelen);
+
 /* How much of part 1's data fork is the part: `datalen` (the fork's
  * length), or less where `rsrc`, that file's RESOURCE fork, says so.
  * A fat self-extracting StuffIt set carries PowerPC code after the

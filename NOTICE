@@ -131,6 +131,12 @@ hand.
                        list from Apple's CoreFoundation (CFBinaryPList.c,
                        ForFoundationOnly.h; APSL 2.0), from which no code
                        is copied.
+  src/unc_segment.c    the names that make a set of the two schemes no
+                       part identifies — NAME.zNN with NAME.zip last
+                       (XADZipParser.m) and NAME.NNN (XADSplitFileParser.m),
+                       case-insensitive. Facts, not code. Inventoried
+                       since 2026-11-08, when the CLI's and the Mac
+                       shell's copies, outside src/, became this one.
   src/unc_internal.h   the LZAH preload above. The MIME line rule left
                        on 2026-10-05 for deark's dbuf_find_line, which
                        is in the same file this header already cited

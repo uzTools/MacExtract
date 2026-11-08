@@ -63,6 +63,7 @@ CARRIES = {
     "fmt_hecx.c":       "BinHex before 4.0 and .dl, the whole decoder (hexbin's hecx.c, dl.c)",
     "fmt_binhex_probe.c": "the .hex/.hcx header-line rule and the .dl first line (hexbin's hecx.c, hexbin.c)",
     "unc_sidecar.c":    "which names are Mac OS X sidecars, and the pairing rule",
+    "unc_segment.c":    "the spanned-zip and .NNN split naming rules",
 }
 
 # Mentions a reference only to say what it no longer owes, or to

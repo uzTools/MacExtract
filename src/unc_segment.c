@@ -243,6 +243,54 @@ int unc_segment_match(const UncSegmentDesc *d,
     return sc->match(d, head, len);
 }
 
+/* ------------------------------------------------------------------ */
+/* The two schemes that are nothing but a naming convention            */
+/*                                                                    */
+/* Source: reference/XADMaster/XADZipParser.m +volumesForHandle:,      */
+/*   ^NAME\.(zip|z[0-9]{2})$ with REG_ICASE;                           */
+/* reference/XADMaster/XADSplitFileParser.m +volumesForHandle:,        */
+/*   ^NAME\.[0-9]{3}$ with REG_ICASE.                                  */
+/* Both extensions are three bytes, so a member is the stem, a '.' and */
+/* three more. Two departures, both the hosts' before this function    */
+/* was theirs: there is no part zero (".000", ".z00"), and an empty    */
+/* stem (".001", ".zip") names no family.                              */
+/*                                                                    */
+/* Case folds A-Z only, as both hosts' copies did byte for byte (the   */
+/* CLI's ascii_lower, the Mac shell's PLowerByte): a MacRoman letter   */
+/* above 0x7F is compared exactly, though HFS itself would fold it.    */
+/* ------------------------------------------------------------------ */
+
+#define SEG_LOWER(c) ((c) >= 'A' && (c) <= 'Z' ? (c) + ('a' - 'A') : (c))
+
+int unc_segment_name_part(UncFormat scheme,
+                          const uint8_t *stem, uint32_t stemlen,
+                          const uint8_t *name, uint32_t namelen)
+{
+    const uint8_t *e;
+    uint32_t i;
+    int n = 0;
+
+    if (stemlen == 0 || namelen != stemlen + 4 || name[stemlen] != '.')
+        return 0;
+    for (i = 0; i < stemlen; i++)
+        if (SEG_LOWER(name[i]) != SEG_LOWER(stem[i])) return 0;
+    e = name + stemlen + 1;
+    i = 0;
+    if (scheme == UNC_FORMAT_ZIPSEG) {
+        if (SEG_LOWER(e[0]) != 'z') return 0;
+        if (SEG_LOWER(e[1]) == 'i' && SEG_LOWER(e[2]) == 'p')
+            return UNC_SEG_NAME_LAST;
+        i = 1;
+    } else if (scheme != UNC_FORMAT_SPLIT) {
+        return 0;
+    }
+    for (; i < 3; i++) {
+        if (e[i] < '0' || e[i] > '9') return 0;
+        n = n * 10 + (e[i] - '0');
+    }
+    return n;                         /* 0 for ".000" and ".z00" */
+}
+
 void unc_segment_stats(const void *scratch, uint32_t *part_switches,
                        uint32_t *backward_crossings)
 {
