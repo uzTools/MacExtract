@@ -2803,6 +2803,9 @@ static void RepEntry(MacSink *s, const char *what)
     RepCat(what);
 }
 
+/* The longest comment the Desktop Manager keeps (StampCat). */
+#define DT_COMMENT_MAX 199
+
 static void StampCat(MacSink *s)
 {
     /* One block for the three calls, which run one after another: three
@@ -2944,6 +2947,18 @@ static void StampCat(MacSink *s)
             u.d.ioDirID = par;
             if (bndl) DTBundle(&u.d, bndl, self, s->curDirID);
             if (s->cur.comment_len) {
+                /* The Desktop Manager keeps the first 199 bytes of a
+                 * longer comment: measured on System 6.0.8 with
+                 * AppleShare's INIT, 7.0.1 and Mac OS 9.2 (DECISIONS.md
+                 * 2026-11-07, *the comment the Desktop Manager cut*). The
+                 * cut is made here, where it can be reported, and with
+                 * the engine's own: MacRoman is a byte a character. */
+                if (s->cur.comment_len > DT_COMMENT_MAX ||
+                    (s->cur.meta & UNC_META_CMT_CUT)) {
+                    if (s->cur.comment_len > DT_COMMENT_MAX)
+                        s->cur.comment_len = DT_COMMENT_MAX;
+                    RepEntry(s, S_REP_CMT_CUT);
+                }
                 u.d.ioDTBuffer = (Ptr)s->cur.comment;
                 u.d.ioDTReqCount = s->cur.comment_len;
                 PBDTSetCommentSync(&u.d);

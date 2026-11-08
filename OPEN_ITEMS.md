@@ -219,8 +219,10 @@ and `tools/run_meta.py` holds it.
 (DECISIONS.md, *the sidecars Mac OS X left beside the file*). Left, none with
 a specimen:
 
-- **A Spotlight comment past byte 1,024 of the sidecar**, or in a standalone
-  `._name`, is dropped (DECISIONS.md 2026-10-18, *the comment Spotlight kept*).
+- **A Spotlight comment whose property list or string header starts past
+  byte 1,024 of the sidecar**, or in a standalone `._name`, is dropped; one
+  that starts inside and runs past is cut and reported (DECISIONS.md
+  2026-11-07, *the comment the Desktop Manager cut*).
 - **A tar sidecar written after its file** comes out as itself; bsdtar never
   writes that order. A pax header between the two is stepped over, no
   specimen (hypothesis: bsdtar writes one for a non-ASCII name).

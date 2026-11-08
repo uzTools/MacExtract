@@ -58,18 +58,36 @@
  * `apple_double_header_t`), and an RFC 1740 writer that puts every entry
  * the engine reads in front of the forks needs a few hundred. An entry
  * that is not wholly inside the window is not read; the forks are spans,
- * and are not limited by it. */
+ * and are not limited by it. One exception: a Spotlight comment's
+ * property list that starts in the window and ends past it is followed
+ * to its end (side_reach), so that its trailer can be checked and the
+ * string cut instead of dropped. */
 void unc_ad_init(UncAdCap *a, uint32_t size)
 {
     a->got = 0;
     a->size = size;
+    a->at = a->tend = a->hi = 0;
     a->state = UNC_AD_READING;
 }
 
+static void side_reach(UncAdCap *a);
+
 int unc_ad_feed(UncAdCap *a, const uint8_t *p, uint32_t n)
 {
-    while (n-- && a->got < UNC_AD_WIN) a->win[a->got++] = *p++;
+    for (; n && a->got < UNC_AD_WIN; n--) a->win[a->got++] = *p++;
     if (a->got < UNC_AD_WIN && a->got < a->size) return 0;
+    if (!a->at) {
+        a->at = a->got;
+        side_reach(a);
+    }
+    /* Past the window, to the list's end: its last UNC_AD_TAIL bytes,
+     * and where the first byte with its top bit set is. */
+    for (; n && a->at < a->tend; n--, p++, a->at++) {
+        uint32_t r = a->tend - a->at;
+        if ((*p & 0x80u) && !a->hi) a->hi = a->at;
+        if (r <= UNC_AD_TAIL) a->tail[UNC_AD_TAIL - r] = *p;
+    }
+    if (a->at < a->tend) return 0;
     unc_ad_end(a);
     return 1;
 }
@@ -129,25 +147,80 @@ static uint32_t side_int(const uint8_t *p, uint32_t n)
     return v;
 }
 
-/* Mac OS X 10.5 and later keep the Finder's comment as the extended
- * attribute `com.apple.metadata:kMDItemFinderComment`, and copyfile
- * packs every extended attribute into entry 9 after its 32 bytes of
- * Finder info. That attribute's value, if it is a binary property list
- * whose top object is a string, becomes the entry's comment, as UTF-8
- * (UNC_META_CMT_UTF8). Anything else — no such attribute, another kind
- * of top object, a list that is not wholly inside the window, a string
- * with a UTF-16 unit UTF-8 cannot hold — leaves the comment unstated,
- * and never fails the file (DECISIONS.md 2026-10-18, *the comment
- * Spotlight kept*).
- *
- * The attribute block. Source: reference/notes/copyfile.c,
+/* The attribute block. Source: reference/notes/copyfile.c,
  * attr_header_t, attr_entry_t and ATTR_ENTRY_LENGTH — two bytes of pad
  * after the Finder info, then u32 magic 'ATTR', debug_tag, total_size,
  * data_start, data_length, three reserved words, u16 flags, u16
  * num_attrs (36 bytes); then each entry is u32 offset (from the start of
  * the FILE), u32 length, u16 flags, u8 namelen, the name, padded to 4.
  * XADMaster reads the block only where entry 9 is longer than 70 bytes
- * (reference/XADMaster/XADAppleDouble.m), which is 32 + 2 + 36.
+ * (reference/XADMaster/XADAppleDouble.m), which is 32 + 2 + 36. Where
+ * the Spotlight comment's value is, out of entry 9 at `foff`: 1 if the
+ * window holds the block and an entry of that name. */
+static int side_attr(const uint8_t *w, uint32_t lim, uint32_t foff,
+                     uint32_t flen, uint32_t *doff, uint32_t *dlen)
+{
+    uint32_t h = foff + 34, p, k, n;
+
+    if (flen <= 70 || foff > lim) return 0;
+    if (flen < lim - foff) lim = foff + flen;  /* the entries, inside 9 */
+    if (h > lim || lim - h < 36 || unc_get_u32be(w + h) != 0x41545452u)
+        return 0;
+    n = unc_get_u16be(w + h + 34);
+    for (p = h + 36, k = 0; k < n; k++) {
+        uint32_t nl;
+        if (p > lim || lim - p < 11) return 0;
+        nl = w[p + 10];
+        if (lim - p - 11 < nl) return 0;
+        if (nl == sizeof k_spot && side_eq(w + p + 11, k_spot, nl)) {
+            *doff = unc_get_u32be(w + p);
+            *dlen = unc_get_u32be(w + p + 4);
+            return 1;
+        }
+        p += (11 + nl + 3) & ~3u;
+    }
+    return 0;
+}
+
+/* Once, when the window is full: if entry 9's Spotlight list starts
+ * inside it and ends past it, and inside the sidecar, the feed goes on
+ * to that end (`tend`), keeping the last UNC_AD_TAIL bytes (the trailer,
+ * 32, and an offset table of up to 8) and the first byte with its top
+ * bit set. Otherwise `tend` is where the feed already is. */
+static void side_reach(UncAdCap *a)
+{
+    uint32_t i, n, doff, dlen, e, p;
+    const uint8_t *t;
+
+    a->tend = a->at;
+    if (a->got < 26) return;
+    n = unc_get_u16be(a->win + 24);
+    for (i = 0; i < n && 38 + 12 * i <= a->got; i++) {
+        t = a->win + 26 + 12 * i;
+        if (unc_get_u32be(t) != 9) continue;
+        if (side_attr(a->win, a->got, unc_get_u32be(t + 4),
+                      unc_get_u32be(t + 8), &doff, &dlen) &&
+            doff < a->got && dlen > a->got - doff &&
+            dlen <= a->size - doff) {
+            e = doff + dlen;               /* > a->got, which is > TAIL */
+            a->tend = e;
+            for (p = e - UNC_AD_TAIL; p < a->got; p++)
+                a->tail[p - (e - UNC_AD_TAIL)] = a->win[p];
+        }
+        return;
+    }
+}
+
+/* Mac OS X 10.5 and later keep the Finder's comment as the extended
+ * attribute `com.apple.metadata:kMDItemFinderComment`, and copyfile
+ * packs every extended attribute into entry 9 after its 32 bytes of
+ * Finder info. That attribute's value, if it is a binary property list
+ * whose top object is a string, becomes the entry's comment, as UTF-8
+ * (UNC_META_CMT_UTF8). Anything else — no such attribute, another kind
+ * of top object, a list that does not start inside the window, a string
+ * with a UTF-16 unit UTF-8 cannot hold — leaves the comment unstated,
+ * and never fails the file (DECISIONS.md 2026-10-18, *the comment
+ * Spotlight kept*).
  *
  * The property list. Source: reference/notes/CFBinaryPList.c,
  * __CFBinaryPlistGetTopLevelInfo, _readInt and the ASCII and Unicode16
@@ -160,46 +233,41 @@ static uint32_t side_int(const uint8_t *p, uint32_t n)
  * string is ASCII: a byte with the top bit set fails CF's ASCII decoding
  * and Python's plistlib alike, and is refused. A 0x6n string is UTF-16BE
  * code units; a surrogate pair becomes one 4-byte sequence and a lone
- * surrogate refuses the string.
+ * surrogate among the units read refuses the string.
+ *
+ * A list that ends past the window is read from its trailer and offset
+ * table, which side_reach kept (an offset table longer than 8 bytes is
+ * refused), and an ASCII string's bytes past the window are checked by
+ * where the first high byte fell. The string is cut at what the window
+ * holds of it, and at UNC_ENTRY_COMMENT_MAX, between characters; a cut
+ * one is marked UNC_META_CMT_CUT.
  *
  * Written over the window, which nothing reads after this: the UTF-8
  * goes from the attribute block's own start (entry 9 + 34) and the
  * UTF-16 it comes from is first moved to the window's END, so that the
  * output, at most UNC_ENTRY_COMMENT_MAX bytes, can only overtake it in a
- * layout no writer makes; a write that would is refused instead. The cut
- * at UNC_ENTRY_COMMENT_MAX falls between characters. */
+ * layout no writer makes; a write that would is refused instead. */
 static void side_spot(UncAdCap *a, UncEntryInfo *e, uint32_t foff,
                       uint32_t flen)
 {
     uint8_t *w = a->win;
-    const uint8_t *b, *t;
-    uint32_t lim = a->got, h = foff + 34, p, k, n, doff = 0, dlen = 0;
+    const uint8_t *b, *t, *tb;
+    uint32_t h = foff + 34, k, doff, dlen, av;
     uint32_t nobj, top, otab, ois, ors, off, q, cnt, m, o, s, d;
 
-    if (flen <= 70 || foff > lim) return;
-    if (flen < lim - foff) lim = foff + flen;  /* the entries, inside 9 */
-    if (h > lim || lim - h < 36 || unc_get_u32be(w + h) != 0x41545452u)
+    if (!side_attr(w, a->got, foff, flen, &doff, &dlen) || doff > a->got)
         return;
-    n = unc_get_u16be(w + h + 34);
-    for (p = h + 36, k = 0; k < n; k++) {
-        uint32_t nl;
-        if (p > lim || lim - p < 11) return;
-        nl = w[p + 10];
-        if (lim - p - 11 < nl) return;
-        if (nl == sizeof k_spot && side_eq(w + p + 11, k_spot, nl)) {
-            doff = unc_get_u32be(w + p);
-            dlen = unc_get_u32be(w + p + 4);
-            break;
-        }
-        p += (11 + nl + 3) & ~3u;
-    }
-    if (k == n || doff > a->got || dlen > a->got - doff) return;
 
-    /* The header and the trailer. */
+    /* The header and the trailer: the window's, or the tail's. */
     b = w + doff;
-    if (dlen < 32 + 8 + 1 || !side_eq(b, (const uint8_t *)"bplist0", 7))
+    av = a->got - doff;                 /* of the list, what `win` holds */
+    if (dlen < 32 + 8 + 1 || av < 8 ||
+        !side_eq(b, (const uint8_t *)"bplist0", 7))
         return;
-    t = b + dlen - 32;
+    if (dlen <= av) t = b + dlen - 32;
+    else if (a->tend == doff + dlen && a->at == a->tend)
+        t = a->tail + UNC_AD_TAIL - 32;
+    else return;
     ois = t[6];
     ors = t[7];
     if (unc_get_u32be(t + 8) || unc_get_u32be(t + 16) ||
@@ -215,10 +283,12 @@ static void side_spot(UncAdCap *a, UncEntryInfo *e, uint32_t foff,
         return;
     if ((ors < 4 && (nobj >> (8 * ors))) || (ois < 4 && (otab >> (8 * ois))))
         return;
+    if (dlen > av && nobj * ois > UNC_AD_TAIL - 32) return;
+    tb = t - nobj * ois;                /* the table ends at the trailer */
     for (k = 0; k < nobj; k++)
-        if (side_int(b + otab + k * ois, ois) >= otab) return;
-    off = side_int(b + otab + top * ois, ois);
-    if (off < 8) return;
+        if (side_int(tb + k * ois, ois) >= otab) return;
+    off = side_int(tb + top * ois, ois);
+    if (off < 8 || off >= av) return;
 
     /* The top object: a string, its count in the marker or after it. */
     m = b[off];
@@ -226,11 +296,12 @@ static void side_spot(UncAdCap *a, UncEntryInfo *e, uint32_t foff,
     cnt = m & 0x0Fu;
     if (cnt == 0x0Fu) {
         uint32_t isz;
-        if (q >= otab || (b[q] & 0xF0u) != 0x10u || (b[q] & 0x0Fu) > 2)
+        if (q >= otab || q >= av || (b[q] & 0xF0u) != 0x10u ||
+            (b[q] & 0x0Fu) > 2)
             return;
         isz = 1u << (b[q] & 0x0Fu);
         q++;
-        if (isz > otab - q) return;
+        if (isz > otab - q || isz > av - q) return;
         cnt = side_int(b + q, isz);
         q += isz;
     }
@@ -238,14 +309,18 @@ static void side_spot(UncAdCap *a, UncEntryInfo *e, uint32_t foff,
     if ((m != 0x50u && m != 0x60u) || cnt > otab - q ||
         (m == 0x60u && cnt * 2 > otab - q))
         return;
+    av = av > q ? av - q : 0;           /* of the string, what it holds */
     if (m == 0x50u) {
-        for (k = 0; k < cnt; k++) if (b[q + k] & 0x80u) return;
-        if (cnt > UNC_ENTRY_COMMENT_MAX) cnt = UNC_ENTRY_COMMENT_MAX;
-        o = cnt;
+        o = cnt < av ? cnt : av;
+        for (k = 0; k < o; k++) if (b[q + k] & 0x80u) return;
+        if (o < cnt && a->hi && a->hi < doff + q + cnt) return;
+        if (o > UNC_ENTRY_COMMENT_MAX) o = UNC_ENTRY_COMMENT_MAX;
+        k = o;
         d = doff + q;
     } else {
         /* At most one unit per byte out, so no more than this is read. */
         uint32_t u = cnt < UNC_ENTRY_COMMENT_MAX ? cnt : UNC_ENTRY_COMMENT_MAX;
+        if (u > av / 2) u = av / 2;
         s = UNC_AD_WIN - 2 * u;
         for (k = 2 * u; k-- > 0; ) w[s + k] = b[q + k];
         d = h;
@@ -282,7 +357,8 @@ static void side_spot(UncAdCap *a, UncEntryInfo *e, uint32_t foff,
     if (o) {
         e->comment = w + d;
         e->comment_len = (uint16_t)o;
-        e->meta |= UNC_META_CMT_UTF8;
+        e->meta |= (uint8_t)(UNC_META_CMT_UTF8 |
+                             (k < cnt ? UNC_META_CMT_CUT : 0));
     }
 }
 
@@ -297,18 +373,22 @@ void unc_ad_apply(UncAdCap *a, UncEntryInfo *e)
         const uint8_t *t = a->win + 26 + 12 * i;
         uint32_t id = unc_get_u32be(t), off = unc_get_u32be(t + 4);
         uint32_t len = unc_get_u32be(t + 8);
-        const uint8_t *b = a->win + off;
+        const uint8_t *b;
         /* The lengths unc_as_record reads; the comment at the engine's
          * ceiling. */
         uint32_t take = id == 4 ? UNC_ENTRY_COMMENT_MAX : 32;
         if (id == 9) { foff = off; flen = len; }
         if (len < take) take = len;
+        /* Checked before `b` is formed: an entry past the window, such as
+         * a resource fork after a long attribute block, has no pointer. */
         if (off > a->got || take > a->got - off) continue;
+        b = a->win + off;
         if (id == 4) {
             if (take) {
                 e->comment = b;
                 e->comment_len = (uint16_t)take;
-                e->meta &= (uint8_t)~UNC_META_CMT_UTF8;
+                e->meta &= (uint8_t)~(UNC_META_CMT_UTF8 |
+                                      UNC_META_CMT_CUT);
             }
         } else if (id >= 8 && id <= 12) {
             /* 32 zero bytes of Finder info are copyfile's "none". */

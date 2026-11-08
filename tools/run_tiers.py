@@ -283,10 +283,13 @@ REPO = os.path.dirname(HERE)
 # control's CODE -96 and A5 0; the shipped pair fell the same 96, OVL_SAVED
 # unmoved. They were 190,276 / 94,894 / 619,182.
 TIERS = {
-    "sys3-512K": (189988, "System 3.0, Macintosh 512Ke (222,070 B free)"),
-    "sys6-512K": (94606,  "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
-    "floor-1M":  (618894, "System 6.0.8, 1 MB Mac Plus — the floor target"),
+    "sys3-512K": (189284, "System 3.0, Macintosh 512Ke (222,070 B free)"),
+    "sys6-512K": (93902,  "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
+    "floor-1M":  (618190, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
+# -704 each 2026-11-07, DERIVED from TIERS_CONTROL +704 (the comment cut,
+# DECISIONS.md 2026-11-07, *the comment the Desktop Manager cut*); they
+# were 189,988 / 94,606 / 618,894.
 # +32 each 2026-11-07, DERIVED from TIERS_CONTROL -32 (`dirCount` deleted,
 # DECISIONS.md 2026-11-07, *the folder count that never counted*); they
 # were 189,956 / 94,574 / 618,862.
@@ -504,7 +507,9 @@ TIERS = {
 # +192 2026-11-07: Now Compress polls Cancel inside a block (`ovl_now` +186;
 # DECISIONS.md 2026-11-07, *the block a click waited for*); CODE +180, A5 +12.
 # TIERS -192 and OVL_SAVED +192, which cancel: only a now-keeper moves.
-TIERS_CONTROL = 222944     # build/mac-resident, CODE + A5, 2026-11-07
+TIERS_CONTROL = 223648     # build/mac-resident, CODE + A5, 2026-11-07
+# +704 the same day: the comment cut (CODE +680, A5 +24; DECISIONS.md
+# 2026-11-07, *the comment the Desktop Manager cut*); TIERS -704.
 # -32 the same day: `dirCount` deleted (CODE -28, A5 -4); TIERS +32.
 # +32 the same day: fio_read's I/O error (CODE +20, A5 +12); TIERS -32.
 # +32 the same day: the disk-full create (CODE +32, A5 0); TIERS -32.
@@ -1086,7 +1091,12 @@ EXPECT = {
 # alignment) against the control's 0 (CODE +12, A5 -12; DECISIONS.md
 # 2026-11-07, *the file in the folder's place*). TIERS unmoved; every
 # grant row -32.
-OVL_SAVED = 166304
+# **+640 the same day, -> 166,944**: the comment cut, the control's +704
+# (CODE +680, A5 +24) against the shipped pair's +64 (CODE +40, A5 +24;
+# DECISIONS.md 2026-11-07, *the comment the Desktop Manager cut*), the
+# reader in `ovl_zipold` (+612). TIERS -704: 64 B off every budget, and a
+# zipold-keeper's another 612.
+OVL_SAVED = 166944
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
 # every kept image is one — as is the bundle an envelope holds on to.
@@ -1235,7 +1245,7 @@ IMAGES = {
     "OVL_ID_SQP":         1736,
     "OVL_ID_SUPERDISK":   6628,
     "OVL_ID_TEXT":        11438,
-    "OVL_ID_ZIPOLD":      15508,
+    "OVL_ID_ZIPOLD":      16120,
     "OVL_ID_SNIFF":       14676,
     "OVL_ID_DESTDLG":     1688,
     "OVL_ID_SEGSETUP":    2446,
@@ -1364,7 +1374,10 @@ IMAGES = {
 # ROM's MoveHHi (DECISIONS.md 2026-11-07, *the decoders a 64K ROM kept low*).
 # **NOW +186, the bundle +184 B, 2026-11-07**: Now Compress polls Cancel
 # inside a block (DECISIONS.md 2026-11-07, *the block a click waited for*).
-BUNDLE = 195232
+# **ZIPOLD +612, the bundle +612 B, 2026-11-07**: a Spotlight list past the
+# sidecar's window followed to its trailer, and a cut comment marked
+# (DECISIONS.md 2026-11-07, *the comment the Desktop Manager cut*).
+BUNDLE = 195844
 
 # What the SHIPPED lane asserts, and it is the refused fixtures BY NAME
 # rather than a tally: a tier that refuses two different fixtures and still

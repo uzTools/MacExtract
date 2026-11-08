@@ -1984,8 +1984,8 @@ bit, per folder the DInfo, DXInfo and dates; `--fcmt` lists a System
 `synth-as-meta.as`, `synth-sqp-meta.pkg`, a generated `nested.pkg` (A/x,
 A/B/y, A/z, folder dates held across a subfolder), `synth-macosx.zip` (Mac OS
 X's sidecars) and `synth-macosx-spot.zip` (their Spotlight comments, folded
-into MacRoman; on 7.0.1 the Desktop Manager gives back 199 bytes of a
-255-byte comment) with `-D UNC_AT_DTCOMMENT`, keeps the disks (`sys30.py
+into MacRoman; the Desktop Manager keeps 199 bytes of a comment, and the
+shell cuts a longer one to that itself) with `-D UNC_AT_DTCOMMENT`, keeps the disks (`sys30.py
 --keep-disks` too), and grades every value against the synthesizers' input,
 allowing the shell's one deliberate change (fdComment cleared; inited is kept
 where the Finder info is stated). Results: DECISIONS.md 2026-10-17, *the
