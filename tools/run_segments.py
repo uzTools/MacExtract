@@ -615,6 +615,38 @@ def split_case_run(macextract, case, workroot, fails):
     return d, kind, whole, parts, original
 
 
+def split_alone_cases(macextract, workroot, fails):
+    """A family of one is not a set. A NAME.NNN alone, whose bytes are
+    no format, is refused as unrecognized rather than "joined" into a
+    one-part split; what makes a split is ANOTHER member beside it
+    (cli/main.c, split_family_present). Nothing asserted this until
+    2026-11-08: a walk that counted the file itself as its own sibling
+    passed every other case here. The control beside it — the same
+    file with a second member — has to join, or the refusal would be
+    vacuous."""
+    d = os.path.join(workroot, "split-alone")
+    data = ssynth._payload(41, 5000)
+    for n in (1, 2):
+        sub = os.path.join(d, "alone%d" % n)
+        os.makedirs(sub)
+        p = os.path.join(sub, "Lone.bin.%03d" % n)
+        open(p, "wb").write(data)
+        dest = os.path.join(sub, "_out")
+        rc, out = ours_join(macextract, p, dest)
+        fails.check(rc != 0 and joined_file(dest, "Lone.bin") is None,
+                    "split-alone: Lone.bin.%03d alone was joined as a set "
+                    "(exit %d)" % (n, rc))
+    sub = os.path.join(d, "pair")
+    os.makedirs(sub)
+    for n in (1, 2):
+        open(os.path.join(sub, "Lone.bin.%03d" % n), "wb").write(data)
+    dest = os.path.join(sub, "_out")
+    rc, out = ours_join(macextract, os.path.join(sub, "Lone.bin.001"), dest)
+    fails.check(rc == 0 and joined_file(dest, "Lone.bin") == data + data,
+                "split-alone: the control, .001 with .002 beside it, did "
+                "not join (exit %d)" % rc)
+
+
 def split_ask_cases(macextract, workroot, fails):
     """--ask makes a split OPEN-ENDED, as the Mac shell does: the set is
     asked for one part at a time as the join reaches it, and whether
@@ -1963,6 +1995,7 @@ def main():
                                  original, workroot, fails)
         if splitcases and not selected:
             split_ask_cases(macextract, workroot, fails)
+            split_alone_cases(macextract, workroot, fails)
 
         # --- DiskDoubler `SPLT` sets ------------------------------------
         for c in ddsegcases:
