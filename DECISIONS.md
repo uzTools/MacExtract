@@ -555,6 +555,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-08 (the file an excluded entry replaced) — under `--only`, a layer that might unwrap wrote an entry nobody selected over the user's file of that name with `--overwrite`, then removed it; such an entry is written aside now, and moved into place only if the chain goes through it
 - 2026-11-08 (the original on every layer) — from layer 2 on, `--overwrite` could replace the archive named on the command line; it and every part located that this run did not decode are on every layer's reading list now
 - 2026-11-08 (the password the second layer never got) — `-p -` read stdin on every layer, so an archive inside an envelope was opened with end-of-file for its password; it is read once per run
+- 2026-11-08 (one layer at a time) — `cli_main` was 906 lines and two `goto`s, and what it carried from one layer to the next was where the last two rounds of CLI bugs were; one layer is `run_layer` now, and each rule about what crosses a layer is a named function
 
 ---
 
@@ -22907,3 +22908,44 @@ password, or none given`, exit 1; `-p secret` extracted it, and so did
 `-p -` on `t.zip` itself. The envelope's layer consumed the line and the
 zip's layer read end of file. Found reading `cli_main` for the layer
 split; the stdin read is per run now, as the help text implies.
+
+## 2026-11-08 (one layer at a time) — `cli_main` was 906 lines and two `goto`s, and what it carried from one layer to the next was where the last two rounds of CLI bugs were; one layer is `run_layer` now, and each rule about what crosses a layer is a named function
+
+**What crosses a layer is `LayerState`, and nothing else.** The input's
+path, the previous layer's output and the sidecar it wrote (what this
+layer may delete once it succeeds), the depth, the files read that this
+run did not write, `--only`'s hits, the long-name buffer and the `-p -`
+password. Everything a layer builds — the sink with its deferrals and
+asides, the allocator, the options, a set's parts — is `Layer`, on
+`run_layer`'s stack, and gone when it returns: `sink.deferred`,
+`only_late`, `last_ok_path` and the reading list could each outlive their
+layer before, by being fields of one sink `memset` at a label. The parsed
+command line is `CliArgs`, read-only; `-f` reaches only the first layer
+through `st_forced` rather than by clearing a variable mid-loop.
+
+**The rules, one function each:** `st_protect` (what may not be written
+over), `st_drop_previous` (what may be deleted), `st_only_now` (whether
+`--only` filters a layer as it is walked or judges it afterwards),
+`st_next_format` (whether the chain goes on), `st_advance` (what the next
+layer is handed). Each was a block inside the loop, and the order between
+them — delete the envelope, then rename the deferred write, then sniff —
+is now `run_layer`'s few lines rather than three screens apart.
+
+**Sizes, measured.** `cli_main` 906 lines before the two fixes before
+this (934 with them), 18 after; `run_layer` 46. The largest function in
+the file is `sink_end` (145, untouched); the largest new one is
+`seg_setup_content` (98), the StuffIt/`SPLT`/MIME setup moved whole.
+
+**Measured: behaviour-preserving.** The CLI's stdout, stderr, exit code
+and every file it created, changed or removed, over every fixture with
+`l`, `t` and `x` and the CLI suites run through a recording wrapper:
+identical to the parent commit's binary on 3,854 records but for two
+kinds: 15 runs whose set setup fails (a spanned zip's middle part alone, a
+split with a stray or a gap) no longer end in a LeakSanitizer report of
+the part list, which the early returns never freed — sanitizer builds
+only; and 19 whose inputs the suites regenerate with fresh zip
+timestamps, which differ the same way between two runs of ONE binary. The split's `--ask` branch lost its
+`goto`; two tests after it (`beyond && !ask`, `!ask || !seg_ask`) could
+only ever take one side and are gone. A set whose setup fails now frees
+its part list and removes any part it had already decoded, which the
+early returns skipped; no recorded case reaches that.

@@ -378,10 +378,10 @@ typedef struct {
     /* --only: the entries the user named, and one flag each recording
      * whether anything matched. NULL/0 means "every entry", which is
      * what every run did before 2026-08-28. */
-    const char **only;
+    const char *const *only;
     unsigned char *only_hit;
     int         nonly;
-    /* --only on a layer written whole because it may unwrap (main). An
+    /* --only on a layer written whole because it may unwrap (st_only_now). An
      * entry the selectors do not name is written ASIDE, to a new file
      * beside its path, so nothing already there is replaced for it: moved
      * into place if the chain goes on through it (sink_aside_settle),
@@ -389,7 +389,7 @@ typedef struct {
      * kept apart until then: an envelope's entry is not the user's.
      * DECISIONS.md 2026-11-08, *the file an excluded entry replaced*. */
     int         only_late;
-    const char **late_sel;
+    const char *const *late_sel;
     int         late_nsel;
     unsigned char late_hit[ONLY_MAX];
     int         cur_aside;          /* this entry is written aside      */
@@ -683,7 +683,7 @@ static char *sink_orig_name(DiskSink *s, const UncEntryInfo *info)
  * Every match is recorded rather than the first, because the flags are
  * what let the run report a selector that matched NOTHING: a mistyped
  * name would otherwise extract nothing and say nothing, and exit 0. */
-static int only_match(const char **only, unsigned char *hit, int nonly,
+static int only_match(const char *const *only, unsigned char *hit, int nonly,
                       const char *name)
 {
     int i, want = 0;
@@ -1344,7 +1344,7 @@ static int sink_aside_settle(DiskSink *s)
 }
 
 /* Name each selector that matched nothing; returns how many. */
-static int only_report_misses(const char **only, const unsigned char *hit,
+static int only_report_misses(const char *const *only, const unsigned char *hit,
                               int nonly)
 {
     int i, miss = 0;
@@ -1360,7 +1360,7 @@ static int only_report_misses(const char **only, const unsigned char *hit,
 /* A layer under `only_late` that is the last one: remove what it wrote
  * aside, count its hits, and report what matched nothing. Returns the
  * number of misses. */
-static int sink_late_final(DiskSink *s, const char **only,
+static int sink_late_final(DiskSink *s, const char *const *only,
                            unsigned char *only_hit, int nonly)
 {
     int i;
@@ -2646,65 +2646,90 @@ static void usage(void)
         "  --version      print the version and exit\n");
 }
 
-static int cli_main(int argc, char **argv)
-{
-    const char *cmd, *file = NULL, *outdir = ".", *force = NULL;
-    int raw_names = 0, verbose = 0, stats = 0, hidden_forks = 0, overwrite = 0;
-    int show_finder = 0;
-    int show_meta = 0;
-    int no_comment = 0;
-    uint32_t budget = 0;
-    int i;
+/* ------------------------------------------------------------------ */
+/* The run: the command line, read once, and one layer at a time       */
+/*                                                                    */
+/* A file the user names is often an envelope around the archive      */
+/* (.sit.hqx, .cpt.bin, .tar.Z), so a run is a chain of layers: each   */
+/* extracts its file, and when it yields one file that is itself      */
+/* something, the next layer extracts that in place. What one layer   */
+/* hands the next is LayerState, and every rule about it is a named   */
+/* function below; everything else a layer builds is its own.         */
+/* ------------------------------------------------------------------ */
 
-    FileIO fio;
-    BudgetAlloc ba;
-    DiskSink sink;
-    UncIO io;
-    UncAlloc al;
-    UncSink sk;
-    UncProgress prog;
-    UncOptions opt;
-    static uint8_t *longname;      /* freed at exit by the OS: one buffer
-                                    * for every layer of an envelope */
-    UncFormat fmt, nextfmt;
-    int ret;
-    int no_recurse = 0, depth = 0;
-    const char *origfile;       /* the file named on the command line */
-    char curfile[PATHBUF], delfile[PATHBUF], delrsrc[PATHBUF];
-    struct stat st;
-    SegHost seg;
+/* The parsed command line. Read-only once parse_args has returned. */
+typedef struct {
+    const char *cmd;            /* l, x, t or sniff                      */
+    const char *file;           /* the file named on the command line    */
+    const char *outdir;
+    const char *force;          /* -f: the FIRST layer's format          */
+    const char *presetfile, *password;
     const char *partargs[UNC_SEG_MAX_PARTS];
-    const char *presetfile = NULL, *password = NULL;
-    static char pwbuf[UNC_PASSWORD_MAX + 2];
-    static uint8_t mkeybuf[8];
-    UncPasswordSource pwsrc;
-    /* SpaceSaver's preset dictionary is 9,679 bytes; this is the ceiling
-     * on what --preset will read, not a size anybody declared. */
-    static uint8_t presetbuf[64 * 1024];
-    int nparts = 0, no_parts = 0, ask = 0;
-    /* --only. The flags outlive one layer on purpose: the selectors are
-     * judged once, at the end of the run. */
+    int         nparts;
     const char *only[ONLY_MAX];
-    unsigned char only_hit[ONLY_MAX];
-    int nonly = 0, onlymiss = 0;
-    /* The files a layer read that this run did not write, carried to
-     * every later layer's reading list: the command line's file and the
-     * parts located beside it (DECISIONS.md 2026-11-08, *the original on
-     * every layer*). */
-    static ReadList kept;
-    mode_t file_mode;
+    int         nonly;
+    uint32_t    budget;
+    int raw_names, verbose, stats, hidden_forks, overwrite, show_finder,
+        show_meta, no_comment, no_recurse, no_parts, ask;
+    mode_t      file_mode;      /* 0666 less the umask, read once */
+} CliArgs;
 
-    memset(only_hit, 0, sizeof only_hit);
-    file_mode = umask(0);
-    umask(file_mode);
-    file_mode = 0666 & ~file_mode;
-    if (getenv("UNC_SHORT_READ")) {
-        fio_read_cap = (int32_t)atol(getenv("UNC_SHORT_READ"));
-        /* Said, so a harness can tell a binary that honours the cap from
-         * one that predates it and passes every comparison by ignoring it. */
-        fprintf(stderr, "macextract: every read capped at %ld B\n",
-                (long)fio_read_cap);
-    }
+/* What one layer hands the next. */
+typedef struct {
+    char     curfile[PATHBUF];  /* this layer's input                    */
+    char     delfile[PATHBUF];  /* the previous layer's output, "" on
+                                 * the first: deleted once this layer
+                                 * has extracted cleanly                 */
+    char     delrsrc[PATHBUF];  /* its sidecar, only if that layer wrote
+                                 * one; "" otherwise                     */
+    int      depth;             /* 0 for the command line's file         */
+    ReadList kept;              /* files read that this run did not write */
+    unsigned char only_hit[ONLY_MAX];   /* --only: judged once, at the end */
+    uint8_t *longname;          /* one buffer for every layer; freed at
+                                 * exit by the OS                        */
+    char     pwbuf[UNC_PASSWORD_MAX + 2];   /* `-p -`, read once per run */
+    int      pw_read;
+} LayerState;
+
+/* One layer's own plumbing: the engine's callbacks and what they hold. */
+typedef struct {
+    const char *file;           /* LayerState.curfile */
+    FileIO      fio;
+    UncIO       io;
+    BudgetAlloc ba;
+    UncAlloc    al;
+    DiskSink    sink;
+    UncSink     sk;
+    UncProgress prog;
+    UncOptions  opt;
+    UncPasswordSource pwsrc;
+    UncFormat   fmt;
+    int         ret;            /* what the engine returned */
+} Layer;
+
+/* run_layer's answer when the chain goes on. */
+#define LAYER_NEXT (-1)
+
+static void fio_bind(UncIO *io, FileIO *f)
+{
+    io->ctx = f;
+    io->read = fio_read;
+    io->seek = fio_seek;
+    io->tell = fio_tell;
+    io->size = fio_size;
+}
+
+/* Parse argv into `a`. Returns LAYER_NEXT to run, or the exit code. */
+static int parse_args(int argc, char **argv, CliArgs *a)
+{
+    int i;
+    mode_t m;
+
+    memset(a, 0, sizeof *a);
+    a->outdir = ".";
+    m = umask(0);
+    umask(m);
+    a->file_mode = 0666 & ~m;
 
     if (argc >= 2 && (strcmp(argv[1], "--version") == 0 ||
                       strcmp(argv[1], "-V") == 0)) {
@@ -2716,12 +2741,12 @@ static int cli_main(int argc, char **argv)
         return 0;
     }
     if (argc < 3) { usage(); return 2; }
-    cmd = argv[1];
+    a->cmd = argv[1];
 
     for (i = 2; i < argc; i++) {
-        if (strcmp(argv[i], "-o") == 0 && i + 1 < argc) outdir = argv[++i];
+        if (strcmp(argv[i], "-o") == 0 && i + 1 < argc) a->outdir = argv[++i];
         else if (strcmp(argv[i], "--budget") == 0 && i + 1 < argc) {
-            if (parse_budget(argv[++i], &budget) != 0) {
+            if (parse_budget(argv[++i], &a->budget) != 0) {
                 fprintf(stderr, "macextract: --budget %s: not a byte count "
                         "(digits, then K, M or G at most, under 4G)\n",
                         argv[i]);
@@ -2729,136 +2754,239 @@ static int cli_main(int argc, char **argv)
                 return 2;
             }
         }
-        else if (strcmp(argv[i], "--raw-names") == 0) raw_names = 1;
+        else if (strcmp(argv[i], "--raw-names") == 0) a->raw_names = 1;
         else if (strcmp(argv[i], "--forks") == 0 && i + 1 < argc) {
             const char *k = argv[++i];
-            if (strcmp(k, "hidden") == 0) hidden_forks = 1;
-            else if (strcmp(k, "visible") == 0) hidden_forks = 0;
+            if (strcmp(k, "hidden") == 0) a->hidden_forks = 1;
+            else if (strcmp(k, "visible") == 0) a->hidden_forks = 0;
             else { usage(); return 2; }
         }
-        else if (strcmp(argv[i], "--overwrite") == 0) overwrite = 1;
-        else if (strcmp(argv[i], "-nr") == 0) no_recurse = 1;
+        else if (strcmp(argv[i], "--overwrite") == 0) a->overwrite = 1;
+        else if (strcmp(argv[i], "-nr") == 0) a->no_recurse = 1;
         else if (strcmp(argv[i], "--part") == 0 && i + 1 < argc) {
-            if (nparts < UNC_SEG_MAX_PARTS) partargs[nparts++] = argv[++i];
+            if (a->nparts < UNC_SEG_MAX_PARTS) a->partargs[a->nparts++] = argv[++i];
             else { fprintf(stderr, "macextract: too many --part\n"); return 2; }
         }
         else if (strcmp(argv[i], "--only") == 0 && i + 1 < argc) {
-            if (nonly < ONLY_MAX) only[nonly++] = argv[++i];
+            if (a->nonly < ONLY_MAX) a->only[a->nonly++] = argv[++i];
             else { fprintf(stderr, "macextract: too many --only\n"); return 2; }
         }
-        else if (strcmp(argv[i], "--no-parts") == 0) no_parts = 1;
-        else if (strcmp(argv[i], "--ask") == 0) ask = 1;
+        else if (strcmp(argv[i], "--no-parts") == 0) a->no_parts = 1;
+        else if (strcmp(argv[i], "--ask") == 0) a->ask = 1;
         else if (strcmp(argv[i], "--preset") == 0 && i + 1 < argc)
-            presetfile = argv[++i];
-        else if (strcmp(argv[i], "-p") == 0 && i + 1 < argc) password = argv[++i];
-        else if (strcmp(argv[i], "--no-comment") == 0) no_comment = 1;
-        else if (strcmp(argv[i], "--stats") == 0) stats = 1;
-        else if (strcmp(argv[i], "-f") == 0 && i + 1 < argc) force = argv[++i];
-        else if (strcmp(argv[i], "--finder") == 0) show_finder = 1;
-        else if (strcmp(argv[i], "--meta") == 0) show_meta = 1;
-        else if (strcmp(argv[i], "-v") == 0) verbose = 1;
+            a->presetfile = argv[++i];
+        else if (strcmp(argv[i], "-p") == 0 && i + 1 < argc) a->password = argv[++i];
+        else if (strcmp(argv[i], "--no-comment") == 0) a->no_comment = 1;
+        else if (strcmp(argv[i], "--stats") == 0) a->stats = 1;
+        else if (strcmp(argv[i], "-f") == 0 && i + 1 < argc) a->force = argv[++i];
+        else if (strcmp(argv[i], "--finder") == 0) a->show_finder = 1;
+        else if (strcmp(argv[i], "--meta") == 0) a->show_meta = 1;
+        else if (strcmp(argv[i], "-v") == 0) a->verbose = 1;
         else if (argv[i][0] == '-') { usage(); return 2; }
-        else file = argv[i];
+        else a->file = argv[i];
     }
-    if (!file) { usage(); return 2; }
-    origfile = file;
-    if ((size_t)snprintf(curfile, sizeof curfile, "%s", file) >= sizeof curfile) {
-        fprintf(stderr, "macextract: %s: path too long\n", file);
+    if (!a->file) { usage(); return 2; }
+    return LAYER_NEXT;
+}
+
+/* ---- the rules one layer hands the next ---------------------------- */
+
+/* The first layer reads the command line's file; the rest start empty. */
+static int st_init(LayerState *st, const CliArgs *a)
+{
+    memset(st, 0, sizeof *st);
+    if ((size_t)snprintf(st->curfile, sizeof st->curfile, "%s", a->file)
+        >= sizeof st->curfile) {
+        fprintf(stderr, "macextract: %s: path too long\n", a->file);
         return 1;
     }
-    delfile[0] = 0;
-    delrsrc[0] = 0;
+    return 0;
+}
 
-nextlayer:
-    file = curfile;
-    memset(&fio, 0, sizeof fio);
-    fio.f = fopen(file, "rb");
-    if (!fio.f) {
-        fprintf(stderr, "macextract: %s: %s\n", file, strerror(errno));
-        return 1;
+/* -f names the first layer's format only: what it holds is sniffed. */
+static const char *st_forced(const CliArgs *a, const LayerState *st)
+{
+    return st->depth == 0 ? a->force : NULL;
+}
+
+/* --only filters a layer as it is walked, unless the layer may unwrap:
+ * then it is written whole, and its entries judged once it turns out to
+ * be the last (DiskSink.only_late). `l` and `t` never unwrap, so for
+ * them an envelope's single entry IS the listing. */
+static int st_only_now(const CliArgs *a, UncFormat fmt)
+{
+    return !(strcmp(a->cmd, "x") == 0 && !a->no_recurse && layer_unwraps(fmt));
+}
+
+/* What may not be written over: this layer's input, and every file an
+ * earlier layer read that this run did not write. The previous layer's
+ * own output (delfile) is not one: a write onto it is deferred until it
+ * is deleted (sink_open_fork). */
+static void st_protect(LayerState *st, DiskSink *s)
+{
+    s->unwrap_src = st->delfile;   /* "" until a layer is being unwrapped */
+    s->unwrap_rsrc = st->delrsrc;
+    s->reading = st->kept;
+    read_add(&s->reading, st->curfile);
+    if (st->depth == 0) read_add(&st->kept, st->curfile);
+}
+
+/* A part of a set this layer joins is read, and is the user's unless
+ * this run decoded it into the peel folder. */
+static void st_protect_part(LayerState *st, DiskSink *s, const char *path,
+                            int peeled)
+{
+    read_add(&s->reading, path);
+    if (!peeled) read_add(&st->kept, path);
+}
+
+/* What may be deleted: the previous layer's output and the sidecar it
+ * wrote, once this layer has extracted cleanly; a write deferred beside
+ * either is then renamed onto it. */
+static void st_drop_previous(LayerState *st, const DiskSink *s)
+{
+    char tmp[PATHBUF + sizeof DEFER_SUFFIX];
+    const char *was[2];
+    int k;
+    if (!st->delfile[0]) return;
+    was[0] = st->delfile;
+    was[1] = st->delrsrc;
+    remove(st->delfile);
+    if (st->delrsrc[0]) remove(st->delrsrc);
+    /* sink_open_fork deferred only a path that fit with the suffix,
+     * so a cut here would be a bug; it is skipped rather than renaming
+     * a file nobody wrote. */
+    for (k = 0; k < 2; k++)
+        if (s->deferred[k] &&
+            (size_t)snprintf(tmp, sizeof tmp, "%s" DEFER_SUFFIX, was[k])
+                < sizeof tmp)
+            rename(tmp, was[k]);
+    st->delfile[0] = 0;
+    st->delrsrc[0] = 0;
+}
+
+/* When the chain goes on: `x` without -nr, under the depth cap, on a
+ * layer that may unwrap and yielded one file and no folder, not an
+ * application, whose bytes sniff as a format. Asked once a deferred
+ * write has been renamed into place: before, the path still held the
+ * envelope's bytes. Returns the next format, or UNC_FORMAT_UNKNOWN. */
+static UncFormat st_next_format(const CliArgs *a, const LayerState *st,
+                                UncFormat fmt, const DiskSink *s)
+{
+    UncFormat next = UNC_FORMAT_UNKNOWN;
+    FILE *pf;
+    if (strcmp(a->cmd, "x") != 0 || a->no_recurse || st->depth >= 8 ||
+        !layer_unwraps(fmt) ||
+        s->file_count != 1 || s->dir_count != 0 || !s->last_ok_path[0] ||
+        /* An application is where the chain stops, whatever its data
+         * fork holds: an installer or a self-extracting archive is run,
+         * and what it installs is not what its data fork extracts to
+         * (DECISIONS.md 2026-10-16, *the installer that was a layer*).
+         * unar stops there too. */
+        s->last_ok_type == 0x4150504CUL /* 'APPL' */)
+        return next;
+    pf = fopen(s->last_ok_at, "rb");
+    if (pf) {
+        FileIO pio_f;
+        UncIO pio;
+        struct stat pst;
+        memset(&pio_f, 0, sizeof pio_f);
+        pio_f.f = pf;
+        pio_f.size = stat(s->last_ok_at, &pst) == 0
+                     ? (unc_off_t)pst.st_size : UNC_OFF_UNKNOWN;
+        fio_bind(&pio, &pio_f);
+        next = unc_sniff(&pio);
+        fclose(pf);
     }
-    if (stat(file, &st) == 0) fio.size = file_size_off(&st, file);
-    else fio.size = UNC_SIZE_UNKNOWN;
+    return next;
+}
 
-    io.ctx = &fio;
-    io.read = fio_read;
-    io.seek = fio_seek;
-    io.tell = fio_tell;
-    io.size = fio_size;
+/* Hand the next layer its input: the one file this layer wrote, which
+ * is also what it may delete once that layer has extracted cleanly. */
+static void st_advance(LayerState *st, const DiskSink *s)
+{
+    snprintf(st->delfile, sizeof st->delfile, "%s", s->last_ok_path);
+    snprintf(st->delrsrc, sizeof st->delrsrc, "%s", s->last_ok_rsrc);
+    snprintf(st->curfile, sizeof st->curfile, "%s", s->last_ok_path);
+    st->depth++;
+}
 
-    memset(&ba, 0, sizeof ba);
-    ba.budget = budget;
-    al.ctx = &ba;
-    al.alloc = ba_alloc;
-    al.free = ba_free;
+/* ---- one layer ------------------------------------------------------ */
 
-    memset(&sink, 0, sizeof sink);
-    sink.outdir = outdir;
+static void layer_sink(const CliArgs *a, LayerState *st, Layer *L)
+{
+    DiskSink *s = &L->sink;
+    memset(s, 0, sizeof *s);
+    s->outdir = a->outdir;
     /* What this filesystem takes, asked rather than assumed: ext4 gives
      * 255 and 4096, but eCryptfs gives 143 and a FAT volume less
      * again. The fallbacks are POSIX's minimums where pathconf will not
      * say (it returns -1 with errno unset for "no limit"). */
-    sink.fs_name_max = pathconf(outdir, _PC_NAME_MAX);
-    if (sink.fs_name_max <= 0 || sink.fs_name_max > 255) sink.fs_name_max = 255;
-    sink.fs_path_max = pathconf(outdir, _PC_PATH_MAX);
-    if (sink.fs_path_max <= 0 || sink.fs_path_max > PATHBUF - 8)
-        sink.fs_path_max = PATHBUF - 8;
-    sink.archive = file;
-    sink.no_comment = no_comment;
-    sink.raw_names = raw_names;
-    sink.hidden_forks = hidden_forks;
-    sink.overwrite = overwrite;
-    sink.unwrap_src = delfile;   /* "" until a layer is being unwrapped */
-    sink.unwrap_rsrc = delrsrc;
-    sink.reading = kept;
-    sink_note_reading(&sink, file);
-    if (depth == 0) read_add(&kept, file);
-    sink.file_mode = file_mode;
-    sink.verbose = verbose;
-    sink.show_finder = show_finder;
-    sink.show_meta = show_meta;
+    s->fs_name_max = pathconf(a->outdir, _PC_NAME_MAX);
+    if (s->fs_name_max <= 0 || s->fs_name_max > 255) s->fs_name_max = 255;
+    s->fs_path_max = pathconf(a->outdir, _PC_PATH_MAX);
+    if (s->fs_path_max <= 0 || s->fs_path_max > PATHBUF - 8)
+        s->fs_path_max = PATHBUF - 8;
+    s->archive = L->file;
+    s->no_comment = a->no_comment;
+    s->raw_names = a->raw_names;
+    s->hidden_forks = a->hidden_forks;
+    s->overwrite = a->overwrite;
+    st_protect(st, s);
+    s->file_mode = a->file_mode;
+    s->verbose = a->verbose;
+    s->show_finder = a->show_finder;
+    s->show_meta = a->show_meta;
 
-    sk.ctx = &sink;
-    sk.begin_entry = sink_begin;
-    sk.write = sink_write;
-    sk.end_entry = sink_end;
-    sk.comment = sink_comment;
+    L->sk.ctx = s;
+    L->sk.begin_entry = sink_begin;
+    L->sk.write = sink_write;
+    L->sk.end_entry = sink_end;
+    L->sk.comment = sink_comment;
+    L->prog.ctx = NULL;
+    L->prog.tick = prog_tick;
+}
 
-    prog.ctx = NULL;
-    prog.tick = prog_tick;
+/* The options that do not depend on the format: the long-name buffer,
+ * the password, the archive's 'MKey'. Returns 0, or the exit code. */
+static int layer_options(const CliArgs *a, LayerState *st, Layer *L)
+{
+    static uint8_t mkeybuf[8];
+    UncOptions *opt = &L->opt;
 
-    memset(&opt, 0, sizeof opt);
+    memset(opt, 0, sizeof *opt);
     /* Somewhere for a name the engine cannot carry. It is only ever
      * shown, never written, so the size is the largest a format can
      * state rather than anything the filesystem has to say about it.
      * A run without it loses the text and keeps the length. */
-    if (!longname) longname = (uint8_t *)malloc(UNC_LONGNAME_CAP);
-    opt.long_name = longname;
-    opt.long_name_cap = longname ? UNC_LONGNAME_CAP : 0;
-    sink.long_name = longname;
+    if (!st->longname) st->longname = (uint8_t *)malloc(UNC_LONGNAME_CAP);
+    opt->long_name = st->longname;
+    opt->long_name_cap = st->longname ? UNC_LONGNAME_CAP : 0;
+    L->sink.long_name = st->longname;
 
     /* A password given on the command line, or read from stdin once so
      * that it does not sit in the process table. */
-    if (password) {
-        if (strcmp(password, "-") == 0) {
+    if (a->password) {
+        if (strcmp(a->password, "-") == 0) {
             /* Once per run, not per layer: a second read meets end of
              * file, and an archive inside an envelope was then opened
              * with no password at all (DECISIONS.md 2026-11-08, *the
              * password the second layer never got*). */
-            static int pw_read;
             size_t n;
-            if (!pw_read) {
-                if (!fgets(pwbuf, (int)sizeof pwbuf, stdin)) pwbuf[0] = 0;
-                n = strlen(pwbuf);
-                while (n > 0 && (pwbuf[n - 1] == '\n' || pwbuf[n - 1] == '\r'))
-                    pwbuf[--n] = 0;
-                pw_read = 1;
+            if (!st->pw_read) {
+                if (!fgets(st->pwbuf, (int)sizeof st->pwbuf, stdin))
+                    st->pwbuf[0] = 0;
+                n = strlen(st->pwbuf);
+                while (n > 0 && (st->pwbuf[n - 1] == '\n' ||
+                                 st->pwbuf[n - 1] == '\r'))
+                    st->pwbuf[--n] = 0;
+                st->pw_read = 1;
             }
-            n = strlen(pwbuf);
-            opt.password = (const uint8_t *)pwbuf;
-            opt.password_len = (uint16_t)n;
+            n = strlen(st->pwbuf);
+            opt->password = (const uint8_t *)st->pwbuf;
+            opt->password_len = (uint16_t)n;
         } else {
-            size_t n = strlen(password);
+            size_t n = strlen(a->password);
             if (n > UNC_PASSWORD_MAX) {
                 /* Truncating it silently would report "wrong password"
                  * for a password the user typed correctly. */
@@ -2866,535 +2994,508 @@ nextlayer:
                                 "which no format here uses\n", UNC_PASSWORD_MAX);
                 return 1;
             }
-            opt.password = (const uint8_t *)password;
-            opt.password_len = (uint16_t)n;
+            opt->password = (const uint8_t *)a->password;
+            opt->password_len = (uint16_t)n;
         }
-    } else if (ask) {
-        pwsrc.ctx = NULL;
-        pwsrc.ask = cli_ask_password;
-        opt.ask = &pwsrc;
+    } else if (a->ask) {
+        L->pwsrc.ctx = NULL;
+        L->pwsrc.ask = cli_ask_password;
+        opt->ask = &L->pwsrc;
     }
 
     /* The archive's own resource fork, if this machine has it beside
      * the data fork: the one piece of key material a .sit does not
      * carry in its stream. */
-    if (load_mkey(file, hidden_forks, mkeybuf)) opt.mkey = mkeybuf;
-    else opt.mkey = NULL;
+    if (load_mkey(L->file, a->hidden_forks, mkeybuf)) opt->mkey = mkeybuf;
+    else opt->mkey = NULL;
+    return 0;
+}
+
+/* What this layer is: -f, or the sniff and the naming rules. Returns 0,
+ * or the exit code. */
+static int layer_format(const CliArgs *a, const LayerState *st, Layer *L)
+{
+    const char *force = st_forced(a, st);
+    const char *file = L->file;
 
     if (force) {
-        fmt = format_by_name(force);
-        if (fmt == UNC_FORMAT_UNKNOWN) {
+        L->fmt = format_by_name(force);
+        if (L->fmt == UNC_FORMAT_UNKNOWN) {
             fprintf(stderr, "macextract: unknown format '%s'\n", force);
             return 2;
         }
+        return 0;
+    }
+    L->fmt = unc_sniff(&L->io);
+
+    /* A plain split is decided by NAME, and deliberately BEFORE the
+     * sniff has a say: part 1 of a split .sit begins with "SIT!" and
+     * sniffs as the archive it is a slice of. The reference tries
+     * its content parsers first and so cannot read that shape at all
+     * — measured 2026-08-09, `unar derived-Fractional_Widths.sit.001`
+     * exits 1 having written one truncated fork. --no-parts puts the
+     * sniff back in charge. */
+    /* Unless the file proves otherwise. A DiskDoubler `SPLT` part
+     * carries its own index, count and identity, so a set named
+     * Archive.dd.001 is joined as the scheme it declares — the name
+     * rule above exists for parts that declare nothing, and folding
+     * 94-byte headers into a file would be silent and wrong. */
+    if (!a->no_parts && L->fmt != UNC_FORMAT_DDSEG &&
+        (split_family_present(file) ||
+         /* the cast: split_part_offered is not const-qualified, and
+          * reads its list only */
+         split_part_offered(file, (const char **)a->partargs, a->nparts) ||
+         /* --ask: a NAME.001 alone is the first of a set whose
+          * other parts the user is standing by to produce, as when
+          * each part is on a floppy of its own. */
+         (a->ask && split_ext_part(strrchr(file, '/') ? strrchr(file, '/') + 1
+                                                      : file) == 1)))
+        L->fmt = UNC_FORMAT_SPLIT;
+    /* A spanned zip's middle part has nothing to recognise it by but
+     * its name, NAME.zNN (the first carries the spanning signature,
+     * the last the directory). Placed by name, as every other part of
+     * the set already is when it is opened from the .zip, and as the
+     * Mac shell does: the engine's structural check on the assembled
+     * set is what keeps a wrong file out, whichever part was opened. */
+    if (!a->no_parts && L->fmt == UNC_FORMAT_UNKNOWN && zip_ext_part(file) >= 1)
+        L->fmt = UNC_FORMAT_ZIPSEG;
+    return 0;
+}
+
+/* Name hint for name-less formats (gzip, .Z): archive basename minus
+ * its last extension, unar-style. */
+static void layer_name_hint(Layer *L)
+{
+    const char *base = strrchr(L->file, '/');
+    const char *dot;
+    base = base ? base + 1 : L->file;
+    dot = strrchr(base, '.');
+    /* SpaceSaver compresses a file in place and adds no extension,
+     * so the whole basename is the name — stripping one here would
+     * eat a real ".txt". */
+    if (L->fmt == UNC_FORMAT_SPACESAVER) dot = NULL;
+    L->opt.name_hint = (const uint8_t *)base;
+    L->opt.name_hint_len = (uint16_t)(dot && dot != base ? (size_t)(dot - base)
+                                                         : strlen(base));
+}
+
+/* SpaceSaver's window starts loaded with a dictionary that ships inside
+ * SpaceSaver itself; without it, entries fail rather than decode to
+ * something wrong. Returns 0, or the exit code. */
+static int layer_preset(const CliArgs *a, Layer *L)
+{
+    /* SpaceSaver's preset dictionary is 9,679 bytes; this is the ceiling
+     * on what --preset will read, not a size anybody declared. Static
+     * rather than malloc: the engine holds this pointer for the whole
+     * layer, and a heap buffer would need freeing on every return —
+     * which is how the sanitizer build first met this option. */
+    static uint8_t presetbuf[64 * 1024];
+    FILE *pf;
+    long n;
+
+    if (!a->presetfile) return 0;
+    pf = fopen(a->presetfile, "rb");
+    if (!pf) {
+        fprintf(stderr, "macextract: %s: %s\n", a->presetfile, strerror(errno));
+        return 1;
+    }
+    if (fseek(pf, 0, SEEK_END) != 0 || (n = ftell(pf)) < 0 ||
+        fseek(pf, 0, SEEK_SET) != 0) n = -1;
+    if (n > 0 && n <= (long)sizeof presetbuf &&
+        fread(presetbuf, 1, (size_t)n, pf) == (size_t)n) {
+        L->opt.preset = presetbuf;
+        L->opt.preset_len = (uint32_t)n;
     } else {
-        fmt = unc_sniff(&io);
+        n = -1;
+    }
+    fclose(pf);
+    if (n <= 0) {
+        fprintf(stderr, "macextract: %s: not a usable preset\n", a->presetfile);
+        return 1;
+    }
+    return 0;
+}
 
-        /* A plain split is decided by NAME, and deliberately BEFORE the
-         * sniff has a say: part 1 of a split .sit begins with "SIT!" and
-         * sniffs as the archive it is a slice of. The reference tries
-         * its content parsers first and so cannot read that shape at all
-         * — measured 2026-08-09, `unar derived-Fractional_Widths.sit.001`
-         * exits 1 having written one truncated fork. --no-parts puts the
-         * sniff back in charge. */
-        /* Unless the file proves otherwise. A DiskDoubler `SPLT` part
-         * carries its own index, count and identity, so a set named
-         * Archive.dd.001 is joined as the scheme it declares — the name
-         * rule above exists for parts that declare nothing, and folding
-         * 94-byte headers into a file would be silent and wrong. */
-        if (!no_parts && fmt != UNC_FORMAT_DDSEG &&
-            (split_family_present(file) ||
-             split_part_offered(file, partargs, nparts) ||
-             /* --ask: a NAME.001 alone is the first of a set whose
-              * other parts the user is standing by to produce, as when
-              * each part is on a floppy of its own. */
-             (ask && split_ext_part(strrchr(file, '/') ? strrchr(file, '/') + 1
-                                                       : file) == 1)))
-            fmt = UNC_FORMAT_SPLIT;
-        /* A spanned zip's middle part has nothing to recognise it by but
-         * its name, NAME.zNN (the first carries the spanning signature,
-         * the last the directory). Placed by name, as every other part of
-         * the set already is when it is opened from the .zip, and as the
-         * Mac shell does: the engine's structural check on the assembled
-         * set is what keeps a wrong file out, whichever part was opened. */
-        if (!no_parts && fmt == UNC_FORMAT_UNKNOWN && zip_ext_part(file) >= 1)
-            fmt = UNC_FORMAT_ZIPSEG;
+static int is_segmented(UncFormat f)
+{
+    return f == UNC_FORMAT_SITSEG || f == UNC_FORMAT_ZIPSEG ||
+           f == UNC_FORMAT_SPLIT || f == UNC_FORMAT_CPTSEG ||
+           f == UNC_FORMAT_DDSEG || f == UNC_FORMAT_MIMESEG;
+}
+
+/* ---- a set of parts: one setup per scheme, each returning 0 or the
+ * exit code, with `seg` holding the descriptor and the parts found ---- */
+
+/* A plain split. Nothing in these files says anything, so the
+ * descriptor is built here: the set is the consecutive run of NAME.NNN
+ * in one directory, and the joined file is called NAME. */
+static int seg_setup_split(const CliArgs *a, Layer *L, SegHost *seg)
+{
+    const char *file = L->file;
+    const char *stem;
+    size_t stemlen;
+    char dirbuf[PATHBUF];
+    int i, self, highest, beyond = 0, run;
+
+    self = splitfam_split(file, dirbuf, sizeof dirbuf, &stem, &stemlen);
+    if (self < 1) {
+        fprintf(stderr, "macextract: %s: not a NAME.NNN part\n", file);
+        return 1;
+    }
+    seg->desc.scheme   = UNC_FORMAT_SPLIT;
+    seg->desc.part     = (uint16_t)self;
+    seg->desc.head_len = 0;
+    seg->desc.total    = UNC_SIZE_UNKNOWN;   /* the engine sums it */
+    if (stemlen > UNC_NAME_MAX) stemlen = UNC_NAME_MAX;
+    memcpy(seg->desc.name, stem, stemlen);
+    seg->desc.name[stemlen] = 0;
+    seg->desc.name_len = (uint16_t)stemlen;
+
+    highest = seg_scan_split_family(seg, file);
+    for (i = 0; i < a->nparts; i++) {
+        const char *slash = strrchr(a->partargs[i], '/');
+        int p = split_ext_part(slash ? slash + 1 : a->partargs[i]);
+        if (p >= 1) {
+            if (p > highest) highest = p;
+            seg_record(seg, p, a->partargs[i]);
+        } else {
+            fprintf(stderr, "macextract: %s: no .NNN extension to "
+                    "place it by, ignored\n", a->partargs[i]);
+        }
     }
 
-    /* --only names the entries the user can SEE. A layer this run is
-     * about to unwrap is not one of them: it holds one file on the way
-     * to the archive, and filtering it would extract nothing at all.
-     * The condition is the unwrap gate below, not the format — `l` and
-     * `t` never unwrap, so for them an envelope's single entry IS the
-     * listing, and exempting it made --only silently do nothing.
-     * A layer that filters is a layer that does not recurse, which is
-     * what makes the report at the end fire exactly once. */
-    /* Unless it then does NOT unwrap — a MacBinary of a text file — when
-     * its files are judged after the fact (sink_late_done); until
-     * 2026-11-07 --only was simply never applied there, and `x` wrote
-     * what `l` refused with exit 1. */
-    if (nonly && !(strcmp(cmd, "x") == 0 && !no_recurse && layer_unwraps(fmt))) {
-        sink.only     = only;
-        sink.only_hit = only_hit;
-        sink.nonly    = nonly;
-    } else if (nonly) {
-        sink.only_late = 1;
-        sink.late_sel  = only;
-        sink.late_nsel = nonly;
+    run = split_run_length(seg, &beyond);
+    if (highest > UNC_SEG_MAX_PARTS) {
+        /* Says what was SEEN, not what it means: three digits
+         * reach 999 and a member numbered past our ceiling is
+         * either a set too big to read or a stray file, and
+         * nothing here can tell which. */
+        fprintf(stderr, "macextract: \"%s\": a part numbered %d is "
+                "beside it, and this reads at most %d parts\n",
+                seg->desc.name, highest, UNC_SEG_MAX_PARTS);
+        return 1;
     }
-
-    /* Mac formats carry MacRoman names; zip/tar/gzip do not — nor does
-     * a split, whose entry is named after the host's own file. */
-    switch (fmt) {
-    case UNC_FORMAT_ZIP: case UNC_FORMAT_ZIPSEG: case UNC_FORMAT_TAR:
-    case UNC_FORMAT_GZIP: case UNC_FORMAT_COMPRESS_Z: case UNC_FORMAT_SPLIT:
-        sink.mac_encoding = 0; break;
-    default:
-        sink.mac_encoding = 1; break;
+    if (run < 1) {
+        fprintf(stderr, "macextract: %s: part 1 of \"%s\" is not "
+                "beside it\n", file, seg->desc.name);
+        return 1;
     }
-
-    if (strcmp(cmd, "sniff") == 0) {
-        printf("%s\n", unc_format_name(fmt));
-        fclose(fio.f);
-        return fmt == UNC_FORMAT_UNKNOWN ? 1 : 0;
+    /* With --ask the set is OPEN-ENDED, as on the Mac: the joiner
+     * asks for each next part as it gets there, and seg_need asks
+     * the user whether there is one; a gap is asked for there
+     * too. Nothing about the set's end is settled here. */
+    if (a->ask) {
+        seg->highest = highest;
+        seg->desc.nparts = 0;
+        return 0;
     }
-
-    if (fmt == UNC_FORMAT_UNKNOWN) {
-        fprintf(stderr, "macextract: %s: format not recognized\n", file);
-        fclose(fio.f);
+    /* Something numbered past the end of the run says a part in
+     * between is missing. Refused: without --ask nobody is standing
+     * by to produce it. */
+    if (beyond) {
+        fprintf(stderr, "macextract: part %d of \"%s\" is missing "
+                "(a later part is there)\n", run + 1, seg->desc.name);
         return 1;
     }
 
-    /* Name hint for name-less formats (gzip, .Z): archive basename
-     * minus its last extension, unar-style. */
+    /* Gaps are resolved HERE rather than one disk at a time,
+     * which is what the volume source does for the other two
+     * schemes. A split states its length nowhere, so the joined
+     * size is the sum of the parts' — and that has to be known
+     * before the first byte is written, since it is the size
+     * the one emitted entry announces. Without --ask, a gap is
+     * an error. */
+    for (i = 1; i <= run; i++) {
+        if (seg->path[i]) continue;
+        fprintf(stderr, "macextract: part %d of \"%s\" is "
+                "missing\n", i, seg->desc.name);
+        return 1;
+    }
+    seg->desc.nparts = (uint16_t)run;
+    if (a->verbose)
+        fprintf(stderr, "%s: %d parts\n", seg->desc.name, run);
+    return 0;
+}
+
+/* A Compact Pro set. Every segment carries the set's identity, so
+ * discovery is by CONTENT exactly as it is for StuffIt — a set whose
+ * parts are scattered and named unlike each other works, and the
+ * author's manual says as much ("the names of the files are not
+ * important"). What is special is that only the FINAL segment says how
+ * many there are, by being the one that carries the index. So: identify
+ * the set from whatever part we were given, collect the rest, then take
+ * the count from the final one. */
+static int seg_setup_cpt(const CliArgs *a, Layer *L, SegHost *seg)
+{
+    const char *file = L->file;
+    int i, i2, fin = 0;
+    char dirbuf[PATHBUF];
+    const char *base;
+
+    if (unc_segment_describe(&L->io, &seg->desc) != UNC_OK) {
+        fprintf(stderr, "macextract: %s: not a readable segment "
+                "header\n", file);
+        return 1;
+    }
+    seg_record(seg, (int)seg->desc.part, file);
+    for (i = 0; i < a->nparts; i++) {
+        int p = seg_part_of(seg, a->partargs[i]);
+        if (p) seg_record(seg, p, a->partargs[i]);
+        else fprintf(stderr, "macextract: %s: not a segment of this "
+                     "set, ignored\n", a->partargs[i]);
+    }
+    seg_scan_dir(seg, file, 0);
+
+    /* Which of them is the last? The one whose header names an
+     * index. Asking each is an 8-byte read, and it is the only
+     * way round: nothing else in the set states the count. */
+    if (seg->desc.nparts == 0) {
+        for (i2 = 1; i2 <= UNC_SEG_MAX_PARTS && !fin; i2++) {
+            UncSegmentDesc cand;
+            FILE *cf;
+            FileIO cio_f;
+            UncIO cio;
+            struct stat cst;
+            if (!seg->path[i2]) continue;
+            cf = fopen(seg->path[i2], "rb");
+            if (!cf) continue;
+            memset(&cio_f, 0, sizeof cio_f);
+            cio_f.f = cf;
+            cio_f.size = stat(seg->path[i2], &cst) == 0
+                         ? (unc_off_t)cst.st_size : UNC_OFF_UNKNOWN;
+            fio_bind(&cio, &cio_f);
+            if (unc_segment_describe(&cio, &cand) == UNC_OK &&
+                cand.nparts)
+                { seg->desc = cand; fin = i2; }
+            fclose(cf);
+        }
+        if (!fin) {
+            fprintf(stderr, "macextract: %s: this is one segment of a "
+                    "Compact Pro set; the last segment, the one "
+                    "holding the index, is not beside it\n", file);
+            return 1;
+        }
+    }
+
+    /* Now that the count is known, every part is re-checked
+     * against the full rule: a middle segment must not carry an
+     * index and the last one must, which is more than the
+     * identity alone could ask (fmt_cptseg.c). */
+    for (i2 = 1; i2 <= UNC_SEG_MAX_PARTS; i2++) {
+        if (!seg->path[i2]) continue;
+        if (seg_part_of(seg, seg->path[i2]) == i2) continue;
+        if (a->verbose)
+            fprintf(stderr, "part %d: %s no longer matches the set, "
+                    "dropped\n", i2, seg->path[i2]);
+        free(seg->path[i2]);
+        seg->path[i2] = NULL;
+    }
+
+    /* The format stores no name for the original archive, so
+     * the prompt borrows the opened file's, for display only. */
+    base = strrchr(file, '/');
+    base = base ? base + 1 : file;
+    snprintf(dirbuf, sizeof dirbuf, "%s", base);
     {
+        size_t n = strlen(dirbuf);
+        if (n > UNC_NAME_MAX) n = UNC_NAME_MAX;
+        memcpy(seg->desc.name, dirbuf, n);
+        seg->desc.name[n] = 0;
+        seg->desc.name_len = (uint16_t)n;
+    }
+    return 0;
+}
+
+/* A spanned zip. Only the LAST part carries the part count, so it has
+ * to be found before anything else can be — and for this scheme
+ * "found" means "named .zip in the same folder". */
+static int seg_setup_zip(const CliArgs *a, Layer *L, SegHost *seg)
+{
+    const char *file = L->file;
+    char lastpath[PATHBUF];
+    const char *stem;
+    size_t stemlen;
+    char dirbuf[PATHBUF];
+    FILE *lf;
+    FileIO lio_f;
+    UncIO lio;
+    struct stat lst;
+    int i, derr;
+
+    seg_scan_zip_family(seg, file, 0, lastpath, sizeof lastpath);
+    if (!lastpath[0]) {
+        fprintf(stderr, "macextract: %s: this is one part of a spanned "
+                "zip; the last part (named .zip) is not beside it\n",
+                file);
+        return 1;
+    }
+    lf = fopen(lastpath, "rb");
+    if (!lf) {
+        fprintf(stderr, "macextract: %s: %s\n", lastpath,
+                strerror(errno));
+        return 1;
+    }
+    memset(&lio_f, 0, sizeof lio_f);
+    lio_f.f = lf;
+    lio_f.size = stat(lastpath, &lst) == 0 ? (unc_off_t)lst.st_size
+                                           : UNC_OFF_UNKNOWN;
+    fio_bind(&lio, &lio_f);
+    derr = unc_segment_describe(&lio, &seg->desc);
+    fclose(lf);
+    if (derr != UNC_OK) {
+        fprintf(stderr, "macextract: %s: %s\n", lastpath,
+                unc_strerror(derr));
+        return 1;
+    }
+    seg_record(seg, (int)seg->desc.nparts, lastpath);
+
+    /* The engine has no filename to put in a prompt, because the
+     * format stores none. Borrow the family's stem for display. */
+    if (zipfam_split(file, dirbuf, sizeof dirbuf, &stem, &stemlen)) {
+        if (stemlen > UNC_NAME_MAX) stemlen = UNC_NAME_MAX;
+        memcpy(seg->desc.name, stem, stemlen);
+        seg->desc.name[stemlen] = 0;
+        seg->desc.name_len = (uint16_t)stemlen;
+    }
+
+    for (i = 0; i < a->nparts; i++) {
+        int p = zip_ext_part(a->partargs[i]);
+        if (p == ZIPFAM_LAST) p = (int)seg->desc.nparts;
+        if (p) seg_record(seg, p, a->partargs[i]);
+        else fprintf(stderr, "macextract: %s: no .zNN or .zip "
+                     "extension to place it by, ignored\n",
+                     a->partargs[i]);
+    }
+    return 0;
+}
+
+/* A set whose parts identify themselves: StuffIt, DiskDoubler `SPLT`,
+ * MIME message/partial. */
+static int seg_setup_content(const CliArgs *a, const LayerState *st,
+                             Layer *L, SegHost *seg)
+{
+    const char *file = L->file;
+    int i;
+
+    if (unc_segment_describe(&L->io, &seg->desc) != UNC_OK) {
+        fprintf(stderr, "macextract: %s: not a readable segment header\n",
+                file);
+        return 1;
+    }
+
+    /* A `SPLT` part carries everything about the set except a
+     * name for the file it joins into: DiskDoubler's Split does
+     * not store one. The part's own filename is all there is,
+     * minus the ".N" that numbers it — and because the parts
+     * are matched by CONTENT, that name is for display and for
+     * the output file, never evidence. */
+    if (L->fmt == UNC_FORMAT_DDSEG || L->fmt == UNC_FORMAT_MIMESEG) {
         const char *base = strrchr(file, '/');
         const char *dot;
+        size_t n;
         base = base ? base + 1 : file;
+        n = strlen(base);
         dot = strrchr(base, '.');
-        /* SpaceSaver compresses a file in place and adds no extension,
-         * so the whole basename is the name — stripping one here would
-         * eat a real ".txt". */
-        if (fmt == UNC_FORMAT_SPACESAVER) dot = NULL;
-        opt.name_hint = (const uint8_t *)base;
-        opt.name_hint_len = (uint16_t)(dot && dot != base ? (size_t)(dot - base)
-                                                          : strlen(base));
+        if (dot && dot != base) {
+            const char *d;
+            for (d = dot + 1; *d; d++)
+                if (*d < '0' || *d > '9') break;
+            if (*d == 0 && d != dot + 1) n = (size_t)(dot - base);
+        }
+        if (n > UNC_NAME_MAX) n = UNC_NAME_MAX;
+        memcpy(seg->desc.name, base, n);
+        seg->desc.name[n] = 0;
+        seg->desc.name_len = (uint16_t)n;
     }
 
-    /* SpaceSaver's window starts loaded with a dictionary that ships
-     * inside SpaceSaver itself; without it, entries fail rather than
-     * decode to something wrong. Read once, freed at exit. */
-    if (presetfile && !opt.preset) {
-        FILE *pf = fopen(presetfile, "rb");
-        long n;
-        if (!pf) {
-            fprintf(stderr, "macextract: %s: %s\n", presetfile, strerror(errno));
-            fclose(fio.f);
+    /* The file we were handed is a part, and its own part number
+     * comes from its header — so opening part 3 of a set works. */
+    seg_record(seg, (int)seg->desc.part, file);
+    for (i = 0; i < a->nparts; i++) {
+        /* A part named by the user is worth unwrapping whether
+         * or not anything else here is wrapped: it is one file,
+         * and the user has said what it is. */
+        int p = seg_part_of(seg, a->partargs[i]);
+        if (p) seg_record(seg, p, a->partargs[i]);
+        else if (!seg_wrapped_part_of(seg, a->partargs[i]))
+            fprintf(stderr, "macextract: %s: not part of \"%s\", "
+                    "ignored\n", a->partargs[i], seg->desc.name);
+    }
+    seg_scan_dir(seg, file, 0);
+    /* A part that arrived wrapped was unwrapped into the OUTPUT
+     * directory, so the rest of the set is not there: it is
+     * still where the user left it. */
+    if (st->depth > 0)
+        seg_scan_dir(seg, a->file, 0);
+
+    /* Only now, and only if something is still missing, is it
+     * worth taking envelopes off to look — which is how a real
+     * download arrives (Archive.sit.1.hqx) and also how a
+     * half-unstuffed one does. Rationing it this way means a
+     * set that is complete never opens a single file beside it,
+     * and one that is short pays a hundred decoded bytes per
+     * envelope rather than failing. */
+    if (L->fmt == UNC_FORMAT_MIMESEG) {
+        /* The count, from whichever part carries it, and then
+         * the gap check the joiner would otherwise report as
+         * "a part the host could not produce". No envelope
+         * scan: nothing wraps one of these, and a wrapped part
+         * would be a guess (see seg_wrapped_part_of). */
+        int p;
+        if (seg->desc.nparts == 0) {
+            for (p = 1; p <= UNC_SEG_MAX_PARTS; p++) {
+                int n2;
+                if (!seg->path[p]) continue;
+                n2 = mimeseg_nparts_of(seg->path[p]);
+                if (n2 > 0) { seg->desc.nparts = (uint16_t)n2; break; }
+            }
+        }
+        if (seg->desc.nparts == 0) {
+            fprintf(stderr, "macextract: %s: no part of this set says "
+                    "how many parts it has\n", file);
             return 1;
         }
-        if (fseek(pf, 0, SEEK_END) != 0 || (n = ftell(pf)) < 0 ||
-            fseek(pf, 0, SEEK_SET) != 0) n = -1;
-        /* Static rather than malloc: `main` returns from a dozen places
-         * and the engine holds this pointer for the whole run, so a
-         * heap buffer would need freeing on every one of them — which
-         * is how the sanitizer build first met this option. */
-        if (n > 0 && n <= (long)sizeof presetbuf &&
-            fread(presetbuf, 1, (size_t)n, pf) == (size_t)n) {
-            opt.preset = presetbuf;
-            opt.preset_len = (uint32_t)n;
-        } else {
-            n = -1;
-        }
-        fclose(pf);
-        if (n <= 0) {
-            fprintf(stderr, "macextract: %s: not a usable preset\n", presetfile);
-            fclose(fio.f);
+        for (p = 1; p <= (int)seg->desc.nparts; p++) {
+            if (seg->path[p]) continue;
+            if (a->ask && seg_ask(seg, p)) continue;
+            fprintf(stderr, "macextract: part %d of %d is missing\n",
+                    p, (int)seg->desc.nparts);
             return 1;
         }
+    } else if (!seg_have_all(seg)) {
+        if (st->depth > 0)
+            seg_scan_dir(seg, a->file, 1);
+        seg_scan_dir(seg, file, 1);
     }
+    return 0;
+}
 
-    if (strcmp(cmd, "l") == 0) {
-        opt.list_only = 1;
-        sink.list_only = 1;
-    } else if (strcmp(cmd, "t") == 0) {
-        opt.test_only = 1;
-        sink.test_only = 1;
-    } else if (strcmp(cmd, "x") == 0) {
-        mkdir(outdir, 0777);
-    } else {
-        usage();
-        fclose(fio.f);
-        return 2;
-    }
+/* Join a set of parts and extract what it holds: L->ret is the
+ * engine's answer. Returns 0 once the engine ran, or the exit code. */
+static int layer_join(const CliArgs *a, LayerState *st, Layer *L)
+{
+    SegHost seg;
+    UncVolumeSource vs;
+    void *scratch;
+    int i, code;
 
-    if (verbose || strcmp(cmd, "l") == 0)
-        fprintf(stderr, "%s: %s\n", file, unc_format_name(fmt));
+    memset(&seg, 0, sizeof seg);
+    seg.ask = a->ask;
+    seg.verbose = a->verbose;
+    seg.outdir = a->outdir;
+    seg.sink = &L->sink;
 
-    if ((fmt == UNC_FORMAT_SITSEG || fmt == UNC_FORMAT_ZIPSEG ||
-         fmt == UNC_FORMAT_SPLIT || fmt == UNC_FORMAT_CPTSEG ||
-         fmt == UNC_FORMAT_DDSEG || fmt == UNC_FORMAT_MIMESEG) && !no_parts) {
-        UncVolumeSource vs;
-        void *scratch;
+    if (L->fmt == UNC_FORMAT_SPLIT) code = seg_setup_split(a, L, &seg);
+    else if (L->fmt == UNC_FORMAT_CPTSEG) code = seg_setup_cpt(a, L, &seg);
+    else if (L->fmt == UNC_FORMAT_ZIPSEG) code = seg_setup_zip(a, L, &seg);
+    else code = seg_setup_content(a, st, L, &seg);
 
-        memset(&seg, 0, sizeof seg);
-        seg.ask = ask;
-        seg.verbose = verbose;
-        seg.outdir = outdir;
-        seg.sink = &sink;
-
-        if (fmt == UNC_FORMAT_SPLIT) {
-            /* Nothing in these files says anything, so the descriptor is
-             * built here: the set is the consecutive run of NAME.NNN in
-             * one directory, and the joined file is called NAME. */
-            const char *stem;
-            size_t stemlen;
-            char dirbuf[PATHBUF];
-            int self, highest, beyond = 0, run;
-
-            self = splitfam_split(file, dirbuf, sizeof dirbuf, &stem, &stemlen);
-            if (self < 1) {
-                fprintf(stderr, "macextract: %s: not a NAME.NNN part\n", file);
-                fclose(fio.f);
-                return 1;
-            }
-            seg.desc.scheme   = UNC_FORMAT_SPLIT;
-            seg.desc.part     = (uint16_t)self;
-            seg.desc.head_len = 0;
-            seg.desc.total    = UNC_SIZE_UNKNOWN;   /* the engine sums it */
-            if (stemlen > UNC_NAME_MAX) stemlen = UNC_NAME_MAX;
-            memcpy(seg.desc.name, stem, stemlen);
-            seg.desc.name[stemlen] = 0;
-            seg.desc.name_len = (uint16_t)stemlen;
-
-            highest = seg_scan_split_family(&seg, file);
-            for (i = 0; i < nparts; i++) {
-                const char *slash = strrchr(partargs[i], '/');
-                int p = split_ext_part(slash ? slash + 1 : partargs[i]);
-                if (p >= 1) {
-                    if (p > highest) highest = p;
-                    seg_record(&seg, p, partargs[i]);
-                } else {
-                    fprintf(stderr, "macextract: %s: no .NNN extension to "
-                            "place it by, ignored\n", partargs[i]);
-                }
-            }
-
-            run = split_run_length(&seg, &beyond);
-            if (highest > UNC_SEG_MAX_PARTS) {
-                /* Says what was SEEN, not what it means: three digits
-                 * reach 999 and a member numbered past our ceiling is
-                 * either a set too big to read or a stray file, and
-                 * nothing here can tell which. */
-                fprintf(stderr, "macextract: \"%s\": a part numbered %d is "
-                        "beside it, and this reads at most %d parts\n",
-                        seg.desc.name, highest, UNC_SEG_MAX_PARTS);
-                fclose(fio.f);
-                return 1;
-            }
-            if (run < 1) {
-                fprintf(stderr, "macextract: %s: part 1 of \"%s\" is not "
-                        "beside it\n", file, seg.desc.name);
-                fclose(fio.f);
-                return 1;
-            }
-            /* With --ask the set is OPEN-ENDED, as on the Mac: the joiner
-             * asks for each next part as it gets there, and seg_need asks
-             * the user whether there is one; a gap is asked for there
-             * too. Nothing about the set's end is settled here. */
-            if (ask) {
-                seg.highest = highest;
-                seg.desc.nparts = 0;
-                goto split_ready;
-            }
-            /* Something numbered past the end of the run says a part in
-             * between is missing. Refused, unless --ask means the user
-             * is standing by to produce it. */
-            if (beyond && !ask) {
-                fprintf(stderr, "macextract: part %d of \"%s\" is missing "
-                        "(a later part is there)\n", run + 1, seg.desc.name);
-                fclose(fio.f);
-                return 1;
-            }
-            if (beyond) run = highest;
-
-            /* Gaps are resolved HERE rather than one disk at a time,
-             * which is what the volume source does for the other two
-             * schemes. A split states its length nowhere, so the joined
-             * size is the sum of the parts' — and that has to be known
-             * before the first byte is written, since it is the size
-             * the one emitted entry announces. */
-            for (i = 1; i <= run; i++) {
-                if (seg.path[i]) continue;
-                if (!ask || !seg_ask(&seg, i)) {
-                    fprintf(stderr, "macextract: part %d of \"%s\" is "
-                            "missing\n", i, seg.desc.name);
-                    fclose(fio.f);
-                    return 1;
-                }
-            }
-            seg.desc.nparts = (uint16_t)run;
-            if (verbose)
-                fprintf(stderr, "%s: %d parts\n", seg.desc.name, run);
-        split_ready: ;
-        } else if (fmt == UNC_FORMAT_CPTSEG) {
-            /* Every segment carries the set's identity, so discovery is
-             * by CONTENT exactly as it is for StuffIt — a set whose
-             * parts are scattered and named unlike each other works, and
-             * the author's manual says as much ("the names of the files
-             * are not important"). What is special is that only the
-             * FINAL segment says how many there are, by being the one
-             * that carries the index. So: identify the set from whatever
-             * part we were given, collect the rest, then take the count
-             * from the final one. */
-            int i2, fin = 0;
-            char dirbuf[PATHBUF];
-            const char *base;
-
-            if (unc_segment_describe(&io, &seg.desc) != UNC_OK) {
-                fprintf(stderr, "macextract: %s: not a readable segment "
-                        "header\n", file);
-                fclose(fio.f);
-                return 1;
-            }
-            seg_record(&seg, (int)seg.desc.part, file);
-            for (i = 0; i < nparts; i++) {
-                int p = seg_part_of(&seg, partargs[i]);
-                if (p) seg_record(&seg, p, partargs[i]);
-                else fprintf(stderr, "macextract: %s: not a segment of this "
-                             "set, ignored\n", partargs[i]);
-            }
-            seg_scan_dir(&seg, file, 0);
-
-            /* Which of them is the last? The one whose header names an
-             * index. Asking each is an 8-byte read, and it is the only
-             * way round: nothing else in the set states the count. */
-            if (seg.desc.nparts == 0) {
-                for (i2 = 1; i2 <= UNC_SEG_MAX_PARTS && !fin; i2++) {
-                    UncSegmentDesc cand;
-                    FILE *cf;
-                    FileIO cio_f;
-                    UncIO cio;
-                    struct stat cst;
-                    if (!seg.path[i2]) continue;
-                    cf = fopen(seg.path[i2], "rb");
-                    if (!cf) continue;
-                    memset(&cio_f, 0, sizeof cio_f);
-                    cio_f.f = cf;
-                    cio_f.size = stat(seg.path[i2], &cst) == 0
-                                 ? (unc_off_t)cst.st_size : UNC_OFF_UNKNOWN;
-                    cio.ctx = &cio_f;
-                    cio.read = fio_read;
-                    cio.seek = fio_seek;
-                    cio.tell = fio_tell;
-                    cio.size = fio_size;
-                    if (unc_segment_describe(&cio, &cand) == UNC_OK &&
-                        cand.nparts)
-                        { seg.desc = cand; fin = i2; }
-                    fclose(cf);
-                }
-                if (!fin) {
-                    fprintf(stderr, "macextract: %s: this is one segment of a "
-                            "Compact Pro set; the last segment, the one "
-                            "holding the index, is not beside it\n", file);
-                    fclose(fio.f);
-                    return 1;
-                }
-            }
-
-            /* Now that the count is known, every part is re-checked
-             * against the full rule: a middle segment must not carry an
-             * index and the last one must, which is more than the
-             * identity alone could ask (fmt_cptseg.c). */
-            for (i2 = 1; i2 <= UNC_SEG_MAX_PARTS; i2++) {
-                if (!seg.path[i2]) continue;
-                if (seg_part_of(&seg, seg.path[i2]) == i2) continue;
-                if (verbose)
-                    fprintf(stderr, "part %d: %s no longer matches the set, "
-                            "dropped\n", i2, seg.path[i2]);
-                free(seg.path[i2]);
-                seg.path[i2] = NULL;
-            }
-
-            /* The format stores no name for the original archive, so
-             * the prompt borrows the opened file's, for display only. */
-            base = strrchr(file, '/');
-            base = base ? base + 1 : file;
-            snprintf(dirbuf, sizeof dirbuf, "%s", base);
-            {
-                size_t n = strlen(dirbuf);
-                if (n > UNC_NAME_MAX) n = UNC_NAME_MAX;
-                memcpy(seg.desc.name, dirbuf, n);
-                seg.desc.name[n] = 0;
-                seg.desc.name_len = (uint16_t)n;
-            }
-        } else if (fmt == UNC_FORMAT_ZIPSEG) {
-            /* Only the LAST part carries the part count, so it has to be
-             * found before anything else can be — and for this scheme
-             * "found" means "named .zip in the same folder". */
-            char lastpath[PATHBUF];
-            const char *stem;
-            size_t stemlen;
-            char dirbuf[PATHBUF];
-            FILE *lf;
-            FileIO lio_f;
-            UncIO lio;
-            struct stat lst;
-            int derr;
-
-            seg_scan_zip_family(&seg, file, 0, lastpath, sizeof lastpath);
-            if (!lastpath[0]) {
-                fprintf(stderr, "macextract: %s: this is one part of a spanned "
-                        "zip; the last part (named .zip) is not beside it\n",
-                        file);
-                fclose(fio.f);
-                return 1;
-            }
-            lf = fopen(lastpath, "rb");
-            if (!lf) {
-                fprintf(stderr, "macextract: %s: %s\n", lastpath,
-                        strerror(errno));
-                fclose(fio.f);
-                return 1;
-            }
-            memset(&lio_f, 0, sizeof lio_f);
-            lio_f.f = lf;
-            lio_f.size = stat(lastpath, &lst) == 0 ? (unc_off_t)lst.st_size
-                                                   : UNC_OFF_UNKNOWN;
-            lio.ctx = &lio_f;
-            lio.read = fio_read;
-            lio.seek = fio_seek;
-            lio.tell = fio_tell;
-            lio.size = fio_size;
-            derr = unc_segment_describe(&lio, &seg.desc);
-            fclose(lf);
-            if (derr != UNC_OK) {
-                fprintf(stderr, "macextract: %s: %s\n", lastpath,
-                        unc_strerror(derr));
-                fclose(fio.f);
-                return 1;
-            }
-            seg_record(&seg, (int)seg.desc.nparts, lastpath);
-
-            /* The engine has no filename to put in a prompt, because the
-             * format stores none. Borrow the family's stem for display. */
-            if (zipfam_split(file, dirbuf, sizeof dirbuf, &stem, &stemlen)) {
-                if (stemlen > UNC_NAME_MAX) stemlen = UNC_NAME_MAX;
-                memcpy(seg.desc.name, stem, stemlen);
-                seg.desc.name[stemlen] = 0;
-                seg.desc.name_len = (uint16_t)stemlen;
-            }
-
-            for (i = 0; i < nparts; i++) {
-                int p = zip_ext_part(partargs[i]);
-                if (p == ZIPFAM_LAST) p = (int)seg.desc.nparts;
-                if (p) seg_record(&seg, p, partargs[i]);
-                else fprintf(stderr, "macextract: %s: no .zNN or .zip "
-                             "extension to place it by, ignored\n",
-                             partargs[i]);
-            }
-        } else {
-            if (unc_segment_describe(&io, &seg.desc) != UNC_OK) {
-                fprintf(stderr, "macextract: %s: not a readable segment header\n",
-                        file);
-                fclose(fio.f);
-                return 1;
-            }
-
-            /* A `SPLT` part carries everything about the set except a
-             * name for the file it joins into: DiskDoubler's Split does
-             * not store one. The part's own filename is all there is,
-             * minus the ".N" that numbers it — and because the parts
-             * are matched by CONTENT, that name is for display and for
-             * the output file, never evidence. */
-            if (fmt == UNC_FORMAT_DDSEG || fmt == UNC_FORMAT_MIMESEG) {
-                const char *base = strrchr(file, '/');
-                const char *dot;
-                size_t n;
-                base = base ? base + 1 : file;
-                n = strlen(base);
-                dot = strrchr(base, '.');
-                if (dot && dot != base) {
-                    const char *d;
-                    for (d = dot + 1; *d; d++)
-                        if (*d < '0' || *d > '9') break;
-                    if (*d == 0 && d != dot + 1) n = (size_t)(dot - base);
-                }
-                if (n > UNC_NAME_MAX) n = UNC_NAME_MAX;
-                memcpy(seg.desc.name, base, n);
-                seg.desc.name[n] = 0;
-                seg.desc.name_len = (uint16_t)n;
-            }
-
-            /* The file we were handed is a part, and its own part number
-             * comes from its header — so opening part 3 of a set works. */
-            seg_record(&seg, (int)seg.desc.part, file);
-            for (i = 0; i < nparts; i++) {
-                /* A part named by the user is worth unwrapping whether
-                 * or not anything else here is wrapped: it is one file,
-                 * and the user has said what it is. */
-                int p = seg_part_of(&seg, partargs[i]);
-                if (p) seg_record(&seg, p, partargs[i]);
-                else if (!seg_wrapped_part_of(&seg, partargs[i]))
-                    fprintf(stderr, "macextract: %s: not part of \"%s\", "
-                            "ignored\n", partargs[i], seg.desc.name);
-            }
-            seg_scan_dir(&seg, file, 0);
-            /* A part that arrived wrapped was unwrapped into the OUTPUT
-             * directory, so the rest of the set is not there: it is
-             * still where the user left it. */
-            if (depth > 0)
-                seg_scan_dir(&seg, origfile, 0);
-
-            /* Only now, and only if something is still missing, is it
-             * worth taking envelopes off to look — which is how a real
-             * download arrives (Archive.sit.1.hqx) and also how a
-             * half-unstuffed one does. Rationing it this way means a
-             * set that is complete never opens a single file beside it,
-             * and one that is short pays a hundred decoded bytes per
-             * envelope rather than failing. */
-            if (fmt == UNC_FORMAT_MIMESEG) {
-                /* The count, from whichever part carries it, and then
-                 * the gap check the joiner would otherwise report as
-                 * "a part the host could not produce". No envelope
-                 * scan: nothing wraps one of these, and a wrapped part
-                 * would be a guess (see seg_wrapped_part_of). */
-                int p;
-                if (seg.desc.nparts == 0) {
-                    for (p = 1; p <= UNC_SEG_MAX_PARTS; p++) {
-                        int n2;
-                        if (!seg.path[p]) continue;
-                        n2 = mimeseg_nparts_of(seg.path[p]);
-                        if (n2 > 0) { seg.desc.nparts = (uint16_t)n2; break; }
-                    }
-                }
-                if (seg.desc.nparts == 0) {
-                    fprintf(stderr, "macextract: %s: no part of this set says "
-                            "how many parts it has\n", file);
-                    fclose(fio.f);
-                    return 1;
-                }
-                for (p = 1; p <= (int)seg.desc.nparts; p++) {
-                    if (seg.path[p]) continue;
-                    if (ask && seg_ask(&seg, p)) continue;
-                    fprintf(stderr, "macextract: part %d of %d is missing\n",
-                            p, (int)seg.desc.nparts);
-                    fclose(fio.f);
-                    return 1;
-                }
-            } else if (!seg_have_all(&seg)) {
-                if (depth > 0)
-                    seg_scan_dir(&seg, origfile, 1);
-                seg_scan_dir(&seg, file, 1);
-            }
-        }
-
+    if (code == 0) {
         /* Every part the joiner may open is as much the input as the
          * file named: none of them may be written over mid-join. */
         for (i = 1; i <= UNC_SEG_MAX_PARTS; i++)
-            if (seg.path[i]) {
-                sink_note_reading(&sink, seg.path[i]);
-                if (!seg.peeled[i]) read_add(&kept, seg.path[i]);
-            }
+            if (seg.path[i])
+                st_protect_part(st, &L->sink, seg.path[i], seg.peeled[i]);
 
         memset(&vs, 0, sizeof vs);   /* optional members are NULL ones */
         vs.ctx = &seg;
@@ -3405,41 +3506,116 @@ nextlayer:
         scratch = malloc(unc_segment_scratch_size());
         if (!scratch) {
             fprintf(stderr, "macextract: out of memory\n");
-            fclose(fio.f);
-            return 1;
+            code = 1;
+        } else {
+            L->ret = unc_extract_segments(&seg.desc, &vs, scratch, &L->sk,
+                                          &L->al, &L->prog, &L->opt);
+            if (a->stats) {
+                uint32_t sw = 0, back = 0;
+                unc_segment_stats(scratch, &sw, &back);
+                fprintf(stderr, "segments: %u part opens, %u of them "
+                        "backward\n", sw, back);
+            }
+            free(scratch);
         }
-        ret = unc_extract_segments(&seg.desc, &vs, scratch, &sk, &al,
-                                   &prog, &opt);
-        if (stats) {
-            uint32_t sw = 0, back = 0;
-            unc_segment_stats(scratch, &sw, &back);
-            fprintf(stderr, "segments: %u part opens, %u of them backward\n",
-                    sw, back);
-        }
-        free(scratch);
-        seg_peel_clean(&seg);
-        for (i = 1; i <= UNC_SEG_MAX_PARTS; i++) free(seg.path[i]);
-    } else {
-        ret = unc_extract_as(fmt, &io, &sk, &al, &prog, &opt);
     }
-    fclose(fio.f);
+    seg_peel_clean(&seg);
+    for (i = 1; i <= UNC_SEG_MAX_PARTS; i++) free(seg.path[i]);
+    return code;
+}
 
-    if (stats)
-        fprintf(stderr, "alloc: high-water %u bytes, %u refused\n",
-                ba.high_water, ba.failed);
+/* Everything up to and including the engine's run, on an open input.
+ * Returns LAYER_NEXT once the engine ran (L->ret), or the exit code. */
+static int layer_extract(const CliArgs *a, LayerState *st, Layer *L)
+{
+    int code;
 
-    if (ret != UNC_OK) {
-        fprintf(stderr, "macextract: %s: %s\n", file, unc_strerror(ret));
+    fio_bind(&L->io, &L->fio);
+    memset(&L->ba, 0, sizeof L->ba);
+    L->ba.budget = a->budget;
+    L->al.ctx = &L->ba;
+    L->al.alloc = ba_alloc;
+    L->al.free = ba_free;
+    layer_sink(a, st, L);
+
+    if ((code = layer_options(a, st, L)) != 0) return code;
+    if ((code = layer_format(a, st, L)) != 0) return code;
+
+    if (a->nonly && st_only_now(a, L->fmt)) {
+        L->sink.only     = a->only;
+        L->sink.only_hit = st->only_hit;
+        L->sink.nonly    = a->nonly;
+    } else if (a->nonly) {
+        L->sink.only_late = 1;
+        L->sink.late_sel  = a->only;
+        L->sink.late_nsel = a->nonly;
+    }
+
+    /* Mac formats carry MacRoman names; zip/tar/gzip do not — nor does
+     * a split, whose entry is named after the host's own file. */
+    switch (L->fmt) {
+    case UNC_FORMAT_ZIP: case UNC_FORMAT_ZIPSEG: case UNC_FORMAT_TAR:
+    case UNC_FORMAT_GZIP: case UNC_FORMAT_COMPRESS_Z: case UNC_FORMAT_SPLIT:
+        L->sink.mac_encoding = 0; break;
+    default:
+        L->sink.mac_encoding = 1; break;
+    }
+
+    if (strcmp(a->cmd, "sniff") == 0) {
+        printf("%s\n", unc_format_name(L->fmt));
+        return L->fmt == UNC_FORMAT_UNKNOWN ? 1 : 0;
+    }
+    if (L->fmt == UNC_FORMAT_UNKNOWN) {
+        fprintf(stderr, "macextract: %s: format not recognized\n", L->file);
+        return 1;
+    }
+    layer_name_hint(L);
+    if ((code = layer_preset(a, L)) != 0) return code;
+
+    if (strcmp(a->cmd, "l") == 0) {
+        L->opt.list_only = 1;
+        L->sink.list_only = 1;
+    } else if (strcmp(a->cmd, "t") == 0) {
+        L->opt.test_only = 1;
+        L->sink.test_only = 1;
+    } else if (strcmp(a->cmd, "x") == 0) {
+        mkdir(a->outdir, 0777);
+    } else {
+        usage();
+        return 2;
+    }
+
+    if (a->verbose || strcmp(a->cmd, "l") == 0)
+        fprintf(stderr, "%s: %s\n", L->file, unc_format_name(L->fmt));
+
+    if (is_segmented(L->fmt) && !a->no_parts) {
+        if ((code = layer_join(a, st, L)) != 0) return code;
+    } else {
+        L->ret = unc_extract_as(L->fmt, &L->io, &L->sk, &L->al, &L->prog,
+                                &L->opt);
+    }
+    return LAYER_NEXT;
+}
+
+/* What a layer that ran says about its entries. Returns 0 if it
+ * extracted cleanly, 1 if not. */
+static int layer_verdict(const CliArgs *a, LayerState *st, Layer *L)
+{
+    DiskSink *s = &L->sink;
+    int onlymiss = 0;
+
+    if (L->ret != UNC_OK) {
+        fprintf(stderr, "macextract: %s: %s\n", L->file, unc_strerror(L->ret));
         /* The names that were shortened are on the disk whatever the
          * WALK then did, so the notice that says where to find them is
          * owed on this path too — and it is what frees the list, which
          * this path leaked until 2026-10-03 (found by UBSan/ASan on a
          * mutated archive, TESTING.md, *Method 14*). */
-        sink_report_cuts(&sink);
-        sink_late_final(&sink, only, only_hit, nonly);
+        sink_report_cuts(s);
+        sink_late_final(s, a->only, st->only_hit, a->nonly);
         return 1;
     }
-    if (sink.unsupported) {
+    if (s->unsupported) {
         /* The one failure a user can do something about that is not
          * about their machine: this build cannot read that method YET,
          * and the file itself is what would fix that. Every method this
@@ -3448,11 +3624,11 @@ nextlayer:
         fprintf(stderr,
                 "macextract: %d entr%s use%s a compression method this build "
                 "cannot read yet.\n",
-                sink.unsupported, sink.unsupported == 1 ? "y" : "ies",
-                sink.unsupported == 1 ? "s" : "");
-        if (sink.unsup_method)
+                s->unsupported, s->unsupported == 1 ? "y" : "ies",
+                s->unsupported == 1 ? "s" : "");
+        if (s->unsup_method)
             fprintf(stderr, "macextract: the first is %s method %d.\n",
-                    unc_format_name(fmt), sink.unsup_method);
+                    unc_format_name(L->fmt), s->unsup_method);
         /* No URL, on purpose: a link names a host, an account and a
          * project, and all three outlive their spelling badly. Somebody
          * who has this program can find where it came from. */
@@ -3461,23 +3637,23 @@ nextlayer:
                 "issue — a specimen\n"
                 "macextract: is exactly what is needed to add support.\n");
     }
-    sink_report_cuts(&sink);
+    sink_report_cuts(s);
     /* A selector that matched nothing is a typo, and a typo must not
      * extract nothing and exit 0. */
-    if (sink.nonly) onlymiss = only_report_misses(only, only_hit, nonly);
+    if (s->nonly) onlymiss = only_report_misses(a->only, st->only_hit, a->nonly);
     /* Said once at the end as well as once per entry: a long run's
      * per-entry lines scroll away, and this is the one thing about the
      * output that a user has to know afterwards. Not an error — the
      * files are there and they open. */
-    if (sink.inexact)
+    if (s->inexact)
         fprintf(stderr, "macextract: %d entr%s rebuilt from what a StuffIt "
                         "Optimizer left, and %s NOT the original file%s\n",
-                sink.inexact, sink.inexact == 1 ? "y was" : "ies were",
-                sink.inexact == 1 ? "is" : "are",
-                sink.inexact == 1 ? "" : "s");
-    if (sink.errors) {
+                s->inexact, s->inexact == 1 ? "y was" : "ies were",
+                s->inexact == 1 ? "is" : "are",
+                s->inexact == 1 ? "" : "s");
+    if (s->errors) {
         fprintf(stderr, "macextract: %d of %d entries failed\n",
-                sink.errors, sink.entries);
+                s->errors, s->entries);
         /* Say by how much, once, on its own line: the per-entry lines are
          * what the harnesses read, so the number goes here rather than
          * into them. Only when a budget was actually set — without one
@@ -3490,95 +3666,81 @@ nextlayer:
          * that needs another 200. Measured 2026-09-01: `synth-dd-m5.dd`
          * at --budget 197728 reports 928 and wants 203,680 more — its
          * minimum budget, bisected, is 401,408. */
-        if (ba.shortby)
+        if (L->ba.shortby)
             fprintf(stderr, "macextract: at least %u bytes more memory "
-                            "would have been needed\n", (unsigned)ba.shortby);
-        sink_late_final(&sink, only, only_hit, nonly);
+                            "would have been needed\n", (unsigned)L->ba.shortby);
+        sink_late_final(s, a->only, st->only_hit, a->nonly);
         return 1;
     }
-    if (onlymiss) return 1;
+    return onlymiss ? 1 : 0;
+}
 
-    /* This layer extracted cleanly: the previous layer's envelope file
-     * (if any) is no longer needed. */
-    if (delfile[0]) {
-        char tmp[PATHBUF + sizeof DEFER_SUFFIX];
-        const char *was[2];
-        int k;
-        was[0] = delfile;
-        was[1] = delrsrc;
-        remove(delfile);
-        if (delrsrc[0]) remove(delrsrc);
-        /* sink_open_fork deferred only a path that fit with the suffix,
-         * so a cut here would be a bug; it is skipped rather than renaming
-         * a file nobody wrote. */
-        for (k = 0; k < 2; k++)
-            if (sink.deferred[k] &&
-                (size_t)snprintf(tmp, sizeof tmp, "%s" DEFER_SUFFIX, was[k])
-                    < sizeof tmp)
-                rename(tmp, was[k]);
-        delfile[0] = 0;
-        delrsrc[0] = 0;
+/* One layer of the chain. Returns LAYER_NEXT when the chain goes on
+ * (st holds the next layer's input), or the run's exit code. */
+static int run_layer(const CliArgs *a, LayerState *st)
+{
+    Layer L;
+    UncFormat next;
+    struct stat st_in;
+    int code;
+
+    memset(&L, 0, sizeof L);
+    L.file = st->curfile;
+    L.fio.f = fopen(L.file, "rb");
+    if (!L.fio.f) {
+        fprintf(stderr, "macextract: %s: %s\n", L.file, strerror(errno));
+        return 1;
     }
+    if (stat(L.file, &st_in) == 0) L.fio.size = file_size_off(&st_in, L.file);
+    else L.fio.size = UNC_SIZE_UNKNOWN;
 
-    /* Does the chain go on? Asked only now, once a write deferred beside
-     * the envelope has been renamed into place: before, the path still
-     * held the envelope's bytes. */
-    nextfmt = UNC_FORMAT_UNKNOWN;
-    if (strcmp(cmd, "x") == 0 && !no_recurse && depth < 8 &&
-        layer_unwraps(fmt) &&
-        sink.file_count == 1 && sink.dir_count == 0 &&
-        sink.last_ok_path[0] &&
-        /* An application is where the chain stops, whatever its data
-         * fork holds: an installer or a self-extracting archive is run,
-         * and what it installs is not what its data fork extracts to
-         * (DECISIONS.md 2026-10-16, *the installer that was a layer*).
-         * unar stops there too. */
-        sink.last_ok_type != 0x4150504CUL /* 'APPL' */) {
-        FILE *pf = fopen(sink.last_ok_at, "rb");
-        if (pf) {
-            FileIO pio_f;
-            UncIO pio;
-            struct stat pst;
-            memset(&pio_f, 0, sizeof pio_f);
-            pio_f.f = pf;
-            pio_f.size = stat(sink.last_ok_at, &pst) == 0
-                         ? (unc_off_t)pst.st_size : UNC_OFF_UNKNOWN;
-            pio.ctx = &pio_f;
-            pio.read = fio_read;
-            pio.seek = fio_seek;
-            pio.tell = fio_tell;
-            pio.size = fio_size;
-            nextfmt = unc_sniff(&pio);
-            fclose(pf);
+    code = layer_extract(a, st, &L);
+    fclose(L.fio.f);
+    if (code != LAYER_NEXT) return code;
+
+    if (a->stats)
+        fprintf(stderr, "alloc: high-water %u bytes, %u refused\n",
+                L.ba.high_water, L.ba.failed);
+    if (layer_verdict(a, st, &L)) return 1;
+
+    st_drop_previous(st, &L.sink);
+    next = st_next_format(a, st, L.fmt, &L.sink);
+    if (L.sink.only_late) {
+        if (next != UNC_FORMAT_UNKNOWN) {
+            if (sink_aside_settle(&L.sink)) return 1;
+        } else if (sink_late_final(&L.sink, a->only, st->only_hit, a->nonly)) {
+            return 1;
         }
     }
-    if (sink.only_late) {
-        if (nextfmt != UNC_FORMAT_UNKNOWN) {
-            if (sink_aside_settle(&sink)) return 1;
-        }
-        else if (sink_late_final(&sink, only, only_hit, nonly)) return 1;
-    }
+    if (next == UNC_FORMAT_UNKNOWN) return 0;
 
     /* Envelope auto-unwrap (real-world files are chained: .sit.hqx,
-     * .cpt.bin, .tar.Z ...): when an envelope format yielded exactly
-     * one file that sniffs as something (nextfmt, above), extract it in
-     * place. -nr disables. */
-    if (nextfmt != UNC_FORMAT_UNKNOWN) {
-        if (verbose)
-            fprintf(stderr, "unwrapping: %s (%s)\n",
-                    sink.last_ok_path, unc_format_name(nextfmt));
-        snprintf(delfile, sizeof delfile, "%s", sink.last_ok_path);
-        snprintf(delrsrc, sizeof delrsrc, "%s", sink.last_ok_rsrc);
-        snprintf(curfile, sizeof curfile, "%s", sink.last_ok_path);
-        depth++;
-        force = NULL;
-        sink.file_count = sink.dir_count = 0;
-        sink.last_ok_path[0] = 0;
-        sink.last_ok_rsrc[0] = 0;
-        sink.entries = sink.errors = 0;
-        goto nextlayer;
+     * .cpt.bin, .tar.Z ...): the one file this layer wrote sniffs as
+     * something, so it is extracted in place. -nr disables. */
+    if (a->verbose)
+        fprintf(stderr, "unwrapping: %s (%s)\n",
+                L.sink.last_ok_path, unc_format_name(next));
+    st_advance(st, &L.sink);
+    return LAYER_NEXT;
+}
+
+static int cli_main(int argc, char **argv)
+{
+    CliArgs a;
+    static LayerState st;      /* static: ~21 KB of paths and the reading list */
+    int ret;
+
+    if (getenv("UNC_SHORT_READ")) {
+        fio_read_cap = (int32_t)atol(getenv("UNC_SHORT_READ"));
+        /* Said, so a harness can tell a binary that honours the cap from
+         * one that predates it and passes every comparison by ignoring it. */
+        fprintf(stderr, "macextract: every read capped at %ld B\n",
+                (long)fio_read_cap);
     }
-    return 0;
+    if ((ret = parse_args(argc, argv, &a)) != LAYER_NEXT) return ret;
+    if (st_init(&st, &a)) return 1;
+    do ret = run_layer(&a, &st); while (ret == LAYER_NEXT);
+    return ret;
 }
 
 /* A listing is the output of `l`, and one sent to a full disk is as lost
