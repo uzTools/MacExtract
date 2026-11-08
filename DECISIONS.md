@@ -23068,9 +23068,17 @@ code could not be carried. So of the 18 `CARRIES` files, the six holding
 transcribed code are LGPL: `unc_lzdyn.c` and `sit14.c` (libxad's, whole),
 `fmt_hecx.c` (hexbin's, whole), `fmt_arc.c` (Crunch and Crush), `fmt_dd.c`
 (method 7's Stac LZS, "transcribed", and method 2's splay tree) and
-`unc_crypt.c` — the closest call: its key derivations follow XADMaster's
-routines, and reading them as facts would rest on a closer comparison than
-was made. The other twelve, and the ten files outside `src/` that cite a
+`unc_crypt.c` (StuffItDES's key schedule and StuffIt classic's key
+derivation). That last was the closest call, and was compared the same
+day: `sit_nibble` is XADMaster's `Nibble` character for character,
+`sitdes_setkey` is `StuffItDESSetKey`'s sixteen nibble expressions
+regrouped into standard DES's layout, and `unc_crypt_sit` follows
+`keyForPasswordData:entryKey:MKey:` step for step under the same names and
+constants, differing only in the fold count (measured, and XADMaster's is
+wrong at 8 and from 17) and in deriving the schedule once. Code, so LGPL.
+The file's other two citations are facts: StuffIt 5's key is MD5 truncated
+to five bytes and checked by MD5 again (`XADStuffIt5Parser.m`), and ARC's
+garble is an XOR with the password by position (`XADXORHandle.m`). The other twelve, and the ten files outside `src/` that cite a
 layout or rule, are 0BSD. `CARRIES` keeps all eighteen: leaving XADMaster
 is about where the knowledge came from as well as the licence.
 

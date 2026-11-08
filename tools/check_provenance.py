@@ -90,7 +90,7 @@ CODE = {
     "fmt_hecx.c",   # hexbin's hecx.c and dl.c, the whole decoder
     "fmt_arc.c",    # XADMaster's Crunch and Crush handles
     "fmt_dd.c",     # XADMaster's method-2 splay tree and Stac LZS
-    "unc_crypt.c",  # XADMaster's StuffIt key derivations
+    "unc_crypt.c",  # XADMaster's StuffItDES schedule and key derivation
 }
 
 # Mentions a reference only to say what it no longer owes, or to

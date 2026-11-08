@@ -46,7 +46,12 @@ hand.
                        derivation (XADStuffItDESHandle.m), StuffIt 5's
                        password hash (XADStuffIt5Parser.m) and ARC's
                        garble (XADXORHandle.m). No standard in
-                       reference/notes/ states the first. PackIt's two
+                       reference/notes/ states the first. The schedule
+                       and the derivation are XADMaster's code, compared
+                       2026-11-08: `sit_nibble` is its `Nibble` verbatim,
+                       the schedule its sixteen expressions regrouped,
+                       the derivation its routine step for step; the
+                       hash and the garble are facts. PackIt's two
                        ciphers left on 2026-10-05: they are Packit III
                        1.3's own, read out of and then RUN out of its
                        CODE 1 and CODE 256 under qemu-m68k, and graded
