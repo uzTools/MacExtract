@@ -204,6 +204,16 @@ case for.
 - `budget-parse`: `--budget 1M` must let a 32 KB-window gzip through and
   `1K` must not; thirteen malformed or out-of-range values must each be a
   usage error, exit 2.
+- `only-late-user-file`: the user's `Note.txt` (and its `.rsrc` or `._`
+  sidecar) where `x Note.bin --only nosuch` would write, with and without
+  `--overwrite`: untouched, and the selector's miss the only line; the
+  control, `--only Note.txt --overwrite`, replaces it; a selected entry
+  refused is not reported as matching nothing.
+- `original-every-layer`: `A.bin` holding a tar holding `A.bin`, two and
+  three layers deep, extracted beside itself with `--overwrite`: `A.bin`
+  must survive, exit 1.
+- `refusal-said-once`: an entry refused as the input itself is followed
+  by one "output error" (the layer's), not two.
 
 ### Exact oracle invocation
 

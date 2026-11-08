@@ -552,6 +552,8 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-07 (the budget that took anything) — `--budget` was `strtoul` with no end or range check: "1M" was one byte, "lots" no cap, and 4G and up wrapped; it takes digits and an optional K/M/G now, and anything else is a usage error
 - 2026-11-07 (every path the CLI deletes, renames or creates) — the audit after the review: each `remove`, `rename`, `unlink` and file creation in `cli/main.c`, and why it can only touch what this run wrote
 - 2026-11-08 (the naming rules in one place) — the multi-part naming rules (`NAME.zNN`/`NAME.zip`, `NAME.NNN`) were written twice, in `cli/main.c` and in the Mac shell; they are one engine function, `unc_segment_name_part`, and the shell's copies are gone for −128 B
+- 2026-11-08 (the file an excluded entry replaced) — under `--only`, a layer that might unwrap wrote an entry nobody selected over the user's file of that name with `--overwrite`, then removed it; such an entry is written aside now, and moved into place only if the chain goes through it
+- 2026-11-08 (the original on every layer) — from layer 2 on, `--overwrite` could replace the archive named on the command line; it and every part located that this run did not decode are on every layer's reading list now
 
 ---
 
@@ -22704,9 +22706,10 @@ wrote (`sink_note_late`). If the chain goes on, the record is dropped and
 the next layer filters as before; if not, `--only` is applied to the
 record as `l` applies it to the listing: a file not asked for is removed
 — this run's own, written moments before — and an unmatched selector is
-reported, exit 1. Under `--overwrite` a removed file may have replaced
-one of the user's of that name, as any unwrap's intermediate may; not
-covered. Folder entries of such a layer are not judged (no envelope here
+reported, exit 1. Under `--overwrite` a removed file had replaced the
+user's file of that name (corrected 2026-11-08: measured, and fixed by
+writing such entries aside, *the file an excluded entry replaced*).
+Folder entries of such a layer are not judged (no envelope here
 yields one). The sniff that decides the chain moved into a single place,
 after the deferred rename, which is where it has to read.
 
@@ -22776,7 +22779,8 @@ and the case in `tools/run_cli_safety.py` that fails without that rule.
 | cleanup `remove(delfile)` | the previous layer's file | `last_ok_path`, a file that layer wrote; an inner entry on it is deferred or, by inode, refused | `overwrite-self` |
 | cleanup `remove(delrsrc)` | its sidecar | only if that layer opened the fork (`last_ok_rsrc`) | `sidecar-not-ours` |
 | cleanup `rename` | the deferred temp | keyed by the path it matched; buffer `PATHBUF` + suffix | `deferred-by-path`, `long-paths` |
-| `sink_late_done` `remove` | files a final envelope layer wrote that `--only` did not select | recorded in `sink_end` from what was written | `only-last-layer` |
+| `sink_late_done` `remove` | asides a final envelope layer wrote for entries `--only` did not select | each created by `mkstemp`, recorded per entry (corrected 2026-11-08: they were the entries' own paths) | `only-last-layer`, `only-late-user-file` |
+| `sink_aside_settle` `rename` | an aside, onto its entry's path, when the chain goes through it | the rules `sink_open_fork` applies to that path | `only-last-layer` |
 | `env_peel` `remove` on failure | a part it just created | created `O_EXCL` in the same call | — |
 | `seg_peel_clean` `remove`, `rmdir` | decoded parts | recorded per part, in a `mkdtemp` folder; `rmdir` refuses a folder holding anything else | `peel-folder-not-ours` |
 | `mkdir(outdir)` | `-o` itself | creates only; the user's own choice | — |
@@ -22785,8 +22789,7 @@ Every row but `env_peel` and `mkdir(outdir)` was changed by the items
 above. `env_peel` was already safe in effect — its caller removed a path
 it had just built — and now cleans up after itself. Not covered, said where it was found:
 a folder link swapped in during the run (*the links in the output
-folder*), and a file a removed `--only` reject had replaced under
-`--overwrite` (*the selector the last layer ignored*).
+folder*).
 
 ## 2026-11-08 (the naming rules in one place) — the multi-part naming rules (`NAME.zNN`/`NAME.zip`, `NAME.NNN`) were written twice, in `cli/main.c` and in the Mac shell; they are one engine function, `unc_segment_name_part`, and the shell's copies are gone for −128 B
 
@@ -22830,3 +22833,66 @@ set, placed by content, and `--named` found every part beside the first.
 The split walk's first verdict was MISMATCH with the Mac right: the
 reference listed the CLI's visible `.rsrc` sidecar, which `phase_chain`
 stopped doing on 2026-11-03; `phase_named` now uses hidden forks too.
+
+## 2026-11-08 (the file an excluded entry replaced) — under `--only`, a layer that might unwrap wrote an entry nobody selected over the user's file of that name with `--overwrite`, then removed it; such an entry is written aside now, and moved into place only if the chain goes through it
+
+**Claim, measured** (`run_cli_safety.py only-late-user-file`, against the
+parent commit). `echo USER > o/Note.txt; x Note.bin -o o --overwrite
+--only nosuch`, `Note.bin` a MacBinary of a text file named `Note.txt`:
+`o` was left empty, exit 1 — the layer (*the selector the last layer
+ignored*) unlinked the user's file to write its entry, then removed that
+entry as not selected. The user's `Note.txt.rsrc` / `._Note.txt` went the
+same way. Without `--overwrite`, the entry nobody asked for was refused as
+"output path already exists" and the run said "output error" twice for
+it; and a SELECTED entry refused that way was then reported as `--only
+"Note.txt": no entry of this archive has that name`, because hits were
+taken only from what the layer managed to write.
+
+**The fix.** Which entries the selectors name is known at `sink_begin`;
+only whether the layer is the last is not. A named entry is written as
+any other, so `--overwrite --only Note.txt` still replaces the user's
+file, as asked. An entry not named is written ASIDE — a new file beside
+its path, `.macextract-aside-XXXXXX`, `mkstemp`'s, mode 0666 less the
+umask — and if the layer is the last it is removed, having touched
+nothing; if the chain goes on through it, it is renamed onto its path
+under the rules `sink_open_fork` applies there (never the file being
+read, an existing one only with `--overwrite`), once the envelope's own
+file is gone. The chain's sniff reads the aside. Hits are recorded at
+`sink_begin` into the layer's own flags and counted only when it is the
+last, as `l` counts them. An aside that fails mid-entry is removed.
+
+**Refused: "do not let --overwrite replace a file while `only_late` is
+set".** It would make `--overwrite --only Note.txt` refuse exactly the
+replacement the user asked for, and it leaves the excluded entry's
+"already exists" failure in place.
+
+**What changes beyond the fix.** An excluded entry that collides on a
+layer the chain goes THROUGH is now refused at the rename, after the
+layer, with the same words and exit 1, rather than inside it. Not seen in
+any baseline case; constructed only.
+
+## 2026-11-08 (the original on every layer) — from layer 2 on, `--overwrite` could replace the archive named on the command line; it and every part located that this run did not decode are on every layer's reading list now
+
+**Claim, measured** (`run_cli_safety.py original-every-layer`, against
+the parent commit). `A.bin` a MacBinary of `B.tar` holding a member named
+`A.bin`, `x A.bin --overwrite` in its own folder: `A.bin` became the
+member's six bytes, exit 0; three layers deep (`A.bin` → `B.bin` →
+`C.tar`) the same. The reading list was rebuilt per layer from that
+layer's input, so the user's archive left it after layer 1, while
+`sink_open_fork`'s comment said nothing deletes it.
+
+**Decision: yes, on every layer.** What a later layer may not write over
+is every file an earlier layer read that this run did not write: the
+command line's file, and the parts of a set located beside it or named
+with `--part` or `--ask`. Not the intermediate files (a layer's own input
+from layer 2 on) nor parts decoded into the peel folder: this run deletes
+those, and a later output can be given the freed inode, which would then
+be refused as "being read" with nothing reading it. The refusal's words
+are unchanged ("is the archive being read; not written over"), exit 1.
+
+**And the refusal is said once.** An entry the sink refused, or whose
+write it reported with the system's words, was followed by
+`NAME: output error` for the entry and then the layer's own `FILE: output
+error` — `Self.bin` three lines for one refusal
+(`run_cli_safety.py refusal-said-once`). The entry's line is dropped when
+the sink has already said why; the layer's stays.

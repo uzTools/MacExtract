@@ -498,6 +498,98 @@ def case_budget_parse(tmp):
     return probs
 
 
+def case_only_late_user_file(tmp):
+    """Item 9: a layer that may unwrap is written whole and judged by
+    --only afterwards. With --overwrite its entry replaced the user's
+    o/Note.txt, and the judge then removed it as not asked for: the
+    user's file was gone. Without --overwrite the excluded entry was
+    refused as "already exists" and failed the run with two "output
+    error" lines for a file nobody asked for. A file the user already
+    has, data fork or sidecar, must be left as it was; the excluded
+    entry must say nothing but the selector's miss; and the control
+    (--only naming it, --overwrite) must still replace it."""
+    probs = []
+    note = b"just a note, not an archive\r" * 20
+    for label, rsrc, hidden in (("data", b"", False), ("rsrc", b"R" * 300, False),
+                                ("hidden", b"R" * 300, True)):
+        d = os.path.join(tmp, label)
+        os.makedirs(os.path.join(d, "o"))
+        write(os.path.join(d, "Note.bin"),
+              macbinary(b"Note.txt", note, rsrc=rsrc, typ=b"TEXT"))
+        side = "._Note.txt" if hidden else "Note.txt.rsrc"
+        mine = {"Note.txt": b"USER\n"}
+        if rsrc:
+            mine[side] = b"USER RSRC\n"
+        forks = ["--forks", "hidden"] if hidden else []
+        for extra in (["--overwrite"], []):
+            for n, b in mine.items():
+                write(os.path.join(d, "o", n), b)
+            rc, err = run("x", "Note.bin", "-o", "o", *forks, *extra,
+                          "--only", "nosuch", cwd=d)
+            left = {n: read(os.path.join(d, "o", n))
+                    for n in sorted(os.listdir(os.path.join(d, "o")))}
+            lines = [l for l in err.strip().splitlines() if l]
+            if left != mine:
+                probs.append(f"{label} {extra}: the user's files were changed: "
+                             f"{sorted(left)} (exit {rc})")
+            if rc != 1 or len(lines) != 1 or "nosuch" not in lines[0]:
+                probs.append(f"{label} {extra}: wanted only the selector's "
+                             f"miss, exit 1; got exit {rc} {lines!r}")
+        rc, err = run("x", "Note.bin", "-o", "o", *forks, "--overwrite",
+                      "--only", "Note.txt", cwd=d)
+        if rc != 0 or read(os.path.join(d, "o", "Note.txt")) != note:
+            probs.append(f"{label}: --only Note.txt --overwrite did not "
+                         f"replace it (exit {rc}, {err.strip()[:120]!r})")
+    # A selected entry that fails is not one "no entry has that name".
+    d = os.path.join(tmp, "data")
+    write(os.path.join(d, "o", "Note.txt"), b"USER\n")
+    rc, err = run("x", "Note.bin", "-o", "o", "--only", "Note.txt", cwd=d)
+    if rc != 1 or "already exists" not in err or "no entry" in err:
+        probs.append(f"selected but refused: wanted the refusal alone, exit 1;"
+                     f" got exit {rc} {err.strip()[:200]!r}")
+    return probs
+
+
+def case_original_every_layer(tmp):
+    """Item 10: the file named on the command line was protected only on
+    the first layer. A.bin holding B.tar holding a member named A.bin,
+    extracted beside itself with --overwrite: layer 2 replaced the user's
+    archive with the member and exited 0. Two and three layers deep."""
+    probs = []
+    inner = tar_of([("A.bin", b"inner\n"), ("c.txt", b"c\n")])
+    for label, arc in (("two", macbinary(b"B.tar", inner)),
+                       ("three", macbinary(b"B.bin", macbinary(b"C.tar", inner)))):
+        d = os.path.join(tmp, label)
+        os.makedirs(d)
+        write(os.path.join(d, "A.bin"), arc)
+        rc, err = run("x", "A.bin", "--overwrite", cwd=d)
+        if read(os.path.join(d, "A.bin")) != arc:
+            probs.append(f"{label} layers: A.bin was replaced (exit {rc}, "
+                         f"{err.strip()[:160]!r})")
+        elif rc != 1 or "is the archive being read" not in err:
+            probs.append(f"{label} layers: wanted the refusal, exit 1; got "
+                         f"exit {rc} {err.strip()[:160]!r}")
+    return probs
+
+
+def case_refusal_said_once(tmp):
+    """Item 11: an entry the sink refused (the input itself, a path that
+    exists) was said three times: the refusal, then "NAME: output error"
+    for the entry, then the layer's own "output error". The entry's line
+    added nothing; the refusal and the layer's line stay."""
+    probs = []
+    d = os.path.join(tmp, "d")
+    os.makedirs(d)
+    write(os.path.join(d, "Self.bin"),
+          macbinary(b"Self.bin", tar_of([("inner.txt", b"x" * 600)])))
+    rc, err = run("x", "Self.bin", "--overwrite", cwd=d)
+    n = err.count("output error")
+    if rc != 1 or "is the archive being read" not in err or n != 1:
+        probs.append(f"wanted the refusal and one \"output error\", exit 1; "
+                     f"got exit {rc}, {n} of them: {err.strip()[:200]!r}")
+    return probs
+
+
 CASES = {
     "overwrite-self": case_overwrite_self,
     "sidecar-not-ours": case_sidecar_not_ours,
@@ -510,6 +602,9 @@ CASES = {
     "peel-folder-not-ours": case_peel_folder_not_ours,
     "mkey-past-256k": case_mkey_past_256k,
     "budget-parse": case_budget_parse,
+    "only-late-user-file": case_only_late_user_file,
+    "original-every-layer": case_original_every_layer,
+    "refusal-said-once": case_refusal_said_once,
 }
 
 

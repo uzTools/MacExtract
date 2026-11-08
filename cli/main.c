@@ -343,6 +343,15 @@ typedef struct {
     int      numbered;
 } CutName;
 
+/* Files by device and inode: no spelling, link or hard link of one is
+ * ever opened for writing (sink_is_reading). Room for one layer's own
+ * input and parts, and as many again carried from earlier layers. */
+#define READ_MAX (2 * (UNC_SEG_MAX_PARTS + 1))
+typedef struct {
+    struct { dev_t dev; ino_t ino; } id[READ_MAX];
+    int n;
+} ReadList;
+
 typedef struct {
     const char *outdir;
     int         list_only;
@@ -352,6 +361,8 @@ typedef struct {
     int         overwrite;      /* write over existing output files    */
     int         clobber;        /* last open refused: path existed     */
     int         write_err;      /* this entry's write error was said   */
+    int         said;           /* this entry's failure was explained,
+                                 * so "NAME: output error" adds nothing */
     const char *unwrap_src;     /* envelope being unwrapped, or NULL   */
     const char *unwrap_rsrc;    /* ITS sidecar, only if the layer before
                                  * wrote one; "" or NULL otherwise      */
@@ -360,22 +371,33 @@ typedef struct {
                                  * matched, and is renamed onto it once
                                  * that is deleted                     */
     /* Every file this layer READS — the layer itself and, for a
-     * segmented set, each part located — by device and inode, so that no
-     * spelling, link or hard link of one is ever opened for writing
-     * (sink_is_reading). */
-    struct { dev_t dev; ino_t ino; } reading[UNC_SEG_MAX_PARTS + 1];
-    int         nreading;
+     * segmented set, each part located — and every file an earlier layer
+     * read that this run did not write, the archive named on the command
+     * line first (DECISIONS.md 2026-11-08, *the original on every layer*). */
+    ReadList    reading;
     /* --only: the entries the user named, and one flag each recording
      * whether anything matched. NULL/0 means "every entry", which is
      * what every run did before 2026-08-28. */
     const char **only;
     unsigned char *only_hit;
     int         nonly;
-    /* --only on a layer written whole because it may unwrap (main): the
-     * files it wrote, judged once it turns out to be the last layer. */
+    /* --only on a layer written whole because it may unwrap (main). An
+     * entry the selectors do not name is written ASIDE, to a new file
+     * beside its path, so nothing already there is replaced for it: moved
+     * into place if the chain goes on through it (sink_aside_settle),
+     * removed if this layer is the last (sink_late_final). The hits are
+     * kept apart until then: an envelope's entry is not the user's.
+     * DECISIONS.md 2026-11-08, *the file an excluded entry replaced*. */
     int         only_late;
-    struct LateFile { char *path, *rsrc, *name; } *late;
+    const char **late_sel;
+    int         late_nsel;
+    unsigned char late_hit[ONLY_MAX];
+    int         cur_aside;          /* this entry is written aside      */
+    char        aside[2][PATHBUF];  /* where its data [0] and resource
+                                     * [1] fork went; "" if not opened  */
+    struct LateFile { char *path[2], *at[2]; } *late;  /* final, aside */
     int         nlate, latecap;
+    mode_t      file_mode;      /* 0666 less the umask, for the asides */
     int         mac_encoding;   /* names are MacRoman */
     int         verbose;
     int         show_finder;    /* --finder: the Finder metadata as hex
@@ -412,6 +434,8 @@ typedef struct {
     /* For envelope auto-unwrap: shape of what was extracted. */
     int         file_count, dir_count;
     char        last_ok_path[PATHBUF];
+    char        last_ok_at[PATHBUF];    /* where its bytes are: the path,
+                                         * or its aside */
     char        last_ok_rsrc[PATHBUF];  /* its sidecar, if this run wrote
                                          * one; "" otherwise */
     uint32_t    last_ok_type;  /* its Mac type, 0 if none */
@@ -659,20 +683,26 @@ static char *sink_orig_name(DiskSink *s, const UncEntryInfo *info)
  * Every match is recorded rather than the first, because the flags are
  * what let the run report a selector that matched NOTHING: a mistyped
  * name would otherwise extract nothing and say nothing, and exit 0. */
-static int only_wanted(DiskSink *s, const char *name)
+static int only_match(const char **only, unsigned char *hit, int nonly,
+                      const char *name)
 {
     int i, want = 0;
 
-    if (!s->nonly) return 1;
-    for (i = 0; i < s->nonly; i++) {
-        size_t n = strlen(s->only[i]);
-        if (strcmp(name, s->only[i]) == 0 ||
-            (strncmp(name, s->only[i], n) == 0 && name[n] == '/')) {
-            s->only_hit[i] = 1;
+    for (i = 0; i < nonly; i++) {
+        size_t n = strlen(only[i]);
+        if (strcmp(name, only[i]) == 0 ||
+            (strncmp(name, only[i], n) == 0 && name[n] == '/')) {
+            hit[i] = 1;
             want = 1;
         }
     }
     return want;
+}
+
+static int only_wanted(DiskSink *s, const char *name)
+{
+    if (!s->nonly) return 1;
+    return only_match(s->only, s->only_hit, s->nonly, name);
 }
 
 /* `l --meta`: what the Finder keeps beyond type, creator and flags, one
@@ -741,10 +771,14 @@ static int sink_begin(void *ctx, const UncEntryInfo *info)
     /* Not asked for: skipped before it counts, so the tallies at the end
      * describe the SELECTION rather than the archive. */
     if (!only_wanted(s, name)) return 1;
+    s->cur_aside = s->only_late &&
+                   !only_match(s->late_sel, s->late_hit, s->late_nsel, name);
+    s->aside[0][0] = s->aside[1][0] = 0;
 
     s->cur = *info;
     s->data_written = s->rsrc_written = 0;
     s->write_err = 0;
+    s->said = 0;
     s->entries++;
 
     if (s->list_only && s->show_meta) {
@@ -993,26 +1027,59 @@ static int sink_unwrap_exempt(DiskSink *s, const char *path)
  * its only entry carried its filename, and a hard link or another
  * spelling of the same file is the same file. DECISIONS.md 2026-11-07,
  * *what the CLI may delete*. */
-static int sink_is_reading(const DiskSink *s, const struct stat *st)
+static int read_has(const ReadList *r, const struct stat *st)
 {
     int i;
-    for (i = 0; i < s->nreading; i++)
-        if (s->reading[i].dev == st->st_dev && s->reading[i].ino == st->st_ino)
+    for (i = 0; i < r->n; i++)
+        if (r->id[i].dev == st->st_dev && r->id[i].ino == st->st_ino)
             return 1;
     return 0;
 }
 
-/* Remember a file this layer reads. A path that cannot be stat()ed is
- * not one the engine can be reading. */
-static void sink_note_reading(DiskSink *s, const char *path)
+static int sink_is_reading(const DiskSink *s, const struct stat *st)
+{
+    return read_has(&s->reading, st);
+}
+
+/* Remember a file that is read. A path that cannot be stat()ed is not
+ * one the engine can be reading. */
+static void read_add(ReadList *r, const char *path)
 {
     struct stat st;
-    if (s->nreading >= (int)(sizeof s->reading / sizeof s->reading[0]) ||
-        stat(path, &st) != 0 || sink_is_reading(s, &st))
+    if (r->n >= READ_MAX || stat(path, &st) != 0 || read_has(r, &st))
         return;
-    s->reading[s->nreading].dev = st.st_dev;
-    s->reading[s->nreading].ino = st.st_ino;
-    s->nreading++;
+    r->id[r->n].dev = st.st_dev;
+    r->id[r->n].ino = st.st_ino;
+    r->n++;
+}
+
+static void sink_note_reading(DiskSink *s, const char *path)
+{
+    read_add(&s->reading, path);
+}
+
+/* The new file an entry written aside goes to: beside `path`, in its
+ * folder, named by mkstemp so that nothing already there is opened. */
+#define ASIDE_NAME ".macextract-aside-XXXXXX"
+static FILE *sink_open_aside(DiskSink *s, UncFork fork, const char *path)
+{
+    char *t = s->aside[fork == UNC_FORK_RSRC];
+    const char *slash = strrchr(path, '/');
+    size_t dl = slash ? (size_t)(slash - path) : 1u;
+    FILE *f;
+    int fd;
+    if (dl + sizeof "/" ASIDE_NAME > PATHBUF) {
+        errno = ENAMETOOLONG;
+        return NULL;
+    }
+    memcpy(t, slash ? path : ".", dl);
+    memcpy(t + dl, "/" ASIDE_NAME, sizeof "/" ASIDE_NAME);
+    fd = mkstemp(t);
+    if (fd < 0) { t[0] = 0; return NULL; }
+    (void)fchmod(fd, s->file_mode);
+    f = fdopen(fd, "wb");
+    if (!f) { close(fd); remove(t); t[0] = 0; }
+    return f;
 }
 
 /* Never write over a file that is already there. Two entries can want
@@ -1032,11 +1099,12 @@ static FILE *sink_open_fork(DiskSink *s, UncFork fork)
     if (fork == UNC_FORK_DATA)
         snprintf(path, sizeof path, "%s", s->cur_path);
     else if (rsrc_path(s->cur_path, s->hidden_forks, path, sizeof path)) {
-        s->clobber = 1;
+        s->clobber = s->said = 1;
         fprintf(stderr, "macextract: %s: the resource fork's path is too "
                 "long to write\n", s->cur_path);
         return NULL;
     }
+    if (s->cur_aside) return sink_open_aside(s, fork, path);
     /* Keyed by the PATH that matched, not by the fork being written: an
      * inner data fork can carry the envelope's sidecar name, and keyed by
      * fork it was renamed onto the envelope's data path, which was gone —
@@ -1047,7 +1115,7 @@ static FILE *sink_open_fork(DiskSink *s, UncFork fork)
         size_t n = strlen(path);
         if (n + sizeof DEFER_SUFFIX > sizeof path) return NULL;
         if (s->deferred[ex - 1] && !s->overwrite) {
-            s->clobber = 1;
+            s->clobber = s->said = 1;
             fprintf(stderr, "macextract: %s: output path already exists; "
                     "re-run with --forks hidden to keep both forks, or "
                     "--overwrite\n", path);
@@ -1067,13 +1135,13 @@ static FILE *sink_open_fork(DiskSink *s, UncFork fork)
      * its own contents. */
     if (lstat(path, &st) == 0) {
         if (!S_ISLNK(st.st_mode) && sink_is_reading(s, &st)) {
-            s->clobber = 1;
+            s->clobber = s->said = 1;
             fprintf(stderr, "macextract: %s: is the archive being read; not "
                     "written over\n", path);
             return NULL;
         }
         if (!s->overwrite) {
-            s->clobber = 1;
+            s->clobber = s->said = 1;
             fprintf(stderr, "macextract: %s: output path already exists; "
                     "re-run with --forks hidden to keep both forks, or "
                     "--overwrite\n", path);
@@ -1091,7 +1159,7 @@ static void sink_say_write_error(DiskSink *s, UncFork fork)
     const char *path = s->cur_path;
     int e = errno;
     if (s->write_err) return;
-    s->write_err = 1;
+    s->write_err = s->said = 1;
     if (fork == UNC_FORK_RSRC &&
         rsrc_path(s->cur_path, s->hidden_forks, rp, sizeof rp) == 0)
         path = rp;
@@ -1134,6 +1202,7 @@ static int sink_write(void *ctx, UncFork fork, const void *buf, int32_t len)
             if (!s->clobber)   /* sink_open_fork already explained that one */
                 fprintf(stderr, "macextract: cannot create output for %s: %s\n",
                         s->cur_path, strerror(errno));
+            s->said = 1;
             return -1;
         }
     }
@@ -1189,52 +1258,89 @@ static const char *module_name(unsigned kind, unsigned id)
     return NULL;
 }
 
-/* Remember a file a layer under `only_late` wrote: its path, its
- * sidecar if one was written, and the name `l` would print for it. */
-static void sink_note_late(DiskSink *s, const char *name, int wrote_rsrc)
+/* Remember an entry written aside, or remove what it wrote when it
+ * failed: a file nobody asked for is not left half-written either. */
+static void sink_note_aside(DiskSink *s, int ok)
 {
     char rp[PATHBUF];
     struct LateFile *e;
-    if (s->nlate == s->latecap) {
+    int k;
+    if (ok && s->nlate == s->latecap) {
         int cap = s->latecap ? s->latecap * 2 : 4;
         struct LateFile *p = (struct LateFile *)realloc(s->late,
                                                        (size_t)cap * sizeof *p);
-        if (!p) return;
-        s->late = p;
-        s->latecap = cap;
+        if (p) { s->late = p; s->latecap = cap; }
+    }
+    if (!ok || s->nlate == s->latecap) {
+        for (k = 0; k < 2; k++) if (s->aside[k][0]) remove(s->aside[k]);
+        return;
     }
     e = &s->late[s->nlate];
-    e->path = seg_dup(s->cur_path);
-    e->name = seg_dup(name);
-    e->rsrc = wrote_rsrc &&
-              rsrc_path(s->cur_path, s->hidden_forks, rp, sizeof rp) == 0
-            ? seg_dup(rp) : NULL;
-    if (e->path && e->name) s->nlate++;
-    else { free(e->path); free(e->name); free(e->rsrc); }
+    e->path[0] = seg_dup(s->cur_path);
+    e->path[1] = s->aside[1][0] &&
+                 rsrc_path(s->cur_path, s->hidden_forks, rp, sizeof rp) == 0
+               ? seg_dup(rp) : NULL;
+    e->at[0] = s->aside[0][0] ? seg_dup(s->aside[0]) : NULL;
+    e->at[1] = s->aside[1][0] ? seg_dup(s->aside[1]) : NULL;
+    if (e->path[0] && e->at[0] && (!s->aside[1][0] || (e->path[1] && e->at[1]))) {
+        s->nlate++;
+        return;
+    }
+    for (k = 0; k < 2; k++) {
+        if (s->aside[k][0]) remove(s->aside[k]);
+        free(e->path[k]);
+        free(e->at[k]);
+    }
 }
 
-/* The layer turned out to be the last one: apply --only to what it
- * wrote, as `l` applies it to what it lists. A file not asked for is
- * removed — it is this run's own, written moments ago — and the hits are
- * recorded so the usual report names a selector that matched nothing
- * (DECISIONS.md 2026-11-07, *the selector the last layer ignored*). With
- * judge 0 the list is only freed. */
-static void sink_late_done(DiskSink *s, int judge)
+/* Forget the asides, removing them first with `drop`. */
+static void sink_late_done(DiskSink *s, int drop)
 {
-    int i;
-    for (i = 0; i < s->nlate; i++) {
-        struct LateFile *e = &s->late[i];
-        if (judge && !only_wanted(s, e->name)) {
-            remove(e->path);
-            if (e->rsrc) remove(e->rsrc);
+    int i, k;
+    for (i = 0; i < s->nlate; i++)
+        for (k = 0; k < 2; k++) {
+            if (drop && s->late[i].at[k]) remove(s->late[i].at[k]);
+            free(s->late[i].path[k]);
+            free(s->late[i].at[k]);
         }
-        free(e->path);
-        free(e->rsrc);
-        free(e->name);
-    }
     free(s->late);
     s->late = NULL;
     s->nlate = s->latecap = 0;
+}
+
+/* The chain goes on through this layer: every aside is moved onto its
+ * own path, under the rules sink_open_fork would have applied there —
+ * the file being read is never replaced, an existing one only with
+ * --overwrite. Called once the envelope's own file is gone, so its path
+ * is free. Returns the number refused; a refused aside is removed. */
+static int sink_aside_settle(DiskSink *s)
+{
+    int i, k, bad = 0;
+    for (i = 0; i < s->nlate; i++)
+        for (k = 0; k < 2; k++) {
+            struct LateFile *e = &s->late[i];
+            struct stat st;
+            const char *why = NULL;
+            if (!e->at[k]) continue;
+            if (lstat(e->path[k], &st) == 0) {
+                if (!S_ISLNK(st.st_mode) && sink_is_reading(s, &st))
+                    why = "is the archive being read; not written over";
+                else if (!s->overwrite)
+                    why = "output path already exists; re-run with --forks "
+                          "hidden to keep both forks, or --overwrite";
+            }
+            if (!why && rename(e->at[k], e->path[k]) != 0)
+                why = strerror(errno);
+            if (why) {
+                fprintf(stderr, "macextract: %s: %s\n", e->path[k], why);
+                remove(e->at[k]);
+                bad++;
+            }
+            free(e->at[k]);
+            e->at[k] = NULL;
+        }
+    sink_late_done(s, 0);
+    return bad;
 }
 
 /* Name each selector that matched nothing; returns how many. */
@@ -1251,15 +1357,16 @@ static int only_report_misses(const char **only, const unsigned char *hit,
     return miss;
 }
 
-/* A layer under `only_late` that is the last one: judge what it wrote,
- * and report what matched nothing. Returns the number of misses. */
+/* A layer under `only_late` that is the last one: remove what it wrote
+ * aside, count its hits, and report what matched nothing. Returns the
+ * number of misses. */
 static int sink_late_final(DiskSink *s, const char **only,
                            unsigned char *only_hit, int nonly)
 {
+    int i;
     if (!s->only_late) return 0;
-    s->only = only;
-    s->only_hit = only_hit;
-    s->nonly = nonly;
+    for (i = 0; i < nonly; i++)
+        if (s->late_hit[i]) only_hit[i] = 1;
     sink_late_done(s, 1);
     return only_report_misses(only, only_hit, nonly);
 }
@@ -1360,7 +1467,7 @@ static int sink_end(void *ctx, int status)
                             "have\n",
                     name, module_name(UNC_MODULE_ENCRYPTOR,
                                       s->cur.module_id));
-        } else {
+        } else if (!(status == UNC_ERR_SINK && s->said)) {
             fprintf(stderr, "macextract: %s: %s\n", name, unc_strerror(status));
         }
     } else {
@@ -1388,12 +1495,14 @@ static int sink_end(void *ctx, int status)
     if (s->cur.is_dir) s->dir_count++;
     else {
         s->file_count++;
-        if (status == UNC_OK && s->cur_path[0] && s->only_late)
-            sink_note_late(s, name, wrote_rsrc);
+        if (s->cur_aside)
+            sink_note_aside(s, status == UNC_OK && s->cur_path[0]);
         if (status == UNC_OK && s->cur_path[0])
         {
             snprintf(s->last_ok_path, sizeof s->last_ok_path, "%s",
                      s->cur_path);
+            snprintf(s->last_ok_at, sizeof s->last_ok_at, "%s",
+                     s->cur_aside ? s->aside[0] : s->cur_path);
             /* Recorded, never inferred from the name: what the next
              * layer may delete is what this one wrote. */
             if (wrote_rsrc)
@@ -2578,8 +2687,17 @@ static int cli_main(int argc, char **argv)
     const char *only[ONLY_MAX];
     unsigned char only_hit[ONLY_MAX];
     int nonly = 0, onlymiss = 0;
+    /* The files a layer read that this run did not write, carried to
+     * every later layer's reading list: the command line's file and the
+     * parts located beside it (DECISIONS.md 2026-11-08, *the original on
+     * every layer*). */
+    static ReadList kept;
+    mode_t file_mode;
 
     memset(only_hit, 0, sizeof only_hit);
+    file_mode = umask(0);
+    umask(file_mode);
+    file_mode = 0666 & ~file_mode;
     if (getenv("UNC_SHORT_READ")) {
         fio_read_cap = (int32_t)atol(getenv("UNC_SHORT_READ"));
         /* Said, so a harness can tell a binary that honours the cap from
@@ -2692,7 +2810,10 @@ nextlayer:
     sink.overwrite = overwrite;
     sink.unwrap_src = delfile;   /* "" until a layer is being unwrapped */
     sink.unwrap_rsrc = delrsrc;
+    sink.reading = kept;
     sink_note_reading(&sink, file);
+    if (depth == 0) read_add(&kept, file);
+    sink.file_mode = file_mode;
     sink.verbose = verbose;
     sink.show_finder = show_finder;
     sink.show_meta = show_meta;
@@ -2809,6 +2930,8 @@ nextlayer:
         sink.nonly    = nonly;
     } else if (nonly) {
         sink.only_late = 1;
+        sink.late_sel  = only;
+        sink.late_nsel = nonly;
     }
 
     /* Mac formats carry MacRoman names; zip/tar/gzip do not — nor does
@@ -3259,7 +3382,10 @@ nextlayer:
         /* Every part the joiner may open is as much the input as the
          * file named: none of them may be written over mid-join. */
         for (i = 1; i <= UNC_SEG_MAX_PARTS; i++)
-            if (seg.path[i]) sink_note_reading(&sink, seg.path[i]);
+            if (seg.path[i]) {
+                sink_note_reading(&sink, seg.path[i]);
+                if (!seg.peeled[i]) read_add(&kept, seg.path[i]);
+            }
 
         memset(&vs, 0, sizeof vs);   /* optional members are NULL ones */
         vs.ctx = &seg;
@@ -3399,14 +3525,14 @@ nextlayer:
          * (DECISIONS.md 2026-10-16, *the installer that was a layer*).
          * unar stops there too. */
         sink.last_ok_type != 0x4150504CUL /* 'APPL' */) {
-        FILE *pf = fopen(sink.last_ok_path, "rb");
+        FILE *pf = fopen(sink.last_ok_at, "rb");
         if (pf) {
             FileIO pio_f;
             UncIO pio;
             struct stat pst;
             memset(&pio_f, 0, sizeof pio_f);
             pio_f.f = pf;
-            pio_f.size = stat(sink.last_ok_path, &pst) == 0
+            pio_f.size = stat(sink.last_ok_at, &pst) == 0
                          ? (unc_off_t)pst.st_size : UNC_OFF_UNKNOWN;
             pio.ctx = &pio_f;
             pio.read = fio_read;
@@ -3418,7 +3544,9 @@ nextlayer:
         }
     }
     if (sink.only_late) {
-        if (nextfmt != UNC_FORMAT_UNKNOWN) sink_late_done(&sink, 0);
+        if (nextfmt != UNC_FORMAT_UNKNOWN) {
+            if (sink_aside_settle(&sink)) return 1;
+        }
         else if (sink_late_final(&sink, only, only_hit, nonly)) return 1;
     }
 
