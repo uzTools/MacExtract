@@ -43,7 +43,7 @@
  * as itself (DECISIONS.md 2026-10-17, *the sidecars Mac OS X left
  * beside the file*).
  *
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: 0BSD
  */
 #include "unc_internal.h"
 

@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# SPDX-License-Identifier: LGPL-2.1-or-later
 """derive_now.py — one of Now Compress's stream shapes, derived from
 the application's own output, and a tool that re-runs the reading.
 

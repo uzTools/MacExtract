@@ -42,7 +42,7 @@
  * (recursive) child count to the total. Parent chains are tracked by
  * header offset (diroffs), not by nesting order.
  *
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: 0BSD
  */
 #include "unc_internal.h"
 #include "fmt_sit5_priv.h"

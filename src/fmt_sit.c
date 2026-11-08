@@ -72,7 +72,7 @@
  * Get Info pane reads*, has why it is a reading and not an
  * observation.
  *
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: 0BSD
  */
 #include "unc_internal.h"
 
@@ -936,7 +936,7 @@ out:
 /* THREE RULES BELOW ARE NOT IN THAT NOTE and remain                  */
 /* Source: reference/libxad/libxad/portable/clients/StuffIt.c        */
 /* (SIT_mw, SITMW_out; Dirk Stöcker's libxad, which XADMaster's       */
-/* XADStuffItOldHandles.m carries unchanged) — LGPL, see NOTICE: the   */
+/* XADStuffItOldHandles.m carries unchanged; see NOTICE): the          */
 /* table RESTART (a code equal to the next free one) and the END of    */
 /* the stream (a code greater than it), with the 14-bit ceiling that   */
 /* goes with them. They are the only thing in this file that is still  */

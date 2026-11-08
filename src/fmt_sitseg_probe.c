@@ -14,7 +14,7 @@
  * it requires to be B0 56 and which StuffIt writes as a per-set value
  * (measured 2026-10-24; below, and fmt_sitseg.c).
  *
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: 0BSD
  */
 #include "fmt_sitseg_priv.h"
 

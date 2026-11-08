@@ -7,7 +7,7 @@
  *
  * Source: unchanged from fmt_binhex.c, whose provenance comments stand.
  *
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: 0BSD
  */
 #include "fmt_binhex_priv.h"
 

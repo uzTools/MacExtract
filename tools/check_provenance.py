@@ -33,17 +33,20 @@ direction the script was written to catch (BLOCKERS.md).
 Moving a file from CARRIES to HISTORICAL is the act of shedding it:
 do it in the same commit as the re-citation, with NOTICE.
 
-THE LICENCE FOLLOWS THE CITATION (the maintainer, 2026-11-08; DECISIONS.md
-2026-11-08, *the code we wrote*). Everything this project wrote is 0BSD,
-the tree's default in LICENSE; a file that carries somebody else's code or
-facts keeps LGPL-2.1-or-later and says so in an SPDX-License-Identifier
-line. Under src/, that line must be in exactly the CARRIES files. Outside
-src/ there is no list: a file with a live citation must carry the line,
-and a file with the line must have a live citation, so no file stays LGPL
-after its last citation goes. Every such file is named in NOTICE.
+THE LICENCE FOLLOWS THE CODE, NOT THE FACT (DECISIONS.md 2026-11-08, *the
+code we wrote*). Everything this project wrote is 0BSD, the tree's default
+in LICENSE. A file holding code transcribed from one of these references
+keeps LGPL-2.1-or-later and says so in an SPDX-License-Identifier line:
+CODE below, a subset of CARRIES. A file that carries only facts — a
+layout, an offset, a rule — is 0BSD; CARRIES still lists it, because
+leaving XADMaster is about where the knowledge came from, not only the
+licence. Under src/ the LGPL line must be in exactly the CODE files.
+Outside src/ a file with the line must have a live citation and be named
+in NOTICE, so no file stays LGPL after its last citation goes.
 
-What this cannot see: a borrowing nobody marked with a Source: line, and
-a file whose citation names a reference other than these three.
+What this cannot see: whether a citation is a fact or code — CODE is a
+human reading, recorded once; a borrowing nobody marked with a Source:
+line; and a citation of a reference other than these three.
 """
 
 import re
@@ -77,6 +80,17 @@ CARRIES = {
     "fmt_binhex_probe.c": "the .hex/.hcx header-line rule and the .dl first line (hexbin's hecx.c, hexbin.c)",
     "unc_sidecar.c":    "which names are Mac OS X sidecars, and the pairing rule",
     "unc_segment.c":    "the spanned-zip and .NNN split naming rules",
+}
+
+# The CARRIES files whose borrowing is CODE, transcribed, rather than facts:
+# these, and only these, are LGPL-2.1-or-later (read 2026-11-08; NOTICE).
+CODE = {
+    "unc_lzdyn.c",  # libxad's -lh2-/-lh3-, the whole file
+    "sit14.c",      # libxad's SIT_14, the whole file
+    "fmt_hecx.c",   # hexbin's hecx.c and dl.c, the whole decoder
+    "fmt_arc.c",    # XADMaster's Crunch and Crush handles
+    "fmt_dd.c",     # XADMaster's method-2 splay tree and Stac LZS
+    "unc_crypt.c",  # XADMaster's StuffIt key derivations
 }
 
 # Mentions a reference only to say what it no longer owes, or to
@@ -147,17 +161,15 @@ def main():
 
     bad = []
 
-    for name in sorted(set(CARRIES) - tagged):
-        bad.append("src/%s carries \"%s\" but has no "
+    for name in sorted(CODE - set(CARRIES)):
+        bad.append("src/%s is in CODE but not in CARRIES." % name)
+    for name in sorted(CODE - tagged):
+        bad.append("src/%s carries transcribed code but has no "
                    "\"SPDX-License-Identifier: LGPL-2.1-or-later\" line."
-                   % (name, CARRIES[name]))
-    for name in sorted(tagged - set(CARRIES)):
-        bad.append("src/%s says LGPL-2.1-or-later but is not in CARRIES; "
-                   "what this project wrote is 0BSD." % name)
-    for rel in sorted(out_live - out_tagged):
-        bad.append("%s has a Source-marked citation of XADMaster, libxad or "
-                   "macutils but no \"SPDX-License-Identifier: "
-                   "LGPL-2.1-or-later\" line." % rel)
+                   % name)
+    for name in sorted(tagged - CODE):
+        bad.append("src/%s says LGPL-2.1-or-later but is not in CODE; what "
+                   "this project wrote, facts included, is 0BSD." % name)
     for rel in sorted(out_tagged - out_live):
         bad.append("%s says LGPL-2.1-or-later but cites nothing it carries; "
                    "what this project wrote is 0BSD." % rel)
@@ -214,8 +226,8 @@ def main():
         # The licence scan must see the carriers, or it passes on nothing.
         if not tagged or not out_live:
             raise SystemExit("check_provenance: SELFTEST FAILED — the "
-                             "licence scan found no SPDX line under src/ or "
-                             "no citation outside it")
+                             "licence scan found no LGPL line under src/ or "
+                             "no citation outside it, so it reads nothing")
         print("check_provenance: selftest ok (%d mention, %d carry a live "
               "Source: citation, %d outside src/)"
               % (len(found), len(live), len(out_live)))
@@ -225,9 +237,9 @@ def main():
             print("check_provenance: FAIL: " + b)
         return 1
 
-    print("check_provenance: ok (%d carrying a live citation, %d historical, "
-          "%d outside src/, all LGPL-tagged and in NOTICE)"
-          % (len(CARRIES), len(HISTORICAL), len(out_tagged)))
+    print("check_provenance: ok (%d carrying a live citation, %d of them code "
+          "and LGPL, %d historical, all in NOTICE)"
+          % (len(CARRIES), len(CODE), len(HISTORICAL)))
     return 0
 
 

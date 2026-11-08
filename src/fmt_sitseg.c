@@ -11,8 +11,8 @@
  * Source: reference/XADMaster/XADStuffItSplitParser.m — the whole
  * layout below.
  * Layout (reference/XADMaster/XADStuffItSplitParser.m,
- * +recognizeFileWithHandle:, +volumesForHandle: and -parse — LGPL,
- * see NOTICE):
+ * +recognizeFileWithHandle:, +volumesForHandle: and -parse; see
+ * NOTICE):
  *
  *   Every part begins with a 100-byte header:
  *      0  two bytes, the same in every part of a set: a random set
@@ -93,7 +93,7 @@
  *   - a one-part set is just a file with a 100-byte hat: it extracts
  *     with no volume source at all.
  *
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: 0BSD
  */
 #include "fmt_sitseg_priv.h"
 

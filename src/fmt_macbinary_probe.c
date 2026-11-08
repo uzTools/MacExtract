@@ -28,7 +28,7 @@
  *     MacBinary I header has no checksum, so without it the whole of
  *     the evidence is a handful of zero bytes.
  *
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: 0BSD
  */
 #include "fmt_macbinary_priv.h"
 
@@ -37,7 +37,7 @@
  * is not it: XADMaster is the sole source, accepting this as a fallback
  * for files made by encoders that reached for the wrong table.
  * Source: reference/XADMaster/XADMacArchiveParser.m (XADCRCTable_a001
- * use, and the nonzero-date test above) — LGPL, see NOTICE. Bitwise form; runs over 124 bytes only, speed is
+ * use, and the nonzero-date test above); see NOTICE. Bitwise form; runs over 124 bytes only, speed is
  * irrelevant. */
 static uint16_t mb_crc16_a001(uint16_t crc, const uint8_t *buf, int32_t len)
 {

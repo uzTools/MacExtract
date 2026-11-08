@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# SPDX-License-Identifier: LGPL-2.1-or-later
 """synth_wrapped.py — put each part of a segmented set in its own envelope.
 
 A real download is not a bare set of parts. It is Archive.sit.1.hqx,

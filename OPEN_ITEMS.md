@@ -120,38 +120,36 @@ forks of classic StuffIt and Compact Pro (TESTING.md; FORMATS.md).
 
 ### What still holds the licence
 
-LGPL-2.1-or-later, through the 18 files `tools/check_provenance.py` lists
-as `CARRIES`: 12 owe XADMaster, 4 owe libxad, the Amiga library
-XADMaster carries them from (`unc_lzdyn.c`, `fmt_sit.c`, `sit14.c`,
-`fmt_dd.c`; same licence), and `fmt_hecx.c` and `fmt_binhex_probe.c`
-owe macutils' hexbin, whose README puts "some parts" under the GNU licence
-(NOTICE). Ten files outside `src/` that cite a layout or rule there,
-`cli/main.c` among them, are LGPL with them (NOTICE); facts, not code, so
-they go with the maintainer's word that a fact does not carry it, or with
-their citations. **A re-citation does not close a row**: the code has to be our
-own, written from facts this project established — a published
-description, the original program's behaviour on chosen input, or its own
-code read as BinHex 2.0's and Packit III's were (NOTICE) — and the file
-moves to `HISTORICAL` and its SPDX line to `0BSD` in the same commit.
+LGPL-2.1-or-later, through the six files that hold transcribed code
+(`CODE` in `tools/check_provenance.py`, **code** below). The other rows are
+facts read in somebody else's code, 0BSD already, and stay listed because
+leaving XADMaster is about where the knowledge came from (DECISIONS.md
+2026-11-08, *the code we wrote*). Of the 18 `CARRIES` files, 12 owe
+XADMaster, 4 owe libxad, the Amiga library XADMaster carries them from
+(`unc_lzdyn.c`, `fmt_sit.c`, `sit14.c`, `fmt_dd.c`; same licence), and
+`fmt_hecx.c` and `fmt_binhex_probe.c` owe macutils' hexbin, whose README
+puts "some parts" under the GNU licence (NOTICE). **A re-citation does not
+close a row**: the code has to be our own, written from facts this project
+established — a published description, the original program's behaviour on
+chosen input, or its own code read as BinHex 2.0's and Packit III's were
+(NOTICE) — and the file moves to `HISTORICAL`, and out of `CODE` with its
+SPDX line, in the same commit.
 
 | what | known | what would close it |
 |---|---|---|
-| `unc_lzdyn.c` — `-lh2-` and `-lh3-`, libxad's | lhasa implements neither; LHa for UNIX has its own licence (DECISIONS.md, *the 3,504 bytes that stay*) | a description written from what the original DOS LHA emits under DOSBox |
+| `unc_lzdyn.c` — `-lh2-` and `-lh3-`, libxad's, **code** | lhasa implements neither; LHa for UNIX has its own licence (DECISIONS.md, *the 3,504 bytes that stay*) | a description written from what the original DOS LHA emits under DOSBox |
 | `fmt_sit.c` — three rules of StuffIt method 8, libxad's | no specimen reaches them; deark leaves the method NULL (DECISIONS.md, *the layout Aladdin's own output settled*) | StuffIt made to reach them as an encoder, or shown not to and the rules deleted |
 | `fmt_sit5.c` — the encrypted header's bit 5 | nothing here sets it | a StuffIt 5 archive that sets it, or the rule deleted |
-| `unc_crypt.c` — StuffItDES's key schedule, StuffIt 5's hash, ARC's garble | the schedule reads all 64 key bits, so no standard one; graded against three StuffIt Deluxe 3.5.1 archives | the encryptor's own `DCMP` (512 + id) called as `tools/sdmodule/` calls SuperDisk!'s modules; the other two not looked at |
+| `unc_crypt.c` — StuffItDES's key schedule, StuffIt 5's hash, ARC's garble, **code** | the schedule reads all 64 key bits, so no standard one; graded against three StuffIt Deluxe 3.5.1 archives | the encryptor's own `DCMP` (512 + id) called as `tools/sdmodule/` calls SuperDisk!'s modules; the other two not looked at |
 | `unc_lzah.c`, `unc_internal.h` — the `-lh1-`/method-5 window preload | the corpus cannot tell XADMaster's reading from lhasa's (DECISIONS.md 2026-09-28, *the preload nothing reaches*) | a writer's specimen that tells the two readings apart |
-| `src/sit14.c` — StuffIt 5's method 14, libxad's | libxad's `SIT_14` is the only implementation (FORMATS.md, *StuffIt 5's method 14*) | a description written from StuffIt 5's own engine; the largest row, not priced |
-| `fmt_arc.c` — Crunch 5/6/7, Crush, the method numbers | no other implementation of 7 or Crush; not taken 2026-09-22 | the DOS originals as encoders, and a description |
-| `fmt_dd.c` — the DDAR 0x20 raw-fork shape, libxad's | — | DiskDoubler's own expander on a fork of that shape |
+| `src/sit14.c` — StuffIt 5's method 14, libxad's, **code** | libxad's `SIT_14` is the only implementation (FORMATS.md, *StuffIt 5's method 14*) | a description written from StuffIt 5's own engine; the largest row, not priced |
+| `fmt_arc.c` — Crunch 5/6/7, Crush, the method numbers, **code** | no other implementation of 7 or Crush; not taken 2026-09-22 | the DOS originals as encoders, and a description |
+| `fmt_dd.c` — method 7's Stac LZS and method 2's splay tree, transcribed, the per-method rules, and the DDAR 0x20 raw-fork shape, libxad's, **code** | listed as the raw-fork shape alone until 2026-11-08 (BLOCKERS.md, *Withdrawn claims*) | methods 2 and 7 described from DiskDoubler's own coders, as the wiki gave 6, 9 and 10; DiskDoubler's own expander on a fork of the 0x20 shape |
 | `fmt_sitseg.c`, `fmt_sitseg_probe.c` — the StuffIt split header | Aladdin never published it; nothing else in `reference/` reads it (NOTICE) | its offsets measured off sets StuffIt cuts, as the B0 56 bytes were |
 | `unc_sidecar.c` — which names are Mac OS X sidecars, and the pairing rule | — | not looked for |
 | `unc_segment.c` — the part names of a spanned zip (`NAME.zNN`, `NAME.zip` last) and a `.NNN` split, since 2026-11-08 | facts, not code (NOTICE) | not looked for |
 | five tolerances no specification supports — the MacBinary CRC-16/0xA001 fallback and its nonzero-date test, the byte-swapped AppleSingle header, DiskDoubler's stored header CRC of zero (with the split header above) | deark is a checked negative for all four; the two MacBinary ones are unexercised; kept, the maintainer's decision 2026-10-23 (DECISIONS.md 2026-10-23, *the probes next door*) | the writer that made such files, or the tolerance dropped |
-| `fmt_hecx.c`, `fmt_binhex_probe.c` — hexbin's | *BinHex before 4.0*, below | BinHex 2.0's own `CODE`, as that item says |
-
-**Everything else is 0BSD**, the 20 `HISTORICAL` files with it (the
-maintainer, 2026-11-08; DECISIONS.md 2026-11-08, *the code we wrote*).
+| `fmt_hecx.c` (**code**), `fmt_binhex_probe.c` — hexbin's | *BinHex before 4.0*, below | BinHex 2.0's own `CODE`, as that item says |
 
 ## The wait before the first callback
 

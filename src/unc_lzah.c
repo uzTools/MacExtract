@@ -41,7 +41,7 @@
  * descends from the same program: see DECISIONS.md for the one place the
  * readings differ (the window preload) and which the archives chose.
  *
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: 0BSD
  */
 #include "unc_internal.h"
 

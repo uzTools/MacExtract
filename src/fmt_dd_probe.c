@@ -7,7 +7,7 @@
  * bundle*). What a probe and its reader share is defined once, here, and
  * stays resident for the reader.
  *
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: 0BSD
  */
 #include "unc_internal.h"
 
@@ -39,7 +39,7 @@
  * maintainer's decision 2026-10-23 (DECISIONS.md, *the probes next
  * door*).
  * Source: reference/XADMaster/XADDiskDoublerParser.m, recognizeFile
- * (LGPL, see NOTICE). */
+ * (see NOTICE). */
 UncFormat unc_diskdoubler_probe(const uint8_t *head, int32_t len, UncIO *io)
 {
     (void)io;

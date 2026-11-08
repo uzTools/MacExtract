@@ -1,11 +1,14 @@
 MacExtract — a universal unarchiver for Classic Mac OS formats
 0BSD (see LICENSE): everything this project wrote itself, the maintainer's
-decision of 2026-11-08 (DECISIONS.md, *the code we wrote*). The exceptions:
-the files listed below as still somebody else's are LGPL-2.1-or-later (see
-LICENSE-LGPL-2.1) and say so in an SPDX-License-Identifier line;
-third_party/zlib is zlib's; and src/ss_dict.h holds Aladdin's bytes (below).
-The application and the CLI link all three, so a binary carries their
-licences too.
+decision of 2026-11-08 (DECISIONS.md, *the code we wrote*), facts read in
+somebody else's code included: a layout, an offset or a rule is not theirs to
+license, only its expression is (btoa and MAR, below). The exceptions: six
+files hold code transcribed from the references below and are
+LGPL-2.1-or-later (see LICENSE-LGPL-2.1), saying so in an
+SPDX-License-Identifier line — src/unc_lzdyn.c, src/sit14.c, src/fmt_hecx.c,
+src/fmt_arc.c, src/fmt_dd.c and src/unc_crypt.c; third_party/zlib is zlib's;
+and src/ss_dict.h holds Aladdin's bytes (below). The application and the CLI
+link all three, so a binary carries their licences too.
 
 WHAT IS STILL SOMEBODY ELSE'S, IN FULL
 -------------------------------------
@@ -88,10 +91,15 @@ hand.
                        password all left on 2026-09-27, measured
                        against the three archives DropStuff 5.0.1
                        wrote (tools/derive_sit5crypt.py).
-  src/fmt_dd.c         the `DDAR` 0x20 raw-fork shape, four offsets
-                       nothing reachable sets — libxad's
-                       clients/DiskDoubler.c, which
-                       XADDiskDoublerParser.m restates.
+  src/fmt_dd.c         method 7's Stac LZS, transcribed
+                       (XADStacLZSHandle.m), and method 2's tree and
+                       splay step (XADDiskDoublerMethod2Handle.m), with
+                       XADDiskDoublerParser.m's per-method rules for
+                       methods 1, 2, 5, 7 and 8; and the `DDAR` 0x20
+                       raw-fork shape, four offsets nothing reachable
+                       sets — libxad's clients/DiskDoubler.c, which
+                       XADDiskDoublerParser.m restates. Listed as the
+                       raw-fork shape alone until 2026-11-08.
   src/fmt_macbinary_probe.c,  five things no specification supports:
   src/fmt_applesingle.c  the MacBinary CRC-16/0xA001 fallback and its
   src/fmt_sitseg.c,    nonzero-date test, the byte-swapped AppleSingle
@@ -160,16 +168,6 @@ hand.
                        state — the archives adjudicate it, with no
                        reference implementation in the loop
                        (tools/derive_dd8.py).
-
-Outside src/, these cite a reference for a layout or a rule they use,
-none for code, and are LGPL-2.1-or-later on the same terms; the check
-fails a file that gains or sheds such a citation without its SPDX line
-following it:
-
-  cli/main.c, tests/unit_formats.c, tools/derive_now.py,
-  tools/make_manifests.py, tools/synth_arc.py, tools/synth_dd.py,
-  tools/synth_now.py, tools/synth_wrapped.py, tools/vmac/sitmeta.py,
-  tools/xadmaster-ddn-repro/make_repro_unchecked.py
 
 Everything else this engine does that these references also do is
 written from a published description or measured here; the rest of
@@ -300,10 +298,11 @@ This project's decoders are transcriptions/ports of algorithms from:
     Pro 4.1 were run here and `tools/derive_ddc.py` makes 643 assertions
     against the oracle over 91 fixtures with 0 disagreements, the folder
     records among them (measured against archives 3.7's Combine command
-    wrote). What is still XADDiskDoublerParser.m's, and macutils'
-    `macunpack/dd.h` beside it, is the `DDAR` `0x20` raw-fork shape,
-    which no specimen here reaches — it is also what names which forks
-    use method 10's second form.
+    wrote). What is still XADMaster's is in the inventory above:
+    methods 2 and 7's codecs, the per-method rules, and the `DDAR`
+    `0x20` raw-fork shape (macutils' `macunpack/dd.h` beside it), which
+    no specimen here reaches — it is also what names which forks use
+    method 10's second form.
     And **the StuffIt 5 container** since 2026-09-22:
     `reference/notes/sit5_specs_theunarchiver.md` is that same wiki's
     `StuffIt5Format` page, which this project's own

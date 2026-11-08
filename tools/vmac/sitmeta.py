@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# SPDX-License-Identifier: LGPL-2.1-or-later
 """sitmeta.py — which StuffIt classic header bytes does StuffIt Expander restore?
 
 No reference says where a classic StuffIt archive keeps a file's icon

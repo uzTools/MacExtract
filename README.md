@@ -187,10 +187,10 @@ coffee at [ko-fi.com/khaz1](https://ko-fi.com/khaz1).
 
 ## License
 
-0BSD: everything this project wrote itself. The few decoders and probes
-that still carry code or facts from [XADMaster](https://github.com/MacPaw/XADMaster),
-libxad or macutils are LGPL-2.1-or-later and say so in their header, and zlib's
-inflate keeps the zlib licence; `NOTICE` lists them all.
+0BSD: everything this project wrote itself. Six decoders transcribed from
+[XADMaster](https://github.com/MacPaw/XADMaster), libxad or macutils are
+LGPL-2.1-or-later and say so in their header, and zlib's inflate keeps the
+zlib licence; `NOTICE` lists them.
 
 One exception, marked as one in `NOTICE`: `src/ss_dict.h` holds about 9.7 KB
 that are **copyright Aladdin Systems, Inc.** — the tables SpaceSaver primes its

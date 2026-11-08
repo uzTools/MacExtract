@@ -560,7 +560,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-08 (the CLI's walks that were one walk) — the CLI's copies of the naming rules gave way to `unc_segment_name_part`, and its four folder walks and three path splitters to one `family_of` and one `family_scan`
 - 2026-11-08 (the reader that disagrees) — where a writer's own reader disagrees with the stored CRC or with another reader, the case is decided on its own; there is no general rule
 - 2026-11-08 (the report pool that stays) — the report window's 6,539 B of fixed buffers stay until something needs the bytes
-- 2026-11-08 (the code we wrote) — everything this project wrote is 0BSD, the 20 `HISTORICAL` files with it; only the files that carry somebody else's code or facts stay LGPL-2.1-or-later
+- 2026-11-08 (the code we wrote) — everything this project wrote is 0BSD, facts read in somebody else's code included; only the six files holding transcribed code stay LGPL-2.1-or-later
 - 2026-11-08 (the refusals the probe counted) — the probe build extracts Cool Tools and a2basic on the 64K ROM; its `short` and `why` count the requests Arsenic falls back from, and `e1` is its verdict
 
 ---
@@ -23050,33 +23050,43 @@ for 6,539 B to matter: `synth-dd-m5.dd` peaks at 401,408 B against a
 KB machines*), and Library_ISBN's first refused request alone is 77,203 B
 on the 64K ROM (FORMATS.md, *A true Macintosh 512K*), a lower bound.
 
-## 2026-11-08 (the code we wrote) — everything this project wrote is 0BSD, the 20 `HISTORICAL` files with it; only the files that carry somebody else's code or facts stay LGPL-2.1-or-later
+## 2026-11-08 (the code we wrote) — everything this project wrote is 0BSD, facts read in somebody else's code included; only the six files holding transcribed code stay LGPL-2.1-or-later
 
 **The maintainer's decision, 2026-11-08**, the question *What still holds
-the licence* left to him (OPEN_ITEMS.md). A file `tools/check_provenance.py`
-lists as `HISTORICAL` was transcribed from XADMaster, libxad or macutils
-once and rewritten since from a published description, the original
-program's behaviour, or its own code; nothing borrowed is left. Such a
-file is clean, the purest code here. Everything this project wrote is
-0BSD; only the 18 `CARRIES` files keep the licence of what they carry.
+the licence* left to him (OPEN_ITEMS.md): the 20 `HISTORICAL` files,
+transcribed once and rewritten since from a published description, the
+original program's behaviour or its own code, are clean, the purest code
+here, and everything this project wrote is 0BSD. Only what is derived from
+somewhere else keeps its own licence.
+
+**What counts as derived: code, not facts** (left to this log by the
+maintainer, the same day). A layout, an offset, a flag bit, a tolerance or
+a naming rule read in XADMaster's source is not its authors' to license;
+the expression is. NOTICE already rests on that for btoa (non-commercial)
+and MAR (GPL-2.0-only), both implemented as formats from references whose
+code could not be carried. So of the 18 `CARRIES` files, the six holding
+transcribed code are LGPL: `unc_lzdyn.c` and `sit14.c` (libxad's, whole),
+`fmt_hecx.c` (hexbin's, whole), `fmt_arc.c` (Crunch and Crush), `fmt_dd.c`
+(method 7's Stac LZS, "transcribed", and method 2's splay tree) and
+`unc_crypt.c` — the closest call: its key derivations follow XADMaster's
+routines, and reading them as facts would rest on a closer comparison than
+was made. The other twelve, and the ten files outside `src/` that cite a
+layout or rule, are 0BSD. `CARRIES` keeps all eighteen: leaving XADMaster
+is about where the knowledge came from as well as the licence.
 
 **How it is marked.** `LICENSE` is 0BSD, the default for the whole tree,
 and names the exceptions; the LGPL's text is `LICENSE-LGPL-2.1`. Every
-file header that said "License: LGPL-2.1-or-later" carries an
-`SPDX-License-Identifier` line in its place: `0BSD` in 142, `LGPL-2.1-or-later`
-in the 18 `CARRIES` files and in 10 outside `src/` (no source file under
-`src/`, `mac/`, `include/`, `cli/` or `companion/` changed its line count).
-The 10 are the ones with a live `Source:` citation of XADMaster: `cli/main.c`'s
-split-family scan, `tests/unit_formats.c` and eight tools that write
-archives, or parse `unar`'s output, by what they read there. Each cites a fact, not code, but so
-does `unc_segment.c`, which the inventory already counts, so they keep the
-LGPL until the maintainer says facts alone do not carry it.
-`check_provenance.py` fails a `CARRIES` file without the LGPL line, any
-other file under `src/` with one, and, outside `src/`, a live citation
-without the line or the line without a citation; all four mutations fail
-it, and the tree passes. `third_party/zlib` keeps the zlib licence and
-`src/ss_dict.h`'s Aladdin bytes stay theirs, as before.
+header that said "License: LGPL-2.1-or-later" carries an
+`SPDX-License-Identifier` line in its place, `LGPL-2.1-or-later` in the six
+and `0BSD` elsewhere. `check_provenance.py` holds `CODE` and fails a `CODE`
+file without the LGPL line, any other `src/` file with one, and a file
+outside `src/` with one that has no live citation or is not in NOTICE;
+each of those four mutations fails it, and the tree passes.
+`third_party/zlib` keeps the zlib licence and `src/ss_dict.h`'s Aladdin
+bytes stay theirs.
 
+**Found on the way:** NOTICE listed `fmt_dd.c` as carrying the raw-fork
+shape alone (BLOCKERS.md, *Withdrawn claims*).
 ## 2026-11-08 (the refusals the probe counted) — the probe build extracts Cool Tools and a2basic on the 64K ROM; its `short` and `why` count the requests Arsenic falls back from, and `e1` is its verdict
 
 **The open item** (OPEN_ITEMS.md, *Two archives the 64K ROM's budget probe

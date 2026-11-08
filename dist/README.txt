@@ -515,6 +515,6 @@ v0.39.0 and found the faults above; their fixes are checked on emulators.
 Nothing older than that has, so a Mac Plus is still untested on real
 hardware -- worth knowing before you commit a floppy to it.
 
-License: 0BSD, except the files that carry code or facts from XADMaster,
-libxad or macutils (LGPL-2.1-or-later) and zlib's inflate (the zlib
-licence), all listed in NOTICE. See LICENSE and NOTICE in the source tree.
+License: 0BSD, except six decoders transcribed from XADMaster, libxad or
+macutils (LGPL-2.1-or-later) and zlib's inflate (the zlib licence), all
+listed in NOTICE. See LICENSE and NOTICE in the source tree.

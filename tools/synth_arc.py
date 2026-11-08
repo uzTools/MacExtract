@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# SPDX-License-Identifier: LGPL-2.1-or-later
 """synth_arc.py — synthetic ARC archives, one per compression method.
 
 The corpus holds no `.arc` at all (measured 2026-08-15 by innermost
