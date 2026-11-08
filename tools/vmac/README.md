@@ -2375,6 +2375,10 @@ Saving a SECOND time puts both records in the catalog: the first was
     interactive.py --named zip      # a spanned zip set, opened through Standard File
                                     # — needs a fixture OVER 64 KB, below
     interactive.py --named split    # a plain .NNN split, likewise
+    interactive.py --named zip --named-floppy
+                                    # ...with the later parts on a second
+                                    # floppy, found by NAME through the part
+                                    # dialog (System 3.0 and 6.0.8)
     interactive.py --chain          # .sit.hqx: do ALL the envelope layers come off?
                                     # The only run of the layer UNDER an envelope:
                                     # the autotest build takes one. Names only, against

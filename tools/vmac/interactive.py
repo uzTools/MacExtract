@@ -428,6 +428,9 @@ SF_DRIVE = (377, 192)
 # The part dialog's Drive (v0.45.0): its items 1-10 are Apple's own Open
 # dialog, placed where SFGetFile's are, so the button is SFGetFile's.
 PART_DRIVE = SF_DRIVE
+# Its Cancel, measured off named-split-3-complete.png (System 6.0.8), where
+# it answers "No part 4? Click Cancel." — the end of an open-ended split.
+PART_CANCEL = (385, 261)
 
 # The Finder, in --e2e mode. Coordinates measured off the numbered screenshots
 # that mode writes; they are stable because the boot image is rebuilt
@@ -1893,22 +1896,56 @@ def phase_named(args, appbin, workdir, shot):
 
     Ends on a byte comparison, not a screenshot: the one file the set
     must produce is read back off the volume the Mac wrote to.
+
+    With `--named-floppy` the parts the join reaches LAST go on a second
+    floppy instead, so the folder scan misses them and the part dialog is
+    switched to that floppy, where they are found by NAME (SegScanFamily
+    from the dialog). A zip keeps `.z01` and `.zip` on the boot volume —
+    the count is read from the `.zip` before the join, and nothing asks
+    for it — and moves `.z02` on; a split keeps `.001` and `.002` and moves
+    `.003`, asked for because `.002` is as long as `.001`. What it cannot
+    see: a part asked for by the dialog that the scan of the folder
+    BESIDE the archive would have found, since every part either is
+    there or is on the floppy.
     """
     parts, outname, expect = build_named_set(args.named, workdir, args.fixture)
+    if args.named_floppy:
+        later = (parts[1:-1] if args.named == "zip" else parts[2:])
+    else:
+        later = []
     for_each = []
     for p in parts:
-        for_each += ["--data", f"{p}:{os.path.basename(p)}"]
+        if p not in later:
+            for_each += ["--data", f"{p}:{os.path.basename(p)}"]
     bootimg = os.path.join(workdir, "boot-named.hfv")
     R.sh(sys.executable, os.path.join(HERE, "mkboot.py"),
          os.path.join(R.VMAC_HOME, args.system), appbin, bootimg, *for_each)
+    extra = ()
+    if later:
+        if args.system == "Sys7.img":
+            raise SystemExit("interactive: --named-floppy walks Drive, which "
+                             "System 7 relabels Desktop; run it on System 3.0 "
+                             "or 6.0.8")
+        partsdsk = os.path.join(workdir, "parts.dsk")
+        R.make_floppy(partsdsk, "Parts",
+                      extras=[(p, os.path.basename(p)) for p in later])
+        extra = (partsdsk,)
+        print("interactive: on the Parts floppy: "
+              + ", ".join(os.path.basename(p) for p in later))
 
     scratch = os.path.join(args.outdir, ".settle.png")
-    mac = Mac(bootimg, args.emu, workdir)
+    mac = Mac(bootimg, args.emu, workdir, extra=extra)
     elapsed = None
     try:
         if mac.settle(scratch, interval=5.0, timeout=args.boot_timeout) is None:
             raise SystemExit("interactive: the machine never settled")
         shot(mac, f"named-{args.named}-1-sfgetfile.png")
+        if later:
+            # Standard File opens on the last-inserted volume, the floppy
+            # (phase_segments says what assuming otherwise cost).
+            mac.click(*SF_DRIVE)
+            time.sleep(2.0)
+            shot(mac, f"named-{args.named}-1b-boot-volume.png")
         # Sorted case-insensitively, the first row is the FIRST part —
         # Set.z01 or Blob.001 — which is deliberately not the one that
         # carries the count in either scheme.
@@ -1916,6 +1953,19 @@ def phase_named(args, appbin, workdir, shot):
         mac.key("Return")
         shot(mac, f"named-{args.named}-2-destination.png")
         accept_destination(mac)
+        if later:
+            time.sleep(10.0)
+            shot(mac, f"named-{args.named}-2b-asked.png")
+            mac.click(*PART_DRIVE)           # over to the Parts floppy
+            if (args.named == "split" and os.path.getsize(parts[-1])
+                    == os.path.getsize(parts[-2])):
+                # A last part as long as the one before it may not be the
+                # last (derived-xmasbeeps.sit cuts into 3 x 95,408), so
+                # part 4 is asked for (seg_need); Cancel says it ends.
+                mac.settle(scratch, interval=5.0, quiet=EXTRACT_QUIET,
+                           timeout=args.complete_timeout)
+                shot(mac, f"named-{args.named}-2c-next-part.png")
+                mac.click(*PART_CANCEL)
         elapsed = mac.settle(scratch, interval=5.0, quiet=EXTRACT_QUIET,
                              timeout=args.complete_timeout)
         shot(mac, f"named-{args.named}-3-complete.png")
@@ -1944,8 +1994,11 @@ def phase_named(args, appbin, workdir, shot):
         return False
     ref = os.path.join(workdir, "_cli")
     os.makedirs(ref, exist_ok=True)
-    R.sh(CD.CLI, "x", "-o", ref, parts[0])
-    want = set(os.listdir(ref))
+    # Hidden forks, as phase_chain: a visible `.rsrc` sidecar is a name the
+    # Mac never writes, so a payload with a resource fork read MISMATCH
+    # (first seen 2026-11-08, the split of derived-xmasbeeps.sit).
+    R.sh(CD.CLI, "x", "--forks", "hidden", "-o", ref, parts[0])
+    want = {n for n in os.listdir(ref) if not n.startswith("._")}
     ok = got == want
     print(f"interactive: the volume holds {sorted(got)}")
     print(f"interactive: the Linux CLI gives {sorted(want)}")
@@ -2912,6 +2965,9 @@ def main():
     ap.add_argument("--named", choices=("zip", "split"),
                     help="drive a set placed by FILENAME: a spanned zip "
                          "or a plain .NNN split, through Standard File")
+    ap.add_argument("--named-floppy", action="store_true",
+                    help="with --named: the later parts on a second floppy, "
+                         "found through the part dialog")
     ap.add_argument("--segments", action="store_true",
                     help="the segmented-archive phase: cut the fixture into "
                          "three parts, leave part 1 alone on the boot volume "
