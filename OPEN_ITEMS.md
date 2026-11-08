@@ -229,7 +229,7 @@ time, measured on Mac OS 9.2.2 and 7.6.1 on 2026-10-18 (DECISIONS.md
 
 | what | status | what would close it |
 |---|---|---|
-| AppleSingle/AppleDouble by mpack, whose entry 8 is the writer's wall clock, not RFC 1740's GMT | **the maintainer's decision**: the RFC is followed, so such a file moves by the reader's offset | a rule to tell the writer apart, or a decision to treat entry 8 as wall clock |
+| AppleSingle/AppleDouble by mpack, whose entry 8 is the writer's wall clock, not RFC 1740's GMT | **undecided, the maintainer's to decide**; until then the RFC is followed, so such a file moves by the reader's offset (DECISIONS.md 2026-10-17, *dates in the Macintosh's own zone*) | a rule to tell the writer apart, or a decision to treat entry 8 as wall clock |
 
 ## Hand-written 68000 assembly: candidates, held for one VM pass
 
@@ -320,7 +320,9 @@ Switching to `HOpen`/`HOpenRF`/`HDelete` costs **+224 B** today (measured
 2026-10-19; DECISIONS.md 2026-10-19, *the toolchain that inlined
 PurgeSpace*), so the hand-built blocks stay. Closes when multiversal generates
 File Manager glue inline (then about 0 B, hypothesis), proposed upstream
-**after MacExtract's first public release** (the maintainer, 2026-10-19). The
+after MacExtract's first public release (the maintainer, 2026-10-19), which
+v0.44.0 was (2026-10-25): **not started**; the patches are drafted here and
+posted by the maintainer. The
 seven glue routines linked today total 298 B (`FSRead` 58, `FSWrite` 58,
 `SetFPos` 42, `GetEOF` 38, `SetEOF` 36, `FlushVol` 36, `FSClose` 30;
 measured, `nm -S`).
