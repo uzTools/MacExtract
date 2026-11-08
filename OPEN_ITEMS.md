@@ -81,6 +81,10 @@ Nothing is detect-only since 2026-10-18: an unextractable file is
   there is a valid ending (DECISIONS.md 2026-08-29, *a cut archive*).
 - **A uuencoded set missing a middle part decodes short, silently**; a
   missing last part is caught. `tools/run_uu.py` asserts this.
+- **An mpack AppleSingle/AppleDouble's dates land shifted by the Mac's zone
+  offset**: mpack stores the wall clock in entry 8, which RFC 1740 makes GMT,
+  and nothing in the file names its writer. The RFC is followed, decided
+  2026-11-08 (DECISIONS.md 2026-10-17, *dates in the Macintosh's own zone*).
 
 ---
 
@@ -219,17 +223,6 @@ a specimen:
 - **A tar sidecar written after its file** comes out as itself; bsdtar never
   writes that order. A pax header between the two is stepped over, no
   specimen (hypothesis: bsdtar writes one for a non-ASCII name).
-
-## Dates in the Macintosh's zone: what is not measured
-
-Instants are written in the Mac's zone where it has one (DECISIONS.md
-2026-10-17, *dates in the Macintosh's own zone*); gmtDelta includes summer
-time, measured on Mac OS 9.2.2 and 7.6.1 on 2026-10-18 (DECISIONS.md
-2026-10-18, *the format nobody reads*).
-
-| what | status | what would close it |
-|---|---|---|
-| AppleSingle/AppleDouble by mpack, whose entry 8 is the writer's wall clock, not RFC 1740's GMT | **undecided, the maintainer's to decide**; until then the RFC is followed, so such a file moves by the reader's offset (DECISIONS.md 2026-10-17, *dates in the Macintosh's own zone*) | a rule to tell the writer apart, or a decision to treat entry 8 as wall clock |
 
 ## Hand-written 68000 assembly: candidates, held for one VM pass
 

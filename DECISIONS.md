@@ -17782,11 +17782,13 @@ the same zone would get back what MacZip stored (derived, not run).
 BLOCKERS.md, *Withdrawn claims*.
 
 **AppleSingle: the RFC is followed, its commonest Mac writer is not — the
-maintainer's to decide.** mpack's `macfile.c` writes entry 8 as the Mac's
+maintainer's decision, 2026-11-08: the RFC stays.** mpack's `macfile.c` writes entry 8 as the Mac's
 wall clock plus the epoch (`dates.create = fpb->ioFlCrDat + CONVERT_TIME`),
 so an mpack AppleDouble lands shifted on a zone-set Mac; a netatalk or Unix
 one is GMT. Nothing in the record says which; guessing the writer was not
-taken.
+taken. Treating entry 8 as a wall clock would only move the error onto the
+writers that follow the RFC, so it stays out (OPEN_ITEMS.md, *Limits of the
+formats themselves*).
 
 **The shell (mac/macextract_mac.c, `ZoneProbe`, `ZoneShift`).** Once per
 launch, at the first marked date, mpack's method (`macmpack.c`,
