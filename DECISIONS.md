@@ -551,6 +551,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-07 (the key past 256 KB) — `load_mkey` read the first 256 KB of the archive's sidecar, and a resource map is at a fork's end, so a larger fork hid its `'MKey'`; the sidecar is read whole now, up to 32 MB
 - 2026-11-07 (the budget that took anything) — `--budget` was `strtoul` with no end or range check: "1M" was one byte, "lots" no cap, and 4G and up wrapped; it takes digits and an optional K/M/G now, and anything else is a usage error
 - 2026-11-07 (every path the CLI deletes, renames or creates) — the audit after the review: each `remove`, `rename`, `unlink` and file creation in `cli/main.c`, and why it can only touch what this run wrote
+- 2026-11-08 (the naming rules in one place) — the multi-part naming rules (`NAME.zNN`/`NAME.zip`, `NAME.NNN`) were written twice, in `cli/main.c` and in the Mac shell; they are one engine function, `unc_segment_name_part`, and the shell's copies are gone for −128 B
 
 ---
 
@@ -22786,3 +22787,46 @@ it had just built — and now cleans up after itself. Not covered, said where it
 a folder link swapped in during the run (*the links in the output
 folder*), and a file a removed `--only` reject had replaced under
 `--overwrite` (*the selector the last layer ignored*).
+
+## 2026-11-08 (the naming rules in one place) — the multi-part naming rules (`NAME.zNN`/`NAME.zip`, `NAME.NNN`) were written twice, in `cli/main.c` and in the Mac shell; they are one engine function, `unc_segment_name_part`, and the shell's copies are gone for −128 B
+
+**Claim, measured.** The CLI (`zipfam_part_of`, `splitfam_part_of`,
+`split_ext_part`) and the shell (`ZipFamPartOf`, `SplitPartOf`,
+`PStemMatches`) implemented the same two regexes (XADZipParser.m,
+XADSplitFileParser.m) with the same two departures: no part zero, no
+empty stem. Copied verbatim out of the parent commit and run against the
+engine function over 4,000,000 generated stem/name pairs (143,544 of them
+naming a part), the three answer alike on every one; the Mac copy with its
+recorded off-by-one put back (`ext + 1`, which matched no numbered zip
+part) differs on 25,114. The CLI's `ascii_lower` and the shell's
+`PLowerByte` agree on all 256 byte values — both fold A-Z only — so there
+was no case behaviour to keep apart; a MacRoman letter above 0x7F is still
+compared exactly, though HFS folds it.
+
+**Where it lives, by reachability, not by trying.** Every caller in the
+shell is resident: the open path's family decision and `SegScanFamily`,
+which the part dialog calls DURING the join (`SegScanHere`, and the scan
+after `SegAskUser`), after the bundle — sniffer and set-setup images
+included — has been given back. So it is in `src/unc_segment.c`, resident;
+neither image was built with it.
+
+**Cost, every configuration, against the parent:** eager CODE −140, A5 +12
+(`.data` alignment), so −128; lazy −136/+8; the resident control −132/+4;
+the autotest build −156/−4; `MacExtract.code.bin` 48,000 → 47,872; no
+image moved. `OVL_SAVED` unchanged, `TIERS` +128, no tally moved.
+
+**Tests.** `test_segment_names`; 14 single mutations of the function (the
+empty-stem guard, the length, the dot, folding off, folding past Z, part
+zero, each digit bound, the `z`, the `p`, the zip's digit count, the
+scheme guard, the first and last stem byte) each fail it.
+
+**On the machine (System 6.0.8, Mac Plus 4 MB):** the part dialog finds
+parts by name for both schemes — `interactive.py --named zip
+--named-floppy` (`.z02`–`.z04` on a second floppy, found from part 2's
+question) and `--named split --named-floppy` (`.003`, then "No part 4?"
+answered Cancel, the three parts being equal), each MATCH against the
+CLI. Neither walk existed: `--segments` reaches the dialog with a StuffIt
+set, placed by content, and `--named` found every part beside the first.
+The split walk's first verdict was MISMATCH with the Mac right: the
+reference listed the CLI's visible `.rsrc` sidecar, which `phase_chain`
+stopped doing on 2026-11-03; `phase_named` now uses hidden forks too.

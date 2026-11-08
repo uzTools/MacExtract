@@ -3259,26 +3259,16 @@ static int SegPartOf(SegHost *h, short vol, long dir, ConstStr255Param name)
 /* A spanned zip part and a plain .NNN split part carry nothing that   */
 /* says which set they belong to — only the FIRST and LAST parts of a  */
 /* spanned zip are recognizable at all, and a split part is not even   */
-/* that. So the family is decided by filename, exactly as the Linux    */
-/* CLI decides it, and what keeps a wrong file out is not this scan    */
-/* but the check the engine makes on the ASSEMBLED set (macextract.h,  */
-/* unc_extract_segments). Names propose; content disposes.            */
-/*                                                                    */
-/* Filenames here are Str63 — a length byte and MacRoman bytes — so    */
-/* the comparisons are written out rather than borrowed from a libc    */
-/* this application does not link.                                     */
+/* that. So the family is decided by filename, by the engine's        */
+/* unc_segment_name_part — the rule the Linux CLI uses too — and what  */
+/* keeps a wrong file out is not this scan but the check the engine    */
+/* makes on the ASSEMBLED set (macextract.h, unc_extract_segments).    */
+/* Names propose; content disposes.                                    */
 /* ------------------------------------------------------------------ */
-
-#define kZipFamLast (-1)          /* the ".zip" member, whose number is N */
 
 static void SegRemember(SegHost *h, int part, short vol, long dir,
                         ConstStr255Param name);
 static short SegDriveOf(short vol);
-
-static short PLowerByte(short c)
-{
-    return (c >= 'A' && c <= 'Z') ? (short)(c - 'A' + 'a') : c;
-}
 
 /* Length of `nm` up to its LAST '.', or 0 if it has none. That is the
  * stem a family shares: "Archive.zip" and "Archive.z01" share
@@ -3289,63 +3279,6 @@ static short PStemLen(ConstStr255Param nm)
     for (i = 1; i <= (short)nm[0]; i++)
         if (nm[i] == '.') dot = i;
     return dot ? (short)(dot - 1) : 0;
-}
-
-static int PStemMatches(const unsigned char *stem, short stemlen,
-                        ConstStr255Param nm)
-{
-    short i;
-    if ((short)nm[0] < stemlen + 2) return 0;      /* stem + '.' + one */
-    if (nm[stemlen + 1] != '.') return 0;
-    for (i = 0; i < stemlen; i++)
-        if (PLowerByte(stem[i]) != PLowerByte(nm[i + 1])) return 0;
-    return 1;
-}
-
-/* Which member of the zip family `nm` is: NN for ".zNN", kZipFamLast
- * for ".zip", 0 for anything else. Source for the naming: the volume
- * regex in reference/XADMaster/XADZipParser.m, ^NAME\.(zip|z[0-9]{2})$,
- * matched case-insensitively. */
-static int ZipFamPartOf(const unsigned char *stem, short stemlen,
-                        ConstStr255Param nm)
-{
-    short ext = stemlen + 2;                       /* first byte after '.' */
-    if (!PStemMatches(stem, stemlen, nm)) return 0;
-    if ((short)nm[0] == ext + 2 &&
-        PLowerByte(nm[ext]) == 'z' && PLowerByte(nm[ext + 1]) == 'i' &&
-        PLowerByte(nm[ext + 2]) == 'p')
-        return kZipFamLast;
-    /* ext is the INDEX of the first extension byte, so a three-byte
-     * extension ends at ext+2 and the name is ext+2 long — the same
-     * arithmetic the ".zip" test above uses. Written ext+1 here at
-     * first, which matched nothing: the .zip member was found, the
-     * numbered parts were not, and the set failed as damaged rather
-     * than as incomplete. The .NNN scheme was right, so a passing
-     * split case said nothing about this one. */
-    if ((short)nm[0] == ext + 2 && PLowerByte(nm[ext]) == 'z' &&
-        nm[ext + 1] >= '0' && nm[ext + 1] <= '9' &&
-        nm[ext + 2] >= '0' && nm[ext + 2] <= '9') {
-        int n = (nm[ext + 1] - '0') * 10 + (nm[ext + 2] - '0');
-        return n >= 1 ? n : 0;                     /* there is no part zero */
-    }
-    return 0;
-}
-
-/* Which member of a .NNN split `nm` is, or 0. Three digits exactly, and
- * ".000" is not one: reference/XADMaster/XADSplitFileParser.m. */
-static int SplitPartOf(const unsigned char *stem, short stemlen,
-                       ConstStr255Param nm)
-{
-    short ext = stemlen + 2;
-    short i;
-    int n = 0;
-    if (!PStemMatches(stem, stemlen, nm)) return 0;
-    if ((short)nm[0] != ext + 2) return 0;
-    for (i = 0; i < 3; i++) {
-        if (nm[ext + i] < '0' || nm[ext + i] > '9') return 0;
-        n = n * 10 + (nm[ext + i] - '0');
-    }
-    return n >= 1 ? n : 0;
 }
 
 /* Walk one folder and record every member of the family, by name. The
@@ -3370,9 +3303,10 @@ static void SegScanFamily(SegHost *h, short vol, long dir, int split,
         if (PBGetCatInfoSync(&pb) != noErr) break;
         if (pb.hFileInfo.ioFlAttrib & 0x10) continue;         /* a folder */
         {
-            int part = split ? SplitPartOf(h->stem, h->stemlen, nm)
-                             : ZipFamPartOf(h->stem, h->stemlen, nm);
-            if (part == kZipFamLast) {
+            int part = unc_segment_name_part(
+                split ? UNC_FORMAT_SPLIT : UNC_FORMAT_ZIPSEG,
+                h->stem, (uint32_t)h->stemlen, nm + 1, nm[0]);
+            if (part == UNC_SEG_NAME_LAST) {
                 for (z = 0; z <= (long)nm[0]; z++) lastName[z] = nm[z];
                 /* Once its count is known, the ".zip" is that part: one
                  * found on a disk inserted later is the last part back
@@ -4564,9 +4498,11 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
                 short i;
                 for (i = 0; i < stemlen; i++) famStem[i] = name[i + 1];
                 famStemLen = stemlen;
-                famSplit = SplitPartOf(famStem, stemlen, name) >= 1;
-                famZip = famSplit ? 0
-                                  : ZipFamPartOf(famStem, stemlen, name);
+                famSplit = unc_segment_name_part(UNC_FORMAT_SPLIT,
+                        famStem, (uint32_t)stemlen, name + 1, name[0]) >= 1;
+                famZip = famSplit ? 0 : unc_segment_name_part(
+                        UNC_FORMAT_ZIPSEG, famStem, (uint32_t)stemlen,
+                        name + 1, name[0]);
             }
         }
         segOK = unc_segment_describe(&pio, &desc) == UNC_OK;
@@ -4589,7 +4525,7 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
          * harness always named the archive "archive.sit". Found on an
          * LC475 (DECISIONS.md 2026-10-11, *the zip that was a set of
          * one*). A ".zNN" is still placed by name: nothing in it can say. */
-        if (famZip == kZipFamLast &&
+        if (famZip == UNC_SEG_NAME_LAST &&
             !(segOK && desc.scheme == UNC_FORMAT_ZIPSEG))
             famZip = 0;
 #ifndef UNC_MAC_AUTOTEST

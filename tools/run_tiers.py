@@ -283,10 +283,13 @@ REPO = os.path.dirname(HERE)
 # control's CODE -96 and A5 0; the shipped pair fell the same 96, OVL_SAVED
 # unmoved. They were 190,276 / 94,894 / 619,182.
 TIERS = {
-    "sys3-512K": (189284, "System 3.0, Macintosh 512Ke (222,070 B free)"),
-    "sys6-512K": (93902,  "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
-    "floor-1M":  (618190, "System 6.0.8, 1 MB Mac Plus — the floor target"),
+    "sys3-512K": (189412, "System 3.0, Macintosh 512Ke (222,070 B free)"),
+    "sys6-512K": (94030,  "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
+    "floor-1M":  (618318, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
+# +128 each 2026-11-08, DERIVED from TIERS_CONTROL -128 (the naming rules
+# in the engine, DECISIONS.md 2026-11-08, *the naming rules in one place*); they were
+# 189,284 / 93,902 / 618,190.
 # -704 each 2026-11-07, DERIVED from TIERS_CONTROL +704 (the comment cut,
 # DECISIONS.md 2026-11-07, *the comment the Desktop Manager cut*); they
 # were 189,988 / 94,606 / 618,894.
@@ -507,7 +510,9 @@ TIERS = {
 # +192 2026-11-07: Now Compress polls Cancel inside a block (`ovl_now` +186;
 # DECISIONS.md 2026-11-07, *the block a click waited for*); CODE +180, A5 +12.
 # TIERS -192 and OVL_SAVED +192, which cancel: only a now-keeper moves.
-TIERS_CONTROL = 223648     # build/mac-resident, CODE + A5, 2026-11-07
+TIERS_CONTROL = 223520     # build/mac-resident, CODE + A5, 2026-11-08
+# -128 2026-11-08: the naming rules in the engine (CODE -132, A5 +4;
+# DECISIONS.md 2026-11-08, *the naming rules in one place*); TIERS +128.
 # +704 the same day: the comment cut (CODE +680, A5 +24; DECISIONS.md
 # 2026-11-07, *the comment the Desktop Manager cut*); TIERS -704.
 # -32 the same day: `dirCount` deleted (CODE -28, A5 -4); TIERS +32.
@@ -1096,6 +1101,9 @@ EXPECT = {
 # DECISIONS.md 2026-11-07, *the comment the Desktop Manager cut*), the
 # reader in `ovl_zipold` (+612). TIERS -704: 64 B off every budget, and a
 # zipold-keeper's another 612.
+# **0 2026-11-08**: the naming rules in the engine, the control's -128
+# (CODE -132, A5 +4) and the shipped pair's -128 (CODE -140, A5 +12;
+# DECISIONS.md 2026-11-08, *the naming rules in one place*). TIERS +128: 128 B onto every budget.
 OVL_SAVED = 166944
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
