@@ -22294,10 +22294,12 @@ interleave probe are autotest builds only. `mio_*` had no caller in the
 application, only in `mac_sink_test`. That lane now reads through
 `fio_*`, and `mio_*` is deleted, for 0 B.
 
-**Not closed: a failure inside the sniff.** `unc_sniff` returns a format and
+**Accepted: a failure inside the sniff.** `unc_sniff` returns a format and
 nothing else, so on `derived-MUSFMT10.ZIP`, whose sniff is still reading
-when the reads begin to fail, the run ends on "not a recognized archive"
-(OPEN_ITEMS.md, *A read error inside the sniff*). The ci case uses
+when the reads begin to fail, the run ends on "not a recognized archive".
+The maintainer, 2026-11-08: that is correct — a bad sector is a corrupt
+archive, unreadable anywhere, and the only remedy either message could
+point to is the last good copy (OPEN_ITEMS.md, Part 1). The ci case uses
 `derived-ASCbeep.sit`.
 
 **Price (measured).** `fio_read` 118 → 140 B. Shipped eager CODE +24 and

@@ -51,6 +51,7 @@ refusal — the brief has grown before, on request.
 | Zip64 past 4 GB | **counts and the per-entry escape read; over-4-GB fields refused** (`UNC_ERR_UNSUPPORTED` per archive, `UNC_ERR_TOOLARGE` per entry) | a format change, not a type change (DECISIONS.md 2026-08-28, *what a width costs*; FORMATS.md, *Size limits*) |
 | More archives opened in a quick burst while MacExtract is busy — a second double-click during a helper's stay, archives of several creators at once | **dropped silently** (two `SIT!` archives 2 s apart: both lost, 7.0.1, one run; several creators: not run) | the maintainer, 2026-11-02: a limitation of the application. One more archive at a time is queued: File > Open... on every System, a double-click under MultiFinder and System 7 (DECISIONS.md 2026-11-01, *the Open item MultiFinder looks for*) |
 | The report window's 6,539 B of fixed buffers (`gRepBuf` and the row arrays) | **kept** | the maintainer, 2026-11-08: until something needs the bytes; neither 512 KB refusal is within them (DECISIONS.md 2026-11-08, *the report pool that stays*) |
+| A read error while the format is still being found | **"not a recognized archive"**, not "read error" (`mac_sink_test --ioerr` on `derived-MUSFMT10.ZIP`) | the maintainer, 2026-11-08: a bad sector is a corrupt archive, and either way only a good copy helps (DECISIONS.md 2026-11-07, *the read error that read as end of file*) |
 | A click during an extraction waiting for the next progress callback — 1–2 s on a Mac Plus for most formats at the 1 KB step; a short click on the menu bar lost; a menu held down pausing the extraction | **accepted** | the maintainer, 2026-11-06: input is queued and Cancel flashes when it is taken; the window's lack of responsiveness is known and the user is warned (DECISIONS.md 2026-11-06, *the step a click waits for*). What remains open: *The wait before the first callback* |
 
 Nothing is detect-only since 2026-10-18: an unextractable file is
@@ -308,15 +309,6 @@ posted by the maintainer. The
 seven glue routines linked today total 298 B (`FSRead` 58, `FSWrite` 58,
 `SetFPos` 42, `GetEOF` 38, `SetEOF` 36, `FlushVol` 36, `FSClose` 30;
 measured, `nm -S`).
-
-## A read error inside the sniff reads as "not a recognized archive"
-
-`unc_sniff` returns a format, not an error, so an archive whose reads fail
-before its format is known ends on "not a recognized archive", not on
-"Could not open the archive." Measured with `mac_sink_test --ioerr` on
-`derived-MUSFMT10.ZIP` (DECISIONS.md 2026-11-07, *the read error that read
-as end of file*). What would close it: an error out of the sniff, priced
-on the resident sniffer and the shipped budget.
 
 ## The double-click helpers: what is left
 
