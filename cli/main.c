@@ -2841,11 +2841,20 @@ nextlayer:
      * that it does not sit in the process table. */
     if (password) {
         if (strcmp(password, "-") == 0) {
+            /* Once per run, not per layer: a second read meets end of
+             * file, and an archive inside an envelope was then opened
+             * with no password at all (DECISIONS.md 2026-11-08, *the
+             * password the second layer never got*). */
+            static int pw_read;
             size_t n;
-            if (!fgets(pwbuf, (int)sizeof pwbuf, stdin)) pwbuf[0] = 0;
+            if (!pw_read) {
+                if (!fgets(pwbuf, (int)sizeof pwbuf, stdin)) pwbuf[0] = 0;
+                n = strlen(pwbuf);
+                while (n > 0 && (pwbuf[n - 1] == '\n' || pwbuf[n - 1] == '\r'))
+                    pwbuf[--n] = 0;
+                pw_read = 1;
+            }
             n = strlen(pwbuf);
-            while (n > 0 && (pwbuf[n - 1] == '\n' || pwbuf[n - 1] == '\r'))
-                pwbuf[--n] = 0;
             opt.password = (const uint8_t *)pwbuf;
             opt.password_len = (uint16_t)n;
         } else {

@@ -590,6 +590,37 @@ def case_refusal_said_once(tmp):
     return probs
 
 
+def case_password_every_layer(tmp):
+    """Item 12: `-p -` read the password from stdin on EVERY layer, so a
+    zip encrypted by `zip -P` inside a MacBinary got it on the envelope's
+    layer and end-of-file on its own: "wrong password, or none given",
+    exit 1, where `-p secret` extracts it. Read once, used by every
+    layer."""
+    import shutil
+    if not shutil.which("zip"):
+        return []
+    probs = []
+    d = os.path.join(tmp, "d")
+    os.makedirs(d)
+    write(os.path.join(d, "a.txt"), b"hello\n")
+    subprocess.run(["zip", "-q", "-P", "secret", "t.zip", "a.txt"], cwd=d,
+                   check=True)
+    os.remove(os.path.join(d, "a.txt"))
+    write(os.path.join(d, "A.bin"),
+          macbinary(b"t.zip", read(os.path.join(d, "t.zip"))))
+    for label, pw, stdin in (("-p secret", "secret", b""),
+                             ("-p -", "-", b"secret\n")):
+        o = os.path.join(d, "o" + str(len(probs)) + pw)
+        r = subprocess.run([MACEXTRACT, "x", "A.bin", "-o", o, "-p", pw],
+                           cwd=d, input=stdin, capture_output=True, timeout=120)
+        got = read(os.path.join(o, "a.txt")) if os.path.exists(
+            os.path.join(o, "a.txt")) else None
+        if r.returncode != 0 or got != b"hello\n":
+            probs.append(f"{label}: wanted a.txt, exit 0; got exit "
+                         f"{r.returncode} {r.stderr.decode()[:120]!r}")
+    return probs
+
+
 CASES = {
     "overwrite-self": case_overwrite_self,
     "sidecar-not-ours": case_sidecar_not_ours,
@@ -605,6 +636,7 @@ CASES = {
     "only-late-user-file": case_only_late_user_file,
     "original-every-layer": case_original_every_layer,
     "refusal-said-once": case_refusal_said_once,
+    "password-every-layer": case_password_every_layer,
 }
 
 

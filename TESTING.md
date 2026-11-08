@@ -214,6 +214,9 @@ case for.
   must survive, exit 1.
 - `refusal-said-once`: an entry refused as the input itself is followed
   by one "output error" (the layer's), not two.
+- `password-every-layer`: a `zip -P` archive inside a MacBinary, with
+  `-p secret` and with `-p -` on stdin: both must extract it, exit 0.
+  Skipped without `zip`.
 
 ### Exact oracle invocation
 

@@ -554,6 +554,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-08 (the naming rules in one place) — the multi-part naming rules (`NAME.zNN`/`NAME.zip`, `NAME.NNN`) were written twice, in `cli/main.c` and in the Mac shell; they are one engine function, `unc_segment_name_part`, and the shell's copies are gone for −128 B
 - 2026-11-08 (the file an excluded entry replaced) — under `--only`, a layer that might unwrap wrote an entry nobody selected over the user's file of that name with `--overwrite`, then removed it; such an entry is written aside now, and moved into place only if the chain goes through it
 - 2026-11-08 (the original on every layer) — from layer 2 on, `--overwrite` could replace the archive named on the command line; it and every part located that this run did not decode are on every layer's reading list now
+- 2026-11-08 (the password the second layer never got) — `-p -` read stdin on every layer, so an archive inside an envelope was opened with end-of-file for its password; it is read once per run
 
 ---
 
@@ -22896,3 +22897,13 @@ write it reported with the system's words, was followed by
 error` — `Self.bin` three lines for one refusal
 (`run_cli_safety.py refusal-said-once`). The entry's line is dropped when
 the sink has already said why; the layer's stays.
+
+## 2026-11-08 (the password the second layer never got) — `-p -` read stdin on every layer, so an archive inside an envelope was opened with end-of-file for its password; it is read once per run
+
+**Claim, measured** (`run_cli_safety.py password-every-layer`, against
+the parent commit). `t.zip` written by `zip -P secret`, wrapped in a
+MacBinary: `echo secret | macextract x A.bin -p -` said `a.txt: wrong
+password, or none given`, exit 1; `-p secret` extracted it, and so did
+`-p -` on `t.zip` itself. The envelope's layer consumed the line and the
+zip's layer read end of file. Found reading `cli_main` for the layer
+split; the stdin read is per run now, as the help text implies.
