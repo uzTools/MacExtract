@@ -153,17 +153,6 @@ SPDX line, in the same commit.
 | five tolerances no specification supports — the MacBinary CRC-16/0xA001 fallback and its nonzero-date test, the byte-swapped AppleSingle header, DiskDoubler's stored header CRC of zero (with the split header above) | deark is a checked negative for all four; the two MacBinary ones are unexercised; kept, the maintainer's decision 2026-10-23 (DECISIONS.md 2026-10-23, *the probes next door*) | the writer that made such files, or the tolerance dropped |
 | `fmt_hecx.c` (**code**), `fmt_binhex_probe.c` — hexbin's | *BinHex before 4.0*, below | BinHex 2.0's own `CODE`, as that item says |
 
-## One way to keep a decoder high, on every ROM
-
-`ovl_keep` keeps a decoder high in the heap with `MoveHHi` on a 128K ROM
-and later, and on a 64K ROM with `high_handle`, a filler routine in the
-`segsetup` image. Choosing between them and calling the image cost **64 B
-of every budget** (DECISIONS.md 2026-11-07, *the decoders a 64K ROM kept
-low*). `high_handle` on every ROM would drop the test and `MoveHHi`, for
-perhaps one 32-byte step less (an estimate), but it changes the heap's
-layout on every machine. What would settle it: the three tiers' budgets
-and largest free block, and the two 512 KB sweeps on a 128K ROM.
-
 ## A later archive's destination dialog opens where Standard File last was
 
 After File > Open... or a part dialog answered on a floppy, the next archive

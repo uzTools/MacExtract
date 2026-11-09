@@ -563,6 +563,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-08 (the code we wrote) — everything this project wrote is 0BSD, facts read in somebody else's code included; only the six files holding transcribed code stay LGPL-2.1-or-later
 - 2026-11-08 (the refusals the probe counted) — the probe build extracts Cool Tools and a2basic on the 64K ROM; its `short` and `why` count the requests Arsenic falls back from, and `e1` is its verdict
 - 2026-11-08 (the scan made twice) — the shell sniffs once and asks the set check only as the scheme the sniff named; the zip end-record scan every open paid twice is paid once or not at all, and 64 B come back on every budget
+- 2026-11-09 (one way to keep a decoder high) — `ovl_keep` places a kept image with `high_handle` on every ROM; the ROM test and `MoveHHi` are gone, for 32 B onto every budget
 
 ---
 
@@ -22115,9 +22116,8 @@ both; `why=1` and the ~530 KB shortfalls are Arsenic's 3-byte table, refused
 and fallen back from (2026-11-08, *the refusals the probe counted*).
 
 **The single path** — `high_handle` on every ROM, no test and no
-`MoveHHi` — is OPEN_ITEMS.md's (*One way to keep a decoder high, on every
-ROM*). It would cost less resident code but changes every machine's heap
-layout.
+`MoveHHi` — was taken 2026-11-09, for 32 B onto every budget (*one way to
+keep a decoder high*).
 
 ## 2026-11-07 (the create the disk was too full for) — a file or folder the catalog cannot take ended on "Extraction stopped part way" with nothing named; now "Disk full." under the entry, for 32 B off every budget
 
@@ -23189,3 +23189,56 @@ BinHex's 2.8 s is its sniff walking the tail once — the text probes sit
 behind the zip pair — with the MIME multipart probe's 18 KB, and 0.9 s of
 release and peek; Tar's 1.0 s is the same walk; gzip's and compress's
 0.7–0.8 s are the peek's decode; Now Compress's 0.9 s is its directory.
+
+## 2026-11-09 (one way to keep a decoder high) — `ovl_keep` places a kept image with `high_handle` on every ROM; the ROM test and `MoveHHi` are gone, for 32 B onto every budget
+
+**The open item, measured.** OPEN_ITEMS.md asked whether the 64K ROM's
+`high_handle` (2026-11-07, *the decoders a 64K ROM kept low*) on every ROM
+would save bytes, perhaps one 32-byte step (an estimate), and what it
+would do to the heap on a 128K ROM.
+
+**Price (measured, `nm -S` and the three builds).** The single path alone
+is `ovl_keep` 200 → 174 B: shipped CODE −24, A5 +24, **0 B**. The code
+ended 4 B short of the 32-byte boundary `.data` is aligned to, so the 24
+went to padding. The 4 B came from the `*h == NULL` test after the call,
+which cannot be true: `len` is non-zero by then and a `NewHandle` of a
+non-zero size that succeeds has a block. With it, `ovl_keep` is 170 B,
+the only function that moved, CODE −28 (39,772 →
+39,744) and A5 −4 (16,740 → 16,736): **−32 B**. Lazy and the resident
+control are unmoved to the function, so `OVL_SAVED` +32,
+`TIERS` unmoved, every grant row +32. The `segsetup` image and the bundle
+are unmoved; `MoveHHi` is in no shipped function. Stack: `ovl_keep` 34 B
+both ways (`-fstack-usage`); on a 128K ROM the call now enters the
+`segsetup` image's `ovl_main` (502 B, `SegSetup` inlined), from
+`ovl_release_if_unwanted` in the shell before any decoder runs, the chain
+the 64K ROM already took, not the deepest (*Stack*; derived from the call
+graph). Peak heap: the filler is freed before the call returns, so nothing
+is held beyond what the keep held before.
+
+**The machine (measured, `-D UNC_AT_BUDGET`, five fixtures, each tier
+against the same probe at c7ad925):** every budget and every `free0`
+**+32**, and every shortfall **−32**, on all four tiers — the floor
+(`run.py --mem 1M`, `adobenumbers.sit` 719,944 → 719,976 B), System 3.0
+on the 512Ke (291,060 → 291,092), System 6.0.8 on the 512Ke (195,656 →
+195,688) and the 64K ROM (256,790 → 256,822). On a 128K ROM the copies
+land where `MoveHHi` put them, to the byte the refused requests can see:
+Library_ISBN's shortfall 42,917 → 42,885 B on System 3.0 and 138,321 →
+138,289 B on System 6.0.8, `synth-dd-m5.dd`'s 1,236 → 1,204 and 416 →
+384; `e1`, `why` and `kf` unmoved on all twenty.
+
+**The sweeps (measured, the shipped autotest build, one fixture per
+boot):** System 3.0 on the 512Ke **72/74** (`derived-XferIt_1.5b4.sea`
+and `PCCTS.tar.gz` NOGRID with no emulator window, PASS alone); System
+6.0.8 on the 512Ke **72/74** in one pass; the 64K ROM **72/74** in one
+pass, Cool Tools and a2basic byte-exact. The
+refusals are BLOCKERS.md's, by name. `run_tiers.py --check` moves no
+tally.
+
+**The host lane.** `tests/run_overlay_host.sh` cannot call an image, so
+`OVL_KEEP_HIGH` is a macro it replaces with the mock's `NewHandle` and
+`MoveHHi` (`ovlbox_keep_high`), as it replaces `OVL_LOWMEM_ROM85`;
+`high_handle` itself is seen only on the emulator tiers.
+
+**Taken: free or better on every axis** — 32 B onto every budget, no
+tally lost on the three tiers that decide, the 64K ROM unmoved but for
+its own +32.

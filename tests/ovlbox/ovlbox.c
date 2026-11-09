@@ -212,6 +212,16 @@ void MoveHHi(Handle h)
     ovlbox_moves++;
 }
 
+/* ovl_keep's placing (mac/ovl_load_eager.c, OVL_KEEP_HIGH): on a Macintosh
+ * the segsetup image's high_handle, which no lane here can call; the mock's
+ * NewHandle and MoveHHi in its place, so a copy still MOVES before its lock. */
+Handle ovlbox_keep_high(unsigned long len)
+{
+    Handle h = NewHandle((Size)len);
+    if (h != NULL) MoveHHi(h);
+    return h;
+}
+
 OSErr MemError(void) { return 0; }
 
 /* Where a block lands is not modelled here — a mapping per block has no

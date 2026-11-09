@@ -1628,8 +1628,13 @@ UNC_MAC_A5_DEFAULT=36692
 # -44 and -20 on 2026-11-08, 39,816 -> 39,772 and 16,760 -> 16,740: one
 # sniff before the set check instead of the set check and then a sniff
 # (DECISIONS.md 2026-11-08, *the scan made twice*). 64 B onto every budget.
-UNC_MAC_CODE_EAGER=39772
-UNC_MAC_A5_EAGER=16740
+# -28 and -4 on 2026-11-09, 39,772 -> 39,744 and 16,740 -> 16,736:
+# `ovl_keep` keeps a decoder high with `high_handle` on every ROM, the ROM
+# test and the MoveHHi path gone (DECISIONS.md 2026-11-09, *one way to keep
+# a decoder high*). The code crossed a 32-byte `.data` boundary. 32 B onto
+# every budget.
+UNC_MAC_CODE_EAGER=39744
+UNC_MAC_A5_EAGER=16736
 # +8 on 2026-10-02 for the same reason as the eager pair above: the
 # overlay call that now says WHICH of StuffIt 2.x's ciphers an entry
 # wants. A5 fell to 19,096 and its ceiling is left where it was.

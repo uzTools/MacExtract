@@ -129,31 +129,36 @@ OverlayEntry ovl_image(short id) { return ovl_image_q(id, 0); }
  * the entry is read, so a format that can carry one has to keep the ciphers
  * whatever this archive turns out to hold — the eligibility rule the mechanism
  * has always had, applied to a bundle rather than to one blob. */
+/* A macro so that tests/ovlbox/, whose lanes cannot call an image, can put
+ * the mock's NewHandle and MoveHHi in its place (tests/run_overlay_host.sh),
+ * as it does with OVL_LOWMEM_ROM85. */
+#ifndef OVL_KEEP_HIGH
+#define OVL_KEEP_HIGH(len) ((Handle)ovl_image(OVL_ID_SEGSETUP)(NULL, \
+                                OVL_HIGH_HANDLE, NULL, (void *)(len)))
+#else
+Handle ovlbox_keep_high(unsigned long len);   /* tests/ovlbox/ovlbox.c */
+#endif
+
 static void ovl_keep(short id, int slot)
 {
     unsigned long len;
     const unsigned char *p = ovl_find(gBundle, id, &len);
     Handle h;
     if (p == NULL || len == 0) { OVL_DIAG(gKeepFail = 1); return; }
-    /* MoveHHi before the lock. These copies are locked for the rest of the
-     * run, and a locked block in the middle of the heap splits it. Measured
-     * on a Macintosh 512Ke: with the copies left where NewHandle put them,
-     * `derived-a2basic.dmg.sit` was granted 317,838 B and still failed —
-     * `gRefusedWhy` = 2, NewPtr returning NULL for a 205 KB block against a
-     * largest free block of 169,298 B. The memory was there, in two pieces.
-     * A 64K ROM has no MoveHHi (measured 2026-11-06, tools/vmac/traptest;
-     * ROM85 > 0 is a 128K ROM or later, as ovl_reloc.c's flush reads it):
-     * its equivalent is an image's, tools/overlay/ovl_segsetup.c,
-     * high_handle, without which Cool Tools and a2basic were refused there
-     * (measured 2026-11-07). */
-    if (*(const short *)OVL_LOWMEM_ROM85 > 0) {
-        h = NewHandle((Size)len);
-        if (h != NULL)
-            MoveHHi(h);
-    } else
-        h = (Handle)ovl_image(OVL_ID_SEGSETUP)(NULL, OVL_HIGH_HANDLE, NULL,
-                                               (void *)len);
-    if (h == NULL || *h == NULL) { OVL_DIAG(gKeepFail = 2); return; }
+    /* High in the heap before the lock. These copies are locked for the
+     * rest of the run, and a locked block in the middle of the heap splits
+     * it. Measured on a Macintosh 512Ke: with the copies left where
+     * NewHandle put them, `derived-a2basic.dmg.sit` was granted 317,838 B
+     * and still failed — `gRefusedWhy` = 2, NewPtr returning NULL for a
+     * 205 KB block against a largest free block of 169,298 B. The memory
+     * was there, in two pieces. The placing is an image's,
+     * tools/overlay/ovl_segsetup.c, high_handle, on every ROM: a 64K ROM
+     * has no MoveHHi, and one path for all of them is 32 B onto every
+     * budget, with every refusal on a 128K ROM 32 B nearer (measured
+     * 2026-11-09). No `*h == NULL` test: len is non-zero here, and a
+     * NewHandle of a non-zero size that succeeds has a block. */
+    h = OVL_KEEP_HIGH(len);
+    if (h == NULL) { OVL_DIAG(gKeepFail = 2); return; }
     HLock(h);
     BlockMoveData(p, *h, (Size)len);
     /* Relocated AGAIN, for the address the copy runs at: the fixup is

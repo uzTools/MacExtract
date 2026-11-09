@@ -1113,7 +1113,11 @@ EXPECT = {
 # control's -32 (CODE -44, A5 +12) against the shipped pair's -64 (CODE -44,
 # A5 -20; DECISIONS.md 2026-11-08, *the scan made twice*). TIERS +32: 64 B
 # onto every budget.
-OVL_SAVED = 166976
+# **+32 2026-11-09, -> 167,008**: `high_handle` on every ROM, the control
+# unmoved against the shipped pair's -32 (CODE -28, A5 -4; DECISIONS.md
+# 2026-11-09, *one way to keep a decoder high*). TIERS unmoved: 32 B onto
+# every budget.
+OVL_SAVED = 167008
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
 # every kept image is one — as is the bundle an envelope holds on to.

@@ -89,7 +89,7 @@ int ovl_reload(void);
 void ovl_codecs_invalidate(void);
 
 /* ROM85, the low-memory word that is > 0 on a 128K ROM or later, read by
- * ovl_reloc.c's flush and ovl_load_eager.c's MoveHHi. A macro so that
+ * ovl_reloc.c's flush. A macro so that
  * tests/ovlbox/ can point it at a variable (tests/run_overlay_host.sh). */
 #ifndef OVL_LOWMEM_ROM85
 #define OVL_LOWMEM_ROM85 0x028EL

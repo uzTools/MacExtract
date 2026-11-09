@@ -112,12 +112,12 @@ INC="-Iinclude -Isrc -Imac -Itools/overlay -Itests/ovlbox -Itests/ovlbox/toolbox
 # UNC_AT_BUDGET is what defines gWantedAfterRelease/gKeepFail/gFlushHas/
 # gFlushCalls — the probe fields a Macintosh only shows on its completion
 # alert. Here they are assertions.
-DEFS="-DUNC_AT_OVERLAY -DUNC_AT_BUDGET '-DOVL_LOWMEM_ROM85=ovlbox_rom85()'"
+DEFS="-DUNC_AT_OVERLAY -DUNC_AT_BUDGET '-DOVL_LOWMEM_ROM85=ovlbox_rom85()' '-DOVL_KEEP_HIGH(n)=ovlbox_keep_high(n)'"
 # The sink lane does NOT define UNC_AT_BUDGET: in mac/macextract_mac.c that
 # switch turns on a heap probe built out of ApplicationZone, LMGetApplLimit and
 # MaxBlock, which the mock Toolbox does not carry and which has nothing to do
 # with overlays. The loader test is where those fields are read.
-SINK_DEFS="-DUNC_AT_OVERLAY '-DOVL_LOWMEM_ROM85=ovlbox_rom85()'"
+SINK_DEFS="-DUNC_AT_OVERLAY '-DOVL_LOWMEM_ROM85=ovlbox_rom85()' '-DOVL_KEEP_HIGH(n)=ovlbox_keep_high(n)'"
 
 build_loadtest() {   # <out> <loader.c> <extra-defs> <cc...>
     out=$1; loader=$2; extra=$3; shift 3

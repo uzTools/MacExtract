@@ -235,11 +235,11 @@ int main(int argc, char **argv)
     CHECK(ovlbox_reads == 1, "the bundle took %ld reads, not 1", ovlbox_reads);
     CHECK(ovlbox_flushes == (getenv("OVLBOX_NO_FLUSH_ROUTE") ? 0 : 1),
           "the bundle fixup flushed %ld time(s)", ovlbox_flushes);
-    /* The flush route is latched now. A 64K ROM's keep calls the segsetup
-     * image's high_handle (mac/ovl_load_eager.c, ovl_keep), and the native
-     * lane cannot call an image, so the keeps below take the 128K ROM's
-     * NewHandle and MoveHHi. What this cannot see: high_handle, which
-     * tools/vmac/sys30.py --rom64 runs on the emulated 512K. */
+    /* The flush route is latched now. Every keep calls the segsetup
+     * image's high_handle (mac/ovl_load_eager.c, ovl_keep), which no lane
+     * here can call, so the keeps below take the mock's NewHandle and
+     * MoveHHi (ovlbox_keep_high). What this cannot see: high_handle, which
+     * every emulator tier runs. */
     ovlbox_set_rom85(1);
 #else
     printf("lazy: preload read %ld resource(s) (it reads nothing, by design)\n",

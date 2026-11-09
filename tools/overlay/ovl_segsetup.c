@@ -23,16 +23,16 @@ static const SegSetupFns *gF = (const SegSetupFns *)1;
 
 #include "../../mac/seg_setup.inc.c"
 
-/* NewHandle then MoveHHi, for a 64K ROM, which has no MoveHHi (FORMATS.md,
- * *A true Macintosh 512K*): a handle as high as the heap allows.
+/* NewHandle then MoveHHi, on every ROM, a 64K ROM having no MoveHHi
+ * (FORMATS.md, *A true Macintosh 512K*): a handle as high as the heap allows.
  * CompactMem gives the largest free block after compaction and purges
  * nothing; a pointer filling all of it but the handle's room takes its
  * bottom, since NewPtr places a block as low as it can; the handle takes
  * the top, and the filler goes. Failing that, a plain NewHandle. Source:
  * Inside Macintosh II, The Memory Manager (CompactMem, NewPtr, NewHandle).
- * In this image rather than resident, so a 128K ROM, which calls MoveHHi,
- * carries it only in the bundle it gives back (mac/ovl_load_eager.c,
- * ovl_keep). */
+ * In this image rather than resident, so it is carried only in the bundle
+ * given back (mac/ovl_load_eager.c, ovl_keep; DECISIONS.md 2026-11-09,
+ * *one way to keep a decoder high*). */
 static int32_t high_handle(Size len)
 {
     Size room = CompactMem(0x7FFFFFF0L) - len - 1024;
