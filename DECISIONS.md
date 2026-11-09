@@ -23184,7 +23184,7 @@ path. Lazy the same. The resident control CODE −44 and A5 +12, `.data`
 alignment; so `OVL_SAVED` +32, `TIERS` +32, every grant row +32
 (`run_tiers.gain()`), and `run_tiers.py --check` moves no tally.
 
-**What is left** (OPEN_ITEMS.md, *The wait before the first callback*):
+**What is left, accepted by the maintainer the same day** — initial loading time is fine where the scan is needed, and it is, being what finds a zip behind other bytes (OPEN_ITEMS.md, Part 1):
 BinHex's 2.8 s is its sniff walking the tail once — the text probes sit
 behind the zip pair — with the MIME multipart probe's 18 KB, and 0.9 s of
 release and peek; Tar's 1.0 s is the same walk; gzip's and compress's

@@ -52,7 +52,8 @@ refusal — the brief has grown before, on request.
 | More archives opened in a quick burst while MacExtract is busy — a second double-click during a helper's stay, archives of several creators at once | **dropped silently** (two `SIT!` archives 2 s apart: both lost, 7.0.1, one run; several creators: not run) | the maintainer, 2026-11-02: a limitation of the application. One more archive at a time is queued: File > Open... on every System, a double-click under MultiFinder and System 7 (DECISIONS.md 2026-11-01, *the Open item MultiFinder looks for*) |
 | The report window's 6,539 B of fixed buffers (`gRepBuf` and the row arrays) | **kept** | the maintainer, 2026-11-08: until something needs the bytes; neither 512 KB refusal is within them (DECISIONS.md 2026-11-08, *the report pool that stays*) |
 | A read error while the format is still being found | **"not a recognized archive"**, not "read error" (`mac_sink_test --ioerr` on `derived-MUSFMT10.ZIP`) | the maintainer, 2026-11-08: a bad sector is a corrupt archive, and either way only a good copy helps (DECISIONS.md 2026-11-07, *the read error that read as end of file*) |
-| A click during an extraction waiting for the next progress callback — 1–2 s on a Mac Plus for most formats at the 1 KB step; a short click on the menu bar lost; a menu held down pausing the extraction | **accepted** | the maintainer, 2026-11-06: input is queued and Cancel flashes when it is taken; the window's lack of responsiveness is known and the user is warned (DECISIONS.md 2026-11-06, *the step a click waits for*). What remains open: *The wait before the first callback* |
+| The wait before the first callback — up to 2.8 s (BinHex) and 1.0 s (Tar) on a Mac Plus, 1.0 s or less elsewhere | **accepted** since 2026-11-08 | the maintainer: initial loading time is fine where the scan is needed. It is: the zip pair's walk of a file's last 64 KB is what finds a zip behind other bytes, and the text and tar probes sit after it so they cannot take one (DECISIONS.md 2026-11-08, *the scan made twice*; FORMATS.md, *How long a click waits*) |
+| A click during an extraction waiting for the next progress callback — 1–2 s on a Mac Plus for most formats at the 1 KB step; a short click on the menu bar lost; a menu held down pausing the extraction | **accepted** | the maintainer, 2026-11-06: input is queued and Cancel flashes when it is taken; the window's lack of responsiveness is known and the user is warned (DECISIONS.md 2026-11-06, *the step a click waits for*); the wait before the first callback is the row above |
 
 Nothing is detect-only since 2026-10-18: an unextractable file is
 `UNC_FORMAT_UNKNOWN` (DECISIONS.md 2026-10-18, *the formats it only named*).
@@ -151,21 +152,6 @@ SPDX line, in the same commit.
 | `unc_segment.c` — the part names of a spanned zip (`NAME.zNN`, `NAME.zip` last) and a `.NNN` split, since 2026-11-08 | facts, not code (NOTICE) | not looked for |
 | five tolerances no specification supports — the MacBinary CRC-16/0xA001 fallback and its nonzero-date test, the byte-swapped AppleSingle header, DiskDoubler's stored header CRC of zero (with the split header above) | deark is a checked negative for all four; the two MacBinary ones are unexercised; kept, the maintainer's decision 2026-10-23 (DECISIONS.md 2026-10-23, *the probes next door*) | the writer that made such files, or the tolerance dropped |
 | `fmt_hecx.c` (**code**), `fmt_binhex_probe.c` — hexbin's | *BinHex before 4.0*, below | BinHex 2.0's own `CODE`, as that item says |
-
-## The wait before the first callback
-
-Before an archive's first callback the window, Cancel and Cmd-. wait up to
-**2.8 s** (BinHex) on a Mac Plus, and 1.0 s or less for every other format
-in FORMATS.md's table (*How long a click waits*), since one sniff replaced
-the set check and a second sniff (3.8 s before; DECISIONS.md 2026-11-08,
-*the scan made twice*). Where the rest goes, measured with `run.py`'s
-`marks:`: BinHex's sniff still walks the file's last 64 KB for a zip end
-record once (1.9 s with the MIME multipart probe's 18 KB), because the
-text probes sit behind the zip pair, then 0.9 s of overlay release and
-envelope peek; Tar's 1.0 s is the same walk; gzip's and compress's
-0.7–0.8 s are the peek's decode; Now Compress's 0.9 s is its directory.
-What would shorten BinHex's: a text file kept from the zip pair's walk
-without a zip behind text being missed, priced on the sniffer's image.
 
 ## One way to keep a decoder high, on every ROM
 

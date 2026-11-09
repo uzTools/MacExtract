@@ -4995,7 +4995,7 @@ inside it; the autotest row is the BinHex layer alone.
 
 The widest gap between two progress callbacks is the longest the window,
 Cancel, Cmd-. and the menu bar go unanswered (accepted: OPEN_ITEMS.md, Part
-1; what is open: *The wait before the first callback*). `-D UNC_AT_TICKGAP` at `--emu mv-4M-1x --poll 20`, System
+1; the wait before the first, accepted too). `-D UNC_AT_TICKGAP` at `--emu mv-4M-1x --poll 20`, System
 6.0.8, all byte-exact; File Manager time is included, the shipped 10 Hz gate
 (up to 0.1 s) is not. **Before the first callback** holds the sniff, the set
 check, the overlay release with the envelope peek, and the archive's
