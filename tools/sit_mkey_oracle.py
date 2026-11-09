@@ -5,9 +5,9 @@ Every encrypted StuffIt classic archive carries an eight-byte `'MKey'`
 resource in its resource fork that VERIFIES a password: the reader decrypts
 the MKey under the password-derived ARCHIVE KEY to an IV, then checks that
 encrypting the IV's first four bytes (with a trailing 00 00 00 04) reproduces
-its last four. Source: `unc_crypt_sit` in `src/unc_crypt.c`, which cites
-XADStuffItDESHandle.m keyForPasswordData:entryKey:MKey: and FIPS 46-3, and
-is graded on every `ci.sh` run against the three archives StuffIt Deluxe
+its last four. Source: `unc_crypt_sit` in `src/unc_crypt.c`, written from
+StuffIt Engine 3.5.2's own `CCOD` -2013 (docs/formats/stuffit-des-key.md)
+and FIPS 46-3, and is graded on every `ci.sh` run against the three archives StuffIt Deluxe
 3.5.1 wrote (`tools/run_crypt.py`); FORMATS.md, *Encryption*.
 
 That check is an ORACLE: the MKey alone decides whether a candidate

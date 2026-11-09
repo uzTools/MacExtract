@@ -68,7 +68,7 @@ CARRIES = {
     "sit14.c":          "StuffIt 5's method 14, the whole file (libxad's SIT_14)",
     "fmt_dd.c":         "the DDAR 0x20 raw-fork shape (libxad's DiskDoubler.c)",
     "fmt_arc.c":        "Crunch 5/6/7 and Crush, and the method numbers",
-    "unc_crypt.c":      "StuffItDES, StuffIt 5's hash, ARC's garble",
+    "unc_crypt.c":      "StuffIt 5's hash and ARC's garble",
     "unc_lzah.c":       "the -lh1-/method-5 window preload (resetLZSSHandle)",
     "fmt_macbinary_probe.c": "the CRC-16/0xA001 fallback and the nonzero-date test",
     "fmt_applesingle.c": "the byte-swapped header",
@@ -90,7 +90,6 @@ CODE = {
     "fmt_hecx.c",   # hexbin's hecx.c and dl.c, the whole decoder
     "fmt_arc.c",    # XADMaster's Crunch and Crush handles
     "fmt_dd.c",     # XADMaster's method-2 splay tree and Stac LZS
-    "unc_crypt.c",  # XADMaster's StuffItDES schedule and key derivation
 }
 
 # Mentions a reference only to say what it no longer owes, or to

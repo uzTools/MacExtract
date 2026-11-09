@@ -560,10 +560,11 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-08 (the CLI's walks that were one walk) — the CLI's copies of the naming rules gave way to `unc_segment_name_part`, and its four folder walks and three path splitters to one `family_of` and one `family_scan`
 - 2026-11-08 (the reader that disagrees) — where a writer's own reader disagrees with the stored CRC or with another reader, the case is decided on its own; there is no general rule
 - 2026-11-08 (the report pool that stays) — the report window's 6,539 B of fixed buffers stay until something needs the bytes
-- 2026-11-08 (the code we wrote) — everything this project wrote is 0BSD, facts read in somebody else's code included; only the six files holding transcribed code stay LGPL-2.1-or-later
+- 2026-11-08 (the code we wrote) — everything this project wrote is 0BSD, facts read in somebody else's code included; only the six files holding transcribed code stay LGPL-2.1-or-later (five since 2026-11-09)
 - 2026-11-08 (the refusals the probe counted) — the probe build extracts Cool Tools and a2basic on the 64K ROM; its `short` and `why` count the requests Arsenic falls back from, and `e1` is its verdict
 - 2026-11-08 (the scan made twice) — the shell sniffs once and asks the set check only as the scheme the sniff named; the zip end-record scan every open paid twice is paid once or not at all, and 64 B come back on every budget
 - 2026-11-09 (one way to keep a decoder high) — `ovl_keep` places a kept image with `high_handle` on every ROM; the ROM test and `MoveHHi` are gone, for 32 B onto every budget
+- 2026-11-09 (the key StuffIt's own engine derives) — StuffIt classic's key schedule and key derivation are written from StuffIt Engine 3.5.2's own code, read and run under qemu-m68k; `unc_crypt.c` is 0BSD, and 320 B come back on every budget that keeps the ciphers
 
 ---
 
@@ -23053,7 +23054,7 @@ for 6,539 B to matter: `synth-dd-m5.dd` peaks at 401,408 B against a
 KB machines*), and Library_ISBN's first refused request alone is 77,203 B
 on the 64K ROM (FORMATS.md, *A true Macintosh 512K*), a lower bound.
 
-## 2026-11-08 (the code we wrote) — everything this project wrote is 0BSD, facts read in somebody else's code included; only the six files holding transcribed code stay LGPL-2.1-or-later
+## 2026-11-08 (the code we wrote) — everything this project wrote is 0BSD, facts read in somebody else's code included; only the six files holding transcribed code stay LGPL-2.1-or-later (five since 2026-11-09)
 
 **The maintainer's decision, 2026-11-08**, the question *What still holds
 the licence* left to him (OPEN_ITEMS.md): the 20 `HISTORICAL` files,
@@ -23068,11 +23069,13 @@ a naming rule read in XADMaster's source is not its authors' to license;
 the expression is. NOTICE already rests on that for btoa (non-commercial)
 and MAR (GPL-2.0-only), both implemented as formats from references whose
 code could not be carried. So of the 18 `CARRIES` files, the six holding
-transcribed code are LGPL: `unc_lzdyn.c` and `sit14.c` (libxad's, whole),
-`fmt_hecx.c` (hexbin's, whole), `fmt_arc.c` (Crunch and Crush), `fmt_dd.c`
-(method 7's Stac LZS, "transcribed", and method 2's splay tree) and
+transcribed code were LGPL that day, **five since 2026-11-09** (*the key
+StuffIt's own engine derives*): `unc_lzdyn.c` and `sit14.c` (libxad's,
+whole), `fmt_hecx.c` (hexbin's, whole), `fmt_arc.c` (Crunch and Crush) and
+`fmt_dd.c` (method 7's Stac LZS, "transcribed", and method 2's splay tree);
 `unc_crypt.c` (StuffItDES's key schedule and StuffIt classic's key
-derivation). That last was the closest call, and was compared the same
+derivation) was the sixth until it was rewritten from StuffIt Engine
+3.5.2's own code. It was the closest call, and was compared the same
 day: `sit_nibble` is XADMaster's `Nibble` character for character,
 `sitdes_setkey` is `StuffItDESSetKey`'s sixteen nibble expressions
 regrouped into standard DES's layout, and `unc_crypt_sit` follows
@@ -23242,3 +23245,73 @@ tally.
 **Taken: free or better on every axis** — 32 B onto every budget, no
 tally lost on the three tiers that decide, the 64K ROM unmoved but for
 its own +32.
+
+## 2026-11-09 (the key StuffIt's own engine derives) — StuffIt classic's key schedule and key derivation are written from StuffIt Engine 3.5.2's own code, read and run under qemu-m68k; `unc_crypt.c` is 0BSD, and 320 B come back on every budget that keeps the ciphers
+
+**Where the code was (measured).** Not in a `DCMP` (512 + id), the route
+OPEN_ITEMS.md named: 3.5.1 has no Encryptor modules. It is in the
+`StuffIt Engine™` extension 3.5.1 installs (3.5.2 by its `'vers'`), in the
+cached System 7.0.1 volume `spacesaver.py` installed it on: `CCOD` -2013
+reads an encrypted archive (`GetResource('MKey', 0)` @0x1d9a) and -2045
+writes one. Found by searching every resource of the engine, the
+application and Magic Menu for `MKey` and for `01234567`/`89abcdef` as
+immediates. The routines call no trap, so `tools/sitdes/sitdes_run.c`
+calls them as `pit_run.c` calls Packit III's.
+
+**The description** is `docs/formats/stuffit-des-key.md`, from the
+disassembly and from runs: sixteen DES rounds with no IP/FP; a schedule
+that takes, for round *r*, three key nibbles at *r* + (1, 8, 5), (10, 3,
+14), (6, 11, 2), (13, 0, 9) as twelve bits per S-box pair; the archive key
+folded from `01 23 45 67 89 ab cd ef` by seven-bit password bytes, eight at
+a time, **at least once**; the `'MKey'` check; the file key and IV from the
+fork's last sixteen bytes. The new `sitdes_setkey` and `unc_crypt_sit` are
+written from it; the old file was an oracle only.
+
+**Graded (measured, `tools/sitdes/run_sitdes.py`):** 8,264 schedules,
+8,128 blocks, 4,518 passwords through `unc_crypt_sit` (every byte value
+1..255, lengths 0..40, each with a refused one-bit-off `'MKey'`), 2,000
+fork streams and both forks of the three 3.5.1 archives agree with
+Aladdin's code; against the old source, every case but the empty password
+is byte-identical. Seven patches to Aladdin's code (a nibble offset in each schedule, an
+S-box bit, the 7-bit mask, the check's 4, the file key's XOR, the feedback
+rotate) each make their class fail, and a one-nibble change to the new
+table fails 44 of `run_crypt.py`'s checks. `run_crypt.py` (75 cases),
+`run_sitopt.py` (28 archives, 2.0.1's `DES` and `NewDE` among them), the
+MKey oracle and the unit tests pass.
+
+**The one behaviour that changed: the empty password** is folded once, as
+Aladdin's reader and writer fold it (@0x19da); the old code folded it zero
+times, so an archive encrypted with one could not be opened. What the
+engine still does differently — an archive key of eight equal bytes, which
+Aladdin refolds, and a NUL inside a password — is in the description; no
+password reaches the first in practice and no dialog types the second.
+
+**Price (measured), all five axes.** CODE: `ovl_crypt` 9,604 → 9,284 B,
+**−320** (`sit_nibble` −50, `sitdes_setkey` 332 → 170, `unc_crypt_sit`
+666 → 552, an 8-byte table +8); the shipped resident pair unchanged; the
+resident control CODE −316, A5 −4. A5, shipped: 0. Transient heap: the
+same 2 KB table; a kept crypt image 320 B smaller. Stack: `unc_crypt_sit`
+240 → 236 B, `sitdes_setkey` 36 → 32 (`-fstack-usage`), not the deepest
+chain. Extractions lost: none — `run_tiers.py --check` moves no tally; the
+budgets of formats keeping the ciphers rise 320 B by arithmetic (`OVL_SAVED`
+−320, `TIERS` +320), not re-measured on the emulators. Speed: the schedule
+builds the sixteen nibbles once, 30 % fewer host instructions than the old
+one (callgrind, 8,000 schedules, 9.76 M → 6.80 M); the m68k is not timed
+(hypothesis: it is faster too). Reading each nibble out of the key in the
+loop was 42 B smaller and 17.0 M instructions, 1.7 times the old, so not
+taken.
+
+**Taken: free or better on every axis.** `unc_crypt.c` leaves `CODE` in
+`tools/check_provenance.py` and is 0BSD; five files stay LGPL. It still
+carries two facts, StuffIt 5's hash and ARC's garble.
+
+**Found on the way:** FORMATS.md's image sum read 195,600 B against
+`IMAGES`' 195,602, so the bundle's index was 242 B, not 244 (corrected in
+place).
+
+**Transferable.**
+- **The module a format names is not always where its code is.** The route
+  on file was a `DCMP`, from 2.x's module scheme; 3.5.1's code was in its
+  engine, and a search for the cipher's own constants found it in minutes.
+- **The old code made a fine oracle** once Aladdin's code existed to grade
+  both: it agreed everywhere but the one input nobody had tried.

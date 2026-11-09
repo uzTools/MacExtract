@@ -2409,6 +2409,21 @@ header can refuse*).
   `ci.sh` (needs the fixture, the m68k cross-compiler and `qemu-m68k`), so
   **nothing in a `ci.sh` run compiles `pit_run.c` or re-checks a witness**
   — `tools/derive_sqp.py`'s position too.
+- **StuffIt classic's key code, by StuffIt Engine 3.5.2** (the extension
+  StuffIt Deluxe 3.5.1 installs). `tools/sitdes/run_sitdes.py` runs its
+  `CCOD` -2013 (reader) and -2045 (writer) under `qemu-m68k`
+  (`tools/sitdes/sitdes_run.c`) and puts `src/unc_crypt.c` behind the same
+  commands (`sitdes_ours.c`): 8,264 schedules (zero, all ones, the 64
+  single-bit keys, random), 8,128 blocks, 4,518 passwords through
+  `unc_crypt_sit` with an `'MKey'` Aladdin's block routine built and the
+  same one bit off, 2,000 fork streams, and both forks of the three 3.5.1
+  archives. `--old FILE` compares a second source line for line. Seven
+  patches to Aladdin's code, one per class, must each fail it. Not in
+  `ci.sh` (needs the cached volume, the cross-compiler and `qemu-m68k`).
+  **It cannot see** an archive key whose bytes are all equal or a password
+  with a NUL in it (*What the engine does differently*,
+  `docs/formats/stuffit-des-key.md`), nor the 2.x schemes, whose
+  derivation this is and which `run_sitopt.py` grades.
 - **WinZip AES**: no second reader here (`unar` 1.10.8 cannot open one),
   so **7-Zip** writes four cases (256, 192, 128, and one stored), verifies
   them itself, and our output must equal the input; each also has a

@@ -6,8 +6,8 @@
  * is the one `unc_crypt_sit` makes once the password is folded: decrypt the
  * MKey under the key to the archive IV, then encrypt the IV's first four
  * bytes with 00 00 00 04 behind them and compare the last four. Source:
- * `unc_crypt_sit` in src/unc_crypt.c, which cites XADStuffItDESHandle.m
- * keyForPasswordData:entryKey:MKey:. That file is INCLUDED, not copied, so
+ * `unc_crypt_sit` in src/unc_crypt.c, written from StuffIt Engine 3.5.2's
+ * own check (docs/formats/stuffit-des-key.md). That file is INCLUDED, not copied, so
  * the DES here is the engine's own; a four-byte check passes by chance once
  * in 2^32 windows, so a hit is confirmed with `--ak` before it is believed.
  *

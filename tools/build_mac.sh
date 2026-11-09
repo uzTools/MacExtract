@@ -778,7 +778,11 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # 2026-11-08, *the naming rules in one place*); the shipped pair -128.
 # -44 on 2026-11-08, 186,840 -> 186,796, A5 +12 below: one sniff before the
 # set check (DECISIONS.md 2026-11-08, *the scan made twice*).
-UNC_MAC_CODE_DEFAULT=186796
+# -316 on 2026-11-09, 186,796 -> 186,480, A5 -4 below: StuffIt classic's
+# key schedule and derivation written from StuffIt Engine 3.5.2's own
+# (DECISIONS.md 2026-11-09, *the key StuffIt's own engine derives*). In
+# `ovl_crypt` on the shipped pair, -320.
+UNC_MAC_CODE_DEFAULT=186480
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -1043,7 +1047,10 @@ UNC_MAC_CODE_DEFAULT=186796
 # rules (above); no data was added.
 # +12 on 2026-11-08, 36,680 -> 36,692: `.data` alignment under one sniff
 # before the set check (above); no data was added.
-UNC_MAC_A5_DEFAULT=36692
+# -4 on 2026-11-09, 36,692 -> 36,688: the key schedule's 8-byte table of
+# nibble offsets in, and 12 B of `.data` alignment out under the code's
+# -316 (above).
+UNC_MAC_A5_DEFAULT=36688
 # A CEILING PER CONFIGURATION, because one ceiling measured on another build
 # cannot fire. The figures above are the RESIDENT control build, which carries
 # every decoder; the shipped build's resident code is a third of that, so

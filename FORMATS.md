@@ -4130,13 +4130,13 @@ Measured 2026-09-27:
 whose tallies it is quoted beside. It cancels in a difference taken from
 one probe pair (*What it buys, against the control*): **117,040 B saved
 between the shipped pair against 116,720 B between the probe pair**, both
-2026-09-27. The shipped pair is **167,008 B** (`OVL_SAVED`,
-`tools/run_tiers.py`) since 2026-11-09 (*one way to keep a decoder high*);
+2026-09-27. The shipped pair is **166,688 B** (`OVL_SAVED`,
+`tools/run_tiers.py`) since 2026-11-09 (*the key StuffIt's own engine derives*);
 the probe pair has not been re-measured, so the 320 B is that
 day's difference, not today's.
 
-The bundle is **195,844 B** — the nineteen images sum to 195,600 B, so its
-index costs **244 B** (`tools/run_tiers.py` `BUNDLE`, `IMAGES`): a
+The bundle is **195,524 B** — the nineteen images sum to 195,282 B, so its
+index costs **242 B** (`tools/run_tiers.py` `BUNDLE`, `IMAGES`): a
 4-byte header, 12 bytes of directory per image and padding of each image to
 a multiple of 4 — the padding is why the index is not a constant. The
 bundle is not `ovl_bundle.r.rsrc.bin`, the Rez'd resource fork around it
@@ -4196,7 +4196,7 @@ carries, and they were read again from the floppy (DECISIONS.md 2026-11-04,
 
 A tier's budget for a format is the resident build's budget for that tier
 (`TIERS`; *512 KB machines*, *Floor target verification*), plus
-the 167,008 B of `CODE` and A5 the shipped build does not carry (`OVL_SAVED`;
+the 166,688 B of `CODE` and A5 the shipped build does not carry (`OVL_SAVED`;
 *Three configurations, one tree*), less the images the format keeps and 8 B of
 block header each, less a **322 B residue** (`OVL_RESIDUE`, re-taken
 2026-10-22 from the shipped and resident budget probes on all three tiers;
@@ -4219,7 +4219,8 @@ budget (a fixture is in the Mac sample); the rest are the same sum with no
 fixture. Every row has since moved by arithmetic only — each application or
 image change since 2026-10-09 shifts `OVL_SAVED`, the images and `TIERS` by
 amounts recorded in its DECISIONS.md entry and in `tools/run_tiers.py`'s
-comments, last on 2026-11-09 (*one way to keep a decoder high*: +32 B a row), with
+comments, last on 2026-11-09 (*the key StuffIt's own engine derives*: −320 B on
+every row that keeps no cipher image, 0 on the rest, the control 320 B smaller), with
 `run_tiers.py --check` moving no tally. **Re-taken from `gain()` that
 day**: the rows had missed the same day's Arsenic table and fuzzer fixes
 (`OVL_SAVED` +320, StuffIt's image +256, DiskDoubler's +12), so most were
@@ -4227,20 +4228,20 @@ day**: the rows had missed the same day's Arsenic table and fuzzer fixes
 
 | sniffed format | images kept | granted, against the control |
 |---|---|---|
-| **AppleLink package** | **sqp, codecs** | **+158,918 B** (arithmetic: no `.pkg` is in the Mac sample) — the largest grant, because `ovl_sqp` is the smallest decoder image at 1,736 B |
-| Now Compress | now, codecs | **+155,706 B** (measured) |
-| SuperDisk! | superdisk, codecs | +154,026 B (arithmetic: no SuperDisk! fixture is in the Mac sample) |
-| LZH | lzh, codecs | **+150,216 B** (measured) |
+| **AppleLink package** | **sqp, codecs** | **+158,598 B** (arithmetic: no `.pkg` is in the Mac sample) — the largest grant, because `ovl_sqp` is the smallest decoder image at 1,736 B |
+| Now Compress | now, codecs | **+155,386 B** (measured) |
+| SuperDisk! | superdisk, codecs | +153,706 B (arithmetic: no SuperDisk! fixture is in the Mac sample) |
+| LZH | lzh, codecs | **+149,896 B** (measured) |
 | PackIt | packit, ciphers, codecs | **+148,862 B** (measured) |
-| DiskDoubler | cptdd, codecs | **+145,422 B** (measured) |
-| StuffIt SpaceSaver | spacesaver, codecs | +144,486 B (arithmetic: no SpaceSaver fixture is in the Mac sample) |
+| DiskDoubler | cptdd, codecs | **+145,102 B** (measured) |
+| StuffIt SpaceSaver | spacesaver, codecs | +144,166 B (arithmetic: no SpaceSaver fixture is in the Mac sample) |
 | ARC | arc, ciphers, codecs | **+143,346 B** (measured) |
-| Compact Pro, Compact Pro segment | cptdd, ciphers, codecs | +135,810 B (arithmetic), and **+145,422 B** where the directory says no entry is encrypted (measured) |
-| Tar | zipold, codecs | **+144,534 B** (measured) |
-| MAR | zipold, codecs | +144,534 B (arithmetic: no MAR fixture is in the Mac sample) |
-| StuffIt, StuffIt 5 | stuffit, ciphers, codecs | **+122,600 B** (measured), and **+132,212 B** for a StuffIt 5 archive whose header carries no password hash (measured, 2026-11-03) |
-| Zip, spanned zip | exo, zipold, ciphers, codecs | +104,686 B (arithmetic), **+114,298 B** unencrypted (measured) |
-| an envelope whose payload's first bytes name its format (`unc_envelope_peek`), since 2026-11-03 | its own reader, the sniffer, and what that format keeps | **+99,614 B** for a `.tar.Z` or `.tar.gz`, and an LZW-compressed MAR, which keeps the same (arithmetic), **+129,850 B** for a `.mar.lz4` (arithmetic), **+100,486 B** for a StuffIt archive in BinHex or MacBinary (measured) |
+| Compact Pro, Compact Pro segment | cptdd, ciphers, codecs | +135,810 B (arithmetic), and **+145,102 B** where the directory says no entry is encrypted (measured) |
+| Tar | zipold, codecs | **+144,214 B** (measured) |
+| MAR | zipold, codecs | +144,214 B (arithmetic: no MAR fixture is in the Mac sample) |
+| StuffIt, StuffIt 5 | stuffit, ciphers, codecs | **+122,600 B** (measured), and **+131,892 B** for a StuffIt 5 archive whose header carries no password hash (measured, 2026-11-03) |
+| Zip, spanned zip | exo, zipold, ciphers, codecs | +104,686 B (arithmetic), **+113,978 B** unencrypted (measured) |
+| an envelope whose payload's first bytes name its format (`unc_envelope_peek`), since 2026-11-03 | its own reader, the sniffer, and what that format keeps | **+99,294 B** for a `.tar.Z` or `.tar.gz`, and an LZW-compressed MAR, which keeps the same (arithmetic), **+129,530 B** for a `.mar.lz4` (arithmetic), **+100,486 B** for a StuffIt archive in BinHex or MacBinary (measured) |
 | any other envelope, and every segment scheme that joins to a file | the whole bundle, kept | **−29,166 B** (−29,118 B measured, before 2026-11-07) |
 
 A change to resident code moves every row by the control's growth less the
@@ -4252,7 +4253,7 @@ left*).
 
 **The last row is the one no tally had shown**: a wrapper whose payload the
 peek cannot name keeps the bundle, and that layer runs with **less** memory than
-a resident build would give it — 195,844 B held against 167,008 B saved. Until
+a resident build would give it — 195,524 B held against 166,688 B saved. Until
 2026-11-03 that was every envelope, and it refused `a2ps.V4.3.tar.Z` and
 `popper-1.7.tar.Z` at System 6.0.8 / 512 KB; the peek names Tar from the first
 512 bytes and the `.Z` layer is granted 200,022 B there instead of 72,090 B
@@ -4315,7 +4316,7 @@ with File > Open...'s record placed after the last before it, 250,752 B with
 MacBinary I read without padding before that, 250,496 B with Arsenic's
 2.5-byte table before that, 250,240 B before that, CORRECTED the same day
 from 250,112). **48,000 B** is
-`MacExtract.code.bin`, read at launch and never purged, and **195,844 B** is
+`MacExtract.code.bin`, read at launch and never purged, and **195,524 B** is
 the `'OVLY'` bundle, read at launch and mostly given back before the engine
 takes its budget (*Overlays*). What stays costs the heap one for one: the
 link produces a single `MacExtract.code.bin`, and `Elf2Mac/LdScript.cc`
@@ -5752,7 +5753,7 @@ data and relocations. 63,744 B was measured against 2026-09-01's build;
 `ApplLimit − ApplZone` = **78,568 B**, leaving 20,956 B for every buffer
 (*derived*; DECISIONS.md 2026-10-22, *the runtime the application did not
 need*). `CODE` has since fallen 2,584 B; the sum has not been re-derived. The
-eager loader then asks for the `'OVLY'` bundle as ONE **195,844 B** block
+eager loader then asks for the `'OVLY'` bundle as ONE **195,524 B** block
 (*Overlays*). The bound is the RAM under the screen buffer, so no smaller
 System moves it (*What the application costs the engine*); the margin is
 kilobytes, which is why MANUAL_TESTS.md §6's HD20 question is about a

@@ -52,10 +52,11 @@
  *
  * Sources: FIPS 46-3 for DES itself, which is now the whole of both DES
  * ciphers here — StuffIt's variant is that round function and no other
- * (see *StuffItDES* below); reference/XADMaster/XADStuffItDESHandle.m
- * for what remains format knowledge, the nibble key schedule and the
- * derivation the three real archives grade; XADStuffIt5Parser.m and
- * XADXORHandle.m (ARC's garble). Both PackIt handles left on 2026-10-05
+ * (see *StuffItDES* below); StuffIt Engine 3.5.2's own code for StuffIt
+ * classic's key schedule and key derivation since 2026-11-09, read out
+ * of and run from its `CCOD` -2013 and -2045
+ * (docs/formats/stuffit-des-key.md, tools/sitdes/); XADStuffIt5Parser.m
+ * and XADXORHandle.m (ARC's garble), for facts. Both PackIt handles left on 2026-10-05
  * for the application itself. The other four left on 2026-09-23 for the documents
  * that state what they do: RFC 3174, RFC 2104 and RFC 2898 for SHA-1,
  * HMAC and PBKDF2, reference/notes/winzip_aes.txt for AE-1/AE-2's
@@ -67,9 +68,9 @@
  * (reference/notes/fips46-3.pdf), MD5's are RFC 1321's
  * (reference/notes/rfc1321.txt), and the AES S box is built from the
  * definition in FIPS 197 section 5.1.1. They are precomputed because
- * this engine may not have global mutable state. LGPL — see NOTICE.
+ * this engine may not have global mutable state. See NOTICE.
  *
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: 0BSD
  */
 #include "unc_internal.h"
 #include "crypt_tables.h"
@@ -265,57 +266,43 @@ static void des_crypt(uint8_t ks[16][8], uint8_t block[8], int decrypt,
 /* ------------------------------------------------------------------ */
 /* StuffItDES                                                          */
 /*                                                                    */
-/* "A modified DES that ROLs the input, does the DES rounds without    */
-/* IP, then RORs the result. It also uses its own key schedule." —     */
-/* XADStuffItDESHandle.m. That description is exact, and since         */
-/* 2026-09-19 only its second sentence is code here: the rotate, the   */
-/* bit reversal and the second S-box table were one relabelling of     */
-/* standard DES's round, applied to the state and undone at the end of */
-/* the block, so the rounds ARE des_core above.                        */
-/*                                                                    */
-/* Two facts carry it, both machine-checked by tools/fit_sitdes.py:    */
-/* XADMaster's DES_SPtrans[b][v] equals ROL(REV(SP[b][rev6(v)]), 3)    */
-/* entry for entry, and with the state held in the standard layout the */
-/* subkeys fall out of the nibble schedule as plain six-bit groups —   */
-/* group 2g is s1's lane 3-g, group 2g+1 is s0's, which is why no      */
-/* revbits survives. The same tool A/Bs the two formulations over      */
-/* 20,000 random key/block pairs and every single-bit case.            */
-/*                                                                    */
-/* What is NOT standard DES, and is kept as the format knowledge it    */
-/* is, is the schedule below — it reads all 64 key bits where PC-1     */
-/* drops eight, so no permutation of the key can turn one into the     */
-/* other (DECISIONS.md 2026-09-19, *the DES that was only wearing a    */
-/* disguise*). Used only to derive keys: a handful of blocks per       */
-/* archive.                                                           */
+/* StuffIt Engine 3.5.2's block routine (CCOD -2013 @0x0f3e) is        */
+/* sixteen rounds of DES's round function with no IP and no FP — its   */
+/* tables are the S boxes through P, its state held rotated one bit —  */
+/* so the rounds ARE des_core above, graded against that routine under */
+/* qemu-m68k on every single-bit key and block (tools/sitdes/). How   */
+/* the round was folded onto DES's first is DECISIONS.md 2026-09-19,   */
+/* *the DES that was only wearing a disguise*. What is not standard is */
+/* the schedule below: it reads all 64 key bits where PC-1 drops       */
+/* eight. Used only to derive keys: a handful of blocks per archive.   */
 /* ------------------------------------------------------------------ */
 
-static uint32_t sit_nibble(const uint8_t key[8], int n)
-{
-    return (uint32_t)((key[(n & 0x0f) >> 1] >> (((n ^ 1) & 1) << 2)) & 0x0f);
-}
+/* The schedule, from StuffIt Engine 3.5.2's own (CCOD -2013 @0x1820;
+ * docs/formats/stuffit-des-key.md). Round r reads the key as sixteen
+ * nibbles, high nibble of byte 0 first, at r plus a fixed offset mod 16,
+ * and each pair of S-boxes takes three of them as one twelve-bit number:
+ * the odd box's subkey is its top six bits, the even box's the low six.
+ * A pair's three offsets are the three nibbles of its word here. */
+static const uint16_t sitdes_pairs[4] = { 0x185, 0xa3e, 0x6b2, 0xd09 };
 
-/* The nibble schedule, straight into standard six-bit subkey groups. */
 static void sitdes_setkey(const uint8_t key[8], uint8_t ks[16][8])
 {
-    int i;
-    for (i = 0; i < 16; i++) {
-        ks[i][0] = (uint8_t)((sit_nibble(key, i + 8) >> 2) |
-                             (sit_nibble(key, i + 1) << 2));
-        ks[i][1] = (uint8_t)((sit_nibble(key, i + 5) |
-                              (sit_nibble(key, i + 8) << 4)) & 0x3f);
-        ks[i][2] = (uint8_t)((sit_nibble(key, i + 3) >> 2) |
-                             (sit_nibble(key, i + 10) << 2));
-        ks[i][3] = (uint8_t)((sit_nibble(key, i + 14) |
-                              (sit_nibble(key, i + 3) << 4)) & 0x3f);
-        ks[i][4] = (uint8_t)((sit_nibble(key, i + 11) >> 2) |
-                             (sit_nibble(key, i + 6) << 2));
-        ks[i][5] = (uint8_t)((sit_nibble(key, i + 2) |
-                              (sit_nibble(key, i + 11) << 4)) & 0x3f);
-        ks[i][6] = (uint8_t)((sit_nibble(key, i) >> 2) |
-                             (sit_nibble(key, i + 13) << 2));
-        ks[i][7] = (uint8_t)((sit_nibble(key, i + 9) |
-                              (sit_nibble(key, i) << 4)) & 0x3f);
+    uint8_t nib[16];
+    int r, k;
+
+    for (k = 0; k < 8; k++) {
+        nib[2 * k] = (uint8_t)(key[k] >> 4);
+        nib[2 * k + 1] = (uint8_t)(key[k] & 15);
     }
+    for (r = 0; r < 16; r++)
+        for (k = 0; k < 4; k++) {
+            uint16_t p = sitdes_pairs[k];
+            uint16_t twelve = (uint16_t)((nib[(r + (p >> 8)) & 15] << 8) |
+                                         (nib[(r + (p >> 4)) & 15] << 4) |
+                                         nib[(r + p) & 15]);
+            ks[r][2 * k] = (uint8_t)(twelve >> 6);
+            ks[r][2 * k + 1] = (uint8_t)(twelve & 63);
+        }
 }
 
 /* DES with no IP and no FP: the block IS L0 R0, and the preoutput is
@@ -877,80 +864,63 @@ void unc_crypt_pf(UncCrypt *cr, const uint8_t *pw, uint16_t pwlen,
     unc_crypt_rc4(cr, digest, keylen > 16 ? 16 : keylen);
 }
 
-/* StuffIt classic. Three keys are involved: the ARCHIVE key, iterated
- * out of the password; the archive IV, which is the 'MKey' resource
- * decrypted under it (and which also verifies the password); and the
- * FILE key and IV, derived from the sixteen bytes stored at the end of
- * the entry's own compressed fork. Source: XADStuffItDESHandle.m
- * keyForPasswordData:entryKey:MKey:. */
+/* StuffIt classic's keys, as StuffIt Engine 3.5.2's reader derives them
+ * (CCOD -2013: the fold @0x19a8, the check @0x05ee, the file key
+ * @0x0692; docs/formats/stuffit-des-key.md), graded against that code
+ * under qemu-m68k by tools/sitdes/run_sitdes.py. Three keys: the ARCHIVE
+ * key, folded out of the password; the archive IV, which is the 'MKey'
+ * resource decrypted under it and which checks the password; and the
+ * FILE key and IV, out of the sixteen bytes after the entry's fork. */
 int unc_crypt_sit(UncCrypt *cr, UncAlloc *al, const uint8_t *pw,
                   uint16_t pwlen, const uint8_t entrykey[16],
                   const uint8_t mkey[8], int scheme)
 {
-    uint8_t ks[16][8];
+    uint8_t ks[16][8], ak[8], iv[8], probe[8], fk[8], fiv[8];
     const uint32_t *sp;
-    uint8_t archivekey[8] = { 0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef };
-    uint8_t archiveiv[8], verifyblock[8] = { 0, 0, 0, 0, 0, 0, 0, 4 };
-    uint8_t filekey[8], fileiv[8];
-    uint32_t x, blocks, length = pwlen;
-    int i;
+    uint16_t at = 0;
+    int i, err = crypt_table(cr, al, CRYPT_TAB_DES);
 
-    /* One fold per eight-byte block of the password, and the count is
-     * ceil(length / 8) — MEASURED, on three archives StuffIt Deluxe
-     * 3.5.1 wrote under Mini vMac with passwords of 8, 9 and 17
-     * characters, which need 1, 2 and 3 folds (tools/vmac/sitcrypt.py;
-     * FORMATS.md, *StuffIt classic's archive key*).
-     *
-     * NEITHER reference has this. XADMaster's loop —
-     *   while ((((x * (length >> 3)) << 3) <= length) && length >= 8)
-     * — folds an extra ALL-ZERO block at exactly 8 and stops at two
-     * folds however long the password is, so it is wrong at 8 and at
-     * 17 and up; Debian's `unar` 1.10.8 folds one block whatever the
-     * length, so it is wrong at 9 and up. Each opens archives the other
-     * cannot, which is what the divergence looked like from here before
-     * an archive existed to ask. */
-    blocks = (length + 7u) >> 3;
-    {
-        int err = crypt_table(cr, al, CRYPT_TAB_DES);
-        if (err != UNC_OK) return err;
-    }
+    if (err != UNC_OK) return err;
     sp = cr->tab;
-    sitdes_setkey(archivekey, ks);
-    for (x = 0; x < blocks; x++) {
-        uint8_t passblock[8];
-        uint32_t off = x << 3, n = length - off < 8u ? length - off : 8u;
 
-        for (i = 0; i < 8; i++) passblock[i] = 0;
-        for (i = 0; i < (int)n; i++) passblock[i] = pw[off + (uint32_t)i];
+    /* The fold: one schedule from 01 23 45 67 89 ab cd ef, a block that
+     * starts as those bytes, and at least once, up to eight password
+     * bytes of seven bits each XORed in and the block encrypted. So
+     * ceil(len/8) folds and one for the empty password — the count the
+     * three archives 3.5.1 wrote here also need (FORMATS.md, *StuffIt
+     * classic's archive key*). */
+    for (i = 0; i < 8; i++) ak[i] = (uint8_t)(0x01 + 0x22 * i);
+    sitdes_setkey(ak, ks);
+    do {
+        for (i = 0; i < 8 && at < pwlen; i++) ak[i] ^= pw[at++] & 0x7f;
+        sitdes_crypt(ak, ks, 1, sp);
+    } while (at < pwlen);
 
-        for (i = 0; i < 8; i++) archivekey[i] ^= passblock[i] & 0x7f;
-
-        sitdes_crypt(archivekey, ks, 1, sp);
-    }
-
-    /* Everything below is keyed by the folded archive key, so the
-     * schedule is derived once. (It was derived three more times until
-     * 2026-09-19, each from the same unchanged bytes.) */
-    sitdes_setkey(archivekey, ks);
-
-    for (i = 0; i < 8; i++) archiveiv[i] = mkey[i];
-    sitdes_crypt(archiveiv, ks, 0, sp);
-
-    /* Verify: encrypting the IV's first four bytes (with a trailing 4)
-     * must reproduce its last four. */
-    for (i = 0; i < 4; i++) verifyblock[i] = archiveiv[i];
-    sitdes_crypt(verifyblock, ks, 1, sp);
-    for (i = 0; i < 4; i++)
-        if (verifyblock[4 + i] != archiveiv[4 + i]) return UNC_ERR_PASSWORD;
-
+    /* The check: the IV's first half and 00 00 00 04, encrypted, must
+     * end in the IV's second half. */
+    sitdes_setkey(ak, ks);
     for (i = 0; i < 8; i++) {
-        filekey[i] = entrykey[i];
-        fileiv[i] = entrykey[8 + i];
+        iv[i] = mkey[i];
+        probe[i] = 0;
     }
-    sitdes_crypt(filekey, ks, 0, sp);
-    for (i = 0; i < 8; i++) filekey[i] ^= archiveiv[i];
-    sitdes_setkey(filekey, ks);
-    sitdes_crypt(fileiv, ks, 0, sp);
+    sitdes_crypt(iv, ks, 0, sp);
+    for (i = 0; i < 4; i++) probe[i] = iv[i];
+    probe[7] = 4;
+    sitdes_crypt(probe, ks, 1, sp);
+    for (i = 4; i < 8; i++)
+        if (probe[i] != iv[i]) return UNC_ERR_PASSWORD;
+
+    /* The fork's last sixteen bytes: the file key decrypted under the
+     * archive key and XORed with the IV, then the file IV decrypted
+     * under the file key. */
+    for (i = 0; i < 8; i++) {
+        fk[i] = entrykey[i];
+        fiv[i] = entrykey[8 + i];
+    }
+    sitdes_crypt(fk, ks, 0, sp);
+    for (i = 0; i < 8; i++) fk[i] ^= iv[i];
+    sitdes_setkey(fk, ks);
+    sitdes_crypt(fiv, ks, 0, sp);
 
     /* Everything above is shared by all three schemes — the archive key,
      * the 'MKey' and its verifier, the file key and IV — and only the
@@ -962,20 +932,20 @@ int unc_crypt_sit(UncCrypt *cr, UncAlloc *al, const uint8_t *pw,
      * bytes differing. */
     if (scheme == UNC_SIT_SCHEME_DES) {
         crypt_clear(cr, UNC_CRYPT_SIT_CBC, 8);
-        des_setkey(cr->ks, filekey);
+        des_setkey(cr->ks, fk);
     } else if (scheme == UNC_SIT_SCHEME_NEWDE) {
         crypt_clear(cr, UNC_CRYPT_SIT_NEWDE, 8);
-        sitdes_setkey(filekey, cr->ks);
+        sitdes_setkey(fk, cr->ks);
     } else {
         crypt_clear(cr, UNC_CRYPT_SIT_DES, 8);
-        cr->a = unc_get_u32be(&filekey[0]);
-        cr->b = unc_get_u32be(&filekey[4]);
+        cr->a = unc_get_u32be(&fk[0]);
+        cr->b = unc_get_u32be(&fk[4]);
     }
     /* c and d are the IV for the feedback and the chaining block for
      * the two CBC schemes; both advance the same way through
      * `unc_crypt_apply`. */
-    cr->c = unc_get_u32be(&fileiv[0]);
-    cr->d = unc_get_u32be(&fileiv[4]);
+    cr->c = unc_get_u32be(&fiv[0]);
+    cr->d = unc_get_u32be(&fiv[4]);
     return UNC_OK;
 }
 
