@@ -10,10 +10,12 @@
  *
  * NOT Russotto's write-up, which this file claimed until 2026-09-22:
  * reference/notes/arsenic_russotto.md is method 15 and nothing else.
- * What is still XADStuffIt5Parser.m's is the ENCRYPTED archive: where
- * the password hash sits and how a password is graded against it, both
- * marked where they are. The page says only "Encrypted (algorithm used
- * is unknown)", and no corpus archive sets the bit.
+ * The ENCRYPTED archive is measured too, on archives Aladdin's own
+ * software wrote: where the password hash sits behind bits 4 and 5, and
+ * how a password is graded against it (docs/formats/stuffit5-container.md,
+ * since 2026-09-27 and 2026-10-06). The page says only "Encrypted
+ * (algorithm used is unknown)". Bit 6, which XADStuffIt5Parser.m reads
+ * and no archive here sets, is not read: nothing below rests on it.
  *
  * Archive header: an 80-byte banner ("StuffIt (c)1997-....") with 4
  * wildcard bytes, then u8 version (= 5), u8 flags, u32 total size,
@@ -208,8 +210,8 @@ int unc_sit5_extract(UncCtx *c)
      * the length byte reads 5 at 100+14+4 and 0 at 100+14, so the shift
      * is load-bearing (tools/derive_sit5crypt.py).
      *
-     * Source: reference/XADMaster/XADStuffIt5Parser.m, parse;
-     * docs/formats/stuffit5-container.md. */
+     * Source: docs/formats/stuffit5-container.md (measured; the same
+     * layout XADStuffIt5Parser.m's parse reads). */
     if (hdr[83] & SIT5_ARCH_CRYPTED) {
         uint32_t hp = 100;
         uint8_t hb[8];

@@ -567,6 +567,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-09 (the key StuffIt's own engine derives) — StuffIt classic's key schedule and key derivation are written from StuffIt Engine 3.5.2's own code, read and run under qemu-m68k; `unc_crypt.c` is 0BSD, and 320 B come back on every budget that keeps the ciphers
 - 2026-11-09 (the decoders DiskDoubler shipped) — DiskDoubler's methods 2, 5 and 7 rewritten from Salient's own decoders, read and run under qemu-m68k, and from Jones's paper and RFC 1974; smaller and faster on both, but 0.2-0.4 % slower on method 10, so not landed: branch `dd-own-coders`
 - 2026-11-09 (the garble ARC wrote and the key DropStuff used) — ARC's garble and StuffIt 5's password key leave XADMaster for the originals' own source and output; `unc_crypt.c` leaves `CARRIES`
+- 2026-11-09 (the bit the inventory still named) — `fmt_sit5.c` carries nothing of XADMaster's: bit 5 was measured on 2026-10-06, and bit 6, the one thing only XADMaster knows, is not read
 
 ---
 
@@ -23484,3 +23485,26 @@ is measured and bit 6 is what is left. Which is stale was not checked.
 **Transferable.** A cipher whose output is compressed can still be graded
 without a second decoder: cancel the engine's own cipher and let it be
 only the decompressor and the CRC check.
+
+## 2026-11-09 (the bit the inventory still named) — `fmt_sit5.c` carries nothing of XADMaster's: bit 5 was measured on 2026-10-06, and bit 6, the one thing only XADMaster knows, is not read
+
+**Claim (measured, from the files).** NOTICE's inventory, `CARRIES` and
+OPEN_ITEMS.md said `fmt_sit5.c` still owed XADStuffIt5Parser.m one bit of
+the encrypted archive's flag byte, "bit 5, which nothing reachable sets".
+The file itself has said since 2026-10-06 that bit 5 is measured — an
+archive comment, four bytes, on `Sample Archive.sit` of StuffIt Deluxe
+5.5's Tutorial Files and two archives 7.0.3 wrote (FORMATS.md, *StuffIt
+5's archive flag byte, and what bit 5 is*; `tools/derive_sit5crypt.py`).
+The one bit only XADMaster describes is bit 6, and the reader does not
+read it: the comment is located from `firstoffs` backwards and the hash
+sits before any bit-6 block, so nothing the reader takes depends on it.
+Found by the agent that re-sourced StuffIt 5's key the same night; read
+in the file here.
+
+**Consequence.** The file's last live citation, on the encrypted
+header, now cites `docs/formats/stuffit5-container.md`, where all of it
+is measured; the file moves to `HISTORICAL`, its NOTICE row and its
+OPEN_ITEMS row go, and its header comment, which still said no corpus
+archive sets the encrypted bit (stale since 2026-09-27), is corrected.
+Comments only in `src/`; `check_provenance.py` fails if the file is put
+back in `CARRIES` (shown).

@@ -73,14 +73,6 @@ hand.
                        and the block-length wrap — and the four
                        departures are measured against `unar` over
                        every fork in reach.
-  src/fmt_sit5.c       one bit of the encrypted archive's flag byte —
-                       bit 5, which shifts the password hash by four
-                       more bytes and which nothing reachable sets
-                       (XADStuffIt5Parser.m, parse). Bit 7, bit 4's
-                       14-byte shift and the MD5-of-MD5 that grades a
-                       password all left on 2026-09-27, measured
-                       against the three archives DropStuff 5.0.1
-                       wrote (tools/derive_sit5crypt.py).
   src/fmt_dd.c         method 7's Stac LZS, transcribed
                        (XADStacLZSHandle.m), and method 2's tree and
                        splay step (XADDiskDoublerMethod2Handle.m), with

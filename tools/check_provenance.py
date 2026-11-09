@@ -64,7 +64,6 @@ NOTICE = ROOT / "NOTICE"
 CARRIES = {
     "unc_lzdyn.c":      "-lh2- and -lh3- (libxad's LhA.c), whole file",
     "fmt_sit.c":        "three method-8 rules no specimen reaches (libxad's SIT_mw)",
-    "fmt_sit5.c":       "the encrypted header's bit 5, which nothing here sets",
     "sit14.c":          "StuffIt 5's method 14, the whole file (libxad's SIT_14)",
     "fmt_dd.c":         "the DDAR 0x20 raw-fork shape (libxad's DiskDoubler.c)",
     "fmt_arc.c":        "Crunch 5/6/7 and Crush, and the method numbers",
@@ -100,7 +99,7 @@ HISTORICAL = {
     "sit_arsenic.c", "unc_encinfo.c", "unc_huffman.c", "crypt_tables.h",
     "fmt_cpt.c", "fmt_cptseg.c", "fmt_now.c", "unc_util.c",
     "fmt_binhex_priv.h", "sit6_tables.h", "fmt_mime.c", "fmt_lzh.c",
-    "fmt_packit.c", "unc_shrink.c",
+    "fmt_packit.c", "unc_shrink.c", "fmt_sit5.c",
     "unc_crypt.c",  # StuffIt 5's key and ARC's garble left 2026-11-09
 }
 
