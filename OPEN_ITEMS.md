@@ -226,13 +226,14 @@ paths).
 ## Resident bytes that could leave before extraction
 
 **Not started; each is its own change.** Sizes MEASURED 2026-10-22 at
-17a025b (`nm -S` of `build/mac/MacExtract.code.bin.gdb`); every saving is a
+17a025b, the first row's 2026-11-09 (`nm -S` of
+`build/mac/MacExtract.code.bin.gdb`); every saving is a
 HYPOTHESIS until read off the budget probe (FORMATS.md, *What the application
 costs the engine*).
 
 | what | resident | what would close it |
 |---|---|---|
-| segment joining: `unc_segment.c`, the five `fmt_*seg.c`, their shared parsers | 6,498 B of code | an image kept by the release for every set scheme; how much can move is not measured |
+| segment joining: the joiner (`unc_segment.c`), the schemes' join hooks and readers, their parsers, the shims to `src/unc_segid.c` | 6,788 B of code on 2026-11-09, after describe and match left for `ovl_sniff` and `ovl_cptdd` (−1,584 B; DECISIONS.md 2026-11-09, *the set's identity that left*) | the joiner is read while a Compact Pro or spanned-zip set is, which keep only their readers' images, so it stays; the hooks only bundle-keeping schemes call (MIME's header walk 1,840 B, `SPLT`'s 772 B, StuffIt's emit 578 B) could go to an image, not priced |
 | the shell's set code (`SegAskUser`, `SegPartOf`, the part dialog's scans) | 3,166 B of code on 2026-10-22, not re-measured since the setup half (`SegScanWrapped` and the rest of `mac/seg_setup.inc.c`) left as `ovl_segsetup` in v0.45.0 | the same table of function pointers the setup image is given (DECISIONS.md 2026-11-02, *the dialogs that became the application*); not priced |
 | the relocator, `Retro68Relocate` and `Retro68ApplyRelocations` | 1,656 B of code | Elf2Mac places it at the start of `.text`; needs a layout Elf2Mac does not offer |
 

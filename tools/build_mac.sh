@@ -792,7 +792,12 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # +1,052 on 2026-11-09, 186,520 -> 187,572, A5 +4 below: unc_bitin_bit and
 # unc_bitin_fill forced inline (DECISIONS.md 2026-11-09, *the inline the
 # compiler declined*). In seven images on the shipped pair, +1,160.
-UNC_MAC_CODE_DEFAULT=187572
+# +12 on 2026-11-09, 187,572 -> 187,584, A5 +4 below: which set a file
+# belongs to in a file of its own, src/unc_segid.c, with its own walk of
+# its own table where unc_segment.c's lookup served both (DECISIONS.md
+# 2026-11-09, *the set's identity that left*). On the shipped pair it is
+# in `ovl_sniff`, -1,584.
+UNC_MAC_CODE_DEFAULT=187584
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -1066,7 +1071,10 @@ UNC_MAC_CODE_DEFAULT=187572
 # +220 (above); the BinHex reader added no data.
 # +4 on 2026-11-09, 36,680 -> 36,684: `.data` alignment under the code's
 # +1,052 (above); inlining added no data.
-UNC_MAC_A5_DEFAULT=36684
+# +4 on 2026-11-09, 36,684 -> 36,688: the table of describe and match,
+# 60 B, for the joiner's 48 B of the same pointers, less `.data`
+# alignment (above).
+UNC_MAC_A5_DEFAULT=36688
 # A CEILING PER CONFIGURATION, because one ceiling measured on another build
 # cannot fire. The figures above are the RESIDENT control build, which carries
 # every decoder; the shipped build's resident code is a third of that, so
@@ -1656,8 +1664,15 @@ UNC_MAC_A5_DEFAULT=36684
 # test and the MoveHHi path gone (DECISIONS.md 2026-11-09, *one way to keep
 # a decoder high*). The code crossed a 32-byte `.data` boundary. 32 B onto
 # every budget.
-UNC_MAC_CODE_EAGER=39744
-UNC_MAC_A5_EAGER=16736
+# -1,536 and -48 on 2026-11-09, 39,744 -> 38,208 and 16,736 -> 16,688:
+# which set a file belongs to — the schemes' describe and match, their
+# dispatch, and StuffIt's header parse — in `ovl_sniff`, beside the
+# parsers it already carried, and Compact Pro's match in `ovl_cptdd` too
+# (DECISIONS.md 2026-11-09, *the set's identity that left*). The A5 is the
+# joiner's table losing its two pointer columns. 1,584 B onto every budget
+# that keeps neither image.
+UNC_MAC_CODE_EAGER=38208
+UNC_MAC_A5_EAGER=16688
 # +8 on 2026-10-02 for the same reason as the eager pair above: the
 # overlay call that now says WHICH of StuffIt 2.x's ciphers an entry
 # wants. A5 fell to 19,096 and its ceiling is left where it was.
@@ -1811,7 +1826,9 @@ UNC_MAC_A5_EAGER=16736
 # pair; data + bss 16,776 (+8), under its ceiling.
 # -44 code on 2026-11-08: one sniff before the set check, as the eager
 # pair; data + bss 16,756 (-20), under its ceiling.
-UNC_MAC_CODE_LAZY=38524
+# -1,536 code on 2026-11-09: which set a file belongs to in `ovl_sniff`,
+# as the eager pair; data + bss 16,708 (-48), under its ceiling.
+UNC_MAC_CODE_LAZY=36988
 UNC_MAC_A5_LAZY=19200
 if [ -n "$UNC_OVL_RESIDENT" ]; then
     UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-$UNC_MAC_CODE_DEFAULT}

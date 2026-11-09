@@ -171,6 +171,11 @@ typedef int32_t (*OverlayEntry)(const OverlayHost *host, int32_t which,
 #define OVL_LZ4_EXTRACT        63
 #define OVL_HIGH_HANDLE        64  /* NewHandle + MoveHHi, on any ROM: b = the size;
                                     * returns the Handle, or 0 */
+#define OVL_SEG_DESCRIBE       65  /* unc_segment_describe(_as): a = OvlArgs* (in io,
+                                    * obj desc, len the scheme or OVL_SEG_EVERY) */
+#define OVL_SEG_EVERY  0xFFFFFFFFul
+#define OVL_SEG_MATCH          66  /* unc_segment_match: a = OvlArgs* (obj desc,
+                                    * in head, len) */
 
 /* OVL_DEST_ASK's argument. Plain integers, so this header needs no Mac
  * one: `v`/`h` are the dialog's top left, `vol` is the reply's vRefNum. */

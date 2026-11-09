@@ -290,7 +290,10 @@ TAKEN = "2026-11-03"
 # (each change in `run_tiers.py`'s `BUNDLE` comments), then `unc_bitin_bit` and
 # `unc_bitin_fill` forced inline, +1,160 across seven images (DECISIONS.md
 # 2026-11-09, *the inline the compiler declined*).
-EXPECT_BUNDLE = 196536
+# -> 198,172 the same day: which set a file belongs to in `ovl_sniff`
+# (+1,460) and Compact Pro's match in `ovl_cptdd` (+176) (DECISIONS.md
+# 2026-11-09, *the set's identity that left*).
+EXPECT_BUNDLE = 198172
 TOLERANCE_BUNDLE = 2048
 TAKEN_BUNDLE = "2026-11-09"
 

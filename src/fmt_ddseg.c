@@ -126,7 +126,10 @@ int unc_ddseg_extract(UncCtx *c)
     uint32_t size;
     int err;
 
-    err = unc_ddseg_describe(c->io, &desc);
+    /* Through the dispatch, which answers as this scheme's describe does
+     * (UNC_OK or UNC_ERR_FORMAT), so that a build carrying unc_segid.c in
+     * an image has one copy of it. */
+    err = unc_segment_describe_as(c->io, UNC_FORMAT_DDSEG, &desc);
     if (err != UNC_OK) return err;
     if (desc.nparts != 1 || desc.part != 1) return UNC_ERR_SEGMENTED;
 

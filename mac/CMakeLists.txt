@@ -126,6 +126,10 @@ else()
     list(FILTER ENGINE_SRC EXCLUDE REGEX "fmt_mar\\.c$")
     list(FILTER ENGINE_SRC EXCLUDE REGEX "fmt_lz4\\.c$")
     list(FILTER ENGINE_SRC EXCLUDE REGEX "unc_sniff\\.c$")
+    # Which set a file belongs to goes with the sniffer, whose image holds
+    # every parser it calls; mac/ovl_shim.c is what the shell links against
+    # (DECISIONS.md 2026-11-09, *the set's identity that left*).
+    list(FILTER ENGINE_SRC EXCLUDE REGEX "unc_segid\\.c$")
     # The Mac OS X sidecars zip and tar share are ovl_zipold's too.
     list(FILTER ENGINE_SRC EXCLUDE REGEX "unc_sidecar\\.c$")
     # zlib and the inflate wrapper go with them: fmt_exo is their only caller,
@@ -282,12 +286,14 @@ add_custom_command(
             ${CMAKE_CURRENT_BINARY_DIR}/ovl_forwards_gen.c
             ${ENGINE_DIR}/src/fmt_cpt.c
             ${ENGINE_DIR}/src/fmt_dd.c
+            ${ENGINE_DIR}/src/fmt_cptseg.c
     DEPENDS ${ENGINE_DIR}/tools/overlay/ovl_cptdd.c
             ${CMAKE_CURRENT_BINARY_DIR}/ovl_forwards_gen.c
             ${CMAKE_CURRENT_BINARY_DIR}/ovl_forwards_codecs_gen.c
             ${CMAKE_CURRENT_BINARY_DIR}/ovl_host_gen.h
             ${ENGINE_DIR}/src/fmt_cpt.c
             ${ENGINE_DIR}/src/fmt_dd.c
+            ${ENGINE_DIR}/src/fmt_cptseg.c
             ${OVL_DEPS})
 
 add_custom_command(
@@ -825,9 +831,10 @@ add_custom_command(
             ${CMAKE_CURRENT_BINARY_DIR}/ovl_host_gen.h
             ${ENGINE_DIR}/src/fmt_sqp.c
             ${OVL_DEPS})
-# The sniffer and every probe, in one image run from the bundle before the
-# release and in no keep set (DECISIONS.md 2026-10-21, *the probes that left
-# with the bundle*). Listed by file, not by glob: tools/overlay/images.py
+# The sniffer and every probe, and which set a file belongs to (unc_segid.c
+# and the schemes' describe and match, which share the probes' parsers), in
+# one image run from the bundle before the release and in no keep set
+# (DECISIONS.md 2026-10-21, *the probes that left with the bundle*). Listed by file, not by glob: tools/overlay/images.py
 # reads THIS rule to build the same image for the host lane. Its forwards
 # file leaves out the one probe the image defines and two decoders reach
 # through the vector, unc_macbinary_probe.
@@ -871,6 +878,11 @@ add_custom_command(
             ${ENGINE_DIR}/src/fmt_tar_probe.c
             ${ENGINE_DIR}/src/fmt_uu_probe.c
             ${ENGINE_DIR}/src/fmt_zipseg_probe.c
+            ${ENGINE_DIR}/src/unc_segid.c
+            ${ENGINE_DIR}/src/fmt_cptseg.c
+            ${ENGINE_DIR}/src/fmt_ddseg.c
+            ${ENGINE_DIR}/src/fmt_mimeseg.c
+            ${ENGINE_DIR}/src/fmt_sitseg.c
     DEPENDS ${ENGINE_DIR}/tools/overlay/ovl_sniff.c
             ${CMAKE_CURRENT_BINARY_DIR}/ovl_forwards_sniff_gen.c
             ${CMAKE_CURRENT_BINARY_DIR}/ovl_host_gen.h
@@ -906,6 +918,11 @@ add_custom_command(
             ${ENGINE_DIR}/src/fmt_tar_probe.c
             ${ENGINE_DIR}/src/fmt_uu_probe.c
             ${ENGINE_DIR}/src/fmt_zipseg_probe.c
+            ${ENGINE_DIR}/src/unc_segid.c
+            ${ENGINE_DIR}/src/fmt_cptseg.c
+            ${ENGINE_DIR}/src/fmt_ddseg.c
+            ${ENGINE_DIR}/src/fmt_mimeseg.c
+            ${ENGINE_DIR}/src/fmt_sitseg.c
             ${OVL_DEPS})
 # The destination dialog and a set's setup: shell code in images of their
 # own, bundled so that they are read at launch and given back with the bundle

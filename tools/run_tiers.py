@@ -283,10 +283,13 @@ REPO = os.path.dirname(HERE)
 # control's CODE -96 and A5 0; the shipped pair fell the same 96, OVL_SAVED
 # unmoved. They were 190,276 / 94,894 / 619,182.
 TIERS = {
-    "sys3-512K": (188676, "System 3.0, Macintosh 512Ke (222,070 B free)"),
-    "sys6-512K": (93294,  "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
-    "floor-1M":  (617582, "System 6.0.8, 1 MB Mac Plus — the floor target"),
+    "sys3-512K": (188660, "System 3.0, Macintosh 512Ke (222,070 B free)"),
+    "sys6-512K": (93278,  "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
+    "floor-1M":  (617566, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
+# -16 each 2026-11-09, DERIVED from TIERS_CONTROL +16 (which set a file
+# belongs to in an image, DECISIONS.md 2026-11-09, *the set's identity
+# that left*); they were 188,676 / 93,294 / 617,582.
 # -1,056 each 2026-11-09, DERIVED from TIERS_CONTROL +1,056 (the bit reader
 # and unc_bitin_fill forced inline, DECISIONS.md 2026-11-09, *the inline the compiler declined*); they were 189,732 / 94,350 / 618,638.
 # -224 each 2026-11-09, DERIVED from TIERS_CONTROL +224 (BinHex decoded a
@@ -524,7 +527,11 @@ TIERS = {
 # +192 2026-11-07: Now Compress polls Cancel inside a block (`ovl_now` +186;
 # DECISIONS.md 2026-11-07, *the block a click waited for*); CODE +180, A5 +12.
 # TIERS -192 and OVL_SAVED +192, which cancel: only a now-keeper moves.
-TIERS_CONTROL = 224256     # build/mac-resident, CODE + A5, 2026-11-09
+TIERS_CONTROL = 224272     # build/mac-resident, CODE + A5, 2026-11-09
+# +16 2026-11-09: which set a file belongs to in a file of its own,
+# src/unc_segid.c (CODE +12, A5 +4, its table less the joiner's two
+# columns and `.data` alignment; DECISIONS.md 2026-11-09, *the set's
+# identity that left*); TIERS -16 and OVL_SAVED +16, which cancel.
 # +1,056 2026-11-09: unc_bitin_bit and unc_bitin_fill forced inline (seven
 # images +1,160; CODE +1,052, A5 +4; DECISIONS.md 2026-11-09, *the inline the compiler declined*);
 # TIERS -1,056 and OVL_SAVED +1,056, which cancel: only the keepers of those
@@ -1162,7 +1169,12 @@ EXPECT = {
 # inline, the control's +1,056 (CODE +1,052, A5 +4) against the shipped
 # pair's 0, the code in seven images (+1,160 in all; DECISIONS.md 2026-11-09, *the inline the compiler declined*). TIERS -1,056, which cancels: only those images'
 # keepers move, every format by its codecs' +192.
-OVL_SAVED = 167776
+# **+1,600 2026-11-09, -> 169,376**: which set a file belongs to, in
+# `ovl_sniff` and Compact Pro's match in `ovl_cptdd` too, the shipped
+# pair's -1,584 (CODE -1,536, A5 -48) against the control's +16
+# (DECISIONS.md 2026-11-09, *the set's identity that left*). TIERS -16,
+# which cancels: a format's budget moves by +1,584 less what its images grew.
+OVL_SAVED = 169376
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
 # every kept image is one — as is the bundle an envelope holds on to.
@@ -1300,7 +1312,7 @@ IMAGES = {
     "OVL_ID_BINHEX":      7630,
     "OVL_ID_BTOA":        2496,
     "OVL_ID_CODECS":      6208,
-    "OVL_ID_CPTDD":       15114,
+    "OVL_ID_CPTDD":       15290,
     "OVL_ID_CRYPT":       9284,
     "OVL_ID_EXO":         30228,
     "OVL_ID_LZH":         10702,
@@ -1312,7 +1324,7 @@ IMAGES = {
     "OVL_ID_SUPERDISK":   6628,
     "OVL_ID_TEXT":        11438,
     "OVL_ID_ZIPOLD":      16172,
-    "OVL_ID_SNIFF":       14676,
+    "OVL_ID_SNIFF":       16136,
     "OVL_ID_DESTDLG":     1688,
     "OVL_ID_SEGSETUP":    2446,
 }
@@ -1453,7 +1465,10 @@ IMAGES = {
 # **ARC +228, CODECS +192, CPTDD +240, LZH +264, SPACESAVER +68, STUFFIT
 # +116, ZIPOLD +52, the bundle +1,160 B, 2026-11-09**: unc_bitin_bit and
 # unc_bitin_fill forced inline (DECISIONS.md 2026-11-09, *the inline the compiler declined*).
-BUNDLE = 196536
+# **SNIFF +1,460, CPTDD +176, the bundle +1,636 B, 2026-11-09**: which set
+# a file belongs to, and Compact Pro's match (DECISIONS.md 2026-11-09, *the
+# set's identity that left*).
+BUNDLE = 198172
 
 # What the SHIPPED lane asserts, and it is the refused fixtures BY NAME
 # rather than a tally: a tier that refuses two different fixtures and still

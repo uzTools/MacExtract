@@ -120,6 +120,14 @@ HOST_FLAGS = ["-mcpu=68000", "-Os", "-std=c99", "-ffunction-sections"]
 
 SHELL_SRC = ["mac/macextract_mac.c", "mac/mac_start.c"]
 GLUE_SRC = ["mac/ovl_shim.c", "mac/ovl_reloc.c", "mac/ovl_load_eager.c"]
+# mac/ovl_shim.c's helpers that call an image for several shims. Each maps
+# a shim to the (image, function) pairs it reaches; a shim not named
+# reaches the one image defining its own name.
+SHARED_SHIMS = {
+    "ovl_run": {},
+    "seg_id": {"unc_segment_match": [("sniff", "unc_segment_match"),
+                                     ("cptdd", "unc_cptseg_match")]},
+}
 
 # Library routines the resident link takes from Retro68 (an image links
 # tools/overlay/ovl_rt.c's own, which is compiled here). Bytes are the
@@ -174,7 +182,7 @@ CLASSES = {
     "seek_part": ["unc_segment.c:seg_seek_part"],
     "skip": ["unc_segment.c:seg_skip_fwd"],
     "part_size": ["unc_segment.c:seg_part_size"],
-    # unc_segment.c's scheme table
+    # unc_segid.c's table, then unc_segment.c's
     "describe": ["unc_sitseg_describe", "unc_cptseg_describe",
                  "unc_ddseg_describe", "unc_zipseg_describe",
                  "unc_mimeseg_describe"],
@@ -715,7 +723,7 @@ class Graph:
             return [(k, "vector")]
         if fil == "ovl_shim.c" and last in ("e", "OVL_CALL", "VOID_KEYED",
                                             "INT_KEYED_AL"):
-            if f.name == "ovl_run":
+            if f.name in SHARED_SHIMS:
                 return []          # per shim: clone_decoder_shims()
             if f.name == "ovl_patched":
                 return [(self.dispatch(img, None), "export")
@@ -761,28 +769,33 @@ class Graph:
         return k
 
     def clone_decoder_shims(self):
-        """DECODER(fn): fn -> ovl_run -> ovl_main -> fn in its image."""
-        runs = [k for k in self.by_name.get("ovl_run", ())
-                if k[0] == "resident"]
-        if not runs:
-            return
-        run = runs[0]
-        for key, f in list(self.fns.items()):
-            if self.file_of(f) != "ovl_shim.c" or key == run:
+        """DECODER(fn): fn -> ovl_run -> ovl_main -> fn in its image, and
+        the same for every helper in SHARED_SHIMS: a clone of the helper
+        per shim that calls it, ending in the image(s) that shim reaches."""
+        for helper in SHARED_SHIMS:
+            runs = [k for k in self.by_name.get(helper, ())
+                    if k[0] == "resident"]
+            if not runs:
                 continue
-            es = self.edges.get(key, [])
-            if not any(e[0] == run for e in es):
-                continue
-            ck = ("clone", "ovl_run", f.name)
-            c = Fn(ck, "resident", self.fns[run].unit, "ovl_run")
-            base = self.fns[run]
-            c.su, c.link, c.kind = base.su, base.link, base.kind
-            self.fns[ck] = c
-            self.edges[ck] = list(self.edges[run]) + [
-                (self.dispatch(self.image_of(f.name), f.name), False,
-                 "image")]
-            self.edges[key] = [(ck if e[0] == run else e[0], e[1], e[2])
-                               for e in es]
+            run = runs[0]
+            for key, f in list(self.fns.items()):
+                if self.file_of(f) != "ovl_shim.c" or key == run:
+                    continue
+                es = self.edges.get(key, [])
+                if not any(e[0] == run for e in es):
+                    continue
+                ck = ("clone", helper, f.name)
+                c = Fn(ck, "resident", self.fns[run].unit, helper)
+                base = self.fns[run]
+                c.su, c.link, c.kind = base.su, base.link, base.kind
+                self.fns[ck] = c
+                targets = SHARED_SHIMS[helper].get(f.name) or \
+                    [(self.image_of(f.name), f.name)]
+                self.edges[ck] = list(self.edges[run]) + [
+                    (self.dispatch(img, name), False, "image")
+                    for img, name in targets]
+                self.edges[key] = [(ck if e[0] == run else e[0], e[1], e[2])
+                                   for e in es]
 
     # -- depth
     def step(self, mask, k, c, why):

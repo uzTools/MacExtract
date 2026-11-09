@@ -26,6 +26,15 @@ int32_t ovl_main(const OverlayHost *host, int32_t which, void *a, void *b)
         return (int32_t)unc_cpt_extract((UncCtx *)a);
     case OVL_DD_EXTRACT:
         return (int32_t)unc_dd_extract((UncCtx *)a);
+    /* A Compact Pro set keeps this image and not the sniffer's, and its
+     * parts are still being matched while it is read: the part search a
+     * disk swap starts (mac/ovl_shim.c, unc_segment_match). */
+    case OVL_SEG_MATCH: {
+        const OvlArgs *g = (const OvlArgs *)a;
+        return (int32_t)unc_cptseg_match((const UncSegmentDesc *)g->obj,
+                                         (const uint8_t *)g->in,
+                                         (int32_t)g->len);
+    }
     default:
         return -1;
     }

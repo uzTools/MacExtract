@@ -44,11 +44,11 @@
 /* ------------------------------------------------------------------ */
 /* The join schemes                                                   */
 /*                                                                    */
-/* One row each, and the ORDER is the order unc_segment_describe tries */
-/* them in. Everything that used to be a scheme test in the middle of  */
-/* the joiner is a named property here, so adding a sixth scheme is a  */
-/* row rather than a search (DECISIONS.md 2026-08-27, the shapes    */
-/* that were left).                                                 */
+/* One row each. Everything that used to be a scheme test in the      */
+/* middle of the joiner is a named property here, so adding a sixth   */
+/* scheme is a row rather than a search (DECISIONS.md 2026-08-27, the */
+/* shapes that were left). Which set a file belongs to — describe and */
+/* match — is unc_segid.c's.                                          */
 /* ------------------------------------------------------------------ */
 
 #define SEG_HEAD_MAX UNC_SEG_HEAD     /* the longest header a hook reads */
@@ -65,14 +65,6 @@ typedef struct SegScheme {
      * even a magic. The host's names and sizes are the whole map, and
      * the descriptor is the host's to build. */
     uint8_t   anonymous;
-    /* Describe the set a file belongs to, or UNC_ERR_FORMAT. NULL for
-     * a scheme whose parts carry nothing to read. */
-    int      (*describe)(UncIO *io, UncSegmentDesc *desc);
-    /* Which part of a set this file is, or 0. NULL where the parts
-     * carry no identity - which is not the same as "no", and
-     * macextract.h says why. */
-    int      (*match)(const UncSegmentDesc *d, const uint8_t *head,
-                      int32_t len);
     /* This part's payload length out of its OWN header. NULL means the
      * host's part size is all there is to go on. */
     int      (*payload)(const UncSegmentDesc *d, const uint8_t *head,
@@ -104,39 +96,27 @@ typedef struct SegScheme {
 } SegScheme;
 
 static const SegScheme seg_schemes[] = {
-    /* StuffIt first: it decides on 100 bytes at offset 0, where the zip
-     * scheme has to hunt backwards from the end of the file. */
-    { UNC_FORMAT_SITSEG, 0, 0, 0, unc_sitseg_describe, unc_sitseg_match,
+    { UNC_FORMAT_SITSEG, 0, 0, 0,
       NULL, unc_sitseg_stored_crc, unc_crc16_arc, 1, NULL, UNC_SEG_HEAD,
       NULL },
-    /* Compact Pro next: like StuffIt it decides on a header at offset 0,
-     * where the zip scheme has to hunt backwards from the end. Unlike
-     * StuffIt, a part that is not the LAST one answers with nparts == 0
-     * - it knows the set it belongs to but not how big the set is, and
-     * the host is expected to go and find the final segment. */
-    { UNC_FORMAT_CPTSEG, 1, 0, 0, unc_cptseg_describe, unc_cptseg_match,
+    { UNC_FORMAT_CPTSEG, 1, 0, 0,
       NULL, NULL, NULL, 0, NULL, 0, unc_cpt_extract },
-    /* DiskDoubler's `SPLT`, also decided on a header at offset 0 - and
-     * on a second copy of its magic at offset 90, so it is the cheapest
-     * of the four to refuse. It is also the only scheme whose parts
-     * state their own payload length; its CRC is each part's own, where
-     * StuffIt's runs across the set. */
-    { UNC_FORMAT_DDSEG, 0, 1, 0, unc_ddseg_describe, unc_ddseg_match,
+    /* DiskDoubler's `SPLT`, the only scheme whose parts state their own
+     * payload length; its CRC is each part's own, where StuffIt's runs
+     * across the set. */
+    { UNC_FORMAT_DDSEG, 0, 1, 0,
       unc_ddseg_payload, unc_ddseg_stored_crc, unc_crc16_xmodem, 0, NULL,
       UNC_DDSEG_HEAD, NULL },
-    { UNC_FORMAT_ZIPSEG, 1, 0, 0, unc_zipseg_describe, NULL,
+    { UNC_FORMAT_ZIPSEG, 1, 0, 0,
       NULL, NULL, NULL, 0, NULL, 0, unc_zip_extract },
-    /* message/partial, whose describe() reads a mail header block and
-     * is therefore the dearest of them: it goes after every scheme
-     * that decides on a magic at offset 0. The parts join into a
-     * MESSAGE, so the reader for the joined stream is the MIME walk
-     * — no file is emitted in between. */
-    { UNC_FORMAT_MIMESEG, 0, 0, 0, unc_mimeseg_describe, NULL,
+    /* message/partial. The parts join into a MESSAGE, so the reader
+     * for the joined stream is the MIME walk — no file is emitted in
+     * between. */
+    { UNC_FORMAT_MIMESEG, 0, 0, 0,
       NULL, NULL, NULL, 0, unc_mimeseg_head, 0, unc_mime_extract },
-    /* SPLIT last and describe-less: a part of a plain NAME.001 split is
-     * an anonymous slice of bytes, so nothing here can recognise one.
-     * A host that has decided by name builds the descriptor itself. */
-    { UNC_FORMAT_SPLIT, 0, 0, 1, NULL, NULL, NULL, NULL, NULL, 0, NULL, 0,
+    /* SPLIT: a part of a plain NAME.001 split is an anonymous slice of
+     * bytes, and the host's names and sizes are the whole map. */
+    { UNC_FORMAT_SPLIT, 0, 0, 1, NULL, NULL, NULL, 0, NULL, 0,
       NULL }
 };
 
@@ -206,41 +186,6 @@ typedef struct SegJoin {
 uint32_t unc_segment_scratch_size(void)
 {
     return (uint32_t)sizeof(SegJoin);
-}
-
-int unc_segment_describe(UncIO *io, UncSegmentDesc *desc)
-{
-    unsigned i;
-
-    if (!io || !desc) return UNC_ERR_FORMAT;
-    for (i = 0; i < sizeof seg_schemes / sizeof seg_schemes[0]; i++)
-        if (seg_schemes[i].describe &&
-            seg_schemes[i].describe(io, desc) == UNC_OK)
-            return UNC_OK;
-    return UNC_ERR_FORMAT;
-}
-
-int unc_segment_describe_as(UncIO *io, UncFormat scheme,
-                            UncSegmentDesc *desc)
-{
-    const SegScheme *sc = seg_scheme(scheme);
-
-    if (!io || !desc || !sc || !sc->describe) return UNC_ERR_FORMAT;
-    return sc->describe(io, desc) == UNC_OK ? UNC_OK : UNC_ERR_FORMAT;
-}
-
-int unc_segment_match(const UncSegmentDesc *d,
-                      const uint8_t *head, int32_t len)
-{
-    const SegScheme *sc;
-
-    if (!d || !head) return 0;
-    sc = seg_scheme(d->scheme);
-    /* A scheme whose parts carry no identity cannot answer this. Said
-     * explicitly rather than left to fall out of a failed header parse,
-     * because the two outcomes mean opposite things (see macextract.h). */
-    if (!sc || !sc->match) return 0;
-    return sc->match(d, head, len);
 }
 
 /* ------------------------------------------------------------------ */

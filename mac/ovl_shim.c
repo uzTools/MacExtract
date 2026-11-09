@@ -145,6 +145,45 @@ uint32_t unc_segment_first_end(const UncSegmentDesc *desc, UncIO *rsrc,
 }
 
 
+/* In the same image: which set a file belongs to (src/unc_segid.c). Asked
+ * with the bundle whole, before the release, and again while a set is
+ * read, by the part search a disk swap starts (mac/macextract_mac.c,
+ * SegPartOf). The bundle is whole then for every scheme but two: a spanned
+ * zip's parts are placed by name and never asked, and Compact Pro's are
+ * matched in its reader's image, which the set keeps. No image is no set:
+ * UNC_ERR_FORMAT, which a match reads as 0. */
+static int32_t seg_id(short id, int32_t which, const void *obj,
+                      const void *in, uint32_t len)
+{
+    OverlayEntry e = ovl_image(id);
+    OvlArgs g;
+    if (!e) return UNC_ERR_FORMAT;
+    g.obj = (void *)obj; g.in = in; g.len = len;
+    return e(&gOvlHost, which, &g, NULL);
+}
+
+int unc_segment_describe_as(UncIO *io, UncFormat scheme,
+                            UncSegmentDesc *desc)
+{
+    return (int)seg_id(OVL_ID_SNIFF, OVL_SEG_DESCRIBE, desc, io,
+                       (uint32_t)scheme);
+}
+
+int unc_segment_describe(UncIO *io, UncSegmentDesc *desc)
+{
+    return (int)seg_id(OVL_ID_SNIFF, OVL_SEG_DESCRIBE, desc, io,
+                       OVL_SEG_EVERY);
+}
+
+int unc_segment_match(const UncSegmentDesc *desc, const uint8_t *head,
+                      int32_t len)
+{
+    int32_t r = seg_id(desc && desc->scheme == UNC_FORMAT_CPTSEG
+                           ? OVL_ID_CPTDD : OVL_ID_SNIFF,
+                       OVL_SEG_MATCH, desc, head, (uint32_t)len);
+    return r > 0 ? (int)r : 0;
+}
+
 #define OVL_CALL(which, gp) (e(&gOvlHost, (which), (gp), NULL))
 
 void unc_crypt_apply(UncCrypt *cr, uint8_t *buf, uint32_t len, uint32_t pos)

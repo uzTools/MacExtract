@@ -575,6 +575,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-09 (the group every line break cut) — BinHex decodes a line at a time, the scan for the line's end being its decode, and RLE90 a buffer at a time; a Mac Plus spends 898 engine ticks on `macburger-helper.hqx` where it spent 2,397, every outcome unchanged
 - 2026-11-09 (the character past the buffer) — a BinHex line longer than 256 characters lost its 257th; the reader now stops before the character that does not fit
 - 2026-11-09 (the inline the compiler declined) — `unc_bitin_bit` and `unc_bitin_fill` forced inline: −21 to −31 % on method 5, method 6 and implode for +1,160 B of images; `unc_bufin_next` and `unc_fork_put` measured and not kept
+- 2026-11-09 (the set's identity that left) — which set a file belongs to leaves resident `CODE` for `ovl_sniff`, beside the parsers it already carried, and Compact Pro's match for `ovl_cptdd` too; 1,584 B onto every budget that keeps neither, 52 B off one that keeps the bundle
 
 ---
 
@@ -23836,3 +23837,80 @@ where GCC was already inlining the whole reader. Here the whole reader was
 already a call, refill included, so forcing it in removes a call per bit
 and adds nothing opaque. **`static inline` is a request; at -Os the
 listing, not the keyword, says whether it was granted.**
+
+## 2026-11-09 (the set's identity that left) — which set a file belongs to leaves resident `CODE` for `ovl_sniff`, beside the parsers it already carried, and Compact Pro's match for `ovl_cptdd` too; 1,584 B onto every budget that keeps neither, 52 B off one that keeps the bundle
+
+**Where describe and match are called (read, then run).** Before the
+release: the open (`RunExtract`'s `unc_segment_describe_as`) and the set's
+setup (`ovl_segsetup`, through `SegSetupFns`), with the bundle whole. After
+it, only while a set is read: `seg_need` → the part dialog → a disk put in
+or Find… → `SegPartOf`, and the engine's own `unc_sitseg_extract`,
+`unc_ddseg_extract` and `unc_ddseg_payload`. Each of those runs under a
+scheme that keeps the whole bundle (StuffIt's, `SPLT`, message/partial,
+`.NNN`; `mac/ovl_load_eager.c` has no row for them) except two: a spanned
+zip, whose parts are placed by name and never reach `SegPartOf`
+(`SegByName`), and Compact Pro, which keeps `ovl_cptdd` and is matched
+there. So the describe side and StuffIt's and `SPLT`'s match can live in
+any bundled image, and Compact Pro's match must also be in its reader's.
+
+**Where, priced.** `ovl_sniff`, because every parser the schemes call
+(`sitseg_parse`, `ddseg_parse`, `mseg_scan`, the end-record read) is
+already in it with its probe: the bodies cost the image 1,460 B, and the
+parsers nothing. `ovl_segsetup`, which no keep set holds, would spare the
+peeked envelopes, which keep the sniffer, but needs its own copy of
+those parsers, about 2,500 B by their resident sizes (derived), all of it
+charged to the bundle-keeping schemes. The setup's table turned around
+(the brief's (b)) would keep `ovl_segsetup`, 2,446 B, for every set.
+Resident, the third, is the base.
+
+**The change.** `src/unc_segid.c`: the describe/match table and the three
+dispatchers, out of `unc_segment.c`, whose joiner keeps its own rows less
+two pointer columns. The Mac build leaves it out of the resident link and
+links it into `ovl_sniff` with the five schemes' files;
+`unc_zipseg_describe` moves beside the probe in `fmt_zipseg_probe.c`, so
+the image needs no second copy of the end-record scan. Three resident
+shims (`mac/ovl_shim.c`, 194 B) call the image; Compact Pro's match goes to
+`ovl_cptdd`, which also links `fmt_cptseg.c`. `unc_ddseg_extract` asks
+through the dispatch, which answers what `unc_ddseg_describe` answered
+(UNC_OK or UNC_ERR_FORMAT), so one copy is linked.
+
+**Price (measured, build against build at d47ea1a).** Shipped CODE −1,536,
+A5 −48 (the joiner's two columns): −1,584 B. `ovl_sniff` +1,460 B,
+`ovl_cptdd` +176 B (the match and its case; 138 B of the sniffer's 1,460 is
+the same match, reached by no call on the Mac), the bundle +1,636 B. The
+resident control CODE +12, A5 +4 (a table of its own, `.data` alignment;
++48 on the commit before, whose alignment differed), so `OVL_SAVED` +1,600
+and `TIERS` −16. By `run_tiers.gain()`: +1,584 B on
+every format that keeps neither image, +1,408 B on Compact Pro and
+DiskDoubler, +124 B on a peeked envelope, **−52 B on a format that keeps
+the bundle** (StuffIt's, `SPLT`, message/partial and `.NNN` sets, MIME,
+Private File) — 138 B of it the unreached match, 176 B Compact Pro's copy. Lazy CODE −1,536. The engine's deepest chain +4 B, 3,446 B
+(`ovl_cptdd`'s entry now saves a register); a lone StuffIt part's describe
+1,764 → 1,890 B through the shims. At launch a 512 KB machine holds
+`CODE` and the whole bundle, and that sum is +52 B. `run_tiers.py
+--check` moves no tally on either lane.
+
+**On the machine (measured).** The budget probe (`-D UNC_AT_BUDGET`),
+base and change booted back to back, gave the arithmetic to the byte:
+`derived-PCCTS.tar` (keeps `ovl_zipold`) +1,584 B on all three tiers
+(764,024 → 765,608 at 1 MB, 239,736 → 241,320 on System 6.0.8 / 512Ke,
+335,140 → 336,724 on System 3.0 / 512Ke); `derived-BootTime.cpt` +1,408 B
+and `down-line-111.hqx` (a peeked StuffIt) +124 B at 1 MB. A set found
+across a disk swap, on the hand-built one-drive emulators (`mv-1M-1d`,
+`mv-512Ke-1d`, System 6.0.8), nothing clicked after the disk went in:
+StuffIt (`interactive.py --diskswap`) byte-exact on both; Compact Pro, a
+scratch harness of the same shape (the last segment beside the
+application, segments 1-3 under unrelated names on a floppy put in while
+the part dialog asks, after a decoy), 9 of 9 files byte-exact on both. On
+the 512Ke the decoy check compared whole frames and failed: the frame
+shows the dialog still asking for part 1, over the decoy's listing,
+before its eject. **The Compact Pro run can fail**: built with Compact
+Pro's match sent to the released `ovl_sniff`, the real disk went in and
+came back out, the dialog still asked for part 1, and nothing was
+written.
+
+**Transferable.** **Put moved code where its callees already are.** The
+image with nothing kept looked free, and was the dearest: a parser is
+shared with the probe that recognises the same header, so the bodies cost
+their own bytes in the sniffer and their bytes plus the parsers anywhere
+else.

@@ -7,7 +7,9 @@
  * with the sniffer, in one `'OVLY'` image run before the release and given
  * back with it (DECISIONS.md 2026-10-21, *the probes that left with the
  * bundle*). What a probe and its reader share is defined once, here, and
- * stays resident for the reader.
+ * stays resident for the reader. So is the set's describe, which reads
+ * the same record, for the image that carries the schemes' describe and
+ * match beside the probes (src/unc_segid.c).
  *
  * SPDX-License-Identifier: 0BSD
  */
@@ -28,6 +30,41 @@ int zs_read_eocd(UncIO *io, uint32_t at, ZsEocd *e)
     e->total   = unc_get_u16le(r + 10);
     e->cdsize  = unc_get_u32le(r + 12);
     e->cdoff   = unc_get_u32le(r + 16);
+    return UNC_OK;
+}
+
+int unc_zipseg_describe(UncIO *io, UncSegmentDesc *desc)
+{
+    uint32_t fsize, at;
+    ZsEocd e;
+    int32_t i;
+
+    if (!io || !desc) return UNC_ERR_FORMAT;
+    fsize = unc_io_size32(io);
+    if (fsize == UNC_SIZE_UNKNOWN) return UNC_ERR_FORMAT;
+    if (zs_find_eocd(io, fsize, &at) != UNC_OK) return UNC_ERR_FORMAT;
+    if (zs_read_eocd(io, at, &e) != UNC_OK) return UNC_ERR_FORMAT;
+
+    if (e.disknum == 0) return UNC_ERR_FORMAT;      /* an ordinary zip */
+    if (e.disknum == 0xFFFFu) return UNC_ERR_UNSUPPORTED;  /* zip64 */
+    if (e.disknum + 1 > UNC_SEG_MAX_PARTS) return UNC_ERR_UNSUPPORTED;
+    if (e.cddisk > e.disknum) return UNC_ERR_CORRUPT;
+
+    desc->scheme   = UNC_FORMAT_ZIPSEG;
+    desc->head_len = 0;                 /* the parts simply concatenate */
+    desc->nparts   = (uint16_t)(e.disknum + 1);
+    desc->part     = desc->nparts;      /* the EOCD is in the last part */
+    desc->total    = UNC_SIZE_UNKNOWN;  /* measured by opening them all */
+
+    /* Nothing else is known: a zip stores no original filename, no
+     * fingerprint and no fork sizes. Left zeroed rather than guessed. */
+    desc->name[0]  = 0;
+    desc->name_len = 0;
+    for (i = 0; i < UNC_SEG_FP_LEN; i++) desc->fp[i] = 0;
+    desc->data_size = desc->rsrc_size = 0;
+    desc->type = desc->creator = 0;
+    desc->finder_flags = 0;
+    desc->create_date = desc->mod_date = 0;
     return UNC_OK;
 }
 
