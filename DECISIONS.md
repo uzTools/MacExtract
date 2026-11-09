@@ -565,6 +565,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-08 (the scan made twice) — the shell sniffs once and asks the set check only as the scheme the sniff named; the zip end-record scan every open paid twice is paid once or not at all, and 64 B come back on every budget
 - 2026-11-09 (one way to keep a decoder high) — `ovl_keep` places a kept image with `high_handle` on every ROM; the ROM test and `MoveHHi` are gone, for 32 B onto every budget
 - 2026-11-09 (the key StuffIt's own engine derives) — StuffIt classic's key schedule and key derivation are written from StuffIt Engine 3.5.2's own code, read and run under qemu-m68k; `unc_crypt.c` is 0BSD, and 320 B come back on every budget that keeps the ciphers
+- 2026-11-09 (the decoders DiskDoubler shipped) — DiskDoubler's methods 2, 5 and 7 rewritten from Salient's own decoders, read and run under qemu-m68k, and from Jones's paper and RFC 1974; smaller and faster on both, but 0.2-0.4 % slower on method 10, so not landed: branch `dd-own-coders`
 
 ---
 
@@ -23315,3 +23316,125 @@ place).
   engine, and a search for the cipher's own constants found it in minutes.
 - **The old code made a fine oracle** once Aladdin's code existed to grade
   both: it agreed everywhere but the one input nobody had tried.
+
+## 2026-11-09 (the decoders DiskDoubler shipped) — DiskDoubler's methods 2, 5 and 7 rewritten from Salient's own decoders, read and run under qemu-m68k, and from Jones's paper and RFC 1974; smaller and faster on both, but 0.2-0.4 % slower on method 10, so not landed: branch `dd-own-coders`
+
+**Where the code was (measured).** `DiskDoubler™ App` 3.1.2, uncompressed on
+the 1991 floppy kept since 2026-08-21 (*the Salient disk*): `CODE` 11 has
+the splay-tree decoder @0x221e and a SOFTWARE Stac decoder @0x34e2, which
+DiskDoubler uses when no Sigma card is fitted (@0x2c5c); `CODE` 7 @0x0070 is
+the CRC-16 it checks the chunk table with. Found by looking for the window's
+`andi.w #2047` in every `CODE` resource. Both routines reach the outside
+only through the A5 jump table, so `tools/ddcode/dd_run.c` (on the branch)
+puts its own stubs there — the byte stream, the progress callback, six
+Memory Manager calls — and calls them as they are.
+
+**The description** is `docs/formats/diskdoubler-splay-stac.md`, beside the
+two published algorithms `tools/fetch_references.sh` now fetches: Jones's
+`minunsplay.c` (CACM 31(8), 1988; "may be used or copied for any purpose")
+and RFC 1974 section 2.5.5's Stac grammar. What DiskDoubler adds is the
+page's: one tree per context, the byte before the XOR masked with count − 1;
+an 18-byte chunk table whose u32 at +6 counts its 16-bit entries, then one
+complemented bit stream for every chunk, the window holding the complement
+of each output byte, and a zero offset in EITHER form ending the stream.
+The branch's `dd_m2` and `dd_stac` are written from those; the old source
+was a black box.
+
+**Graded (measured, `tools/ddcode/run_ddcode.py`):** the 26 method 2, 5 and
+7 forks in the corpus, the specimens and the floppy (24 Stac forks of up to
+8 chunks, `XCMD.h`, `synth-dd-m5.dd`), 283 splay forks at every tree count
+and 151 Stac forks (every length to 69, matches to 65,537 bytes at distances
+1 and 9, both offset forms at their limits, both end markers, 200 table
+entries, greedy encodings to 200 KB): the branch agrees with Salient's code
+everywhere but seven cases named in `EXPECT_DIFFER`, each of which must
+differ. Seven patches to Salient's code, one per rule, fail 280, 240, 245,
+139, 88, 33 and 47 cases. The old CLI and the branch's extract the 163 files
+here holding a DiskDoubler magic (fixtures, specimens, the floppy) to
+identical trees, exit codes and messages; three one-token mutants of the
+new code (a 1 KB window, length nibbles continuing on 14, the context off
+by one) make 24, 25 and 1 of them differ, and the grader
+fails the last on 198 forks (197 splay, 1 corpus). Unit tests 1,622 of 1,622;
+`run_tiers.py --check` moves no tally.
+
+**What the branch changes (measured); nothing a DiskDoubler here wrote
+reaches it:**
+- **An eleven-bit offset of 1 to 15** — top seven bits zero — is an end
+  marker to main's decoder (XADMaster's reading) and a match to Salient's;
+  a match on the branch. `test_dd_stac` writes its end marker that way,
+  `1 0 0000000`: an eleven-bit offset cut short, which Salient reads to the
+  end of the input and refuses (-39). The branch writes RFC 1974's
+  `110000000`; the case still covers a 2,100-byte match past the window,
+  two chunks and a checksum one bit off.
+- **Method 5 tree counts that are not powers of two** (3 and 100 measured)
+  decode with `%` on main, as `ddencode.py` writes them; Salient refuses
+  every count but 32, 64, 128 and 256. The branch masks, so the sum fails
+  and both refuse. 16 decodes on both; Salient refuses it.
+- **`% ntrees` is a libgcc call per byte** on the 68000, `__modsi3`.
+
+**Price (measured), all five axes.** CODE: `fmt_dd.o` 9,364 → 9,246 B under
+the overlay flags, −118; `ovl_cptdd` 15,232 → 14,874 B, **−358**, about 230 B
+of it libgcc's `__modsi3`, `__divsi3`, `__udivsi3` and `__mulsi3`, which `%
+ntrees` links into the image on main (with 3 load-time relocations); the
+shipped resident pair unchanged (eager 39,744 + 16,736, lazy 38,524 +
+16,756); the resident control CODE −180, A5 −12 (`.data` alignment). A5,
+shipped: 0. Transient heap: unchanged — the same 1,536-byte tree per
+context used, the same 2 KB window — and a kept `ovl_cptdd` 358 B smaller.
+Stack (`-fstack-usage`, overlay flags): `dd_fork` 1,832 → 840 B, with
+`dd_m2` its own 1,084 B frame — the trees' 1 KB of pointers out of
+`dd_fork`, as 2026-11-03 (*the parents the descent already knew*)
+proposed — so method 2's chain is 92 B deeper and every other method's,
+method 10's (the engine's deepest) among them, 992 B shallower. Extractions
+lost: none — `OVL_SAVED` −192, `TIERS` +192, the bundle −356, so
+DiskDoubler's and Compact Pro's budgets rise 358 B and the rest are
+unmoved. **Speed**, Mac Plus at 1x, engine ticks then the run's total
+(`run.py --emu mv-4M-1x -D UNC_AT_TIMING`), main → branch:
+
+| fork | method | engine ticks | total |
+|---|---|---|---|
+| `DDExpand™` off the floppy, 97,906 B, 8 chunks | 7 | 1,687 → 1,514, **−10.3 %** | 1,700 → 1,525 |
+| 300 KB of word-like text, `ddencode.py` | 2 | 8,863 → 5,841, **−34.1 %** | 8,894 → 5,876 |
+| `derived-LHA_Expander_1.0.3.sea` | 10 | 1,881 → 1,890, **+0.5 %** | 1,932 → 1,940, +0.4 % |
+| `derived-DD_Expand.sea` | 10 | 3,172 → 3,183, **+0.3 %** | 3,195 → 3,202, +0.2 % |
+| `dd8-list-of-all-files.dd` (the control) | 8 | 1,885 → 1,879 | 1,904 → 1,904 |
+
+The control's total is unmoved while its split between the File Manager
+and the engine moves 6 ticks, so a total is the steadier figure. Host
+callgrind, `dd_fork` inclusive: −7.6 % on the Stac fork, −19.7 % on the text,
+−25 % on 100 KB of random bytes, +0.3 % on `LHA_Expander`.
+
+**Why method 10 moved.** Its decoder is inlined into `dd_fork` and its code
+is unchanged; what changed is `dd_fork`'s register allocation around it.
+The per-byte loops come out instruction for instruction as before; the
+literal loop now keeps `unc_canon_decode`'s address in `a1` and saves it
+around every call (HYPOTHESIS: that is the 8 ticks; a literal costs two more
+moves). Five variants were measured and none got back: both coders inlined
+1,919 engine ticks on `LHA_Expander`, both out of line 1,920, the splay
+code inlined and Stac not 1,948, method 10's run out of line 1,974, its
+literal loop out of line 1,955. The branch's, the splay code out of line
+and Stac inlined, is the 1,890 above.
+
+**Decision: not landed; the maintainer lands only what is free or better on
+every axis, and method 10 pays 0.2-0.4 %.** The code is on branch
+`dd-own-coders` (tag `archive/dd-own-coders`), as one commit with its
+budget cascade, NOTICE, licence lines and the grader; `fmt_dd.c` stays in
+`CODE`, LGPL, on main. Landing it means re-taking the budgets on whatever
+main is then and running `ci.sh` again; it was green on the branch as
+committed, `dist/` rebuilt. The description lands on main: the
+facts are true whichever decoder reads them.
+
+**Found on the way:** `fmt_dd.c`'s header says methods 2 to 5 are declined
+for want of a specimen, untrue since 2026-08-21 (corrected on the branch);
+and `unc_dd_extract`'s frame is 1,120 B today (`-Os -std=c99
+-fstack-usage`), where FORMATS.md *Stack*'s derived deepest chain counts
+992, so that row is older than its frames (not re-derived here).
+
+**Transferable.**
+- **A hardware method can have a software decoder.** Method 7 was filed as
+  "the Sigma card's", and the application that drove the card decodes it
+  without one.
+- **A test written against a transcription inherits its reading.** The unit
+  test's end marker was the old decoder's, not the format's, and only the
+  original program could say so.
+- **In a function this size, the cost of a change lands on code it did not
+  touch.** Price every method a shared function inlines, not the ones the
+  diff names.

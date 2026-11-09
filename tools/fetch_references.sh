@@ -563,3 +563,17 @@ for _f in copyfile.c:apple-oss-distributions/copyfile/9f91eb6ced021952278816cdc7
         curl -sfL -o "reference/notes/${_f%%:*}" \
             "https://raw.githubusercontent.com/${_f#*:}"
 done
+
+# DiskDoubler's methods 2/5 and 7 (src/fmt_dd.c, since 2026-11-09). Stac
+# LZS is ANSI X3.241-1994; RFC 1974 section 2.5.5 repeats its token grammar
+# (literal, the two offset forms, the length code, the end marker). The
+# splay-tree code is Douglas W. Jones's (CACM 31(8), 1988); minunsplay.c
+# is his decoder, initsplay and uncompress being the tree, the path and the
+# semi-splay, "may be used or copied for any purpose". What DiskDoubler
+# adds to both is docs/formats/diskdoubler-splay-stac.md.
+[ -f reference/notes/rfc1974.txt ] || \
+    curl -sL -o reference/notes/rfc1974.txt \
+        "https://www.rfc-editor.org/rfc/rfc1974.txt"
+[ -f reference/notes/splay_jones_minunsplay.c ] || \
+    curl -sL -o reference/notes/splay_jones_minunsplay.c \
+        "https://homepage.cs.uiowa.edu/~dwjones/compress/minunsplay.c"
