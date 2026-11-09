@@ -303,10 +303,14 @@ dist*). Left:
 - **MacExtract as Internet Config's post-processor — under consideration,
   the maintainer, 2026-11-03.** It is what would extract a download
   without a double-click; the helpers do not do it, Expander stays the
-  post-processor. `companion/icsetup`, which set it up (and stamped
-  downloads as MacExtract's) and measured working on Mac OS 9.2 only, is
-  retired from the tree and kept at 9e149a5 (DECISIONS.md 2026-10-31, *the
-  hand-off that arrives once*). Not run: System 7.x with an Internet Config
+  post-processor. `companion/icsetup`, which set it up and measured
+  working on Mac OS 9.2 only, is retired from the tree and kept at 9e149a5
+  (DECISIONS.md 2026-10-31, *the hand-off that arrives once*). **It must
+  not change the browser's stamp** (the maintainer, 2026-11-09): icsetup
+  set each entry's file creator and application name to MacExtract's as
+  well as its post-processor creator and name (`ICMapEntry`,
+  `reference/mpack/macICKeys.h`); only the post-processor fields may
+  change. Not run: System 7.x with an Internet Config
   extension, a real browser download, and a download finishing while
   MacExtract extracts, which the hand-off of 2026-11-01 suggests may now
   queue (DECISIONS.md 2026-11-01, *the Open item MultiFinder looks for*;
