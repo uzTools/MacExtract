@@ -4129,12 +4129,12 @@ Measured 2026-09-27:
 whose tallies it is quoted beside. It cancels in a difference taken from
 one probe pair (*What it buys, against the control*): **117,040 B saved
 between the shipped pair against 116,720 B between the probe pair**, both
-2026-09-27. The shipped pair is **166,496 B** (`OVL_SAVED`,
-`tools/run_tiers.py`) since 2026-11-09 (*the decoders DiskDoubler shipped*);
+2026-09-27. The shipped pair is **166,720 B** (`OVL_SAVED`,
+`tools/run_tiers.py`) since 2026-11-09 (*the group every line break cut*);
 the probe pair has not been re-measured, so the 320 B is that
 day's difference, not today's.
 
-The bundle is **195,168 B** — the nineteen images sum to 194,924 B, so its
+The bundle is **195,376 B** — the nineteen images sum to 195,132 B, so its
 index costs **244 B** (`tools/run_tiers.py` `BUNDLE`, `IMAGES`): a
 4-byte header, 12 bytes of directory per image and padding of each image to
 a multiple of 4 — the padding is why the index is not a constant. The
@@ -4195,7 +4195,7 @@ carries, and they were read again from the floppy (DECISIONS.md 2026-11-04,
 
 A tier's budget for a format is the resident build's budget for that tier
 (`TIERS`; *512 KB machines*, *Floor target verification*), plus
-the 166,496 B of `CODE` and A5 the shipped build does not carry (`OVL_SAVED`;
+the 166,720 B of `CODE` and A5 the shipped build does not carry (`OVL_SAVED`;
 *Three configurations, one tree*), less the images the format keeps and 8 B of
 block header each, less a **322 B residue** (`OVL_RESIDUE`, re-taken
 2026-10-22 from the shipped and resident budget probes on all three tiers;
@@ -4218,9 +4218,9 @@ budget (a fixture is in the Mac sample); the rest are the same sum with no
 fixture. Every row has since moved by arithmetic only — each application or
 image change since 2026-10-09 shifts `OVL_SAVED`, the images and `TIERS` by
 amounts recorded in its DECISIONS.md entry and in `tools/run_tiers.py`'s
-comments, last on 2026-11-09 (*the decoders DiskDoubler shipped*: −192 B on
-every row that keeps no `ovl_cptdd`, +166 B on the rest, the control 192 B
-smaller and the image 358 B), with
+comments, last on 2026-11-09 (*the group every line break cut*: +224 B on
+every row that keeps no `ovl_binhex`, +16 B on the rest, the control 224 B
+larger and the image 208 B), with
 `run_tiers.py --check` moving no tally. **Re-taken from `gain()` that
 day**: the rows had missed the same day's Arsenic table and fuzzer fixes
 (`OVL_SAVED` +320, StuffIt's image +256, DiskDoubler's +12), so most were
@@ -4228,21 +4228,21 @@ day**: the rows had missed the same day's Arsenic table and fuzzer fixes
 
 | sniffed format | images kept | granted, against the control |
 |---|---|---|
-| **AppleLink package** | **sqp, codecs** | **+158,406 B** (arithmetic: no `.pkg` is in the Mac sample) — the largest grant, because `ovl_sqp` is the smallest decoder image at 1,736 B |
-| Now Compress | now, codecs | **+155,194 B** (measured) |
-| SuperDisk! | superdisk, codecs | +153,514 B (arithmetic: no SuperDisk! fixture is in the Mac sample) |
-| LZH | lzh, codecs | **+149,704 B** (measured) |
-| PackIt | packit, ciphers, codecs | **+148,670 B** (measured) |
-| DiskDoubler | cptdd, codecs | **+145,268 B** (measured) |
-| StuffIt SpaceSaver | spacesaver, codecs | +143,974 B (arithmetic: no SpaceSaver fixture is in the Mac sample) |
-| ARC | arc, ciphers, codecs | **+143,154 B** (measured) |
-| Compact Pro, Compact Pro segment | cptdd, ciphers, codecs | +135,976 B (arithmetic), and **+145,268 B** where the directory says no entry is encrypted (measured) |
-| Tar | zipold, codecs | **+144,022 B** (measured) |
-| MAR | zipold, codecs | +144,022 B (arithmetic: no MAR fixture is in the Mac sample) |
-| StuffIt, StuffIt 5 | stuffit, ciphers, codecs | **+122,408 B** (measured), and **+131,700 B** for a StuffIt 5 archive whose header carries no password hash (measured, 2026-11-03) |
-| Zip, spanned zip | exo, zipold, ciphers, codecs | +104,494 B (arithmetic), **+113,786 B** unencrypted (measured) |
-| an envelope whose payload's first bytes name its format (`unc_envelope_peek`), since 2026-11-03 | its own reader, the sniffer, and what that format keeps | **+99,102 B** for a `.tar.Z` or `.tar.gz`, and an LZW-compressed MAR, which keeps the same (arithmetic), **+129,338 B** for a `.mar.lz4` (arithmetic), **+100,294 B** for a StuffIt archive in BinHex or MacBinary (measured) |
-| any other envelope, and every segment scheme that joins to a file | the whole bundle, kept | **−29,002 B** (−29,118 B measured, before 2026-11-07) |
+| **AppleLink package** | **sqp, codecs** | **+158,630 B** (arithmetic: no `.pkg` is in the Mac sample) — the largest grant, because `ovl_sqp` is the smallest decoder image at 1,736 B |
+| Now Compress | now, codecs | **+155,418 B** (measured) |
+| SuperDisk! | superdisk, codecs | +153,738 B (arithmetic: no SuperDisk! fixture is in the Mac sample) |
+| LZH | lzh, codecs | **+149,928 B** (measured) |
+| PackIt | packit, ciphers, codecs | **+148,894 B** (measured) |
+| DiskDoubler | cptdd, codecs | **+145,492 B** (measured) |
+| StuffIt SpaceSaver | spacesaver, codecs | +144,198 B (arithmetic: no SpaceSaver fixture is in the Mac sample) |
+| ARC | arc, ciphers, codecs | **+143,378 B** (measured) |
+| Compact Pro, Compact Pro segment | cptdd, ciphers, codecs | +136,200 B (arithmetic), and **+145,492 B** where the directory says no entry is encrypted (measured) |
+| Tar | zipold, codecs | **+144,246 B** (measured) |
+| MAR | zipold, codecs | +144,246 B (arithmetic: no MAR fixture is in the Mac sample) |
+| StuffIt, StuffIt 5 | stuffit, ciphers, codecs | **+122,632 B** (measured), and **+131,924 B** for a StuffIt 5 archive whose header carries no password hash (measured, 2026-11-03) |
+| Zip, spanned zip | exo, zipold, ciphers, codecs | +104,718 B (arithmetic), **+114,010 B** unencrypted (measured) |
+| an envelope whose payload's first bytes name its format (`unc_envelope_peek`), since 2026-11-03 | its own reader, the sniffer, and what that format keeps | **+99,326 B** for a `.tar.Z` or `.tar.gz`, and an LZW-compressed MAR, which keeps the same (arithmetic), **+129,562 B** for a `.mar.lz4` (arithmetic), **+100,310 B** for a StuffIt archive in BinHex or MacBinary (measured) |
+| any other envelope, and every segment scheme that joins to a file | the whole bundle, kept | **−28,986 B** (−29,118 B measured, before 2026-11-07) |
 
 A change to resident code moves every row by the control's growth less the
 shipped build's; a change to an image moves only the rows that keep it — so a
@@ -4253,7 +4253,7 @@ left*).
 
 **The last row is the one no tally had shown**: a wrapper whose payload the
 peek cannot name keeps the bundle, and that layer runs with **less** memory than
-a resident build would give it — 195,168 B held against 166,496 B saved. Until
+a resident build would give it — 195,376 B held against 166,720 B saved. Until
 2026-11-03 that was every envelope, and it refused `a2ps.V4.3.tar.Z` and
 `popper-1.7.tar.Z` at System 6.0.8 / 512 KB; the peek names Tar from the first
 512 bytes and the `.Z` layer is granted 200,022 B there instead of 72,090 B
@@ -4316,7 +4316,7 @@ with File > Open...'s record placed after the last before it, 250,752 B with
 MacBinary I read without padding before that, 250,496 B with Arsenic's
 2.5-byte table before that, 250,240 B before that, CORRECTED the same day
 from 250,112). **48,000 B** is
-`MacExtract.code.bin`, read at launch and never purged, and **195,168 B** is
+`MacExtract.code.bin`, read at launch and never purged, and **195,376 B** is
 the `'OVLY'` bundle, read at launch and mostly given back before the engine
 takes its budget (*Overlays*). What stays costs the heap one for one: the
 link produces a single `MacExtract.code.bin`, and `Elf2Mac/LdScript.cc`
@@ -4868,6 +4868,7 @@ of every format):
 | method 13 flushes runs | 2026-09-20 | Copland **−11.6 %** of 68000 instructions; Plus engine **4,395 → 3,867 ticks, −12.0 %** | +140 B, −12 B A5, peak 81,226 B identical, 948 fixtures byte-identical | *the window that was already the staging buffer* |
 | BinHex reads a line once | 2026-09-20 | `macburger-helper.hqx` **−35.8 %** 68000 instructions, `a2basic-09.hqx` −36.8 %; Plus engine **3,771 → 2,386 ticks, −36.7 %** | +240 B, +16 B A5 (alignment), peak identical | *the character that was touched three times* |
 | Now Compress coders rewritten from `docs/formats/now-compress.md` | 2026-09-21 | **790 → 792 engine ticks** on `derived-Expand_Now_1.0.1.sea` (parity) | **−204 B**, −616 B of deepest call chain | 2026-09-21, *asking the program that wrote it* |
+| BinHex decoded a line at a time | 2026-11-09 | Plus engine `macburger-helper.hqx` **2,397 → 898 ticks, −62.5 %**, `otc-fm-68k-glue.hqx` **2,105 → 766, −63.6 %** (~1,200 → ~450 cycles an output byte); 68000 instructions −52.8 % and −53.8 % | `ovl_binhex` +208 B; control CODE +220, A5 +4 (alignment); peak identical | 2026-11-09, *the group every line break cut* |
 
 **Linux counts mis-rank 68000 changes**: a clearer Now Compress draft cost
 **790 → 811 ticks, +2.7 %** while executing FEWER x86 instructions
@@ -4883,10 +4884,11 @@ decoded symbol** (471,500 decodes on the ISBN fixture; its two lines 4.52 % +
 iteration would cost a 68000 more than one `__udivsi3`. The divisions are
 unsigned.
 
-**BinHex** `bh_get_bits` was 38 % of a large `.hqx`; an inline fast path
-measured **worse** (−5.5 % against −6.6 %). Decoding four groups to three
-bytes changes what a stream truncated mid-triple does, and that is graded by
-9,320 robustness variants rather than argued.
+**BinHex** is decoded a line at a time since 2026-11-09. What is left on
+`macburger-helper.hqx`, in 68000 instructions: the line's scan and decode
+(`bh_refill_line`) 43 %, CRC-16 (`unc_crc16_xmodem`, resident, one call a
+buffer) 26 %, RLE90 (`bh_fill`) 20 %. A stream cut mid-group ends as it did
+(measured; BLOCKERS.md, *Withdrawn claims*).
 
 `-flto` crashes Retro68's gcc 16.1.0 (ICE `write_symbol, at
 lto-streamer-out.cc:3097`, IPA pass `modref`) on `mac/macextract_mac.c`.
@@ -4920,7 +4922,7 @@ output is still in every row** (measured: 341 ticks on `kermitut9test.bin`, 325 
 | `derived-Expand_Now_1.0.1.sea` | Now Compress | 62 KB | 18 s | 31 s | 3 s |
 | `PCCTS.tar.gz` | gzip | 64 KB | 21 s | 58 s | 3 s |
 | `derived-MUSFMT10.ZIP` | Zip | 172 KB | 43 s | 110 s | 3 s |
-| `macburger-helper.hqx` | BinHex | 306 KB | 46 s | 83 s | 3 s |
+| `macburger-helper.hqx` | BinHex | 306 KB | **21 s** (46 s before 2026-11-09) | 83 s | 3 s |
 | `derived-EmpireBuilderDemo.sit` | StuffIt | 278 KB | **61 s** | 119 s | 3 s |
 | `derived-MacPass390.sea` | DiskDoubler | 156 KB | 61 s | 110 s | 3 s |
 | `derived-XferIt_1.5b4.sea` | Compact Pro | 285 KB | 122 s | 251 s | 3 s |
@@ -4992,11 +4994,13 @@ runs each, spread in ticks.
 | `derived-EmpireBuilderDemo.sit` | StuffIt | 278 KB | 52.4 s | 1 |
 | `derived-MacPass390.sea` | DiskDoubler | 156 KB | 53.6 s | 1 |
 | `derived-XferIt_1.5b4.sea` | Compact Pro | 285 KB | 103.0 s | 1 |
-| `macburger-helper.hqx` | BinHex → StuffIt | 307 KB | 245.9 s | 1 |
+| `macburger-helper.hqx` | BinHex → StuffIt | 307 KB | **226.0 s** (re-measured 2026-11-09; 250.9 s without the line decoder) | 0 |
 | `derived-a2basic.dmg.sit` | StuffIt 5 (Arsenic) | 153 KB | 341.6 s | 3 |
 | `derived-Library_ISBN_Barcoder.sit` | StuffIt 5 (Arsenic) | 202 KB | 749.3 s | 5 |
 
-Host ÷ Mac seconds 0.998–1.003 on every run. The Arsenic rows were taken at
+Host ÷ Mac seconds 0.998–1.003 on every run. The BinHex row is the
+line decoder's (DECISIONS.md 2026-11-09, *the group every line break cut*), timed the same way on the same day's
+`dist/MacExtract.bin` and on the one committed before it. The Arsenic rows were taken at
 `--quiet 300` (at 30 the 0 % bar was read as the end; DECISIONS.md
 2026-10-19, *the clock inside the Mac*); they sit within 1 % of the autotest's
 1 MB column. `macburger-helper.hqx` here includes the 312-file StuffIt archive
@@ -5181,13 +5185,16 @@ The shape, not the clock: relative cost transfers to any CPU as a ratio.
 | kermitut9test.bin | MacBinary | 297 | 296 | 0.6 | 485,802 |
 | derived-PCCTS.tar | Tar | 280 | 231 | 0.6 | 439,603 |
 | derived-PackIt.pit | PackIt (stored) | 60 | 60 | 0.7 | 85,110 |
-| macburger-helper.hqx | BinHex | 299 | 253 | 2.9 | 102,708 |
+| macburger-helper.hqx | BinHex | 299 | 253 | 2.9; −34 % since 2026-11-09 (below) | 102,708 |
 | derived-MUSFMT10.ZIP | Zip (deflate) | 168 | 498 | 3.9 | 42,704 |
 | popper-1.7.tar.Z | Compress | 58 | — | 2.0 | 29,526 |
 | PCCTS.tar.gz | Gzip | 62 | — | 2.0 | 31,162 |
 | derived-EmpireBuilderDemo.sit | StuffIt (2 LZW, 3 Huffman) | 272 | 407 | 9.0 | 30,204 |
 | derived-XferIt_1.5b4.sea | Compact Pro | 279 | 926 | 18.2 | 15,351 |
 | derived-KeyGraphics.sit | StuffIt 5 (Arsenic) | 5 | 33 | 1.6 | 2,859 |
+
+BinHex's row: 4.10 → 2.71 ms, the byte-at-a-time and the line decoder, best
+of seven on 2026-11-09 on a busier host; no other row was re-taken.
 
 Envelopes are essentially a copy; BinHex a few times that; StuffIt's LZW and
 Compact Pro's LZH 15–30x a copy per input byte; Arsenic two orders of
@@ -5220,8 +5227,8 @@ written is DECISIONS.md 2026-10-09 (*what GCC will not do with an index*).
 - **The header's "inline" helpers are out of line in the overlays.** At `tools/overlay/mkoverlay.sh`'s flags the listing shows `unc_bitin_bit` CALLED in nine files (`fmt_arc`, `fmt_dd`, `fmt_exo`, `fmt_lzh`, `fmt_sit`, `fmt_spacesaver`, `unc_huffman`, `unc_lzah`, `unc_lzdyn`), `unc_bufin_next` in six, `unc_bitin_fill` in two, `unc_fork_put` in `fmt_sit` — in `unc_lzah.c` a `jsr` per tree level, ~100 cycles. DECISIONS.md 2026-09-19 (*the tree that was Yoshizaki's*) says that coder kept "the engine's inline bit reader"; the listing says otherwise. **The listing is read, the cost is not measured.** `always_inline` needs no assembly.
 - **Canonical Huffman decode as one routine with the bit state in registers** (`unc_canon_decode`): the table-hit path is ~45 instructions, ~630 cycles a symbol from the `-Os` listing, ~180 of them the call (`movem.l` of six registers each way, argument loads, `bitbuf`/`nbits` round-tripped). It also crosses an overlay boundary every symbol through a generated forward (`tools/overlay/mkforwards.py`, ~40 cycles), so no decoder can inline it. `unc_huff_decode` has the same shape. A fast path copied into each decoder, calling through the vector only on a miss, removes both.
 - **The LSB-first table hit reverses its peek every symbol** (`unc_rev_fast`; StuffIt method 13, SpaceSaver method 3, ARC): 12 instructions, ~170 cycles a symbol. Building the LSB-first table at bit-reversed indices, as zlib does, removes it. **Needs no assembly.**
-- **BinHex as a whole-line decoder.** 2,386 engine ticks for ~253 KB out, **~1,200 cycles an output byte**; `bh_next` is a call per byte with a five-register `movem` each way, and `bh_fork` makes a second CRC pass. A 64-character line → 48 bytes through RLE90 with the CRC folded in would be ~100 a byte. It changes truncated-mid-group behaviour (*What is still hot*), so the robustness variants grade it.
-- **base64 and uuencode have BinHex's shape** (`unc_b64_feed` per input character into a four-byte queue): the same routine with a different table would serve all three.
+- **base64 and uuencode have BinHex's old shape** (`unc_b64_feed` per input character into a four-byte queue). BinHex's line decoder of 2026-11-09 is not a routine they could share: its table carries the `:`, and its line rules and the group carried across a line break are BinHex's (DECISIONS.md 2026-11-09, *the group every line break cut*).
+- **BinHex's CRC-16 folded into its RLE90 loop.** 26 % of the line decoder's instructions; folding saves only the loop and the reload, because an image cannot read the resident table and would carry its own 512 B (estimate, not counted).
 - **Window clears as `movem.l`.** `clr.b` loops (~28 cycles a byte) in `fmt_lzh`, `unc_lzah`, `unc_lzdyn`; `clr.l` loops (~9) in Compact Pro, DiskDoubler and method 14; eleven registers by `movem.l` is ~2.2. A `uint32_t` C loop gets the first group to ~9 (allocations are even).
 - **LZW's code reader shifts by a register** (`lzw_code`): ~130 cycles of shifting a code at 12–16 bits. compress writes codes in groups of eight filling exactly `n` bytes, so an unpacker per width with constant shifts takes eight at once.
 - **Arsenic's symbol decoder as one routine** (`ars_decode`, through a pointer per symbol): the call alone ~200 cycles (`movem.l` of eight registers each way); each search step ~80 cycles where `sub.l (An)+,Dn` / `bcc` is ~24. With the renormalisation row and the divisions, the whole arithmetic decoder is put at ~20,000 cycles an output byte (FORMATS.md, *StuffIt 5: the Arsenic block size*).
@@ -5763,7 +5770,7 @@ data and relocations. 63,744 B was measured against 2026-09-01's build;
 `ApplLimit − ApplZone` = **78,568 B**, leaving 20,956 B for every buffer
 (*derived*; DECISIONS.md 2026-10-22, *the runtime the application did not
 need*). `CODE` has since fallen 2,584 B; the sum has not been re-derived. The
-eager loader then asks for the `'OVLY'` bundle as ONE **195,168 B** block
+eager loader then asks for the `'OVLY'` bundle as ONE **195,376 B** block
 (*Overlays*). The bound is the RAM under the screen buffer, so no smaller
 System moves it (*What the application costs the engine*); the margin is
 kilobytes, which is why MANUAL_TESTS.md §6's HD20 question is about a
@@ -6371,12 +6378,16 @@ instrument and what it cannot see are in `tools/vmac/README.md`.
 | `derived-Export.sit` | StuffIt | 1.6 KB | **1.9 s** | 2.4–2.5 s | 1.26x |
 | `derived-EmpireBuilderDemo.sit` | StuffIt | 278 KB | **52.4 s** | 54.4 s | **1.04x** |
 | `derived-FirstClass_Demo.cpt` | Compact Pro | 249 KB | **79.5 s** | 155.2 s | **1.95x** |
-| `macburger-helper.hqx` | BinHex → StuffIt | 307 KB | **245.9 s** | 423.7 s | **1.72x** |
+| `macburger-helper.hqx` | BinHex → StuffIt | 307 KB | **233.8 s** | 423.7 s | **1.81x** |
 
 **Two runs of each agree to two ticks** (0.03 s): 117/117, 146/148,
 3,150/3,150, 3,274/3,274, 4,781/4,781, 9,333/9,334, 14,788/14,789 and
 25,483/25,483 ticks; host ÷ Mac seconds 0.994–1.001 on all sixteen. **Ours is
-faster on all four.**
+faster on all four.** The BinHex row is re-measured 2026-11-09 on that day's
+`dist/MacExtract.bin`, the line decoder's: 233.8 s twice, against **258.7 s**
+twice for the `dist/` committed before it, so the shipped application had
+lost 12.8 s on this archive since v0.41.0's 245.9 s (measured; where, not
+measured) and the line decoder gave back 24.9 s (DECISIONS.md 2026-11-09, *the group every line break cut*).
 
 **Corrected 2026-10-19:** the earlier screenshot-poll figures were upper
 bounds, not lower bounds; the StuffIt row's "1.00x" is withdrawn (BLOCKERS.md,
@@ -6384,7 +6395,7 @@ bounds, not lower bounds; the StuffIt row's "1.00x" is withdrawn (BLOCKERS.md,
 
 **Not comparable with *Measured on a 7 MHz Mac Plus***, which times the
 autotest build (`RunExtract` once, CRC read-back): for `macburger-helper.hqx`
-46 s there is the BinHex decode alone, 246 s here includes the 312-file
+21 s there is the BinHex decode alone, 234 s here includes the 312-file
 archive inside.
 
 **They wrote the same names** on every fixture. Defaults differ: Expander

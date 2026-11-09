@@ -283,10 +283,13 @@ REPO = os.path.dirname(HERE)
 # control's CODE -96 and A5 0; the shipped pair fell the same 96, OVL_SAVED
 # unmoved. They were 190,276 / 94,894 / 619,182.
 TIERS = {
-    "sys3-512K": (189956, "System 3.0, Macintosh 512Ke (222,070 B free)"),
-    "sys6-512K": (94574,  "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
-    "floor-1M":  (618862, "System 6.0.8, 1 MB Mac Plus — the floor target"),
+    "sys3-512K": (189732, "System 3.0, Macintosh 512Ke (222,070 B free)"),
+    "sys6-512K": (94350,  "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
+    "floor-1M":  (618638, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
+# -224 each 2026-11-09, DERIVED from TIERS_CONTROL +224 (BinHex decoded a
+# line at a time, DECISIONS.md 2026-11-09, *the group every line break cut*); they were
+# 189,956 / 94,574 / 618,862.
 # +192 each 2026-11-09, DERIVED from TIERS_CONTROL -192 (DiskDoubler's
 # methods 2, 5 and 7 from Salient's own decoders, DECISIONS.md 2026-11-09,
 # *the decoders DiskDoubler shipped*); they were 189,764 / 94,382 / 618,670.
@@ -519,7 +522,10 @@ TIERS = {
 # +192 2026-11-07: Now Compress polls Cancel inside a block (`ovl_now` +186;
 # DECISIONS.md 2026-11-07, *the block a click waited for*); CODE +180, A5 +12.
 # TIERS -192 and OVL_SAVED +192, which cancel: only a now-keeper moves.
-TIERS_CONTROL = 222976     # build/mac-resident, CODE + A5, 2026-11-09
+TIERS_CONTROL = 223200     # build/mac-resident, CODE + A5, 2026-11-09
+# +224 2026-11-09: BinHex decoded a line at a time (`ovl_binhex` +208;
+# CODE +220, A5 +4; DECISIONS.md 2026-11-09, *the group every line break cut*); TIERS -224
+# and OVL_SAVED +224, which cancel: only a binhex-keeper moves, -208.
 # -192 2026-11-09: DiskDoubler's methods 2, 5 and 7 from Salient's own
 # decoders (`ovl_cptdd` -358; CODE -180, A5 -12; DECISIONS.md 2026-11-09,
 # *the decoders DiskDoubler shipped*); TIERS +192 and OVL_SAVED -192, which
@@ -1142,7 +1148,11 @@ EXPECT = {
 # __modsi3 family, which the old `% ntrees` linked into the image, is about
 # 230; DECISIONS.md 2026-11-09, *the decoders DiskDoubler shipped*). TIERS
 # +192, which cancels: only a cptdd-keeper's budget moves, +358.
-OVL_SAVED = 166496
+# **+224 2026-11-09, -> 166,720**: BinHex decoded a line at a time, the
+# control's +224 (CODE +220, A5 +4) against the shipped pair's 0, the code
+# in `ovl_binhex` (+208; DECISIONS.md 2026-11-09, *the group every line break cut*). TIERS
+# -224, which cancels: only a binhex-keeper's budget moves, -208.
+OVL_SAVED = 166720
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
 # every kept image is one — as is the bundle an envelope holds on to.
@@ -1277,7 +1287,7 @@ OVL_RESIDUE = -322
 # own Finder info*).
 IMAGES = {
     "OVL_ID_ARC":         7696,
-    "OVL_ID_BINHEX":      7422,
+    "OVL_ID_BINHEX":      7630,
     "OVL_ID_BTOA":        2496,
     "OVL_ID_CODECS":      6016,
     "OVL_ID_CPTDD":       14874,
@@ -1428,7 +1438,9 @@ IMAGES = {
 # **CPTDD -358, the bundle -356 B, 2026-11-09** (the image's padding to 4
 # is 2 B now): DiskDoubler's methods 2, 5 and 7 from Salient's own decoders
 # (DECISIONS.md 2026-11-09, *the decoders DiskDoubler shipped*).
-BUNDLE = 195168
+# **BINHEX +208, the bundle +208 B, 2026-11-09**: BinHex decoded a line at a
+# time (DECISIONS.md 2026-11-09, *the group every line break cut*).
+BUNDLE = 195376
 
 # What the SHIPPED lane asserts, and it is the refused fixtures BY NAME
 # rather than a tally: a tier that refuses two different fixtures and still

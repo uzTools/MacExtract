@@ -120,7 +120,7 @@ ciphers, each checked against an archive 2.0.1 made.
 | A few KB of StuffIt | 2 s | 2 s |
 | 280 KB StuffIt | **52 s** | 54 s |
 | 250 KB Compact Pro | **79 s** | 155 s |
-| 300 KB BinHex with a StuffIt archive inside | **246 s** | 424 s |
+| 300 KB BinHex with a StuffIt archive inside | **234 s** | 424 s |
 
 The Deluxes do not run on a Mac Plus. Details in [FORMATS.md](FORMATS.md).
 

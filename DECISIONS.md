@@ -572,6 +572,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-09 (the slowdown that was accepted) — DiskDoubler's methods 2, 5 and 7 from Salient's own decoders land, method 10's 0.2-0.4 % accepted by the maintainer; `fmt_dd.c` is 0BSD and four files stay LGPL
 - 2026-11-09 (the helper Internet Config would call) — MacExtract as Internet Config's post-processor is out of scope: Internet Config cannot say where a download is extracted or whether it is deleted, and MacExtract has no preference for either
 - 2026-11-09 (the glue that was measured inline) — multiversal's File Manager glue, inline in a local header: the three calls the shell would switch to still cost +32 to +64 B, the seven it links give 336 B back once the setup image calls them itself
+- 2026-11-09 (the group every line break cut) — BinHex decodes a line at a time, the scan for the line's end being its decode, and RLE90 a buffer at a time; a Mac Plus spends 898 engine ticks on `macburger-helper.hqx` where it spent 2,397, every outcome unchanged
 
 ---
 
@@ -23690,3 +23691,85 @@ the same body as the out-of-line copy in `libInterface`, so a pointer to
 one still links. For MacExtract the first pull request worth having is
 the mechanism with `FSRead`, `FSWrite`, `SetFPos`, `GetEOF`, `SetEOF`,
 `FlushVol` and `FSClose`, not with `HOpen`/`HOpenRF`/`HDelete`.
+
+## 2026-11-09 (the group every line break cut) — BinHex decodes a line at a time, the scan for the line's end being its decode, and RLE90 a buffer at a time; a Mac Plus spends 898 engine ticks on `macburger-helper.hqx` where it spent 2,397, every outcome unchanged
+
+**Why.** Nearly every archive arrives as `.sit.hqx` or `.cpt.hqx`, and the
+BinHex layer was ~1,200 cycles an output byte (2,397 ticks for 259,379 B,
+measured): `bh_next` → `unc_rle90_take`/`feed` → `bh_decode_byte` →
+`bh_get_bits` once per byte, then a second pass for the CRC.
+
+**What changed.** `bh_refill_line` turns an accepted line into its bytes in
+`line[]` (over the characters when the line had to be copied there), and
+its first scan for the line's end IS the decode: four characters at a time
+through the table, which gives the line break, the `:` and every character
+outside the alphabet a high bit, so the group holding the terminator is the
+one that stops it. What it took is kept only if the line ends in the buffer
+and four characters or more were taken (fewer could be the `---` of a part
+separator); every other line is read and judged as before. `bh_fill` makes
+a fork's bytes a buffer at a time: a literal loop that stops at 0x90, the
+run copy, and `unc_rle90_feed` for the count byte. The CRC stays one call
+to the resident `unc_crc16_xmodem` a buffer: an image reaches resident code
+only through forwards, not its tables, so folding it into the loop needs a
+512 B table in `ovl_binhex` and saves only the loop's reload (estimate).
+
+**The trap: the first line holds 63 characters.** The `:` takes the first
+character of the first line, so on a real file every later line break falls
+one character into a group. The pass as first written started only at a
+group boundary and never ran: that build measured **1,132 ticks against
+1,115** for the one without it. Finishing the carried group a character at
+a time first took it to **898**.
+
+**What a stream cut mid-group does: unchanged (measured).** FORMATS.md had
+said a four-to-three decoder would change it. A byte is still produced when
+its second character is read, and a line is still read only when one of its
+bytes is needed, so a document ends with the input where it ended before.
+Old binary against new: run_robustness.py's variants and
+run_truncation.py's cuts of all 1,004 fixtures (13,052), `t`'s exit code,
+stdout and stderr; and every `.hqx` fixture cut at every byte across its
+first, middle and last lines, the same cuts ended by `:` and by a new
+banner, and 40 mutations each (bytes, alphabet characters, `:`, a line
+split or dropped, a part separator, mail text, whitespace), 216,353 inputs,
+`x -nr`'s exit code, messages and output tree. **0 differences** in both.
+The harness found 159 on a build whose `:` error was one word different. A
+first harness that kept failing inputs beside the next one reported 1,941
+false differences: the CLI scans an input's folder for the parts of a set.
+
+**Price (measured).** `ovl_binhex` 7,422 → 7,630 B, **+208**; the shipped
+resident build unchanged; the control CODE 186,300 → 186,520, +220, A5
+36,676 → 36,680, +4 (`.data` alignment: `fmt_binhex.o` has no data or bss).
+So `OVL_SAVED` +224, `TIERS` −224 each, the bundle +208: a format keeping
+`ovl_binhex` gets 16 B more, every other 224 B more. Peak heap identical
+(no allocation changed). Stack: the BinHex entry's deepest chain is still
+the `.hcx` reader's 1,784 B (`tools/stack_depth.py`). `run_tiers.py
+--check`: no tally moved.
+
+**Speed (measured,** `mv-4M-1x`, `UNC_AT_TIMING`, two runs each, equal to
+the tick**).**
+
+| fixture | out | before | after |
+|---|---|---|---|
+| `macburger-helper.hqx` | 259,379 B | 2,397 | **898, −62.5 %** |
+| `otc-fm-68k-glue.hqx` | 211,763 B | 2,105 | **766, −63.6 %** |
+
+End to end, the shipped application on the same archive with the 312-file
+StuffIt archive inside it (`expander.py --only ours`, two runs each, equal
+to the tick): **258.7 → 233.8 s** at 4 MB and **250.9 → 226.0 s** at 1 MB,
+the `dist/` committed before this against this one; the autotest's extract
+column 46 → 21 s. README's 246 s was v0.41.0's: the application had lost
+12.8 s on this archive since, which is measured and not located.
+
+~450 cycles an output byte, not the ~100 estimated: the CRC alone is ten
+instructions a byte. 68000 instructions 22.3 M → 10.5 M and 19.7 M → 9.1 M
+(`tools/m68kprof.py`), the clock moving further than the count again.
+
+**Not taken.** base64 and uuencode through the same routine (the brief's
+optional step): it is not a routine that takes a table. The `:` code, the
+line rules and the carried group are BinHex's; uuencode leads each line
+with a length and base64 allows `=` and whitespace anywhere; and each
+reader is in its own image, so a shared routine is a copy or a forwarded
+call a line.
+
+**Transferable.** **Before writing a fast path that assumes where a line
+starts, measure where the real file's lines start.** The 64-character line
+was the model; the stream's first line is 63.

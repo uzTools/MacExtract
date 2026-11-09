@@ -61,20 +61,18 @@ typedef struct BhDec {
     UncBufIn in;
     /* One line at a time, because a document can have MAIL between its
      * lines — the shape a file posted in several parts arrives in. See
-     * bh_refill_line. */
+     * bh_refill_line. Once a line is accepted this holds its DECODED
+     * bytes, three for every four characters (written over the
+     * characters when a line had to be copied here to be read); rp..rend
+     * is what is left of them. */
     uint8_t  line[BH_LINE_MAX];
-    int32_t  llen, lpos;
+    uint8_t *rp, *rend;
     uint8_t  lut[256];    /* char -> 6-bit value, 0xFF = invalid, 0xFE = ':' */
-    uint32_t phase;       /* 0, 1 or 2: which third of the 4-group ->
-                           * 3-byte cycle the next byte comes from. Kept
-                           * ALREADY REDUCED rather than counted and taken
-                           * mod 3, because that modulo ran once per output
-                           * byte and a 68000 has no divide instruction.
-                           */
-    uint8_t  batch[2];    /* bytes 2 and 3 of a group decoded at once */
-    uint8_t *bp, *bend;   /* what is left of them; equal when none is */
-    uint8_t  prev_bits;
-    int      eof;         /* saw terminating ':' */
+    uint8_t  phase;       /* characters of the current four-character group
+                           * already taken, 0..3: a group can straddle a
+                           * line break, so it carries from line to line */
+    uint8_t  prev_bits;   /* the last of them, whose low bits are owed */
+    uint8_t  colon;       /* the terminating ':' is on the line in hand */
     int      in_gap;      /* between "--- end of part" and "---" */
     /* RLE layer */
     UncRle90 rle;
@@ -89,12 +87,11 @@ static void bh_init(BhDec *d, UncCtx *c, uint8_t *storage, uint32_t cap)
     for (i = 0; i < 64; i++) d->lut[(uint8_t)bh_alphabet[i]] = (uint8_t)i;
     d->lut[':'] = 0xFE;
     d->phase = 0;
-    d->bp = d->bend = d->batch;
     d->prev_bits = 0;
-    d->eof = 0;
+    d->colon = 0;
     d->in_gap = 0;
     unc_rle90_init(&d->rle, 1);
-    d->llen = d->lpos = 0;
+    d->rp = d->rend = d->line;
     d->err = UNC_OK;
 }
 
@@ -144,234 +141,287 @@ static void bh_init(BhDec *d, UncCtx *c, uint8_t *storage, uint32_t cap)
  * only of alphabet characters, a bare rule of hyphens being the
  * realistic shape — is taken as data and caught by BinHex's own per-fork
  * CRC, as a per-entry error rather than as silence. */
-static int bh_refill_line(BhDec *d)
+static UNC_NOINLINE int bh_refill_line(BhDec *d)
 {
-    for (;;) {
-        const uint8_t *q;
-        uint32_t avail;
-        int32_t n = 0, i;
-        int ok = 1;
+    const uint8_t *const lut = d->lut;
 
-        d->llen = d->lpos = 0;
+    for (;;) {
+        const uint8_t *q, *s, *se;
+        uint8_t *o = d->line;
+        uint32_t avail, ph = d->phase, prev = d->prev_bits;
+        int32_t n = 0;
+        int keep = 0, colon = 0, found = 0;
 
         /* The line is normally in the reader's buffer already, all 64
          * characters and the terminator with them, so it is taken in
          * one scan for that terminator rather than one call, one bounds
-         * test and one cursor store per character. */
+         * test and one cursor store per character — and that scan is
+         * the DECODE, for as long as it lasts (`found` is 0 while it
+         * is): four characters at a time through the table, which
+         * marks the line break, the ':' and every character outside
+         * the alphabet alike, so the group holding the terminator is
+         * the one that stops it. A group carried from the line before
+         * is finished first, a character at a time, which is every line
+         * of a real file: the first holds 63 characters after the ':',
+         * so every line break after it falls one character into a
+         * group. Not in a gap, whose lines are only scanned. */
         avail = unc_bufin_span(&d->in, &q);
         if (avail > (uint32_t)BH_LINE_MAX) avail = (uint32_t)BH_LINE_MAX;
-        while ((uint32_t)n < avail && q[n] != '\n' && q[n] != '\r') n++;
-        if ((uint32_t)n < avail) {
-            unc_bufin_drop(&d->in, (uint32_t)n + 1u);   /* and the terminator */
-        } else {
-            /* Not in hand: the line straddles a refill, or ends with
-             * the file, or is longer than the buffer. One character at
-             * a time, and a line that overflows is handed over in
-             * pieces — harmless, because every piece is judged by the
-             * same rule and the character order is unchanged. */
-            int ch;
-            n = 0;                      /* the scan above found nothing */
-            for (;;) {
-                ch = unc_bufin_next(&d->in);
-                if (ch < 0) {
-                    if (n == 0) { d->err = d->in.err; return -1; }
+        s = q;
+        se = d->in_gap ? q : q + avail;
+        for (;;) {
+            uint32_t v;
+            /* The bytes are written over the characters when the line
+             * is d->line, which is safe: a character yields at most one
+             * byte and the first of each group none, so the write never
+             * passes the read. A line that is refused leaves line[]
+             * spent and the carried group untouched, so it is as if
+             * never read. */
+            if (ph == 0u) {
+                while (se - s >= 4) {
+                    uint32_t a = lut[s[0]], b = lut[s[1]];
+                    uint32_t c = lut[s[2]], e = lut[s[3]];
+                    /* One test on the OR of the four: none is outside
+                     * the alphabet (0xFF, the line break included) or
+                     * the ':' (0xFE). */
+                    if (((a | b | c | e) & 0xC0u) != 0u) break;
+                    o[0] = (uint8_t)((a << 2) | (b >> 4));
+                    o[1] = (uint8_t)((b << 4) | (c >> 2));
+                    o[2] = (uint8_t)((c << 6) | e);
+                    o += 3;
+                    s += 4;
+                }
+            }
+            if (!found) {
+                if (s != se && lut[*s] < 0xFEu) goto one;
+                found = 1;
+                /* Fewer than four characters taken might be the start
+                 * of a part separator, "---" being in the alphabet: the
+                 * line is judged from its first character instead. */
+                if (s - q < 4) {
+                    s = q;
+                    o = d->line;
+                    ph = d->phase;
+                    prev = d->prev_bits;
+                }
+                n = (int32_t)(s - q);
+                while ((uint32_t)n < avail && q[n] != '\n' && q[n] != '\r') n++;
+                if ((uint32_t)n < avail) {
+                    unc_bufin_drop(&d->in, (uint32_t)n + 1u);   /* and the terminator */
+                } else {
+                    /* Not in hand: the line straddles a refill, or ends
+                     * with the file, or is longer than the buffer. One
+                     * character at a time, and a line that overflows is
+                     * handed over in pieces — harmless, because every
+                     * piece is judged by the same rule and the character
+                     * order is unchanged. */
+                    int ch;
+                    n = 0;              /* the scan above found nothing */
+                    for (;;) {
+                        ch = unc_bufin_next(&d->in);
+                        if (ch < 0) {
+                            if (n == 0) { d->err = d->in.err; return -1; }
+                            break;
+                        }
+                        if (ch == '\n' || ch == '\r') break;
+                        if (n >= BH_LINE_MAX) break;
+                        d->line[n++] = (uint8_t)ch;
+                    }
+                    q = s = d->line;    /* and nothing decoded is kept */
+                    o = d->line;
+                    ph = d->phase;
+                    prev = d->prev_bits;
+                }
+
+                /* Mailers put whitespace on the end of a line, so it is
+                 * trimmed before the line is judged and a trimmed line is not
+                 * "garbage".
+                 *
+                 * Source: binhex40_lewis.txt — "<return> means to the decoder:
+                 * Any sequence of <cr>, <lf>, <tab>, <spc>. (The <tab> and <spc>
+                 * are required because some old programs produced these
+                 * characters)". Both characters are named by the format's own
+                 * Definition, so trailing ones are a line ending and not data.
+                 *
+                 * THE TAB IS NOT OURS, corrected 2026-10-07: this comment said
+                 * it was from 2026-10-06, having looked for it in hexbin (which
+                 * tests `line[n - 1] == ' '` and nothing else) rather than in
+                 * the document this file is transcribed from. HQXer 1.1 is a
+                 * second implementation — its inverse table marks TAB skippable
+                 * ANYWHERE in a line, with BS, LF, CR and the space
+                 * (tools/derive_hqxgarbage.py --tables).
+                 *
+                 * The trim is load-bearing, and on a real file:
+                 * country-song-generator-101.hqx carries a trailing space on all
+                 * 2,600 of its data lines. StuffIt's HQXEngine does not trim, so
+                 * every one of those lines is 65 characters long and holds a
+                 * SPACE — it fails both halves of that engine's predicate and
+                 * the whole file is discarded, line by line. A rule and its
+                 * second implementation are not the same reader
+                 * (tools/derive_hqxgarbage.py --length). */
+                while (n > 0 && (q[n - 1] == ' ' || q[n - 1] == '\t')) n--;
+                se = q + n;
+                /* Four characters already taken are data: the line is
+                 * neither blank nor a part separator. */
+                if (s != q) continue;
+                if (n == 0) break;                      /* blank line */
+
+                /* The part separator a posting is CUT at, which the alphabet
+                 * rule below cannot see: the resume line is "---" and every one
+                 * of those three characters is in the BinHex alphabet, so it
+                 * reads as two bytes of data and the fork's CRC fails.
+                 *
+                 * Source: DeHQX 2.0.1's own documentation, *How It Works*, by
+                 * Peter N Lewis — who wrote the BinHex 4.0 Definition this file
+                 * is transcribed from: "If it encounters a line beginning with
+                 * '--- end of part', it ignores the file until it encounters a
+                 * line consisting only of '---', at which time it resumes
+                 * dehqxing." tools/derive_dehqx.py checks that sentence and
+                 * grades a posting cut this way, which this reader failed until
+                 * 2026-10-06 and macutils' hexbin reads (by the length rule
+                 * below, which is still not transcribed).
+                 *
+                 * THE RESUME LINE IS A PREFIX, not the whole line, and that is
+                 * a second implementation's reading rather than the prose's.
+                 * Source: HQXer 1.1 (John Stiles, 1994), `CODE` 2 +0x1baa — its
+                 * gap loop reads three characters, compares each with '-', and
+                 * on three hits discards the REST of the line and resumes with
+                 * the next character. Taking "consisting only of '---'"
+                 * literally cost a regression this suite could not see, written
+                 * and withdrawn the same day, 2026-10-06: a posting whose resume
+                 * line read `--- part 2 ---` or `-----` lost everything after
+                 * the cut —
+                 * and the FIRST of those had read correctly before the gap
+                 * existed at all, because it holds spaces and the garbage rule
+                 * below skips it, so the gap cost a file it had been given
+                 * (measured on a build with this test compiled out;
+                 * DECISIONS.md 2026-10-06; graded by tools/run_multihqx.py's
+                 * three cuts). HQXer is more permissive
+                 * still — it scans for three consecutive '-' anywhere, not at a
+                 * line start — and the line anchor is kept because nothing here
+                 * needs the rest. */
+                if (d->in_gap) {
+                    if (n >= 3 && q[0] == '-' && q[1] == '-' && q[2] == '-')
+                        d->in_gap = 0;
                     break;
                 }
-                if (ch == '\n' || ch == '\r') break;
-                if (n >= BH_LINE_MAX) break;
-                d->line[n++] = (uint8_t)ch;
+                if (n >= 15 && q[0] == '-' && q[1] == '-' && q[2] == '-' &&
+                    q[3] == ' ' && q[4] == 'e' && q[5] == 'n' && q[6] == 'd' &&
+                    q[7] == ' ' && q[8] == 'o' && q[9] == 'f' && q[10] == ' ' &&
+                    q[11] == 'p' && q[12] == 'a' && q[13] == 'r' && q[14] == 't') {
+                    /* Compared byte by byte rather than against a literal: a
+                     * string constant here would be thirteen bytes of A5 world,
+                     * which is resident for the life of the application and is
+                     * at its ceiling (tools/check_app_size.py). */
+                    d->in_gap = 1;
+                    break;
+                }
+                continue;
             }
-            q = d->line;
+
+            /* Past the groups: one character at a time, which is a
+             * group cut by the line break, a short line and the ':'.
+             * Every character is judged, those after the ':' too: a
+             * line holding one that is not BinHex is refused whole. */
+            if (s == se) { keep = 1; break; }
+        one:
+            v = lut[*s++];
+            if (v == 0xFFu) break;                      /* refused */
+            if (v == 0xFEu) {
+                colon = keep = 1;
+                while (s != se)
+                    if (lut[*s++] == 0xFFu) keep = 0;
+                break;
+            }
+            switch (ph) {
+            case 0:  ph = 1; break;
+            case 1:  *o++ = (uint8_t)((prev << 2) | (v >> 4)); ph = 2; break;
+            case 2:  *o++ = (uint8_t)((prev << 4) | (v >> 2)); ph = 3; break;
+            default: *o++ = (uint8_t)((prev << 6) | v);        ph = 0; break;
+            }
+            prev = v;
         }
+        if (keep) {
+            d->colon = (uint8_t)colon;
+            d->phase = (uint8_t)ph;
+            d->prev_bits = (uint8_t)prev;
+            d->rp = d->line;
+            d->rend = o;
+            return UNC_OK;
+        }
+        /* blank, in a gap, a separator, or refused: the next line */
+    }
+}
 
-        /* Mailers put whitespace on the end of a line, so it is
-         * trimmed before the line is judged and a trimmed line is not
-         * "garbage".
-         *
-         * Source: binhex40_lewis.txt — "<return> means to the decoder:
-         * Any sequence of <cr>, <lf>, <tab>, <spc>. (The <tab> and <spc>
-         * are required because some old programs produced these
-         * characters)". Both characters are named by the format's own
-         * Definition, so trailing ones are a line ending and not data.
-         *
-         * THE TAB IS NOT OURS, corrected 2026-10-07: this comment said
-         * it was from 2026-10-06, having looked for it in hexbin (which
-         * tests `line[n - 1] == ' '` and nothing else) rather than in
-         * the document this file is transcribed from. HQXer 1.1 is a
-         * second implementation — its inverse table marks TAB skippable
-         * ANYWHERE in a line, with BS, LF, CR and the space
-         * (tools/derive_hqxgarbage.py --tables).
-         *
-         * The trim is load-bearing, and on a real file:
-         * country-song-generator-101.hqx carries a trailing space on all
-         * 2,600 of its data lines. StuffIt's HQXEngine does not trim, so
-         * every one of those lines is 65 characters long and holds a
-         * SPACE — it fails both halves of that engine's predicate and
-         * the whole file is discarded, line by line. A rule and its
-         * second implementation are not the same reader
-         * (tools/derive_hqxgarbage.py --length). */
-        while (n > 0 && (q[n - 1] == ' ' || q[n - 1] == '\t')) n--;
-        if (n == 0) continue;                       /* blank line */
+/* Up to `n` fully decoded bytes (after RLE90) into `out`; the count is
+ * returned, and fewer than `n` means the stream ended or failed, with
+ * d->err set as bh_next's caller has always read it: UNC_ERR_TRUNCATED
+ * at the ':', the reader's own error at the end of the input, and
+ * UNC_ERR_CORRUPT for a run count of one.
+ *
+ * The whole document goes through here, a fork's bytes a buffer at a
+ * time, so the per-byte path is the literal loop in the middle: a byte
+ * that is not 0x90 and not owed to an escape is copied and is the new
+ * run byte, which is unc_rle90_feed's last branch, and the 0x90 that
+ * stops it only marks the escape, which is its first. The count byte
+ * goes through unc_rle90_feed itself, so the rules for a count have one
+ * statement. A line is read only when one of its bytes is needed, as
+ * the byte-at-a-time reader before this did: a document ends with the
+ * input where it ended then, and the next banner is searched for from
+ * there. */
+static uint32_t bh_fill(BhDec *d, uint8_t *out, uint32_t n)
+{
+    uint8_t *p = out, *const end = out + n;
 
-        /* The part separator a posting is CUT at, which the alphabet
-         * rule below cannot see: the resume line is "---" and every one
-         * of those three characters is in the BinHex alphabet, so it
-         * reads as two bytes of data and the fork's CRC fails.
-         *
-         * Source: DeHQX 2.0.1's own documentation, *How It Works*, by
-         * Peter N Lewis — who wrote the BinHex 4.0 Definition this file
-         * is transcribed from: "If it encounters a line beginning with
-         * '--- end of part', it ignores the file until it encounters a
-         * line consisting only of '---', at which time it resumes
-         * dehqxing." tools/derive_dehqx.py checks that sentence and
-         * grades a posting cut this way, which this reader failed until
-         * 2026-10-06 and macutils' hexbin reads (by the length rule
-         * below, which is still not transcribed).
-         *
-         * THE RESUME LINE IS A PREFIX, not the whole line, and that is
-         * a second implementation's reading rather than the prose's.
-         * Source: HQXer 1.1 (John Stiles, 1994), `CODE` 2 +0x1baa — its
-         * gap loop reads three characters, compares each with '-', and
-         * on three hits discards the REST of the line and resumes with
-         * the next character. Taking "consisting only of '---'"
-         * literally cost a regression this suite could not see, written
-         * and withdrawn the same day, 2026-10-06: a posting whose resume
-         * line read `--- part 2 ---` or `-----` lost everything after
-         * the cut —
-         * and the FIRST of those had read correctly before the gap
-         * existed at all, because it holds spaces and the garbage rule
-         * below skips it, so the gap cost a file it had been given
-         * (measured on a build with this test compiled out;
-         * DECISIONS.md 2026-10-06; graded by tools/run_multihqx.py's
-         * three cuts). HQXer is more permissive
-         * still — it scans for three consecutive '-' anywhere, not at a
-         * line start — and the line anchor is kept because nothing here
-         * needs the rest. */
-        if (d->in_gap) {
-            if (n >= 3 && q[0] == '-' && q[1] == '-' && q[2] == '-')
-                d->in_gap = 0;
+    if (d->err != UNC_OK) return 0;
+    while (p != end) {
+        uint8_t *r = d->rp;
+        uint32_t k;
+        int v;
+
+        if (d->rle.run) {                       /* a run still owed */
+            uint8_t last = d->rle.last;
+            k = d->rle.run;
+            if (k > (uint32_t)(end - p)) k = (uint32_t)(end - p);
+            d->rle.run = (uint16_t)(d->rle.run - k);
+            do *p++ = last; while (--k);
             continue;
         }
-        if (n >= 15 && q[0] == '-' && q[1] == '-' && q[2] == '-' &&
-            q[3] == ' ' && q[4] == 'e' && q[5] == 'n' && q[6] == 'd' &&
-            q[7] == ' ' && q[8] == 'o' && q[9] == 'f' && q[10] == ' ' &&
-            q[11] == 'p' && q[12] == 'a' && q[13] == 'r' && q[14] == 't') {
-            /* Compared byte by byte rather than against a literal: a
-             * string constant here would be thirteen bytes of A5 world,
-             * which is resident for the life of the application and is
-             * at its ceiling (tools/check_app_size.py). */
-            d->in_gap = 1;
+        if (r == d->rend) {
+            if (d->colon) { d->err = UNC_ERR_TRUNCATED; break; }
+            if (bh_refill_line(d) != UNC_OK) break;     /* d->err set */
             continue;
         }
-
-        /* The one pass that judges the line also converts it: what
-         * line[] holds from here on is 6-bit values and 0xFE for the
-         * ':', not characters, so neither bh_get_bits nor the 4->3
-         * group in bh_decode_byte looks a character up again. In the
-         * straddling case q IS d->line and the conversion is in place,
-         * one element at a time. */
-        for (i = 0; i < n; i++) {
-            uint8_t v = d->lut[q[i]];
-            if (v == 0xFF) { ok = 0; break; }
-            d->line[i] = v;
+        if (!d->rle.esc) {
+            uint8_t *start = p;
+            uint8_t b;
+            k = (uint32_t)(d->rend - r);
+            if (k > (uint32_t)(end - p)) k = (uint32_t)(end - p);
+            do {
+                b = *r++;
+                if (b == UNC_RLE90_ESC) break;
+                *p++ = b;
+            } while (--k);
+            if (p != start) d->rle.last = p[-1];
+            d->rp = r;
+            /* An escape outside a run only waits for its count, which
+             * is all unc_rle90_feed would do with it. */
+            if (b == UNC_RLE90_ESC) d->rle.esc = 1;
+            continue;
         }
-        if (ok) { d->llen = n; return UNC_OK; }
+        d->rp = r + 1;
+        v = unc_rle90_feed(&d->rle, *r);
+        if (v >= 0) *p++ = (uint8_t)v;
+        else if (v != UNC_RLE90_MORE) { d->err = UNC_ERR_CORRUPT; break; }
     }
+    return (uint32_t)(p - out);
 }
 
-/* Next 6-bit group, from a line that belongs to the document; ':' ends
- * the stream. Returns -1 on end/error with d->err set. */
-static int bh_get_bits(BhDec *d)
-{
-    /* Written so the byte-in-hand case is straight-line and costs one
-     * compare: this runs four times per three output bytes and callgrind
-     * put it at 37 % of a large .hqx, which is 204 of the 929 fixtures. */
-    for (;;) {
-        uint8_t v;
-        if (d->lpos < d->llen) {
-            v = d->line[d->lpos++];
-            if (v < 0xFE) return v;
-            if (v == 0xFE) { d->eof = 1; d->err = UNC_ERR_TRUNCATED; return -1; }
-            continue;                               /* 0xFF: cannot happen */
-        }
-        if (bh_refill_line(d) != UNC_OK) return -1;
-    }
-}
-
-/* Next byte of the 6-bit layer (pre-RLE).
- *
- * Four characters make three bytes, and when all four are on the line in
- * hand the group is decoded in one go: the caller gets the first byte
- * and the other two are served from d->batch without the line, the
- * bounds test or the LUT being touched again. A BinHex line is 64
- * characters, a multiple of four, so a real file takes this path for
- * every group except at a line break. Everything else — a short line, a
- * group straddling two lines, the terminating ':' — falls through to
- * the one-character-at-a-time path below, which is unchanged. */
-static int bh_decode_byte(BhDec *d)
-{
-    int bits1, bits2;
-    uint32_t ph = d->phase;
-
-    if (d->bp != d->bend) return *d->bp++;   /* rest of a decoded group */
-    if (ph == 0u && d->llen - d->lpos >= 4) {
-        const uint8_t *p = d->line + d->lpos;
-        uint32_t a = p[0], b = p[1], c = p[2], e = p[3];
-        /* Every value on the line is a 6-bit code or 0xFE (':'); one
-         * test on the OR of the four says all of them are codes. */
-        if (((a | b | c | e) & 0xC0u) == 0u) {
-            d->lpos += 4;
-            d->batch[0] = (uint8_t)((b << 4) | (c >> 2));
-            d->batch[1] = (uint8_t)((c << 6) | e);
-            d->bp = d->batch; d->bend = d->batch + 2;
-            return (int)(((a << 2) | (b >> 4)) & 0xFFu);
-        }
-    }
-    d->phase = (ph == 2u) ? 0u : ph + 1u;
-    switch (ph) {
-    case 0:
-        bits1 = bh_get_bits(d);
-        if (bits1 < 0) return -1;
-        bits2 = bh_get_bits(d);
-        if (bits2 < 0) return -1;
-        d->prev_bits = (uint8_t)bits2;
-        return ((bits1 << 2) | (bits2 >> 4)) & 0xFF;
-    case 1:
-        bits1 = d->prev_bits;
-        bits2 = bh_get_bits(d);
-        if (bits2 < 0) return -1;
-        d->prev_bits = (uint8_t)bits2;
-        return ((bits1 << 4) | (bits2 >> 2)) & 0xFF;
-    default:
-        bits1 = d->prev_bits;
-        bits2 = bh_get_bits(d);
-        if (bits2 < 0) return -1;
-        return ((bits1 << 6) | bits2) & 0xFF;
-    }
-}
-
-/* Next fully decoded byte (post-RLE). 0x90 <count>: count==0 emits a
- * literal 0x90; count==1 is illegal; else the previous byte repeats
- * count-1 more times. */
-/* Next fully decoded byte (post-RLE), or -1 with d->err set.
- *
- * The loop is the cheapest of three shapes measured here: straight-line
- * (two inlined unc_rle90_feed bodies) and a fast/slow split both grew
- * this past the point where gcc inlines it into bh_fork, and cost 10 %
- * and 4 % of a .hqx run against this one's 2-3 %. DECISIONS.md
- * 2026-08-27, the fork writer and the filter. */
+/* Next fully decoded byte, or -1 with d->err set: the header's reader. */
 static int bh_next(BhDec *d)
 {
-    if (d->err != UNC_OK) return -1;
-    for (;;) {
-        int b, v = unc_rle90_take(&d->rle);
-        if (v >= 0) return v;
-        b = bh_decode_byte(d);
-        if (b < 0) return -1;                    /* d->err is set */
-        v = unc_rle90_feed(&d->rle, b);
-        if (v >= 0) return v;
-        if (v != UNC_RLE90_MORE) { d->err = UNC_ERR_CORRUPT; return -1; }
-    }
+    uint8_t b;
+    return bh_fill(d, &b, 1) == 1 ? (int)b : -1;
 }
 
 /* ------------------------------------------------------------------ */
@@ -471,12 +521,9 @@ static int bh_fork(UncCtx *c, BhDec *d, UncFork fork, uint32_t size,
     int b1, b2;
 
     while (left > 0) {
-        uint32_t n = 0;
-        while (n < ocap && n < left) {
-            int b = bh_next(d);
-            if (b < 0) return d->err != UNC_OK ? d->err : UNC_ERR_TRUNCATED;
-            obuf[n++] = (uint8_t)b;
-        }
+        uint32_t n = left < ocap ? left : ocap;
+        if (bh_fill(d, obuf, n) != n)
+            return d->err != UNC_OK ? d->err : UNC_ERR_TRUNCATED;
         crc = unc_crc16_xmodem(crc, obuf, (int32_t)n);
         if (!c->opt.test_only && !c->opt.list_only &&
             c->sink->write(c->sink->ctx, fork, obuf, (int32_t)n) < 0)
@@ -495,11 +542,10 @@ static int bh_fork(UncCtx *c, BhDec *d, UncFork fork, uint32_t size,
  * the sticky error the terminating ':' of the previous document set. */
 static void bh_reset(BhDec *d)
 {
-    d->llen = d->lpos = 0;
+    d->rp = d->rend = d->line;
     d->phase = 0;
-    d->bp = d->bend = d->batch;
     d->prev_bits = 0;
-    d->eof = 0;
+    d->colon = 0;
     d->in_gap = 0;
     unc_rle90_init(&d->rle, 1);
     d->err = UNC_OK;
