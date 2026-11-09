@@ -5,7 +5,7 @@
  * Eight schemes across the six formats that can encrypt an entry:
  *
  *   ARC          a plain repeating XOR of the password over the
- *                compressed bytes (XADXORHandle).
+ *                compressed bytes, ARC 5.21q's own codebuf().
  *   PackIt PMa5  an XOR too, but the key is the password run through
  *                DES's PC-1 permutation, which yields 56 bits — so the
  *                keystream is SEVEN bytes, cycled, and restarted at
@@ -55,9 +55,11 @@
  * (see *StuffItDES* below); StuffIt Engine 3.5.2's own code for StuffIt
  * classic's key schedule and key derivation since 2026-11-09, read out
  * of and run from its `CCOD` -2013 and -2045
- * (docs/formats/stuffit-des-key.md, tools/sitdes/); XADStuffIt5Parser.m
- * and XADXORHandle.m (ARC's garble), for facts. Both PackIt handles left on 2026-10-05
- * for the application itself. The other four left on 2026-09-23 for the documents
+ * (docs/formats/stuffit-des-key.md, tools/sitdes/). StuffIt 5's key and
+ * hash, and ARC's garble, left XADMaster on 2026-11-09: the first for
+ * the archives Aladdin's own writers encrypted, the second for ARC
+ * 5.21q's own source and output (both below). Both PackIt handles left
+ * on 2026-10-05 for the application itself. The other four left on 2026-09-23 for the documents
  * that state what they do: RFC 3174, RFC 2104 and RFC 2898 for SHA-1,
  * HMAC and PBKDF2, reference/notes/winzip_aes.txt for AE-1/AE-2's
  * parameters, zip_appnote.txt section 6.1 for the traditional zip
@@ -707,6 +709,13 @@ static void crypt_clear(UncCrypt *cr, int kind, uint32_t blocksize)
     cr->tabkind = tabkind;
 }
 
+/* ARC's garble: the password, cycled from its first byte at every
+ * member, XORed over the member's packed bytes (the keystream's `pos`
+ * is the offset into them). Source: ARC 5.21q, reference/arc/arccode.c
+ * codebuf() and setcode(), applied in arcpack.c putb_pak and arcunp.c
+ * getb_unp; measured against that ARC's own `g` output by
+ * tools/derive_arc.py --garble (docs/formats/arc-container-and-coders.md,
+ * "The garble"). Which case the password is in is the caller's. */
 void unc_crypt_xor(UncCrypt *cr, const uint8_t *pw, uint16_t pwlen)
 {
     uint16_t i;
@@ -836,7 +845,12 @@ void unc_crypt_rc4(UncCrypt *cr, const uint8_t *key, uint16_t keylen)
 /* StuffIt 5: the archive key is the first five bytes of MD5(password),
  * and the archive header carries MD5 of THAT, also truncated to five,
  * so a wrong password is known before anything is decoded.
- * Source: XADStuffIt5Parser.m keyForEntryWithDictionary. */
+ * Source: the archives Aladdin's own writers encrypted under chosen
+ * passwords (three DropStuff 5.0.1, two StuffIt Deluxe 7.0.3): the hash
+ * is that, at 4, 9 and 17 characters, and every fork's CRC verifies
+ * under RC4 keyed by these five bytes and the fork's own five, and under
+ * no other five of the digest (tools/derive_sit5crypt.py --macextract;
+ * docs/formats/stuffit5-container.md, "What is still nobody else's"). */
 int unc_crypt_sit5_key(const uint8_t *pw, uint16_t pwlen,
                        const uint8_t hash[UNC_SIT5_KEYLEN],
                        uint8_t out[UNC_SIT5_KEYLEN])

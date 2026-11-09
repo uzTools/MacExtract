@@ -27,6 +27,10 @@
  *       method and the one this file follows.
  *   reference/XADMaster/XADARCDistillHandle.m — the first reading of
  *       0x0b, which agrees with deark everywhere except the window.
+ *   reference/arc/arccode.c, arc.c           — ARC 5.21q's own source:
+ *       the garble (codebuf(), reset per member by setcode()) and the
+ *       upper-casing of `g`'s password; measured against its output by
+ *       tools/derive_arc.py --garble since 2026-11-09.
  *   reference/macutils/macunpack/arc.h       — the ArcMac header, and
  *       the note that its second size field is a copy of the first
  *       ("this is wrong for Arc!"), which is why the uncompressed
@@ -1179,9 +1183,8 @@ static int arc_entry_data(UncCtx *c, UncBufIn *in, int method,
 
 /* ARC's "garble": the password is XORed over the COMPRESSED bytes,
  * repeating, and nothing in the file says it was done — SEA's format
- * has no encryption flag and XADMaster says so in as many words ("we
- * should somehow figure out if an ARC file is actually encrypted;
- * however, there seems to be no way to do this"). The only evidence is
+ * has no encryption flag: ARC 5.21q writes a garbled member's header
+ * byte for byte as it writes the plain one. The only evidence is
  * the entry's own CRC, which means a candidate key can only be graded
  * by decoding the whole entry.
  *
@@ -1191,7 +1194,9 @@ static int arc_entry_data(UncCtx *c, UncBufIn *in, int method,
  * of a wrong key and then appending the output of the right one to it —
  * which is exactly what the first version of this did.
  *
- * Source: XADARCParser.m + XADXORHandle.m. */
+ * Source: ARC 5.21q's own source, reference/arc/arccode.c codebuf()
+ * and setcode(), and its output: tools/derive_arc.py --garble
+ * (docs/formats/arc-container-and-coders.md, "The garble"). */
 static int arc_run(UncCtx *c, UncCrypt *cr, uint8_t *iobuf, uint32_t iocap,
                    uint32_t at, int method, uint32_t compsize,
                    uint32_t outsize, uint16_t crc16, int write,
@@ -1256,9 +1261,9 @@ static int arc_entry_data_pw(UncCtx *c, UncCrypt *cr, uint8_t *iobuf,
         if (est != UNC_OK) return attempt ? UNC_ERR_PASSWORD : UNC_ERR_CRC;
 
         /* Twice per password: as typed, then upper-cased. `arc` 5.21q
-         * upper-cases the password before garbling with it (measured: a
-         * stored entry's ciphertext XOR its plaintext is the password in
-         * capitals), which is the DOS lineage's habit; XADMaster uses
+         * upper-cases the password before garbling with it (its arc.c,
+         * upper(arg[1]); measured by tools/derive_arc.py --garble),
+         * which is the DOS lineage's habit; XADMaster uses
          * the bytes as given. Neither is wrong, so try both — the format
          * carries nothing that could tell them apart. */
         for (upper = 0; upper < 2; upper++) {

@@ -81,5 +81,15 @@ block — against three archives DropStuff 5.0.1 wrote, one StuffIt Deluxe
 5.5 ships inside its own installer, and two StuffIt Deluxe 7.0.3 wrote
 by Apple event, with no engine and no reference in the loop
 (`tools/derive_sit5crypt.py`; FORMATS.md, *StuffIt 5's RC4* and *StuffIt
-5's archive flag byte, and what bit 5 is*). Bit 6 is still
-`XADStuffIt5Parser.m`'s alone: nothing here sets it.
+5's archive flag byte, and what bit 5 is*). **The key**, measured
+2026-11-09: each fork is RC4 (`reference/notes/arcfour_draft.txt`) under
+MD5(password)[:5] followed by the fork's own five clear bytes.
+`tools/derive_sit5crypt.py --macextract BIN` decrypts every fork of the
+four single-entry encrypted archives (three DropStuff 5.0.1, one StuffIt
+Deluxe 7.0.3) with that key in its own RC4 and hands the result to the
+engine as decompressor only; every fork's CRC-16, which Aladdin's writer
+computed from the file it was given, verifies. MD5(password)[5:10] and
+[11:16], the bare password, and MD5 of it upper-cased are each refused
+on all four, and stating MD5(password)[5:10] instead fails the check
+(exit 1). Bit 6 is still `XADStuffIt5Parser.m`'s alone: nothing here
+sets it.

@@ -23,18 +23,26 @@ the standard library:
     StuffIt Deluxe 7.0.3 wrote by Apple event on Mac OS 9.2
     (`tools/vmac/sitcomment.py --specimen`), which are the only ones here
     that set bits 5 and 7 together. The check that makes it mean
-    anything is the one on the UNSHIFTED offset, which reads 0.
+    anything is the one on the UNSHIFTED offset, which reads 0;
+  * **the key is MD5(password)[:5]**, then the fork's own five bytes,
+    with `--macextract BIN`: every fork of the four single-entry
+    archives is decrypted by THIS file's RC4 under the rule and handed to
+    the engine re-encrypted under its own key, so its cipher cancels and
+    it is only the Arsenic decoder and the CRC check. Aladdin's CRC must
+    verify under the rule and under none of four others (`check_key`).
 
-    tools/derive_sit5crypt.py [-v]
+    tools/derive_sit5crypt.py [-v] [--macextract build/rel/macextract]
 
 Not in `ci.sh`: the specimens live in the cache, not the repository
 (fixtures/SOURCES.md's rule about copyrighted archives). It skips cleanly
-without them. FORMATS.md, *StuffIt 5's RC4* and *StuffIt 5's archive flag
+without them. What it cannot see: the key on an archive of more than one
+entry, whose fork offsets this file does not walk. FORMATS.md, *StuffIt 5's RC4* and *StuffIt 5's archive flag
 byte, and what bit 5 is*, hold the numbers.
 """
 
 import hashlib
 import os
+import subprocess
 import sys
 
 CACHE = os.environ.get("UNC_SIT5_HOME",
@@ -185,8 +193,127 @@ def check_order(verbose):
     return ok, bad
 
 
+# The KEY, as opposed to the hash: the archive key is MD5(password)[:5]
+# and each fork is RC4 under that key followed by the fork's own five
+# bytes. The hash above only proves that MD5(MD5(pw)[:5])[:5] is stored;
+# this proves the first MD5's five bytes are what Aladdin keyed RC4 with.
+# Only the single-entry archives, whose forks run to the archive's end.
+KEY_CASES = CASES[:4]
+
+# Rules that must NOT decode, or the check cannot fail: the other ten
+# bytes of the digest, the password itself, and the password upper-cased
+# (ARC's habit).
+def _md5(pw):
+    return hashlib.md5(pw).digest()
+
+
+KEY_RULES = [("MD5(pw)[:5]", lambda pw: _md5(pw)[:5], True),
+             ("MD5(pw)[5:10]", lambda pw: _md5(pw)[5:10], False),
+             ("MD5(pw)[11:16]", lambda pw: _md5(pw)[11:16], False),
+             ("pw[:5]", lambda pw: (pw * 5)[:5], False),
+             ("MD5(PW)[:5]", lambda pw: _md5(pw.upper())[:5], False)]
+
+
+def _rc4(key, data):
+    """RC4, draft-kaukonen-cipher-arcfour-03 section 3."""
+    s = list(range(256))
+    j = 0
+    for i in range(256):
+        j = (j + s[i] + key[i % len(key)]) & 0xFF
+        s[i], s[j] = s[j], s[i]
+    out = bytearray(data)
+    i = j = 0
+    for n in range(len(out)):
+        i = (i + 1) & 0xFF
+        j = (j + s[i]) & 0xFF
+        s[i], s[j] = s[j], s[i]
+        out[n] ^= s[(s[i] + s[j]) & 0xFF]
+    return bytes(out)
+
+
+def _forks(b):
+    """[(offset, length, forkkey)] of the encrypted forks of a
+    single-entry archive. The layout is fmt_sit5.c's: rsrc fork, then
+    data fork, right after the entry's second block."""
+    p = int.from_bytes(b[94:98], "big")
+    hs = int.from_bytes(b[p + 6:p + 8], "big")
+    dcomp = int.from_bytes(b[p + 38:p + 42], "big")
+    if b[p + 47] != KEYLEN:
+        return None
+    dkey = b[p + 48:p + 48 + KEYLEN]
+    q = p + hs
+    flags2 = int.from_bytes(b[q:q + 2], "big")
+    q += 14 + (22 if b[p + 4] == 1 else 18)
+    out = []
+    if flags2 & 1:
+        rcomp = int.from_bytes(b[q + 4:q + 8], "big")
+        if b[q + 13] != KEYLEN:
+            return None
+        rkey = b[q + 14:q + 14 + KEYLEN]
+        q += 14 + KEYLEN
+        out.append((q, rcomp, rkey))
+        q += rcomp
+    out.append((q, dcomp, dkey))
+    if q + dcomp != len(b):
+        return None
+    return out
+
+
+def check_key(macextract, verbose):
+    """Grade the archive key against the CRC Aladdin wrote.
+
+    For each rule, every encrypted fork is decrypted under RC4(rule(pw) +
+    the fork's five bytes) — this script's RC4, not the engine's — and
+    then re-encrypted under the key the engine derives, so the engine's
+    own cipher cancels and what reaches its Arsenic decoder and CRC check
+    is exactly what the RULE decrypted. The engine is the decompressor
+    and nothing else. Exit 0 from `t` means every fork's CRC-16, which
+    DropStuff computed over the bytes it was given, verified. The stated
+    rule has to pass on every archive and every other rule has to fail
+    on every archive."""
+    ok, bad = 0, []
+    tmp = os.path.join(os.path.dirname(os.path.dirname(
+        os.path.abspath(__file__))), ".tmp", "sit5key")
+    os.makedirs(tmp, exist_ok=True)
+    engine_key = KEY_RULES[0][1]
+    for fn, pw in KEY_CASES:
+        p = os.path.join(SPECIMENS, fn)
+        if not os.path.exists(p):
+            continue
+        b = open(p, "rb").read()
+        forks = _forks(b)
+        if not forks:
+            bad.append("%s: not a single-entry archive whose forks end it" % fn)
+            continue
+        pwb = pw.encode()
+        for name, rule, want in KEY_RULES:
+            nb = bytearray(b)
+            for off, n, fk in forks:
+                plain = _rc4(rule(pwb) + fk, b[off:off + n])
+                nb[off:off + n] = _rc4(engine_key(pwb) + fk, plain)
+            t = os.path.join(tmp, fn)
+            open(t, "wb").write(bytes(nb))
+            r = subprocess.run([macextract, "t", "-p", pw, t],
+                               stdout=subprocess.DEVNULL,
+                               stderr=subprocess.DEVNULL)
+            got = r.returncode == 0
+            if got != want:
+                bad.append("%s: key %s %s" % (fn, name,
+                           "decodes, but must not" if got else
+                           "does not decode"))
+            elif verbose:
+                print("  %-22s key %-15s %s" % (fn, name,
+                      "CRC verifies" if got else "refused"))
+        os.remove(os.path.join(tmp, fn))
+        ok += 1
+    return ok, bad
+
+
 def main():
     verbose = "-v" in sys.argv
+    macextract = None
+    if "--macextract" in sys.argv:
+        macextract = sys.argv[sys.argv.index("--macextract") + 1]
     if not os.path.isdir(SPECIMENS):
         print("derive-sit5crypt: no specimens in %s — skipped" % SPECIMENS)
         return 0
@@ -270,6 +397,20 @@ def main():
               "%d archive(s) that set both bits — the length byte reads 5 "
               "at 100+14+4 and 0 at 100+14, so the four-byte shift is "
               "load-bearing." % ook)
+    if macextract:
+        kok, kbad = check_key(macextract, verbose)
+        if kbad:
+            for b_ in kbad:
+                print("derive-sit5crypt: FAIL: " + b_)
+            return 1
+        if kok:
+            print("derive-sit5crypt: the KEY is MD5(password)[:5], then "
+                  "the fork's own five: on %d archive(s) every fork's CRC "
+                  "verifies under it, and under none of %d other rules."
+                  % (kok, len(KEY_RULES) - 1))
+    else:
+        print("derive-sit5crypt: the key itself not graded — "
+              "--macextract BIN to decompress with")
     return 0
 
 

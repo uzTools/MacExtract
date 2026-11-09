@@ -68,7 +68,6 @@ CARRIES = {
     "sit14.c":          "StuffIt 5's method 14, the whole file (libxad's SIT_14)",
     "fmt_dd.c":         "the DDAR 0x20 raw-fork shape (libxad's DiskDoubler.c)",
     "fmt_arc.c":        "Crunch 5/6/7 and Crush, and the method numbers",
-    "unc_crypt.c":      "StuffIt 5's hash and ARC's garble",
     "unc_lzah.c":       "the -lh1-/method-5 window preload (resetLZSSHandle)",
     "fmt_macbinary_probe.c": "the CRC-16/0xA001 fallback and the nonzero-date test",
     "fmt_applesingle.c": "the byte-swapped header",
@@ -102,6 +101,7 @@ HISTORICAL = {
     "fmt_cpt.c", "fmt_cptseg.c", "fmt_now.c", "unc_util.c",
     "fmt_binhex_priv.h", "sit6_tables.h", "fmt_mime.c", "fmt_lzh.c",
     "fmt_packit.c", "unc_shrink.c",
+    "unc_crypt.c",  # StuffIt 5's key and ARC's garble left 2026-11-09
 }
 
 MENTION = re.compile(r"XAD|libxad|macutils")

@@ -126,7 +126,7 @@ LGPL-2.1-or-later, through the five files that hold transcribed code
 (`CODE` in `tools/check_provenance.py`, **code** below). The other rows are
 facts read in somebody else's code, 0BSD already, and stay listed because
 leaving XADMaster is about where the knowledge came from (DECISIONS.md
-2026-11-08, *the code we wrote*). Of the 18 `CARRIES` files, 12 owe
+2026-11-08, *the code we wrote*). Of the 17 `CARRIES` files, 11 owe
 XADMaster, 4 owe libxad, the Amiga library XADMaster carries them from
 (`unc_lzdyn.c`, `fmt_sit.c`, `sit14.c`, `fmt_dd.c`; same licence), and
 `fmt_hecx.c` and `fmt_binhex_probe.c` owe macutils' hexbin, whose README
@@ -142,7 +142,6 @@ SPDX line, in the same commit.
 | `unc_lzdyn.c` — `-lh2-` and `-lh3-`, libxad's, **code** | lhasa implements neither; LHa for UNIX has its own licence (DECISIONS.md, *the 3,504 bytes that stay*) | a description written from what the original DOS LHA emits under DOSBox |
 | `fmt_sit.c` — three rules of StuffIt method 8, libxad's | no specimen reaches them; deark leaves the method NULL (DECISIONS.md, *the layout Aladdin's own output settled*) | StuffIt made to reach them as an encoder, or shown not to and the rules deleted |
 | `fmt_sit5.c` — the encrypted header's bit 5 | nothing here sets it | a StuffIt 5 archive that sets it, or the rule deleted |
-| `unc_crypt.c` — StuffIt 5's hash and ARC's garble, facts | the key schedule and derivation left 2026-11-09 for StuffIt Engine 3.5.2's own (`docs/formats/stuffit-des-key.md`; DECISIONS.md 2026-11-09, *the key StuffIt's own engine derives*) | not looked for |
 | `unc_lzah.c`, `unc_internal.h` — the `-lh1-`/method-5 window preload | the corpus cannot tell XADMaster's reading from lhasa's (DECISIONS.md 2026-09-28, *the preload nothing reaches*) | a writer's specimen that tells the two readings apart |
 | `src/sit14.c` — StuffIt 5's method 14, libxad's, **code** | libxad's `SIT_14` is the only implementation (FORMATS.md, *StuffIt 5's method 14*) | a description written from StuffIt 5's own engine; the largest row, not priced |
 | `fmt_arc.c` — Crunch 5/6/7, Crush, the method numbers, **code** | no other implementation of 7 or Crush; not taken 2026-09-22 | the DOS originals as encoders, and a description |

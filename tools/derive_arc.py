@@ -11,6 +11,7 @@ byte for byte. Without `--grid` it re-reads the corpus fixtures with
 the rules so derived and checks them against the oracle's sha256.
 
     tools/derive_arc.py --grid    # derive, needs build/arc
+    tools/derive_arc.py --garble  # ARC's `g` against the garble rule, needs build/arc
     tools/derive_arc.py           # verify against fixtures/manifests
 
 Not in `ci.sh`: it needs either the encoder or the fixtures, neither of
@@ -273,12 +274,105 @@ def cmd_grid():
     return 0
 
 
+# ------------------------------------------------------------------ garble
+
+def _xor(data, key, start=0):
+    return bytes(b ^ key[(start + i) % len(key)] for i, b in enumerate(data))
+
+
+# How a member's stored bytes might be ungarbled. The first is the
+# reading under test (`unc_crypt_xor`, `fmt_arc.c`'s two passwords): the
+# password UPPER-CASED, XORed over the member's COMPRESSED bytes by
+# position, starting again at its first character for every member. The
+# others must fail, or the check cannot: the password as typed, and the
+# key running on from one member into the next.
+GARBLE_RULES = [("upper-cased, from 0 in each member", True, False, True),
+                ("as typed, from 0 in each member", False, False, False),
+                ("upper-cased, running on across members", True, True, False)]
+
+
+def cmd_garble():
+    """ARC 5.21q's own `g<password>` against the reading in unc_crypt.c.
+
+    The same inputs are archived twice by the same ARC, once without a
+    password and once with one; the headers must be identical, and each
+    member's garbled bytes, ungarbled by a rule, must equal the
+    UNGARBLED archive's bytes for that member — its compressed stream,
+    not its plaintext, whichever method ARC chose. Only ARC's output and
+    this file are in the loop; no decoder runs."""
+    if not os.path.exists(ARC):
+        print("derive-arc: no build/arc — run tools/get_arc.sh first (skipped)")
+        return 0
+    os.makedirs(os.path.join(ROOT, ".tmp"), exist_ok=True)
+    wd = tempfile.mkdtemp(prefix="arcgarble-", dir=os.path.join(ROOT, ".tmp"))
+    import random
+    import shutil
+    random.seed(11)
+    files = {
+        "sq.txt": b"".join(bytes([random.choice(b"abcdeeeeefffffgggg  \n")])
+                           for _ in range(3001)),
+        "run.bin": b"A" * 300 + bytes(range(256)) + b"B" * 501,
+        "noise.bin": bytes(random.randrange(256) for _ in range(1003)),
+        "fox.txt": b"the quick brown fox jumps over the lazy dog " * 80,
+    }
+    for n, b in files.items():
+        open(os.path.join(wd, n), "wb").write(b)
+    pw = "k3yWord"                       # 7: divides none of the sizes
+    names = list(files)
+    subprocess.run([ARC, "a", "plain.arc"] + names, cwd=wd,
+                   capture_output=True)
+    subprocess.run([ARC, "ag" + pw, "garbled.arc"] + names, cwd=wd,
+                   capture_output=True)
+    plain = open(os.path.join(wd, "plain.arc"), "rb").read()
+    garb = open(os.path.join(wd, "garbled.arc"), "rb").read()
+    shutil.rmtree(wd, ignore_errors=True)
+    pm, gm = members(plain), members(garb)
+    if len(pm) != len(files) or [m[:2] + m[3:] for m in pm] != \
+            [m[:2] + m[3:] for m in gm]:
+        print("FAIL the garbled archive's headers differ from the plain one's")
+        return 1
+    methods = sorted({m[0] for m in pm})
+    if not any(m != 2 for m in methods):
+        print("FAIL ARC stored every member, so nothing grades the "
+              "COMPRESSED bytes")
+        return 1
+    if garb == plain:
+        print("FAIL `g` changed nothing")
+        return 1
+    bad = 0
+    for label, upper, running, want in GARBLE_RULES:
+        key = (pw.upper() if upper else pw).encode()
+        pos = 0
+        good = True
+        for (m, ename, off, csize, osize), p_ in zip(gm, pm):
+            got = _xor(garb[off:off + csize], key, pos if running else 0)
+            if got != plain[p_[2]:p_[2] + csize]:
+                good = False
+            pos += csize
+        verdict = "ok " if good == want else "FAIL"
+        print(f"{verdict} key {label:40s} "
+              f"{'reproduces' if good else 'does not reproduce'} "
+              f"the unpassworded archive")
+        bad += good != want
+    if bad:
+        return 1
+    print(f"derive-arc: garble = the password upper-cased, XORed over each "
+          f"member's compressed bytes from its first character, on "
+          f"{len(gm)} members (methods {', '.join(map(str, methods))}) "
+          f"ARC 5.21q garbled itself")
+    return 0
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--grid", action="store_true",
                     help="derive from archives a real ARC writes here")
+    ap.add_argument("--garble", action="store_true",
+                    help="grade the garble against ARC's own g<password>")
     a = ap.parse_args()
+    if a.garble:
+        return cmd_garble()
     return cmd_grid() if a.grid else cmd_verify()
 
 

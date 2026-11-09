@@ -80,6 +80,21 @@ if [ ! -d reference/mpack ]; then
     rm -f /tmp/mpack.tar.gz
 fi
 
+# ARC 5.21q (SEA's ARC 5.21, Thom Henderson; the UNIX port Howard Chu
+# keeps; GPL since 2003, LICENSE) — the source of the `arc` that
+# tools/get_arc.sh installs. Read for ARC's garble only: arccode.c's
+# setcode() and codebuf(), which arcpack.c and arcunp.c apply to the
+# packed bytes, and arc.c's upper(arg[1]) before `g` takes the password
+# (docs/formats/arc-container-and-coders.md, *The garble*). Facts only;
+# no code of it is in this project.
+if [ ! -d reference/arc ]; then
+    mkdir -p reference/arc
+    curl -sL -o /tmp/arc.tar.gz \
+        "http://deb.debian.org/debian/pool/main/a/arc/arc_5.21q.orig.tar.gz"
+    tar xzf /tmp/arc.tar.gz -C reference/arc --strip-components=1
+    rm -f /tmp/arc.tar.gz
+fi
+
 if [ ! -d reference/macutils ]; then
     mkdir -p reference/macutils
     curl -sL -o /tmp/macutils.tar.gz \

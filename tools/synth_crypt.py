@@ -748,8 +748,8 @@ ARC_CASES = [
 def build_arc_garble(password):
     """ARC's "garble": the password XORed over an entry's COMPRESSED
     bytes, repeating from the start of each entry, with nothing in the
-    file saying it was done (`src/fmt_arc.c`; XADARCParser.m and
-    XADXORHandle.m). So the engine finds it by decoding an entry, failing
+    file saying it was done (`src/fmt_arc.c`; ARC 5.21q's arccode.c,
+    graded by tools/derive_arc.py --garble). So the engine finds it by decoding an entry, failing
     its CRC, and trying the password — which makes this the one shape
     here whose cipher is reached only because the CRC does NOT check out.
 

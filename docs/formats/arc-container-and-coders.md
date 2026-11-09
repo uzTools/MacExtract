@@ -97,6 +97,29 @@ two READERS and not about a stream: what an encoder would cost is the hash
 insertion ORDER, which it must reproduce exactly for the codes to land where
 either decoder looks.
 
+## The garble — 2026-11-09
+
+ARC's `g<password>` XORs the password over each member's **compressed**
+bytes, by position, from its first character again at every member, and
+leaves the header alone; the password is **upper-cased** first.
+
+- **ARC 5.21q's own source** (`reference/arc/`, Debian's
+  `arc_5.21q.orig.tar.gz`, via `tools/fetch_references.sh`): `arccode.c`
+  `codebuf()` is the XOR, wrapping at the password's NUL; `setcode()`
+  resets it, called once per member (`arcpack.c` lines 78 and 112,
+  `arcunp.c` line 62); it is applied to the packed buffer on the way out
+  (`arcpack.c` `putb_pak`, line 294) and in (`arcunp.c` line 248); and
+  `arc.c` line 242, `upper(arg[1])`, upper-cases the option string the
+  `G` switch takes the password from (lines 299-300).
+- **Its behaviour, measured:** `tools/derive_arc.py --garble` archives
+  four inputs twice with that ARC, once plain and once with `gk3yWord`.
+  The headers are identical, and every member's bytes XOR the
+  upper-cased password from position 0 are the plain archive's bytes for
+  that member — methods 2, 3, 4 and 8, so the compressed stream and not
+  the file. The password as typed, and a key that runs on from one member
+  into the next, must both fail; flipping either expectation fails the
+  check (exit 1). No decoder is in the loop.
+
 ## What this note does NOT establish
 
 - **Methods 5, 6 and 7** — the older Crunch variants. ARC 5.21q will
@@ -126,5 +149,6 @@ either decoder looks.
   table. ARC 7's **Trimmed** and PAK's
   **Distilled** share the number; Distilled is deark's (MIT) already
   and needs nothing from here.
-- **Anything about encryption**, ARC's `g` switch, which no specimen
-  here uses.
+- **Which case the password was typed in.** ARC upper-cases it, so an
+  archive garbled by a reader that does not cannot be told apart by
+  anything in the file; `src/fmt_arc.c` tries both.

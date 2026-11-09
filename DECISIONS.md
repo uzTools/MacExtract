@@ -566,6 +566,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-09 (one way to keep a decoder high) — `ovl_keep` places a kept image with `high_handle` on every ROM; the ROM test and `MoveHHi` are gone, for 32 B onto every budget
 - 2026-11-09 (the key StuffIt's own engine derives) — StuffIt classic's key schedule and key derivation are written from StuffIt Engine 3.5.2's own code, read and run under qemu-m68k; `unc_crypt.c` is 0BSD, and 320 B come back on every budget that keeps the ciphers
 - 2026-11-09 (the decoders DiskDoubler shipped) — DiskDoubler's methods 2, 5 and 7 rewritten from Salient's own decoders, read and run under qemu-m68k, and from Jones's paper and RFC 1974; smaller and faster on both, but 0.2-0.4 % slower on method 10, so not landed: branch `dd-own-coders`
+- 2026-11-09 (the garble ARC wrote and the key DropStuff used) — ARC's garble and StuffIt 5's password key leave XADMaster for the originals' own source and output; `unc_crypt.c` leaves `CARRIES`
 
 ---
 
@@ -23438,3 +23439,48 @@ and `unc_dd_extract`'s frame is 1,120 B today (`-Os -std=c99
 - **In a function this size, the cost of a change lands on code it did not
   touch.** Price every method a shared function inlines, not the ones the
   diff names.
+
+## 2026-11-09 (the garble ARC wrote and the key DropStuff used) — ARC's garble and StuffIt 5's password key leave XADMaster for the originals' own source and output; `unc_crypt.c` leaves `CARRIES`
+
+**Claim.** `src/unc_crypt.c`'s last two borrowed facts, StuffIt 5's key
+and hash (`XADStuffIt5Parser.m`) and ARC's garble (`XADXORHandle.m`), are
+established without XADMaster, and the file is `HISTORICAL`. No code
+changed; only the citations moved.
+
+**ARC (measured).** SEA's own code says it: ARC 5.21q's source, Debian's
+`arc_5.21q.orig.tar.gz`, is now `reference/arc/` (`tools/fetch_references.sh`).
+`arccode.c` `codebuf()` XORs the password over a buffer, wrapping at its
+NUL; `setcode()` resets it once per member; `arcpack.c` and `arcunp.c`
+apply it to the PACKED buffer; `arc.c` upper-cases the option string `g`
+takes the password from. The binary agrees: `tools/derive_arc.py
+--garble` archives four inputs plain and with `gk3yWord`, and the garbled
+members (methods 2, 3, 4, 8) XOR `K3YWORD` from position 0 of each are the
+plain members' bytes, headers identical. The password as typed and a key
+running across members are required to fail, and stating either as the
+rule fails the check (exit 1). deark has no ARC garble, so there is no
+second permissive reader to cite.
+
+**StuffIt 5 (measured).** The hash half left on 2026-09-27 (`fmt_sit5.c`
+already cited `tools/derive_sit5crypt.py`); `unc_crypt.c` still cited
+XADMaster for the key. `derive_sit5crypt.py --macextract BIN` now grades
+it: each fork of the four single-entry encrypted archives Aladdin's
+writers made (three DropStuff 5.0.1, one StuffIt Deluxe 7.0.3) is
+decrypted with the script's own RC4 under MD5(password)[:5] + the fork's
+five bytes, re-encrypted under the engine's key so its cipher cancels, and
+every fork's CRC verifies; MD5[5:10], MD5[11:16], the password itself and
+MD5 of it upper-cased are refused on all four. Stating MD5[5:10] instead
+fails (exit 1). No StuffIt 5.x engine code was read: the archives settle
+it, as Packit III's did.
+
+**Also corrected in NOTICE**, in place: two sentences of its XADMaster
+paragraph still said the StuffIt (classic and 5) encrypted layouts were
+XADMaster's, which the inventory had withdrawn on 2026-09-27.
+
+**Found, not fixed (measured: the two texts disagree):** NOTICE's `fmt_sit5.c` row and
+`CARRIES` say bit 5 is what the file still owes, and nothing sets it;
+`docs/formats/stuffit5-container.md` and `derive_sit5crypt.py` say bit 5
+is measured and bit 6 is what is left. Which is stale was not checked.
+
+**Transferable.** A cipher whose output is compressed can still be graded
+without a second decoder: cancel the engine's own cipher and let it be
+only the decompressor and the CRC check.
