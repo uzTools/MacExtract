@@ -1473,6 +1473,15 @@ int unc_arsenic_decode(UncBufIn *in, UncAlloc *al, uint32_t outlen,
 int unc_sit14_decode(UncBufIn *in, UncAlloc *al, uint32_t outlen,
                      UncForkOut *f);
 
+/* Methods 13 and 14's match copy (fmt_sit.c): n >= 1 bytes from `from`
+ * to `pos` in a window of mask + 1 bytes, forward, wrapping. */
+void unc_sit_match(uint8_t *window, uint32_t mask, uint32_t pos,
+                   uint32_t from, uint32_t n);
+/* ...and their flush (fmt_sit.c): window bytes [from, to), at most a
+ * window's worth, handed to the fork writer in at most two pieces. */
+int unc_sit_flush(UncForkOut *f, const uint8_t *window, uint32_t win,
+                  uint32_t from, uint32_t to);
+
 /* Raw-deflate decode via vendored zlib (unc_inflate.c). Decodes one
  * complete deflate stream from `in`, leaving the reader positioned on
  * the first byte after it. maxout: expected output size cap, or

@@ -293,7 +293,10 @@ TAKEN = "2026-11-03"
 # -> 198,172 the same day: which set a file belongs to in `ovl_sniff`
 # (+1,460) and Compact Pro's match in `ovl_cptdd` (+176) (DECISIONS.md
 # 2026-11-09, *the set's identity that left*).
-EXPECT_BUNDLE = 198172
+# -> 198,216 the same day: methods 13 and 14's match copied through cursors
+# in `ovl_stuffit` (+44) (DECISIONS.md 2026-11-09, *the match that was
+# masked twice a byte*).
+EXPECT_BUNDLE = 198216
 TOLERANCE_BUNDLE = 2048
 TAKEN_BUNDLE = "2026-11-09"
 

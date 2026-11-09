@@ -283,10 +283,13 @@ REPO = os.path.dirname(HERE)
 # control's CODE -96 and A5 0; the shipped pair fell the same 96, OVL_SAVED
 # unmoved. They were 190,276 / 94,894 / 619,182.
 TIERS = {
-    "sys3-512K": (188660, "System 3.0, Macintosh 512Ke (222,070 B free)"),
-    "sys6-512K": (93278,  "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
-    "floor-1M":  (617566, "System 6.0.8, 1 MB Mac Plus — the floor target"),
+    "sys3-512K": (188628, "System 3.0, Macintosh 512Ke (222,070 B free)"),
+    "sys6-512K": (93246,  "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
+    "floor-1M":  (617534, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
+# -32 each 2026-11-09, DERIVED from TIERS_CONTROL +32 (methods 13 and 14's
+# match copied through cursors, DECISIONS.md 2026-11-09, *the match that
+# was masked twice a byte*); they were 188,660 / 93,278 / 617,566.
 # -16 each 2026-11-09, DERIVED from TIERS_CONTROL +16 (which set a file
 # belongs to in an image, DECISIONS.md 2026-11-09, *the set's identity
 # that left*); they were 188,676 / 93,294 / 617,582.
@@ -527,7 +530,11 @@ TIERS = {
 # +192 2026-11-07: Now Compress polls Cancel inside a block (`ovl_now` +186;
 # DECISIONS.md 2026-11-07, *the block a click waited for*); CODE +180, A5 +12.
 # TIERS -192 and OVL_SAVED +192, which cancel: only a now-keeper moves.
-TIERS_CONTROL = 224272     # build/mac-resident, CODE + A5, 2026-11-09
+TIERS_CONTROL = 224304     # build/mac-resident, CODE + A5, 2026-11-09
+# +32 2026-11-09: methods 13 and 14's match copied through cursors, one
+# flush for both (`ovl_stuffit` +44; CODE +24, A5 +8, `.data` alignment;
+# DECISIONS.md 2026-11-09, *the match that was masked twice a byte*); TIERS
+# -32 and OVL_SAVED +32, which cancel: only a stuffit-keeper moves, -44.
 # +16 2026-11-09: which set a file belongs to in a file of its own,
 # src/unc_segid.c (CODE +12, A5 +4, its table less the joiner's two
 # columns and `.data` alignment; DECISIONS.md 2026-11-09, *the set's
@@ -1174,7 +1181,12 @@ EXPECT = {
 # pair's -1,584 (CODE -1,536, A5 -48) against the control's +16
 # (DECISIONS.md 2026-11-09, *the set's identity that left*). TIERS -16,
 # which cancels: a format's budget moves by +1,584 less what its images grew.
-OVL_SAVED = 169376
+# **+32 2026-11-09, -> 169,408**: methods 13 and 14's match copied through
+# cursors, the control's +32 (CODE +24, A5 +8) against the shipped pair's 0,
+# the code in `ovl_stuffit` (+44; DECISIONS.md 2026-11-09, *the match that
+# was masked twice a byte*). TIERS -32, which cancels: only a
+# stuffit-keeper's budget moves, -12 against the control.
+OVL_SAVED = 169408
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
 # every kept image is one — as is the bundle an envelope holds on to.
@@ -1319,7 +1331,7 @@ IMAGES = {
     "OVL_ID_NOW":         4948,
     "OVL_ID_PACKIT":      2180,
     "OVL_ID_SPACESAVER":  16236,
-    "OVL_ID_STUFFIT":     28558,
+    "OVL_ID_STUFFIT":     28602,
     "OVL_ID_SQP":         1736,
     "OVL_ID_SUPERDISK":   6628,
     "OVL_ID_TEXT":        11438,
@@ -1468,7 +1480,10 @@ IMAGES = {
 # **SNIFF +1,460, CPTDD +176, the bundle +1,636 B, 2026-11-09**: which set
 # a file belongs to, and Compact Pro's match (DECISIONS.md 2026-11-09, *the
 # set's identity that left*).
-BUNDLE = 198172
+# **STUFFIT +44, the bundle +44 B, 2026-11-09**: methods 13 and 14's match
+# copied through cursors, one flush for both (DECISIONS.md 2026-11-09, *the
+# match that was masked twice a byte*).
+BUNDLE = 198216
 
 # What the SHIPPED lane asserts, and it is the refused fixtures BY NAME
 # rather than a tally: a tier that refuses two different fixtures and still

@@ -490,11 +490,14 @@ static int sit13_parse_code(UncCanon *cn, UncBitIn *bi, uint8_t *lengths,
  * out of line at `-Os`, and a 68000 profile put the jsr, the ten
  * instructions and the rts at 13.6 % of a method-13 run.
  *
- * `to - from` is never more than the window: the loop head below
- * flushes at a quarter of it, and one iteration adds at most 32,832
- * bytes (the 0x13f escape's 15 bits plus 65). */
-static int sit13_flush(UncForkOut *f, const uint8_t *window, uint32_t win,
-                       uint32_t from, uint32_t to)
+ * Methods 13 and 14 both (sit14.c). `to - from` is never more than the
+ * window: a window smaller than the format's is at least the fork's
+ * length, and at full size each loop head flushes at a quarter of it,
+ * then one iteration adds at most 32,832 bytes on method 13 (the 0x13f
+ * escape's 15 bits plus 65: 16,383 + 32,832 < 65,536) and 16,387 on
+ * method 14 (its longest length code, against 256 KB). */
+int unc_sit_flush(UncForkOut *f, const uint8_t *window, uint32_t win,
+                  uint32_t from, uint32_t to)
 {
     uint32_t n = to - from, a = from & (win - 1);
     if (n == 0) return UNC_OK;
@@ -505,6 +508,35 @@ static int sit13_flush(UncForkOut *f, const uint8_t *window, uint32_t win,
         a = 0;
     }
     return unc_fork_write(f, window + a, n);
+}
+
+/* Copy an LZ match of n >= 1 bytes from `from` to `pos` in a window of
+ * mask + 1 bytes, in pieces that wrap neither end: the same bytes move
+ * in the same order as one masked copy per byte, overlapping matches
+ * included. Methods 13 and 14.
+ *
+ * Out of line on purpose. Inlined into unc_sit_decode_fork the cursors
+ * are spilled to the frame (an `addq.l #1,d16(a6)` a byte); alone, the
+ * loop is `move.b (An)+,(Am)+`, `cmp.l`, `bcs`: ~28 cycles a byte for
+ * one call a match, where the masked copy was ~138 (FORMATS.md, *The
+ * masked match copies*). The end pointer, not a count, is what keeps
+ * GCC from turning the cursors back into an index. */
+UNC_NOINLINE void unc_sit_match(uint8_t *window, uint32_t mask, uint32_t pos,
+                                uint32_t from, uint32_t n)
+{
+    do {
+        uint32_t d = pos & mask, s = from & mask;
+        uint32_t k = mask + 1u - (d > s ? d : s);
+        if (k > n) k = n;
+        n -= k;
+        pos += k;
+        from += k;
+        {
+            const uint8_t *sp = window + s, *send = sp + k;
+            uint8_t *dp = window + d;
+            do *dp++ = *sp++; while (sp < send);
+        }
+    } while (n > 0);
 }
 
 static int sit13_fork(UncForkOut *f, UncBufIn *in, uint32_t outlen,
@@ -566,7 +598,7 @@ static int sit13_fork(UncForkOut *f, UncBufIn *in, uint32_t outlen,
     while (pos < outlen) {
         int sym;
         if (pos - flushed >= thresh) {
-            err = sit13_flush(f, window, win, flushed, pos);
+            err = unc_sit_flush(f, window, win, flushed, pos);
             if (err != UNC_OK) goto out;
             flushed = pos;
         }
@@ -597,15 +629,16 @@ static int sit13_fork(UncForkOut *f, UncBufIn *in, uint32_t outlen,
                 moff = (1 << (bl - 1)) + low + 1;
             }
 
+            /* mlen >= 3 and pos < outlen here, so n >= 1. */
             {
-                uint32_t from = pos - (uint32_t)moff;
-                while (mlen-- > 0 && pos < outlen) {
-                    window[pos++ & (win - 1)] = window[from++ & (win - 1)];
-                }
+                uint32_t n = (uint32_t)mlen;
+                if (n > outlen - pos) n = outlen - pos;
+                unc_sit_match(window, win - 1, pos, pos - (uint32_t)moff, n);
+                pos += n;
             }
         }
     }
-    err = sit13_flush(f, window, win, flushed, pos);
+    err = unc_sit_flush(f, window, win, flushed, pos);
 
 out:
     unc_free(al, window);

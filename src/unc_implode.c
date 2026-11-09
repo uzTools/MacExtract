@@ -200,7 +200,7 @@ static int imp_decode(const ImpTree *t, UncBitIn *bi)
 
 /* Hand over what the window has taken since the last flush, and take the
  * CRC-32 of the same span. The window wraps, so a span crossing its end
- * is two writes — the shape is sit14_flush's (src/sit14.c). */
+ * is two writes — the shape is unc_sit_flush's (src/fmt_sit.c). */
 static int imp_flush(const uint8_t *win, uint32_t dict, uint32_t from,
                      uint32_t to, uint32_t *crc, UncPutRun emit, void *ectx)
 {

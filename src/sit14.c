@@ -410,22 +410,6 @@ static uint32_t sit14_winsize(uint32_t outlen)
     return w;
 }
 
-/* Hand over what the window has taken since the last flush — the shape
- * and the reasoning are fmt_sit.c's sit13_flush. */
-static int sit14_flush(UncForkOut *f, const uint8_t *window, uint32_t win,
-                       uint32_t from, uint32_t to)
-{
-    uint32_t n = to - from, a = from & (win - 1);
-    if (n == 0) return UNC_OK;
-    if (a + n > win) {
-        int err = unc_fork_write(f, window + a, win - a);
-        if (err != UNC_OK) return err;
-        n -= win - a;
-        a = 0;
-    }
-    return unc_fork_write(f, window + a, n);
-}
-
 int unc_sit14_decode(UncBufIn *in, UncAlloc *al, uint32_t outlen,
                      UncForkOut *f)
 {
@@ -480,7 +464,7 @@ int unc_sit14_decode(UncBufIn *in, UncAlloc *al, uint32_t outlen,
             int32_t sym;
 
             if (pos - flushed >= thresh) {
-                if ((err = sit14_flush(f, window, win, flushed, pos)) != UNC_OK)
+                if ((err = unc_sit_flush(f, window, win, flushed, pos)) != UNC_OK)
                     goto out;
                 flushed = pos;
             }
@@ -521,14 +505,16 @@ int unc_sit14_decode(UncBufIn *in, UncAlloc *al, uint32_t outlen,
                  * slot for every distance a valid stream can code. */
                 from = pos - dist;
                 left = mlen >= left ? 0 : left - mlen;
-                while (mlen-- > 0 && pos < outlen)
-                    window[pos++ & mask] = window[from++ & mask];
+                /* mlen >= SIT14_LENBIAS and pos < outlen: n >= 1. */
+                if (mlen > outlen - pos) mlen = outlen - pos;
+                unc_sit_match(window, mask, pos, from, mlen);
+                pos += mlen;
             }
         }
         unc_bitin_align(&bi);
     }
 
-    if ((err = sit14_flush(f, window, win, flushed, pos)) != UNC_OK) goto out;
+    if ((err = unc_sit_flush(f, window, win, flushed, pos)) != UNC_OK) goto out;
     /* Short of the declared length the fork is not there, whatever the
      * block count said. */
     if (pos < outlen) err = UNC_ERR_TRUNCATED;

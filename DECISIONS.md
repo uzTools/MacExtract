@@ -576,6 +576,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-09 (the character past the buffer) — a BinHex line longer than 256 characters lost its 257th; the reader now stops before the character that does not fit
 - 2026-11-09 (the inline the compiler declined) — `unc_bitin_bit` and `unc_bitin_fill` forced inline: −21 to −31 % on method 5, method 6 and implode for +1,160 B of images; `unc_bufin_next` and `unc_fork_put` measured and not kept
 - 2026-11-09 (the set's identity that left) — which set a file belongs to leaves resident `CODE` for `ovl_sniff`, beside the parsers it already carried, and Compact Pro's match for `ovl_cptdd` too; 1,584 B onto every budget that keeps neither, 52 B off one that keeps the bundle
+- 2026-11-09 (the match that was masked twice a byte) — methods 13 and 14 copy a match through cursors in one out-of-line function and share one flush: −2.2 to −5.2 % of Plus engine ticks for +44 B of `ovl_stuffit`
 
 ---
 
@@ -23914,3 +23915,46 @@ image with nothing kept looked free, and was the dearest: a parser is
 shared with the probe that recognises the same header, so the bodies cost
 their own bytes in the sniffer and their bytes plus the parsers anywhere
 else.
+
+## 2026-11-09 (the match that was masked twice a byte) — methods 13 and 14 copy a match through cursors in one out-of-line function and share one flush: −2.2 to −5.2 % of Plus engine ticks for +44 B of `ovl_stuffit`
+
+**Claim, evidence, consequence (measured).** `window[pos++ & mask] =
+window[from++ & mask]` became `unc_sit_match` (src/fmt_sit.c): the match
+cut where either cursor would wrap the window or the fork would end, each
+piece `do *dp++ = *sp++; while (sp < send)`. Same bytes, same order,
+overlap included; 163 archives on this machine (every method-13 and
+method-14 one, the 45 MB of method 14 in StuffIt Deluxe 5.5's and 7.0.3's
+installers among them) extract identically before and after, and a copy
+reading one byte off differs on 20 of 20. Plus engine ticks, two runs
+each: method 13 −2.7 % and −2.2 %, a StuffIt 5 method-13 archive −5.2 %,
+method 14 −2.3 %, method 5 in the same image ±1 (FORMATS.md, *The match
+copies through cursors*).
+
+**Why out of line (measured, listings at `mkoverlay.sh`'s flags).** Written
+inline in `sit13_fork`, which GCC inlines into `unc_sit_decode_fork`, the
+loop kept no register: `move.l d16(a6),a4`, `addq.l #1,d16(a6)`, then the
+copy, every byte. Counted with `--k`, GCC turns the two cursors back into
+one index, `move.b (a1,d0.l),(a0,d0.l)`; with `optimize("no-ivopts")` it
+keeps them in data registers and moves both into address registers every
+byte; `optimize("O3")` vectorises it into 408 B of alignment tests. An end
+pointer on the source, in a function of its own, is `move.b (a0)+,(a1)+`,
+`cmp.l d0,a0`, `bcs`: ~28 cycles a byte against ~138, for one call a match.
+
+**Paid for by the flush (measured).** `sit14_flush` was `sit13_flush`
+byte for byte in the same image; one `unc_sit_flush` serves both. Objects
++154 B in fmt_sit.c, −106 B in sit14.c; `ovl_stuffit` +44 B; the control's
+CODE +24, A5 +8 (`.data` alignment); the shipped application 0; every
+tally in `run_tiers.py --check` unmoved; the engine's deepest call chain
+is 3,446 B, DiskDoubler method 2's, through no StuffIt frame
+(`tools/stack_depth.py`). Its quarter-window bound still
+holds for both callers: a window under the format's size is at least the
+fork, and at full size 16,383 + 32,832 < 65,536 (method 13) and 65,535 +
+16,387 < 262,144 (method 14).
+
+**Smaller than the estimate suggested (measured).** The candidate row put
+the copy at ~138 cycles a byte; saving ~110 of them on every match byte
+bought 2–5 %, so on these forks the copy was never the bulk of method 13.
+**`derived-EmpireBuilderDemo.sit` cannot measure it**: its forks are methods
+2 and 3 (FORMATS.md, *Relative decode cost per format*); the method-13
+fixtures are `mar-twin-mar020src.sit` and `derived-mac.faq-36.sit`.
+
