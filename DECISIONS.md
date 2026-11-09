@@ -574,6 +574,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-09 (the glue that was measured inline) — multiversal's File Manager glue, inline in a local header: the three calls the shell would switch to still cost +32 to +64 B, the seven it links give 336 B back once the setup image calls them itself
 - 2026-11-09 (the group every line break cut) — BinHex decodes a line at a time, the scan for the line's end being its decode, and RLE90 a buffer at a time; a Mac Plus spends 898 engine ticks on `macburger-helper.hqx` where it spent 2,397, every outcome unchanged
 - 2026-11-09 (the character past the buffer) — a BinHex line longer than 256 characters lost its 257th; the reader now stops before the character that does not fit
+- 2026-11-09 (the inline the compiler declined) — `unc_bitin_bit` and `unc_bitin_fill` forced inline: −21 to −31 % on method 5, method 6 and implode for +1,160 B of images; `unc_bufin_next` and `unc_fork_put` measured and not kept
 
 ---
 
@@ -23796,3 +23797,42 @@ moves: the old-vs-new harnesses of *the group every line break cut* give
 186,520 B and A5 36,680 B, all as before. `tools/run_multihqx.py` now
 rewraps a document at 256, 257, 300 and 1,000 characters; the three past
 the edge fail on the build before.
+
+## 2026-11-09 (the inline the compiler declined) — `unc_bitin_bit` and `unc_bitin_fill` forced inline: −21 to −31 % on method 5, method 6 and implode for +1,160 B of images; `unc_bufin_next` and `unc_fork_put` measured and not kept
+
+**Claim, evidence, consequence (measured).** At `mkoverlay.sh`'s `-Os` the
+header's `static inline` readers were emitted out of line and called:
+`unc_bitin_bit` from 17 functions in 9 files (`unc_lzah_decode`'s tree walk,
+a `jsr` per level), `unc_bitin_fill` from `unc_bitin_bits`/`_le` and ARC,
+`unc_bufin_next` in 14 files, `unc_fork_put` in StuffIt and SuperDisk!.
+Per-site call counts, from a host build with each helper forced out of line
+and a counter per return address over all 1,004 fixtures: 1.52 M bit calls
+on `sitopt-wild-Phantom.sit`'s tree walk, 0.19 M in implode, 0.22 M in
+method 6, 5.7 M `unc_bitin_fill` calls corpus-wide from `unc_bitin_bits`.
+`always_inline` on the two bit-reader helpers, Plus engine ticks: method 5
+**11,545 → 9,102**, implode 1,113 → 835, method 6 1,246 → 862, DiskDoubler
+−7.4 %, ARC −6.4 %, Compact Pro −2.9 %, method 13 −2 %; every tick figure
+two runs, within 2 (FORMATS.md, *Inlining the shared readers*). No
+`unc_bitin_bit` or `unc_bitin_fill` call is left in any listing.
+
+**Price (measured).** Images +1,160 B (seven; codecs +192, which every
+format keeps); the control's CODE +1,052, A5 +4 (alignment); the shipped
+application 0; `OVL_SAVED` +1,056 and `TIERS` −1,056, which cancel, so a
+format's grant rises by +600 to +864 B. The deepest call chain is 3,442 B,
+unchanged (`tools/stack_depth.py`, both trees).
+
+**Not kept, each measured alone.** `unc_bufin_next` blanket: −21.8 % on a
+stored zip and −18.4 % on PackIt, but +3,500 B across twelve images and
++1,224 B on CptDD for DiskDoubler's −5.6 %. It pays only where it IS the
+loop; a per-site mark on those loops is the follow-up, in files other work
+owns. `unc_fork_put`: StuffIt method 3, its hottest site, **+7 ticks
+slower** in both runs, method 6 −2.7 %, SuperDisk! −6 %, for +210 B.
+Spelling out the refill's byte read inside the inlined `unc_bitin_bit`:
+0–3 % more for ~1,000 B more.
+
+**Not the 2026-08-24 answer, and why it differs.** That entry measured an
+inline fast path with an out-of-line REFILL 3.1–6.6 % worse, on decoders
+where GCC was already inlining the whole reader. Here the whole reader was
+already a call, refill included, so forcing it in removes a call per bit
+and adds nothing opaque. **`static inline` is a request; at -Os the
+listing, not the keyword, says whether it was granted.**

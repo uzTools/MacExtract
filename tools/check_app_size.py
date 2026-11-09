@@ -286,9 +286,13 @@ TAKEN = "2026-11-03"
 # (DECISIONS.md 2026-11-04, *the rung between the table and the index*).
 # -> 194,292 the same day: DiskDoubler method 10's empty block in
 # `ovl_cptdd` (+12) (DECISIONS.md 2026-11-04, *the offsets from nothing*).
-EXPECT_BUNDLE = 194292
+# -> 196,536 2026-11-09: +1,084 inside the tolerance since 2026-11-04
+# (each change in `run_tiers.py`'s `BUNDLE` comments), then `unc_bitin_bit` and
+# `unc_bitin_fill` forced inline, +1,160 across seven images (DECISIONS.md
+# 2026-11-09, *the inline the compiler declined*).
+EXPECT_BUNDLE = 196536
 TOLERANCE_BUNDLE = 2048
-TAKEN_BUNDLE = "2026-11-04"
+TAKEN_BUNDLE = "2026-11-09"
 
 
 def main():

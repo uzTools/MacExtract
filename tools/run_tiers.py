@@ -283,10 +283,12 @@ REPO = os.path.dirname(HERE)
 # control's CODE -96 and A5 0; the shipped pair fell the same 96, OVL_SAVED
 # unmoved. They were 190,276 / 94,894 / 619,182.
 TIERS = {
-    "sys3-512K": (189732, "System 3.0, Macintosh 512Ke (222,070 B free)"),
-    "sys6-512K": (94350,  "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
-    "floor-1M":  (618638, "System 6.0.8, 1 MB Mac Plus — the floor target"),
+    "sys3-512K": (188676, "System 3.0, Macintosh 512Ke (222,070 B free)"),
+    "sys6-512K": (93294,  "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
+    "floor-1M":  (617582, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
+# -1,056 each 2026-11-09, DERIVED from TIERS_CONTROL +1,056 (the bit reader
+# and unc_bitin_fill forced inline, DECISIONS.md 2026-11-09, *the inline the compiler declined*); they were 189,732 / 94,350 / 618,638.
 # -224 each 2026-11-09, DERIVED from TIERS_CONTROL +224 (BinHex decoded a
 # line at a time, DECISIONS.md 2026-11-09, *the group every line break cut*); they were
 # 189,956 / 94,574 / 618,862.
@@ -522,7 +524,11 @@ TIERS = {
 # +192 2026-11-07: Now Compress polls Cancel inside a block (`ovl_now` +186;
 # DECISIONS.md 2026-11-07, *the block a click waited for*); CODE +180, A5 +12.
 # TIERS -192 and OVL_SAVED +192, which cancel: only a now-keeper moves.
-TIERS_CONTROL = 223200     # build/mac-resident, CODE + A5, 2026-11-09
+TIERS_CONTROL = 224256     # build/mac-resident, CODE + A5, 2026-11-09
+# +1,056 2026-11-09: unc_bitin_bit and unc_bitin_fill forced inline (seven
+# images +1,160; CODE +1,052, A5 +4; DECISIONS.md 2026-11-09, *the inline the compiler declined*);
+# TIERS -1,056 and OVL_SAVED +1,056, which cancel: only the keepers of those
+# seven images move.
 # +224 2026-11-09: BinHex decoded a line at a time (`ovl_binhex` +208;
 # CODE +220, A5 +4; DECISIONS.md 2026-11-09, *the group every line break cut*); TIERS -224
 # and OVL_SAVED +224, which cancel: only a binhex-keeper moves, -208.
@@ -1152,7 +1158,11 @@ EXPECT = {
 # control's +224 (CODE +220, A5 +4) against the shipped pair's 0, the code
 # in `ovl_binhex` (+208; DECISIONS.md 2026-11-09, *the group every line break cut*). TIERS
 # -224, which cancels: only a binhex-keeper's budget moves, -208.
-OVL_SAVED = 166720
+# **+1,056 2026-11-09, -> 167,776**: unc_bitin_bit and unc_bitin_fill forced
+# inline, the control's +1,056 (CODE +1,052, A5 +4) against the shipped
+# pair's 0, the code in seven images (+1,160 in all; DECISIONS.md 2026-11-09, *the inline the compiler declined*). TIERS -1,056, which cancels: only those images'
+# keepers move, every format by its codecs' +192.
+OVL_SAVED = 167776
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
 # every kept image is one — as is the bundle an envelope holds on to.
@@ -1286,22 +1296,22 @@ OVL_RESIDUE = -322
 # a tar keeps ZIPOLD now, not EXO (DECISIONS.md 2026-10-17, *the archives'
 # own Finder info*).
 IMAGES = {
-    "OVL_ID_ARC":         7696,
+    "OVL_ID_ARC":         7924,
     "OVL_ID_BINHEX":      7630,
     "OVL_ID_BTOA":        2496,
-    "OVL_ID_CODECS":      6016,
-    "OVL_ID_CPTDD":       14874,
+    "OVL_ID_CODECS":      6208,
+    "OVL_ID_CPTDD":       15114,
     "OVL_ID_CRYPT":       9284,
     "OVL_ID_EXO":         30228,
-    "OVL_ID_LZH":         10438,
+    "OVL_ID_LZH":         10702,
     "OVL_ID_NOW":         4948,
     "OVL_ID_PACKIT":      2180,
-    "OVL_ID_SPACESAVER":  16168,
-    "OVL_ID_STUFFIT":     28442,
+    "OVL_ID_SPACESAVER":  16236,
+    "OVL_ID_STUFFIT":     28558,
     "OVL_ID_SQP":         1736,
     "OVL_ID_SUPERDISK":   6628,
     "OVL_ID_TEXT":        11438,
-    "OVL_ID_ZIPOLD":      16120,
+    "OVL_ID_ZIPOLD":      16172,
     "OVL_ID_SNIFF":       14676,
     "OVL_ID_DESTDLG":     1688,
     "OVL_ID_SEGSETUP":    2446,
@@ -1440,7 +1450,10 @@ IMAGES = {
 # (DECISIONS.md 2026-11-09, *the decoders DiskDoubler shipped*).
 # **BINHEX +208, the bundle +208 B, 2026-11-09**: BinHex decoded a line at a
 # time (DECISIONS.md 2026-11-09, *the group every line break cut*).
-BUNDLE = 195376
+# **ARC +228, CODECS +192, CPTDD +240, LZH +264, SPACESAVER +68, STUFFIT
+# +116, ZIPOLD +52, the bundle +1,160 B, 2026-11-09**: unc_bitin_bit and
+# unc_bitin_fill forced inline (DECISIONS.md 2026-11-09, *the inline the compiler declined*).
+BUNDLE = 196536
 
 # What the SHIPPED lane asserts, and it is the refused fixtures BY NAME
 # rather than a tally: a tier that refuses two different fixtures and still

@@ -215,7 +215,7 @@ overlay images' sizes are re-taken.
 
 | what | evidence |
 |---|---|
-| **the tree walk with the bit reader inside it, no call in the loop**: bits left-aligned in a register, each a test of bit 7 and a shift by one | MEASURED by MacMount on the same tree: ~150 → ~106 cycles a level read off its listing, and 6.1 → 3.9 minutes for a disk at Mini vMac 1x (macmount VERIFIED.md, *The decoders rewritten*). Ours: 230 instructions an output byte against its 178 (its harness, not our flags). An inline fast path with an out-of-line refill measured 3.1–6.6 % WORSE here (DECISIONS.md 2026-08-24); FORMATS.md, *Suggestions* (the header's "inline" helpers) |
+| **the tree walk with the bit reader inside it, no call in the loop**: bits left-aligned in a register, each a test of bit 7 and a shift by one | MEASURED by MacMount on the same tree: ~150 → ~106 cycles a level read off its listing, and 6.1 → 3.9 minutes for a disk at Mini vMac 1x (macmount VERIFIED.md, *The decoders rewritten*). Ours: 230 instructions an output byte against its 178 (its harness, not our flags). The CALL left the loop on 2026-11-09, `unc_bitin_bit` forced inline: method 5 −21 % of Plus engine ticks (FORMATS.md, *Inlining the shared readers*); what is left is the left-aligned register form |
 | **the update scan on the `0xFFFF` sentinel** | FORMATS.md's row *`-lh1-`'s tree-update search* |
 | **match copies in pieces that do not wrap** | FORMATS.md's row *The masked match copies* (`unc_lzah.c` named, not counted) |
 

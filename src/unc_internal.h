@@ -367,6 +367,21 @@ static inline int unc_bufin_peek(UncBufIn *b)
 int unc_readline(UncBufIn *in, uint8_t *buf, int32_t cap, int32_t *len,
                  int *eof);
 
+/* UNC_INLINE — inline this helper at every call site, whatever the
+ * optimiser would decide. `static inline` alone is a hint: at the
+ * overlays' -Os (tools/overlay/mkoverlay.sh) GCC emitted unc_bitin_bit
+ * and unc_bitin_fill out of line in nine and two files and CALLED them
+ * per bit. Forced in: -lh1-/method 5 -21 %, implode -25 %, method 6
+ * -31 % of Mac Plus engine ticks for +1,160 B across the images
+ * (FORMATS.md, *Inlining the shared readers*; DECISIONS.md 2026-11-09,
+ * *the inline the compiler declined*). Measured per helper: the same
+ * mark on unc_bufin_next and unc_fork_put was not kept. */
+#if defined(__GNUC__)
+#define UNC_INLINE inline __attribute__((always_inline))
+#else
+#define UNC_INLINE inline
+#endif
+
 /* ------------------------------------------------------------------ */
 /* MSB-first bit reader over UncBufIn                                 */
 /* (Classic Mac compressors emit bits high-to-low within each byte.)  */
@@ -409,8 +424,10 @@ void unc_bitin_init_le(UncBitIn *b, UncBufIn *in);
  * Compress, because the opaque call forced bitbuf/nbits/le to be
  * reloaded around every eighth bit — and unc_canon_decode compiles in
  * the same translation unit unc_bitin_bit used to live in, where gcc
- * was already inlining the whole of it with that state in registers. */
-static inline int unc_bitin_bit(UncBitIn *b)
+ * was already inlining the whole of it with that state in registers.
+ * The refill's own byte read stays unc_bufin_next, which -Os may call:
+ * spelling it out here too was 0-3 % for ~1 KB more, not kept. */
+static UNC_INLINE int unc_bitin_bit(UncBitIn *b)
 {
     if (b->nbits == 0) {
         int byte = unc_bufin_next(b->in);
@@ -440,7 +457,7 @@ static inline int unc_bitin_bit(UncBitIn *b)
  * count whole buffered bytes rather than discarding them, so a caller
  * that byte-aligns and asks where it is gets the same answer it did when
  * nothing was ever buffered ahead. */
-static inline int unc_bitin_fill(UncBitIn *b, int n)
+static UNC_INLINE int unc_bitin_fill(UncBitIn *b, int n)
 {
     UncBufIn *in = b->in;
     while (b->nbits < n) {
