@@ -273,6 +273,31 @@ def check_posted(macextract, tmp):
         problems.append("lone: a bare \"---\" mid-stream was accepted "
                         "silently; only DeHQX's separator opens a gap")
 
+    # LINES OF ANY LENGTH, since 2026-11-09: "When decoding, lines of any
+    # length should be accepted" (reference/notes/binhex40_lewis.txt). The
+    # reader holds 256 characters and hands a longer line over in pieces;
+    # until 2026-11-09 the character that did not fit was read and
+    # dropped, so every line of 257 or more cost its fork's CRC
+    # (DECISIONS.md 2026-11-09, *the character past the buffer*). The
+    # stream is rewrapped from its ':' to its closing ':', both sides of
+    # the 256 edge.
+    blob = open(src, "rb").read()
+    start = blob.index(b"\n:") + 1
+    stream = blob[start:].replace(b"\r", b"").replace(b"\n", b"")
+    stream = stream[:stream.index(b":", 1) + 1]
+    for width in (256, 257, 300, 1000):
+        wide = os.path.join(tmp, "wide-%d.hqx" % width)
+        with open(wide, "wb") as f:
+            f.write(blob[:start] +
+                    b"\n".join(stream[i:i + width]
+                               for i in range(0, len(stream), width)) + b"\n")
+        rc, got = extract(macextract, wide)
+        if rc != 0 or got != want:
+            problems.append("wide-%d: lines of %d characters exit %d with "
+                            "%d document(s), expected the %d the single "
+                            "file gives" % (width, width, rc, len(got),
+                                            len(want)))
+
     # The edge: alphabet-only junk is taken as data by the one half of
     # hexbin's rule this engine transcribes, and the CRC objects.
     # Silence would be the bug; the length half that would skip it is

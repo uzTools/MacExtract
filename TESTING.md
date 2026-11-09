@@ -1431,6 +1431,13 @@ sentence and consults `hexbin`; `tools/derive_hqxgarbage.py` grades all
 three resume shapes against the second implementation. **What neither can
 see is a wild posting cut that way**: none of the 204 `.hqx` fixtures
 carries the separator (measured).
+
+**Lines of any length**: `run_multihqx.py` rewraps a document at 256,
+257, 300 and 1,000 characters and asserts each reads what the single file
+gives; 257 and up failed on the build before (DECISIONS.md 2026-11-09,
+*the character past the buffer*). Apart from two prose lines before a
+banner, no `.hqx` fixture has a line over 86 characters (measured), so
+nothing else here reaches the line buffer's edge.
 ### `tools/derive_hqxgarbage.py` — fourteen readers, and the one that says yes
 
 Not in `ci.sh` (it needs fixtures and cached specimens). Eleven sections,

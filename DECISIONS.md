@@ -573,6 +573,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-09 (the helper Internet Config would call) — MacExtract as Internet Config's post-processor is out of scope: Internet Config cannot say where a download is extracted or whether it is deleted, and MacExtract has no preference for either
 - 2026-11-09 (the glue that was measured inline) — multiversal's File Manager glue, inline in a local header: the three calls the shell would switch to still cost +32 to +64 B, the seven it links give 336 B back once the setup image calls them itself
 - 2026-11-09 (the group every line break cut) — BinHex decodes a line at a time, the scan for the line's end being its decode, and RLE90 a buffer at a time; a Mac Plus spends 898 engine ticks on `macburger-helper.hqx` where it spent 2,397, every outcome unchanged
+- 2026-11-09 (the character past the buffer) — a BinHex line longer than 256 characters lost its 257th; the reader now stops before the character that does not fit
 
 ---
 
@@ -23773,3 +23774,25 @@ call a line.
 **Transferable.** **Before writing a fast path that assumes where a line
 starts, measure where the real file's lines start.** The 64-character line
 was the model; the stream's first line is 63.
+
+## 2026-11-09 (the character past the buffer) — a BinHex line longer than 256 characters lost its 257th; the reader now stops before the character that does not fit
+
+**Claim, evidence, consequence (measured).** `bh_refill_line`'s
+character-at-a-time path read a character and THEN tested for a full
+256-byte buffer, so the character that did not fit was consumed and
+dropped. Every data line of 257 characters or more lost one, and its fork
+failed its CRC. `naff.hqx` rewrapped at 257, 300, 512 and 1,000 characters:
+`lsar -t` passes all four, this reader failed all four, old and new
+builds alike; with the test before the read it passes all four, and 64,
+255 and 256 as before. The Definition asks for it: "When decoding, lines
+of any length should be accepted" (`reference/notes/binhex40_lewis.txt`).
+In since v0.10.0 (2026-08-15, the 256-byte line buffer). No fixture has a
+data line that long (two have prose lines of 353 and 592 characters,
+before the banner, where this path is not read), so no corpus outcome
+moves: the old-vs-new harnesses of *the group every line break cut* give
+0 differences against that commit.
+
+**Price (measured).** 0 B: `ovl_binhex` 7,630 B, the control's CODE
+186,520 B and A5 36,680 B, all as before. `tools/run_multihqx.py` now
+rewraps a document at 256, 257, 300 and 1,000 characters; the three past
+the edge fail on the build before.

@@ -214,17 +214,21 @@ static UNC_NOINLINE int bh_refill_line(BhDec *d)
                      * character at a time, and a line that overflows is
                      * handed over in pieces — harmless, because every
                      * piece is judged by the same rule and the character
-                     * order is unchanged. */
+                     * order is unchanged. The test for a full buffer
+                     * comes BEFORE the read: after it, the character that
+                     * did not fit was read and lost, and a line of 257
+                     * characters or more failed its fork's CRC
+                     * (DECISIONS.md 2026-11-09, *the character past the
+                     * buffer*). */
                     int ch;
                     n = 0;              /* the scan above found nothing */
-                    for (;;) {
+                    while (n < BH_LINE_MAX) {
                         ch = unc_bufin_next(&d->in);
                         if (ch < 0) {
                             if (n == 0) { d->err = d->in.err; return -1; }
                             break;
                         }
                         if (ch == '\n' || ch == '\r') break;
-                        if (n >= BH_LINE_MAX) break;
                         d->line[n++] = (uint8_t)ch;
                     }
                     q = s = d->line;    /* and nothing decoded is kept */
