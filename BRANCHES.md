@@ -27,4 +27,8 @@ and `BRANCH_NOTES.md` figures for the 2026-09-24 lazy build.
 left this project's scope with DART (DECISIONS.md 2026-09-25, *the disk images
 that found another home*). The SHA is recorded so the work can be recovered.
 
+**`dd-own-coders` DELETED 2026-11-09**, kept as tag `archive/dd-own-coders`
+(`b52dd83`): rebased and landed on `main` the same day (DECISIONS.md
+2026-11-09, *the slowdown that was accepted*).
+
 Branches that exist only in a working copy are not listed.

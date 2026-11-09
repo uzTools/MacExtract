@@ -3523,7 +3523,11 @@ static void test_dd_stac(void)
         stac_put(&b, (uint8_t)lit[i], 8);
     }
     stac_match(&b, NLIT, MATCH);
-    stac_put(&b, 1, 1); stac_put(&b, 0, 1); stac_put(&b, 0, 7);  /* end */
+    /* The end marker is 110000000, a zero SEVEN-bit offset (RFC 1974
+     * section 2.5.5). This wrote 1 0 0000000 until 2026-11-09: an
+     * eleven-bit offset cut short, which DiskDoubler's own decoder reads
+     * to the end of the input and refuses (tools/ddcode/run_ddcode.py). */
+    stac_put(&b, 1, 1); stac_put(&b, 1, 1); stac_put(&b, 0, 7);  /* end */
     stac_flush(&b);
     n += b.len;
     put32(one + 8, n - 84u);                   /* datacomp */

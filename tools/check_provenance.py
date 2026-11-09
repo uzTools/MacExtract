@@ -65,7 +65,7 @@ CARRIES = {
     "unc_lzdyn.c":      "-lh2- and -lh3- (libxad's LhA.c), whole file",
     "fmt_sit.c":        "three method-8 rules no specimen reaches (libxad's SIT_mw)",
     "sit14.c":          "StuffIt 5's method 14, the whole file (libxad's SIT_14)",
-    "fmt_dd.c":         "the DDAR 0x20 raw-fork shape (libxad's DiskDoubler.c)",
+    "fmt_dd.c":         "the per-method rules and the DDAR 0x20 raw-fork shape (libxad's DiskDoubler.c)",
     "fmt_arc.c":        "Crunch 5/6/7 and Crush, and the method numbers",
     "unc_lzah.c":       "the -lh1-/method-5 window preload (resetLZSSHandle)",
     "fmt_macbinary_probe.c": "the CRC-16/0xA001 fallback and the nonzero-date test",
@@ -87,7 +87,6 @@ CODE = {
     "sit14.c",      # libxad's SIT_14, the whole file
     "fmt_hecx.c",   # hexbin's hecx.c and dl.c, the whole decoder
     "fmt_arc.c",    # XADMaster's Crunch and Crush handles
-    "fmt_dd.c",     # XADMaster's method-2 splay tree and Stac LZS
 }
 
 # Mentions a reference only to say what it no longer owes, or to

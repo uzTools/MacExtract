@@ -2,11 +2,11 @@ MacExtract — a universal unarchiver for Classic Mac OS formats
 0BSD (see LICENSE): everything this project wrote itself, the maintainer's
 decision of 2026-11-08 (DECISIONS.md, *the code we wrote*), facts read in
 somebody else's code included: a layout, an offset or a rule is not theirs to
-license, only its expression is (btoa and MAR, below). The exceptions: five
+license, only its expression is (btoa and MAR, below). The exceptions: four
 files hold code transcribed from the references below and are
 LGPL-2.1-or-later (see LICENSE-LGPL-2.1), saying so in an
-SPDX-License-Identifier line — src/unc_lzdyn.c, src/sit14.c, src/fmt_hecx.c,
-src/fmt_arc.c and src/fmt_dd.c; third_party/zlib is zlib's;
+SPDX-License-Identifier line — src/unc_lzdyn.c, src/sit14.c, src/fmt_hecx.c
+and src/fmt_arc.c; third_party/zlib is zlib's;
 and src/ss_dict.h holds Aladdin's bytes (below). The application and the CLI
 link all three, so a binary carries their licences too.
 
@@ -73,15 +73,17 @@ hand.
                        and the block-length wrap — and the four
                        departures are measured against `unar` over
                        every fork in reach.
-  src/fmt_dd.c         method 7's Stac LZS, transcribed
-                       (XADStacLZSHandle.m), and method 2's tree and
-                       splay step (XADDiskDoublerMethod2Handle.m), with
-                       XADDiskDoublerParser.m's per-method rules for
+  src/fmt_dd.c         XADDiskDoublerParser.m's per-method rules for
                        methods 1, 2, 5, 7 and 8; and the `DDAR` 0x20
                        raw-fork shape, four offsets nothing reachable
                        sets — libxad's clients/DiskDoubler.c, which
-                       XADDiskDoublerParser.m restates. Listed as the
-                       raw-fork shape alone until 2026-11-08.
+                       XADDiskDoublerParser.m restates. Facts, so 0BSD
+                       since 2026-11-09, when method 7's Stac LZS
+                       (transcribed from XADStacLZSHandle.m) and method
+                       2's tree and splay step (from
+                       XADDiskDoublerMethod2Handle.m) were rewritten from
+                       DiskDoubler 3.1.2's own decoders (below). Listed as
+                       the raw-fork shape alone until 2026-11-08.
   src/fmt_macbinary_probe.c,  five things no specification supports:
   src/fmt_applesingle.c  the MacBinary CRC-16/0xA001 fallback and its
   src/fmt_sitseg.c,    nonzero-date test, the byte-swapped AppleSingle
@@ -273,15 +275,17 @@ This project's decoders are transcriptions/ports of algorithms from:
     need — including method 10's second form, which the page names and
     does not describe — so a reader written from those pages alone
     reads all 39 DD and AD forks in the corpus
-    (`tools/derive_dd.py`). `src/fmt_dd.c`'s CONTAINERS left this row on
+    (`tools/derive_dd.py`); and its methods 2, 5 and 7 since 2026-11-09,
+    from DiskDoubler's own decoders (*DiskDoubler 3.1.2*, below).
+    `src/fmt_dd.c`'s CONTAINERS left this row on
     2026-09-22 for `docs/formats/diskdoubler-container.md`, this
     project's own measured description — the wiki names three container
     pages and none of the three exists, so DiskDoubler 3.7, 4.0 and
     Pro 4.1 were run here and `tools/derive_ddc.py` makes 643 assertions
     against the oracle over 91 fixtures with 0 disagreements, the folder
     records among them (measured against archives 3.7's Combine command
-    wrote). What is still XADMaster's is in the inventory above:
-    methods 2 and 7's codecs, the per-method rules, and the `DDAR`
+    wrote). What is still XADMaster's is in the inventory above: the
+    per-method rules, and the `DDAR`
     `0x20` raw-fork shape (macutils' `macunpack/dd.h` beside it), which
     no specimen here reaches — it is also what names which forks use
     method 10's second form.
@@ -586,6 +590,23 @@ This project's decoders are transcriptions/ports of algorithms from:
     `tools/derive_arc.py --garble`
     (`docs/formats/arc-container-and-coders.md`, *The garble*). Facts
     only; no code of it is in this project.
+
+  * DiskDoubler 3.1.2 (Salient Software, 1991), its `DiskDoubler™ App`
+    off the distribution floppy. `src/fmt_dd.c`'s methods 2 and 5 (the
+    splay-tree code) and 7 (Stac LZS) are written from
+    `docs/formats/diskdoubler-splay-stac.md`, which was read out of the
+    application's `CODE` 11 — its two software decoders, @0x221e and
+    @0x34e2 — and established by EXECUTING them under `qemu-m68k`
+    (`tools/ddcode/`), and from the published algorithms: Douglas W.
+    Jones, "Application of splay trees to data compression", CACM 31(8),
+    1988, with his `minunsplay.c` ("may be used or copied for any
+    purpose"; `reference/notes/splay_jones_minunsplay.c`), and RFC 1974
+    section 2.5.5 (Friend and Simpson, 1996), which repeats ANSI
+    X3.241-1994's Stac LZS grammar (`reference/notes/rfc1974.txt`). No
+    code was copied; every citation is an address in a binary this
+    project does not redistribute, and `tools/ddcode/run_ddcode.py`
+    checks the bytes at the offsets cited and grades the engine against
+    that code. The floppy is in the emulator cache, never committed.
 
   * Alysis SuperDisk! / Disk Expander (Alysis Software Corporation,
     1991-1992). No public specification of this format exists and no

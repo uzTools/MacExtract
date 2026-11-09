@@ -560,15 +560,16 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-08 (the CLI's walks that were one walk) — the CLI's copies of the naming rules gave way to `unc_segment_name_part`, and its four folder walks and three path splitters to one `family_of` and one `family_scan`
 - 2026-11-08 (the reader that disagrees) — where a writer's own reader disagrees with the stored CRC or with another reader, the case is decided on its own; there is no general rule
 - 2026-11-08 (the report pool that stays) — the report window's 6,539 B of fixed buffers stay until something needs the bytes
-- 2026-11-08 (the code we wrote) — everything this project wrote is 0BSD, facts read in somebody else's code included; only the six files holding transcribed code stay LGPL-2.1-or-later (five since 2026-11-09)
+- 2026-11-08 (the code we wrote) — everything this project wrote is 0BSD, facts read in somebody else's code included; only the six files holding transcribed code stay LGPL-2.1-or-later (four since 2026-11-09)
 - 2026-11-08 (the refusals the probe counted) — the probe build extracts Cool Tools and a2basic on the 64K ROM; its `short` and `why` count the requests Arsenic falls back from, and `e1` is its verdict
 - 2026-11-08 (the scan made twice) — the shell sniffs once and asks the set check only as the scheme the sniff named; the zip end-record scan every open paid twice is paid once or not at all, and 64 B come back on every budget
 - 2026-11-09 (one way to keep a decoder high) — `ovl_keep` places a kept image with `high_handle` on every ROM; the ROM test and `MoveHHi` are gone, for 32 B onto every budget
 - 2026-11-09 (the key StuffIt's own engine derives) — StuffIt classic's key schedule and key derivation are written from StuffIt Engine 3.5.2's own code, read and run under qemu-m68k; `unc_crypt.c` is 0BSD, and 320 B come back on every budget that keeps the ciphers
-- 2026-11-09 (the decoders DiskDoubler shipped) — DiskDoubler's methods 2, 5 and 7 rewritten from Salient's own decoders, read and run under qemu-m68k, and from Jones's paper and RFC 1974; smaller and faster on both, but 0.2-0.4 % slower on method 10, so not landed: branch `dd-own-coders`
+- 2026-11-09 (the decoders DiskDoubler shipped) — DiskDoubler's methods 2, 5 and 7 rewritten from Salient's own decoders, read and run under qemu-m68k, and from Jones's paper and RFC 1974; smaller and faster on both, but 0.2-0.4 % slower on method 10; landed the same day, the maintainer accepting that (*the slowdown that was accepted*)
 - 2026-11-09 (the garble ARC wrote and the key DropStuff used) — ARC's garble and StuffIt 5's password key leave XADMaster for the originals' own source and output; `unc_crypt.c` leaves `CARRIES`
 - 2026-11-09 (the bit the inventory still named) — `fmt_sit5.c` carries nothing of XADMaster's: bit 5 was measured on 2026-10-06, and bit 6, the one thing only XADMaster knows, is not read
 - 2026-11-09 (the chain nobody had re-derived) — the engine's deepest call chain is 4,070 B, 26 B under CLAUDE.md's 4 KB; `tools/stack_depth.py` derives it and `ci.sh` holds it there
+- 2026-11-09 (the slowdown that was accepted) — DiskDoubler's methods 2, 5 and 7 from Salient's own decoders land, method 10's 0.2-0.4 % accepted by the maintainer; `fmt_dd.c` is 0BSD and four files stay LGPL
 
 ---
 
@@ -23058,7 +23059,7 @@ for 6,539 B to matter: `synth-dd-m5.dd` peaks at 401,408 B against a
 KB machines*), and Library_ISBN's first refused request alone is 77,203 B
 on the 64K ROM (FORMATS.md, *A true Macintosh 512K*), a lower bound.
 
-## 2026-11-08 (the code we wrote) — everything this project wrote is 0BSD, facts read in somebody else's code included; only the six files holding transcribed code stay LGPL-2.1-or-later (five since 2026-11-09)
+## 2026-11-08 (the code we wrote) — everything this project wrote is 0BSD, facts read in somebody else's code included; only the six files holding transcribed code stay LGPL-2.1-or-later (four since 2026-11-09)
 
 **The maintainer's decision, 2026-11-08**, the question *What still holds
 the licence* left to him (OPEN_ITEMS.md): the 20 `HISTORICAL` files,
@@ -23074,7 +23075,8 @@ the expression is. NOTICE already rests on that for btoa (non-commercial)
 and MAR (GPL-2.0-only), both implemented as formats from references whose
 code could not be carried. So of the 18 `CARRIES` files, the six holding
 transcribed code were LGPL that day, **five since 2026-11-09** (*the key
-StuffIt's own engine derives*): `unc_lzdyn.c` and `sit14.c` (libxad's,
+StuffIt's own engine derives*), **four** since `fmt_dd.c` left the same day
+(*the slowdown that was accepted*): `unc_lzdyn.c` and `sit14.c` (libxad's,
 whole), `fmt_hecx.c` (hexbin's, whole), `fmt_arc.c` (Crunch and Crush) and
 `fmt_dd.c` (method 7's Stac LZS, "transcribed", and method 2's splay tree);
 `unc_crypt.c` (StuffItDES's key schedule and StuffIt classic's key
@@ -23320,7 +23322,7 @@ place).
 - **The old code made a fine oracle** once Aladdin's code existed to grade
   both: it agreed everywhere but the one input nobody had tried.
 
-## 2026-11-09 (the decoders DiskDoubler shipped) — DiskDoubler's methods 2, 5 and 7 rewritten from Salient's own decoders, read and run under qemu-m68k, and from Jones's paper and RFC 1974; smaller and faster on both, but 0.2-0.4 % slower on method 10, so not landed: branch `dd-own-coders`
+## 2026-11-09 (the decoders DiskDoubler shipped) — DiskDoubler's methods 2, 5 and 7 rewritten from Salient's own decoders, read and run under qemu-m68k, and from Jones's paper and RFC 1974; smaller and faster on both, but 0.2-0.4 % slower on method 10; landed the same day, the maintainer accepting that (*the slowdown that was accepted*)
 
 **Where the code was (measured).** `DiskDoubler™ App` 3.1.2, uncompressed on
 the 1991 floppy kept since 2026-08-21 (*the Salient disk*): `CODE` 11 has
@@ -23416,14 +23418,13 @@ code inlined and Stac not 1,948, method 10's run out of line 1,974, its
 literal loop out of line 1,955. The branch's, the splay code out of line
 and Stac inlined, is the 1,890 above.
 
-**Decision: not landed; the maintainer lands only what is free or better on
-every axis, and method 10 pays 0.2-0.4 %.** The code is on branch
-`dd-own-coders` (tag `archive/dd-own-coders`), as one commit with its
-budget cascade, NOTICE, licence lines and the grader; `fmt_dd.c` stays in
-`CODE`, LGPL, on main. Landing it means re-taking the budgets on whatever
-main is then and running `ci.sh` again; it was green on the branch as
-committed, `dist/` rebuilt. The description lands on main: the
-facts are true whichever decoder reads them.
+**Decision: not landed that morning, because the maintainer lands only
+what is free or better on every axis and method 10 pays 0.2-0.4 %; landed
+the same day, when he accepted that slowdown** (corrected in place;
+*the slowdown that was accepted*). The code waited on branch
+`dd-own-coders` (tag `archive/dd-own-coders`) with its budget cascade,
+NOTICE, licence lines and the grader. The description landed on main
+first: the facts are true whichever decoder reads them.
 
 **Found on the way:** `fmt_dd.c`'s header says methods 2 to 5 are declined
 for want of a specimen, untrue since 2026-08-21 (corrected on the branch);
@@ -23553,3 +23554,31 @@ off it.
 - **A call graph that resolves pointers by type is a superset, and its
   deepest chain is usually a path nobody can take.** The first answer here
   was 45 % high; the fix was rules, each one checkable, not a smaller class.
+
+## 2026-11-09 (the slowdown that was accepted) — DiskDoubler's methods 2, 5 and 7 from Salient's own decoders land, method 10's 0.2-0.4 % accepted by the maintainer; `fmt_dd.c` is 0BSD and four files stay LGPL
+
+**The maintainer's decision, 2026-11-09:** method 10's 0.2-0.4 % on a Mac
+Plus is acceptable, so `dd-own-coders` lands (*the decoders DiskDoubler
+shipped* has the reading, the grading and the speed table). Rebased onto
+main, where nothing compiled had changed since its base but comments, so
+the speed table stands as measured; `tools/ddcode/run_ddcode.py` was
+re-run on the rebased tree.
+
+**Price, re-taken on the rebased tree (measured).** CODE: `ovl_cptdd`
+15,232 → 14,874 B, **−358**; the shipped resident code unchanged (eager
+39,744, lazy 38,524); the resident control 186,480 → 186,300, −180. A5:
+shipped 16,736, unchanged; the control 36,688 → 36,676, −12 (`.data`
+alignment). So `OVL_SAVED` 166,688 → 166,496, `TIERS` +192 each, the
+bundle 195,524 → 195,168: a format keeping `ovl_cptdd` gets 358 B more,
+every other format the same. Transient heap: unchanged, the same trees and
+window. Stack (`tools/stack_depth.py`): the engine's deepest chain
+**4,070 → 3,442 B**, now method 2's (`dd_fork` 848 → `dd_m2` 1,088), 96 B
+deeper than method 2's was; method 10's 3,078 B, −992. Extractions lost:
+none (`run_tiers.py --check`, 74/74, 72/74, 72/74, as before). Speed: Stac
+−10.3 %, method 2 −34.1 %, method 10 +0.3 % and +0.5 % in engine ticks.
+
+**Consequence.** `fmt_dd.c` leaves `CODE` in `tools/check_provenance.py`,
+its SPDX line is 0BSD, and it stays in `CARRIES` for the per-method rules
+and the `DDAR` 0x20 shape; four files stay LGPL (NOTICE, README.md,
+`dist/README.txt`, CLAUDE.md). Branch `dd-own-coders` is deleted; the tag
+keeps it.

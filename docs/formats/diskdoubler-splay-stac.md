@@ -22,7 +22,7 @@ disk*). `CODE` 11 holds both software decoders; `CODE` 7 @0x0070 is the
 CRC-16 one of them calls. Offsets are into each resource's data. The
 decoders are THINK C with their globals off A5 and reach the File Manager,
 the Memory Manager and the progress callback only through the jump table,
-so `tools/ddcode/dd_run.c` (on branch `dd-own-coders`) calls them as they
+so `tools/ddcode/dd_run.c` calls them as they
 are with its own stubs in the table, and `tools/ddcode/run_ddcode.py`
 checks the bytes cited below before using them.
 
@@ -108,16 +108,13 @@ Jones's code, one tree per context.
 
 ### What the engine does differently
 
-`src/fmt_dd.c` on main still decodes both methods with code transcribed
-from XADMaster. A rewrite from this page, which agrees with Salient's code
-on everything below but the list, is on branch `dd-own-coders`, not landed
-because it costs method 10 0.2-0.4 % on a Mac Plus (DECISIONS.md
-2026-11-09, *the decoders DiskDoubler shipped*). None of these is reached by
-a fork any DiskDoubler here wrote; each is a case the branch's
-`tools/ddcode/run_ddcode.py` sends, but the match before the first byte,
-which Salient answers with whatever its stack held.
-
-Both, main and the branch:
+`src/fmt_dd.c` decodes both methods as this page describes since
+2026-11-09 (DECISIONS.md 2026-11-09, *the decoders DiskDoubler shipped*;
+*the slowdown that was accepted*), and agrees with Salient's code on
+everything but the list below. None of these is reached by a fork any
+DiskDoubler here wrote; each is a case `tools/ddcode/run_ddcode.py` sends,
+but the match before the first byte, which Salient answers with whatever
+its stack held.
 
 - **a fork of length 1** is refused for want of a chunk table;
 - **the chunk table's CRC is not checked**; the engine reads the entry
@@ -133,19 +130,17 @@ Both, main and the branch:
 - **a match before the first byte**, which the engine refuses rather than
   copy what an uninitialised buffer holds;
 - **method 5's count** is not range-checked: 16 and smaller powers of two
-  decode, where Salient refuses them.
+  decode, where Salient refuses them; a count that is not a power of two
+  (measured at 3 and 100) is masked, so the sum fails and both refuse.
 
-Main only:
-
-- **an eleven-bit offset of 1 to 15** ends the stream, where Salient
-  copies it (measured at 1, 5, 9 and 15; 16 is a match on both);
-- **a method 5 count that is not a power of two** (measured at 3 and 100)
-  decodes, with the context taken modulo the count; Salient refuses it, and
-  the branch, which masks, fails the sum.
+The decoder transcribed from XADMaster, before 2026-11-09, also ended the
+stream on **an eleven-bit offset of 1 to 15**, where Salient copies it
+(measured at 1, 5, 9 and 15), and decoded a count that is not a power of
+two with the context taken modulo the count.
 
 ## How it was graded
 
-On the branch, `tools/ddcode/run_ddcode.py` sends the same forks to
+`tools/ddcode/run_ddcode.py` sends the same forks to
 Salient's code and, in a container, to the CLI: every method 2, 5 and 7
 fork in the corpus, the specimens and the 3.1.2 floppy; splay forks from
 `tools/vmac/ddencode.py`'s encoder at every count; and Stac forks from its
@@ -154,6 +149,6 @@ own encoder for every length to 69, matches up to 65,537 bytes at distances
 either end marker, a 200-entry table and greedy encodings of random,
 repetitive and word-like data up to 200 KB in up to 17 chunks. It also
 checks the three chunk-table facts above on every method-7 fork it finds.
-Patching one instruction of Salient's code per rule must fail it. Main's
-decoder agrees with Salient's on the 26 corpus forks and fails on the cases
-listed above.
+Patching one instruction of Salient's code per rule must fail it. The
+transcribed decoder agreed with Salient's on the 26 corpus forks and failed
+on the two cases it read differently (above).
