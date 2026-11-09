@@ -1,0 +1,247 @@
+diff --git a/mac/mac_mocks.h b/mac/mac_mocks.h
+index e4fca32..50f43ab 100644
+--- a/mac/mac_mocks.h
++++ b/mac/mac_mocks.h
+@@ -194,6 +194,7 @@ OSErr PBHOpenSync(HParamBlockRec *pb);
+ OSErr PBHOpenRFSync(HParamBlockRec *pb);
+ OSErr PBHCreateSync(HParamBlockRec *pb);
+ OSErr PBHDeleteSync(HParamBlockRec *pb);
++OSErr HDelete(short vref, long dir, ConstStr255Param name);
+ OSErr FSRead(short ref, long *count, void *buf);
+ OSErr FSWrite(short ref, long *count, const void *buf);
+ OSErr FSClose(short ref);
+diff --git a/mac/macextract_mac.c b/mac/macextract_mac.c
+index a7ea43f..14c9e7c 100644
+--- a/mac/macextract_mac.c
++++ b/mac/macextract_mac.c
+@@ -32,6 +32,9 @@
+ #include <Devices.h>
+ #include <Events.h>
+ #include <Files.h>
++#ifdef GLUE_INLINE_HDR
++#include "../tools/glue_inline/glue_inline.h"
++#endif
+ #include <Fonts.h>
+ #include <Memory.h>
+ #include <Menus.h>
+@@ -1865,9 +1868,16 @@ static OSErr EnsureDir(MacSink *s, long parent, Str63 name, uint32_t hash,
+  * (DECISIONS.md, *the bug was the footnote*; tools/retro68-hopen-repro/).
+  *
+  * Field layout: Multiversal CIncludes HParamBlockRec. */
++#ifdef MYOPEN_NOINLINE
++__attribute__((noinline))
++#endif
+ static OSErr MyOpenFork(short vol, long dir, ConstStr255Param name,
+                         SignedByte perm, int rsrc, short *refOut)
+ {
++#ifdef USE_GLUE
++    return rsrc ? HOpenRF(vol, dir, name, perm, refOut)
++                : HOpen(vol, dir, name, perm, refOut);
++#else
+     HParamBlockRec pb;
+     long z;
+     OSErr err;
+@@ -1880,6 +1890,7 @@ static OSErr MyOpenFork(short vol, long dir, ConstStr255Param name,
+     err = rsrc ? PBHOpenRFSync(&pb) : PBHOpenSync(&pb);
+     *refOut = pb.ioParam.ioRefNum;
+     return err;
++#endif
+ }
+ 
+ /* Create a file (type/creator are stamped later by sink_end). */
+@@ -1898,6 +1909,9 @@ static OSErr MyHCreate(short vol, long dir, ConstStr255Param name)
+  * cancelled or failed (the file was created in sink_begin before decoding). */
+ static OSErr MyHDelete(short vol, long dir, ConstStr255Param name)
+ {
++#ifdef USE_GLUE
++    return HDelete(vol, dir, name);
++#else
+     HParamBlockRec pb;
+     long z;
+     for (z = 0; z < (long)sizeof pb; z++) ((char *)&pb)[z] = 0;
+@@ -1905,6 +1919,7 @@ static OSErr MyHDelete(short vol, long dir, ConstStr255Param name)
+     pb.ioParam.ioVRefNum = vol;
+     pb.fileParam.ioDirID = dir;
+     return PBHDeleteSync(&pb);
++#endif
+ }
+ 
+ /* Unlock one file (PBHRstFLock): an envelope layer the archive locked has
+@@ -3976,7 +3991,10 @@ static int SegAskUser(SegHost *h, int part)
+ #ifdef UNC_SHELL_IMAGES
+ /* The setup is an image (ovl_segsetup.c); this is what it calls back. */
+ static const SegSetupFns gSegSetupFns = {
+-    MyOpenFork, MyHDelete, FSClose, GetEOF, FSWrite, FlushVol,
++    MyOpenFork, MyHDelete,
++#ifndef GLUE_IN_IMAGE
++    FSClose, GetEOF, FSWrite, FlushVol,
++#endif
+     SegTmpOpen, SegRemember, SegScanDir, SegScanFamily, SegPartLength,
+     SegPartOf, unc_sniff_envelope, unc_format_is_envelope, unc_extract_as,
+     unc_segment_describe, unc_segment_match,
+@@ -3984,6 +4002,7 @@ static const SegSetupFns gSegSetupFns = {
+ };
+ #else
+ #define SS(f) f
++#define SSIO(f) f
+ #include "seg_setup.inc.c"
+ #endif
+ 
+diff --git a/mac/seg_setup.inc.c b/mac/seg_setup.inc.c
+index da8fbb2..e5c7549 100644
+--- a/mac/seg_setup.inc.c
++++ b/mac/seg_setup.inc.c
+@@ -43,7 +43,7 @@ static int SegDescribeLast(SegHost *h, short vol, long dir,
+     int ok;
+ 
+     if (SS(MyOpenFork)(vol, dir, nm, fsRdPerm, 0, &ref) != noErr) return 0;
+-    SS(GetEOF)(ref, &eof);
++    SSIO(GetEOF)(ref, &eof);
+     probe.refNum = ref;
+     probe.size = (uint32_t)eof;
+     probe.pos = 0;
+@@ -53,7 +53,7 @@ static int SegDescribeLast(SegHost *h, short vol, long dir,
+     pio.tell = SS(fio_tell);
+     pio.size = SS(fio_size);
+     ok = SS(unc_segment_describe)(&pio, &cand) == UNC_OK && cand.nparts;
+-    SS(FSClose)(ref);
++    SSIO(FSClose)(ref);
+     if (!ok) return 0;
+     h->desc = cand;
+     SS(SegRemember)(h, (int)cand.nparts, vol, dir, nm);
+@@ -77,7 +77,7 @@ static int env_write(void *ctx, UncFork fork, const void *buf, int32_t len)
+     if (fork != UNC_FORK_DATA || len <= 0) return 0;
+     if (e->outRef) {
+         long count = (long)len;
+-        if (SS(FSWrite)(e->outRef, &count, (const void *)buf) != noErr ||
++        if (SSIO(FSWrite)(e->outRef, &count, (const void *)buf) != noErr ||
+             count != (long)len) { e->err = 1; return -1; }
+         return 0;
+     }
+@@ -139,7 +139,7 @@ static int EnvRun(short vol, long dir, ConstStr255Param nm, EnvSink *es,
+     int rc;
+ 
+     if (SS(MyOpenFork)(vol, dir, nm, fsRdPerm, 0, &ref) != noErr) return 0;
+-    SS(GetEOF)(ref, &eof);
++    SSIO(GetEOF)(ref, &eof);
+     fio.refNum = ref;
+     fio.size = (uint32_t)eof;
+     fio.pos = 0;
+@@ -151,7 +151,7 @@ static int EnvRun(short vol, long dir, ConstStr255Param nm, EnvSink *es,
+ 
+     fmt = SS(unc_sniff_envelope)(&eio);
+     if (!SS(unc_format_is_envelope)(fmt)) {
+-        SS(FSClose)(ref);
++        SSIO(FSClose)(ref);
+         return 0;
+     }
+     sk.ctx = es;
+@@ -162,7 +162,7 @@ static int EnvRun(short vol, long dir, ConstStr255Param nm, EnvSink *es,
+     prog.ctx = NULL;
+     prog.tick = NULL;
+     rc = SS(unc_extract_as)(fmt, &eio, &sk, al, NULL, NULL);
+-    SS(FSClose)(ref);
++    SSIO(FSClose)(ref);
+     if (es->outRef && rc != UNC_OK) es->err = 1;
+     return 1;
+ }
+@@ -212,12 +212,12 @@ static int SegWrappedPartOf(SegHost *h, short vol, long dir,
+     for (z = 0; z < (long)sizeof es; z++) ((char *)&es)[z] = 0;
+     es.outRef = ref;
+     if (!EnvRun(vol, dir, nm, &es, al) || es.err) {
+-        SS(FSClose)(ref);
++        SSIO(FSClose)(ref);
+         SS(MyHDelete)(h->tmpVol, h->tmpDir, tmp);
+         return 0;
+     }
+-    SS(FSClose)(ref);
+-    SS(FlushVol)(NULL, h->tmpVol);
++    SSIO(FSClose)(ref);
++    SSIO(FlushVol)(NULL, h->tmpVol);
+     SS(SegRemember)(h, part, h->tmpVol, h->tmpDir, tmp);
+     h->peeled = 1;
+     return part;
+@@ -279,7 +279,7 @@ static void SegFindLast(SegHost *h)
+         if (!h->loc[p].name[0]) continue;
+         if (SS(MyOpenFork)(h->loc[p].vRefNum, h->loc[p].dirID, h->loc[p].name,
+                        fsRdPerm, 0, &ref) != noErr) continue;
+-        SS(GetEOF)(ref, &eof);
++        SSIO(GetEOF)(ref, &eof);
+         probe.refNum = ref;
+         probe.size = (uint32_t)eof;
+         probe.pos = 0;
+@@ -290,10 +290,10 @@ static void SegFindLast(SegHost *h)
+         pio.size = SS(fio_size);
+         if (SS(unc_segment_describe)(&pio, &cand) == UNC_OK && cand.nparts) {
+             h->desc = cand;
+-            SS(FSClose)(ref);
++            SSIO(FSClose)(ref);
+             return;
+         }
+-        SS(FSClose)(ref);
++        SSIO(FSClose)(ref);
+     }
+ }
+ 
+diff --git a/mac/seg_types.h b/mac/seg_types.h
+index a1a1174..5e100e0 100644
+--- a/mac/seg_types.h
++++ b/mac/seg_types.h
+@@ -87,13 +87,21 @@ typedef struct {
+  * glue rather than inline traps. Not in the Linux sink tests, whose mocks
+  * have no `pascal` and which never run the image. */
+ #ifndef UNC_SINK_TEST
++#ifdef GLUE_IN_IMAGE
++#ifndef GLUE_INLINE_IO
++#define GLUE_INLINE_IO 1
++#endif
++#include "../tools/glue_inline/glue_inline.h"
++#endif
+ typedef struct {
+     OSErr (*MyOpenFork)(short, long, ConstStr255Param, SignedByte, int, short *);
+     OSErr (*MyHDelete)(short, long, ConstStr255Param);
++#ifndef GLUE_IN_IMAGE
+     pascal OSErr (*FSClose)(short);
+     pascal OSErr (*GetEOF)(short, long *);
+     pascal OSErr (*FSWrite)(short, long *, const void *);
+     pascal OSErr (*FlushVol)(ConstStringPtr, short);
++#endif
+     int  (*SegTmpOpen)(SegHost *, int, Str255, short *);
+     void (*SegRemember)(SegHost *, int, short, long, ConstStr255Param);
+     void (*SegScanDir)(SegHost *, short, long);
+diff --git a/tests/mac_sink_test.c b/tests/mac_sink_test.c
+index 492fe79..9363276 100644
+--- a/tests/mac_sink_test.c
++++ b/tests/mac_sink_test.c
+@@ -226,6 +226,15 @@ OSErr PBHCreateSync(HParamBlockRec *pb)
+     cat_touch_dir(pb->fileParam.ioDirID);
+     return noErr;
+ }
++OSErr HDelete(short v, long d, ConstStr255Param n)
++{
++    HParamBlockRec pb;
++    memset(&pb, 0, sizeof pb);
++    pb.ioParam.ioVRefNum = v;
++    pb.fileParam.ioDirID = d;
++    pb.ioParam.ioNamePtr = (StringPtr)n;
++    return PBHDeleteSync(&pb);
++}
+ OSErr PBHDeleteSync(HParamBlockRec *pb)
+ {
+     char path[800], rpath[820];
+diff --git a/tools/overlay/ovl_segsetup.c b/tools/overlay/ovl_segsetup.c
+index e034257..bb12cd9 100644
+--- a/tools/overlay/ovl_segsetup.c
++++ b/tools/overlay/ovl_segsetup.c
+@@ -20,6 +20,11 @@
+  * (mkoverlay.sh), so it starts non-zero and is set on every entry. */
+ static const SegSetupFns *gF = (const SegSetupFns *)1;
+ #define SS(f) (gF->f)
++#ifdef GLUE_IN_IMAGE
++#define SSIO(f) f
++#else
++#define SSIO(f) SS(f)
++#endif
+ 
+ #include "../../mac/seg_setup.inc.c"
+ 

@@ -571,6 +571,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-09 (the chain nobody had re-derived) — the engine's deepest call chain is 4,070 B, 26 B under CLAUDE.md's 4 KB; `tools/stack_depth.py` derives it and `ci.sh` holds it there
 - 2026-11-09 (the slowdown that was accepted) — DiskDoubler's methods 2, 5 and 7 from Salient's own decoders land, method 10's 0.2-0.4 % accepted by the maintainer; `fmt_dd.c` is 0BSD and four files stay LGPL
 - 2026-11-09 (the helper Internet Config would call) — MacExtract as Internet Config's post-processor is out of scope: Internet Config cannot say where a download is extracted or whether it is deleted, and MacExtract has no preference for either
+- 2026-11-09 (the glue that was measured inline) — multiversal's File Manager glue, inline in a local header: the three calls the shell would switch to still cost +32 to +64 B, the seven it links give 336 B back once the setup image calls them itself
 
 ---
 
@@ -23609,3 +23610,83 @@ may therefore reach MacExtract through that helper with no change to
 Internet Config (hypothesis: whether a browser finds its post-processor
 by creator or by name is not measured, nor a launch event aimed at a
 helper). Welcome if it happens; not a behaviour this project tests for.
+
+## 2026-11-09 (the glue that was measured inline) — multiversal's File Manager glue, inline in a local header: the three calls the shell would switch to still cost +32 to +64 B, the seven it links give 336 B back once the setup image calls them itself
+
+**The question.** OPEN_ITEMS.md (*The shell's own File Manager blocks*)
+said the switch to `HOpen`/`HOpenRF`/`HDelete` would cost "about 0 B,
+hypothesis" once multiversal's glue was inline. Measured against a local
+header, `/opt/Retro68-build` untouched, on 17f2982.
+
+**Method.** `tools/glue_inline/glue_inline.h`: the ten bodies of
+multiversal `custom/glue.c` (unchanged since `d7642c2`), checked against
+`objdump -d` of `glue.o` in the toolchain's `libInterface.a` (same traps,
+same block offsets), each wrapped as pull request 20's generator wraps a
+trap with register outputs: `__gnu_inline__ extern __inline__ pascal` under
+`TARGET_CPU_68K`, so an address-taken use still links the library copy.
+**Read off the real glue:** every statement, the traps, the offsets, the
+wrapper. **Reconstruction (hypothesis):** that multiversal would emit
+these bodies this way; its generator has no path for `custom/glue.c`
+today. `tools/glue_inline/shell.patch` is the shell side, a no-op until
+defined (`.text` and `.data` byte-identical). The three configurations
+`ci.sh` builds, in a scratch worktree; CODE / A5 as `build_mac.sh` prints
+them; functions by `nm -S` on `MacExtract.code.bin.gdb`.
+
+| case | shipped (eager) | lazy | control |
+|---|---|---|---|
+| (a) today, the shell's blocks | 39,744 / 16,736 | 38,524 / 16,756 | 186,300 / 36,676 |
+| (b) the library's `HOpen`/`HOpenRF`/`HDelete` | +160 / 0 | +160 / 0 | +192 / 0 |
+| (c) those three inline | +44 / +20 | +44 / +20 | +36 / −4 |
+| (c) and `MyOpenFork` `noinline` | +24 / +8 | +24 / +8 | +28 / +4 |
+| (d) all ten inline, `SegSetupFns` unchanged | −132 / +4 | −132 / +4 | −352 / 0 |
+| (d) and the image expanding four itself | −296 / −8 | −296 / −8 | −352 / 0 |
+| the same and `MyOpenFork` `noinline` | **−320 / −16** | −320 / −16 | −348 / −4 |
+| the blocks kept, the seven inline, image expanding four | **−344 / +8** | −344 / +8 | −376 / +24 |
+
+**Per function.** (b): `HOPEN` 66, `HOPENRF` 66, `HDELETE` 48 linked;
+`MyOpenFork` 78 → 70, `MyHDelete` 48 → 26. (c): `MyOpenFork` 78 → 106,
+because GCC expands both bodies, one per trap, and does not share the
+block; `MyHDelete` 48 → 38, and without `noinline` `MyOpenFork` is also
+expanded into `ExtractOne` for its `rsrc` = 1 call, +22. (d): `FSREAD`,
+`SETFPOS` and `SETEOF` go; `FSCLOSE`, `GETEOF`, `FSWRITE` and `FLUSHVOL`
+(162 B) stay in both bundle builds, because `gSegSetupFns` takes their
+addresses for `ovl_segsetup`, and go only when the image expands them
+(`ovl_segsetup` 2,446 → 2,434 B, the bundle 195,168 → 195,156; the
+table −16 B of `.data`). No call to the library copies is left in the
+control: the inliner took every call. GCC's `-Os` inliner moves the rest
+(`SegAskUser` 1,172 B folded into `seg_need`, +12 net; `StreamClose`
+outlined, 64 B). Otherwise A5 moves with the 32-byte alignment of
+the first `.data` object after CODE: no case changes data but the
+table, which loses 16 B.
+
+**The other axes, for the best case** (all ten inline, `noinline`, image
+expanding four). Budget: shipped **+336 B** on every format (`TIERS`
++352, `OVL_SAVED` 166,496 → 166,480), +12 more where an envelope keeps
+the bundle. Extractions lost: none, none gained (`run_tiers.py --check`
+with those constants and the images re-taken: resident 74/74, 70/74,
+64/74; shipped 74/74, 72/74, 72/74). Stack (`tools/stack_depth.py`): the
+engine's deepest chain 3,442 B, unchanged; `--shell` 6,130 → 6,114 B. Each
+parameter block moves into its caller's frame (`fio_read` 18 → 88,
+`sink_write` 48 → 124, `seg_release` 2 → 84); the tool charges library
+glue nothing, so the 84-128 B a glue frame took below those callers was
+never counted, and no chain is deeper. Transient heap: none, the glue
+allocates nothing. Correctness: `tests/run_mac_sink.sh` passes with
+`USE_GLUE` (an `HDelete` mock added; it compiles the mocks, not the
+inline bodies, which are 68K-only); `tests/run_overlay_host.sh` passes,
+and `--shipped-only` loads and relocates the changed `ovl_segsetup`
+without calling it. No emulator was booted: the inline code is not run
+on a Macintosh.
+
+**Consequence.** The hypothesis is withdrawn for the three calls: the
+blocks stay, and the switch is 0 B only with all ten inline and
+`MyOpenFork` kept out of line (+26 B of text the A5 step absorbs). The
+336 B are in the seven, and none of them needs the three, multiversal or
+upstream: the shell's own inline I/O would measure the same (hypothesis:
+only the multiversal shape was built). For multiversal, the generator
+change this implies is a C body for a function in the YAML (or
+`custom/glue.c` read into the header), emitted as the "complex" register
+traps are: a `gnu_inline` definition in the header under `TARGET_CPU_68K`,
+the same body as the out-of-line copy in `libInterface`, so a pointer to
+one still links. For MacExtract the first pull request worth having is
+the mechanism with `FSRead`, `FSWrite`, `SetFPos`, `GetEOF`, `SetEOF`,
+`FlushVol` and `FSClose`, not with `HOpen`/`HOpenRF`/`HDelete`.
