@@ -122,7 +122,7 @@ forks of classic StuffIt and Compact Pro (TESTING.md; FORMATS.md).
 
 ### What still holds the licence
 
-LGPL-2.1-or-later, through the five files that hold transcribed code
+LGPL-2.1-or-later, through the four files that hold transcribed code
 (`CODE` in `tools/check_provenance.py`, **code** below). The other rows are
 facts read in somebody else's code, 0BSD already, and stay listed because
 leaving XADMaster is about where the knowledge came from (DECISIONS.md
@@ -146,7 +146,7 @@ SPDX line, in the same commit.
 | `unc_lzah.c`, `unc_internal.h` — the `-lh1-`/method-5 window preload | the corpus cannot tell XADMaster's reading from lhasa's (DECISIONS.md 2026-09-28, *the preload nothing reaches*) | a writer's specimen that tells the two readings apart |
 | `src/sit14.c` — StuffIt 5's method 14, libxad's, **code** | libxad's `SIT_14` is the only implementation (FORMATS.md, *StuffIt 5's method 14*) | a description written from StuffIt 5's own engine; the largest row, not priced |
 | `fmt_arc.c` — Crunch 5/6/7, Crush, the method numbers, **code** | no other implementation of 7 or Crush; not taken 2026-09-22 | the DOS originals as encoders, and a description |
-| `fmt_dd.c` — method 7's Stac LZS and method 2's splay tree, transcribed, the per-method rules, and the DDAR 0x20 raw-fork shape, libxad's, **code** | listed as the raw-fork shape alone until 2026-11-08 (BLOCKERS.md, *Withdrawn claims*) | methods 2 and 7 described from DiskDoubler's own coders, as the wiki gave 6, 9 and 10; DiskDoubler's own expander on a fork of the 0x20 shape |
+| `fmt_dd.c` — the per-method rules, and the DDAR 0x20 raw-fork shape, libxad's, facts | methods 2, 5 and 7's codecs left 2026-11-09 for DiskDoubler 3.1.2's own decoders (`docs/formats/diskdoubler-splay-stac.md`; DECISIONS.md 2026-11-09, *the decoders DiskDoubler shipped*) | DiskDoubler's own expander on a fork of the 0x20 shape |
 | `fmt_sitseg.c`, `fmt_sitseg_probe.c` — the StuffIt split header | Aladdin never published it; nothing else in `reference/` reads it (NOTICE) | its offsets measured off sets StuffIt cuts, as the B0 56 bytes were |
 | `unc_sidecar.c` — which names are Mac OS X sidecars, and the pairing rule | — | not looked for |
 | `unc_segment.c` — the part names of a spanned zip (`NAME.zNN`, `NAME.zip` last) and a `.NNN` split, since 2026-11-08 | facts, not code (NOTICE) | not looked for |

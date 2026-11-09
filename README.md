@@ -187,7 +187,7 @@ coffee at [ko-fi.com/khaz1](https://ko-fi.com/khaz1).
 
 ## License
 
-0BSD: everything this project wrote itself. Five decoders transcribed from
+0BSD: everything this project wrote itself. Four decoders transcribed from
 [XADMaster](https://github.com/MacPaw/XADMaster), libxad or macutils are
 LGPL-2.1-or-later and say so in their header, and zlib's inflate keeps the
 zlib licence; `NOTICE` lists them.

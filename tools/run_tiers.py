@@ -283,10 +283,13 @@ REPO = os.path.dirname(HERE)
 # control's CODE -96 and A5 0; the shipped pair fell the same 96, OVL_SAVED
 # unmoved. They were 190,276 / 94,894 / 619,182.
 TIERS = {
-    "sys3-512K": (189764, "System 3.0, Macintosh 512Ke (222,070 B free)"),
-    "sys6-512K": (94382,  "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
-    "floor-1M":  (618670, "System 6.0.8, 1 MB Mac Plus — the floor target"),
+    "sys3-512K": (189956, "System 3.0, Macintosh 512Ke (222,070 B free)"),
+    "sys6-512K": (94574,  "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
+    "floor-1M":  (618862, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
+# +192 each 2026-11-09, DERIVED from TIERS_CONTROL -192 (DiskDoubler's
+# methods 2, 5 and 7 from Salient's own decoders, DECISIONS.md 2026-11-09,
+# *the decoders DiskDoubler shipped*); they were 189,764 / 94,382 / 618,670.
 # +320 each 2026-11-09, DERIVED from TIERS_CONTROL -320 (StuffIt classic's
 # key code from StuffIt Engine 3.5.2's own, DECISIONS.md 2026-11-09,
 # *the key StuffIt's own engine derives*); they were 189,444 / 94,062 / 618,350.
@@ -516,7 +519,11 @@ TIERS = {
 # +192 2026-11-07: Now Compress polls Cancel inside a block (`ovl_now` +186;
 # DECISIONS.md 2026-11-07, *the block a click waited for*); CODE +180, A5 +12.
 # TIERS -192 and OVL_SAVED +192, which cancel: only a now-keeper moves.
-TIERS_CONTROL = 223168     # build/mac-resident, CODE + A5, 2026-11-09
+TIERS_CONTROL = 222976     # build/mac-resident, CODE + A5, 2026-11-09
+# -192 2026-11-09: DiskDoubler's methods 2, 5 and 7 from Salient's own
+# decoders (`ovl_cptdd` -358; CODE -180, A5 -12; DECISIONS.md 2026-11-09,
+# *the decoders DiskDoubler shipped*); TIERS +192 and OVL_SAVED -192, which
+# cancel: only a cptdd-keeper moves, +358.
 # -320 2026-11-09: StuffIt classic's key code from StuffIt Engine 3.5.2's
 # own (`ovl_crypt` -320; CODE -316, A5 -4; DECISIONS.md 2026-11-09,
 # *the key StuffIt's own engine derives*); TIERS +320 and OVL_SAVED -320, which
@@ -1129,7 +1136,13 @@ EXPECT = {
 # shipped pair's 0, the code in `ovl_crypt` (-320; DECISIONS.md 2026-11-09,
 # *the key StuffIt's own engine derives*). TIERS +320, which cancels: only a
 # ciphers-keeper's budget moves, +320.
-OVL_SAVED = 166688
+# **-192 2026-11-09, -> 166,496**: DiskDoubler's methods 2, 5 and 7 from
+# Salient's own decoders, the control's -192 (CODE -180, A5 -12) against the
+# shipped pair's 0, the code in `ovl_cptdd` (-358, of which libgcc's
+# __modsi3 family, which the old `% ntrees` linked into the image, is about
+# 230; DECISIONS.md 2026-11-09, *the decoders DiskDoubler shipped*). TIERS
+# +192, which cancels: only a cptdd-keeper's budget moves, +358.
+OVL_SAVED = 166496
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
 # every kept image is one — as is the bundle an envelope holds on to.
@@ -1267,7 +1280,7 @@ IMAGES = {
     "OVL_ID_BINHEX":      7422,
     "OVL_ID_BTOA":        2496,
     "OVL_ID_CODECS":      6016,
-    "OVL_ID_CPTDD":       15232,
+    "OVL_ID_CPTDD":       14874,
     "OVL_ID_CRYPT":       9284,
     "OVL_ID_EXO":         30228,
     "OVL_ID_LZH":         10438,
@@ -1412,7 +1425,10 @@ IMAGES = {
 # (DECISIONS.md 2026-11-07, *the comment the Desktop Manager cut*).
 # **CRYPT -320, the bundle -320 B, 2026-11-09**: StuffIt classic's key code
 # from StuffIt Engine 3.5.2's own (DECISIONS.md 2026-11-09, *the key StuffIt's own engine derives*).
-BUNDLE = 195524
+# **CPTDD -358, the bundle -356 B, 2026-11-09** (the image's padding to 4
+# is 2 B now): DiskDoubler's methods 2, 5 and 7 from Salient's own decoders
+# (DECISIONS.md 2026-11-09, *the decoders DiskDoubler shipped*).
+BUNDLE = 195168
 
 # What the SHIPPED lane asserts, and it is the refused fixtures BY NAME
 # rather than a tally: a tier that refuses two different fixtures and still

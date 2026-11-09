@@ -19,27 +19,25 @@
  *           XADDiskDoublerParser.m restates
  * and the note says what would settle it.
  *
- * Method 7 is transcribed:
- *   Source: reference/XADMaster/XADStacLZSHandle.m           (method 7)
- * — LGPL, see NOTICE.
- *
- * The AD and DD coders are NOT, since 2026-09-21. They are written
- * from the format's own published description, with the corrections
- * it needs measured here:
+ * The coders are this project's own. The AD and DD coders, since
+ * 2026-09-21, are written from the format's own published description,
+ * with the corrections it needs measured here:
  *   Source: reference/notes/dd_ad_theunarchiver.md
  *           + docs/formats/diskdoubler-dd.md                 (methods 6, 9)
  *   Source: reference/notes/dd_dd_theunarchiver.md
  *           + docs/formats/diskdoubler-dd.md                 (method 10)
+ * The splay-tree code and Stac LZS, since 2026-11-09, from the published
+ * algorithms and from Salient's own decoders, read and run here:
+ *   Source: reference/notes/splay_jones_minunsplay.c
+ *           + docs/formats/diskdoubler-splay-stac.md         (methods 2, 5)
+ *   Source: reference/notes/rfc1974.txt
+ *           + docs/formats/diskdoubler-splay-stac.md         (method 7)
  *
  * A file header describes BOTH forks, each with its own method, so one
  * DiskDoubler entry is one entry here (XADMaster splits the forks into
  * two entries; ours is the engine's usual shape).
  *
- * Methods 2, 3, 4 and 5 are recognized and declined per entry: no
- * specimen of any of them has been found, so an implementation could not
- * be graded — the same reason LZH extraction stays out of scope.
- *
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: 0BSD
  */
 #include "unc_internal.h"
 
@@ -281,133 +279,103 @@ static int dd_lzc(DdFork *o, UncCtx *c, UncBufIn *in, uint32_t complen,
     return err;
 }
 
-/* ---- method 2: splay-tree Huffman, one tree per preceding byte ----- */
+/* ---- methods 2 and 5: splay-tree codes, one tree per context ------- */
 /*
- * An order-1 adaptive code: 256 splay trees, the one in use chosen by
- * the byte just produced. Each tree starts as the complete binary tree
- * over 256 leaves — internal node j has children 2j and 2j+1, the root
- * is node 1 and node 256+b is the leaf for byte b — so the first byte
- * of a fork costs eight bits and the tree self-adjusts from there:
- * after each byte its leaf is rotated toward the root, which is what
- * makes the code adaptive without transmitting any table.
- *
- * The decompressed bytes are XORed with 0x5a under the same condition
- * as method 1 (`info1 >= 0x2a` and info2's high bit clear); the fork's
- * 16-bit sum is taken over the result, and unlike method 1 there is no
- * header adjustment because the stream carries no header.
- *
- * Method 5 is this codec with a leading byte giving the tree count
- * (0 meaning 256); it stays declined for want of a specimen.
- *
- * Source: reference/XADMaster/XADDiskDoublerMethod2Handle.m (the tree
- * and the splay step) and XADDiskDoublerParser.m, case 2 (the tree
- * count, the XOR condition and the checksum).
+ * Jones's splay-tree prefix code (Douglas W. Jones, "Application of
+ * splay trees to data compression", CACM 31(8), 1988): a binary tree
+ * whose leaves are the 256 byte values, a byte coded as its path from
+ * the root (0 left, 1 right, most significant bit of each input byte
+ * first), and after every byte its leaf semi-splayed toward the root —
+ * each step swaps the node with its grandparent's other child — so the
+ * code adapts with no table sent.
+ *   Source: reference/notes/splay_jones_minunsplay.c (initsplay,
+ *           uncompress: the tree, the path and the semi-splay)
+ * DiskDoubler keeps one such tree per context, the context being the
+ * byte just decoded masked with count - 1: 256 trees for method 2, a
+ * count from the stream's first byte for method 5. Each starts as the
+ * complete tree over 256 leaves: node j's children are 2j and 2j+1, the
+ * root is 1, leaf 256 + b is byte b.
+ *   Source: docs/formats/diskdoubler-splay-stac.md, read off Salient's
+ *           decoder (DiskDoubler App 3.1.2, CODE 11 @0x221e) and graded
+ *           against it by tools/ddcode/run_ddcode.py
+ * The 0x5a XOR and the 16-bit sum are applied by the caller, over what
+ * this produces.
  */
-typedef struct DdM2Tree {
-    uint16_t left[256];      /* by internal node; a value >= 256 is a leaf */
-    uint16_t right[256];
-    uint8_t  parent[512];    /* by node, internal and leaf alike */
-} DdM2Tree;
+typedef struct DdSplay {
+    uint8_t  up[512];        /* a node's parent, internal nodes only */
+    uint16_t left[256];      /* children of internal nodes; >= 256 is */
+    uint16_t right[256];     /* the leaf of byte (child - 256)          */
+} DdSplay;
 
-typedef struct DdM2 {
-    DdM2Tree *tree[256];     /* NULL until a context is first used */
-} DdM2;
-
-/* The trees are identical until used, so one is built only when its
- * context byte actually occurs. A fork that never mentions a byte never
- * pays its 1,536 bytes — which is what keeps a small fork small; a fork
- * that uses every context costs 384 KB and is a per-entry allocation
- * failure on a small machine, like any other data-driven allocation
- * here. */
-static DdM2Tree *dd_m2_tree(DdM2 *m, UncCtx *c, int i)
+/* A context's tree is built when the context first occurs: one that
+ * never does costs nothing, and a fork that uses every context asks for
+ * 384 KB, which a small machine refuses per entry.
+ *
+ * The bits are taken here rather than through UncBitIn: `acc` holds what
+ * is left of the current byte at its top with a marker bit below, so it
+ * reads 0x8000 when the byte is spent; and the function is kept out of
+ * dd_fork so the walk has registers of its own. A 300 KB fork on a Mac
+ * Plus: 9,458 engine ticks through unc_bitin_bit inlined into dd_fork,
+ * 5,841 like this (DECISIONS.md 2026-11-09, *the decoders DiskDoubler
+ * shipped*). */
+static UNC_NOINLINE int dd_m2(DdFork *o, UncCtx *c, UncBufIn *in, int xorval,
+                             int ntrees)
 {
-    DdM2Tree *t = m->tree[i];
-    int j;
+    DdSplay *tree[256];
+    unsigned ctx = 0, mask = (unsigned)ntrees - 1u, i;
+    uint16_t acc = 0x8000u;
+    int err = UNC_OK;
 
-    if (t) return t;
-    t = (DdM2Tree *)unc_alloc(c->al, (uint32_t)sizeof *t);
-    if (!t) return NULL;
-    for (j = 0; j < 256; j++) {
-        t->left[j]  = (uint16_t)(j * 2);
-        t->right[j] = (uint16_t)(j * 2 + 1);
-        t->parent[j * 2]     = (uint8_t)j;
-        t->parent[j * 2 + 1] = (uint8_t)j;
-    }
-    m->tree[i] = t;
-    return t;
-}
-
-/* Rotate the leaf just decoded one level toward the root, repeatedly:
- * the node changes places with its uncle, which halves its depth. */
-static void dd_m2_splay(DdM2Tree *t, int byte)
-{
-    int node = byte + 0x100;
-
-    for (;;) {
-        int parent = t->parent[node], grand, uncle;
-
-        if (parent == 1) break;
-        grand = t->parent[parent];
-        uncle = t->left[grand];
-        if (uncle == parent) {
-            uncle = t->right[grand];
-            t->right[grand] = (uint16_t)node;
-        } else {
-            t->left[grand] = (uint16_t)node;
+    for (i = 0; i < 256; i++) tree[i] = NULL;
+    while (o->left) {
+        DdSplay *t = tree[ctx];
+        uint16_t *lf, *rt;
+        uint8_t *up;
+        uint16_t node = 1, par, grand, other;
+        if (!t) {
+            t = (DdSplay *)unc_alloc(c->al, (uint32_t)sizeof *t);
+            if (!t) { err = UNC_ERR_MEM; break; }
+            for (i = 0; i < 256; i++) {
+                t->up[i + i] = t->up[i + i + 1u] = (uint8_t)i;
+                t->left[i] = (uint16_t)(i + i);
+                t->right[i] = (uint16_t)(i + i + 1u);
+            }
+            tree[ctx] = t;
         }
-        if (t->left[parent] != node) t->right[parent] = (uint16_t)uncle;
-        else                         t->left[parent]  = (uint16_t)uncle;
-        t->parent[node]  = (uint8_t)grand;
-        t->parent[uncle] = (uint8_t)parent;
-
-        node = grand;
-        if (node == 1) break;
-    }
-}
-
-static int dd_m2(DdFork *o, UncCtx *c, UncBufIn *in, int xorval, int ntrees)
-{
-    UncBitIn bi;
-    DdM2 m;
-    uint8_t ctxof[256];
-    int err = UNC_OK, i, ctx = 0;
-
-    /* Method 2 fixes this at 256; method 5 reads it from the stream, and
-     * 0 there means 256. Guarded because byte % ntrees is what selects
-     * the tree: a zero reaching that would be a crash on a malformed
-     * file, which is the one failure the fork's checksum cannot turn
-     * into an error. */
-    if (ntrees <= 0 || ntrees > 256) ntrees = 256;
-
-    /* ...and the modulo itself runs ONCE PER OUTPUT BYTE. The 256 = 256
-     * case is already a special case in the source; the other branch
-     * still called __modsi3 per byte on a 68000, which has no divide.
-     * A 256-entry table built once answers both. */
-    for (i = 0; i < 256; i++)
-        ctxof[i] = (uint8_t)(ntrees == 256 ? i : i % ntrees);
-
-    for (i = 0; i < 256; i++) m.tree[i] = NULL;
-    unc_bitin_init(&bi, in);
-
-    while (o->left > 0) {
-        DdM2Tree *t = dd_m2_tree(&m, c, ctx);
-        int node = 1, byte;
-
-        if (!t) { err = UNC_ERR_MEM; break; }
-        for (;;) {
-            int bit = unc_bitin_bit(&bi);
-            if (bit < 0) { err = bi.err; break; }
-            node = bit ? t->right[node] : t->left[node];
-            if (node >= 0x100) break;
+        lf = t->left; rt = t->right; up = t->up;
+        do {
+            if (acc == 0x8000u) {
+                int b = unc_bufin_next(in);
+                if (b < 0) { err = in->err; goto out; }
+                acc = (uint16_t)((unsigned)b << 8 | 0x80u);
+            }
+            node = (acc & 0x8000u) ? rt[node] : lf[node];
+            acc = (uint16_t)(acc << 1);
+        } while (node < 256);
+        ctx = (node - 256u) & mask;
+        if ((err = dd_out_byte(o, (uint8_t)(node ^ (unsigned)xorval)))
+            != UNC_OK)
+            break;
+        /* Up from the leaf two levels at a time. up[1] is 0, so the walk
+         * stops at the root as well as below it. */
+        while ((par = up[node]) > 1) {
+            grand = up[par];
+            other = lf[grand];
+            if (other == par) {
+                other = rt[grand];
+                rt[grand] = node;
+            } else {
+                lf[grand] = node;
+            }
+            if (lf[par] == node) lf[par] = other;
+            else                 rt[par] = other;
+            up[node] = (uint8_t)grand;
+            up[other] = (uint8_t)par;
+            node = grand;
         }
-        if (err != UNC_OK) break;
-        byte = node - 0x100;
-        dd_m2_splay(t, byte);
-        ctx = ctxof[byte];
-        if ((err = dd_out_byte(o, (uint8_t)(byte ^ xorval))) != UNC_OK) break;
     }
-
-    for (i = 0; i < 256; i++) unc_free(c->al, m.tree[i]);
+out:
+    for (i = 0; i < 256; i++) unc_free(c->al, tree[i]);
     return err;
 }
 
@@ -524,100 +492,71 @@ static int dd_huffman(DdFork *o, UncCtx *c, UncBufIn *in, int xorval)
 
 /* ---- method 7: Stac LZS -------------------------------------------- */
 /*
- * Stac's LZS, which DiskDoubler 3.x wrote when a Sigma Designs
- * compression card was fitted. A 2 KB-window LZSS, with two twists: the
- * bit stream is stored COMPLEMENTED, and so are the bytes it produces;
- * and a match length is not bounded by the window, so it may exceed 2048
- * and repeat.
- *
- * Source: reference/XADMaster/XADStacLZSHandle.m (the codec) and
- * XADDiskDoublerParser.m, case 7 (the chunk table, the two complements
- * and the checksum's parity rule). Cross-checked against
- * reference/macutils/macunpack/dd.c, dd_lzss, which agrees on the codec
- * and on complementing the input, and omits the output's complement.
+ * Stac's LZS (ANSI X3.241-1994), which DiskDoubler 3.x writes when a
+ * Sigma Designs card is fitted and decodes in software when none is. The
+ * token grammar: a literal is 0 and eight bits; a match is 1, an offset
+ * (1 and seven bits, or 0 and eleven), then a length (00, 01, 10 for 2-4;
+ * 1100-1110 for 5-7; 1111 then nibbles from 8, a nibble of 15 meaning
+ * another follows), so a match may run far past the 2 KB window.
+ *   Source: reference/notes/rfc1974.txt, section 2.5.5
+ * DiskDoubler's fork: an 18-byte header whose u32 at +6 counts the 16-bit
+ * entries after it, then one bit stream for all the chunks, every byte of
+ * it complemented, and the window holds the complement of each output
+ * byte. An offset of zero in either form ends the stream.
+ *   Source: docs/formats/diskdoubler-splay-stac.md, read off Salient's
+ *           decoder (DiskDoubler App 3.1.2, CODE 11 @0x34e2) and graded
+ *           against it by tools/ddcode/run_ddcode.py
+ * The header's own CRC-16, which Salient checks, is not; the XOR over the
+ * fork is the caller's.
  */
 #define DD_STAC_WINDOW 2048u
 
-/* n bits of a complemented stream. Bits are read MSB-first and each
- * field is contiguous, so complementing the field is complementing the
- * bytes it came from. */
-static int32_t dd_stac_bits(UncBitIn *bi, int n)
+/* n bits of the complemented stream; 0 once the input has failed, which
+ * reads as an end marker and leaves bi->err to say why. */
+static unsigned dd_lzs(UncBitIn *bi, int n)
 {
-    int32_t v = unc_bitin_bits(bi, n);
-    if (v < 0) return v;
-    return v ^ (int32_t)((1u << n) - 1u);
+    return (unsigned)~unc_bitin_bits(bi, n) & ((1u << n) - 1u);
 }
 
 static int dd_stac(DdFork *o, UncBufIn *in, uint8_t *win, uint32_t complen)
 {
     UncBitIn bi;
-    uint32_t ne = 0, pos = 0, i;
-    int32_t v;
-    int err, b;
+    uint32_t pos = 0, n = 0;
+    unsigned i, off, len, k;
+    int err;
 
-    /* Six bytes, a 32-bit count of compressed chunks, eight more, then
-     * one 16-bit length per chunk. The codec reads none of it: the
-     * chunks are one continuous bit stream. */
-    if (complen < 18) return UNC_ERR_TRUNCATED;
-    for (i = 0; i < 6; i++)
-        if (unc_bufin_next(in) < 0) return in->err;
-    for (i = 0; i < 4; i++) {
-        b = unc_bufin_next(in);
+    for (i = 0; i < 18; i++) {
+        int b = unc_bufin_next(in);
         if (b < 0) return in->err;
-        ne = (ne << 8) | (uint32_t)b;
+        if (i >= 6 && i < 10) n = n << 8 | (uint32_t)b;
     }
-    if (ne > (complen - 18u) / 2u) return UNC_ERR_CORRUPT;
-    if ((err = unc_bufin_skip_to(in, 18u + 2u * ne)) != UNC_OK) return err;
-
+    if (n > (complen - 18u) / 2u) return UNC_ERR_CORRUPT;
+    if ((err = unc_bufin_skip_to(in, 18u + 2u * n)) != UNC_OK) return err;
     unc_bitin_init(&bi, in);
-    while (o->left > 0) {
-        if ((v = dd_stac_bits(&bi, 1)) < 0) return bi.err;
-        if (v == 0) {
-            if ((v = dd_stac_bits(&bi, 8)) < 0) return bi.err;
-            win[pos & (DD_STAC_WINDOW - 1u)] = (uint8_t)v;
-            pos++;
-            if ((err = dd_out_byte(o, (uint8_t)(v ^ 0xFF))) != UNC_OK)
-                return err;
-        } else {
-            uint32_t offset, length;
-            if ((v = dd_stac_bits(&bi, 1)) < 0) return bi.err;
-            if (v == 1) {
-                if ((v = dd_stac_bits(&bi, 7)) < 0) return bi.err;
-                offset = (uint32_t)v;
-            } else {
-                if ((v = dd_stac_bits(&bi, 7)) < 0) return bi.err;
-                if (v == 0) break;                  /* end of stream */
-                offset = (uint32_t)v << 4;
-                if ((v = dd_stac_bits(&bi, 4)) < 0) return bi.err;
-                offset |= (uint32_t)v;
-            }
-            if ((v = dd_stac_bits(&bi, 2)) < 0) return bi.err;
-            length = (uint32_t)v;
-            if (length == 3) {
-                if ((v = dd_stac_bits(&bi, 2)) < 0) return bi.err;
-                length += (uint32_t)v;
-                if (length == 6) {
-                    do {
-                        if ((v = dd_stac_bits(&bi, 4)) < 0) return bi.err;
-                        length += (uint32_t)v;
-                    } while (v == 15);
-                }
-            }
-            length += 2;
-            /* A zero distance names no byte. XADStacLZSHandle rejects it
-             * only through `offset>pos`, macunpack ends the stream on it;
-             * no specimen reaches either. */
-            if (offset == 0 || offset > pos) return UNC_ERR_CORRUPT;
-            for (i = 0; i < length && o->left > 0; i++) {
-                uint8_t m = win[(pos - offset) & (DD_STAC_WINDOW - 1u)];
-                win[pos & (DD_STAC_WINDOW - 1u)] = m;
-                pos++;
-                if ((err = dd_out_byte(o, (uint8_t)(m ^ 0xFF))) != UNC_OK)
-                    return err;
-            }
+    for (;;) {
+        if (dd_lzs(&bi, 1) == 0) {                         /* a literal */
+            k = dd_lzs(&bi, 8) ^ 0xFFu;
+            if (bi.err) return bi.err;
+            win[pos++ & (DD_STAC_WINDOW - 1u)] = (uint8_t)k;
+            if ((err = dd_out_byte(o, (uint8_t)k)) != UNC_OK) return err;
+            continue;
+        }
+        off = dd_lzs(&bi, dd_lzs(&bi, 1) ? 7 : 11);
+        if (off == 0) return bi.err;                       /* the end */
+        len = dd_lzs(&bi, 2) + 2u;
+        if (len == 5) {
+            len += dd_lzs(&bi, 2);
+            if (len == 8)
+                do { k = dd_lzs(&bi, 4); len += k; } while (k == 15);
+        }
+        if (bi.err) return bi.err;
+        if (off > pos) return UNC_ERR_CORRUPT;   /* before the first byte */
+        while (len--) {
+            k = win[(pos - off) & (DD_STAC_WINDOW - 1u)];
+            win[pos++ & (DD_STAC_WINDOW - 1u)] = (uint8_t)k;
+            if ((err = dd_out_byte(o, (uint8_t)k)) != UNC_OK) return err;
         }
     }
-    return UNC_OK;
 }
 
 /* ---- method 10: DDn ----------------------------------------------- */
@@ -1112,7 +1051,9 @@ static int dd_fork(UncCtx *c, UncFork fork, uint32_t at, uint32_t complen,
         err = UNC_ERR_CRC;
     /* Method 7 carries a one-byte XOR of the fork instead, complemented
      * when the fork's length is even.
-     * Source: XADDiskDoublerParser.m handleForEntryWithDictionary, case 7. */
+     * Source: XADDiskDoublerParser.m handleForEntryWithDictionary, case 7;
+     * measured in Salient's decoder too (docs/formats/diskdoubler-splay-
+     * stac.md, "The check"). */
     if (err == UNC_OK && m == 7 && crc != 0) {
         uint8_t want = (uint8_t)crc;
         if ((uncomplen & 1u) == 0) want ^= 0xFF;

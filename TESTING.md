@@ -2424,6 +2424,21 @@ header can refuse*).
   with a NUL in it (*What the engine does differently*,
   `docs/formats/stuffit-des-key.md`), nor the 2.x schemes, whose
   derivation this is and which `run_sitopt.py` grades.
+- **DiskDoubler methods 2, 5 and 7, by DiskDoubler 3.1.2**
+  (`docs/formats/diskdoubler-splay-stac.md`). `tools/ddcode/run_ddcode.py`
+  runs the splay-tree and Stac decoders of its `DiskDoubler™ App`, `CODE`
+  11, under `qemu-m68k` (`tools/ddcode/dd_run.c`, its own stubs in the jump
+  table), and hands the same forks to the CLI in a container: every method
+  2, 5 and 7 fork in the corpus, the specimens and the 3.1.2 floppy (26),
+  283 splay forks from `ddencode.py`'s encoder at every tree count, and 151
+  Stac forks from its own (every length to 69, matches to 65,537 bytes, both
+  offset forms at their limits, both end markers, up to 200 table entries).
+  Where the two are meant to differ the case is named in `EXPECT_DIFFER`
+  and must differ. Seven patches to Salient's code, one per rule, must each
+  fail it. About 15 minutes; not in `ci.sh` (needs the cached floppy, the
+  cross-compiler and `qemu-m68k`). **It cannot see** a match reaching
+  before the first byte, which Salient copies out of an uninitialised stack
+  buffer, nor the Sigma card's own decoder.
 - **WinZip AES**: no second reader here (`unar` 1.10.8 cannot open one),
   so **7-Zip** writes four cases (256, 192, 128, and one stored), verifies
   them itself, and our output must equal the input; each also has a
