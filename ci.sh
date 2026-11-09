@@ -556,6 +556,18 @@ UNC_AT_OVERLAY=1 sh tools/build_mac.sh || fail "overlay build (eager)"
 python3 tools/run_tiers.py --check-images \
     || fail "the overlay images moved — re-take run_tiers.py's IMAGES"
 
+# CLAUDE.md's call-depth rule, which nothing checked until 2026-11-09: the
+# figure on file was a month older than its frames (DECISIONS.md 2026-11-09,
+# *the chain nobody had re-derived*). It builds the shipped configuration
+# itself, so it needs Retro68 and nothing above.
+if [ -x "${RETRO68:-/opt/Retro68-build/toolchain}/bin/m68k-apple-macos-gcc" ]; then
+    echo "=== the 68000 call depth: the engine's deepest chain <= 4,096 B ==="
+    python3 tools/stack_depth.py --selftest || fail "stack_depth selftest"
+    python3 tools/stack_depth.py --limit 4096 > build/stack_depth.txt 2>&1 \
+        || { cat build/stack_depth.txt; fail "the engine's call depth (tools/stack_depth.py)"; }
+    sed -n 3p build/stack_depth.txt
+fi
+
 # variant 4c: the LAZY lifetime — the same fifteen images, one resource
 # each, read when a format turns out to want one. It is not shipped, and that
 # is precisely why it is built: the two lifetimes were separate branches until

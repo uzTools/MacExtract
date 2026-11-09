@@ -568,6 +568,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-09 (the decoders DiskDoubler shipped) — DiskDoubler's methods 2, 5 and 7 rewritten from Salient's own decoders, read and run under qemu-m68k, and from Jones's paper and RFC 1974; smaller and faster on both, but 0.2-0.4 % slower on method 10, so not landed: branch `dd-own-coders`
 - 2026-11-09 (the garble ARC wrote and the key DropStuff used) — ARC's garble and StuffIt 5's password key leave XADMaster for the originals' own source and output; `unc_crypt.c` leaves `CARRIES`
 - 2026-11-09 (the bit the inventory still named) — `fmt_sit5.c` carries nothing of XADMaster's: bit 5 was measured on 2026-10-06, and bit 6, the one thing only XADMaster knows, is not read
+- 2026-11-09 (the chain nobody had re-derived) — the engine's deepest call chain is 4,070 B, 26 B under CLAUDE.md's 4 KB; `tools/stack_depth.py` derives it and `ci.sh` holds it there
 
 ---
 
@@ -23508,3 +23509,47 @@ OPEN_ITEMS row go, and its header comment, which still said no corpus
 archive sets the encrypted bit (stale since 2026-09-27), is corrected.
 Comments only in `src/`; `check_provenance.py` fails if the file is put
 back in `CARRIES` (shown).
+
+## 2026-11-09 (the chain nobody had re-derived) — the engine's deepest call chain is 4,070 B, 26 B under CLAUDE.md's 4 KB; `tools/stack_depth.py` derives it and `ci.sh` holds it there
+
+**Claim (measured).** FORMATS.md *Stack* said 3,350 B, "derived
+2026-10-17", from frames a month old: `unc_dd_extract` alone is 1,116 B
+under the overlay flags against the 992 the sum assumed (found by *the
+decoders DiskDoubler shipped*, the same night). `tools/stack_depth.py`
+builds every file as the shipped application does, takes frames and edges
+from GCC's `-fcallgraph-info=su`, and resolves every indirect call:
+**4,070 B**, `unc_extract` → `unc_extract_as` → the decoder shim → `ovl_run`
+→ `unc_dd_extract` → `dd_emit` → `dd_fork` (1,840) → `unc_huff_read_tree`
+(688, the codecs image) → `unc_bufin_next_slow` → libgcc's `__umodsi3`. The
+shell above it reaches **7,720 B** of the 12,220 B stack, through a spanned
+zip's missing part, `SegAskUser`, and the engine again. Neither rule is
+broken, so nothing was booted; the margin is the engine's 26 B.
+
+**Two words a sum of `.su` lines leaves out, measured** (`--selftest`):
+the return address, and the frame pointer a `LINK` saves. The old figures
+counted neither; they are 76 B of today's 4,070.
+
+**What a static graph needed.** Relocations alone miss every call through a
+pointer, and resolving those by type alone invents paths: the first run's
+deepest chain, 5,896 B, decoded zip through a joined set's stream inside a
+segment map inside itself. Each rule that removed one is a fact about the
+source with its file named (a joined set's stream exists only under
+`unc_extract_segments`; the envelope peek decodes only envelopes; input is
+decrypted only in the seven files that set a cipher up), and the two lists
+among them are re-read from `src/` on every run; the cycle check found
+the two wrappers. The address-taken guard found a bug in the tool itself
+before any figure was written down: GCC prints some edges without a source
+position, and the parser had been dropping them.
+
+**Consequence.** FORMATS.md *Stack*'s rows are corrected in place; the
+check runs in `ci.sh` with `--limit 4096` (about 20 s), so the next 27 B
+on the DiskDoubler chain fails a commit rather than a month later. What
+moving it would cost is not priced here; `dd-own-coders` would take 992 B
+off it.
+
+**Transferable.**
+- **A derived figure is as old as the oldest frame in it.** Re-derive the
+  sum, not the one term somebody remembered changing.
+- **A call graph that resolves pointers by type is a superset, and its
+  deepest chain is usually a path nobody can take.** The first answer here
+  was 45 % high; the fix was rules, each one checkable, not a smaller class.

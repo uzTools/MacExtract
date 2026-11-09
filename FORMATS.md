@@ -1810,7 +1810,7 @@ against the 32 the assignment can represent.
 | `ovl_stuffit` image | 23,670 → **26,274 B** (26,278 until the sort fix of 2026-10-06, which is -4 B), read at launch and released for every archive that is not a StuffIt one |
 | resident `CODE`, SHIPPED build | **+0 B**, A5 +0 |
 | resident `CODE`, the control | 158,972 → 161,596 B (+2,624; `src/sit14.c` is 2,613 B of text and no data or bss at all) |
-| deepest stack chain | **360 B** — `unc_sit14_decode` 104, `sit14_tree` 84, `sit14_build` 172 — against the engine's deepest 3,350 B (*Stack*) |
+| deepest stack chain | **360 B** — `unc_sit14_decode` 104, `sit14_tree` 84, `sit14_build` 172 — against the engine's deepest 4,070 B (*Stack*, 2026-11-09) |
 
 The window is sized to the fork, by `sit13_winsize`'s argument (*StuffIt
 classic: method 13's window*). A fork wanting the whole 256 KB is refused
@@ -4698,27 +4698,34 @@ that resolves better on a 22-minute run.
     m68k-apple-macos-gcc -mcpu=68000 -Os -std=c99 -Iinclude -Isrc \
         -fstack-usage -c src/FILE.c -o /dev/null
 
-and the call graph comes from the relocations in the linked objects
-(`m68k-apple-macos-objdump -dr`), so the worst path is a sum over the two.
+and **`tools/stack_depth.py` gives the chains** (TESTING.md, *The 68000
+call depth*): every frame and call edge from GCC's own
+`-fcallgraph-info=su`, each file built with the flags of the image it ships
+in, the forwards and shims between images as frames, and every indirect
+call resolved to what can be behind it. A chain's bytes are each frame plus
+4 for its return address, plus 4 where it opens with `LINK` — two words
+`-fstack-usage` leaves out, so the figures below are larger than a sum of
+`.su` lines (both measured, `--selftest`).
 
-| | before 2026-08-24 | now |
+| | before 2026-08-24 | now (`tools/stack_depth.py`, 2026-11-09) |
 |---|---|---|
-| deepest chain in the engine | 6,664 B (`unc_dd_extract` → `dd_fork` → `dd_ddn`) | **3,350 B**, derived 2026-10-17: 3,310 B since 2026-10-07, +44 B for `UncEntryInfo` (`unc_dd_extract` 952 → 996), −4 for DiskDoubler's FInfo (996 → 992) |
-| Now Compress chain | 5,632 B | ~1,400 B; −616 B since 2026-09-21 (a shape-3 block's table staging moved to the per-archive allocation; DECISIONS.md 2026-09-27, *the inventory that was kept twice*) |
-| largest single frame | 3,740 B (`dd_fork`) | **2,352 B** (`ars_index_build`) |
-| largest frame in the SHELL | — | **1,544 B** (`ExtractOne`, whose `MacSink` holds an entry), measured 2026-10-17; `StampCat` 272 → **320 B** 2026-10-21 (DECISIONS.md 2026-10-21, *the Desktop Manager System 6 can have*) |
+| deepest chain in the engine | 6,664 B (`unc_dd_extract` → `dd_fork` → `dd_ddn`) | **4,070 B, 26 B under the 4,096 rule**: `unc_extract` 32 → `unc_extract_as` 168 → the `unc_dd_extract` shim 12 → `ovl_run` 28 → `ovl_main` 4 → `unc_dd_extract` 1,124 → `dd_emit` 62 → `dd_fork` 1,840 → `unc_huff_read_tree` 688 (the codecs image, through the vector) → `unc_bitin_bits` 28 → `unc_bitin_bit` 12 → `unc_bufin_next_slow` 44 → `__umodsi3` 12 → `__udivsi3` 8; 3,994 B in `-fstack-usage` figures alone, 4,018 B with FORMATS' one command (`--config host`). **Corrected 2026-11-09:** the 3,350 B derived 2026-10-17 was older than its frames (`unc_dd_extract` 992 → 1,116 B) and started at `unc_dd_extract` |
+| Now Compress chain | 5,632 B | **1,656 B** from `unc_now_extract` (940) → `now_fork` → `now_huffman` (404) → `unc_canon_build_ext`; "~1,400 B" until 2026-11-09 (corrected); −616 B since 2026-09-21 (a shape-3 block's table staging moved to the per-archive allocation; DECISIONS.md 2026-09-27, *the inventory that was kept twice*) |
+| largest single frame | 3,740 B (`dd_fork`) | **1,840 B** (`dd_fork`, 1,832 B by `-fstack-usage`); `ars_index_build` 1,332, the 2,352 B on file until 2026-11-09 (corrected) |
+| largest frame in the SHELL | — | **1,464 B** (`ExtractOne`, whose `MacSink` holds an entry; 1,544 B on 2026-10-17, corrected 2026-11-09); `StampCat` **328 B** (320 by `-fstack-usage`, 272 → 320 on 2026-10-21; DECISIONS.md 2026-10-21, *the Desktop Manager System 6 can have*) |
+| shell plus engine | — | **7,720 B** of the 12,220 B stack, static: `main` → `ExtractOne` → `unc_extract_segments` → a spanned zip's end-of-central-directory scan → `seg_read` → `seg_open` → `seg_need` (the shell) → `SegAskUser` 744 → `SegScanDir` → `SegPartOf` 412 → `unc_segment_describe_as` → `mseg_scan` 1,240; the ROM's frames under Standard File are not in it (*What the stack actually uses*) |
 
-Zip's chains, measured 2026-10-08/09 (*Implode*, *Shrink*): deflate
-`unc_zip_extract` → `zip_decode` (56) → `unc_inflate_raw` (108) → `inflate`
-(88) → `inflate_table` (152) = **1,868 B**; the minimum-match-length probe
-`unc_zip_extract` → `zip_imp_dry` (172) → `zip_decode` → `zip_implode` →
-`imp_flush` (60) → `exo_emit` (32) = **1,896 B**, zip's deepest; Shrink
-→ `unc_shrink_decode` (120) → `zip_put` (0) → `exo_emit` (32) = **1,672 B**,
-all with `unc_zip_extract` at 1,464 B. Since 2026-10-17 `unc_zip_extract`
-is **1,540 B** and LZH's `unc_lzh_extract` 1,560 / `lzh_ext` 64 (DECISIONS.md
-2026-10-17, *the archives' own Finder info*); `unc_ad_apply` 80 B since
-2026-10-18, off any decode chain (DECISIONS.md 2026-10-18, *the comment
-Spotlight kept*). None is near the engine's deepest.
+Zip's chains, `tools/stack_depth.py`, 2026-11-09: `unc_zip_extract` is
+**1,560 B** (1,552 by `-fstack-usage`; 1,464 B on 2026-10-08, 1,540 B on
+2026-10-17, DECISIONS.md 2026-10-17, *the archives' own Finder info*);
+deflate → `zip_decode` → `unc_inflate_raw` → `inflate` → `inflate_table` is
+**2,008 B**, and zip's deepest from its own entry is **2,706 B**, WinZip
+AES's key derivation (`pbkdf2` → `hmac_init` → `sha1_block`, the crypt
+image). The 2026-10-08/09 figures (deflate 1,868 B, the Implode probe
+1,896, Shrink 1,672; *Implode*, *Shrink*) summed `-fstack-usage` alone.
+LZH's `unc_lzh_extract` is 1,572 B; `unc_ad_apply` 80 B since 2026-10-18,
+off any decode chain (DECISIONS.md 2026-10-18, *the comment Spotlight
+kept*). Every format's chain from its own entry is in the tool's output.
 
 #### What the stack actually uses, measured two ways
 
@@ -4781,10 +4788,13 @@ than a boundary (a frame holding an uninitialised buffer leaves clean longs
 inside it); the lowest dirty long in the top quarter saturated at the
 quarter boundary. A metric with a threshold baked in reports the threshold.
 
-The sixth join scheme's deepest chain is **2,796 B** (2026-08-29):
+The sixth join scheme's deepest chain is **2,804 B** from `unc_mime_extract`
+(`tools/stack_depth.py`, 2026-11-09; 2,796 B on 2026-08-29, summed the old
+way), and a joined set's deepest is a spanned zip's, **3,284 B** from
+`unc_extract_segments`. The MIME one:
 `unc_extract_segments` → `unc_mime_extract` → `mime_emit` → `mime_dec_run`
 → `mime_dec_next` → `seg_read` → `seg_open` → `unc_mimeseg_head` →
-`mseg_scan` (1,256 B: a 512-byte read window and a 512-byte unfolded header)
+`mseg_scan` (1,240 B: a 512-byte read window and a 512-byte unfolded header)
 → `unc_read_at` — the only chain through the engine twice.
 
 What fixed the 6,664 B chain: DiskDoubler's three `UncCanon` and Now

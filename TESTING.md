@@ -4022,6 +4022,31 @@ short-circuited and subtract — the instrument sees only the total.
   pinned by `test_zip_behind_a_stub` in `tests/unit_formats.c` and
   `tools/run_zipit.py`'s nine-of-nine sniff count.
 
+## The 68000 call depth (`tools/stack_depth.py`, in `ci.sh`)
+
+CLAUDE.md's rule, call depth ≤ 4 KB, as a check: `python3
+tools/stack_depth.py --limit 4096` builds every engine file the way the
+shipped application does (resident or in its image, with that link's
+flags), reads GCC's `-fcallgraph-info=su`, resolves every indirect call to
+its class of targets, and exits 1 if the engine's deepest chain exceeds the
+limit. About 20 s on this machine; `ci.sh` runs it after variant 4b, and
+skips without Retro68. `--config host` is FORMATS.md *Stack*'s one command,
+`--shell` adds the shell's frames and callbacks, `--selftest` re-measures
+what `-fstack-usage` counts. The figures are FORMATS.md's (*Stack*).
+
+**It fails, measured 2026-11-09:** `--extra-frame dd_fork=100` moves the
+deepest chain 4,070 → 4,170 B and exits 1; `--extra-edge
+__udivsi3=mime_lower` moves it by mime_lower's 4 B; an address-taken
+function or an indirect call no class names stops the run (its first runs
+found both, and an edge format the parser was dropping).
+
+**What it cannot see:** Toolbox traps and the ROM's frames under them;
+alloca (it warns); a pointer stored where the address-taken scan cannot
+see it; library frames, which are a table read off the disassembly; the
+shell's two dialog images; and a wrong rule in `EDGE_RULES`, which prunes
+paths the code cannot take and would prune real ones just as quietly. The
+docstring has the list.
+
 ## The 68000 profile (`tools/m68kprof.py`, not in `ci.sh`)
 
 **It ranks; it does not price.** The tick probe on an emulated Mac Plus
