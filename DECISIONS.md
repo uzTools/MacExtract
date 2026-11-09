@@ -570,6 +570,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-09 (the bit the inventory still named) — `fmt_sit5.c` carries nothing of XADMaster's: bit 5 was measured on 2026-10-06, and bit 6, the one thing only XADMaster knows, is not read
 - 2026-11-09 (the chain nobody had re-derived) — the engine's deepest call chain is 4,070 B, 26 B under CLAUDE.md's 4 KB; `tools/stack_depth.py` derives it and `ci.sh` holds it there
 - 2026-11-09 (the slowdown that was accepted) — DiskDoubler's methods 2, 5 and 7 from Salient's own decoders land, method 10's 0.2-0.4 % accepted by the maintainer; `fmt_dd.c` is 0BSD and four files stay LGPL
+- 2026-11-09 (the helper Internet Config would call) — MacExtract as Internet Config's post-processor is out of scope: Internet Config cannot say where a download is extracted or whether it is deleted, and MacExtract has no preference for either
 
 ---
 
@@ -23582,3 +23583,29 @@ its SPDX line is 0BSD, and it stays in `CARRIES` for the per-method rules
 and the `DDAR` 0x20 shape; four files stay LGPL (NOTICE, README.md,
 `dist/README.txt`, CLAUDE.md). Branch `dd-own-coders` is deleted; the tag
 keeps it.
+
+## 2026-11-09 (the helper Internet Config would call) — MacExtract as Internet Config's post-processor is out of scope: Internet Config cannot say where a download is extracted or whether it is deleted, and MacExtract has no preference for either
+
+**The maintainer's decision, 2026-11-09**, after *the hand-off that
+arrives once* (2026-10-31) had left it under consideration.
+
+**What Internet Config holds (read off `reference/mpack/macICKeys.h`).**
+`ICMapEntry` is the file type and creator a download is stamped with,
+the creator application's name, the post-processor's creator and name,
+flags (binary or text transfer, which forks matter, post-process or not,
+ignore for incoming or outgoing), the extension, MIME type and entry
+name; beside it a `DownloadFolder` preference. Nothing says where the
+post-processor writes or whether it removes the archive: those are its
+own preferences, as StuffIt Expander's are. MacExtract has neither: a
+post-processor's launch event reaches it as a double-click does, and it
+asks for a folder (measured 2026-10-31) and deletes nothing. The
+maintainer's other condition, the same day, was that it must not change
+the browser's stamp, which `icsetup` did.
+
+**What remains, not pursued.** Since 2026-11-03 a helper owns `SITx`, the
+creator stock Mac OS 9.2's map stamps archives with and names as
+post-processor. Where StuffIt Expander is absent, a browser's hand-off
+may therefore reach MacExtract through that helper with no change to
+Internet Config (hypothesis: whether a browser finds its post-processor
+by creator or by name is not measured, nor a launch event aimed at a
+helper). Welcome if it happens; not a behaviour this project tests for.

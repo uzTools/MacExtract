@@ -53,6 +53,7 @@ refusal — the brief has grown before, on request.
 | The report window's 6,539 B of fixed buffers (`gRepBuf` and the row arrays) | **kept** | the maintainer, 2026-11-08: until something needs the bytes; neither 512 KB refusal is within them (DECISIONS.md 2026-11-08, *the report pool that stays*) |
 | A read error while the format is still being found | **"not a recognized archive"**, not "read error" (`mac_sink_test --ioerr` on `derived-MUSFMT10.ZIP`) | the maintainer, 2026-11-08: a bad sector is a corrupt archive, and either way only a good copy helps (DECISIONS.md 2026-11-07, *the read error that read as end of file*) |
 | The wait before the first callback — up to 2.8 s (BinHex) and 1.0 s (Tar) on a Mac Plus, 1.0 s or less elsewhere | **accepted** since 2026-11-08 | the maintainer: initial loading time is fine where the scan is needed. It is: the zip pair's walk of a file's last 64 KB is what finds a zip behind other bytes, and the text and tar probes sit after it so they cannot take one (DECISIONS.md 2026-11-08, *the scan made twice*; FORMATS.md, *How long a click waits*) |
+| MacExtract as Internet Config's post-processor, so a download is extracted without a double-click | **out of scope** since 2026-11-09; `companion/icsetup`, which set it up on Mac OS 9.2, is kept at 9e149a5 | the maintainer: Internet Config says only whether and by whom a download is post-processed, not where it goes or whether the archive is deleted, which are the post-processor's own preferences, and MacExtract has none (DECISIONS.md 2026-11-09, *the helper Internet Config would call*). A download reaching MacExtract through the `SITx` helper where Expander is absent would be welcome, not pursued (not measured) |
 | A click during an extraction waiting for the next progress callback — 1–2 s on a Mac Plus for most formats at the 1 KB step; a short click on the menu bar lost; a menu held down pausing the extraction | **accepted** | the maintainer, 2026-11-06: input is queued and Cancel flashes when it is taken; the window's lack of responsiveness is known and the user is warned (DECISIONS.md 2026-11-06, *the step a click waits for*); the wait before the first callback is the row above |
 
 Nothing is detect-only since 2026-10-18: an unextractable file is
@@ -300,18 +301,3 @@ dist*). Left:
   opened by itself takes its creator back from StuffIt Expander
   (DECISIONS.md 2026-10-31, *the stub that sorts*); System 7.x and the
   stub's alert on Systems without a desktop database are not run.
-- **MacExtract as Internet Config's post-processor — under consideration,
-  the maintainer, 2026-11-03.** It is what would extract a download
-  without a double-click; the helpers do not do it, Expander stays the
-  post-processor. `companion/icsetup`, which set it up and measured
-  working on Mac OS 9.2 only, is retired from the tree and kept at 9e149a5
-  (DECISIONS.md 2026-10-31, *the hand-off that arrives once*). **It must
-  not change the browser's stamp** (the maintainer, 2026-11-09): icsetup
-  set each entry's file creator and application name to MacExtract's as
-  well as its post-processor creator and name (`ICMapEntry`,
-  `reference/mpack/macICKeys.h`); only the post-processor fields may
-  change. Not run: System 7.x with an Internet Config
-  extension, a real browser download, and a download finishing while
-  MacExtract extracts, which the hand-off of 2026-11-01 suggests may now
-  queue (DECISIONS.md 2026-11-01, *the Open item MultiFinder looks for*;
-  *hypothesis*).
