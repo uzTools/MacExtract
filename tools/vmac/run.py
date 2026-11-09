@@ -514,12 +514,20 @@ def tickgap_probe(indsk):
     callbacks and the input positions either side of it, the wait before
     the first and after the last, the callback count, and the extraction's
     own duration in ticks (60 Hz). Gaps are printed in seconds."""
-    v = read_report(indsk, 15)
+    v = read_report(indsk, 19) or read_report(indsk, 15)
     if v is None:
         return None
     s = lambda t: f"{t / 60:.1f}s"
-    return (f"gap={s(v[8])} at {v[9]}->{v[10]} head={s(v[11])} "
-            f"tail={s(v[12])} ticks={v[13]} run={v[14]}t")
+    out = (f"gap={s(v[8])} at {v[9]}->{v[10]} head={s(v[11])} "
+           f"tail={s(v[12])} ticks={v[13]} run={v[14]}t")
+    if len(v) >= 19:
+        # Ticks from RunExtract's start to the end of each phase before
+        # the first callback (-1: not reached); the engine's own start is
+        # head less the last of them.
+        m = [x if x < 0x80000000 else x - 0x100000000 for x in v[15:19]]
+        out += (" marks: open=%dt sniff=%dt setup=%dt release=%dt engine=%dt"
+                % (m[0], m[1], m[2], m[3], v[11] - m[3] if m[3] >= 0 else -1))
+    return out
 
 
 def read_report(indsk, n):

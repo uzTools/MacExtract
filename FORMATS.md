@@ -4130,9 +4130,8 @@ Measured 2026-09-27:
 whose tallies it is quoted beside. It cancels in a difference taken from
 one probe pair (*What it buys, against the control*): **117,040 B saved
 between the shipped pair against 116,720 B between the probe pair**, both
-2026-09-27. The shipped pair is **166,944 B** (`OVL_SAVED`,
-`tools/run_tiers.py`) since 2026-11-07 (*the comment the Desktop Manager
-cut*);
+2026-09-27. The shipped pair is **166,976 B** (`OVL_SAVED`,
+`tools/run_tiers.py`) since 2026-11-08 (*the scan made twice*);
 the probe pair has not been re-measured, so the 320 B is that
 day's difference, not today's.
 
@@ -4197,7 +4196,7 @@ carries, and they were read again from the floppy (DECISIONS.md 2026-11-04,
 
 A tier's budget for a format is the resident build's budget for that tier
 (`TIERS`; *512 KB machines*, *Floor target verification*), plus
-the 166,944 B of `CODE` and A5 the shipped build does not carry (`OVL_SAVED`;
+the 166,976 B of `CODE` and A5 the shipped build does not carry (`OVL_SAVED`;
 *Three configurations, one tree*), less the images the format keeps and 8 B of
 block header each, less a **322 B residue** (`OVL_RESIDUE`, re-taken
 2026-10-22 from the shipped and resident budget probes on all three tiers;
@@ -4220,8 +4219,7 @@ budget (a fixture is in the Mac sample); the rest are the same sum with no
 fixture. Every row has since moved by arithmetic only — each application or
 image change since 2026-10-09 shifts `OVL_SAVED`, the images and `TIERS` by
 amounts recorded in its DECISIONS.md entry and in `tools/run_tiers.py`'s
-comments, last on 2026-11-07 (*the comment the Desktop Manager cut*:
-+640 B a row, +28 B where it keeps `ovl_zipold`), with
+comments, last on 2026-11-08 (*the scan made twice*: +32 B a row), with
 `run_tiers.py --check` moving no tally. **Re-taken from `gain()` that
 day**: the rows had missed the same day's Arsenic table and fuzzer fixes
 (`OVL_SAVED` +320, StuffIt's image +256, DiskDoubler's +12), so most were
@@ -4229,21 +4227,21 @@ day**: the rows had missed the same day's Arsenic table and fuzzer fixes
 
 | sniffed format | images kept | granted, against the control |
 |---|---|---|
-| **AppleLink package** | **sqp, codecs** | **+158,854 B** (arithmetic: no `.pkg` is in the Mac sample) — the largest grant, because `ovl_sqp` is the smallest decoder image at 1,736 B |
-| Now Compress | now, codecs | **+155,642 B** (measured) |
-| SuperDisk! | superdisk, codecs | +153,962 B (arithmetic: no SuperDisk! fixture is in the Mac sample) |
-| LZH | lzh, codecs | **+150,152 B** (measured) |
-| PackIt | packit, ciphers, codecs | **+148,798 B** (measured) |
-| DiskDoubler | cptdd, codecs | **+145,358 B** (measured) |
-| StuffIt SpaceSaver | spacesaver, codecs | +144,422 B (arithmetic: no SpaceSaver fixture is in the Mac sample) |
-| ARC | arc, ciphers, codecs | **+143,282 B** (measured) |
-| Compact Pro, Compact Pro segment | cptdd, ciphers, codecs | +135,746 B (arithmetic), and **+145,358 B** where the directory says no entry is encrypted (measured) |
-| Tar | zipold, codecs | **+144,470 B** (measured) |
-| MAR | zipold, codecs | +144,470 B (arithmetic: no MAR fixture is in the Mac sample) |
-| StuffIt, StuffIt 5 | stuffit, ciphers, codecs | **+122,536 B** (measured), and **+132,148 B** for a StuffIt 5 archive whose header carries no password hash (measured, 2026-11-03) |
-| Zip, spanned zip | exo, zipold, ciphers, codecs | +104,622 B (arithmetic), **+114,234 B** unencrypted (measured) |
-| an envelope whose payload's first bytes name its format (`unc_envelope_peek`), since 2026-11-03 | its own reader, the sniffer, and what that format keeps | **+99,550 B** for a `.tar.Z` or `.tar.gz`, and an LZW-compressed MAR, which keeps the same (arithmetic), **+129,786 B** for a `.mar.lz4` (arithmetic), **+100,422 B** for a StuffIt archive in BinHex or MacBinary (measured) |
-| any other envelope, and every segment scheme that joins to a file | the whole bundle, kept | **−29,230 B** (−29,118 B measured, before 2026-11-07) |
+| **AppleLink package** | **sqp, codecs** | **+158,886 B** (arithmetic: no `.pkg` is in the Mac sample) — the largest grant, because `ovl_sqp` is the smallest decoder image at 1,736 B |
+| Now Compress | now, codecs | **+155,674 B** (measured) |
+| SuperDisk! | superdisk, codecs | +153,994 B (arithmetic: no SuperDisk! fixture is in the Mac sample) |
+| LZH | lzh, codecs | **+150,184 B** (measured) |
+| PackIt | packit, ciphers, codecs | **+148,830 B** (measured) |
+| DiskDoubler | cptdd, codecs | **+145,390 B** (measured) |
+| StuffIt SpaceSaver | spacesaver, codecs | +144,454 B (arithmetic: no SpaceSaver fixture is in the Mac sample) |
+| ARC | arc, ciphers, codecs | **+143,314 B** (measured) |
+| Compact Pro, Compact Pro segment | cptdd, ciphers, codecs | +135,778 B (arithmetic), and **+145,390 B** where the directory says no entry is encrypted (measured) |
+| Tar | zipold, codecs | **+144,502 B** (measured) |
+| MAR | zipold, codecs | +144,502 B (arithmetic: no MAR fixture is in the Mac sample) |
+| StuffIt, StuffIt 5 | stuffit, ciphers, codecs | **+122,568 B** (measured), and **+132,180 B** for a StuffIt 5 archive whose header carries no password hash (measured, 2026-11-03) |
+| Zip, spanned zip | exo, zipold, ciphers, codecs | +104,654 B (arithmetic), **+114,266 B** unencrypted (measured) |
+| an envelope whose payload's first bytes name its format (`unc_envelope_peek`), since 2026-11-03 | its own reader, the sniffer, and what that format keeps | **+99,582 B** for a `.tar.Z` or `.tar.gz`, and an LZW-compressed MAR, which keeps the same (arithmetic), **+129,818 B** for a `.mar.lz4` (arithmetic), **+100,454 B** for a StuffIt archive in BinHex or MacBinary (measured) |
+| any other envelope, and every segment scheme that joins to a file | the whole bundle, kept | **−29,198 B** (−29,118 B measured, before 2026-11-07) |
 
 A change to resident code moves every row by the control's growth less the
 shipped build's; a change to an image moves only the rows that keep it — so a
@@ -4254,7 +4252,7 @@ left*).
 
 **The last row is the one no tally had shown**: a wrapper whose payload the
 peek cannot name keeps the bundle, and that layer runs with **less** memory than
-a resident build would give it — 195,844 B held against 166,944 B saved. Until
+a resident build would give it — 195,844 B held against 166,976 B saved. Until
 2026-11-03 that was every envelope, and it refused `a2ps.V4.3.tar.Z` and
 `popper-1.7.tar.Z` at System 6.0.8 / 512 KB; the peek names Tar from the first
 512 bytes and the `.Z` layer is granted 200,022 B there instead of 72,090 B
@@ -4997,30 +4995,33 @@ inside it; the autotest row is the BinHex layer alone.
 
 The widest gap between two progress callbacks is the longest the window,
 Cancel, Cmd-. and the menu bar go unanswered (accepted: OPEN_ITEMS.md, Part
-1; what is open: *Two waits no progress step reaches*). `-D UNC_AT_TICKGAP` at `--emu mv-4M-1x --poll 20`, System
+1; what is open: *The wait before the first callback*). `-D UNC_AT_TICKGAP` at `--emu mv-4M-1x --poll 20`, System
 6.0.8, all byte-exact; File Manager time is included, the shipped 10 Hz gate
-(up to 0.1 s) is not. **Before the first callback** holds the decoders' load
-and the archive's directory. **Re-measured 2026-11-06 at the 1 KB step**
+(up to 0.1 s) is not. **Before the first callback** holds the sniff, the set
+check, the overlay release with the envelope peek, and the archive's
+directory; its last column is 2026-11-08's, after one sniff replaced the set
+check and a second sniff (`run.py` prints each phase as `marks:`; DECISIONS.md
+2026-11-08, *the scan made twice*). **Re-measured 2026-11-06 at the 1 KB step**
 (`UNC_PROGRESS_STEP`; *What the step costs*), against the 8 KB build the same
 day, whose gaps were 2026-10-12's to the tenth.
 
-| fixture | format | widest gap, 8 → 1 KB | before the first, 8 → 1 KB | callbacks at 1 KB |
+| fixture | format | widest gap, 8 → 1 KB | before the first, 8 → 1 KB → one sniff | callbacks at 1 KB |
 |---|---|---|---|---|
-| `derived-a2basic.dmg.sit` | StuffIt 5 (Arsenic) | **0.8 s** (254 s before 2026-10-12), by output, unmoved by the step | 1.2 s | 1,472 (2026-10-12) |
-| `derived-Library_ISBN_Barcoder.sit` | StuffIt 5 (Arsenic) | **1.1 s** (140 s), likewise | 1.4 s | 4,623 (2026-10-12) |
-| `derived-KeyGraphics.sit` | StuffIt 5 (Arsenic) | 0.3 → **0.3 s** | 0.2 s | 235 |
-| `derived-Expand_Now_1.0.1.sea` | Now Compress | **1.1 s** (6.1 s before the in-block poll, 2026-11-07) | **1.9 s** (was 5.4 s) | 66 (was 3) |
-| `derived-XferIt_1.5b4.sea` | Compact Pro | 4.8 → **1.9 s** | 3.1 → 1.4 s | 73 |
-| `derived-MacPass390.sea` | DiskDoubler | 4.2 → **1.7 s** | 2.4 → 1.2 s | 39 |
-| `derived-EmpireBuilderDemo.sit` | StuffIt | 2.5 → **1.0 s** | 2.1 → 1.2 s | 68 |
-| `derived-MUSFMT10.ZIP` | Zip | 2.4 → **1.2 s** | 2.1 → 0.3 s | 49 |
-| `PCCTS.tar.gz` | gzip | 1.9 → **1.2 s** | 2.6 → 1.6 s | 16 |
-| `popper-1.7.tar.Z` | compress | 1.5 → **0.8 s** | 2.5 → 1.8 s | 15 |
-| `macburger-helper.hqx` | BinHex | 1.1 → **0.6 s** | 4.2 → 3.8 s | 75 |
-| `derived-PCCTS.tar` | Tar | 0.9 → **0.4 s** | 2.1 → 2.0 s | 47 |
-| `derived-PackIt.pit` | PackIt | 0.7 → **0.4 s** | 1.2 → 1.0 s | 15 |
-| `kermitut9test.bin` | MacBinary | 0.0 → **0.0 s** | 1.2 s | 37 |
-| `derived-Export.sit` | StuffIt | — (none; 1.4 s in all) | — | 1 |
+| `derived-a2basic.dmg.sit` | StuffIt 5 (Arsenic) | **0.8 s** (254 s before 2026-10-12), by output, unmoved by the step | 1.2 s → **0.1 s** | 1,472 (2026-10-12) |
+| `derived-Library_ISBN_Barcoder.sit` | StuffIt 5 (Arsenic) | **1.1 s** (140 s), likewise | 1.4 s → **0.3 s** | 4,623 (2026-10-12) |
+| `derived-KeyGraphics.sit` | StuffIt 5 (Arsenic) | 0.3 → **0.3 s** | 0.2 s → **0.1 s** | 235 |
+| `derived-Expand_Now_1.0.1.sea` | Now Compress | **1.1 s** (6.1 s before the in-block poll, 2026-11-07) | 1.9 s (was 5.4 s) → **0.9 s** | 66 (was 3) |
+| `derived-XferIt_1.5b4.sea` | Compact Pro | 4.8 → **1.9 s** | 3.1 → 1.4 s → **0.4 s** | 73 |
+| `derived-MacPass390.sea` | DiskDoubler | 4.2 → **1.7 s** | 2.4 → 1.2 s → **0.1 s** | 39 |
+| `derived-EmpireBuilderDemo.sit` | StuffIt | 2.5 → **1.0 s** | 2.1 → 1.2 s → **0.1 s** | 68 |
+| `derived-MUSFMT10.ZIP` | Zip | 2.4 → **1.2 s** | 2.1 → 0.3 s → **0.3 s** | 49 |
+| `PCCTS.tar.gz` | gzip | 1.9 → **1.2 s** | 2.6 → 1.6 s → **0.7 s** | 16 |
+| `popper-1.7.tar.Z` | compress | 1.5 → **0.8 s** | 2.5 → 1.8 s → **0.8 s** | 15 |
+| `macburger-helper.hqx` | BinHex | 1.1 → **0.6 s** | 4.2 → 3.8 s → **2.8 s** | 75 |
+| `derived-PCCTS.tar` | Tar | 0.9 → **0.4 s** | 2.1 → 2.0 s → **1.0 s** | 47 |
+| `derived-PackIt.pit` | PackIt | 0.7 → **0.4 s** | 1.2 → 1.0 s → **0.0 s** | 15 |
+| `kermitut9test.bin` | MacBinary | 0.0 → **0.0 s** | 1.2 s → **0.1 s** | 37 |
+| `derived-Export.sit` | StuffIt | — (none; 1.4 s in all, 1.3 s after one sniff) | — → **0.1 s** | 1 |
 
 **At 1 MB, under the sampled index**: a2basic **0.6 s** (18.3 s with only the
 block decode ticking), the Barcoder **1.9 s** (24.1 s), inside the walk.

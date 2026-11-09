@@ -283,10 +283,13 @@ REPO = os.path.dirname(HERE)
 # control's CODE -96 and A5 0; the shipped pair fell the same 96, OVL_SAVED
 # unmoved. They were 190,276 / 94,894 / 619,182.
 TIERS = {
-    "sys3-512K": (189412, "System 3.0, Macintosh 512Ke (222,070 B free)"),
-    "sys6-512K": (94030,  "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
-    "floor-1M":  (618318, "System 6.0.8, 1 MB Mac Plus — the floor target"),
+    "sys3-512K": (189444, "System 3.0, Macintosh 512Ke (222,070 B free)"),
+    "sys6-512K": (94062,  "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
+    "floor-1M":  (618350, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
+# +32 each 2026-11-08, DERIVED from TIERS_CONTROL -32 (one sniff before the
+# set check, DECISIONS.md 2026-11-08, *the scan made twice*); they were
+# 189,412 / 94,030 / 618,318.
 # +128 each 2026-11-08, DERIVED from TIERS_CONTROL -128 (the naming rules
 # in the engine, DECISIONS.md 2026-11-08, *the naming rules in one place*); they were
 # 189,284 / 93,902 / 618,190.
@@ -510,7 +513,9 @@ TIERS = {
 # +192 2026-11-07: Now Compress polls Cancel inside a block (`ovl_now` +186;
 # DECISIONS.md 2026-11-07, *the block a click waited for*); CODE +180, A5 +12.
 # TIERS -192 and OVL_SAVED +192, which cancel: only a now-keeper moves.
-TIERS_CONTROL = 223520     # build/mac-resident, CODE + A5, 2026-11-08
+TIERS_CONTROL = 223488     # build/mac-resident, CODE + A5, 2026-11-08
+# -32 2026-11-08: one sniff before the set check (CODE -44, A5 +12;
+# DECISIONS.md 2026-11-08, *the scan made twice*); TIERS +32.
 # -128 2026-11-08: the naming rules in the engine (CODE -132, A5 +4;
 # DECISIONS.md 2026-11-08, *the naming rules in one place*); TIERS +128.
 # +704 the same day: the comment cut (CODE +680, A5 +24; DECISIONS.md
@@ -1104,7 +1109,11 @@ EXPECT = {
 # **0 2026-11-08**: the naming rules in the engine, the control's -128
 # (CODE -132, A5 +4) and the shipped pair's -128 (CODE -140, A5 +12;
 # DECISIONS.md 2026-11-08, *the naming rules in one place*). TIERS +128: 128 B onto every budget.
-OVL_SAVED = 166944
+# **+32 2026-11-08, -> 166,976**: one sniff before the set check, the
+# control's -32 (CODE -44, A5 +12) against the shipped pair's -64 (CODE -44,
+# A5 -20; DECISIONS.md 2026-11-08, *the scan made twice*). TIERS +32: 64 B
+# onto every budget.
+OVL_SAVED = 166976
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
 # every kept image is one — as is the bundle an envelope holds on to.

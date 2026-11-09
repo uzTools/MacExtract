@@ -154,14 +154,18 @@ SPDX line, in the same commit.
 
 ## The wait before the first callback
 
-Before any archive's first callback, while its decoders load and its
-directory is read, the window, Cancel and Cmd-. wait up to **3.8 s**
-(BinHex) on a Mac Plus (FORMATS.md, *How long a click waits*). Not
-investigated. Now Compress's whole-block wait of 6.1 s, and its own 5.4 s
-here, were closed when its decode began polling Cancel on its block loop
-(6.1 → 1.1 s, 5.4 → 1.9 s; DECISIONS.md 2026-11-07, *the block a click
-waited for*); what is left of its 1.9 s, like BinHex's 3.8 s, is the load
-and the directory read before any decode.
+Before an archive's first callback the window, Cancel and Cmd-. wait up to
+**2.8 s** (BinHex) on a Mac Plus, and 1.0 s or less for every other format
+in FORMATS.md's table (*How long a click waits*), since one sniff replaced
+the set check and a second sniff (3.8 s before; DECISIONS.md 2026-11-08,
+*the scan made twice*). Where the rest goes, measured with `run.py`'s
+`marks:`: BinHex's sniff still walks the file's last 64 KB for a zip end
+record once (1.9 s with the MIME multipart probe's 18 KB), because the
+text probes sit behind the zip pair, then 0.9 s of overlay release and
+envelope peek; Tar's 1.0 s is the same walk; gzip's and compress's
+0.7–0.8 s are the peek's decode; Now Compress's 0.9 s is its directory.
+What would shorten BinHex's: a text file kept from the zip pair's walk
+without a zip behind text being missed, priced on the sniffer's image.
 
 ## One way to keep a decoder high, on every ROM
 

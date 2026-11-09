@@ -4421,6 +4421,17 @@ static int AskDest(short *vol)
 }
 #endif
 
+#ifdef UNC_AT_TICKGAP
+/* Where the wait before the first callback goes: TickCount() after the
+ * open, the sniff with the set check, the set's setup (nothing for a
+ * single file), and the overlay release (the envelope peek is inside it).
+ * The rest of `head` is the engine's own start. */
+static long gGapMark[4];
+#define GAP_MARK(i) (gGapMark[i] = TickCount())
+#else
+#define GAP_MARK(i) ((void)0)
+#endif
+
 static int RunExtract(short inVol, long inDir, ConstStr255Param name,
                       short outVol, long outDir,
                       short origVol, long origDir,
@@ -4463,6 +4474,7 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
     fileSize = 0;
     GetEOF(refNum, &fileSize);
     if (fileSize <= 0) { FSClose(refNum); return UNC_ERR_FORMAT; }
+    GAP_MARK(0);
 
     /* --- Is this one part of a segmented set? Decided from the header,
      *     before any of the whole-archive machinery below, because a
@@ -4481,10 +4493,9 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
         pio.seek = fio_seek;
         pio.tell = fio_tell;
         pio.size = fio_size;
-        /* unc_segment_describe, not unc_sniff: this runs on EVERY archive
-         * the app opens, and a full sniff would re-walk a Compact Pro
-         * index CRC that unc_extract is about to walk again — twice the
-         * work on a 7 MHz machine, for a question one header answers. */
+        /* This runs on EVERY archive the app opens, so it looks once:
+         * the name, then one sniff, then the set check as the scheme the
+         * sniff names (below). */
         {
             /* Decided by NAME first, and deliberately before the header
              * has a say: part 1 of a split .sit begins with "SIT!" and
@@ -4505,7 +4516,17 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
                         name + 1, name[0]);
             }
         }
-        segOK = unc_segment_describe(&pio, &desc) == UNC_OK;
+        /* The sniff first, and the set check only as the scheme the sniff
+         * names. Both walk a file's last 64 KB backwards for a zip end
+         * record when nothing at its front answers, so run one after the
+         * other, as until 2026-11-08, they made that scan twice: 1.0 s
+         * and then 1.9 s of a BinHex mail's 3.8 s open on a Mac Plus
+         * (DECISIONS.md 2026-11-08, *the scan made twice*). Over 7,276
+         * files the two give every set part the same descriptor, byte
+         * for byte. On a set, extractedAs is not read again. */
+        extractedAs = unc_sniff(&pio);
+        segOK = unc_segment_describe_as(&pio, extractedAs, &desc) == UNC_OK;
+        GAP_MARK(1);
         /* ...unless the file proves otherwise. A DiskDoubler `SPLT`
          * part carries its own index, count and identity, so a set
          * named Archive.dd.001 is joined as the scheme it declares:
@@ -4529,14 +4550,11 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
             !(segOK && desc.scheme == UNC_FORMAT_ZIPSEG))
             famZip = 0;
 #ifndef UNC_MAC_AUTOTEST
-        /* The one look at a single file, kept for the dispatch below.
-         * The destination is asked only of a file something here will
+        /* The destination is asked only of a file something here will
          * extract: any other goes on to fail as it always did, writing
          * nothing, and is told so without the question (the maintainer,
          * 2026-10-18). Cancel there ends the launch on the spot; the
          * archive is the one file open. */
-        if (!(famSplit || famZip || segOK))
-            extractedAs = unc_sniff(&pio);
         if (gAskDest && (famSplit || famZip || segOK ||
                          unc_format_extractable(extractedAs))) {
             if (!AskDest(&outVol)) {
@@ -4790,9 +4808,7 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
          * exactly this internally: same work, and the caller learns what
          * the layer was — which is what decides whether there is another
          * one under it. */
-#ifdef UNC_MAC_AUTOTEST
-        extractedAs = unc_sniff(&io);
-#endif
+        GAP_MARK(2);
 #ifdef UNC_AT_OVERLAY
         /* Before the engine's first allocation, always: the budget is taken
          * there (mal_take_budget), so what this frees is simply part of the
@@ -4813,6 +4829,7 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
          * first, which is why this is here rather than beside the strip. */
         if (extractedAs == UNC_FORMAT_SPACESAVER)
             opt.name_hint_len = name[0];
+        GAP_MARK(3);
         ret = unc_extract_as(extractedAs, &io, &sk, &al, prog, &opt);
     }
     gPeakUsage = ma.initial - ma.lowmark;   /* engine heap high-water mark */
@@ -5744,10 +5761,13 @@ int main(void)
         UncProgress gprog;
         gprog.ctx = NULL;
         gprog.tick = at_gap_tick;
-        gGapPr.startTicks = gGapRun = gGapLast = TickCount();
+        long gapStart;
+        gGapPr.startTicks = gGapRun = gGapLast = gapStart = TickCount();
         ret = RunExtract(inVol, fsRtDirID, gATName,
                          outVol, fsRtDirID, inVol, fsRtDirID,
                          &gprog, &entries, &errors, NULL);
+        { int k; for (k = 0; k < 4; k++)
+            gGapMark[k] = gGapMark[k] ? gGapMark[k] - gapStart : -1; }
         gGapLast = TickCount() - gGapLast;   /* now the tail */
         gGapRun = TickCount() - gGapRun;     /* the whole extraction */
 #else
@@ -5933,7 +5953,7 @@ int main(void)
         /* The grid is left alone, so the run still grades its bytes; the
          * gaps go in the FILE, which run.py prints. Ticks, 60 Hz. */
         {
-            uint32_t gv[15];
+            uint32_t gv[19];
             int k;
             for (k = 0; k < 8; k++) gv[k] = vals[k];
             gv[8]  = (uint32_t)gGapMax;    /* widest gap between two ticks */
@@ -5943,7 +5963,9 @@ int main(void)
             gv[12] = (uint32_t)gGapLast;   /* last tick to return          */
             gv[13] = (uint32_t)gGapCount;
             gv[14] = (uint32_t)gGapRun;    /* RunExtract, read-back apart  */
-            at_report_file(gv, 15);        /* file, eject, grid: see above */
+            for (k = 0; k < 4; k++)        /* open, sniff, setup and       */
+                gv[15 + k] = (uint32_t)gGapMark[k]; /* release, from start */
+            at_report_file(gv, 19);        /* file, eject, grid: see above */
             (void)Eject(NULL, gATreportVol);
             at_report(vals, 8);
         }

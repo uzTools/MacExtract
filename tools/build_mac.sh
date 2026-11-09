@@ -776,7 +776,9 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # -132 on 2026-11-08, 186,972 -> 186,840, A5 +4 below: the shell's copies
 # of the multi-part naming rules replaced by the engine's (DECISIONS.md
 # 2026-11-08, *the naming rules in one place*); the shipped pair -128.
-UNC_MAC_CODE_DEFAULT=186840
+# -44 on 2026-11-08, 186,840 -> 186,796, A5 +12 below: one sniff before the
+# set check (DECISIONS.md 2026-11-08, *the scan made twice*).
+UNC_MAC_CODE_DEFAULT=186796
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -1039,7 +1041,9 @@ UNC_MAC_CODE_DEFAULT=186840
 # and the comment cut's code ahead of `.data` (above).
 # +4 on 2026-11-08, 36,676 -> 36,680: `.data` alignment under the naming
 # rules (above); no data was added.
-UNC_MAC_A5_DEFAULT=36680
+# +12 on 2026-11-08, 36,680 -> 36,692: `.data` alignment under one sniff
+# before the set check (above); no data was added.
+UNC_MAC_A5_DEFAULT=36692
 # A CEILING PER CONFIGURATION, because one ceiling measured on another build
 # cannot fire. The figures above are the RESIDENT control build, which carries
 # every decoder; the shipped build's resident code is a third of that, so
@@ -1621,8 +1625,11 @@ UNC_MAC_A5_DEFAULT=36680
 # shell's three copies of the multi-part naming rules replaced by the
 # engine's unc_segment_name_part (DECISIONS.md 2026-11-08, *the naming rules in one place*).
 # The A5 is `.data` alignment. 128 B onto every budget.
-UNC_MAC_CODE_EAGER=39816
-UNC_MAC_A5_EAGER=16760
+# -44 and -20 on 2026-11-08, 39,816 -> 39,772 and 16,760 -> 16,740: one
+# sniff before the set check instead of the set check and then a sniff
+# (DECISIONS.md 2026-11-08, *the scan made twice*). 64 B onto every budget.
+UNC_MAC_CODE_EAGER=39772
+UNC_MAC_A5_EAGER=16740
 # +8 on 2026-10-02 for the same reason as the eager pair above: the
 # overlay call that now says WHICH of StuffIt 2.x's ciphers an entry
 # wants. A5 fell to 19,096 and its ceiling is left where it was.
@@ -1774,7 +1781,9 @@ UNC_MAC_A5_EAGER=16760
 # 16,768 (+8), under its ceiling.
 # -136 code on 2026-11-08: the naming rules in the engine, as the eager
 # pair; data + bss 16,776 (+8), under its ceiling.
-UNC_MAC_CODE_LAZY=38568
+# -44 code on 2026-11-08: one sniff before the set check, as the eager
+# pair; data + bss 16,756 (-20), under its ceiling.
+UNC_MAC_CODE_LAZY=38524
 UNC_MAC_A5_LAZY=19200
 if [ -n "$UNC_OVL_RESIDENT" ]; then
     UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-$UNC_MAC_CODE_DEFAULT}

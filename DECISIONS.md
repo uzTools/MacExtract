@@ -562,6 +562,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-08 (the report pool that stays) — the report window's 6,539 B of fixed buffers stay until something needs the bytes
 - 2026-11-08 (the code we wrote) — everything this project wrote is 0BSD, facts read in somebody else's code included; only the six files holding transcribed code stay LGPL-2.1-or-later
 - 2026-11-08 (the refusals the probe counted) — the probe build extracts Cool Tools and a2basic on the 64K ROM; its `short` and `why` count the requests Arsenic falls back from, and `e1` is its verdict
+- 2026-11-08 (the scan made twice) — the shell sniffs once and asks the set check only as the scheme the sniff named; the zip end-record scan every open paid twice is paid once or not at all, and 64 B come back on every budget
 
 ---
 
@@ -23129,3 +23130,62 @@ higher, on that day's budget.
 refused request's need and said both fields are 0 on a healthy run. Both
 sentences are corrected; the README now names `e1` as the verdict. The 64K
 ROM's budget for the two is 288,516 B, with both extracting.
+
+## 2026-11-08 (the scan made twice) — the shell sniffs once and asks the set check only as the scheme the sniff named; the zip end-record scan every open paid twice is paid once or not at all, and 64 B come back on every budget
+
+**Claim (measured).** Before its first progress callback a 300 KB BinHex
+mail waited 3.8 s on a Mac Plus (FORMATS.md, *How long a click waits*).
+Tick marks inside `RunExtract` (`-D UNC_AT_TICKGAP`, printed as `marks:`)
+split it: the set check 1.0 s, the sniff 1.9 s, the overlay release with
+the envelope peek 0.9 s, the engine's start nothing. Counted on Linux
+through a reader that counts, the set check read 66 KB in 69 reads and
+the sniff 86 KB in 105: `unc_zipseg_describe` and `unc_zipseg_probe`
+each walk a file's last 64 KB backwards, 1 KB a read, for a zip end
+record, and a file with no set magic at its front reached both, one
+after the other.
+
+**The change.** `RunExtract` calls `unc_sniff` once and then
+`unc_segment_describe_as` with the format it named, which answers an
+error for anything that is not a set scheme, instead of
+`unc_segment_describe` and then, for a file it did not claim,
+`unc_sniff`. The name rule is unchanged and still decides `.001`, `.zNN`
+and `.zip` families; the autotest build reuses the same sniff instead of
+making its own, so it measures what ships.
+
+**The premise, measured before the shell was touched.** Over 7,276 files
+(the 1,004 in `fixtures/`, 4,936 in the specimens cache, 1,336 from
+`synth_sitsplit.py`, `synth_zipsplit.py` and `synth_ddsplit.py`), the new
+order gives every one of the 132 set parts the verdict and the
+descriptor the old order gave, byte for byte; a mutant that never
+describes a Compact Pro segment shows 32 differences, so the comparison
+can fail. **No file reads more, and 7,197 read less**, 74.6 MB in all.
+The one change of verdict: 23 random payloads in `synth_zipsplit.py`'s
+source folders, which `unc_segment_describe` called Compact Pro segments
+and the sniff calls nothing — as the CLI, which sniffs first, already
+did ("format not recognized"). What the application did with such a
+file before is not run (hypothesis: the set path, asking for parts).
+
+**What it bought (measured,** `run.py -D UNC_AT_TICKGAP --emu
+mv-4M-1x`, System 6.0.8, the 15 fixtures of FORMATS.md's table, 14 in
+one sweep and Library_ISBN alone for its length, every one byte-exact,
+another project's emulator at full speed on the other core**)**: the wait
+before the first callback fell by about a second wherever the scan ran
+twice — a2basic 1.2 → 0.1 s, Library_ISBN 1.4 → 0.3, MacBinary 1.2 → 0.1, StuffIt 1.2 → 0.1,
+DiskDoubler 1.2 → 0.1, PackIt 1.0 → 0.0, Compact Pro 1.4 → 0.4, Now
+Compress 1.9 → 0.9, gzip 1.6 → 0.7, compress 1.8 → 0.8, Tar 2.0 → 1.0,
+BinHex 3.8 → 2.8 — and not at all for a zip (0.3 s), whose end record
+the first read finds. Every widest gap and callback count is the old
+table's; BinHex, measured in two separate runs after the change, read
+2.8 s both times.
+
+**Price (measured).** Shipped CODE −44 and A5 −20: **64 B onto every
+budget**, the second sniff call and the full set check gone from the open
+path. Lazy the same. The resident control CODE −44 and A5 +12, `.data`
+alignment; so `OVL_SAVED` +32, `TIERS` +32, every grant row +32
+(`run_tiers.gain()`), and `run_tiers.py --check` moves no tally.
+
+**What is left** (OPEN_ITEMS.md, *The wait before the first callback*):
+BinHex's 2.8 s is its sniff walking the tail once — the text probes sit
+behind the zip pair — with the MIME multipart probe's 18 KB, and 0.9 s of
+release and peek; Tar's 1.0 s is the same walk; gzip's and compress's
+0.7–0.8 s are the peek's decode; Now Compress's 0.9 s is its directory.
