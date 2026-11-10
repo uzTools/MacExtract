@@ -4131,12 +4131,12 @@ Measured 2026-09-27:
 whose tallies it is quoted beside. It cancels in a difference taken from
 one probe pair (*What it buys, against the control*): **117,040 B saved
 between the shipped pair against 116,720 B between the probe pair**, both
-2026-09-27. The shipped pair is **169,408 B** (`OVL_SAVED`,
+2026-09-27. The shipped pair is **169,440 B** (`OVL_SAVED`,
 `tools/run_tiers.py`) since 2026-11-09 (*the match that was masked twice a byte*);
 the probe pair has not been re-measured, so the 320 B is that
 day's difference, not today's.
 
-The bundle is **198,216 B** — the nineteen images sum to 197,972 B, so its
+The bundle is **198,244 B** — the nineteen images sum to 198,000 B, so its
 index costs **244 B** (`tools/run_tiers.py` `BUNDLE`, `IMAGES`): a
 4-byte header, 12 bytes of directory per image and padding of each image to
 a multiple of 4 — the padding is why the index is not a constant. The
@@ -4197,7 +4197,7 @@ carries, and they were read again from the floppy (DECISIONS.md 2026-11-04,
 
 A tier's budget for a format is the resident build's budget for that tier
 (`TIERS`; *512 KB machines*, *Floor target verification*), plus
-the 169,408 B of `CODE` and A5 the shipped build does not carry (`OVL_SAVED`;
+the 169,440 B of `CODE` and A5 the shipped build does not carry (`OVL_SAVED`;
 *Three configurations, one tree*), less the images the format keeps and 8 B of
 block header each, less a **322 B residue** (`OVL_RESIDUE`, re-taken
 2026-10-22 from the shipped and resident budget probes on all three tiers;
@@ -4221,28 +4221,28 @@ fixture. Every row has since moved by arithmetic only — each application or
 image change since 2026-10-09 shifts `OVL_SAVED`, the images and `TIERS` by
 amounts recorded in its DECISIONS.md entry and in `tools/run_tiers.py`'s
 comments, last on 2026-11-09 (*the match that was masked twice a byte*:
-+32 B on every row that does not keep `ovl_stuffit`, −12 B on those that
-do and with the whole bundle kept; the control 32 B larger), with
++36 B on every row that does not keep `ovl_stuffit`, −8 B on those that
+do and with the whole bundle kept; the control 64 B larger), with
 `run_tiers.py --check` moving no tally. **Re-taken from `gain()` that
 day**, and every row agreed with it before the change.
 
 | sniffed format | images kept | granted, against the control |
 |---|---|---|
-| **AppleLink package** | **sqp, codecs** | **+161,126 B** (arithmetic: no `.pkg` is in the Mac sample) — the largest grant, because `ovl_sqp` is the smallest decoder image at 1,736 B |
-| Now Compress | now, codecs | **+157,914 B** (measured) |
-| SuperDisk! | superdisk, codecs | +156,234 B (arithmetic: no SuperDisk! fixture is in the Mac sample) |
-| LZH | lzh, codecs | **+152,160 B** (measured) |
-| PackIt | packit, ciphers, codecs | **+151,390 B** (measured) |
-| DiskDoubler | cptdd, codecs | **+147,572 B** (measured) |
-| StuffIt SpaceSaver | spacesaver, codecs | +146,626 B (arithmetic: no SpaceSaver fixture is in the Mac sample) |
-| ARC | arc, ciphers, codecs | **+145,646 B** (measured) |
-| Compact Pro, Compact Pro segment | cptdd, ciphers, codecs | +138,280 B (arithmetic), and **+147,572 B** where the directory says no entry is encrypted (measured) |
-| Tar | zipold, codecs | **+146,690 B** (measured) |
-| MAR | zipold, codecs | +146,690 B (arithmetic: no MAR fixture is in the Mac sample) |
-| StuffIt, StuffIt 5 | stuffit, ciphers, codecs | **+124,968 B** (measured), and **+134,260 B** for a StuffIt 5 archive whose header carries no password hash (measured, 2026-11-03) |
-| Zip, spanned zip | exo, zipold, ciphers, codecs | +107,162 B (arithmetic), **+116,454 B** unencrypted (measured) |
-| an envelope whose payload's first bytes name its format (`unc_envelope_peek`), since 2026-11-03 | its own reader, the sniffer, and what that format keeps | **+100,310 B** for a `.tar.Z` or `.tar.gz`, and an LZW-compressed MAR, which keeps the same (arithmetic), **+130,546 B** for a `.mar.lz4` (arithmetic), **+101,186 B** for a StuffIt archive in BinHex or MacBinary (measured) |
-| any other envelope, and every segment scheme that joins to a file | the whole bundle, kept | **−29,138 B** (−29,118 B measured, before 2026-11-07) |
+| **AppleLink package** | **sqp, codecs** | **+161,130 B** (arithmetic: no `.pkg` is in the Mac sample) — the largest grant, because `ovl_sqp` is the smallest decoder image at 1,736 B |
+| Now Compress | now, codecs | **+157,918 B** (measured) |
+| SuperDisk! | superdisk, codecs | +156,238 B (arithmetic: no SuperDisk! fixture is in the Mac sample) |
+| LZH | lzh, codecs | **+152,164 B** (measured) |
+| PackIt | packit, ciphers, codecs | **+151,394 B** (measured) |
+| DiskDoubler | cptdd, codecs | **+147,576 B** (measured) |
+| StuffIt SpaceSaver | spacesaver, codecs | +146,630 B (arithmetic: no SpaceSaver fixture is in the Mac sample) |
+| ARC | arc, ciphers, codecs | **+145,650 B** (measured) |
+| Compact Pro, Compact Pro segment | cptdd, ciphers, codecs | +138,284 B (arithmetic), and **+147,576 B** where the directory says no entry is encrypted (measured) |
+| Tar | zipold, codecs | **+146,694 B** (measured) |
+| MAR | zipold, codecs | +146,694 B (arithmetic: no MAR fixture is in the Mac sample) |
+| StuffIt, StuffIt 5 | stuffit, ciphers, codecs | **+124,972 B** (measured), and **+134,264 B** for a StuffIt 5 archive whose header carries no password hash (measured, 2026-11-03) |
+| Zip, spanned zip | exo, zipold, ciphers, codecs | +107,166 B (arithmetic), **+116,458 B** unencrypted (measured) |
+| an envelope whose payload's first bytes name its format (`unc_envelope_peek`), since 2026-11-03 | its own reader, the sniffer, and what that format keeps | **+100,314 B** for a `.tar.Z` or `.tar.gz`, and an LZW-compressed MAR, which keeps the same (arithmetic), **+130,550 B** for a `.mar.lz4` (arithmetic), **+101,190 B** for a StuffIt archive in BinHex or MacBinary (measured) |
+| any other envelope, and every segment scheme that joins to a file | the whole bundle, kept | **−29,134 B** (−29,118 B measured, before 2026-11-07) |
 
 A change to resident code moves every row by the control's growth less the
 shipped build's; a change to an image moves only the rows that keep it — so a
@@ -4253,7 +4253,7 @@ left*).
 
 **The last row is the one no tally had shown**: a wrapper whose payload the
 peek cannot name keeps the bundle, and that layer runs with **less** memory than
-a resident build would give it — 198,216 B held against 169,408 B saved. Until
+a resident build would give it — 198,244 B held against 169,440 B saved. Until
 2026-11-03 that was every envelope, and it refused `a2ps.V4.3.tar.Z` and
 `popper-1.7.tar.Z` at System 6.0.8 / 512 KB; the peek names Tar from the first
 512 bytes and the `.Z` layer is granted 200,022 B there instead of 72,090 B
@@ -5229,10 +5229,14 @@ window[from++ & mask]` is split where it would wrap the window or pass
 | | `System_2.x.sit` (StuffIt 5, method 13, 819,200 B in two forks; the emulator cache, not the corpus) | 6,225 / 6,225 | **5,900 / 5,902, −5.2 %** | |
 | | `m14.sit` (method 14, 453,747 B in five entries carved from StuffIt Deluxe 5.5's installer; not the corpus) | 6,378 / 6,378 | **6,233 / 6,232, −2.3 %** | |
 | | `sitopt-wild-Phantom.sit` (method 5, the same image; control) | 9,096 / 9,096 | 9,095 / 9,095 | |
+| `-lh1-` and ARC Trimmed (`unc_lzah.c`, the same split inline) | `long.lzh` (`-lh1-`, 1,241,658 B, LHarc 1.13's test archive in `reference/lhasa`; not the corpus) | 6,912 / 6,912 | **5,726 / 5,721, −17.2 %** | `ovl_codecs` +28 B |
+| | `sitopt-wild-Phantom.sit` (method 5) | 9,095 / 9,095 | **8,978 / 8,978, −1.3 %** | |
+| | `derived-ARCDOS.arc` (ARC Trimmed) | 5,052 / 5,052 | **4,976 / 4,975, −1.5 %** | |
 
 `mac.faq-36` and `System_2.x.sit` were timed before method 14's flush became
-method 13's; `mar-twin` was timed on both and moved 1 tick. The corpus has no
-StuffIt 5 method-13 fork and no method-14 fork over 18,501 B; the two
+method 13's; `mar-twin` was timed on both and moved 1 tick. The `-lh1-` rows
+are against the method-13/14 tree. The corpus has no StuffIt 5 method-13 fork,
+no method-14 fork over 18,501 B and no `-lh1-` LZH over 18,432 B; the three
 specimens are timing inputs only, graded against this engine's own output.
 
 ## Relative decode cost per format (Linux, same engine)
@@ -5278,7 +5282,7 @@ written is DECISIONS.md 2026-10-09 (*what GCC will not do with an index*).
 | **Compact Pro's match copy** (`cpt_rle_match`, `UNC_HOT`; DiskDoubler method 8 runs the same loop) | 8 instructions, ~64 cycles a byte | 6 instructions, ~46: `0x81` in a register; cursor post-incremented and corrected on the escape exit; `dbf` on `k` (≤ 8,192) | as RC4's row |
 | **The fork writer's run copy** (`unc_fork_write`; every output byte of StuffIt methods 5, 13 and 14, LZH's `-lh1-`/`-lh2-`/`-lh3-` and DART) | 12 instructions, ~154 cycles a byte: `o->buf`/`o->len` reloaded and stored every byte (aliasing), then `len == cap` tested | 2 instructions, ~22: `n` clipped once per piece, `move.b (An)+,(Am)+` / `dbf` (~8 a byte with `move.l` at equal parity). **A C loop over the clipped piece would get most of this too** (100 B; its time not recorded) | as RC4's row |
 | **Arsenic's renormalisation** (`ars_next_symbol`'s `while (range <= HALF)`, once per compressed bit) | 22 instructions, ~280 cycles a bit: bit reader, `range` and `code` loaded and stored each bit | ~6 instructions, ~60: all in registers; `lsr.b #1` into X, `addx.l` into `code`. **Inference, not measured:** ~1.6 M compressed bits in the ISBN fixture puts the saving near 8 % of its 4 MB run | as RC4's row |
-| **The masked match copies** (`window[pos++ & mask] = window[from++ & mask]`: `unc_lzah.c`; methods 13 and 14 were this line until 2026-11-09) | 12 instructions, ~138 cycles a byte on method 13 | 2 instructions, ~22: `move.b (An)+,(Am)+` / `dbf`. **Methods 13 and 14 took the split in C**: `move.b (An)+,(Am)+`, `cmp.l`, `bcs`, ~28 cycles, one call a match; −2.2 to −5.2 % of engine ticks (MEASURED, *The match copies through cursors*), so the copy was never the bulk of method 13 | as RC4's row |
+| **The match copies through cursors** (`unc_sit_match`, methods 13 and 14; `unc_lzah_decode`'s, `-lh1-` and ARC Trimmed; all three masked a byte at a time until 2026-11-09) | 3 instructions, ~28 cycles a byte: `move.b (An)+,(Am)+`, `cmp.l`, `bcs` (was 12, ~138) | 2 instructions, ~22: `dbf` on a count. The C split took the rest: −2.2 to −5.2 % on method 13 and 14, −17.2 % on a match-heavy `-lh1-` (MEASURED, *The match copies through cursors*) | as RC4's row |
 | **Now Compress's match copy** (`now_newlzss`, inlined into `now_fork`) | 4 instructions, ~42 cycles a byte | 2 instructions, ~22: a second source pointer, `dbf` — bounds already checked per match | as RC4's row |
 | **`-lh1-`'s tree-update search** (`lzah_update`'s `while (l + 1 <= LZAH_T && k > freq[l + 1]) l++`; DART, StuffIt method 5, LZH `-lh1-`) | 8 instructions, ~66 cycles a step | 2 instructions, ~18: `cmp.w (An)+,Dn` / `bhi.s`, stopped by the `0xFFFF` already at `freq[LZAH_T]` — which also makes the C loop's bound test redundant | as RC4's row |
 
@@ -5829,7 +5833,7 @@ data and relocations. 63,744 B was measured against 2026-09-01's build;
 `ApplLimit − ApplZone` = **78,568 B**, leaving 20,956 B for every buffer
 (*derived*; DECISIONS.md 2026-10-22, *the runtime the application did not
 need*). `CODE` has since fallen 2,584 B; the sum has not been re-derived. The
-eager loader then asks for the `'OVLY'` bundle as ONE **198,216 B** block
+eager loader then asks for the `'OVLY'` bundle as ONE **198,244 B** block
 (*Overlays*). The bound is the RAM under the screen buffer, so no smaller
 System moves it (*What the application costs the engine*); the margin is
 kilobytes, which is why MANUAL_TESTS.md §6's HD20 question is about a

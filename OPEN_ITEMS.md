@@ -209,7 +209,7 @@ assembly: the candidates, estimated*).
 | **a timing build that can open an encrypted archive**: the autotest app with a compile-time password beside `UNC_AT_TIMING` | the tick probe cannot reach any cipher today |
 
 **`-lh1-` (StuffIt method 5, LZH, ARC Trimmed), from MacMount's comparison
-(2026-11-01).** All three are C, so none waits for the VM pass. Each closes
+(2026-11-01).** Both are C, so neither waits for the VM pass. Each closes
 when the tick probe times it on a method-5 or `-lh1-` fixture and the
 overlay images' sizes are re-taken.
 
@@ -217,7 +217,6 @@ overlay images' sizes are re-taken.
 |---|---|
 | **the tree walk with the bit reader inside it, no call in the loop**: bits left-aligned in a register, each a test of bit 7 and a shift by one | MEASURED by MacMount on the same tree: ~150 → ~106 cycles a level read off its listing, and 6.1 → 3.9 minutes for a disk at Mini vMac 1x (macmount VERIFIED.md, *The decoders rewritten*). Ours: 230 instructions an output byte against its 178 (its harness, not our flags). The CALL left the loop on 2026-11-09, `unc_bitin_bit` forced inline: method 5 −21 % of Plus engine ticks (FORMATS.md, *Inlining the shared readers*); what is left is the left-aligned register form |
 | **the update scan on the `0xFFFF` sentinel** | FORMATS.md's row *`-lh1-`'s tree-update search* |
-| **match copies in pieces that do not wrap** | FORMATS.md's row *The masked match copies* (`unc_lzah.c` named, not counted) |
 
 **Not taken from it:** a separate output ring (+2 KB peak per entry), and
 16-bit node indices (CLAUDE.md, 68000 discipline: 32-bit arithmetic in hot

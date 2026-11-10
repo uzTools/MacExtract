@@ -801,7 +801,10 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # match copied through cursors by one out-of-line function, and one flush
 # for both (DECISIONS.md 2026-11-09, *the match that was masked twice a
 # byte*). In `ovl_stuffit` on the shipped pair, +44.
-UNC_MAC_CODE_DEFAULT=187608
+# +28 on 2026-11-09, 187,608 -> 187,636, A5 +4 below: `-lh1-`'s match
+# (unc_lzah.c) copied through cursors, the same entry. In `ovl_codecs` on
+# the shipped pair, +28.
+UNC_MAC_CODE_DEFAULT=187636
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -1080,7 +1083,9 @@ UNC_MAC_CODE_DEFAULT=187608
 # alignment (above).
 # +8 on 2026-11-09, 36,688 -> 36,696: `.data` alignment under the code's
 # +24 (above); the match copy added no data.
-UNC_MAC_A5_DEFAULT=36696
+# +4 on 2026-11-09, 36,696 -> 36,700: `.data` alignment under the code's
+# +28 (above).
+UNC_MAC_A5_DEFAULT=36700
 # A CEILING PER CONFIGURATION, because one ceiling measured on another build
 # cannot fire. The figures above are the RESIDENT control build, which carries
 # every decoder; the shipped build's resident code is a third of that, so

@@ -283,10 +283,13 @@ REPO = os.path.dirname(HERE)
 # control's CODE -96 and A5 0; the shipped pair fell the same 96, OVL_SAVED
 # unmoved. They were 190,276 / 94,894 / 619,182.
 TIERS = {
-    "sys3-512K": (188628, "System 3.0, Macintosh 512Ke (222,070 B free)"),
-    "sys6-512K": (93246,  "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
-    "floor-1M":  (617534, "System 6.0.8, 1 MB Mac Plus — the floor target"),
+    "sys3-512K": (188596, "System 3.0, Macintosh 512Ke (222,070 B free)"),
+    "sys6-512K": (93214,  "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
+    "floor-1M":  (617502, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
+# -32 each 2026-11-09, DERIVED from TIERS_CONTROL +32 (`-lh1-`'s match
+# copied through cursors, DECISIONS.md 2026-11-09, *the match that was
+# masked twice a byte*); they were 188,628 / 93,246 / 617,534.
 # -32 each 2026-11-09, DERIVED from TIERS_CONTROL +32 (methods 13 and 14's
 # match copied through cursors, DECISIONS.md 2026-11-09, *the match that
 # was masked twice a byte*); they were 188,660 / 93,278 / 617,566.
@@ -530,7 +533,11 @@ TIERS = {
 # +192 2026-11-07: Now Compress polls Cancel inside a block (`ovl_now` +186;
 # DECISIONS.md 2026-11-07, *the block a click waited for*); CODE +180, A5 +12.
 # TIERS -192 and OVL_SAVED +192, which cancel: only a now-keeper moves.
-TIERS_CONTROL = 224304     # build/mac-resident, CODE + A5, 2026-11-09
+TIERS_CONTROL = 224336     # build/mac-resident, CODE + A5, 2026-11-09
+# +32 2026-11-09: `-lh1-`'s match copied through cursors (`ovl_codecs` +28;
+# CODE +28, A5 +4, `.data` alignment; DECISIONS.md 2026-11-09, *the match
+# that was masked twice a byte*); TIERS -32 and OVL_SAVED +32, which cancel:
+# every format keeps the codecs, so every grant moves +4.
 # +32 2026-11-09: methods 13 and 14's match copied through cursors, one
 # flush for both (`ovl_stuffit` +44; CODE +24, A5 +8, `.data` alignment;
 # DECISIONS.md 2026-11-09, *the match that was masked twice a byte*); TIERS
@@ -1186,7 +1193,11 @@ EXPECT = {
 # the code in `ovl_stuffit` (+44; DECISIONS.md 2026-11-09, *the match that
 # was masked twice a byte*). TIERS -32, which cancels: only a
 # stuffit-keeper's budget moves, -12 against the control.
-OVL_SAVED = 169408
+# **+32 2026-11-09, -> 169,440**: `-lh1-`'s match copied through cursors,
+# the control's +32 (CODE +28, A5 +4) against the shipped pair's 0, the code
+# in `ovl_codecs` (+28; DECISIONS.md 2026-11-09, *the match that was masked
+# twice a byte*). TIERS -32, which cancels: every grant moves +4.
+OVL_SAVED = 169440
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
 # every kept image is one — as is the bundle an envelope holds on to.
@@ -1323,7 +1334,7 @@ IMAGES = {
     "OVL_ID_ARC":         7924,
     "OVL_ID_BINHEX":      7630,
     "OVL_ID_BTOA":        2496,
-    "OVL_ID_CODECS":      6208,
+    "OVL_ID_CODECS":      6236,
     "OVL_ID_CPTDD":       15290,
     "OVL_ID_CRYPT":       9284,
     "OVL_ID_EXO":         30228,
@@ -1483,7 +1494,10 @@ IMAGES = {
 # **STUFFIT +44, the bundle +44 B, 2026-11-09**: methods 13 and 14's match
 # copied through cursors, one flush for both (DECISIONS.md 2026-11-09, *the
 # match that was masked twice a byte*).
-BUNDLE = 198216
+# **CODECS +28, the bundle +28 B, the same day**: `-lh1-`'s match copied
+# through cursors (DECISIONS.md 2026-11-09, *the match that was masked twice
+# a byte*).
+BUNDLE = 198244
 
 # What the SHIPPED lane asserts, and it is the refused fixtures BY NAME
 # rather than a tally: a tier that refuses two different fixtures and still

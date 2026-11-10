@@ -296,7 +296,9 @@ TAKEN = "2026-11-03"
 # -> 198,216 the same day: methods 13 and 14's match copied through cursors
 # in `ovl_stuffit` (+44) (DECISIONS.md 2026-11-09, *the match that was
 # masked twice a byte*).
-EXPECT_BUNDLE = 198216
+# -> 198,244 the same day: `-lh1-`'s match copied through cursors in
+# `ovl_codecs` (+28) (the same entry).
+EXPECT_BUNDLE = 198244
 TOLERANCE_BUNDLE = 2048
 TAKEN_BUNDLE = "2026-11-09"
 

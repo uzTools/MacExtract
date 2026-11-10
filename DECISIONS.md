@@ -576,7 +576,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-09 (the character past the buffer) — a BinHex line longer than 256 characters lost its 257th; the reader now stops before the character that does not fit
 - 2026-11-09 (the inline the compiler declined) — `unc_bitin_bit` and `unc_bitin_fill` forced inline: −21 to −31 % on method 5, method 6 and implode for +1,160 B of images; `unc_bufin_next` and `unc_fork_put` measured and not kept
 - 2026-11-09 (the set's identity that left) — which set a file belongs to leaves resident `CODE` for `ovl_sniff`, beside the parsers it already carried, and Compact Pro's match for `ovl_cptdd` too; 1,584 B onto every budget that keeps neither, 52 B off one that keeps the bundle
-- 2026-11-09 (the match that was masked twice a byte) — methods 13 and 14 copy a match through cursors in one out-of-line function and share one flush: −2.2 to −5.2 % of Plus engine ticks for +44 B of `ovl_stuffit`
+- 2026-11-09 (the match that was masked twice a byte) — methods 13 and 14 copy a match through cursors in one out-of-line function and share one flush: −2.2 to −5.2 % of Plus engine ticks for +44 B of `ovl_stuffit`; `-lh1-` and ARC Trimmed the same, inline, −1.3 to −17.2 % for +28 B of `ovl_codecs`
 
 ---
 
@@ -23916,7 +23916,7 @@ shared with the probe that recognises the same header, so the bodies cost
 their own bytes in the sniffer and their bytes plus the parsers anywhere
 else.
 
-## 2026-11-09 (the match that was masked twice a byte) — methods 13 and 14 copy a match through cursors in one out-of-line function and share one flush: −2.2 to −5.2 % of Plus engine ticks for +44 B of `ovl_stuffit`
+## 2026-11-09 (the match that was masked twice a byte) — methods 13 and 14 copy a match through cursors in one out-of-line function and share one flush: −2.2 to −5.2 % of Plus engine ticks for +44 B of `ovl_stuffit`; `-lh1-` and ARC Trimmed the same, inline, −1.3 to −17.2 % for +28 B of `ovl_codecs`
 
 **Claim, evidence, consequence (measured).** `window[pos++ & mask] =
 window[from++ & mask]` became `unc_sit_match` (src/fmt_sit.c): the match
@@ -23957,4 +23957,18 @@ bought 2–5 %, so on these forks the copy was never the bulk of method 13.
 **`derived-EmpireBuilderDemo.sit` cannot measure it**: its forks are methods
 2 and 3 (FORMATS.md, *Relative decode cost per format*); the method-13
 fixtures are `mar-twin-mar020src.sit` and `derived-mac.faq-36.sit`.
+
+**`-lh1-` and ARC Trimmed, the same day (measured).** `unc_lzah_decode`'s
+copy took the same split, written inline: its function is small enough that
+the listing keeps both cursors and the end in registers, the same three
+instructions. Against the method-13/14 tree: `long.lzh` (LHarc 1.13's test
+archive, 1,241,658 B, almost all matches) −17.2 %, method 5 −1.3 %, ARC
+Trimmed −1.5 %; 208 archives that reach the decoder extract identically.
+`ovl_codecs` +28 B, which every format keeps, so every grant moves +4 B; the
+control's CODE +28, A5 +4; every tally unmoved. A match here is at most 60 B
+of a 4 KB window, flushed at 2 KB, as before. **What a match copy is worth
+follows the share of match bytes, not the method**: the same decoder gained
+17.2 % on a fork of long matches and 1.3 % on method 5; where the rest of an
+ordinary fork goes these runs do not say (OPEN_ITEMS.md, *`-lh1-`*, has the
+two candidates left).
 

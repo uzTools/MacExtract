@@ -332,10 +332,24 @@ int unc_lzah_decode(UncAlloc *al, UncBitIn *bi, uint32_t outlen, int mode,
             }
             moff = (high << 6) + (i & 0x3Fu) + 1u;
             from = pos - moff;
-            while (mlen-- > 0 && pos < outlen) {
-                uint8_t b = h->window[from++ & (LZAH_WINDOW - 1)];
-                h->window[pos++ & (LZAH_WINDOW - 1)] = b;
-            }
+            /* mlen >= 3 and pos < outlen: n >= 1. Pieces that wrap
+             * neither end, copied through cursors (fmt_sit.c's
+             * unc_sit_match, which this image cannot reach). */
+            if (mlen > outlen - pos) mlen = outlen - pos;
+            do {
+                uint32_t d = pos & (LZAH_WINDOW - 1);
+                uint32_t s = from & (LZAH_WINDOW - 1);
+                uint32_t k = LZAH_WINDOW - (d > s ? d : s);
+                if (k > mlen) k = mlen;
+                mlen -= k;
+                pos += k;
+                from += k;
+                {
+                    const uint8_t *sp = h->window + s, *send = sp + k;
+                    uint8_t *dp = h->window + d;
+                    do *dp++ = *sp++; while (sp < send);
+                }
+            } while (mlen > 0);
         }
     }
 
