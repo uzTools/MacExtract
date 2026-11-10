@@ -580,6 +580,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-10 (the forward every symbol took) — the canonical decoder's table hit on locals, its walk out of line: −3.2 to −7.1 % of Plus engine ticks on all five of its users for −80 B; a copy in each image was −1.3 to −3.7 % more for +2,440 B of bundle, landed and taken back
 - 2026-11-10 (the division libgcc was asked to do) — Arsenic's two divisions are an inline `divu.w`, the engine's first instruction written by hand: −8.4 % and −8.6 % of Plus engine ticks for +116 B of `ovl_stuffit`
 - 2026-11-10 (the count the bit buffer did not need) — Arsenic's renormalisation runs in registers on a bit buffer of its own: −7.4 % and −7.2 % of Plus engine ticks for +28 B of `ovl_stuffit`; the symbol decoder inlined into the block loop measured slower and was not kept
+- 2026-11-10 (the division every byte paid for) — ARC's garble and PackIt's PMa5 wrap a key cursor instead of taking a `%` a byte: ~960 → ~64 cycles a byte (estimate), −24 B of `ovl_crypt`; no suite could tell a key restarted at every refill
 
 ---
 
@@ -24112,3 +24113,43 @@ grants +4, the rest +32; `run_tiers.py --check` moves no tally; engine peak
 −24 B on x86 (`UncBitIn` leaves the decoder state). The StuffIt 5 call
 chain is 2,966 B (+8), under DiskDoubler's 3,446 B. FORMATS.md, *Decode cost, before and after the
 2026-08-24 pass* (the changes since).
+## 2026-11-10 (the division every byte paid for) — ARC's garble and PackIt's PMa5 wrap a key cursor instead of taking a `%` a byte: ~960 → ~64 cycles a byte (estimate), −24 B of `ovl_crypt`; no suite could tell a key restarted at every refill
+
+**Claim, evidence, consequence.** `unc_crypt_apply` keyed both repeating-key
+ciphers with `key[(pos + i) % keylen]` (`% 7u` for PMa5). On a 68000 each of
+those is a call to libgcc's `__umodsi3`, which in Retro68's libgcc is
+`__udivsi3` (two `divu.w`) and then `__mulsi3` (three `mulu.w`): ~960 cycles a
+byte with the loop, against ~64 for a cursor that wraps, taken once per refill
+from `pos % keylen` (**estimates**, MC68000 timing table, from the listings at
+`mkoverlay.sh`'s flags). `unc_crypt_apply` is 798 → 774 B; `ovl_crypt` 9,284 →
+9,260 B. **Not timed on a Plus**: the tick probe cannot open an encrypted
+archive (OPEN_ITEMS.md, *Hand-written 68000 assembly*). Linux callgrind, as a
+ranking only: PMa5 3.41 M → 1.81 M Ir in the function; ARC's garble flat,
+because x86 divides by a variable in one instruction — so Linux could not have
+found this one.
+
+**Why one `%` a refill is exact.** `pos` is the offset of the buffer within
+the encrypted stream (`unc_bufin_refill` passes `at`), so the key position of
+`buf[0]` is `pos % keylen` and every later byte is one step on, wrapping at
+`keylen`. Both ciphers set `keylen` (PMa5's is 7, `unc_crypt_packit_xor`), so
+the two cases share the loop.
+
+**The suite could not fail on it (measured).** A mutant that starts every
+refill at key byte 0 passed `tools/run_crypt.py` 78/78, because every XOR
+case there fits in one 4 KB refill. Two cases now cross one: a 9,000 B stored
+member in the `arc g` archive (the 18-byte key does not divide 4,096), and a
+6,000 B PMa5 entry (7 does not either), both read back by `unar -p` as well.
+The mutant fails both. `build_packit` takes the cases as an argument, so the
+fuzzer's seeds are unchanged.
+
+**Price.** Shipped `CODE` and A5 0; the resident control `CODE` −24, A5 −8;
+`OVL_SAVED` −32 and `TIERS` +32, which cancel: every grant in *What each
+format is granted* −32 B, −8 B where it keeps `ovl_crypt`, against the
+control. Heap 0 (no allocation touched); the deepest call chain 3,446 B
+before and after (`tools/stack_depth.py`).
+`run_tiers.py --check` moves no tally. FORMATS.md, *The repeating-key
+ciphers' wrap*.
+
+`tools/run_tiers.py`'s `TIERS` labels had been moved with the bases twice that
+day ("62,070 B free", "−2,688 B free"); they are measured free memory and do
+not move, and read 222,070 and 126,688 B again.

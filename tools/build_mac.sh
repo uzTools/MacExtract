@@ -812,7 +812,9 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # 2026-11-10, *the division libgcc was asked to do*). In `ovl_stuffit` on the shipped pair, +116.
 # +32 on 2026-11-10, 187,724 -> 187,756, A5 +0 below: Arsenic's renormalisation in registers, reading its own bits (DECISIONS.md
 # 2026-11-10, *the count the bit buffer did not need*). In `ovl_stuffit` on the shipped pair, +28.
-UNC_MAC_CODE_DEFAULT=187756
+# -24 on 2026-11-10, 187,756 -> 187,732, A5 -8 below: ARC's garble and PackIt's PMa5 key wrapped by a cursor, not a `%` a byte (DECISIONS.md
+# 2026-11-10, *the division every byte paid for*). In `ovl_crypt` -24 on the shipped pair.
+UNC_MAC_CODE_DEFAULT=187732
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -1097,7 +1099,9 @@ UNC_MAC_CODE_DEFAULT=187756
 # (above); the decoder added no data.
 # +12 on 2026-11-10, 36,696 -> 36,708: `.data` alignment under the code's
 # +116 (above); the change added no data.
-UNC_MAC_A5_DEFAULT=36708
+# -8 on 2026-11-10, 36,708 -> 36,700: `.data` alignment under the code's -24 (above);
+# the change added no data.
+UNC_MAC_A5_DEFAULT=36700
 # A CEILING PER CONFIGURATION, because one ceiling measured on another build
 # cannot fire. The figures above are the RESIDENT control build, which carries
 # every decoder; the shipped build's resident code is a third of that, so

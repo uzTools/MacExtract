@@ -443,7 +443,7 @@ PIT_CASES = [
 ]
 
 
-def build_packit(password, des):
+def build_packit(password, des, cases=PIT_CASES):
     parts = []
     ranges = []
 
@@ -453,7 +453,7 @@ def build_packit(password, des):
     # One entry in the clear first, so the fixture also proves that a
     # reader gets back onto the rails after an encrypted block.
     parts.append(PIT.stored_entry("Read Me", b"not a secret\n", b""))
-    for name, data, rsrc in PIT_CASES:
+    for name, data, rsrc in cases:
         stream = PIT.huffman_entry(name, data, rsrc)[4:]   # drop 'PMa4'
         stream += b"\x00" * ((-len(stream)) % 8)
         ranges.append((at() + 4, at() + 4 + len(stream)))

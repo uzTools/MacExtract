@@ -283,14 +283,16 @@ REPO = os.path.dirname(HERE)
 # control's CODE -96 and A5 0; the shipped pair fell the same 96, OVL_SAVED
 # unmoved. They were 190,276 / 94,894 / 619,182.
 TIERS = {
-    "sys3-512K": (188468, "System 3.0, Macintosh 512Ke (62,070 B free)"),
-    "sys6-512K": (93086,  "System 6.0.8, Macintosh 512Ke (-2,688 B free)"),
-    "floor-1M":  (617374, "System 6.0.8, 1 MB Mac Plus — the floor target"),
+    "sys3-512K": (188500, "System 3.0, Macintosh 512Ke (222,070 B free)"),
+    "sys6-512K": (93118,  "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
+    "floor-1M":  (617406, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
+# +32 each 2026-11-10, DERIVED from TIERS_CONTROL -32 (ARC's garble and PackIt's PMa5 key wrapped by a cursor, not a `%` a byte, DECISIONS.md
+# 2026-11-10, *the division every byte paid for*); they were 188,468 / 93,086 / 617,374.
 # -32 each 2026-11-10, DERIVED from TIERS_CONTROL +32 (Arsenic's renormalisation in registers, reading its own bits, DECISIONS.md
-# 2026-11-10, *the count the bit buffer did not need*); they were 188,500 / 94 / 93,118 / 617,406.
+# 2026-11-10, *the count the bit buffer did not need*); they were 188,500 / 93,118 / 617,406.
 # -128 each 2026-11-10, DERIVED from TIERS_CONTROL +128 (Arsenic's two divisions inline, DECISIONS.md
-# 2026-11-10, *the division libgcc was asked to do*); they were 188,628 / 222 / 93,246 / 126 / 617,534.
+# 2026-11-10, *the division libgcc was asked to do*); they were 188,628 / 93,246 / 617,534.
 # +32 each 2026-11-10, DERIVED from TIERS_CONTROL -32 (the canonical
 # decoder's table hit, DECISIONS.md 2026-11-10, *the forward every symbol
 # took*); they were 188,596 / 93,214 / 617,502.
@@ -540,7 +542,9 @@ TIERS = {
 # +192 2026-11-07: Now Compress polls Cancel inside a block (`ovl_now` +186;
 # DECISIONS.md 2026-11-07, *the block a click waited for*); CODE +180, A5 +12.
 # TIERS -192 and OVL_SAVED +192, which cancel: only a now-keeper moves.
-TIERS_CONTROL = 224464     # build/mac-resident, CODE + A5, 2026-11-10
+TIERS_CONTROL = 224432     # build/mac-resident, CODE + A5, 2026-11-10
+# -32 2026-11-10: ARC's garble and PackIt's PMa5 key wrapped by a cursor, not a `%` a byte (`ovl_crypt` -24; CODE -24, A5 -8; DECISIONS.md 2026-11-10, *the division every byte paid for*); TIERS +32 and
+# OVL_SAVED -32, which cancel.
 # +32 2026-11-10: Arsenic's renormalisation in registers, reading its own bits (`ovl_stuffit` +28; DECISIONS.md 2026-11-10,
 # *the count the bit buffer did not need*); TIERS -32 and OVL_SAVED +32, which cancel.
 # +128 2026-11-10: Arsenic's two divisions inline (`ovl_stuffit` +116; DECISIONS.md 2026-11-10,
@@ -1220,7 +1224,10 @@ EXPECT = {
 # pair's 0, the code in `ovl_stuffit` (+116; DECISIONS.md 2026-11-10, *the division libgcc was asked to do*).
 # **+32 2026-11-10, -> 169,568**: Arsenic's renormalisation in registers, reading its own bits, the control's +32 against the shipped
 # pair's 0, the code in `ovl_stuffit` (+28; DECISIONS.md 2026-11-10, *the count the bit buffer did not need*).
-OVL_SAVED = 169568
+# **-32 2026-11-10, -> 169,536**: ARC's garble and PackIt's PMa5 key wrapped by a cursor, not a `%` a byte, the control's -32 (CODE -24, A5 -8) against
+# the shipped pair's 0, the code in `ovl_crypt` -24 (DECISIONS.md 2026-11-10, *the division every byte paid for*). TIERS +32,
+# which cancels.
+OVL_SAVED = 169536
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
 # every kept image is one — as is the bundle an envelope holds on to.
@@ -1359,7 +1366,7 @@ IMAGES = {
     "OVL_ID_BTOA":        2496,
     "OVL_ID_CODECS":      6156,
     "OVL_ID_CPTDD":       15290,
-    "OVL_ID_CRYPT":       9284,
+    "OVL_ID_CRYPT":       9260,
     "OVL_ID_EXO":         30228,
     "OVL_ID_LZH":         10702,
     "OVL_ID_NOW":         4948,
@@ -1527,7 +1534,9 @@ IMAGES = {
 # 2026-11-10, *the division libgcc was asked to do*).
 # **STUFFIT +28, the bundle +28 B, 2026-11-10**: Arsenic's renormalisation in registers, reading its own bits (DECISIONS.md
 # 2026-11-10, *the count the bit buffer did not need*).
-BUNDLE = 198308
+# **CRYPT -24, the bundle -24 B, 2026-11-10**: ARC's garble and PackIt's PMa5 key wrapped by a cursor, not a `%` a byte (DECISIONS.md
+# 2026-11-10, *the division every byte paid for*).
+BUNDLE = 198284
 
 # What the SHIPPED lane asserts, and it is the refused fixtures BY NAME
 # rather than a tally: a tier that refuses two different fixtures and still

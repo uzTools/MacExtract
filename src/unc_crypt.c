@@ -982,12 +982,18 @@ void unc_crypt_apply(UncCrypt *cr, uint8_t *buf, uint32_t len, uint32_t pos)
         break;
 
     case UNC_CRYPT_XOR:
-        for (i = 0; i < len; i++) buf[i] ^= cr->key[(pos + i) % cr->keylen];
+    case UNC_CRYPT_PIT_XOR: {
+        /* One division a refill, then an index that wraps: a `%` a byte
+         * was a __umodsi3 call each on the 68000. PackIt's keylen is 7. */
+        const uint8_t *key = cr->key, *kend = key + cr->keylen;
+        const uint8_t *k = key + pos % cr->keylen;
+        uint8_t *end = buf + len;
+        while (buf != end) {
+            *buf++ ^= *k++;
+            if (k == kend) k = key;
+        }
         break;
-
-    case UNC_CRYPT_PIT_XOR:
-        for (i = 0; i < len; i++) buf[i] ^= cr->key[(pos + i) % 7u];
-        break;
+    }
 
     case UNC_CRYPT_PIT_DES:
         for (i = 0; i + 8 <= len; i += 8) des_crypt(cr->ks, buf + i, 1, cr->tab);

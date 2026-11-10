@@ -147,6 +147,15 @@ def check_refusal(label, archive, macextract, problems, args=(),
                         % (label, expect, msg.strip()[:160]))
 
 
+def noise(n):
+    """n bytes no coder can shrink much: a 31-bit LCG's high byte."""
+    out, x = bytearray(), 12345
+    for _ in range(n):
+        x = (x * 1103515245 + 12345) & 0x7FFFFFFF
+        out.append(x >> 23)
+    return bytes(out)
+
+
 def synth(kind, path, password):
     run([sys.executable, os.path.join(ROOT, "tools", "synth_crypt.py"),
          "--kind", kind, "-o", path, "--password", password], check=True)
@@ -711,6 +720,19 @@ def main():
                                     "wrong" % (kind, n))
             shutil.rmtree(out, ignore_errors=True)
             ran += 2
+        # PMa5 longer than one 4 KB refill: the key position carries
+        # across refills, and 4,096 is not a multiple of 7. The cases
+        # above all fit in one, so a decoder that restarted the key at
+        # every refill passed them (2026-11-10).
+        want = {"Read Me": b"not a secret\n", "Long Note": noise(6000),
+                "Trailer": b"after the secret\n"}
+        blob, _ = SC.build_packit(LONG_PW.encode("mac_roman"), False,
+                                  [("Long Note", want["Long Note"], b"")])
+        p = os.path.join(tmp, "packit-xor-long.pit")
+        open(p, "wb").write(blob)
+        check_one("packit-xor past a refill", p, want, LONG_PW, macextract,
+                  problems)
+        ran += 1
 
         # ---- zip, from Info-ZIP itself --------------------------------
         if shutil.which("zip"):
@@ -947,9 +969,13 @@ def main():
         # ---- ARC, from Debian's `arc` if it is here -------------------
         if os.path.exists(ARC_BIN):
             src = tempfile.mkdtemp()
+            # noise.bin is stored and longer than a 4 KB refill, which
+            # the 18-byte key does not divide: the garble's position
+            # must carry from one refill to the next.
             payload = {"crunched.txt": b"quick brown fox " * 30,
                        "stored.bin": bytes((i * 91 + 7) & 0xFF
-                                           for i in range(3000))}
+                                           for i in range(3000)),
+                       "noise.bin": noise(9000)}
             for n, b in payload.items():
                 open(os.path.join(src, n), "wb").write(b)
             garbled = os.path.join(tmp, "garbled.arc")
