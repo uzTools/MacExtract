@@ -584,6 +584,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-10 (the window filled a byte at a time) — every decoder window is filled a long at a time: −2.5 % on a small `-lh5-` entry, −3.2 % on method 14, Compact Pro unchanged, for −304 B of bundle
 - 2026-11-10 (the 12.8 seconds that were three commits) — the shipped application's 12.8 s on `macburger-helper.hqx` between v0.41.0 and 2026-11-09 is 9.6 s from `ovl_keep`'s `high_handle` on a 128K ROM, 2.0 s from the 1 KB progress step and 1.0 s from v0.45.0's dialogs; `MoveHHi` put back gives the 9.6 s back
 - 2026-11-10 (the encoder make clean deleted) — Debian's `arc` lives in the machine's cache, not `build/`, and `ci.sh`'s last line says when its cases were skipped
+- 2026-11-10 (the peek that was turned round) — StuffIt method 13's canonical table built at bit-reversed indices in the same 1 KB, the reversal table gone: −1.6 to −2.75 % of Plus engine ticks, −104 B of bundle, heap 0; built a bit at a time it was −0.2 % on an archive of many forks
 
 ---
 
@@ -24244,3 +24245,54 @@ process here has no network: it would stall, not fail. The other oracles
 they survive a clean and this did not. Instead the run's LAST line, the one
 that is read, says `CI: all green, WITHOUT the real-arc cases` when there
 is no encoder. A machine without the package still goes green.
+
+## 2026-11-10 (the peek that was turned round) — StuffIt method 13's canonical table built at bit-reversed indices in the same 1 KB, the reversal table gone: −1.6 to −2.75 % of Plus engine ticks, −104 B of bundle, heap 0; built a bit at a time it was −0.2 % on an archive of many forks
+
+**Claim, evidence, consequence (measured).** Method 13 reads LSB-first, and
+`unc_canon_decode` turned each peeked window round (`unc_rev_fast`, two
+lookups in a 256 B table) to index the MSB-first length table. Its
+`UncCanon`s are now built for the direction (`unc_canon_build_le`): 512
+entries of (symbol << 4 | length) at each code's bit-reversed positions, in
+the 1 KB the length table had, so a hit is one masked load and the symbol
+comes with it. Plus engine ticks, two runs each, against `bc57d157`:
+`mar-twin-mar020src.sit` −2.75 %, `derived-mac.faq-36.sit` −2.75 %,
+StuffIt 5's `System_2.x.sit` −1.6 %; Compact Pro, MSB-first, −0.3 %
+(FORMATS.md, *The canonical decoder's table hit*). 163 method-13 and 14
+archives and 208 that reach LZH's builder extract identically.
+
+**Nine bits, not zlib's symbol per ten-bit entry (measured).** A symbol per
+entry at ten bits is 2 KB where the table is 1 KB, in every `UncCanon`; the
+maintainer's call of the same day was memory before the last 3 %. At nine
+bits the entries fit the bytes; 4.1–5.0 % of method 13's symbols have
+ten-bit codes and walk instead (a host count over three archives).
+
+**The build is what the first try paid (measured).** Reversing each code a
+bit at a time gave −2.7 % on `mac.faq-36` (5 forks) and −0.2 % on
+`mar-twin` (157 forks): method 13 builds three tables a fork. zlib's
+`inflate_table` keeps the code reversed as it goes, a reversed increment a
+code (third_party/zlib/inftrees.c), and `mar-twin` went to −2.75 %.
+**A per-symbol saving is paid for per table; count the tables.**
+
+**No new vector entry (measured).** An overlay reaches the codecs only
+through the host vector, an entry of which is resident A5; the direction is
+an argument of `unc_canon_build_ext` instead (LZH's two calls pass 0) and
+`unc_canon_build_le` a header inline. The first build added the function
+and did not link (`ovl_stuffit`: undefined reference). Price: `ovl_codecs`
+−148, `ovl_stuffit` +36, `ovl_lzh` +8, the bundle −104; the shipped
+application 0; the control's CODE +172 and A5 −236 (the table was `.data`
+there); heap 0; every grant +40 to +84 B; `run_tiers.py --check` moves no
+tally.
+
+**The unit test that could not fail (measured).** A table filled with the
+codes unreversed passed every LSB-first case written first, and a check of
+every code of four sets too: a wrong entry is usually an empty one, the walk
+decodes it right, and a fresh reader's first decode always walks because its
+window is empty. Each code is now decoded twice; the unreversed table fails
+151 of 2,278 checks. **Before trusting a fast path's test, make the fast
+path the one that runs.**
+
+**The candidate's user list was stale.** FORMATS.md named SpaceSaver method
+3 and ARC beside method 13; ARC builds its own raw-indexed LSB-first table
+(fmt_arc.c) and SpaceSaver method 3 has its own decoder, so method 13 was
+the only user.
+

@@ -561,6 +561,14 @@ int unc_huff_decode(const UncHuff *h, UncBitIn *bi);
 #define UNC_CANON_FAST_BITS 10
 #define UNC_CANON_FAST_MASK ((1u << UNC_CANON_FAST_BITS) - 1u)
 
+/* The LSB-first table's width (UncCanon, `fast.le`): 512 two-byte
+ * entries are the 1 KB the MSB-first table's 1,024 lengths take. On
+ * StuffIt method 13, its one user, 4.1-5.0 % of symbols have ten-bit
+ * codes and walk because of it (measured 2026-11-10, three archives;
+ * DECISIONS.md 2026-11-10, *the peek that was turned round*). */
+#define UNC_CANON_LE_BITS 9
+#define UNC_CANON_LE_MASK ((1u << UNC_CANON_LE_BITS) - 1u)
+
 typedef struct UncCanon {
     uint16_t count[UNC_CANON_MAX_BITS + 1]; /* codes per bit length */
     uint32_t first[UNC_CANON_MAX_BITS + 1]; /* first code value per length */
@@ -573,13 +581,24 @@ typedef struct UncCanon {
     uint16_t cdelta[UNC_CANON_MAX_BITS + 1];
     int16_t *sym;                           /* symbols in (len,sym) order */
     int16_t  maxlen;
-    /* Next UNC_CANON_FAST_BITS bits -> the length of the code that
-     * starts there, or 0 when it is longer than that and the
-     * bit-at-a-time walk has to run. The symbol itself is not stored:
-     * codes of one length are consecutive from first[l], so it is
-     * sym[code + cdelta[l]], which is two shifts and an add against
-     * the 256 extra bytes a symbol table would cost. */
-    uint8_t  fastlen[1u << UNC_CANON_FAST_BITS];
+    /* The fast table, one of two layouts in the same 1 KB.
+     *
+     * MSB-first (unc_canon_build/_ext): the next UNC_CANON_FAST_BITS
+     * bits -> the length of the code that starts there, or 0 when it is
+     * longer than that and the bit-at-a-time walk has to run. The symbol
+     * itself is not stored: codes of one length are consecutive from
+     * first[l], so it is sym[code + cdelta[l]], which is two shifts and
+     * an add against the 1 KB more a symbol per entry would cost.
+     *
+     * LSB-first (unc_canon_build_le): the next UNC_CANON_LE_BITS bits,
+     * as they leave the stream, index (symbol << 4) | length directly,
+     * each code stored at its bit-reversed positions as zlib does, so
+     * nothing is turned round per symbol; 0 is a walk. Nine bits rather
+     * than ten, so that the entries fit the bytes `len` has. */
+    union {
+        uint8_t  len[1u << UNC_CANON_FAST_BITS];
+        uint16_t le[1u << UNC_CANON_LE_BITS];
+    } fast;
     int16_t  symstore[UNC_CANON_MAX_SYMS];  /* what `sym` points at unless
                                              * the caller supplied storage */
 } UncCanon;
@@ -589,9 +608,22 @@ typedef struct UncCanon {
 int unc_canon_build(UncCanon *c, const uint8_t *lengths, int32_t nsyms);
 
 /* The same, over symbol storage the caller owns: for an alphabet
- * larger than UNC_CANON_MAX_SYMS (LZH's 510 literals). */
+ * larger than UNC_CANON_MAX_SYMS (LZH's 510 literals). `le` non-zero
+ * builds the fast table for a stream read LSB-first (unc_bitin_init_le);
+ * a table built one way decodes only a reader of that direction. One
+ * function with a flag rather than two because an overlay reaches the
+ * codecs only through the host vector, where an entry is resident A5. */
 int unc_canon_build_ext(UncCanon *c, const uint8_t *lengths, int32_t nsyms,
-                        int16_t *symbuf, int32_t symcap);
+                        int16_t *symbuf, int32_t symcap, int le);
+
+/* The same as unc_canon_build, for a stream read LSB-first
+ * (unc_bitin_init_le): the fast table in its `le` layout. */
+static inline int unc_canon_build_le(UncCanon *c, const uint8_t *lengths,
+                                     int32_t nsyms)
+{
+    return unc_canon_build_ext(c, lengths, nsyms, c->symstore,
+                               UNC_CANON_MAX_SYMS, 1);
+}
 
 /* Decode one symbol, or -1 with bi->err set / on an invalid code. */
 int unc_canon_decode(const UncCanon *c, UncBitIn *bi);

@@ -304,7 +304,10 @@ TAKEN = "2026-11-03"
 # 2026-11-10, *the division libgcc was asked to do*).
 # -> 198,308 on 2026-11-10: Arsenic's renormalisation in registers, reading its own bits in `ovl_stuffit` (+28) (DECISIONS.md
 # 2026-11-10, *the count the bit buffer did not need*).
-EXPECT_BUNDLE = 198308
+# -> 197,876 2026-11-10: re-taken from the bundle after method 13's
+# canonical table moved to bit-reversed indices (`ovl_codecs` -148,
+# `ovl_stuffit` +36, `ovl_lzh` +8; DECISIONS.md 2026-11-10, *the peek that was turned round*).
+EXPECT_BUNDLE = 197876
 TOLERANCE_BUNDLE = 2048
 TAKEN_BUNDLE = "2026-11-10"
 

@@ -283,10 +283,13 @@ REPO = os.path.dirname(HERE)
 # control's CODE -96 and A5 0; the shipped pair fell the same 96, OVL_SAVED
 # unmoved. They were 190,276 / 94,894 / 619,182.
 TIERS = {
-    "sys3-512K": (188692, "System 3.0, Macintosh 512Ke (222,070 B free)"),
-    "sys6-512K": (93310,  "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
-    "floor-1M":  (617598, "System 6.0.8, 1 MB Mac Plus — the floor target"),
+    "sys3-512K": (188756, "System 3.0, Macintosh 512Ke (222,070 B free)"),
+    "sys6-512K": (93374,  "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
+    "floor-1M":  (617662, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
+# +64 each 2026-11-10, DERIVED from TIERS_CONTROL -64 (method 13's
+# canonical table built at bit-reversed indices, DECISIONS.md 2026-11-10, *the peek that was turned round*); they were
+# 188,692 / 93,310 / 617,598.
 # +192 each 2026-11-10, DERIVED from TIERS_CONTROL -192 (window fills a long at a time (LZH's spaces, `-lh1-`, Compact Pro, method 14), DECISIONS.md
 # 2026-11-10, *the window filled a byte at a time*); they were 188,500 / 93,118 / 617,406.
 # +32 each 2026-11-10, DERIVED from TIERS_CONTROL -32 (ARC's garble and PackIt's PMa5 key wrapped by a cursor, not a `%` a byte, DECISIONS.md
@@ -544,7 +547,11 @@ TIERS = {
 # +192 2026-11-07: Now Compress polls Cancel inside a block (`ovl_now` +186;
 # DECISIONS.md 2026-11-07, *the block a click waited for*); CODE +180, A5 +12.
 # TIERS -192 and OVL_SAVED +192, which cancel: only a now-keeper moves.
-TIERS_CONTROL = 224240     # build/mac-resident, CODE + A5, 2026-11-10
+TIERS_CONTROL = 224176     # build/mac-resident, CODE + A5, 2026-11-10
+# -64 2026-11-10: method 13's canonical table built at bit-reversed
+# indices, the 256 B reversal table gone (`ovl_codecs` -148, `ovl_stuffit`
+# +36, `ovl_lzh` +8; CODE +172, A5 -236; DECISIONS.md 2026-11-10, *the peek that was turned round*);
+# TIERS +64 and OVL_SAVED -64, which cancel.
 # -192 2026-11-10: window fills a long at a time (LZH's spaces, `-lh1-`, Compact Pro, method 14) (`ovl_cptdd` -196, `ovl_lzh` -108, `ovl_stuffit` -4, `ovl_codecs` +4; CODE -188, A5 -4; DECISIONS.md 2026-11-10, *the window filled a byte at a time*); TIERS +192 and
 # OVL_SAVED -192, which cancel.
 # -32 2026-11-10: ARC's garble and PackIt's PMa5 key wrapped by a cursor, not a `%` a byte (`ovl_crypt` -24; CODE -24, A5 -8; DECISIONS.md 2026-11-10, *the division every byte paid for*); TIERS +32 and
@@ -1234,7 +1241,12 @@ EXPECT = {
 # **-192 2026-11-10, -> 169,344**: window fills a long at a time (LZH's spaces, `-lh1-`, Compact Pro, method 14), the control's -192 (CODE -188, A5 -4) against
 # the shipped pair's 0, the code in `ovl_cptdd` -196, `ovl_lzh` -108, `ovl_stuffit` -4, `ovl_codecs` +4 (DECISIONS.md 2026-11-10, *the window filled a byte at a time*). TIERS +192,
 # which cancels.
-OVL_SAVED = 169344
+# **-64 2026-11-10, -> 169,280**: method 13's canonical table built at
+# bit-reversed indices, the control's -64 (CODE +172, A5 -236: the reversal
+# table was A5 there) against the shipped pair's 0; the images -104 in all
+# (DECISIONS.md 2026-11-10, *the peek that was turned round*). TIERS +64, which
+# cancels: every grant moves by -64 less its images' change, +84 at least.
+OVL_SAVED = 169280
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
 # every kept image is one — as is the bundle an envelope holds on to.
@@ -1371,15 +1383,15 @@ IMAGES = {
     "OVL_ID_ARC":         7924,
     "OVL_ID_BINHEX":      7630,
     "OVL_ID_BTOA":        2496,
-    "OVL_ID_CODECS":      6160,
+    "OVL_ID_CODECS":      6012,
     "OVL_ID_CPTDD":       15094,
     "OVL_ID_CRYPT":       9260,
     "OVL_ID_EXO":         30228,
-    "OVL_ID_LZH":         10594,
+    "OVL_ID_LZH":         10602,
     "OVL_ID_NOW":         4948,
     "OVL_ID_PACKIT":      2180,
     "OVL_ID_SPACESAVER":  16236,
-    "OVL_ID_STUFFIT":     28742,
+    "OVL_ID_STUFFIT":     28778,
     "OVL_ID_SQP":         1736,
     "OVL_ID_SUPERDISK":   6628,
     "OVL_ID_TEXT":        11438,
@@ -1545,7 +1557,11 @@ IMAGES = {
 # 2026-11-10, *the division every byte paid for*).
 # **CPTDD -196, LZH -108, STUFFIT -4, CODECS +4, the bundle -304 B, 2026-11-10**: window fills a long at a time (LZH's spaces, `-lh1-`, Compact Pro, method 14) (DECISIONS.md
 # 2026-11-10, *the window filled a byte at a time*).
-BUNDLE = 197980
+# **CODECS -148, STUFFIT +36, LZH +8, the bundle -104 B, 2026-11-10**:
+# method 13's canonical table built at bit-reversed indices, the reversal
+# table gone; the direction is an argument of unc_canon_build_ext, so the
+# host vector has no new entry (DECISIONS.md 2026-11-10, *the peek that was turned round*).
+BUNDLE = 197876
 
 # What the SHIPPED lane asserts, and it is the refused fixtures BY NAME
 # rather than a tally: a tier that refuses two different fixtures and still

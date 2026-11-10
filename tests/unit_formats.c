@@ -816,6 +816,55 @@ static void test_packit(void)
 /* M4: canonical Huffman + Compact Pro                                */
 /* ------------------------------------------------------------------ */
 
+/* Every code of a set, one at a time, through an LSB-first table:
+ * each code is written in front of zeros and must decode to its own
+ * symbol. A wrong table entry — the reversal done wrong — shows here;
+ * one that is merely missing walks and decodes right. Measured: a table
+ * filled unreversed passed the cases in test_canon, and passed this too
+ * while each code was decoded once, the first decode of a fresh reader
+ * being a walk. */
+static void canon_le_every_code(const uint8_t *lens, int32_t n)
+{
+    UncCanon cn;
+    uint32_t code = 0;
+    uint32_t next[UNC_CANON_MAX_BITS + 2];
+    uint16_t count[UNC_CANON_MAX_BITS + 2];
+    int32_t i;
+    int l;
+
+    for (l = 0; l <= UNC_CANON_MAX_BITS + 1; l++) count[l] = 0;
+    for (i = 0; i < n; i++) count[lens[i]]++;
+    count[0] = 0;
+    for (l = 1; l <= UNC_CANON_MAX_BITS; l++) {
+        next[l] = code;
+        code = (code + count[l]) << 1;
+    }
+    CHECK(unc_canon_build_le(&cn, lens, n) == UNC_OK);
+    for (i = 0; i < n; i++) {
+        uint8_t buf[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
+        uint8_t storage[8];
+        MemIO m;
+        UncIO io;
+        UncBufIn in;
+        UncBitIn bi;
+        uint32_t c, k;
+        if (!lens[i]) continue;
+        c = next[lens[i]]++;
+        for (k = 0; k < 2u * lens[i]; k++) {      /* MSB of the code first */
+            uint32_t b = k % lens[i];
+            if ((c >> (lens[i] - 1u - b)) & 1u)
+                buf[k >> 3] |= (uint8_t)(1u << (k & 7u));
+        }
+        test_make_memio(&io, &m, buf, sizeof buf);
+        unc_bufin_init(&in, &io, NULL, storage, sizeof storage);
+        unc_bitin_init_le(&bi, &in);
+        /* Twice: a fresh reader's window is empty, so the first decode
+         * walks and fills it; the second is the table's. */
+        CHECK(unc_canon_decode(&cn, &bi) == i);
+        CHECK(unc_canon_decode(&cn, &bi) == i);
+    }
+}
+
 static void test_canon(void)
 {
     /* Lengths: A=1, B=2, C=3, D=3 -> codes 0, 10, 110, 111. */
@@ -887,6 +936,64 @@ static void test_canon(void)
         /* One length past it is refused rather than truncated. */
         deep[0] = UNC_CANON_MAX_BITS + 1;
         CHECK(unc_canon_build(&cn, deep, 2) == UNC_ERR_CORRUPT);
+    }
+
+    /* LSB-first (unc_canon_build_le, StuffIt method 13): the same codes,
+     * each bit leaving the stream from the low end of a byte. B A D is
+     * bits 1,0 0 1,1,1 -> bits 0..5 of one byte, 0x39. */
+    lens[0] = 1; lens[1] = 2; lens[2] = 3; lens[3] = 3;
+    CHECK(unc_canon_build_le(&cn, lens, 4) == UNC_OK);
+    buf[0] = 0x39; buf[1] = 0x00;
+    test_make_memio(&io, &m, buf, 2);
+    unc_bufin_init(&in, &io, NULL, storage, sizeof storage);
+    unc_bitin_init_le(&bi, &in);
+    CHECK(unc_canon_decode(&cn, &bi) == 1);
+    CHECK(unc_canon_decode(&cn, &bi) == 0);
+    CHECK(unc_canon_decode(&cn, &bi) == 3);
+
+    /* LSB-first, one symbol at length 1: '0' is it, '1' is refused —
+     * half the table must fall through to the walk. */
+    lens[0] = 0; lens[1] = 0; lens[2] = 1; lens[3] = 0;
+    CHECK(unc_canon_build_le(&cn, lens, 4) == UNC_OK);
+    buf[0] = 0x02; buf[1] = 0x00;   /* bits 0, then 1 */
+    test_make_memio(&io, &m, buf, 2);
+    unc_bufin_init(&in, &io, NULL, storage, sizeof storage);
+    unc_bitin_init_le(&bi, &in);
+    CHECK(unc_canon_decode(&cn, &bi) == 2);
+    CHECK(unc_canon_decode(&cn, &bi) == -1);
+
+    /* LSB-first across the table's edge: lengths 1..9, 10, 10 make the
+     * nine-bit code 111111110 (symbol 8) the longest the table holds and
+     * 1111111111 (symbol 10) one the walk decodes. Bits: 8 x 1, 0 (the
+     * 8), 10 x 1 (the 10), 0 (a 0), then zeros. */
+    {
+        uint8_t ladder[11] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 10 };
+        uint8_t lb[5] = { 0xFF, 0xFE, 0x07, 0x00, 0x00 };
+        uint8_t st2[8];
+        CHECK(unc_canon_build_le(&cn, ladder, 11) == UNC_OK);
+        test_make_memio(&io, &m, lb, 5);
+        unc_bufin_init(&in, &io, NULL, st2, sizeof st2);
+        unc_bitin_init_le(&bi, &in);
+        CHECK(unc_canon_decode(&cn, &bi) == 8);
+        CHECK(unc_canon_decode(&cn, &bi) == 10);
+        CHECK(unc_canon_decode(&cn, &bi) == 0);
+        CHECK(unc_canon_decode(&cn, &bi) == 0);
+        canon_le_every_code(ladder, 11);
+    }
+
+    /* Every code of three more sets through the LSB-first table: the
+     * four above; 16 five-bit and 32 six-bit codes; and 255 nine-bit
+     * codes beside two ten-bit ones, the table's edge on every entry. */
+    {
+        static uint8_t wide[257];
+        uint8_t mid[48];
+        int32_t i;
+        lens[0] = 1; lens[1] = 2; lens[2] = 3; lens[3] = 3;
+        canon_le_every_code(lens, 4);
+        for (i = 0; i < 48; i++) mid[i] = (uint8_t)(i < 16 ? 5 : 6);
+        canon_le_every_code(mid, 48);
+        for (i = 0; i < 257; i++) wide[i] = (uint8_t)(i < 255 ? 9 : 10);
+        canon_le_every_code(wide, 257);
     }
 }
 

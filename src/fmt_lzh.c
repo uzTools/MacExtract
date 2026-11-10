@@ -453,7 +453,7 @@ static int lzh_read_table(LzhCode *k, UncBitIn *bi, uint8_t *lengths,
             while (skip-- > 0) lengths[++i] = 0;
         }
     }
-    return unc_canon_build_ext(&k->c, lengths, n, symbuf, symcap);
+    return unc_canon_build_ext(&k->c, lengths, n, symbuf, symcap, 0);
 }
 
 /* How many codes a 0/1/2 from the temporary table skips over.
@@ -509,7 +509,7 @@ static int lzh_read_code_table(LzhStatic *s, UncBitIn *bi)
         }
     }
     return unc_canon_build_ext(&s->code.c, s->lengths, n, s->codesyms,
-                               LZH_NUM_CODES);
+                               LZH_NUM_CODES, 0);
 }
 
 /* A new block: its length in commands, then the three tables.

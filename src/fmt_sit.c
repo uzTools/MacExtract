@@ -477,7 +477,7 @@ static int sit13_parse_code(UncCanon *cn, UncBitIn *bi, uint8_t *lengths,
         if (i >= nsyms) break;   /* repeats may land exactly on the end */
         lengths[i] = len < 0 ? 0 : (uint8_t)len;
     }
-    return unc_canon_build(cn, lengths, nsyms);
+    return unc_canon_build_le(cn, lengths, nsyms);
 }
 
 /* Hand over what the window has taken since the last flush.
@@ -580,12 +580,12 @@ static int sit13_fork(UncForkOut *f, UncBufIn *in, uint32_t outlen,
             err = sit13_parse_code(&hz->offset, &bi, hz->lengths,
                                    (val & 0x07) + 10);
     } else if (sel < 6) {
-        err = unc_canon_build(&hz->first, sit13_firstlengths[sel - 1], 321);
+        err = unc_canon_build_le(&hz->first, sit13_firstlengths[sel - 1], 321);
         if (err == UNC_OK)
-            err = unc_canon_build(&hz->second, sit13_secondlengths[sel - 1], 321);
+            err = unc_canon_build_le(&hz->second, sit13_secondlengths[sel - 1], 321);
         if (err == UNC_OK)
-            err = unc_canon_build(&hz->offset, sit13_offsetlengths[sel - 1],
-                                  sit13_offsetcodesize[sel - 1]);
+            err = unc_canon_build_le(&hz->offset, sit13_offsetlengths[sel - 1],
+                                     sit13_offsetcodesize[sel - 1]);
         second = &hz->second;
     } else {
         err = UNC_ERR_CORRUPT;

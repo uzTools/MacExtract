@@ -816,7 +816,11 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # 2026-11-10, *the division every byte paid for*). In `ovl_crypt` -24 on the shipped pair.
 # -188 on 2026-11-10, 187,732 -> 187,544, A5 -4 below: window fills a long at a time (LZH's spaces, `-lh1-`, Compact Pro, method 14) (DECISIONS.md
 # 2026-11-10, *the window filled a byte at a time*). In `ovl_cptdd` -196, `ovl_lzh` -108, `ovl_stuffit` -4, `ovl_codecs` +4 on the shipped pair.
-UNC_MAC_CODE_DEFAULT=187544
+# +172 on 2026-11-10, 187,544 -> 187,716, A5 -236 below: method 13's
+# canonical table built at bit-reversed indices, the build's second branch
+# and the direction argument (DECISIONS.md 2026-11-10, *the peek that was turned round*). On the
+# shipped pair, the images -104.
+UNC_MAC_CODE_DEFAULT=187716
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -1105,7 +1109,10 @@ UNC_MAC_CODE_DEFAULT=187544
 # the change added no data.
 # -4 on 2026-11-10, 36,700 -> 36,696: `.data` alignment under the code's -188 (above);
 # the change added no data.
-UNC_MAC_A5_DEFAULT=36696
+# -236 on 2026-11-10, 36,696 -> 36,460: the 256 B bit-reversal table
+# (unc_revbyte) gone, less `.data` alignment; the same entry as the code's
+# +172 above.
+UNC_MAC_A5_DEFAULT=36460
 # A CEILING PER CONFIGURATION, because one ceiling measured on another build
 # cannot fire. The figures above are the RESIDENT control build, which carries
 # every decoder; the shipped build's resident code is a third of that, so
