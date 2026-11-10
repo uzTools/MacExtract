@@ -427,9 +427,9 @@ int unc_sit14_decode(UncBufIn *in, UncAlloc *al, uint32_t outlen,
     if (!s) return UNC_ERR_MEM;
     window = (uint8_t *)unc_alloc(al, win);
     if (!window) { unc_free(al, s); return UNC_ERR_MEM; }
-    {
-        uint32_t i;
-        for (i = 0; i < win; i++) window[i] = 0;
+    {   /* a long at a time; `win` is a power of two of at least 256 */
+        uint32_t *p = (uint32_t *)(void *)window, i;
+        for (i = win >> 2; i; i--) *p++ = 0;
     }
     mask = win - 1;
     thresh = win >> 2;

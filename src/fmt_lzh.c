@@ -256,6 +256,15 @@ static void lzh_preload(uint8_t *w)
     for (i = 0; i < 18;  i++) *p++ = 0;
 }
 
+/* Fill a window with spaces a long at a time: a byte at a time it was
+ * ~42 cycles a byte on the 68000. `w` is an allocation (even) and every
+ * window size is a power of two of at least 2 KB. */
+static void lzh_spaces(uint8_t *w, uint32_t wsize)
+{
+    uint32_t *p = (uint32_t *)(void *)w, n;
+    for (n = wsize >> 2; n; n--) *p++ = 0x20202020u;
+}
+
 static int lzh_larc(UncForkOut *o, UncBufIn *in, uint32_t outlen, UncAlloc *al,
                     int lz5)
 {
@@ -276,7 +285,7 @@ static int lzh_larc(UncForkOut *o, UncBufIn *in, uint32_t outlen, UncAlloc *al,
      * zeros: lhasa and LHa 1.14i both say so, XADMaster's LZSS base
      * class zero-fills, and lhasa's `lzs.lzs` fails its stored CRC
      * either way but one. Measured, 2026-08-23 (DECISIONS.md). */
-    else { uint32_t i; for (i = 0; i < wsize; i++) w[i] = ' '; }
+    else lzh_spaces(w, wsize);
     unc_bitin_init(&bi, in);
 
     while (pos < outlen) {
@@ -566,7 +575,7 @@ static int lzh_static(UncForkOut *o, UncBufIn *in, uint32_t outlen, int wbits,
      * stream that reads back further than it has written can tell, and
      * none in the corpus does (measured 2026-09-19, DECISIONS.md). The
      * two references that describe the format agree on spaces. */
-    { uint32_t i; for (i = 0; i < wsize; i++) w[i] = ' '; }
+    lzh_spaces(w, wsize);
 
     s->block_remaining = 0;
     s->code.single = s->offset.single = s->temp.single = -1;

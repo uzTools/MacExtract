@@ -234,7 +234,10 @@ static void lzah_update(Lzah *h, uint32_t c)
 static void lzah_preload(Lzah *h, int mode)
 {
     uint32_t i;
-    for (i = 0; i < LZAH_WINDOW; i++) h->window[i] = 0;
+    {   /* a long at a time: the window's offset in Lzah is even */
+        uint32_t *p = (uint32_t *)(void *)h->window;
+        for (i = 0; i < LZAH_WINDOW / 4u; i++) p[i] = 0;
+    }
     if (mode == UNC_LZAH_TRIMMED) return;
     for (i = 0; i < 256; i++) {
         uint32_t j;

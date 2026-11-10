@@ -65,6 +65,15 @@ typedef struct Lzdyn {
     uint8_t  window[LZD_DICSIZ];
 } Lzdyn;
 
+/* Fill a window with spaces a long at a time: a byte at a time it was
+ * ~28 cycles a byte on the 68000. Both structs' `window` sits at an
+ * even offset, after fields of even total size. */
+static void lzd_spaces(uint8_t *w)
+{
+    uint32_t *p = (uint32_t *)(void *)w, n;
+    for (n = LZD_DICSIZ >> 2; n; n--) *p++ = 0x20202020u;
+}
+
 /* Rebuild a range of the tree, halving every frequency. @LHAreconst. */
 static void lzd_reconst(Lzdyn *h, int32_t start, int32_t end)
 {
@@ -331,7 +340,7 @@ int unc_lzdyn_decode(UncAlloc *al, UncBitIn *bi, uint32_t outlen,
          * encoder never emits such a match — its match search only knows
          * positions it has actually inserted. Kept because it is what
          * the reference does, not because a test would catch its loss. */
-        for (i = 0; i < LZD_DICSIZ; i++) h->window[i] = ' ';
+        lzd_spaces(h->window);
     }
     h->avail = h->most_p = h->n1 = h->nn = 0;
     h->total_p = 0;
@@ -529,7 +538,7 @@ int unc_lzst0_decode(UncAlloc *al, UncBitIn *bi, uint32_t outlen,
     if (!h) return UNC_ERR_MEM;
     for (i = 0; i < LZS_N1; i++) h->c_len[i] = 0;
     for (i = 0; i < LZS_NP; i++) h->pt_len[i] = 0;
-    for (i = 0; i < LZD_DICSIZ; i++) h->window[i] = ' ';
+    lzd_spaces(h->window);
     h->c_single = h->p_single = -1;
     h->blocksize = 0;
 

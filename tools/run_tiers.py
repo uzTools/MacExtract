@@ -283,10 +283,12 @@ REPO = os.path.dirname(HERE)
 # control's CODE -96 and A5 0; the shipped pair fell the same 96, OVL_SAVED
 # unmoved. They were 190,276 / 94,894 / 619,182.
 TIERS = {
-    "sys3-512K": (188500, "System 3.0, Macintosh 512Ke (222,070 B free)"),
-    "sys6-512K": (93118,  "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
-    "floor-1M":  (617406, "System 6.0.8, 1 MB Mac Plus — the floor target"),
+    "sys3-512K": (188692, "System 3.0, Macintosh 512Ke (222,070 B free)"),
+    "sys6-512K": (93310,  "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
+    "floor-1M":  (617598, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
+# +192 each 2026-11-10, DERIVED from TIERS_CONTROL -192 (window fills a long at a time (LZH's spaces, `-lh1-`, Compact Pro, method 14), DECISIONS.md
+# 2026-11-10, *the window filled a byte at a time*); they were 188,500 / 93,118 / 617,406.
 # +32 each 2026-11-10, DERIVED from TIERS_CONTROL -32 (ARC's garble and PackIt's PMa5 key wrapped by a cursor, not a `%` a byte, DECISIONS.md
 # 2026-11-10, *the division every byte paid for*); they were 188,468 / 93,086 / 617,374.
 # -32 each 2026-11-10, DERIVED from TIERS_CONTROL +32 (Arsenic's renormalisation in registers, reading its own bits, DECISIONS.md
@@ -542,7 +544,9 @@ TIERS = {
 # +192 2026-11-07: Now Compress polls Cancel inside a block (`ovl_now` +186;
 # DECISIONS.md 2026-11-07, *the block a click waited for*); CODE +180, A5 +12.
 # TIERS -192 and OVL_SAVED +192, which cancel: only a now-keeper moves.
-TIERS_CONTROL = 224432     # build/mac-resident, CODE + A5, 2026-11-10
+TIERS_CONTROL = 224240     # build/mac-resident, CODE + A5, 2026-11-10
+# -192 2026-11-10: window fills a long at a time (LZH's spaces, `-lh1-`, Compact Pro, method 14) (`ovl_cptdd` -196, `ovl_lzh` -108, `ovl_stuffit` -4, `ovl_codecs` +4; CODE -188, A5 -4; DECISIONS.md 2026-11-10, *the window filled a byte at a time*); TIERS +192 and
+# OVL_SAVED -192, which cancel.
 # -32 2026-11-10: ARC's garble and PackIt's PMa5 key wrapped by a cursor, not a `%` a byte (`ovl_crypt` -24; CODE -24, A5 -8; DECISIONS.md 2026-11-10, *the division every byte paid for*); TIERS +32 and
 # OVL_SAVED -32, which cancel.
 # +32 2026-11-10: Arsenic's renormalisation in registers, reading its own bits (`ovl_stuffit` +28; DECISIONS.md 2026-11-10,
@@ -1227,7 +1231,10 @@ EXPECT = {
 # **-32 2026-11-10, -> 169,536**: ARC's garble and PackIt's PMa5 key wrapped by a cursor, not a `%` a byte, the control's -32 (CODE -24, A5 -8) against
 # the shipped pair's 0, the code in `ovl_crypt` -24 (DECISIONS.md 2026-11-10, *the division every byte paid for*). TIERS +32,
 # which cancels.
-OVL_SAVED = 169536
+# **-192 2026-11-10, -> 169,344**: window fills a long at a time (LZH's spaces, `-lh1-`, Compact Pro, method 14), the control's -192 (CODE -188, A5 -4) against
+# the shipped pair's 0, the code in `ovl_cptdd` -196, `ovl_lzh` -108, `ovl_stuffit` -4, `ovl_codecs` +4 (DECISIONS.md 2026-11-10, *the window filled a byte at a time*). TIERS +192,
+# which cancels.
+OVL_SAVED = 169344
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
 # every kept image is one — as is the bundle an envelope holds on to.
@@ -1364,15 +1371,15 @@ IMAGES = {
     "OVL_ID_ARC":         7924,
     "OVL_ID_BINHEX":      7630,
     "OVL_ID_BTOA":        2496,
-    "OVL_ID_CODECS":      6156,
-    "OVL_ID_CPTDD":       15290,
+    "OVL_ID_CODECS":      6160,
+    "OVL_ID_CPTDD":       15094,
     "OVL_ID_CRYPT":       9260,
     "OVL_ID_EXO":         30228,
-    "OVL_ID_LZH":         10702,
+    "OVL_ID_LZH":         10594,
     "OVL_ID_NOW":         4948,
     "OVL_ID_PACKIT":      2180,
     "OVL_ID_SPACESAVER":  16236,
-    "OVL_ID_STUFFIT":     28746,
+    "OVL_ID_STUFFIT":     28742,
     "OVL_ID_SQP":         1736,
     "OVL_ID_SUPERDISK":   6628,
     "OVL_ID_TEXT":        11438,
@@ -1536,7 +1543,9 @@ IMAGES = {
 # 2026-11-10, *the count the bit buffer did not need*).
 # **CRYPT -24, the bundle -24 B, 2026-11-10**: ARC's garble and PackIt's PMa5 key wrapped by a cursor, not a `%` a byte (DECISIONS.md
 # 2026-11-10, *the division every byte paid for*).
-BUNDLE = 198284
+# **CPTDD -196, LZH -108, STUFFIT -4, CODECS +4, the bundle -304 B, 2026-11-10**: window fills a long at a time (LZH's spaces, `-lh1-`, Compact Pro, method 14) (DECISIONS.md
+# 2026-11-10, *the window filled a byte at a time*).
+BUNDLE = 197980
 
 # What the SHIPPED lane asserts, and it is the refused fixtures BY NAME
 # rather than a tally: a tier that refuses two different fixtures and still

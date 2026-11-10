@@ -352,7 +352,10 @@ UNC_HOT int unc_cpt_lzh_fork(CptRle *rle, UncBufIn *in, CptLzh *hz,
     int first = 1, err;
     uint32_t i;
 
-    for (i = 0; i < CPT_WINDOW; i++) window[i] = 0;
+    {   /* a long at a time: `window` is an allocation, so even */
+        uint32_t *p = (uint32_t *)(void *)window;
+        for (i = 0; i < CPT_WINDOW / 4u; i++) p[i] = 0;
+    }
     unc_bitin_init(&bi, in);
 
     while (rle->remaining > 0) {

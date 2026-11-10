@@ -581,6 +581,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-10 (the division libgcc was asked to do) — Arsenic's two divisions are an inline `divu.w`, the engine's first instruction written by hand: −8.4 % and −8.6 % of Plus engine ticks for +116 B of `ovl_stuffit`
 - 2026-11-10 (the count the bit buffer did not need) — Arsenic's renormalisation runs in registers on a bit buffer of its own: −7.4 % and −7.2 % of Plus engine ticks for +28 B of `ovl_stuffit`; the symbol decoder inlined into the block loop measured slower and was not kept
 - 2026-11-10 (the division every byte paid for) — ARC's garble and PackIt's PMa5 wrap a key cursor instead of taking a `%` a byte: ~960 → ~64 cycles a byte (estimate), −24 B of `ovl_crypt`; no suite could tell a key restarted at every refill
+- 2026-11-10 (the window filled a byte at a time) — every decoder window is filled a long at a time: −2.5 % on a small `-lh5-` entry, −3.2 % on method 14, Compact Pro unchanged, for −304 B of bundle
 
 ---
 
@@ -24153,3 +24154,39 @@ ciphers' wrap*.
 `tools/run_tiers.py`'s `TIERS` labels had been moved with the bases twice that
 day ("62,070 B free", "−2,688 B free"); they are measured free memory and do
 not move, and read 222,070 and 126,688 B again.
+## 2026-11-10 (the window filled a byte at a time) — every decoder window is filled a long at a time: −2.5 % on a small `-lh5-` entry, −3.2 % on method 14, Compact Pro unchanged, for −304 B of bundle
+
+**Claim, evidence, consequence (measured).** LZH's space fills (`fmt_lzh.c`,
+both decoders; `unc_lzdyn.c`, both), `-lh1-`'s zeros (`unc_lzah.c`), method
+14's (`sit14.c`) and Compact Pro's (`fmt_cpt.c`, which DiskDoubler method 8
+runs) are `uint32_t` loops. Every allocation is even (each also holds structs
+of `uint32_t`), `Lzah`'s, `Lzdyn`'s and `Lzst0`'s windows sit after fields of
+even total size, and every size is a multiple of 4: powers of two of at least
+256 B, or the 4 and 8 KB constants. Mac Plus `gTkRun`, two runs a build, the
+runs equal: `lhasa-maclha-l1_lh5.lzh` 160 → 156 (−2.5 %),
+`lhasa-os2_208-h3_lh5.lzh` 146 → 144, `m14.sit` 6,296 → 6,094 (−3.2 %),
+`derived-DigSim_RAM_Circuit.cpt` 135 → 135. Byte-exact: the diff suite
+988/988, `run_lzh.py` 182 archives, `run_arc.py` 222, `run_sit14wrap.py` 18.
+
+**Corrected in place, FORMATS.md's suggestion.** It had LZH's fills as
+`clr.b` and method 14's as `clr.l`. Read off the listings: LZH's are spaces,
+`move.b #32` with an index (~42 cycles a byte) for `-lh5-` and the rest, and
+post-increment (~28) for `-lzs-` and `unc_lzdyn.c`; method 14's was a `clr.b`
+with an index (~42), which is why it gained most. Only Compact Pro's was
+`clr.l`: GCC vectorises a constant-count zero loop, with an alignment peel
+either side, and in `unc_cpt_lzh_fork` (`UNC_HOT`, `-O3`) the peel was 196 B.
+There the time does not move and the image does.
+
+**One loop a site, not a helper.** The six sites are in four images; one
+helper would be a forward from `ovl_codecs` (or a copy per image) for a loop
+of three instructions. `fmt_lzh.c` and `unc_lzdyn.c`, with two sites each,
+have a static one each, which GCC inlines.
+
+**Price.** `ovl_cptdd` −196, `ovl_lzh` −108, `ovl_stuffit` −4, `ovl_codecs`
++4 (`unc_lzah_decode` +2 and padding); the bundle 198,284 → 197,980. Shipped
+`CODE` and A5 0; the control's `CODE` −188, A5 −4; `OVL_SAVED` −192, `TIERS`
++192. Every grant against the control moves by −192 less its images: LZH −88,
+Compact Pro and DiskDoubler 0, StuffIt −192, the whole bundle's +112, the rest
+−196. Heap 0; the deepest call chain 3,446 B before and after.
+`run_tiers.py --check` moves no tally. FORMATS.md, *The window fills a long at
+a time*.
