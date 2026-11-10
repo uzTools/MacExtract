@@ -579,6 +579,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-09 (the match that was masked twice a byte) — methods 13 and 14 copy a match through cursors in one out-of-line function and share one flush: −2.2 to −5.2 % of Plus engine ticks for +44 B of `ovl_stuffit`; `-lh1-` and ARC Trimmed the same, inline, −1.3 to −17.2 % for +28 B of `ovl_codecs`
 - 2026-11-10 (the forward every symbol took) — the canonical decoder's table hit on locals, its walk out of line: −3.2 to −7.1 % of Plus engine ticks on all five of its users for −80 B; a copy in each image was −1.3 to −3.7 % more for +2,440 B of bundle, landed and taken back
 - 2026-11-10 (the division libgcc was asked to do) — Arsenic's two divisions are an inline `divu.w`, the engine's first instruction written by hand: −8.4 % and −8.6 % of Plus engine ticks for +116 B of `ovl_stuffit`
+- 2026-11-10 (the count the bit buffer did not need) — Arsenic's renormalisation runs in registers on a bit buffer of its own: −7.4 % and −7.2 % of Plus engine ticks for +28 B of `ovl_stuffit`; the symbol decoder inlined into the block loop measured slower and was not kept
 
 ---
 
@@ -24059,3 +24060,55 @@ lane is the first prerequisite of that pass, for this file only.
 `run_tiers.py --check` moves no tally. The StuffIt 5 call chain is 2,958 B,
 unmoved, under DiskDoubler's 3,446 B (`tools/stack_depth.py`). FORMATS.md,
 *Decode cost, before and after the 2026-08-24 pass* (the changes since).
+
+## 2026-11-10 (the count the bit buffer did not need) — Arsenic's renormalisation runs in registers on a bit buffer of its own: −7.4 % and −7.2 % of Plus engine ticks for +28 B of `ovl_stuffit`; the symbol decoder inlined into the block loop measured slower and was not kept
+
+**Claim, evidence, consequence (measured).** `ars_decode`'s `while (range
+<= HALF)` runs once per compressed bit, and through `unc_bitin_bit` and `d->`
+it loaded and stored the bit reader's buffer and count, `range` and `code`
+on every one. All four are now locals, stored back once after the loop, and
+the decoder reads its own bytes. Its buffer is LEFT-aligned with a single 1
+MARKER below the last unread bit, so it is empty when the marker is all that
+is left (`ARS_EMPTY`): a bit is `add.l`/`subx.l` into `code`, with no count,
+no shift by a variable and no mask. Plus engine ticks (`mv-4M-1x`,
+`UNC_AT_TIMING`, two runs per build), after the divisions (*the division
+libgcc was asked to do*):
+
+| build | a2basic | ISBN |
+|---|---|---|
+| divisions inline (the previous commit) | 15,421 / 15,421 | 23,704 / 23,703 |
+| locals, the reader's right-aligned buffer | 14,627 / 14,628 | 22,485 / 22,485 |
+| **locals, its own marker buffer (kept)** | **14,273 / 14,273** | **21,989 / 21,991** |
+| that, and `ars_decode` forced inline into the block loop | 14,529 / 14,529 | 22,215 / 22,214 |
+
+The FORMATS.md candidate had put the saving near 8 % of ISBN (inference);
+it is 7.2 %.
+
+**The symbol decoder inlined is slower (measured).** The candidate had the
+call at ~200 cycles a symbol (an eight-register `movem.l` each way). The
+block loop was restructured so one `ars_sym` site serves the selector, the
+zero run and the rank, with the decoder's state in registers for the whole
+block: +734 B of `ars_read_block` beside the cold callers' copy, and +1.8 %
+(a2basic) and +1.0 % (ISBN) of ticks against the out-of-line decoder with the
+same buffer. In `-Os`'s listing the loop spilled `range`, `total` and
+`freq` to the frame per symbol, and the bit count too until the marker
+removed it. The call was never the 200 cycles. Not kept.
+
+**The MTF, re-profiled before touching it (measured, instructions).**
+`ars_mtf_decode` built out of line for the count: **13.5 % of a2basic's
+68000 instructions and 7.6 % of ISBN's**, against 34.5 % of a2basic before
+the two-level rewrite of 2026-09-19 (`m68kprof`, the divisions-and-bits
+tree). The symbol search's inner walk is a larger block on both. Left as it
+is.
+
+**Graded.** Byte-exact, 32/32, on x86 and under qemu-m68k on the table, the
+2.5-byte table and the sampled index, and at the 1 MB budget. A buffer
+converted wrongly breaks every fixture with a CRC: the block's end bit and
+the stream's CRC are read with the same buffer.
+
+**Price (measured).** `ovl_stuffit` +28 B; the resident control's CODE +32,
+A5 0; the shipped application 0; OVL_SAVED +32, TIERS −32, stuffit-keeping
+grants +4, the rest +32; `run_tiers.py --check` moves no tally; engine peak
+−24 B on x86 (`UncBitIn` leaves the decoder state). The StuffIt 5 call
+chain is 2,966 B (+8), under DiskDoubler's 3,446 B. FORMATS.md, *Decode cost, before and after the
+2026-08-24 pass* (the changes since).

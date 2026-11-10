@@ -64,22 +64,39 @@
 #define ARS_ONE  (1 << (ARS_NUMBITS - 1))
 #define ARS_HALF (1 << (ARS_NUMBITS - 2))
 
+/* The decoder reads its own bits, straight from the byte stream. The
+ * buffer is LEFT-aligned — the next bit is bit 31 — with a MARKER, a
+ * single 1, just below the last unread bit, so the buffer is empty when
+ * the marker is all that is left (ARS_EMPTY) and there is no count to
+ * keep: a bit is a shift into the carry and an add, where UncBitIn's
+ * right-aligned buffer wants a count, a shift by it and a mask. Nothing
+ * else in this decoder reads bits, so nothing else needs UncBitIn's
+ * layout. MSB first, as the format is. */
+#define ARS_EMPTY 0x80000000u
+
 typedef struct ArsDecoder {
-    UncBitIn *bi;
-    int32_t   range, code;
+    UncBufIn *in;
+    uint32_t  range, code, buf;
     int       err;
 } ArsDecoder;
 
-static void ars_dec_init(ArsDecoder *d, UncBitIn *bi)
+static void ars_dec_init(ArsDecoder *d, UncBufIn *in)
 {
-    int32_t hi, lo;
-    d->bi = bi;
+    int32_t i;
+    d->in = in;
     d->range = ARS_ONE;
     d->err = UNC_OK;
-    hi = unc_bitin_bits(bi, 13);
-    lo = unc_bitin_bits(bi, 13);
-    if (hi < 0 || lo < 0) { d->err = bi->err; d->code = 0; return; }
-    d->code = (hi << 13) | lo;
+    d->code = 0;
+    d->buf = ARS_EMPTY;
+    for (i = 0; i < ARS_NUMBITS; i++) {
+        if (d->buf == ARS_EMPTY) {
+            int byte = unc_bufin_next(in);
+            if (byte < 0) { d->err = in->err; d->code = 0; return; }
+            d->buf = ((uint32_t)byte << 24) | (ARS_EMPTY >> 8);
+        }
+        d->code = (d->code << 1) | (d->buf >> 31);
+        d->buf <<= 1;
+    }
 }
 
 /* ------------------------------------------------------------------ */
@@ -255,14 +272,13 @@ static int32_t ars_decode(ArsDecoder *d, ArsModel *m)
     const int32_t *freq = m->freq;
 
     if (d->err != UNC_OK) return -1;
-    if (d->range <= 0 || m->total <= 0 || d->code < 0) {
+    if ((int32_t)d->range <= 0 || m->total <= 0 || (int32_t)d->code < 0) {
         d->err = UNC_ERR_CORRUPT;
         return -1;
     }
-    renorm = (int32_t)ars_div_total((uint32_t)d->range, (uint32_t)m->total);
+    renorm = (int32_t)ars_div_total(d->range, (uint32_t)m->total);
     if (renorm == 0) { d->err = UNC_ERR_CORRUPT; return -1; }
-    frequency = (int32_t)ars_div_renorm((uint32_t)d->code, (uint32_t)renorm,
-                                        (uint32_t)d->range);
+    frequency = (int32_t)ars_div_renorm(d->code, (uint32_t)renorm, d->range);
 
     /* Which group, then which symbol in it. `frequency` can be equal to
      * or a little above the total — renorm is rounded down, so code can
@@ -283,19 +299,33 @@ static int32_t ars_decode(ArsDecoder *d, ArsModel *m)
         n++;
     }
 
-    /* Remove the symbol and renormalise. */
+    /* Remove the symbol and renormalise: once per compressed bit, with
+     * range, code and the bit buffer in locals, stored back once. */
     {
-        int32_t lowincr = (int32_t)ars_mulw((uint32_t)renorm, (uint32_t)low);
-        d->code -= lowincr;
-        if (low + freq[n] == m->total) d->range -= lowincr;
-        else d->range = (int32_t)ars_mulw((uint32_t)renorm,
-                                          (uint32_t)freq[n]);
-        while (d->range <= ARS_HALF) {
-            int bit = unc_bitin_bit(d->bi);
-            if (bit < 0) { d->err = d->bi->err; return -1; }
-            d->range <<= 1;
-            d->code = (d->code << 1) | bit;
+        uint32_t lowincr = ars_mulw((uint32_t)renorm, (uint32_t)low);
+        uint32_t range, code = d->code - lowincr;
+        if (low + freq[n] == m->total) range = d->range - lowincr;
+        else range = ars_mulw((uint32_t)renorm, (uint32_t)freq[n]);
+        if (range <= ARS_HALF) {
+            uint32_t buf = d->buf;
+            do {
+                if (buf == ARS_EMPTY) {
+                    int byte = unc_bufin_next(d->in);
+                    if (byte < 0) {
+                        d->buf = ARS_EMPTY;
+                        d->err = d->in->err;
+                        return -1;
+                    }
+                    buf = ((uint32_t)byte << 24) | (ARS_EMPTY >> 8);
+                }
+                range <<= 1;
+                code = (code << 1) - (uint32_t)((int32_t)buf >> 31);
+                buf <<= 1;
+            } while (range <= ARS_HALF);
+            d->buf = buf;
         }
+        d->range = range;
+        d->code = code;
     }
     ars_model_bump(m, n);
     return m->first + n;
@@ -484,7 +514,6 @@ typedef struct Arsenic {
     ArsModel   mtfmodel[7];
     int32_t    pool[ARS_POOL];
     ArsMtf     mtf;
-    UncBitIn   bi;
 
     uint8_t   *block;       /* [blockcap + 1], grown on demand up to blocksize */
     uint8_t   *transform;   /* [transform_cap * 3] inverse-BWT vector, or
@@ -623,7 +652,7 @@ static int ars_inverse_bwt(Arsenic *a)
     for (i = 0; i < 256; i++) next[i] = 0;
     for (pass = 0; pass < 2; pass++) {
         for (i = 0; i < n; ) {
-            if ((e = unc_progress_at(a->bi.in->ps, a->ppos)) != UNC_OK)
+            if ((e = unc_progress_at(a->dec.in->ps, a->ppos)) != UNC_OK)
                 return e;
             end = n - i > ARS_BWT_CHUNK ? i + ARS_BWT_CHUNK : n;
             if (pass == 0)
@@ -696,7 +725,7 @@ static int ars_index_build(Arsenic *a, UncAlloc *al)
      * Mac Plus. */
     for (i = 0; i < 256; i++) counts[i] = 0;
     for (i = 0; i < n; ) {
-        if ((e = unc_progress_at(a->bi.in->ps, a->ppos)) != UNC_OK)
+        if ((e = unc_progress_at(a->dec.in->ps, a->ppos)) != UNC_OK)
             return e;
         end = n - i > ARS_BWT_CHUNK ? i + ARS_BWT_CHUNK : n;
         for (; i < end; i++) counts[a->block[i]]++;
@@ -745,7 +774,7 @@ static int ars_index_build(Arsenic *a, UncAlloc *al)
     a->index = ix;
     for (i = 0; i < 256; i++) counts[i] = 0;
     for (i = 0; i < n; ) {
-        if ((e = unc_progress_at(a->bi.in->ps, a->ppos)) != UNC_OK)
+        if ((e = unc_progress_at(a->dec.in->ps, a->ppos)) != UNC_OK)
             return e;
         end = n - i > ARS_BWT_CHUNK ? i + ARS_BWT_CHUNK : n;
         for (; i < end; i++) {
@@ -995,7 +1024,7 @@ static int ars_read_block(Arsenic *a, UncAlloc *al)
          * steps over multiples, and a mask cost KeyGraphics a third of
          * its reports. */
         if (a->numbytes >= pnext) {
-            int perr = unc_progress_at(a->bi.in->ps, a->ppos);
+            int perr = unc_progress_at(a->dec.in->ps, a->ppos);
             if (perr != UNC_OK) return perr;
             pnext = a->numbytes + ARS_PROGRESS_STEP;
         }
@@ -1080,8 +1109,7 @@ int unc_arsenic_decode(UncBufIn *in, UncAlloc *al, uint32_t outlen,
     a->index = NULL;
     a->ppos = pbase;
 
-    unc_bitin_init(&a->bi, in);
-    ars_dec_init(&a->dec, &a->bi);
+    ars_dec_init(&a->dec, in);
 
     /* The nine models, as the write-up tabulates them: symbols, increment,
      * limit. The selector's 88 = 11 * 8 and the rest follow. */

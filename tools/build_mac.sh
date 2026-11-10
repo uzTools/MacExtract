@@ -810,7 +810,9 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # shipped pair, -80.
 # +116 on 2026-11-10, 187,608 -> 187,724, A5 +12 below: Arsenic's two divisions inline (DECISIONS.md
 # 2026-11-10, *the division libgcc was asked to do*). In `ovl_stuffit` on the shipped pair, +116.
-UNC_MAC_CODE_DEFAULT=187724
+# +32 on 2026-11-10, 187,724 -> 187,756, A5 +0 below: Arsenic's renormalisation in registers, reading its own bits (DECISIONS.md
+# 2026-11-10, *the count the bit buffer did not need*). In `ovl_stuffit` on the shipped pair, +28.
+UNC_MAC_CODE_DEFAULT=187756
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the

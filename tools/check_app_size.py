@@ -302,7 +302,9 @@ TAKEN = "2026-11-03"
 # (-80) (DECISIONS.md 2026-11-10, *the forward every symbol took*).
 # -> 198,280 on 2026-11-10: Arsenic's two divisions inline in `ovl_stuffit` (+116) (DECISIONS.md
 # 2026-11-10, *the division libgcc was asked to do*).
-EXPECT_BUNDLE = 198280
+# -> 198,308 on 2026-11-10: Arsenic's renormalisation in registers, reading its own bits in `ovl_stuffit` (+28) (DECISIONS.md
+# 2026-11-10, *the count the bit buffer did not need*).
+EXPECT_BUNDLE = 198308
 TOLERANCE_BUNDLE = 2048
 TAKEN_BUNDLE = "2026-11-10"
 
