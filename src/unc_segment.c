@@ -109,6 +109,10 @@ static const SegScheme seg_schemes[] = {
       UNC_DDSEG_HEAD, NULL },
     { UNC_FORMAT_ZIPSEG, 1, 0, 0,
       NULL, NULL, NULL, 0, NULL, 0, unc_zip_extract },
+    /* Apple Backup: addressed, its reader asking for each disk in turn
+     * and never reading past one's used length (fmt_abk.c). */
+    { UNC_FORMAT_ABK, 1, 0, 0,
+      NULL, NULL, NULL, 0, NULL, 0, unc_abk_extract },
     /* message/partial. The parts join into a MESSAGE, so the reader
      * for the joined stream is the MIME walk — no file is emitted in
      * between. */

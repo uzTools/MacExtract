@@ -258,7 +258,6 @@ a program's name and description; none has been held against a file.**
 | ShrinkIt / NuFX (`.shk`, `.bxy`), Apple II | ShrinkIt | named nowhere |
 | shell archives (`shar`) | unshar | named nowhere |
 | yEnc | yEnc TZ | named nowhere |
-| Apple Backup | Apple Backup Extractor | named nowhere |
 | backup sets | Retrospect 1.x/2.1, Fastback, HFS Backup, MacBack, Network DiskFit, Diamond | named nowhere |
 | splitters that may add a header | MacHacha, SplitIt!, SplitsVille, Split & Join, Split&Concat | plain `.001` and DiskDoubler `SPLT` only |
 | unidentified | GIF Blast, MacSQZ!, The Parer, RadicalSqueeze, BKOS Compress, FileCrypt, Big Hairy Installer, MacToVax | format not known |

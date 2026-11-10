@@ -126,6 +126,10 @@ typedef enum UncFormat {
     /* Brought in scope 2026-11-03; appended for the same ABI reason. */
     UNC_FORMAT_LZ4,           /* .lz4 — an LZ4 frame (a .mar.lz4)     */
 
+    /* Brought in scope 2026-11-10; appended for the same ABI reason.
+     * One disk of a set, read only as one, as UNC_FORMAT_CPTSEG. */
+    UNC_FORMAT_ABK,           /* one disk of an Apple Backup set      */
+
     UNC_FORMAT__COUNT
 } UncFormat;
 

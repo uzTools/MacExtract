@@ -445,6 +445,7 @@ StuffIt SpaceSaver, Alysis SuperDisk! (.X), ARC (.arc), LZH/LHA (.lzh, .lha,
 MacLHA's included), uuencoded files (.uu), btoa (.ascii), base64 and files
 mailed as MIME attachments (.b64, .mim -- both forks, where the message
 carried them), AppleSingle/AppleDouble, MAR (.mar, .mac, and .mar.lz4),
+Apple Backup's floppies (a Performa's backup, even with disks missing),
 zip, gzip, tar and Unix compress (.Z).
 Nested files like .sit.hqx or .tar.Z are unwrapped automatically, by looking
 inside them

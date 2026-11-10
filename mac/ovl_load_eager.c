@@ -218,6 +218,8 @@ static const unsigned char gKeepSet[][2] = {
      * zip set is read by that format's own reader over the joined parts. */
     { UNC_FORMAT_CPTSEG,      KEEP(OVL_ID_CPTDD,      KEEP_CRYPT) },
     { UNC_FORMAT_ZIPSEG,      KEEP(OVL_ID_EXO,        KEEP_CRYPT) },
+    /* An Apple Backup set: its reader and its match, no password. */
+    { UNC_FORMAT_ABK,         KEEP(OVL_ID_ZIPOLD,     0) },
     /* Envelopes, by the image their reader is in. */
     { UNC_FORMAT_BINHEX,      KEEP(OVL_ID_BINHEX,     KEEP_PEEK) },
     { UNC_FORMAT_BINHEX_OLD,  KEEP(OVL_ID_BINHEX,     KEEP_PEEK) },

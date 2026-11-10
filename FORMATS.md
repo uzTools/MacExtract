@@ -25,6 +25,7 @@ below it. Per-format detail is under *Table notes*.
 - Private File: Aladdin's encrypted single file
 - MAR: Hampa Hug's archive, graded by what wrote it
 - LZ4 frames: mar 0.2.0's other compressed MAR
+- Apple Backup: a Performa's backup on floppies, graded by two readers in a box
 - Finder info in the archive: what each format's own expander puts back
 - Archives this engine does not have
 - Envelope auto-unwrap
@@ -77,6 +78,7 @@ below it. Per-format detail is under *Table notes*.
 | Tar (ustar/v7) | extract | — (links reported unsupported); bsdtar's `._name` sidecar put on the member after it, Spotlight comment included; a pax `comment` marked UTF-8; a pax `g` header's mtime and comment on every member after it | 3 fixtures (2 real 1990 v7 tars) + unit tests | 8 KB | full |
 | MAR (.mar, .mac) | extract | — (stored blocks, a CRC-32 on each and on every header); a whole archive LZW-compressed by mar 0.2.0 comes out through the `.Z` envelope | 2 real archives by its author, each with a StuffIt twin, + 2 synthetic (*MAR*, below) | 9 KB | full |
 | LZ4 frame (.lz4) | extract | — (an envelope: stored and compressed blocks, header, block and content checksums, concatenated and skippable frames; no dictionary, no legacy frame) | 2 synthetic, liblz4's own frames, + 165 in `tools/run_lz4.py` (*LZ4 frames*, below) | 68 KB | full |
+| Apple Backup (a set of floppies) | extract | — (stored forks; a file cut at a disk's end continues on the next under a repeat of its header; a set read with disks missing, what they held reported) | 6 real disks of 2 partial backups + 1 synthetic 3-disk set, graded by two other readers run in a sandbox (*Apple Backup*, below) | 8 KB | full |
 | StuffIt segment (multi-part) | extract | — (join only; the joined file is the next layer) | 7 synthetic sets, oracle-adjudicated, + 3 with each part in its own envelope (CLI only), + **11 sets StuffIt itself cut** (Deluxe 2.0.1 ×5, four of them from files with a resource fork, Lite 3.0.5 ×2, Deluxe 5.0 ×2, DropSegment 5.0, InstallerMaker 2.0), graded by their originals and the running CRCs (extracting since 2026-10-24; BLOCKERS.md, *Withdrawn claims*) | 8 KB | full |
 | Zip segment (spanned, .z01…/.zip) | extract | store, deflate — the zip reader, over the joined parts | 5 generated sets, adjudicated 4 ways (source tree, `unar`, us split, us unsplit) | 12–13 KB¶ | full |
 | Compact Pro segment (multi-part) | extract | RLE / LZH+RLE — the Compact Pro reader, over the segments | 2 generated sets + 2 cut by Compact Pro 1.51 itself | 20 KB | full |
@@ -2152,9 +2154,10 @@ decoder, `src/fmt_sqp_probe.c` the sniffer, `tools/run_sqp.py` the suite
 (TESTING.md, *AppleLink packages: SqueezePlay*). Every LZW fork is a Unix
 `compress` code stream, decoded identically by **`gzip`** (*The codec*).
 The sniffer answers
-*AppleLink package* for **exactly the 7 of 1,004 corpus files that are
-packages and for nothing else** (re-measured 2026-11-04 with LZ4's probe in
-the sniffer; no file's answer changed but the two LZ4 fixtures'), a sweep
+*AppleLink package* for **exactly the 7 of 1,010 corpus files that are
+packages and for nothing else** (re-measured 2026-11-10 with Apple Backup's
+probe in the sniffer; no file's answer changed but the six Apple Backup
+disks'), a sweep
 that can fail both ways (BLOCKERS.md).
 
 **The reference is `AppleLink Package Translator` 3.0.3, "Copyright ©
@@ -2546,6 +2549,59 @@ codecs (*What each format is granted*), granted 224,460 B at System 6.0.8 /
 bundle, leaving 65,712 B there, which now fits any payload under ~32 KB and
 refuses a larger one per entry (it was a flat 69,816 B, refused for all).
 
+## Apple Backup: a Performa's backup on floppies, graded by two readers in a box
+
+**Extracting since 2026-11-10** (M77). Apple Backup, on Performas from 1993,
+backed a hard disk up to 1.44 MB floppies, one file on each called "Apple
+Backup Data", type `OBDa`, creator `OBBa`. `src/fmt_abk.c` reads a set of
+them; its file comment has the layout and where each offset comes from
+(Doug Brown's description, 2013). DECISIONS.md 2026-11-10, *the backup on
+floppies*.
+
+**A set, not an archive.** Every disk states its number, the count and the
+backup's start time, which is the set's identity (`src/fmt_abkset.c`); the
+reader opens disk after disk through the joiner's addressed mode
+(*Segmented archives*) and never reads past a disk's used length. A file
+cut at a disk's end continues at 0x600 of the next under a repeat of its
+header. **A disk that is not to be had is skipped**: what it would have
+finished is reported as missing a part, what continues past it is reported
+once and passed over, and the rest of the set comes out — the case every
+real set here is, as was Apple Backup Extractor's (`reference/applebackup/
+abe-README.md`). On the Macintosh the part dialog asks for each disk in turn,
+"Insert the disk with Part 2 of "<drive>"", named after the drive backed up.
+
+**What grades it.** Nothing here reads the format but the engine — not
+`unar`, not macunpack — so `tools/run_abk.py` (TESTING.md, *Apple Backup*)
+grades it against two readers others wrote from the same article, each run
+only inside `tools/sandbox.py`'s box:
+
+| what | graded against | measured 2026-11-10 |
+|---|---|---|
+| every fork's bytes | `unbak.py` (Sidney S.M.) | 125 forks of backup A (disks 1, 5, 6 of 6), 72 of backup B (1, 4, 7 of 7), the 4 of a synthetic three-disk set, identical; 8 entries reported failed, exactly those cut by the missing disks |
+| FInfo, FXInfo, lock, both dates | Em Adespoton's Kaitai description, compiled | all 120 items of the two real sets |
+| sniff | the corpus | the six disks, and no other file's answer changed in 1,010 |
+
+The one real file whose fork crosses a cut, backup A's `System`, 936,189 B
+of resource fork from disk 5 into disk 6, comes out whole. **No real set
+here has a disk holding nothing but a continuation**; the synthetic set has
+one, with a 2,965,872 B resource fork across all three disks.
+
+**What it costs.** Shipped `CODE` −4 and A5 +68: its rows in the joiner's
+scheme table, the engine's format table and the release's keep set, and its
+name. **64 B off every budget.** The reader and its set's match are in
+`ovl_zipold` (+2,548 B), kept for an Apple Backup set alone; the probe,
+describe and match in `ovl_sniff` (+712 B). The heap is **8,488 B, a
+constant by construction**: an 8 KB buffer the path and every fork pass
+through, and the path walker; nothing scales with the set. Deepest chain
+through the reader 992 B below `unc_abk_extract`'s shim, under the
+engine's 3,446 B.
+
+**Not restored**: the System Folder's blessing, which no host here writes;
+and a backup date, which the format does not store per item.
+
+**Finder**: `OBDa` and `OBDc` are in the application's bundle. `OBDc` is the type of a
+restore CD's copies by Kaitai's description only; no file here carries it.
+
 ## Finder info in the archive: what each format's own expander puts back
 
 **The engine reads what these tables mark restored since 2026-10-17** for
@@ -2739,7 +2795,7 @@ Archives written and read back by libNeoAppleArchive; StuffIt X, the three
 RAR signatures, Cabinet, Zoo, ARJ and lzip headers identified by deark;
 Zstandard and lrzip on their published magics; and `synth-os9-rar.rar`.
 **No fixture changes format in
-1,004 corpus files**: each manifest's fixture sniffs as its oracle names it,
+1,010 corpus files**: each manifest's fixture sniffs as its oracle names it,
 and the only one that went to `unknown` is that RAR. The CLI before the
 change fails 52 of the 97 checks (TESTING.md, *Archives this engine does
 not have*).
@@ -4134,12 +4190,12 @@ Measured 2026-09-27:
 whose tallies it is quoted beside. It cancels in a difference taken from
 one probe pair (*What it buys, against the control*): **117,040 B saved
 between the shipped pair against 116,720 B between the probe pair**, both
-2026-09-27. The shipped pair is **169,280 B** (`OVL_SAVED`,
-`tools/run_tiers.py`) since 2026-11-10 (*the peek that was turned round*);
+2026-09-27. The shipped pair is **172,208 B** (`OVL_SAVED`,
+`tools/run_tiers.py`) since 2026-11-10 (*the backup on floppies*);
 the probe pair has not been re-measured, so the 320 B is that
 day's difference, not today's.
 
-The bundle is **197,876 B** — the nineteen images sum to 197,632 B, so its
+The bundle is **201,136 B** — the nineteen images sum to 200,892 B, so its
 index costs **244 B** (`tools/run_tiers.py` `BUNDLE`, `IMAGES`): a
 4-byte header, 12 bytes of directory per image and padding of each image to
 a multiple of 4 — the padding is why the index is not a constant. The
@@ -4200,7 +4256,7 @@ carries, and they were read again from the floppy (DECISIONS.md 2026-11-04,
 
 A tier's budget for a format is the resident build's budget for that tier
 (`TIERS`; *512 KB machines*, *Floor target verification*), plus
-the 169,280 B of `CODE` and A5 the shipped build does not carry (`OVL_SAVED`;
+the 172,208 B of `CODE` and A5 the shipped build does not carry (`OVL_SAVED`;
 *Three configurations, one tree*), less the images the format keeps and 8 B of
 block header each, less a **322 B residue** (`OVL_RESIDUE`, re-taken
 2026-10-22 from the shipped and resident budget probes on all three tiers;
@@ -4223,29 +4279,32 @@ budget (a fixture is in the Mac sample); the rest are the same sum with no
 fixture. Every row has since moved by arithmetic only — each application or
 image change since 2026-10-09 shifts `OVL_SAVED`, the images and `TIERS` by
 amounts recorded in its DECISIONS.md entry and in `tools/run_tiers.py`'s
-comments, last on 2026-11-10 (*the peek that was turned round*: +84 B less what the row's images
-grew — StuffIt +48, LZH +76, the whole bundle's +40, every other row +84; the
-control 64 B smaller), with `run_tiers.py --check` moving no tally.
+comments, last on 2026-11-10 (*the backup on floppies*: −64 B less what the
+row's images grew — Tar, MAR, Apple Backup and zip −2,612, the envelope rows
+that keep the sniffer and `ovl_zipold` and the whole bundle's −3,324, a BinHex
+StuffIt −776, every other row −64; the control 2,992 B larger, so +2,928 B
+against it), with `run_tiers.py --check` moving no tally.
 **Re-taken from `gain()` that day**, and every row agreed with it before the
 change.
 
 | sniffed format | images kept | granted, against the control |
 |---|---|---|
-| **AppleLink package** | **sqp, codecs** | **+161,194 B** (arithmetic: no `.pkg` is in the Mac sample) — the largest grant, because `ovl_sqp` is the smallest decoder image at 1,736 B |
-| Now Compress | now, codecs | **+157,982 B** (measured) |
-| SuperDisk! | superdisk, codecs | +156,302 B (arithmetic: no SuperDisk! fixture is in the Mac sample) |
-| LZH | lzh, codecs | **+152,328 B** (measured) |
-| PackIt | packit, ciphers, codecs | **+151,482 B** (measured) |
-| DiskDoubler | cptdd, codecs | **+147,836 B** (measured) |
-| StuffIt SpaceSaver | spacesaver, codecs | +146,694 B (arithmetic: no SpaceSaver fixture is in the Mac sample) |
-| ARC | arc, ciphers, codecs | **+145,738 B** (measured) |
-| Compact Pro, Compact Pro segment | cptdd, ciphers, codecs | +138,568 B (arithmetic), and **+147,836 B** where the directory says no entry is encrypted (measured) |
-| Tar | zipold, codecs | **+146,758 B** (measured) |
-| MAR | zipold, codecs | +146,758 B (arithmetic: no MAR fixture is in the Mac sample) |
-| StuffIt, StuffIt 5 | stuffit, ciphers, codecs | **+124,884 B** (measured), and **+134,152 B** for a StuffIt 5 archive whose header carries no password hash (measured, 2026-11-03) |
-| Zip, spanned zip | exo, zipold, ciphers, codecs | +107,254 B (arithmetic), **+116,522 B** unencrypted (measured) |
-| an envelope whose payload's first bytes name its format (`unc_envelope_peek`), since 2026-11-03 | its own reader, the sniffer, and what that format keeps | **+100,378 B** for a `.tar.Z` or `.tar.gz`, and an LZW-compressed MAR, which keeps the same (arithmetic), **+130,614 B** for a `.mar.lz4` (arithmetic), **+101,102 B** for a StuffIt archive in BinHex or MacBinary (measured) |
-| any other envelope, and every segment scheme that joins to a file | the whole bundle, kept | **−28,926 B** (−29,118 B measured, before 2026-11-07) |
+| **AppleLink package** | **sqp, codecs** | **+164,122 B** (arithmetic: no `.pkg` is in the Mac sample) — the largest grant, because `ovl_sqp` is the smallest decoder image at 1,736 B |
+| Now Compress | now, codecs | **+160,910 B** (measured) |
+| SuperDisk! | superdisk, codecs | +159,230 B (arithmetic: no SuperDisk! fixture is in the Mac sample) |
+| LZH | lzh, codecs | **+155,256 B** (measured) |
+| PackIt | packit, ciphers, codecs | **+154,410 B** (measured) |
+| DiskDoubler | cptdd, codecs | **+150,764 B** (measured) |
+| StuffIt SpaceSaver | spacesaver, codecs | +149,622 B (arithmetic: no SpaceSaver fixture is in the Mac sample) |
+| ARC | arc, ciphers, codecs | **+148,666 B** (measured) |
+| Compact Pro, Compact Pro segment | cptdd, ciphers, codecs | +141,496 B (arithmetic), and **+150,764 B** where the directory says no entry is encrypted (measured) |
+| Tar | zipold, codecs | **+147,138 B** (measured) |
+| MAR | zipold, codecs | +147,138 B (arithmetic: no MAR fixture is in the Mac sample) |
+| Apple Backup | zipold, codecs | +147,138 B (arithmetic: no Apple Backup set is in the Mac sample) |
+| StuffIt, StuffIt 5 | stuffit, ciphers, codecs | **+127,812 B** (measured), and **+137,080 B** for a StuffIt 5 archive whose header carries no password hash (measured, 2026-11-03) |
+| Zip, spanned zip | exo, zipold, ciphers, codecs | +107,634 B (arithmetic), **+116,902 B** unencrypted (measured) |
+| an envelope whose payload's first bytes name its format (`unc_envelope_peek`), since 2026-11-03 | its own reader, the sniffer, and what that format keeps | **+100,046 B** for a `.tar.Z` or `.tar.gz`, and an LZW-compressed MAR, which keeps the same (arithmetic), **+130,282 B** for a `.mar.lz4` (arithmetic), **+103,318 B** for a StuffIt archive in BinHex or MacBinary (measured) |
+| any other envelope, and every segment scheme that joins to a file | the whole bundle, kept | **−29,258 B** (−29,118 B measured, before 2026-11-07) |
 
 A change to resident code moves every row by the control's growth less the
 shipped build's; a change to an image moves only the rows that keep it — so a
@@ -4256,7 +4315,7 @@ left*).
 
 **The last row is the one no tally had shown**: a wrapper whose payload the
 peek cannot name keeps the bundle, and that layer runs with **less** memory than
-a resident build would give it — 197,876 B held against 169,280 B saved. Until
+a resident build would give it — 201,136 B held against 172,208 B saved. Until
 2026-11-03 that was every envelope, and it refused `a2ps.V4.3.tar.Z` and
 `popper-1.7.tar.Z` at System 6.0.8 / 512 KB; the peek names Tar from the first
 512 bytes and the `.Z` layer is granted 200,022 B there instead of 72,090 B
@@ -5943,7 +6002,7 @@ data and relocations. 63,744 B was measured against 2026-09-01's build;
 `ApplLimit − ApplZone` = **78,568 B**, leaving 20,956 B for every buffer
 (*derived*; DECISIONS.md 2026-10-22, *the runtime the application did not
 need*). `CODE` has since fallen 2,584 B; the sum has not been re-derived. The
-eager loader then asks for the `'OVLY'` bundle as ONE **197,876 B** block
+eager loader then asks for the `'OVLY'` bundle as ONE **201,136 B** block
 (*Overlays*). The bound is the RAM under the screen buffer, so no smaller
 System moves it (*What the application costs the engine*); the margin is
 kilobytes, which is why MANUAL_TESTS.md §6's HD20 question is about a

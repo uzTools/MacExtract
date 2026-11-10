@@ -1544,6 +1544,12 @@ UncFormat unc_mar_probe(const uint8_t *head, int32_t len, UncIO *io);
 int unc_mar_extract(UncCtx *c);
 UncFormat unc_lz4_probe(const uint8_t *head, int32_t len, UncIO *io);
 int unc_lz4_extract(UncCtx *c);
+/* Apple Backup (fmt_abk.c): a set of disks, read in addressed mode. */
+UncFormat unc_abk_probe(const uint8_t *head, int32_t len, UncIO *io);
+int unc_abk_describe(UncIO *io, UncSegmentDesc *desc);
+int unc_abk_match(const UncSegmentDesc *desc, const uint8_t *head,
+                  int32_t len);
+int unc_abk_extract(UncCtx *c);
 int unc_dd_extract(UncCtx *c);
 int unc_now_extract(UncCtx *c);
 int unc_superdisk_extract(UncCtx *c);

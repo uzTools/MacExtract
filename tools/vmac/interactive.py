@@ -1609,6 +1609,189 @@ def phase_diskeject(args, appbin, workdir, shot):
     return ok
 
 
+def mac_forks(image, workdir):
+    """{component tuple: (data, rsrc, type, creator)} of every file on an
+    HFS image, each read through `hcopy -m` (MacBinary) and parsed here."""
+    home = tempfile.mkdtemp(prefix="hfs-")
+    env = dict(os.environ, HOME=home)
+    got = {}
+    try:
+        if CD.hfs(env, "hmount", image).returncode != 0:
+            raise SystemExit(f"interactive: {image} will not mount")
+        for comps in CD.walk(env):
+            mb = os.path.join(home, "f.bin")
+            path = b":" + b":".join(c.encode("mac_roman") for c in comps)
+            if CD.hfs(env, "hcopy", "-m", path, mb.encode()).returncode:
+                continue
+            b = open(mb, "rb").read()
+            dl = int.from_bytes(b[83:87], "big")
+            rl = int.from_bytes(b[87:91], "big")
+            r0 = 128 + ((dl + 127) & ~127)
+            got[comps] = (b[128:128 + dl], b[r0:r0 + rl], b[65:69], b[69:73])
+        CD.hfs(env, "humount")
+        return got
+    finally:
+        shutil.rmtree(home, ignore_errors=True)
+
+
+# The part dialog's prompt, "Insert the disk with Part <N> of ...", as it
+# sits under the list on System 6 (abk-3 and abk-4 frames, 2026-11-10).
+PROMPT_LINE = (100, 284, 420, 302)
+
+
+def prompt_line(png):
+    """The prompt line's pixels, 8-bit gray, at 512x342."""
+    px = subprocess.run(["convert", png, "-scale", "512x342!", "-depth", "8",
+                         "gray:-"], capture_output=True, check=True).stdout
+    x0, y0, x1, y1 = PROMPT_LINE
+    return b"".join(px[y * 512 + x0:y * 512 + x1] for y in range(y0, y1))
+
+
+def phase_abk(args, appbin, workdir, shot):
+    """An Apple Backup set read across three floppies, one at a time.
+
+    Each disk of a three-disk set (tools/run_abk.py's synth_set: one file's
+    resource fork runs across all three, so disk 2 holds nothing else) is
+    on a 1.44 MB floppy of its own, every one holding a file called "Apple
+    Backup Data", as the program wrote them. The set is opened on floppy A
+    with the output on the boot disk; at the first "Insert the disk", a
+    DECOY goes in — a real disk of another backup, the same name and type
+    — and the alert must still be up after it (the control: without it,
+    the phase could not tell "the right disk answered" from "any disk
+    did"); then disk 2, then disk 3, nothing clicked after either. Every
+    file is read back off the boot disk, both forks, type and creator,
+    against the Linux CLI's extraction of the same set.
+    """
+    sys.path.insert(0, os.path.join(R.REPO, "tools"))
+    import run_abk                                         # noqa: E402
+    setdir = os.path.join(workdir, "abkset")
+    run_abk.synth_set(setdir)
+    disks = [os.path.join(setdir, f"Apple Backup Data {i}") for i in (1, 2, 3)]
+    ref = os.path.join(workdir, "abk-ref")
+    cli = os.path.join(R.REPO, "build", "rel", "macextract")
+    subprocess.run([cli, "x", "-o", ref, disks[0]], check=True,
+                   capture_output=True)
+    lst = subprocess.run([cli, "l", disks[0]], capture_output=True,
+                         check=True).stdout.decode("utf-8")
+    want = {}
+    for line in lst.splitlines():
+        f = line.split(None, 4)
+        if len(f) == 5 and f[0] == "f":
+            tc = f[3].encode("mac_roman")
+            rel = f[4]
+            d = open(os.path.join(ref, rel), "rb").read()
+            rp = os.path.join(ref, rel + ".rsrc")
+            r = open(rp, "rb").read() if os.path.exists(rp) else b""
+            want[tuple(rel.split("/"))] = (d, r, tc[:4], tc[5:9])
+    decoy_src = os.path.join(R.REPO, "fixtures", "abk-perfA-disk5.data")
+
+    bootimg = os.path.join(workdir, "boot-abk.hfv")
+    R.sh(sys.executable, os.path.join(HERE, "mkboot.py"),
+         os.path.join(R.VMAC_HOME, args.system), appbin, bootimg)
+    flops = []
+    for i, d in enumerate(disks, 1):
+        fp = os.path.join(workdir, f"backup-{i}.dsk")
+        R.make_floppy(fp, f"Backup Disk {i}", extras=[(d, "Apple Backup Data")],
+                      size_kb=1440)
+        flops.append(fp)
+    decoy = os.path.join(workdir, "decoy.dsk")
+    R.make_floppy(decoy, "Other Backup", extras=[(decoy_src,
+                                                  "Apple Backup Data")],
+                  size_kb=1440)
+
+    scratch = os.path.join(args.outdir, ".settle.png")
+    elapsed, still_asking, decoy_out = None, None, None
+    mac = Mac(bootimg, args.emu, workdir, extra=(flops[0],))
+    try:
+        if mac.settle(scratch, interval=5.0, timeout=args.boot_timeout) is None:
+            raise SystemExit("interactive: the machine never settled")
+        shot(mac, "abk-1-launched.png")            # Backup Disk 1's listing
+        mac.click(*SF_FIRST_ROW)                   # "Apple Backup Data"
+        mac.key("Return")
+        time.sleep(3.0)
+        mac.click(*SFPUT_DRIVE)                    # to the boot disk
+        time.sleep(2.0)
+        shot(mac, "abk-2-destination.png")
+        accept_destination(mac, pause=0.5)
+        wait_for_alert(mac, scratch, timeout=args.complete_timeout)
+        time.sleep(3.0)
+        shot(mac, "abk-3-insert-2.png")            # "Insert the disk with Part 2"
+        asking_png = os.path.join(workdir, "asking.png")
+        shutil.copy(scratch, asking_png)
+
+        drop_disk(mac, decoy)
+        time.sleep(20.0)
+        mac.shot(scratch)
+        # The prompt line, not the frame: the dialog lists the decoy's
+        # volume while it ejects it, so a whole frame changes whether or
+        # not the question did (DECISIONS.md 2026-11-09, *the set's
+        # identity that left*, the same dialog on the 512Ke).
+        still_asking = (prompt_line(scratch) == prompt_line(asking_png)
+                        and bool(prompt_line(asking_png).strip(b"\xff")))
+        decoy_out = not image_open(mac, decoy)
+        shot(mac, "abk-4-after-decoy.png")
+
+        drop_disk(mac, flops[1])                   # nothing clicked from here
+        wait_for_alert(mac, scratch, timeout=args.complete_timeout)
+        time.sleep(3.0)
+        shot(mac, "abk-5-insert-3.png")
+        drop_disk(mac, flops[2])
+        elapsed = mac.settle(scratch, interval=5.0, quiet=EXTRACT_QUIET,
+                             timeout=args.complete_timeout)
+        shot(mac, "abk-6-complete.png")
+    finally:
+        mac.close()
+        if os.path.exists(scratch):
+            os.remove(scratch)
+
+    got = mac_forks(os.path.join(workdir, "boot.hfv"), workdir)
+    # Bytes 16..127 of a resource fork are what the Resource Manager stamps
+    # per session (the file's name, measured here on the first run), masked
+    # by every emulator check: tools/vmac_check.py, mask_reserved, which
+    # leaves a fork alone unless its own header makes the range padding.
+    sys.path.insert(0, os.path.join(R.REPO, "tools"))
+    from vmac_check import mask_reserved                   # noqa: E402
+    masked = sum(1 for w in want.values()
+                 if len(w[1]) > 16 and mask_reserved(w[1]) != w[1])
+    want = {k: (w[0], mask_reserved(w[1]), w[2], w[3])
+            for k, w in want.items()}
+    got = {k: (g[0], mask_reserved(g[1]), g[2], g[3])
+           for k, g in got.items()}
+    ok = True
+    for comps, w in sorted(want.items()):
+        hits = [g for c, g in got.items() if c[-len(comps):] == comps]
+        if len(hits) != 1:
+            print(f"interactive: {'/'.join(comps)}: {len(hits)} on the disk")
+            ok = False
+        elif hits[0] != w:
+            g = hits[0]
+            print(f"interactive: {'/'.join(comps)}: data {len(g[0])}/"
+                  f"{len(w[0])} rsrc {len(g[1])}/{len(w[1])} "
+                  f"type {g[2]!r}/{w[2]!r} creator {g[3]!r}/{w[3]!r}")
+            for k, fork in ((0, "data"), (1, "rsrc")):
+                a, b = g[k], w[k]
+                if a != b:
+                    i = next((i for i in range(min(len(a), len(b)))
+                              if a[i] != b[i]), min(len(a), len(b)))
+                    n = sum(1 for x, y in zip(a, b) if x != y)
+                    print(f"interactive:   {fork} first differs at {i} "
+                          f"(0x{i:x}), {n} bytes differ; got "
+                          f"{a[i:i + 8].hex()} want {b[i:i + 8].hex()}")
+                    with open(os.path.join(args.outdir, "abk-got-" + fork),
+                              "wb") as f:
+                        f.write(a)
+            ok = False
+    print("interactive: the decoy "
+          + ("left the alert up" if still_asking else "DISMISSED THE ALERT")
+          + (", and was ejected" if decoy_out else ", and is STILL IN"))
+    print(f"interactive: {len(want)} files, both forks, type and creator "
+          + ("BYTE-EXACT" if ok else "WRONG")
+          + f" ({masked} resource fork(s) with bytes 16..127 masked)")
+    if elapsed is not None:
+        print(f"interactive: settled ~{elapsed:.0f}s after disk 3 went in")
+    return ok and bool(still_asking)
+
+
 def read_joined(image, name, workdir):
     """The joined archive off an HFS image, or None. MacRoman throughout:
     the volume holds names like `StuffIt Expander™`, and a `text=True`
@@ -2943,6 +3126,10 @@ def main():
                     help="with --dest: start the second volume as a copy of "
                          "IMG (its name must be Dest) instead of a blank "
                          "floppy, e.g. one already full")
+    ap.add_argument("--abk", action="store_true",
+                    help="an Apple Backup set across three 1.44 MB floppies, "
+                         "a decoy disk of another backup first; run it on a "
+                         "one-drive emulator (mv-1M-1d, mv-512Ke-1d)")
     ap.add_argument("--diskswap", action="store_true",
                     help="the disk-swap phase: hold the fixture's parts on "
                          "a floppy that is NOT in the machine, let the "
@@ -3147,6 +3334,14 @@ def main():
     if args.diskeject:
         try:
             ok = phase_diskeject(args, appbin, workdir, shot)
+        finally:
+            shutil.rmtree(workdir, ignore_errors=True)
+        print(f"interactive: screenshots in {args.outdir} — LOOK AT THEM.")
+        return 0 if ok else 1
+
+    if args.abk:
+        try:
+            ok = phase_abk(args, appbin, workdir, shot)
         finally:
             shutil.rmtree(workdir, ignore_errors=True)
         print(f"interactive: screenshots in {args.outdir} — LOOK AT THEM.")

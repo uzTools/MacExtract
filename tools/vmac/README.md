@@ -2450,6 +2450,20 @@ shows no dimmed icon on either build, so the check is not made. **What it
 cannot see:** a real one-drive Mac — Mini vMac puts every inserted disk in a
 new drive (MANUAL_TESTS.md §4).
 
+**`--abk` is an Apple Backup set across three 1.44 MB floppies**, run on a
+one-drive emulator (`mv-1M-1d`, `mv-512Ke-1d`): `tools/run_abk.py`'s
+three-disk set, one file's resource fork across all three, each disk a file
+called "Apple Backup Data" on a floppy of its own. Opened on disk 1 with the
+output on the boot disk; at "Insert the disk with Part 2", a DECOY goes in
+first — a real disk of another backup, `abk-perfA-disk5.data`, the same name
+and type — and the alert must still be up after it; then disks 2 and 3,
+nothing clicked. Every file is read back off the boot disk through `hcopy -m`,
+both forks, type and creator, against `build/rel/macextract`'s extraction of
+the same set. The fixture argument is required and unused. **What it cannot
+see:** a real set (none here is complete), a real one-drive Mac (Mini vMac
+puts each inserted disk in a drive of its own, MANUAL_TESTS.md §4), and
+Finder info beyond type and creator.
+
 **`--named zip` needs a fixture larger than 64 KB.** `zip -s 64k` marks an
 archive split whatever its size, so a smaller payload makes one `Aset.zip` and
 no `Aset.z01`, and the application correctly answers *"This archive has more

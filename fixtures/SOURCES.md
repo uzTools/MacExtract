@@ -11,12 +11,16 @@ joined set is graded against. They have no manifest and are not meant to
 have one — `make_manifests.py`'s NOT_ARCHIVES says so where a rebuild
 would otherwise make two, and DECISIONS.md 2026-09-22 (*the sidecar is
 not an archive*) says why. They are the only two that need saying:
-ten other fixtures have no manifest — the six `.1`/`.2` parts,
-`derived-SD__Utilities.x` and the three `synth-os9-*` — and none of them needs a declaration, because `unar`
+sixteen other fixtures have no manifest — the six `.1`/`.2` parts,
+`derived-SD__Utilities.x`, the three `synth-os9-*` and the six `abk-*`
+Apple Backup disks — and none of them needs a declaration, because `unar`
 cannot produce a manifest for any of them anyway. Each is graded by the
 suite that owns it (TESTING.md).
 
-**Four fixtures are a step from their URL.** `libarchive-zip-mac-metadata.zip`
+**Seven fixtures are a step from their URL.** The three `abk-perfB-*` Apple
+Backup disks are files on HFS floppies published as Disk Copy 4.2 images; a
+`dc42hfs+<url>#<path>` URL tells `tools/harvest.py --restore` to take that
+one file's data fork off the image. `libarchive-zip-mac-metadata.zip`
 is libarchive's test file, uuencoded there: `uudecode` it. The two
 `mar-wild-*` archives are lzip-compressed there; an `lzip+` URL tells
 `tools/harvest.py --restore` to decompress what it fetched. And the Mac OS X
@@ -50,6 +54,12 @@ a comment was found.
 | Ultimate_Copland_1.1.sit.bin | a9f92aa7f9c761144b70e3744593c9c8c628dcdc4e5aec40f103597ea1f36681 | 154624 | http://www.nic.funet.fi/pub/mac/extension/Ultimate_Copland_1.1.sit.bin |
 | a2basic-09.hqx | d816141f402065424ee8564a963163abaeea9ae13b5b7ca71d54825b5729bf46 | 209212 | http://www.nic.funet.fi/index/info-mac/cmp/a2basic-09.hqx |
 | a2ps.V4.3.tar.Z | 2a5121c2fc9329533b7ba08bb56d1ec18a0e44a3a110932ba8f57c3a159c9147 | 30255 | http://www.nic.funet.fi/pub/unix/tools/a2ps.V4.3.tar.Z |
+| abk-perfA-disk1.data | e414e6584a3c06dcf7a0bcc233704f5b243b320cf034245a2e76a46e806e1db0 | 1447936 | https://raw.githubusercontent.com/adespoton/kaitai-applebackup/37c7fa8503f1e6b8ac87d9d5e7068e836fa04daf/Data%20File%201 |
+| abk-perfA-disk5.data | 2a3e737f7978d02b3bd08698f02f90b15357082e26cbaee8494e939868b83687 | 1447936 | https://raw.githubusercontent.com/adespoton/kaitai-applebackup/37c7fa8503f1e6b8ac87d9d5e7068e836fa04daf/Data%20File%205 |
+| abk-perfA-disk6.data | 7d5675b3e3deedf3806cb40acca2792ceeaba994f67c511c8f3f85eff409120a | 1447936 | https://raw.githubusercontent.com/adespoton/kaitai-applebackup/37c7fa8503f1e6b8ac87d9d5e7068e836fa04daf/Data%20File%206 |
+| abk-perfB-disk1.data | ba7423ae343d71089700457ec0939df3edc7715f048b56209931c637bc6af100 | 1447936 | dc42hfs+https://raw.githubusercontent.com/adespoton/kaitai-applebackup/37c7fa8503f1e6b8ac87d9d5e7068e836fa04daf/Hard%20disk%20copy%201.dsk#:Apple%20Backup%20Data |
+| abk-perfB-disk4.data | 8229ddbc92edcc56be61f62808d02cc1a19d3210345a854f50c2d82cc293243a | 1447936 | dc42hfs+https://raw.githubusercontent.com/adespoton/kaitai-applebackup/37c7fa8503f1e6b8ac87d9d5e7068e836fa04daf/Hard%20disk%20copy%204.dsk#:Apple%20Backup%20Data |
+| abk-perfB-disk7.data | ba49195254e623d90e845f39545e4d9b25ce55c9130379198c9fc6877f7dd175 | 1447936 | dc42hfs+https://raw.githubusercontent.com/adespoton/kaitai-applebackup/37c7fa8503f1e6b8ac87d9d5e7068e836fa04daf/Hard%20disk%20copy%207.dsk#:Apple%20Backup%20Data |
 | adobenumbers.sit | 23ab6b58f20071efda4d07cd33be20c513000610a056a0c1c9c6a22bf418dd2b | 9062 | http://www.nic.funet.fi/pub/mac/da/adobenumbers.sit |
 | afe-appleworks-msworks.hqx | 85e18bb2ed1774b399244bc8cca6227a005b77f46ccce2ced65f5ed2f27dd558 | 11004 | http://www.nic.funet.fi/index/info-mac/cmp/afe-appleworks-msworks.hqx |
 | afe-epsf-translator.hqx | 2f141192c3915771b1b57bf757532d46105f05368e24dd5c76113e973eaa6e45 | 33547 | http://www.nic.funet.fi/index/info-mac/cmp/afe-epsf-translator.hqx |

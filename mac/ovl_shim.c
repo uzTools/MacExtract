@@ -148,9 +148,10 @@ uint32_t unc_segment_first_end(const UncSegmentDesc *desc, UncIO *rsrc,
 /* In the same image: which set a file belongs to (src/unc_segid.c). Asked
  * with the bundle whole, before the release, and again while a set is
  * read, by the part search a disk swap starts (mac/macextract_mac.c,
- * SegPartOf). The bundle is whole then for every scheme but two: a spanned
- * zip's parts are placed by name and never asked, and Compact Pro's are
- * matched in its reader's image, which the set keeps. No image is no set:
+ * SegPartOf). The bundle is whole then for every scheme but three: a spanned
+ * zip's parts are placed by name and never asked, and Compact Pro's and
+ * Apple Backup's are matched in their reader's image, which the set keeps.
+ * No image is no set:
  * UNC_ERR_FORMAT, which a match reads as 0. */
 static int32_t seg_id(short id, int32_t which, const void *obj,
                       const void *in, uint32_t len)
@@ -178,9 +179,11 @@ int unc_segment_describe(UncIO *io, UncSegmentDesc *desc)
 int unc_segment_match(const UncSegmentDesc *desc, const uint8_t *head,
                       int32_t len)
 {
-    int32_t r = seg_id(desc && desc->scheme == UNC_FORMAT_CPTSEG
-                           ? OVL_ID_CPTDD : OVL_ID_SNIFF,
-                       OVL_SEG_MATCH, desc, head, (uint32_t)len);
+    short id = OVL_ID_SNIFF;
+    int32_t r;
+    if (desc && desc->scheme == UNC_FORMAT_CPTSEG) id = OVL_ID_CPTDD;
+    if (desc && desc->scheme == UNC_FORMAT_ABK) id = OVL_ID_ZIPOLD;
+    r = seg_id(id, OVL_SEG_MATCH, desc, head, (uint32_t)len);
     return r > 0 ? (int)r : 0;
 }
 
@@ -390,3 +393,6 @@ DECODER(unc_tar_extract,        OVL_ID_ZIPOLD,     OVL_TAR_EXTRACT,        RUN_C
 DECODER(unc_mar_extract,        OVL_ID_ZIPOLD,     OVL_MAR_EXTRACT,        0)
 /* An LZ4 frame beside it: its own window, no codec (src/fmt_lz4.c). */
 DECODER(unc_lz4_extract,        OVL_ID_ZIPOLD,     OVL_LZ4_EXTRACT,        0)
+/* Apple Backup beside it: stored forks across disks, no codec
+ * (src/fmt_abk.c). */
+DECODER(unc_abk_extract,        OVL_ID_ZIPOLD,     OVL_ABK_EXTRACT,        0)

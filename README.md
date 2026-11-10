@@ -41,6 +41,7 @@ StuffIt (classic and 5.x), Compact Pro, BinHex (and the older `.hex`/`.hcx` and 
 MacBinary, PackIt, AppleLink packages, DiskDoubler and MacCompress, Now Compress, StuffIt
 SpaceSaver, Alysis SuperDisk!, Private File, ARC, LZH/LHA, uuencode, btoa,
 base64 and MIME attachments, AppleSingle/AppleDouble, MAR (`.mar`, `.mac`, `.mar.lz4`),
+Apple Backup's floppies (a Performa's backup, even with disks missing),
 zip, gzip, tar and `.Z`.
 
 - **Everything comes back as it was:** both forks, type and creator, dates,

@@ -51,6 +51,9 @@ static const UncProbe unc_sniff_order[] = {
      * the record with (fmt_mar.c). Its byte 0 is 'M', so MacBinary
      * below could not take one either. */
     unc_mar_probe,
+    /* 'CMWL' at +2 and 'RLDW' at 0x600 (fmt_abk_probe.c). Ahead of the
+     * Compact Pro segment probe below, which a byte 0 of 1 would reach. */
+    unc_abk_probe,
     /* MacBinary has no magic number, only a header CRC and structural
      * constraints, which is why it used to sit LAST — the weakest test
      * claims a file only when nothing stronger has. It is here instead

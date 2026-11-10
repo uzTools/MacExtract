@@ -125,6 +125,7 @@ else()
     list(FILTER ENGINE_SRC EXCLUDE REGEX "fmt_tar\\.c$")
     list(FILTER ENGINE_SRC EXCLUDE REGEX "fmt_mar\\.c$")
     list(FILTER ENGINE_SRC EXCLUDE REGEX "fmt_lz4\\.c$")
+    list(FILTER ENGINE_SRC EXCLUDE REGEX "fmt_abk\\.c$")
     list(FILTER ENGINE_SRC EXCLUDE REGEX "unc_sniff\\.c$")
     # Which set a file belongs to goes with the sniffer, whose image holds
     # every parser it calls; mac/ovl_shim.c is what the shell links against
@@ -741,7 +742,8 @@ add_custom_command(
             ${OVL_DEPS})
 
 # Zip's Shrink and Reduce, kept for zip alone, tar's reader and MAR's, kept
-# for a tar and a MAR, and the Mac OS X sidecars zip and tar share
+# for a tar and a MAR, Apple Backup's with its set's match, kept for its
+# set, and the Mac OS X sidecars zip and tar share
 # (tools/overlay/ovl_zipold.c).
 add_custom_command(
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/ovl_zipold.r
@@ -759,6 +761,8 @@ add_custom_command(
             ${ENGINE_DIR}/src/fmt_mar.c
             ${ENGINE_DIR}/src/fmt_mar_probe.c
             ${ENGINE_DIR}/src/fmt_lz4.c
+            ${ENGINE_DIR}/src/fmt_abk.c
+            ${ENGINE_DIR}/src/fmt_abkset.c
             ${ENGINE_DIR}/src/unc_sidecar.c
     DEPENDS ${ENGINE_DIR}/tools/overlay/ovl_zipold.c
             ${CMAKE_CURRENT_BINARY_DIR}/ovl_forwards_zipold_gen.c
@@ -771,6 +775,8 @@ add_custom_command(
             ${ENGINE_DIR}/src/fmt_mar.c
             ${ENGINE_DIR}/src/fmt_mar_probe.c
             ${ENGINE_DIR}/src/fmt_lz4.c
+            ${ENGINE_DIR}/src/fmt_abk.c
+            ${ENGINE_DIR}/src/fmt_abkset.c
             ${ENGINE_DIR}/src/unc_sidecar.c
             ${OVL_DEPS})
 
@@ -860,6 +866,7 @@ add_custom_command(
             ${ENGINE_DIR}/src/fmt_lzh_probe.c
             ${ENGINE_DIR}/src/fmt_macbinary_probe.c
             ${ENGINE_DIR}/src/fmt_mar_probe.c
+            ${ENGINE_DIR}/src/fmt_abk_probe.c
             ${ENGINE_DIR}/src/fmt_lz4_probe.c
             ${ENGINE_DIR}/src/fmt_mime_probe.c
             ${ENGINE_DIR}/src/fmt_mimeseg_probe.c
@@ -883,6 +890,7 @@ add_custom_command(
             ${ENGINE_DIR}/src/fmt_ddseg.c
             ${ENGINE_DIR}/src/fmt_mimeseg.c
             ${ENGINE_DIR}/src/fmt_sitseg.c
+            ${ENGINE_DIR}/src/fmt_abkset.c
     DEPENDS ${ENGINE_DIR}/tools/overlay/ovl_sniff.c
             ${CMAKE_CURRENT_BINARY_DIR}/ovl_forwards_sniff_gen.c
             ${CMAKE_CURRENT_BINARY_DIR}/ovl_host_gen.h
@@ -900,6 +908,7 @@ add_custom_command(
             ${ENGINE_DIR}/src/fmt_lzh_probe.c
             ${ENGINE_DIR}/src/fmt_macbinary_probe.c
             ${ENGINE_DIR}/src/fmt_mar_probe.c
+            ${ENGINE_DIR}/src/fmt_abk_probe.c
             ${ENGINE_DIR}/src/fmt_lz4_probe.c
             ${ENGINE_DIR}/src/fmt_mime_probe.c
             ${ENGINE_DIR}/src/fmt_mimeseg_probe.c
@@ -923,6 +932,7 @@ add_custom_command(
             ${ENGINE_DIR}/src/fmt_ddseg.c
             ${ENGINE_DIR}/src/fmt_mimeseg.c
             ${ENGINE_DIR}/src/fmt_sitseg.c
+            ${ENGINE_DIR}/src/fmt_abkset.c
             ${OVL_DEPS})
 # The destination dialog and a set's setup: shell code in images of their
 # own, bundled so that they are read at launch and given back with the bundle

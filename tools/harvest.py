@@ -45,9 +45,36 @@ def fetch(url, timeout=120):
     # is what is inside (fixtures/SOURCES.md says which).
     if url.startswith("lzip+"):
         return unlzip(fetch(url[5:], timeout))
+    # `dc42hfs+<url>#<HFS path>`: the file is on an HFS floppy published
+    # as a Disk Copy 4.2 image, and the fixture is that one file's data
+    # fork. The 84-byte header comes off, hfsutils reads what is left.
+    # Source for the header: reference/notes/DiskCopy42.md.
+    if url.startswith("dc42hfs+"):
+        where, _, hfspath = url[8:].partition("#")
+        return dc42_file(fetch(where, timeout),
+                         urllib.parse.unquote(hfspath))
     req = urllib.request.Request(url, headers={"User-Agent": "macextract-harvest/1.0"})
     with urllib.request.urlopen(req, timeout=timeout) as r:
         return r.read()
+
+
+def dc42_file(blob, hfspath):
+    """One file's data fork off a Disk Copy 4.2 image of an HFS disk."""
+    dlen = struct.unpack(">I", blob[64:68])[0]
+    if len(blob) < 84 + dlen or blob[82:84] != b"\x01\x00":
+        raise ValueError("not a Disk Copy 4.2 image")
+    with tempfile.TemporaryDirectory() as tmp:
+        img, out = os.path.join(tmp, "disk.img"), os.path.join(tmp, "out")
+        with open(img, "wb") as f:
+            f.write(blob[84:84 + dlen])
+        env = dict(os.environ, HOME=tmp)   # hfsutils keeps its state there
+        subprocess.run(["hmount", img], capture_output=True, env=env,
+                       timeout=120, check=True)
+        subprocess.run([b"hcopy", b"-r", hfspath.encode("mac-roman"),
+                        out.encode()], capture_output=True, env=env,
+                       timeout=120, check=True)
+        subprocess.run(["humount"], capture_output=True, env=env, timeout=60)
+        return open(out, "rb").read()
 
 
 def unlzip(blob):

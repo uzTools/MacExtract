@@ -330,6 +330,15 @@ python3 tools/run_mar.py --macextract build/san/macextract \
 # refused. Skips, and says so, where liblz4 is absent.
 python3 tools/run_lz4.py --macextract build/san/macextract \
     || fail "LZ4 frame tests"
+# Apple Backup. Nothing here reads it but the engine, so two readers others
+# wrote from the same article grade it — unbak.py for every fork's bytes,
+# Kaitai's parser for every item's Finder info and dates — each run ONLY
+# inside tools/sandbox.py's box, whose self-test must pass first. Then a set
+# made here with one file across three disks, damaged disks each alone, and
+# three controls that must fail.
+python3 tools/sandbox.py --selftest >/dev/null || fail "sandbox self-test"
+python3 tools/run_abk.py --macextract build/san/macextract \
+    || fail "Apple Backup tests"
 # The Finder metadata beyond type, creator and flags (`l --meta`): FInfo
 # and FXInfo whole, the backup date, the lock and the Get Info comment,
 # held to lsar where it reads them and to the synthesizers' own input where

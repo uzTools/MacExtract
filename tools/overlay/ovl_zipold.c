@@ -12,6 +12,8 @@
  * release keeps this image, and only this one, for a tar. And MAR's, since
  * 2026-11-03, on the same terms: a reader that calls no codec; and the
  * LZ4 frame's, the same day, the form mar 0.2.0 reads a MAR compressed in.
+ * And Apple Backup's, since 2026-11-10, another reader that calls no codec,
+ * with the match its set asks while it is read (src/fmt_abkset.c).
  *
  * Implode too (src/unc_implode.c), since 2026-10-17, when `ovl_exo` reached
  * the 32 KB it can span (DECISIONS.md 2026-10-17, *dates in the Macintosh's
@@ -47,6 +49,17 @@ int32_t ovl_main(const OverlayHost *host, int32_t which, void *a, void *b)
         return (int32_t)unc_mar_extract((UncCtx *)a);
     case OVL_LZ4_EXTRACT:
         return (int32_t)unc_lz4_extract((UncCtx *)a);
+    case OVL_ABK_EXTRACT:
+        return (int32_t)unc_abk_extract((UncCtx *)a);
+    /* An Apple Backup set keeps this image and not the sniffer's, and its
+     * disks are still being matched while it is read: the part search a
+     * disk swap starts (mac/ovl_shim.c, unc_segment_match). */
+    case OVL_SEG_MATCH: {
+        const OvlArgs *g = (const OvlArgs *)a;
+        return (int32_t)unc_abk_match((const UncSegmentDesc *)g->obj,
+                                      (const uint8_t *)g->in,
+                                      (int32_t)g->len);
+    }
     default:
         return -1;
     }

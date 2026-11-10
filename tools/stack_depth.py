@@ -126,7 +126,8 @@ GLUE_SRC = ["mac/ovl_shim.c", "mac/ovl_reloc.c", "mac/ovl_load_eager.c"]
 SHARED_SHIMS = {
     "ovl_run": {},
     "seg_id": {"unc_segment_match": [("sniff", "unc_segment_match"),
-                                     ("cptdd", "unc_cptseg_match")]},
+                                     ("cptdd", "unc_cptseg_match"),
+                                     ("zipold", "unc_abk_match")]},
 }
 
 # Library routines the resident link takes from Retro68 (an image links
@@ -185,8 +186,9 @@ CLASSES = {
     # unc_segid.c's table, then unc_segment.c's
     "describe": ["unc_sitseg_describe", "unc_cptseg_describe",
                  "unc_ddseg_describe", "unc_zipseg_describe",
-                 "unc_mimeseg_describe"],
-    "match": ["unc_sitseg_match", "unc_cptseg_match", "unc_ddseg_match"],
+                 "unc_mimeseg_describe", "unc_abk_describe"],
+    "match": ["unc_sitseg_match", "unc_cptseg_match", "unc_ddseg_match",
+              "unc_abk_match"],
     "payload": ["unc_ddseg_payload"],
     "stored_crc": ["unc_sitseg_stored_crc", "unc_ddseg_stored_crc"],
     "crc_fold": ["unc_crc16_arc", "unc_crc16_xmodem"],

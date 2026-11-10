@@ -382,6 +382,40 @@ open(sys.argv[2], 'w').write(s)
 " "$1" "$2"
 }
 
+# Apple Backup: Doug Brown's description of the format (2013), the source of
+# every offset src/fmt_abk.c reads, as text; and the two readers written from
+# it that tools/run_abk.py grades the engine against, RUN ONLY INSIDE
+# tools/sandbox.py's box, never as they stand: Sidney S.M.'s unbak.py (a gist,
+# no licence stated) and Em Adespoton's Kaitai Struct description with the
+# Python parser compiled from it (MIT), plus the Kaitai runtime it imports
+# (kaitaistruct 0.10, MIT, one file out of PyPI's wheel). siddhartha77's Apple
+# Backup Extractor (no licence stated) is read for its facts, not run.
+# Pinned to commits; none of it is linked into anything shipped.
+if [ ! -f reference/applebackup/kaitaistruct.py ]; then
+    mkdir -p reference/applebackup
+    AB=reference/applebackup
+    curl -sSfL -o $AB/downtowndougbrown-2013.html \
+        "https://www.downtowndougbrown.com/2013/06/legacy-apple-backup-file-format-on-floppy-disks/"
+    html_to_text $AB/downtowndougbrown-2013.html $AB/downtowndougbrown-2013.txt
+    rm -f $AB/downtowndougbrown-2013.html
+    curl -sSfL -o $AB/gist-unbak.py \
+        "https://gist.githubusercontent.com/s4y/725955949a4cefe01fb253b1ec1d6c6c/raw/6c886685e0d25bdd25c287b667569349f7cc0b50/unbak.py"
+    K=https://raw.githubusercontent.com/adespoton/kaitai-applebackup/37c7fa8503f1e6b8ac87d9d5e7068e836fa04daf
+    curl -sSfL -o $AB/kaitai-applebackup.ksy "$K/applebackup.ksy"
+    curl -sSfL -o $AB/kaitai-apple_backup.py "$K/python/apple_backup.py"
+    curl -sSfL -o $AB/kaitai-LICENSE "$K/LICENSE"
+    S=https://raw.githubusercontent.com/siddhartha77/apple-backup-extractor/master
+    for f in AppleBackupSpec.c AppleBackupSpec.h README.md; do
+        curl -sSfL -o "$AB/abe-$f" "$S/$f"
+    done
+    curl -sSfL -o /tmp/kaitaistruct.whl \
+        "https://files.pythonhosted.org/packages/4e/bf/88ad23efc08708bda9a2647169828e3553bb2093a473801db61f75356395/kaitaistruct-0.10-py2.py3-none-any.whl"
+    python3 -c "import zipfile,sys; z=zipfile.ZipFile(sys.argv[1]); open(sys.argv[2],'wb').write(z.read('kaitaistruct.py'))" \
+        /tmp/kaitaistruct.whl $AB/kaitaistruct.py
+    rm -f /tmp/kaitaistruct.whl
+fi
+
+
 # BinHex 4.0 — RFC 1741 for the MIME type and its Appendix A, and Peter
 # N Lewis's "BinHex 4.0 Definition" (Aug 1991) for everything Appendix A
 # leaves vague. BOTH are needed and the reason is worth knowing: the

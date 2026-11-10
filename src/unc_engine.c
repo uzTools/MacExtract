@@ -82,6 +82,10 @@ static const UncFormatDesc unc_formats[] = {
      * message/partial set is half a message, and unc_extract_as has no
      * case for it. */
     { UNC_FORMAT_MIMESEG,     "message/partial part", 0, NULL },
+    /* One disk of a set, like the rows above: read only as a set, a set
+     * of one included, because only the joiner can hand the reader the
+     * next disk (fmt_abk.c). */
+    { UNC_FORMAT_ABK,         "Apple Backup",        0, NULL },
     { UNC_FORMAT_UU,          "uuencode",            1, unc_uu_extract },
     { UNC_FORMAT_ARC,         "ARC",                 0, unc_arc_extract },
     { UNC_FORMAT_SUPERDISK,   "SuperDisk!",          0, unc_superdisk_extract },

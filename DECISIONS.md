@@ -585,6 +585,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-10 (the 12.8 seconds that were three commits) — the shipped application's 12.8 s on `macburger-helper.hqx` between v0.41.0 and 2026-11-09 is 9.6 s from `ovl_keep`'s `high_handle` on a 128K ROM, 2.0 s from the 1 KB progress step and 1.0 s from v0.45.0's dialogs; `MoveHHi` put back gives the 9.6 s back
 - 2026-11-10 (the encoder make clean deleted) — Debian's `arc` lives in the machine's cache, not `build/`, and `ci.sh`'s last line says when its cases were skipped
 - 2026-11-10 (the peek that was turned round) — StuffIt method 13's canonical table built at bit-reversed indices in the same 1 KB, the reversal table gone: −1.6 to −2.75 % of Plus engine ticks, −104 B of bundle, heap 0; built a bit at a time it was −0.2 % on an archive of many forks
+- 2026-11-10 (the backup on floppies) — Apple Backup extracts: a Performa's backup read as a set of disks, with disks missing, graded by two readers others wrote, run only in a namespace box; 64 B off every budget
 
 ---
 
@@ -24296,3 +24297,88 @@ path the one that runs.**
 (fmt_arc.c) and SpaceSaver method 3 has its own decoder, so method 13 was
 the only user.
 
+## 2026-11-10 (the backup on floppies) — Apple Backup extracts: a Performa's backup read as a set of disks, with disks missing, graded by two readers others wrote, run only in a namespace box; 64 B off every budget
+
+**Claim, evidence, consequence (measured).** `src/fmt_abk.c` reads Apple
+Backup's floppies as a SET in the joiner's addressed mode
+(`UNC_FORMAT_ABK`); every fork of the two real partial backups here is the
+one `unbak.py` writes, every item's Finder info and dates the ones Kaitai's
+parser reads, and a three-disk set made here comes out across three
+floppies on the one-drive emulators, 1 MB Mac Plus and 512Ke, System
+6.0.8 (`tools/vmac/interactive.py --abk`): a decoy disk of the other
+backup refused and ejected, disks 2 and 3 taken with nothing clicked, all
+three files byte-exact, both forks, type and creator, ~135 s after the last
+disk went in. The lead had sat
+in OPEN_ITEMS.md as "named nowhere" with "a specimen written by the
+program" as what would close it; the specimens were already published, six
+disks in the repository of the Kaitai description of the format.
+
+**A set, not an archive.** Every disk states its number, the count and the
+backup's start time, so any disk describes the whole set and the start time
+is its identity; every file is called "Apple Backup Data", so a name says
+nothing. A set kept in the joiner's addressed mode lets the reader ask for
+each disk in turn and never read past its used length — the bytes after it
+are another session's (Doug Brown's reply to Em Adespoton; disk 6 of backup
+A has 0x73400 B of them, disk 7 of backup B is 0xF6 to the end). A file cut
+at a disk's end continues under a repeat of its header, part number one
+higher; measured on the twelve cut items of the six disks, the data fork is
+always finished before any resource fork byte, so each fork arrives in order
+and the reader refuses one that does not.
+
+**With disks missing, the rest comes out (decided).** Both real sets lack
+disks, as most surviving sets will. A disk the host cannot produce is
+skipped: the file it would have finished is reported missing a part, the
+file continuing past it is reported once at its first part seen and passed
+over, and the set's verdict is the joiner's `UNC_ERR_SEGMENTED`. Apple
+Backup Extractor (siddhartha77) does the same, writing `.part` files; the
+CLI keeps a failed entry's bytes as it does for every format.
+
+**Compact Pro's describe took the disks (measured).** The first CLI run
+listed nothing: `unc_segment_describe` tries schemes in order, and a Compact
+Pro segment is anything with 1 at byte 0 and a non-zero longword at 4 —
+which a disk's version word 0x0103 and 'CMWL' are. Apple Backup's row is
+ahead of Compact Pro's; `tests/unit_formats.c` asks the dispatcher, not the
+scheme, so the order is what is tested.
+
+**Two readers, run in a box (the maintainer, 2026-11-10).** Nothing else
+reads the format, and the project does not run code from outside.
+`tools/sandbox.py` runs `unbak.py` and Kaitai's compiled parser inside
+unprivileged namespaces — no network, a read-only root of `/usr` alone, the
+disks read-only, one output directory — and its self-test proves each wall
+from inside before anything runs; it failed its first version, whose root
+was writable. Their output is data: forks compared, JSON checked for
+shape. **Harness bugs it found in itself, not the engine**: Python's
+`splitlines()` splits "Icon\r", the name of every custom-icon file, at its
+CR; and the synthetic set's writer stored a resource count of 0 before the
+bytes. A cost: what both readers get wrong the same way passes, since both
+come from one article.
+
+**What it costs (measured).** Shipped `CODE` −4, A5 +68 — the rows in three
+tables and the name; 64 B off every budget. `ovl_zipold` +2,548 B (the
+reader and its set's match, which a set keeps while a disk swap's part
+search runs, as Compact Pro's in `ovl_cptdd`), `ovl_sniff` +712 B (probe,
+describe, match); control +2,992, `OVL_SAVED` +2,928, `TIERS` −2,992,
+DERIVED; `run_tiers.py --check` moves no tally. Heap 8,488 B on every set,
+constant by construction (an 8 KB buffer, the walker). The price quoted
+before the work, 1.5–2.2 KB of image and 0.5 KB resident, was wrong both
+ways: describe and match had left resident CODE the day before
+(*the set's identity that left*), and the reader came out larger.
+
+**The emulator check that misread a refusal (measured).** The decoy check
+first compared whole frames, and passed on one run and failed on the next
+with the dialog still asking for part 2 in both: the frame it took showed
+the decoy's listing on one run and not on the other, depending on when the
+eject came. It compares the prompt line now, which is what says which part
+is asked for; it reads "Part 3" as different and the decoy frame as the
+same. The same dialog had misled the Compact Pro check the day before.
+**Compare the part of a frame that carries the claim.** The resource fork
+also differed in bytes 16..127, the file's name the Resource Manager
+writes there, masked as every emulator check here masks them.
+
+**The type no file here carries.** `OBDc`, a restore CD's copies, is in the
+bundle on the Kaitai description's word alone; `OBDa`
+is read off three real disks. 12 B of resource each.
+
+**Transferable.** **A probe and a describe are two gates; test the one the
+host calls.** The probe here was right from the first line; the describe
+of another scheme answered first.

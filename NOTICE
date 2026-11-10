@@ -762,6 +762,22 @@ This project's decoders are transcriptions/ports of algorithms from:
     the specimen cache, never committed. DECISIONS.md 2026-11-03 (*the
     archive that carries its own CRCs*).
 
+  * Apple Backup's disk format, as described by Doug Brown —
+    https://www.downtowndougbrown.com/2013/06/legacy-apple-backup-file-format-on-floppy-disks/
+    (2013) — is what `src/fmt_abk.c`, `src/fmt_abk_probe.c`,
+    `src/fmt_abkset.c` and `src/fmt_abk_priv.h` are written from; facts,
+    0BSD here. Two readers written from the same description are run as
+    TEST ORACLES ONLY, and only inside `tools/sandbox.py`'s box (no network,
+    no home directory, no repository; `tools/run_abk.py`): Sidney S.M.'s
+    `unbak.py` (a GitHub gist, no licence stated) and Em Adespoton's Kaitai
+    Struct description with the Python parser compiled from it (MIT), with
+    the Kaitai Struct runtime it imports (kaitaistruct 0.10, MIT).
+    siddhartha77's Apple Backup Extractor (no licence stated) was read for
+    its facts — the validity bit, ioFlAttrib, an item's start disk — and no
+    code of it is here. All are in `reference/applebackup`, fetched by
+    `tools/fetch_references.sh`, never committed and linked into nothing.
+    DECISIONS.md 2026-11-10 (*the backup on floppies*).
+
   * The LZ4 frame and block formats and xxHash-32, by Yann Collet —
     https://github.com/lz4/lz4 (doc/, v1.10.0) and
     https://github.com/Cyan4973/xxHash (doc/xxhash_spec.md, v0.8.2). The

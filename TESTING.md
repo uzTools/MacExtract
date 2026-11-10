@@ -3433,6 +3433,46 @@ shapes was measured once, on System 6.0.8 (DECISIONS.md 2026-11-04, *the
 frame mar 0.2.0 reads*). The chain through the application is
 `tools/vmac/interactive.py --chain`, not in `ci.sh`.
 
+## Apple Backup (`tools/run_abk.py`, in `ci.sh`)
+
+Nothing here reads the format but the engine, so two readers others wrote
+from the same article grade it (FORMATS.md, *Apple Backup*), each run ONLY
+inside `tools/sandbox.py`'s box:
+
+    python3 tools/sandbox.py --selftest
+    python3 tools/run_abk.py --macextract build/san/macextract
+
+1. **The box first**: its self-test, from inside it, tries the network, a
+   name lookup, the home directory, the repository, a write beside its
+   output, a write to its read-only input, a write to `/usr` and the host's
+   processes; every one must be refused and the output directory alone
+   writable, or nothing is run.
+2. **Bytes**: each real set (`abk-perfA-*`, `abk-perfB-*`, partial) in a
+   directory of its own; `unbak.py`, run disk by disk in the box with three
+   edits to where it WRITES, against `macextract x`: every fork the engine
+   writes equal to unbak's, and every file unbak writes that the engine
+   does not, one it reported failed.
+3. **Finder info**: Kaitai's compiled parser, in the box under a driver
+   that prints JSON, against `l --meta` for every item whose first part is
+   on a disk: FInfo, FXInfo, lock, created and modified.
+4. **A set made here**: three disks, one file across all of them, opened at
+   disk 1; graded by unbak, not by what made it.
+5. **Damage**: every real disk cut at 1, 25, 50 and 98 % and bit-flipped six
+   ways, each variant alone in a directory, `t` under the sanitizers.
+
+**Made to fail** (each in the run, every time): a fork changed by one byte
+must compare unequal; a date changed in Kaitai's reading must be caught; a
+set whose two disks swapped their numbers must not test clean. The box's
+self-test failed on its first version, which left the box's own root
+writable (2026-11-10).
+
+**What it cannot see**: anything both readers get wrong the same way — both
+come from one article; a set with every disk present, real (neither here
+is); a restore CD's `OBDc` copies; and the Macintosh, which is
+`tools/vmac/interactive.py --abk` (tools/vmac/README.md), not in `ci.sh`.
+The box cannot stop a kernel bug reachable from an unprivileged process;
+there is no seccomp filter.
+
 ## MacGzip's own output (`tools/run_macgzip.py`, in `ci.sh`)
 
 Eleven files **MacGzip 1.1.3 68K** wrote on emulated Mac OS 8.1 from one
@@ -4037,7 +4077,7 @@ short-circuited and subtract — the instrument sees only the total.
   instructions use `tools/m68kprof.py`; for real cost, the tick probe on an
   emulated Mac.
 - **The Macintosh's own I/O** (stdio is not the File Manager).
-- **Any file it is not handed**: the corpus is 1,004 files, and the
+- **Any file it is not handed**: the corpus is 1,010 files, and the
   population that matters for REJECTION cost is non-archives —
   `reference/`, this repository's trees, the specimen cache; 8,364 were
   swept on 2026-10-05 (BLOCKERS.md, *Withdrawn claims*).

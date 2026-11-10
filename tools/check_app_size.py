@@ -307,7 +307,10 @@ TAKEN = "2026-11-03"
 # -> 197,876 2026-11-10: re-taken from the bundle after method 13's
 # canonical table moved to bit-reversed indices (`ovl_codecs` -148,
 # `ovl_stuffit` +36, `ovl_lzh` +8; DECISIONS.md 2026-11-10, *the peek that was turned round*).
-EXPECT_BUNDLE = 197876
+# -> 201,136 2026-11-10: Apple Backup, its reader and its set's match in
+# `ovl_zipold` (+2,548), its probe and its set's identity in `ovl_sniff`
+# (+712) (DECISIONS.md 2026-11-10, *the backup on floppies*).
+EXPECT_BUNDLE = 201136
 TOLERANCE_BUNDLE = 2048
 TAKEN_BUNDLE = "2026-11-10"
 

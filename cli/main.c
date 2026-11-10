@@ -3068,7 +3068,8 @@ static int is_segmented(UncFormat f)
 {
     return f == UNC_FORMAT_SITSEG || f == UNC_FORMAT_ZIPSEG ||
            f == UNC_FORMAT_SPLIT || f == UNC_FORMAT_CPTSEG ||
-           f == UNC_FORMAT_DDSEG || f == UNC_FORMAT_MIMESEG;
+           f == UNC_FORMAT_DDSEG || f == UNC_FORMAT_MIMESEG ||
+           f == UNC_FORMAT_ABK;
 }
 
 /* ---- a set of parts: one setup per scheme, each returning 0 or the

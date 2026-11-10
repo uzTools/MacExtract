@@ -298,6 +298,13 @@ resource 'FREF' (171) { 'MARd', 1, "" };
 resource 'FREF' (172) { 'MARf', 1, "" };
 resource 'FREF' (173) { 'LZ4-', 1, "" };
 resource 'FREF' (174) { 'LZ4 ', 1, "" };
+/* Apple Backup, creator `OBBa`: `OBDa`, the type of "Apple Backup Data" on
+   each backup floppy (three real disks, fixtures/SOURCES.md, abk-perfB-*);
+   `OBDc`, the type of a restore CD's "Data File" copies by Em Adespoton's
+   description (reference/applebackup/kaitai-apple_backup.py), on no file
+   here. DECISIONS.md 2026-11-10, *the backup on floppies*. */
+resource 'FREF' (175) { 'OBDa', 1, "" };
+resource 'FREF' (176) { 'OBDc', 1, "" };
 
 resource 'BNDL' (128) {
     'MExt', 0,
@@ -309,7 +316,7 @@ resource 'BNDL' (128) {
                 30, 157,
                 31, 159, 32, 160, 33, 161, 34, 162, 35, 163, 36, 164, 37, 165,
                 38, 166, 39, 167, 40, 168, 41, 169, 42, 170,
-                43, 171, 44, 172, 45, 173, 46, 174 } }
+                43, 171, 44, 172, 45, 173, 46, 174, 47, 175, 48, 176 } }
 };
 
 /* The SIGNATURE resource: type = the creator code, ID 0. The Finder wants

@@ -30,6 +30,11 @@ static const SegId seg_ids[] = {
     /* StuffIt first: it decides on 100 bytes at offset 0, where the zip
      * scheme has to hunt backwards from the end of the file. */
     { UNC_FORMAT_SITSEG,  unc_sitseg_describe,  unc_sitseg_match },
+    /* Apple Backup ahead of Compact Pro, whose describe would take one of
+     * its disks: a version byte of 1 at 0 and a non-zero longword at 4
+     * are all a Compact Pro segment has to show. 'CMWL' at +2 is what an
+     * Apple Backup disk has, and every disk states the count. */
+    { UNC_FORMAT_ABK,     unc_abk_describe,     unc_abk_match },
     /* Compact Pro next: like StuffIt it decides on a header at offset 0.
      * Unlike StuffIt, a part that is not the LAST one answers with
      * nparts == 0 - it knows the set it belongs to but not how big the

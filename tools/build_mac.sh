@@ -820,7 +820,11 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # canonical table built at bit-reversed indices, the build's second branch
 # and the direction argument (DECISIONS.md 2026-11-10, *the peek that was turned round*). On the
 # shipped pair, the images -104.
-UNC_MAC_CODE_DEFAULT=187716
+# +2,928 on 2026-11-10, 187,716 -> 190,644, A5 +64 below: Apple Backup, its
+# reader, its set's identity and its probe (DECISIONS.md 2026-11-10, *the
+# backup on floppies*). In `ovl_zipold` +2,548 and `ovl_sniff` +712 on the
+# shipped pair.
+UNC_MAC_CODE_DEFAULT=190644
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -1112,7 +1116,10 @@ UNC_MAC_CODE_DEFAULT=187716
 # -236 on 2026-11-10, 36,696 -> 36,460: the 256 B bit-reversal table
 # (unc_revbyte) gone, less `.data` alignment; the same entry as the code's
 # +172 above.
-UNC_MAC_A5_DEFAULT=36460
+# +64 on 2026-11-10, 36,460 -> 36,524: Apple Backup's rows in the joiner's
+# scheme table, the engine's format table and the table of describe and
+# match, and its name; the same entry as the code's +2,928 above.
+UNC_MAC_A5_DEFAULT=36524
 # A CEILING PER CONFIGURATION, because one ceiling measured on another build
 # cannot fire. The figures above are the RESIDENT control build, which carries
 # every decoder; the shipped build's resident code is a third of that, so
@@ -1709,8 +1716,14 @@ UNC_MAC_A5_DEFAULT=36460
 # (DECISIONS.md 2026-11-09, *the set's identity that left*). The A5 is the
 # joiner's table losing its two pointer columns. 1,584 B onto every budget
 # that keeps neither image.
-UNC_MAC_CODE_EAGER=38208
-UNC_MAC_A5_EAGER=16688
+# -4 and +68 on 2026-11-10, 38,208 -> 38,204 and 16,688 -> 16,756: Apple
+# Backup (DECISIONS.md 2026-11-10, *the backup on floppies*). The A5 is its
+# rows in the joiner's scheme table (+34), the engine's format table (+16)
+# with its name, and the release's keep set (+2); the code its decoder shim
+# and its match routed to `ovl_zipold`, less 36 B the joiner's table lookup
+# lost. 64 B off every budget.
+UNC_MAC_CODE_EAGER=38204
+UNC_MAC_A5_EAGER=16756
 # +8 on 2026-10-02 for the same reason as the eager pair above: the
 # overlay call that now says WHICH of StuffIt 2.x's ciphers an entry
 # wants. A5 fell to 19,096 and its ceiling is left where it was.
@@ -1866,7 +1879,9 @@ UNC_MAC_A5_EAGER=16688
 # pair; data + bss 16,756 (-20), under its ceiling.
 # -1,536 code on 2026-11-09: which set a file belongs to in `ovl_sniff`,
 # as the eager pair; data + bss 16,708 (-48), under its ceiling.
-UNC_MAC_CODE_LAZY=36988
+# -4 code on 2026-11-10: Apple Backup, as the eager pair; data + bss 16,776
+# (+68), under its ceiling.
+UNC_MAC_CODE_LAZY=36984
 UNC_MAC_A5_LAZY=19200
 if [ -n "$UNC_OVL_RESIDENT" ]; then
     UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-$UNC_MAC_CODE_DEFAULT}

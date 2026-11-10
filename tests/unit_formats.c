@@ -4837,6 +4837,245 @@ static void test_cptseg_probe(void)
 }
 
 /* ------------------------------------------------------------------ */
+/* Apple Backup: a set of disks read in addressed mode (src/fmt_abk.c) */
+/*                                                                    */
+/* Three small disks in the format's layout: a folder, a file, a file  */
+/* whose resource fork runs from disk 1 into disk 2, one more on each   */
+/* of disks 2 and 3. Then the set with a disk missing, with a damaged   */
+/* item, and with a fork out of order. The real disks are graded by    */
+/* tools/run_abk.py; these pin what each verdict is.                   */
+/* ------------------------------------------------------------------ */
+#define ABKT_DISK 0x1000u
+static void abkt_disk(uint8_t *d, int n, int tot, uint32_t stamp,
+                      uint32_t used)
+{
+    memset(d, 0, ABKT_DISK);
+    put16be(d, 0x0103);
+    memcpy(d + 2, "CMWL", 4);
+    put16be(d + 6, (uint32_t)n);
+    put16be(d + 8, (uint32_t)tot);
+    unc_put_u32be(d + 0x0A, stamp);
+    unc_put_u32be(d + 0x0E, stamp);
+    d[0x12] = 2; d[0x13] = 'H'; d[0x14] = 'D';
+    unc_put_u32be(d + 0x32, ABKT_DISK);
+    unc_put_u32be(d + 0x36, used);
+}
+
+/* An item at `off`; returns where its forks start. */
+static uint32_t abkt_item(uint8_t *d, uint32_t off, int start, int part,
+                          const char *path, int folder, uint32_t dl,
+                          uint32_t rl, uint32_t dh, uint32_t rh,
+                          uint32_t stamp)
+{
+    uint8_t *h = d + off;
+    uint32_t plen = (uint32_t)strlen(path);
+    put16be(h, 0x0103);
+    memcpy(h + 2, "RLDW", 4);
+    put16be(h + 6, (uint32_t)start);
+    unc_put_u32be(h + 8, stamp);
+    unc_put_u32be(h + 0x0C, off);
+    put16be(h + 0x30, (uint32_t)part);
+    h[0x32] = folder ? 0x80 : 0;
+    h[0x33] = 1;
+    if (!folder) { memcpy(h + 0x34, "TEXTttxt", 8); h[0x54] = 1; }
+    unc_put_u32be(h + 0x56, 0xA0000001u);
+    unc_put_u32be(h + 0x5A, 0xA0000002u);
+    unc_put_u32be(h + 0x5E, dl);
+    unc_put_u32be(h + 0x62, rl);
+    unc_put_u32be(h + 0x66, dh);
+    unc_put_u32be(h + 0x6A, rh);
+    put16be(h + 0x6E, plen);
+    memcpy(h + 0x70, path, plen);
+    return off + 0x70 + plen;
+}
+
+static void abkt_fill(uint8_t *d, uint32_t at, uint32_t n, uint32_t from)
+{
+    uint32_t i;
+    for (i = 0; i < n; i++) d[at + i] = (uint8_t)((from + i) * 7 + 1);
+}
+
+static int abkt_same(const uint8_t *p, uint32_t n, uint32_t from)
+{
+    uint32_t i;
+    for (i = 0; i < n; i++)
+        if (p[i] != (uint8_t)((from + i) * 7 + 1)) return 0;
+    return 1;
+}
+
+static uint8_t abkt_d[3][ABKT_DISK];
+
+/* The set: disk 1 holds "F" (a folder), "F:a" (10 data, 5 rsrc) and the
+ * first 100 of "F:b"'s 250 rsrc bytes after its 300 data bytes; disk 2
+ * the other 150 and "c"; disk 3 "d". */
+static void abkt_build(uint32_t stamp)
+{
+    uint32_t f;
+    abkt_disk(abkt_d[0], 1, 3, stamp, 0xC00);
+    abkt_item(abkt_d[0], 0x600, 1, 1, "F", 1, 0, 0, 0, 0, stamp);
+    f = abkt_item(abkt_d[0], 0x800, 1, 1, "F:a", 0, 10, 5, 10, 5, stamp);
+    abkt_fill(abkt_d[0], f, 15, 0);
+    f = abkt_item(abkt_d[0], 0xA00, 1, 1, "F:b", 0, 300, 250, 300, 100,
+                  stamp);
+    /* Room for exactly what is put there: the disk ends at 0xC00 + 0x200. */
+    abkt_fill(abkt_d[0], f, 400, 1000);
+    unc_put_u32be(abkt_d[0] + 0x36, f + 400);
+    abkt_disk(abkt_d[1], 2, 3, stamp, 0);
+    f = abkt_item(abkt_d[1], 0x600, 1, 2, "F:b", 0, 300, 250, 0, 150, stamp);
+    abkt_fill(abkt_d[1], f, 150, 1400);
+    f = abkt_item(abkt_d[1], 0x800, 2, 1, "c", 0, 7, 0, 7, 0, stamp);
+    abkt_fill(abkt_d[1], f, 7, 2000);
+    unc_put_u32be(abkt_d[1] + 0x36, f + 7);
+    abkt_disk(abkt_d[2], 3, 3, stamp, 0);
+    f = abkt_item(abkt_d[2], 0x600, 3, 1, "d", 0, 4, 0, 4, 0, stamp);
+    abkt_fill(abkt_d[2], f, 4, 3000);
+    unc_put_u32be(abkt_d[2] + 0x36, f + 4);
+}
+
+static int abkt_run(int missing, CapSink *cap)
+{
+    SegParts sp;
+    UncVolumeSource vs;
+    UncSegmentDesc desc;
+    UncSink sk;
+    UncAlloc al;
+    MemIO m;
+    UncIO io;
+    void *scratch;
+    int r, k;
+
+    for (k = 0; k < 3; k++) {
+        test_make_memio(&io, &m, abkt_d[k], ABKT_DISK);
+        if (unc_segment_describe(&io, &desc) == UNC_OK) break;
+    }
+    memset(&sp, 0, sizeof sp);
+    for (k = 0; k < 3; k++) { sp.part[k] = abkt_d[k]; sp.len[k] = ABKT_DISK; }
+    sp.nparts = 3;
+    sp.missing = missing;
+    memset(&vs, 0, sizeof vs);
+    vs.ctx = &sp; vs.need = segsrc_need;
+    scratch = malloc(unc_segment_scratch_size());
+    test_make_alloc(&al);
+    cap_make(&sk, cap);
+    r = unc_extract_segments(&desc, &vs, scratch, &sk, &al, NULL, NULL);
+    free(scratch);
+    return r;
+}
+
+static void test_abk(void)
+{
+    uint8_t head[512];
+    MemIO m;
+    UncIO io;
+    UncSegmentDesc desc;
+    CapSink cap;
+
+    abkt_build(0x11223344u);
+
+    /* --- the probe, the sniff and the set's identity ---------------- */
+    test_make_memio(&io, &m, abkt_d[1], ABKT_DISK);
+    CHECK(unc_abk_probe(abkt_d[1], 512, &io) == UNC_FORMAT_ABK);
+    test_make_memio(&io, &m, abkt_d[1], ABKT_DISK);
+    CHECK(unc_sniff(&io) == UNC_FORMAT_ABK);
+    /* Compact Pro's describe would take this disk (byte 0 is 1, the
+     * longword at 4 is not 0), so the order is the test. */
+    test_make_memio(&io, &m, abkt_d[1], ABKT_DISK);
+    CHECK(unc_segment_describe(&io, &desc) == UNC_OK);
+    CHECK(desc.scheme == UNC_FORMAT_ABK);
+    CHECK(desc.part == 2 && desc.nparts == 3);
+    CHECK(desc.fp[0] == 0x11 && desc.fp[3] == 0x44 && desc.fp[4] == 0);
+    CHECK(desc.name_len == 2 && desc.name[0] == 'H' && desc.name[2] == 0);
+    CHECK(unc_segment_match(&desc, abkt_d[2], 512) == 3);
+    memcpy(head, abkt_d[2], 512);
+    head[0x0D] ^= 1;                                  /* another backup */
+    CHECK(unc_segment_match(&desc, head, 512) == 0);
+    memcpy(head, abkt_d[2], 512);
+    put16be(head + 8, 4);                             /* another count */
+    CHECK(unc_segment_match(&desc, head, 512) == 0);
+
+    /* Refused: each of the probe's facts in turn. */
+    memcpy(head, abkt_d[0], 512); head[3] = 'X';
+    test_make_memio(&io, &m, head, 512);
+    CHECK(unc_abk_probe(head, 512, &io) == UNC_FORMAT_UNKNOWN);
+    memcpy(head, abkt_d[0], 512); put16be(head + 6, 0);
+    CHECK(unc_abk_probe(head, 512, &io) == UNC_FORMAT_UNKNOWN);
+    memcpy(head, abkt_d[0], 512); put16be(head + 6, 4);
+    CHECK(unc_abk_probe(head, 512, &io) == UNC_FORMAT_UNKNOWN);
+    memcpy(head, abkt_d[0], 512); unc_put_u32be(head + 0x36, ABKT_DISK + 1);
+    CHECK(unc_abk_probe(head, 512, &io) == UNC_FORMAT_UNKNOWN);
+    {
+        static uint8_t d[ABKT_DISK];
+        memcpy(d, abkt_d[0], ABKT_DISK);
+        d[0x605] = 'X';                               /* no 'RLDW' at 0x600 */
+        test_make_memio(&io, &m, d, ABKT_DISK);
+        CHECK(unc_abk_probe(d, 512, &io) == UNC_FORMAT_UNKNOWN);
+    }
+
+    /* --- the whole set ------------------------------------------- */
+    CHECK(abkt_run(0, &cap) == UNC_OK);
+    CHECK(cap.count == 5);
+    CHECK(cap.info[0].is_dir && cap.status[0] == UNC_OK);
+    CHECK(cap.info[1].name_len == 3 && memcmp(cap.info[1].name, "F/a", 3) == 0);
+    CHECK(cap.info[1].type == 0x54455854u && cap.info[1].locked == UNC_LOCK_YES);
+    CHECK(cap.info[1].mod_date == 0xA0000002u);
+    CHECK(cap.dlen[1] == 10 && abkt_same(cap.data[1], 10, 0));
+    CHECK(cap.rlen[1] == 5 && abkt_same(cap.rsrc[1], 5, 10));
+    /* The resource fork across the cut, in one entry. */
+    CHECK(cap.status[2] == UNC_OK && cap.info[2].rsrc_size == 250);
+    CHECK(cap.dlen[2] == 300 && abkt_same(cap.data[2], 300, 1000));
+    CHECK(cap.rlen[2] == 250 && abkt_same(cap.rsrc[2], 250, 1300));
+    CHECK(cap.status[3] == UNC_OK && abkt_same(cap.data[3], 7, 2000));
+    CHECK(cap.status[4] == UNC_OK && abkt_same(cap.data[4], 4, 3000));
+
+    /* --- disk 2 not to be had: "F:b" ends there, "c" with it; disk 3
+     * still comes out, and the set says what it lacked ------------- */
+    CHECK(abkt_run(2, &cap) == UNC_ERR_SEGMENTED);
+    CHECK(cap.count == 4);
+    CHECK(cap.status[2] == UNC_ERR_SEGMENTED && cap.rlen[2] == 100);
+    CHECK(cap.status[3] == UNC_OK && cap.dlen[3] == 4);
+
+    /* --- disk 1 not to be had: "F:b" is seen first at its part 2, said
+     * once and passed over --------------------------------------- */
+    CHECK(abkt_run(1, &cap) == UNC_ERR_SEGMENTED);
+    CHECK(cap.count == 3);
+    CHECK(cap.status[0] == UNC_ERR_SEGMENTED && cap.rlen[0] == 0 &&
+          cap.dlen[0] == 0);
+    CHECK(cap.status[1] == UNC_OK && cap.status[2] == UNC_OK);
+
+    /* --- a damaged item: the rest of its disk cannot be placed; the
+     * part on the next disk is reported, and the set goes on ------- */
+    unc_put_u32be(abkt_d[0] + 0x800 + 0x0C, 0x900);
+    CHECK(abkt_run(0, &cap) == UNC_ERR_CORRUPT);
+    CHECK(cap.count == 4);
+    CHECK(cap.info[0].is_dir);
+    CHECK(cap.status[1] == UNC_ERR_CORRUPT);          /* "F:b", part 2 */
+    CHECK(cap.status[2] == UNC_OK && cap.status[3] == UNC_OK);
+    abkt_build(0x11223344u);
+
+    /* --- a resource fork begun before the data fork is whole -------- */
+    unc_put_u32be(abkt_d[0] + 0xA00 + 0x66, 299);
+    CHECK(abkt_run(0, &cap) == UNC_OK);
+    CHECK(cap.status[2] == UNC_ERR_CORRUPT);
+    abkt_build(0x11223344u);
+
+    /* --- a disk of another backup's date, and one on its own ------- */
+    unc_put_u32be(abkt_d[2] + 0x0A, 0x55667788u);
+    CHECK(abkt_run(0, &cap) == UNC_ERR_CORRUPT);
+    CHECK(cap.count == 4 && cap.status[3] == UNC_OK);
+    abkt_build(0x11223344u);
+    {
+        UncSink sk;
+        UncAlloc al;
+        test_make_memio(&io, &m, abkt_d[0], ABKT_DISK);
+        test_make_alloc(&al);
+        cap_make(&sk, &cap);
+        CHECK(unc_extract_as(UNC_FORMAT_ABK, &io, &sk, &al, NULL, NULL)
+              != UNC_OK);
+        CHECK(cap.count == 0);
+    }
+}
+
+/* ------------------------------------------------------------------ */
 /* AppleLink package (`.pkg`) — NOT recognised, deliberately          */
 /*                                                                    */
 /* `unc_applelink_probe` shipped from 2026-08-23 to 2026-09-27 and    */
@@ -6761,6 +7000,7 @@ void run_format_tests(void)
     test_zip_reduce_rules();
     test_lzh_probe();
     test_cptseg_probe();
+    test_abk();
     test_lzh_extract();
     test_lzh_macbinary_wrap();
     test_sitseg();
