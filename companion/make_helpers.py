@@ -8,7 +8,7 @@
 Writes DIR/<name>.bin, one MacBinary per row: the row's creator and types
 stamped onto the build by make_stub.stamp, named in its header as the row
 names it; tools/make_dist.sh puts them in the "MacExtract Helpers" folder of
-both disk images. --zip writes the same seventeen as ONE download that
+both disk images. --zip writes the same eighteen as ONE download that
 MacExtract itself opens: a zip laid out as the Mac OS X Finder writes one,
 `MacExtract Helpers/<name>` (an empty data fork) and its sidecar
 `__MACOSX/MacExtract Helpers/._<name>` holding the Finder info and the

@@ -1,0 +1,875 @@
+{
+ "entries": [
+  {
+   "creator": "slnk",
+   "data_oracle": "deark",
+   "data_sha256": "29e5ea535bbfda603662d116ecec3881f1dfcdab8decc16a88fc29c79b55dfa3",
+   "data_size": 9588,
+   "finder_flags": 784,
+   "name": "3Com Impact Analog 14.4",
+   "rsrc_size": 733,
+   "type": "mlts",
+   "unadjudicated": {
+    "rsrc": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+   }
+  },
+  {
+   "creator": "slnk",
+   "data_oracle": "deark",
+   "data_sha256": "e484c5fa1b7731c84923317a5682f26679079ce3c7cb53f3804a14a0f40b292d",
+   "data_size": 4748,
+   "finder_flags": 784,
+   "name": "3Com Impact ISDN 56K",
+   "rsrc_size": 733,
+   "type": "mlts",
+   "unadjudicated": {
+    "rsrc": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+   }
+  },
+  {
+   "creator": "slnk",
+   "data_oracle": "deark",
+   "data_sha256": "8b50c01190454dcef02660617a4534a55738f63267e63f2ee1b57880b85e338f",
+   "data_size": 4889,
+   "finder_flags": 784,
+   "name": "3Com Impact ISDN 56K MLPPP",
+   "rsrc_oracle": "deark",
+   "rsrc_sha256": "ae4d5e24cabade1640f257e6b5cf443544901bb8cc3ea570e898574983d987d5",
+   "rsrc_size": 1117,
+   "type": "mlts"
+  },
+  {
+   "creator": "slnk",
+   "data_oracle": "deark",
+   "data_sha256": "5c66bb7f837291462f2b185e82d7750d1bdfcd7e7cddd110f0f3f7e4c0a78b38",
+   "data_size": 4755,
+   "finder_flags": 784,
+   "name": "3Com Impact ISDN 64K",
+   "rsrc_size": 733,
+   "type": "mlts",
+   "unadjudicated": {
+    "rsrc": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+   }
+  },
+  {
+   "creator": "slnk",
+   "data_oracle": "deark",
+   "data_sha256": "05f9097a4b3bc50b3e6ee396de4795d7a92eb667a3f45a9421789b50016021d6",
+   "data_size": 4889,
+   "finder_flags": 784,
+   "name": "3Com Impact ISDN 64K MLPPP",
+   "rsrc_oracle": "deark",
+   "rsrc_sha256": "795d33214abc4526375144d9b88a05a556bb5ff1f1aebc2f0cd11d8c4650d952",
+   "rsrc_size": 1117,
+   "type": "mlts"
+  },
+  {
+   "creator": "slnk",
+   "data_size": 9751,
+   "finder_flags": 784,
+   "name": "Apple Personal Modem",
+   "rsrc_size": 742,
+   "type": "mlts",
+   "unadjudicated": {
+    "data": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length",
+    "rsrc": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+   }
+  },
+  {
+   "creator": "slnk",
+   "data_oracle": "deark",
+   "data_sha256": "ca9ea501c931d2f77d0b532d70cb341ba62c91fb1dbd7d1180a1a45fa30467b7",
+   "data_size": 14583,
+   "finder_flags": 263,
+   "name": "Apple:GV 56k",
+   "rsrc_size": 647,
+   "type": "mlts",
+   "unadjudicated": {
+    "rsrc": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+   }
+  },
+  {
+   "creator": "slnk",
+   "data_oracle": "deark",
+   "data_sha256": "cfea15477ae35c2e2d19d3f63b64c399add370d686a9bafcc36ced86c2b145ca",
+   "data_size": 9587,
+   "finder_flags": 784,
+   "name": "AT&T Dataport 288",
+   "rsrc_size": 721,
+   "type": "mlts",
+   "unadjudicated": {
+    "rsrc": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+   }
+  },
+  {
+   "creator": "slnk",
+   "data_oracle": "deark",
+   "data_sha256": "f2916f62756274ac3af8d701f5500911a910cacc41a8e90e31fb01975980857d",
+   "data_size": 9586,
+   "finder_flags": 784,
+   "name": "AT&T KeepInTouch",
+   "rsrc_size": 721,
+   "type": "mlts",
+   "unadjudicated": {
+    "rsrc": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+   }
+  },
+  {
+   "creator": "slnk",
+   "data_size": 6059,
+   "finder_flags": 784,
+   "name": "Australia AUSTPAC",
+   "rsrc_oracle": "deark",
+   "rsrc_sha256": "db1774bd7e8ef0cdc4f722ea43e42bbedfa68237344b8629e4a812bef4c9eabf",
+   "rsrc_size": 656,
+   "type": "xlts",
+   "unadjudicated": {
+    "data": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+   }
+  },
+  {
+   "creator": "slnk",
+   "data_oracle": "deark",
+   "data_sha256": "386e723a54ef5a6e058c37ca034e8f1bb783ae4765c50ecf319362277ad85634",
+   "data_size": 9281,
+   "finder_flags": 784,
+   "name": "Best Data Smart One 28.8:33.6",
+   "rsrc_size": 746,
+   "type": "mlts",
+   "unadjudicated": {
+    "rsrc": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+   }
+  },
+  {
+   "creator": "slnk",
+   "data_size": 5488,
+   "finder_flags": 784,
+   "name": "CompuServe",
+   "rsrc_oracle": "deark",
+   "rsrc_sha256": "d6e68e66352ec4e3d29f102d362b91489e64ca376700a632fbe466f2d773ed25",
+   "rsrc_size": 665,
+   "type": "xlts",
+   "unadjudicated": {
+    "data": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+   }
+  },
+  {
+   "creator": "slnk",
+   "data_oracle": "deark",
+   "data_sha256": "80e679056f0f317913a5f0b7a7b709bad3f57b83f3fbe34d54a3ceb123a221c3",
+   "data_size": 9622,
+   "finder_flags": 784,
+   "name": "Dayna CommuniCard 28800",
+   "rsrc_size": 722,
+   "type": "mlts",
+   "unadjudicated": {
+    "rsrc": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+   }
+  },
+  {
+   "creator": "slnk",
+   "data_oracle": "deark",
+   "data_sha256": "091fe8b82d737be80b57ffbfe825001ca836ffc3183513a0759bd0e78e9de26f",
+   "data_size": 7179,
+   "finder_flags": 784,
+   "name": "Farallon ISDN PC Card ARA 56K",
+   "rsrc_size": 663,
+   "type": "mlts",
+   "unadjudicated": {
+    "rsrc": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+   }
+  },
+  {
+   "creator": "slnk",
+   "data_oracle": "deark",
+   "data_sha256": "d6cddd40ffa4fa49bec7e9425bf3540383458cdb700ade8950f41c8dfb4c60e9",
+   "data_size": 7172,
+   "finder_flags": 784,
+   "name": "Farallon ISDN PC Card ARA 64K",
+   "rsrc_size": 663,
+   "type": "mlts",
+   "unadjudicated": {
+    "rsrc": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+   }
+  },
+  {
+   "creator": "slnk",
+   "data_oracle": "deark",
+   "data_sha256": "70f7192245b947cf58f48cb28e8711f3f531802f5509a5556144520e388025ba",
+   "data_size": 7123,
+   "finder_flags": 784,
+   "name": "Farallon ISDN PC Card PPP 56K",
+   "rsrc_size": 663,
+   "type": "mlts",
+   "unadjudicated": {
+    "rsrc": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+   }
+  },
+  {
+   "creator": "slnk",
+   "data_oracle": "deark",
+   "data_sha256": "b1548e055201e9852856c66d870cd0a3f4167bfb701dfa8ea9b64c7ffc3c2afc",
+   "data_size": 7123,
+   "finder_flags": 784,
+   "name": "Farallon ISDN PC Card PPP 64K",
+   "rsrc_size": 663,
+   "type": "mlts",
+   "unadjudicated": {
+    "rsrc": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+   }
+  },
+  {
+   "creator": "slnk",
+   "data_oracle": "deark",
+   "data_sha256": "7da73acccce69f707d42390970f3c7c22e38fc12c4ef6ff037a7d7b4f6bd81f5",
+   "data_size": 9607,
+   "finder_flags": 784,
+   "name": "Farallon LAN:Modem PC Card",
+   "rsrc_size": 663,
+   "type": "mlts",
+   "unadjudicated": {
+    "rsrc": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+   }
+  },
+  {
+   "creator": "slnk",
+   "data_oracle": "deark",
+   "data_sha256": "030e97b78756024181762cea341a18e06a78f20e98228811080cf74c0f68f414",
+   "data_size": 4753,
+   "finder_flags": 784,
+   "name": "Farallon Netopia 56K",
+   "rsrc_size": 741,
+   "type": "mlts",
+   "unadjudicated": {
+    "rsrc": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+   }
+  },
+  {
+   "creator": "slnk",
+   "data_oracle": "deark",
+   "data_sha256": "e8e31aa0fc8443746c1d45a4fca1335c5e4176bc701f245878f9a8b5441b74ea",
+   "data_size": 4885,
+   "finder_flags": 784,
+   "name": "Farallon Netopia 56K MLPPP",
+   "rsrc_oracle": "deark",
+   "rsrc_sha256": "318543c725b54dfe9545f33c05c8dfa48445b5c6bdbacb1ad691cee50332d42f",
+   "rsrc_size": 1125,
+   "type": "mlts"
+  },
+  {
+   "creator": "slnk",
+   "data_oracle": "deark",
+   "data_sha256": "8804bf485bf5300cf8b63d128d1776bdbfccba06c79af62625a8c846a3d9bca2",
+   "data_size": 4760,
+   "finder_flags": 784,
+   "name": "Farallon Netopia 64K",
+   "rsrc_size": 742,
+   "type": "mlts",
+   "unadjudicated": {
+    "rsrc": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+   }
+  },
+  {
+   "creator": "slnk",
+   "data_oracle": "deark",
+   "data_sha256": "6fb056dec8dcb68dcdd03ec994024f3ebbfc5f56c02cfb7dd4d0f16dd11100a1",
+   "data_size": 4890,
+   "finder_flags": 784,
+   "name": "Farallon Netopia 64K MLPPP",
+   "rsrc_oracle": "deark",
+   "rsrc_sha256": "e84d4a4eee8dd9a3d2b0a826671aa4c17ef2658e1b01ad7b054088bc7aceaf14",
+   "rsrc_size": 1126,
+   "type": "mlts"
+  },
+  {
+   "creator": "slnk",
+   "data_size": 5710,
+   "finder_flags": 784,
+   "name": "France TRANSPAC",
+   "rsrc_oracle": "deark",
+   "rsrc_sha256": "989d3fb2d73a15b2e5771875cf42b4a6d9713b827336a8d716bffe2a02385dad",
+   "rsrc_size": 656,
+   "type": "xlts",
+   "unadjudicated": {
+    "data": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+   }
+  },
+  {
+   "creator": "slnk",
+   "data_oracle": "deark",
+   "data_sha256": "93ed4159c8d65aff4a924ba2f096f6abeb0aca3e444319370e713d346dd0b4f6",
+   "data_size": 9230,
+   "finder_flags": 784,
+   "name": "GeoPort:Express Modem",
+   "rsrc_size": 737,
+   "type": "mlts",
+   "unadjudicated": {
+    "rsrc": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+   }
+  },
+  {
+   "creator": "slnk",
+   "data_oracle": "deark",
+   "data_sha256": "1f1acfdcc679fa4b9ff122def7c8d4b7352ff48c884872e02ba474665d277484",
+   "data_size": 9245,
+   "finder_flags": 784,
+   "name": "GeoPort:Express Modem CNG",
+   "rsrc_size": 737,
+   "type": "mlts",
+   "unadjudicated": {
+    "rsrc": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+   }
+  },
+  {
+   "creator": "slnk",
+   "data_size": 6756,
+   "finder_flags": 784,
+   "name": "Germany DATEX-P20",
+   "rsrc_oracle": "deark",
+   "rsrc_sha256": "244f07ab9166debbfeeea84d42da10a6e337fd118023827218d2920008d66ce8",
+   "rsrc_size": 656,
+   "type": "xlts",
+   "unadjudicated": {
+    "data": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+   }
+  },
+  {
+   "creator": "slnk",
+   "data_oracle": "deark",
+   "data_sha256": "ca9ea501c931d2f77d0b532d70cb341ba62c91fb1dbd7d1180a1a45fa30467b7",
+   "data_size": 14583,
+   "finder_flags": 263,
+   "name": "Global Village 28.8-K56",
+   "rsrc_size": 806,
+   "type": "mlts",
+   "unadjudicated": {
+    "rsrc": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+   }
+  },
+  {
+   "creator": "slnk",
+   "data_oracle": "deark",
+   "data_sha256": "fc9c6371a1418eff4239cea36701d71212039fb0e1a9a61ddbb832cd1bbf36ee",
+   "data_size": 9353,
+   "finder_flags": 784,
+   "name": "Global Village Gold:Silver:Merc",
+   "rsrc_size": 731,
+   "type": "mlts",
+   "unadjudicated": {
+    "rsrc": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+   }
+  },
+  {
+   "creator": "slnk",
+   "data_oracle": "deark",
+   "data_sha256": "2471f196a6f8054d9ac07b99dae9081b546836c33d4fd28e79d5baccaac0d22c",
+   "data_size": 9232,
+   "finder_flags": 784,
+   "name": "Global Village Platinum:Gold II",
+   "rsrc_size": 731,
+   "type": "mlts",
+   "unadjudicated": {
+    "rsrc": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+   }
+  },
+  {
+   "creator": "slnk",
+   "data_size": 14507,
+   "finder_flags": 265,
+   "name": "Global Village x2",
+   "rsrc_size": 800,
+   "type": "mlts",
+   "unadjudicated": {
+    "data": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length",
+    "rsrc": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+   }
+  },
+  {
+   "creator": "slnk",
+   "data_oracle": "deark",
+   "data_sha256": "3cb2282486336c687ace17e7a05312ae3dae61dacf7a8ce0013280f1db5ba4d8",
+   "data_size": 9410,
+   "finder_flags": 784,
+   "name": "Hayes Accura 288",
+   "rsrc_size": 722,
+   "type": "mlts",
+   "unadjudicated": {
+    "rsrc": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+   }
+  },
+  {
+   "creator": "slnk",
+   "data_oracle": "deark",
+   "data_sha256": "1394bc4d9b62d7f546a0771354180fd6e24c4b4af3da5fe26fbb21ef293807a8",
+   "data_size": 5649,
+   "finder_flags": 784,
+   "name": "Hayes Accura 56K",
+   "rsrc_size": 663,
+   "type": "mlts",
+   "unadjudicated": {
+    "rsrc": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+   }
+  },
+  {
+   "creator": "slnk",
+   "data_oracle": "deark",
+   "data_sha256": "1b99fe5779a90c3abce9f1bfafd7135d63b22e49971f9b7b8cc71c3bcb4349c1",
+   "data_size": 9413,
+   "finder_flags": 784,
+   "name": "Hayes Optima 288",
+   "rsrc_size": 722,
+   "type": "mlts",
+   "unadjudicated": {
+    "rsrc": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+   }
+  },
+  {
+   "creator": "slnk",
+   "data_size": 6453,
+   "finder_flags": 784,
+   "name": "Hong Kong Datapak",
+   "rsrc_oracle": "deark",
+   "rsrc_sha256": "5faa07acd3aab8a79f1954ba9e335af85f545ec3868133470b756d4a0881226b",
+   "rsrc_size": 656,
+   "type": "xlts",
+   "unadjudicated": {
+    "data": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+   }
+  },
+  {
+   "creator": "slnk",
+   "data_oracle": "deark",
+   "data_sha256": "5a79ac0f87661f82cd15b1324e3eb384977a42ff2a4855cb2ee2bf7a50f74ff3",
+   "data_size": 6285,
+   "finder_flags": 784,
+   "name": "Infonet",
+   "rsrc_oracle": "deark",
+   "rsrc_sha256": "2393bf26a1116404dea5c87522d6b937e02bc64e3e0ca992aa4f8c30fefc5afb",
+   "rsrc_size": 656,
+   "type": "xlts"
+  },
+  {
+   "creator": "slnk",
+   "data_size": 6438,
+   "finder_flags": 784,
+   "name": "Italy ITAPAC",
+   "rsrc_oracle": "deark",
+   "rsrc_sha256": "28d98e706e2ba0863dc1ec9a252cd620caf79991c0f62f6628bfb4488effb32a",
+   "rsrc_size": 656,
+   "type": "xlts",
+   "unadjudicated": {
+    "data": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+   }
+  },
+  {
+   "creator": "slnk",
+   "data_size": 9620,
+   "finder_flags": 784,
+   "name": "Megahertz CruiseCard 14.4",
+   "rsrc_size": 732,
+   "type": "mlts",
+   "unadjudicated": {
+    "data": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length",
+    "rsrc": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+   }
+  },
+  {
+   "creator": "slnk",
+   "data_oracle": "deark",
+   "data_sha256": "329ca709407e2c2ed710324b158e835ffa100213ec14b0aa716bfd5cb17edfc2",
+   "data_size": 9614,
+   "finder_flags": 784,
+   "name": "Megahertz CruiseCard 28.8",
+   "rsrc_size": 732,
+   "type": "mlts",
+   "unadjudicated": {
+    "rsrc": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+   }
+  },
+  {
+   "creator": "slnk",
+   "data_oracle": "deark",
+   "data_sha256": "e84988a1cff07753ba9d84ef2c7a0f804efafc65b0f3b2f576e70c851b8c090f",
+   "data_size": 9587,
+   "finder_flags": 784,
+   "name": "Metricom Ricochet Wireless",
+   "rsrc_size": 731,
+   "type": "mlts",
+   "unadjudicated": {
+    "rsrc": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+   }
+  },
+  {
+   "creator": "slnk",
+   "data_size": 9369,
+   "finder_flags": 784,
+   "name": "Microcom DeskPorte Fast:288",
+   "rsrc_size": 744,
+   "type": "mlts",
+   "unadjudicated": {
+    "data": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length",
+    "rsrc": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+   }
+  },
+  {
+   "creator": "slnk",
+   "data_oracle": "deark",
+   "data_sha256": "05c0fbbbfe0ed63f68db0352b8b5398f949f67d016f3f26f4211ac5c0d45feca",
+   "data_size": 9546,
+   "finder_flags": 784,
+   "name": "Microcom QX:4232bis",
+   "rsrc_size": 717,
+   "type": "mlts",
+   "unadjudicated": {
+    "rsrc": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+   }
+  },
+  {
+   "creator": "slnk",
+   "data_size": 4805,
+   "finder_flags": 784,
+   "name": "Motorola BitSURFR 56K",
+   "rsrc_size": 725,
+   "type": "mlts",
+   "unadjudicated": {
+    "data": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length",
+    "rsrc": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+   }
+  },
+  {
+   "creator": "slnk",
+   "data_size": 4876,
+   "finder_flags": 784,
+   "name": "Motorola BitSURFR 56K MLPPP",
+   "rsrc_size": 725,
+   "type": "mlts",
+   "unadjudicated": {
+    "data": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length",
+    "rsrc": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+   }
+  },
+  {
+   "creator": "slnk",
+   "data_oracle": "deark",
+   "data_sha256": "285aed9d4376dd6a206c268b55dd1004def1d93c244903ea7feb60d532dba76a",
+   "data_size": 4806,
+   "finder_flags": 784,
+   "name": "Motorola BitSURFR 64K",
+   "rsrc_size": 725,
+   "type": "mlts",
+   "unadjudicated": {
+    "rsrc": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+   }
+  },
+  {
+   "creator": "slnk",
+   "data_size": 4876,
+   "finder_flags": 784,
+   "name": "Motorola BitSURFR 64K MLPPP",
+   "rsrc_size": 725,
+   "type": "mlts",
+   "unadjudicated": {
+    "data": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length",
+    "rsrc": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+   }
+  },
+  {
+   "creator": "slnk",
+   "data_oracle": "deark",
+   "data_sha256": "963829f560d372426063ab676c54492d2a264c861492134c3ad71066404fdd91",
+   "data_size": 9021,
+   "finder_flags": 784,
+   "name": "Motorola ModemSURFR 28.8",
+   "rsrc_oracle": "deark",
+   "rsrc_sha256": "0db27dd1ceda3fb5de2083516b66ef678c309ab42bc9f60601cbc7b80276612d",
+   "rsrc_size": 1109,
+   "type": "mlts"
+  },
+  {
+   "creator": "slnk",
+   "data_oracle": "deark",
+   "data_sha256": "753ae80cc8d12af36b96889a003c6a1e97c9395dc84b344731b7871c45c9d61e",
+   "data_size": 9386,
+   "finder_flags": 784,
+   "name": "Motorola Power:Lifestyle 28.8",
+   "rsrc_size": 725,
+   "type": "mlts",
+   "unadjudicated": {
+    "rsrc": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+   }
+  },
+  {
+   "creator": "slnk",
+   "data_size": 6116,
+   "finder_flags": 784,
+   "name": "New Zealand PACNET",
+   "rsrc_oracle": "deark",
+   "rsrc_sha256": "e21b132657b23f93796e2c4281e834ac0780a539930960ec62596fbb31cf8f44",
+   "rsrc_size": 656,
+   "type": "xlts",
+   "unadjudicated": {
+    "data": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+   }
+  },
+  {
+   "creator": "slnk",
+   "data_oracle": "deark",
+   "data_sha256": "cdfd7d3db47a43ed2e9a4df8287885e720fb246e0c04205e8e92f0fd2ad61b53",
+   "data_size": 265,
+   "finder_flags": 784,
+   "name": "Null Modem 115200",
+   "rsrc_size": 663,
+   "type": "mlts",
+   "unadjudicated": {
+    "rsrc": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+   }
+  },
+  {
+   "creator": "slnk",
+   "data_oracle": "deark",
+   "data_sha256": "d5b208606f350d0012e6aca6caba7a016cf59efd87dc67cf33063fe240c274f4",
+   "data_size": 263,
+   "finder_flags": 784,
+   "name": "Null Modem 19200",
+   "rsrc_size": 663,
+   "type": "mlts",
+   "unadjudicated": {
+    "rsrc": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+   }
+  },
+  {
+   "creator": "slnk",
+   "data_oracle": "deark",
+   "data_sha256": "ae04f1c56adc75be2f3296cb16960f5d1264825df194cd017f7f4411f3da2916",
+   "data_size": 263,
+   "finder_flags": 784,
+   "name": "Null Modem 57600",
+   "rsrc_size": 663,
+   "type": "mlts",
+   "unadjudicated": {
+    "rsrc": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+   }
+  },
+  {
+   "creator": "slnk",
+   "data_oracle": "deark",
+   "data_sha256": "8b6e3409a500495778549208dbea1276723e21722de66d9ec8cf96558324d13b",
+   "data_size": 261,
+   "finder_flags": 784,
+   "name": "Null Modem 9600",
+   "rsrc_size": 663,
+   "type": "mlts",
+   "unadjudicated": {
+    "rsrc": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+   }
+  },
+  {
+   "creator": "slnk",
+   "data_oracle": "deark",
+   "data_sha256": "955c15ead623eaeb695e2bc41b182221d5d6c6f9b760579414b4d654235fe6d8",
+   "data_size": 9426,
+   "finder_flags": 784,
+   "name": "Practical Peripherals V.34",
+   "rsrc_size": 738,
+   "type": "mlts",
+   "unadjudicated": {
+    "rsrc": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+   }
+  },
+  {
+   "creator": "slnk",
+   "data_size": 6086,
+   "finder_flags": 784,
+   "name": "Spain IBERPAC",
+   "rsrc_oracle": "deark",
+   "rsrc_sha256": "58af06d934665ecedefd0871d50efbf3ed8e8465feca27b97f9b3760b792e1b0",
+   "rsrc_size": 656,
+   "type": "xlts",
+   "unadjudicated": {
+    "data": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+   }
+  },
+  {
+   "creator": "slnk",
+   "data_size": 5057,
+   "finder_flags": 784,
+   "name": "SprintNet",
+   "rsrc_oracle": "deark",
+   "rsrc_sha256": "a9f3084a50b230e786cb72afa7c2942d1c3d47e16631071c914859df7e33c7a3",
+   "rsrc_size": 648,
+   "type": "xlts",
+   "unadjudicated": {
+    "data": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+   }
+  },
+  {
+   "creator": "slnk",
+   "data_size": 9019,
+   "finder_flags": 784,
+   "name": "Supra 144",
+   "rsrc_size": 734,
+   "type": "mlts",
+   "unadjudicated": {
+    "data": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length",
+    "rsrc": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+   }
+  },
+  {
+   "creator": "slnk",
+   "data_oracle": "deark",
+   "data_sha256": "0cbcd3c94aa034d0d5f23a3e1875ae9e9cd81aeacf94e13c789e82e1c82b7caf",
+   "data_size": 9410,
+   "finder_flags": 784,
+   "name": "Supra 288:336",
+   "rsrc_size": 734,
+   "type": "mlts",
+   "unadjudicated": {
+    "rsrc": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+   }
+  },
+  {
+   "creator": "slnk",
+   "data_oracle": "deark",
+   "data_sha256": "cbdfa475ebc958331a2d54071c8ac37659de005f74a2dee2147e82c71ba39548",
+   "data_size": 9458,
+   "finder_flags": 336,
+   "name": "Supra 336v+:336e:56e",
+   "rsrc_oracle": "deark",
+   "rsrc_sha256": "e3add45d76741a2eabab7cf2d44bff064cc6e0f50756221bf941462aa5590462",
+   "rsrc_size": 941,
+   "type": "mlts"
+  },
+  {
+   "creator": "slnk",
+   "data_oracle": "deark",
+   "data_sha256": "aa458d0057572ff24c9e6dc5bfb7e9093b2dd4a89d6e0a69ff3332f8ecd94bea",
+   "data_size": 12792,
+   "finder_flags": 784,
+   "name": "Supra 56 V90",
+   "rsrc_oracle": "deark",
+   "rsrc_sha256": "8e05a6d2cf48aa453b2d400ec1734797763786aada2cc5aef62d020e85351b7c",
+   "rsrc_size": 606,
+   "type": "mlts"
+  },
+  {
+   "creator": "slnk",
+   "data_size": 6750,
+   "finder_flags": 784,
+   "name": "Switzerland TELEPAC",
+   "rsrc_oracle": "deark",
+   "rsrc_sha256": "f457a0a989072f83461b60f28846edfdcf89e90430ba2cb309fa6be92ea9a509",
+   "rsrc_size": 656,
+   "type": "xlts",
+   "unadjudicated": {
+    "data": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+   }
+  },
+  {
+   "creator": "slnk",
+   "data_oracle": "deark",
+   "data_sha256": "3a019a0f64882263b379858918f0d99c2026871b03f163ab2cfa4636ca86f426",
+   "data_size": 9606,
+   "finder_flags": 784,
+   "name": "TDK DF2814",
+   "rsrc_size": 720,
+   "type": "mlts",
+   "unadjudicated": {
+    "rsrc": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+   }
+  },
+  {
+   "creator": "slnk",
+   "data_size": 8950,
+   "finder_flags": 784,
+   "name": "Telebit QBlazer",
+   "rsrc_size": 741,
+   "type": "mlts",
+   "unadjudicated": {
+    "data": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length",
+    "rsrc": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+   }
+  },
+  {
+   "creator": "slnk",
+   "data_size": 5833,
+   "finder_flags": 784,
+   "name": "TymNet inbound",
+   "rsrc_oracle": "deark",
+   "rsrc_sha256": "fe4a666e293aa0905daeb1e73a10d792326174a39d05fc628fc650facb69622a",
+   "rsrc_size": 649,
+   "type": "xlts",
+   "unadjudicated": {
+    "data": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+   }
+  },
+  {
+   "creator": "slnk",
+   "data_size": 6181,
+   "finder_flags": 784,
+   "name": "TymNet outbound",
+   "rsrc_oracle": "deark",
+   "rsrc_sha256": "f83c21543fcb890950432cbd80ec001963721ab46aefa98684019e1cd1fa79ee",
+   "rsrc_size": 649,
+   "type": "xlts",
+   "unadjudicated": {
+    "data": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+   }
+  },
+  {
+   "creator": "slnk",
+   "data_size": 12787,
+   "finder_flags": 288,
+   "name": "U.S. Robotics High Speed",
+   "rsrc_size": 705,
+   "type": "mlts",
+   "unadjudicated": {
+    "data": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length",
+    "rsrc": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+   }
+  },
+  {
+   "creator": "slnk",
+   "data_oracle": "deark",
+   "data_sha256": "73eeeb2e2cf1dcfef0a75afdb09a900b15f7290b71dec1fb3632d0335451e5a6",
+   "data_size": 9358,
+   "finder_flags": 784,
+   "name": "US Robotics Universal",
+   "rsrc_size": 736,
+   "type": "mlts",
+   "unadjudicated": {
+    "rsrc": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+   }
+  },
+  {
+   "creator": "slnk",
+   "data_size": 6138,
+   "finder_flags": 784,
+   "name": "Vanilla X.28",
+   "rsrc_oracle": "deark",
+   "rsrc_sha256": "c850d0ffcd2960b24d500e7938d9e36787d1d107442f4638cfbcb753195f7e8a",
+   "rsrc_size": 656,
+   "type": "xlts",
+   "unadjudicated": {
+    "data": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+   }
+  },
+  {
+   "creator": "slnk",
+   "data_oracle": "deark",
+   "data_sha256": "88d563d1c04485b5c1baf37cf68f5b42641cbc67fe2f78d8ff1ae9be6b23f213",
+   "data_size": 9017,
+   "finder_flags": 784,
+   "name": "Zoom V-Series",
+   "rsrc_size": 739,
+   "type": "mlts",
+   "unadjudicated": {
+    "rsrc": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+   }
+  }
+ ],
+ "fixture": "tome-wild-modemscripts",
+ "format": "Installer Tome",
+ "oracle": "deark's Tome module (stored and InstaCompOne forks), and Apple's Installer's own output on the System 7.5.5 disk for the rest (tools/run_tome.py)",
+ "sha256": "7c02eb63130268505a79f3922b079b15f410c2aebed296379b63a35ff76cc4df",
+ "size": 230867
+}

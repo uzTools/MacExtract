@@ -67,6 +67,7 @@ static const UncFormatDesc unc_formats[] = {
     /* Not an envelope even as a `.mac`, which holds one file: the
      * format is the same when it holds a folder (fmt_mar.c). */
     { UNC_FORMAT_MAR,         "MAR",                 0, unc_mar_extract },
+    { UNC_FORMAT_TOME,        "Installer Tome",      0, unc_tome_extract },
     { UNC_FORMAT_DISKDOUBLER, "DiskDoubler",         0, unc_dd_extract },
     { UNC_FORMAT_NOWCOMPRESS, "Now Compress",        0, unc_now_extract },
     { UNC_FORMAT_LZH,         "LZH",                 0, unc_lzh_extract },

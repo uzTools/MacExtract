@@ -1,0 +1,294 @@
+{
+ "entries": [
+  {
+   "creator": "udog",
+   "data_oracle": "deark",
+   "data_sha256": "98ccfe429da9f2bd9d2ef61515c3b994dc308eabdebdb9a99457043121d30d75",
+   "data_size": 3833,
+   "finder_flags": 337,
+   "name": "About Personal WebSharing.htm",
+   "rsrc_oracle": "deark",
+   "rsrc_sha256": "605fad6ae069271c20560d790ed66c99ca0d69d80cd657c02bfcdfb40097d25f",
+   "rsrc_size": 571,
+   "type": "TEXT"
+  },
+  {
+   "creator": "udog",
+   "data_size": 9560,
+   "finder_flags": 337,
+   "name": "Calendar.html",
+   "rsrc_oracle": "deark",
+   "rsrc_sha256": "699b7829b5d6d8006c5bd1733ae79a45b63a27dbcccafd6e2dc8c2d194343eb0",
+   "rsrc_size": 485,
+   "type": "TEXT",
+   "unadjudicated": {
+    "data": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+   }
+  },
+  {
+   "creator": "8BIM",
+   "data_oracle": "deark",
+   "data_sha256": "ad3f9296f0787a1f32e423dd0d8a4a222a342b18a31c8f7f76ec83fe447d27e9",
+   "data_size": 26298,
+   "finder_flags": 337,
+   "name": "calimage1.GIF",
+   "rsrc_oracle": "deark",
+   "rsrc_sha256": "a3d0041c3a026043aff10df6592e4f63d1e06b152c96417a274027564a9f173c",
+   "rsrc_size": 7124,
+   "type": "GIFf"
+  },
+  {
+   "creator": "udog",
+   "data_size": 4368,
+   "finder_flags": 337,
+   "name": "default.html",
+   "rsrc_oracle": "deark",
+   "rsrc_sha256": "12db75eb81c9b83cad3c0b41a764de4d8988a3c9e5d61e2c274b3ac28f9bcd86",
+   "rsrc_size": 485,
+   "type": "TEXT",
+   "unadjudicated": {
+    "data": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+   }
+  },
+  {
+   "creator": "GKON",
+   "data_oracle": "deark",
+   "data_sha256": "4cf27c45882ff45b3432eda57c15afa1a1f5109a2f6a56b4a2dc69a5cbc17636",
+   "data_size": 2332,
+   "finder_flags": 337,
+   "name": "docimage1.GIF",
+   "rsrc_oracle": "deark",
+   "rsrc_sha256": "9b0dbddf590d9fdc1ed28841cbdb1029c74098b8b092d9a388a142f3188d4b97",
+   "rsrc_size": 7086,
+   "type": "GIFf"
+  },
+  {
+   "creator": "GKON",
+   "data_oracle": "deark",
+   "data_sha256": "2275fcafad62c8d4154a56d8fdbaeddbb815e2ba73d4be364b786131331eda60",
+   "data_size": 4417,
+   "finder_flags": 337,
+   "name": "docimage2.GIF",
+   "rsrc_oracle": "deark",
+   "rsrc_sha256": "aa69808f2c21fa10305dc38ba71db6cb08de51fd5fd8b3429d43755191d0f337",
+   "rsrc_size": 13788,
+   "type": "GIFf"
+  },
+  {
+   "creator": "udog",
+   "data_size": 498,
+   "finder_flags": 337,
+   "name": "Linksample.html",
+   "rsrc_oracle": "deark",
+   "rsrc_sha256": "a0571c3b264adb6106bf5cb30bc4ee334bfff75813af63fbc1d1d46f44b69224",
+   "rsrc_size": 485,
+   "type": "TEXT",
+   "unadjudicated": {
+    "data": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+   }
+  },
+  {
+   "creator": "udog",
+   "data_size": 6276,
+   "finder_flags": 337,
+   "name": "List.html",
+   "rsrc_oracle": "deark",
+   "rsrc_sha256": "7038d7075913149819475968d6e663db0d46b7b9349911996e8eab17cf64481a",
+   "rsrc_size": 485,
+   "type": "TEXT",
+   "unadjudicated": {
+    "data": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+   }
+  },
+  {
+   "creator": "8BIM",
+   "data_oracle": "deark",
+   "data_sha256": "706e9b6ed12c61590337b8004b995d102d764a153e76c0317261c56a039b512c",
+   "data_size": 7071,
+   "finder_flags": 337,
+   "name": "listimage1.GIF",
+   "rsrc_oracle": "deark",
+   "rsrc_sha256": "aca01787f6b01958eeddac15972fa2d79a2d07aadffcd8f29a100916cc3bd52e",
+   "rsrc_size": 6404,
+   "type": "GIFf"
+  },
+  {
+   "creator": "8BIM",
+   "data_oracle": "deark",
+   "data_sha256": "895d00ec943800dcf0a8dad3abe553270d1e46062efa28d392bffdd5c5c8adc0",
+   "data_size": 20529,
+   "finder_flags": 337,
+   "name": "listimage2.GIF",
+   "rsrc_oracle": "deark",
+   "rsrc_sha256": "3cec2609a0dbb0acefc53253146921fbe398da9b27b09c3194cd7c75c4c7fade",
+   "rsrc_size": 6878,
+   "type": "GIFf"
+  },
+  {
+   "creator": "8BIM",
+   "data_oracle": "deark",
+   "data_sha256": "24673b97ce459038e9ab9ae0afc05c51cdb13bb1d557ccd29902588f1ce7971f",
+   "data_size": 2458,
+   "finder_flags": 337,
+   "name": "macOS.GIF",
+   "rsrc_oracle": "deark",
+   "rsrc_sha256": "ac3fa90551e5760dc073fe0cc7e456a2da1ccfcc8a7763a24c424f209f8357c7",
+   "rsrc_size": 7506,
+   "type": "GIFf"
+  },
+  {
+   "creator": "8BIM",
+   "data_oracle": "deark",
+   "data_sha256": "357560679c4c3d57177c3037697df94198bc62b29763a32255e5448d8fe7a767",
+   "data_size": 6788,
+   "finder_flags": 337,
+   "name": "persimage1.GIF",
+   "rsrc_oracle": "deark",
+   "rsrc_sha256": "1b87de970448bad28bccfc37dfe4a7fdcb40af415f6d34a62c5e95865a90aca0",
+   "rsrc_size": 6364,
+   "type": "GIFf"
+  },
+  {
+   "creator": "8BIM",
+   "data_oracle": "deark",
+   "data_sha256": "e6b8fe32c3d30f6340fc6247825f75f1333a37d3e599a3004cdd77ef0de4ab3d",
+   "data_size": 16803,
+   "finder_flags": 337,
+   "name": "persimage2.GIF",
+   "rsrc_oracle": "deark",
+   "rsrc_sha256": "67dcb7bcf8a3d71acfca001da85fa393ed1a5e4174c8f3bb10298a0aa27dbe30",
+   "rsrc_size": 6562,
+   "type": "GIFf"
+  },
+  {
+   "creator": "8BIM",
+   "data_oracle": "deark",
+   "data_sha256": "b72436067b8927b40931173777fb5cef217e37646cd2ee6e4c60ea89c8573ab4",
+   "data_size": 77,
+   "finder_flags": 337,
+   "name": "persimage3.GIF",
+   "rsrc_oracle": "deark",
+   "rsrc_sha256": "de369d95f19f7409c1b701cc56fda75008d97892a32962a08248c4ee0b25c3d6",
+   "rsrc_size": 2662,
+   "type": "GIFf"
+  },
+  {
+   "creator": "udog",
+   "data_size": 4930,
+   "finder_flags": 337,
+   "name": "Personal.html",
+   "rsrc_oracle": "deark",
+   "rsrc_sha256": "a32843395e86bbb9b731d219362421c29f8c5eaed0c393410ad0b2dce9383b43",
+   "rsrc_size": 485,
+   "type": "TEXT",
+   "unadjudicated": {
+    "data": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+   }
+  },
+  {
+   "creator": "udog",
+   "data_size": 9070,
+   "finder_flags": 337,
+   "name": "template(calendar).html",
+   "rsrc_oracle": "deark",
+   "rsrc_sha256": "5a367d58353cc78e49f5c6dd88fb46c8ec598345882a6298d530b906cfa429f9",
+   "rsrc_size": 485,
+   "type": "TEXT",
+   "unadjudicated": {
+    "data": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+   }
+  },
+  {
+   "creator": "udog",
+   "data_size": 4209,
+   "finder_flags": 337,
+   "name": "template(list).html",
+   "rsrc_oracle": "deark",
+   "rsrc_sha256": "a979b338c8fda074ba949ba27ddcd870d9cbaa2df4ab5034bd9425c20d962d11",
+   "rsrc_size": 485,
+   "type": "TEXT",
+   "unadjudicated": {
+    "data": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+   }
+  },
+  {
+   "creator": "udog",
+   "data_size": 4742,
+   "finder_flags": 337,
+   "name": "Template(personal).html",
+   "rsrc_oracle": "deark",
+   "rsrc_sha256": "ea94ab901859f41095a5041e17dd21e58165704635457b0c34a4acd602878da4",
+   "rsrc_size": 485,
+   "type": "TEXT",
+   "unadjudicated": {
+    "data": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+   }
+  },
+  {
+   "creator": "udog",
+   "data_size": 63177,
+   "finder_flags": 337,
+   "name": "Using Personal WebSharing.html",
+   "rsrc_oracle": "deark",
+   "rsrc_sha256": "2f5da29ad446932eee6913f8f11d4da7cbf85847c9096564f73ef52664b5e6ab",
+   "rsrc_size": 627,
+   "type": "TEXT",
+   "unadjudicated": {
+    "data": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+   }
+  },
+  {
+   "creator": "udog",
+   "data_size": 7348,
+   "finder_flags": 337,
+   "name": "Using Sample FilesTemplates.htm",
+   "rsrc_size": 673,
+   "type": "TEXT",
+   "unadjudicated": {
+    "data": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length",
+    "rsrc": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+   }
+  },
+  {
+   "creator": "wbsu",
+   "data_oracle": "deark",
+   "data_sha256": "1c30098516e98375db1d06a807a55b500ec5181edacd0ac695ca4b7d7f9464ac",
+   "data_size": 474243,
+   "finder_flags": 337,
+   "name": "Web Sharing",
+   "rsrc_oracle": "deark",
+   "rsrc_sha256": "3491e7558ea549c30824d519d42a1e0d521482c4327f5523d6b2fd1f6754bd30",
+   "rsrc_size": 125648,
+   "type": "APPC"
+  },
+  {
+   "creator": "wscs",
+   "data_oracle": "deark",
+   "data_sha256": "b2ad39cc87ec75c6accf52ed5e489c55276edb74e74390cbbd0e0815ca77d772",
+   "data_size": 21334,
+   "finder_flags": 337,
+   "name": "Web Sharing CS",
+   "rsrc_oracle": "deark",
+   "rsrc_sha256": "8d1bc19b9f49d7e88c13985d60a11fbf22f189b0e9e8af838a049bc571467063",
+   "rsrc_size": 20815,
+   "type": "sdev"
+  },
+  {
+   "creator": "wbsh",
+   "data_oracle": "deark",
+   "data_sha256": "bcbde17a2f05d439cfa760c9e87cf17301bcdb6f020923a8fccc611b43dfb4e3",
+   "data_size": 306768,
+   "finder_flags": 337,
+   "name": "Web Sharing Extension",
+   "rsrc_oracle": "deark",
+   "rsrc_sha256": "eaf249146d85de12f7563dadf0e620ac8119842949a5471f8a5d1c0cecabd7f3",
+   "rsrc_size": 49228,
+   "type": "appe"
+  }
+ ],
+ "fixture": "tome-wild-websharing",
+ "format": "Installer Tome",
+ "oracle": "deark's Tome module (stored and InstaCompOne forks), and Apple's Installer's own output on the System 7.5.5 disk for the rest (tools/run_tome.py)",
+ "sha256": "8bc5b0d1e727fbc1b9b0710370cda1beee456cc788a0f2334a6586c996d625d7",
+ "size": 588005
+}

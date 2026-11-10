@@ -283,15 +283,18 @@ REPO = os.path.dirname(HERE)
 # control's CODE -96 and A5 0; the shipped pair fell the same 96, OVL_SAVED
 # unmoved. They were 190,276 / 94,894 / 619,182.
 TIERS = {
-    "sys3-512K": (185828, "System 3.0, Macintosh 512Ke (222,070 B free)"),
-    "sys6-512K": (90446,  "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
-    "floor-1M":  (614734, "System 6.0.8, 1 MB Mac Plus — the floor target"),
+    "sys3-512K": (182420, "System 3.0, Macintosh 512Ke (222,070 B free)"),
+    "sys6-512K": (87038,  "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
+    "floor-1M":  (611326, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
 # -2,992 each 2026-11-10, DERIVED from TIERS_CONTROL +2,992 (Apple Backup,
 # DECISIONS.md 2026-11-10, *the backup on floppies*); they were 188,756 /
 # 93,374 / 617,662.
 # +64 each 2026-11-10, DERIVED from TIERS_CONTROL -64 (the joiner's options
 # zeroed, the same entry); they were 185,764 / 90,382 / 614,670.
+# -3,408 each 2026-11-10, DERIVED from TIERS_CONTROL +3,408 (the Installer
+# Tome, DECISIONS.md 2026-11-10, *the archive the Installer reads*); they
+# were 185,828 / 90,446 / 614,734.
 # +64 each 2026-11-10, DERIVED from TIERS_CONTROL -64 (method 13's
 # canonical table built at bit-reversed indices, DECISIONS.md 2026-11-10, *the peek that was turned round*); they were
 # 188,692 / 93,310 / 617,598.
@@ -552,7 +555,12 @@ TIERS = {
 # +192 2026-11-07: Now Compress polls Cancel inside a block (`ovl_now` +186;
 # DECISIONS.md 2026-11-07, *the block a click waited for*); CODE +180, A5 +12.
 # TIERS -192 and OVL_SAVED +192, which cancel: only a now-keeper moves.
-TIERS_CONTROL = 227104     # build/mac-resident, CODE + A5, 2026-11-10
+# +3,408 2026-11-10: the Installer Tome, its reader and probe (`ovl_zipold`
+# +3,214, `ovl_sniff` +168; CODE +3,052, A5 +356, its code tables `.data`
+# in this build; DECISIONS.md 2026-11-10, *the archive the Installer
+# reads*). TIERS -3,408 and OVL_SAVED +3,376: every grant 32 B lower, less
+# its images' change.
+TIERS_CONTROL = 230512     # build/mac-resident, CODE + A5, 2026-11-10
 # -64 2026-11-10: the joiner zeroes its options when given none (CODE -52,
 # A5 -12; DECISIONS.md 2026-11-10, *the backup on floppies*); TIERS +64 and
 # OVL_SAVED -32, which leave every grant 32 B higher.
@@ -1265,7 +1273,12 @@ EXPECT = {
 # **-32 2026-11-10, -> 172,176**: the joiner's options zeroed, the control's
 # -64 against the shipped pair's -32 (CODE -56, A5 +24); TIERS +64, so every
 # grant +32 (the same entry).
-OVL_SAVED = 172176
+# **+3,376 2026-11-10, -> 175,552**: the Installer Tome, the control's
+# +3,408 against the shipped pair's +32 (CODE +20, A5 +12); `ovl_zipold`
+# +3,214, `ovl_sniff` +168 (DECISIONS.md 2026-11-10, *the archive the
+# Installer reads*). TIERS -3,408: every grant moves by -32 less its images'
+# change.
+OVL_SAVED = 175552
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
 # every kept image is one — as is the bundle an envelope holds on to.
@@ -1414,8 +1427,8 @@ IMAGES = {
     "OVL_ID_SQP":         1736,
     "OVL_ID_SUPERDISK":   6628,
     "OVL_ID_TEXT":        11438,
-    "OVL_ID_ZIPOLD":      18720,
-    "OVL_ID_SNIFF":       16848,
+    "OVL_ID_ZIPOLD":      21934,
+    "OVL_ID_SNIFF":       17016,
     "OVL_ID_DESTDLG":     1688,
     "OVL_ID_SEGSETUP":    2446,
 }
@@ -1583,7 +1596,10 @@ IMAGES = {
 # **ZIPOLD +2,548, SNIFF +712, the bundle +3,260 B, 2026-11-10**: Apple
 # Backup, its reader and its set's match in ZIPOLD, its probe and its set's
 # identity in SNIFF (DECISIONS.md 2026-11-10, *the backup on floppies*).
-BUNDLE = 201136
+# **ZIPOLD +3,214, SNIFF +168, the bundle +3,384 B, 2026-11-10**: the
+# Installer Tome, its reader in ZIPOLD and its probe in SNIFF (DECISIONS.md
+# 2026-11-10, *the archive the Installer reads*).
+BUNDLE = 204520
 
 # What the SHIPPED lane asserts, and it is the refused fixtures BY NAME
 # rather than a tally: a tier that refuses two different fixtures and still

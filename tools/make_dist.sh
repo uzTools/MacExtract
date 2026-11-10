@@ -119,13 +119,13 @@ text as "Read Me"; drag MacExtract onto your startup disk.
                   test: start up from the Hard Disk 20, put the floppy in,
                   double-click MacExtract-Helpers.zip and choose the Hard
                   Disk 20. Then tell us what happened, at
-                  https://github.com/uzTools/MacExtract/issues -- seventeen
+                  https://github.com/uzTools/MacExtract/issues -- eighteen
                   files in a "MacExtract Helpers" folder, or the ID number
                   if it bombs.
 
 Double-click helpers. The 800K and 1.44 MB disks also hold a "MacExtract
 Helpers" folder,
-and MacExtract-Helpers.zip has the same seventeen in one file: open it with
+and MacExtract-Helpers.zip has the same eighteen in one file: open it with
 MacExtract. Each one stands in
 for a program that made archives -- StuffIt, Compact Pro, DiskDoubler and
 others -- so that double-clicking one of its archives opens it in
@@ -446,7 +446,8 @@ MacLHA's included), uuencoded files (.uu), btoa (.ascii), base64 and files
 mailed as MIME attachments (.b64, .mim -- both forks, where the message
 carried them), AppleSingle/AppleDouble, MAR (.mar, .mac, and .mar.lz4),
 Apple Backup's floppies (a Performa's backup, even with disks missing),
-zip, gzip, tar and Unix compress (.Z).
+the Tomes on Apple's install disks (System 7.5 to Mac OS 9), zip, gzip,
+tar and Unix compress (.Z).
 Nested files like .sit.hqx or .tar.Z are unwrapped automatically, by looking
 inside them
 rather than trusting the name, and a .hqx holding several files -- one

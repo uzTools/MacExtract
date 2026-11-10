@@ -396,3 +396,5 @@ DECODER(unc_lz4_extract,        OVL_ID_ZIPOLD,     OVL_LZ4_EXTRACT,        0)
 /* Apple Backup beside it: stored forks across disks, no codec
  * (src/fmt_abk.c). */
 DECODER(unc_abk_extract,        OVL_ID_ZIPOLD,     OVL_ABK_EXTRACT,        0)
+/* And the Installer Tome: its own window, no codec (src/fmt_tome.c). */
+DECODER(unc_tome_extract,       OVL_ID_ZIPOLD,     OVL_TOME_EXTRACT,       0)

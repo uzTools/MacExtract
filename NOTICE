@@ -789,6 +789,17 @@ This project's decoders are transcriptions/ports of algorithms from:
     linked into nothing that ships. DECISIONS.md 2026-11-04 (*the frame
     mar 0.2.0 reads*).
 
+  * The Apple Installer Tome, as documented by danifunker/rusty-backup
+    (issue 109, `tome-support.zip` v2, 2026-11-07, MIT), whose InstaCompOne
+    tables began as maximumspatium's ResDecompress (MIT). Its write-up,
+    `docs/installer_tome.md`, is what `src/fmt_tome.c` and its probe are
+    written from: the container, the record, the blocks, both codecs'
+    tables and limits — format facts, not code. The zip's Rust and Python
+    decoders are not in this project, were not copied and were not run.
+    `reference/notes/installer_tome.md` is fetched by
+    `tools/fetch_references.sh`. DECISIONS.md 2026-11-10 (*the archive the
+    Installer reads*).
+
   * lhasa 0.4.0, by Simon Howard — https://github.com/fragglet/lhasa,
     ISC licence. Since 2026-09-19 `src/fmt_lzh.c`'s decoders follow it
     rather than XADMaster: `lh_new_decoder.c` and `tree_decode.c` for

@@ -35,3 +35,4 @@ LARC	MacLHa	MacLHa	LHA 	pair
 arc*	ArcMac	ArcMac	mArc,ARC7	pair
 MARc	MAR	Hampa's Mac application	MARd,MARf,ZIVU,LZ4-	the maintainer
 OBBa	AppleBkp	Apple Backup	OBDa,OBDc	the maintainer (2026-11-10); OBDa read off three real disks, OBDc off a Performa restore CD by MacStamp (macstamp a960b6c; mac/macextract_icons.r)
+kakc	Tome	Apple's Installer (its Tomes)	idcp	the maintainer (2026-11-10); idcp read off the 39 Tomes of the System 7.5.5 and Mac OS 8.6 media, no application claims kakc; census 253 (mac/macextract_icons.r)

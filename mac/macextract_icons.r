@@ -306,6 +306,12 @@ resource 'FREF' (174) { 'LZ4 ', 1, "" };
    claims. DECISIONS.md 2026-11-10, *the backup on floppies*. */
 resource 'FREF' (175) { 'OBDa', 1, "" };
 resource 'FREF' (176) { 'OBDc', 1, "" };
+/* The Apple Installer Tome, `idcp`/`kakc`: read off the 39 Tomes of the
+   System 7.5.5 and Mac OS 8.6 install media. No application claims the
+   creator — the Installer is `kajr`, and its bundle names `kajr`, `bbkr`,
+   `judy` and `bjbc` — so the `kakc` helper is what opens one by
+   double-click. DECISIONS.md 2026-11-10, *the archive the Installer reads*. */
+resource 'FREF' (177) { 'idcp', 1, "" };
 
 resource 'BNDL' (128) {
     'MExt', 0,
@@ -317,7 +323,7 @@ resource 'BNDL' (128) {
                 30, 157,
                 31, 159, 32, 160, 33, 161, 34, 162, 35, 163, 36, 164, 37, 165,
                 38, 166, 39, 167, 40, 168, 41, 169, 42, 170,
-                43, 171, 44, 172, 45, 173, 46, 174, 47, 175, 48, 176 } }
+                43, 171, 44, 172, 45, 173, 46, 174, 47, 175, 48, 176, 49, 177 } }
 };
 
 /* The SIGNATURE resource: type = the creator code, ID 0. The Finder wants

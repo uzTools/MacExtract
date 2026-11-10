@@ -1542,6 +1542,8 @@ UncFormat unc_tar_probe(const uint8_t *head, int32_t len, UncIO *io);
 int unc_tar_extract(UncCtx *c);
 UncFormat unc_mar_probe(const uint8_t *head, int32_t len, UncIO *io);
 int unc_mar_extract(UncCtx *c);
+UncFormat unc_tome_probe(const uint8_t *head, int32_t len, UncIO *io);
+int unc_tome_extract(UncCtx *c);
 UncFormat unc_lz4_probe(const uint8_t *head, int32_t len, UncIO *io);
 int unc_lz4_extract(UncCtx *c);
 /* Apple Backup (fmt_abk.c): a set of disks, read in addressed mode. */

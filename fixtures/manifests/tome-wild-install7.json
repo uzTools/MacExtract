@@ -1,0 +1,158 @@
+{
+ "entries": [
+  {
+   "creator": "reno",
+   "data_oracle": "deark",
+   "data_sha256": "f115f9a89bf53ab45912c223e43b68137044803f91409dfee70ae58578693a0c",
+   "data_size": 3584,
+   "finder_flags": 304,
+   "name": "About Apple Guide",
+   "rsrc_oracle": "deark",
+   "rsrc_sha256": "3ecb90179e3422cbdaa2540b7de919c283a74857034061a4752dab4ee5087280",
+   "rsrc_size": 37741,
+   "type": "help"
+  },
+  {
+   "creator": "aslm",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 0,
+   "name": "ASLM Preferences",
+   "rsrc_oracle": "deark",
+   "rsrc_sha256": "109d9c4fc4933480a81d59c2181edef743767bbf962b9249a576fc77b0c04f33",
+   "rsrc_size": 491,
+   "type": "pref"
+  },
+  {
+   "creator": "sqid",
+   "data_oracle": "Apple's Installer (System 7.5.5)",
+   "data_sha256": "fd3199def99aa9fb1c959e82cd2dd8fbee24976923e89159aa1519038229981c",
+   "data_size": 416516,
+   "finder_flags": 529,
+   "name": "Color SW 2200",
+   "rsrc_oracle": "deark",
+   "rsrc_sha256": "86b2514c44490fc3931d73f2ccd871ef9f31e4b918096255a8e1c624e59e7627",
+   "rsrc_size": 428943,
+   "type": "PRER"
+  },
+  {
+   "creator": "ATI ",
+   "data_oracle": "deark",
+   "data_sha256": "52b672fce9649a82baad5125bca3b4fa413771252502ede3701652a7dc1f233c",
+   "data_size": 31451,
+   "finder_flags": 261,
+   "name": "Graphics Accelerator",
+   "rsrc_oracle": "deark",
+   "rsrc_sha256": "d8cdbc6df7637735335002cb153af2d96ce650cedeeae0635558448e3bd9071e",
+   "rsrc_size": 61094,
+   "type": "ndrv"
+  },
+  {
+   "creator": "mmry",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1877,
+   "name": "Memory",
+   "rsrc_oracle": "deark",
+   "rsrc_sha256": "ce29b2544704dd24c07f4b92dca1d6bb79c95e6d0e1de70004a418142b5d4f25",
+   "rsrc_size": 41141,
+   "type": "cdev"
+  },
+  {
+   "creator": "mous",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1875,
+   "name": "Mouse",
+   "rsrc_oracle": "deark",
+   "rsrc_sha256": "53cddfd2bff1e3f0a862fdcfb2c0c3266a4b10d2e35281b42475ad9604c8dad3",
+   "rsrc_size": 21179,
+   "type": "cdev"
+  },
+  {
+   "creator": "reno",
+   "data_oracle": "deark",
+   "data_sha256": "7b78b91fdd8a740bacb1e9e811994a6057ebad4b056ad7e21272c088ab243ce2",
+   "data_size": 222208,
+   "finder_flags": 304,
+   "name": "PB 2300 Guide Additions",
+   "rsrc_oracle": "deark",
+   "rsrc_sha256": "0b088c4be320a23a730763c087fa5f34573be7024f4b0ca288f6e45693bcb2be",
+   "rsrc_size": 82808,
+   "type": "mixn"
+  },
+  {
+   "creator": "reno",
+   "data_oracle": "deark",
+   "data_sha256": "b60e44ffda526ea5e3f4b7959a2d839994a698e64663b0388023d3b35fa42552",
+   "data_size": 202752,
+   "finder_flags": 304,
+   "name": "PB 500 Upgrade Guide Additions",
+   "rsrc_oracle": "deark",
+   "rsrc_sha256": "1b0b3ceaed7a2072bf22d7f38744eb5a0353a3d47784b3fe40a80d50a69c7228",
+   "rsrc_size": 84680,
+   "type": "mixn"
+  },
+  {
+   "creator": "ascr",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 273,
+   "name": "Scripting Components",
+   "rsrc_oracle": "deark",
+   "rsrc_sha256": "62cb66e578f232a31f2cbd77f4fef00b11549534cd8530d5ee9eaeb295fa24e1",
+   "rsrc_size": 1677,
+   "type": "osax"
+  },
+  {
+   "creator": "OMGR",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 512,
+   "name": "Shared Library Manager",
+   "rsrc_oracle": "deark",
+   "rsrc_sha256": "dee41350255cf586487b0b3f7d663f0f41f725a9777042cb3729f05b2e8005ac",
+   "rsrc_size": 168215,
+   "type": "INIT"
+  },
+  {
+   "creator": "OMgr",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 512,
+   "name": "Shared Library Manager PPC",
+   "rsrc_oracle": "deark",
+   "rsrc_sha256": "05f444c6103c3546ea0bf12655300e0e09ad849be8eb328968cd031f40a72866",
+   "rsrc_size": 212596,
+   "type": "INIT"
+  },
+  {
+   "creator": "reno",
+   "data_oracle": "Apple's Installer (System 7.5.5)",
+   "data_sha256": "fa53587804554e052e55c2125d84370868c5873e1d81cedd66ab2315041b5dc0",
+   "data_size": 38400,
+   "finder_flags": 304,
+   "name": "Shortcuts",
+   "rsrc_oracle": "deark",
+   "rsrc_sha256": "2fb2a076d0787ef51b0aef0ba5ed7fad60baa960269601c5d3ad3c8b0d4d2cf6",
+   "rsrc_size": 84931,
+   "type": "help"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 305,
+   "name": "SimpleText",
+   "rsrc_oracle": "deark",
+   "rsrc_sha256": "3055eb6d2c7cd51a50b86236a5d5ab663caa99af9014d73b10d9487afa64e3f0",
+   "rsrc_size": 58773,
+   "type": "APPL"
+  }
+ ],
+ "fixture": "tome-wild-install7",
+ "format": "Installer Tome",
+ "oracle": "deark's Tome module (stored and InstaCompOne forks), and Apple's Installer's own output on the System 7.5.5 disk for the rest (tools/run_tome.py)",
+ "sha256": "6cc5e41b12598250984f555c6325af42989e0f0fdc8dbad7ad3610a92ac96611",
+ "size": 851141
+}

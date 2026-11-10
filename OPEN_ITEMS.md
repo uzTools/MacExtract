@@ -7,7 +7,7 @@
    withdrawn claim to BLOCKERS.md, numbers to FORMATS.md).
 
 Nothing here stops the engine or the CLI, which are byte-exact against the
-oracle across 988 fixtures in `./ci.sh`.
+oracle across 992 fixtures in `./ci.sh`.
 
 **Filing something here is a decision to stop looking, so ask first.** Each
 of these questions has emptied a row at least once (BLOCKERS.md, *Withdrawn
@@ -103,7 +103,7 @@ not move the licence; only the second does.
 
 ### What grades a fork
 
-`unar` 1.10.8 grades most of the 988 fixtures' manifests; `macunpack` and
+`unar` 1.10.8 grades most of the 992 fixtures' manifests; `macunpack` and
 deark grade the forks it fails (TESTING.md, *The oracle*). The writers' own
 readers already grade StuffIt Deluxe 2.0.1's output, SuperDisk!'s modules,
 DiskDoubler's methods 3–5, Now Compress, Private File, AppleLink packages
@@ -300,11 +300,37 @@ unless `MyOpenFork` stays out of line); no extraction moves (measured). Proposed
 (the maintainer, 2026-10-19), which v0.44.0 was (2026-10-25): **not
 started**; the patches are drafted here and posted by the maintainer.
 
+## Apple Installer Tomes: what is not read, and what is not graded
+
+The Tome reader is in (FORMATS.md, *Apple Installer Tomes*). Left:
+
+- **The per-fork checksum is unidentified** (+0x48, +0x58): not CRC-32,
+  Adler-32, CRC-16/XMODEM, sums or XOR, per the specification. Without it a
+  changed byte that decodes to the right length is not noticed — 1,308 of
+  3,704 single-byte changes are (`tools/run_tome.py`). Closes with the
+  algorithm, read out of Apple's Installer (`APPL`/`kajr`, on the 7.5.5
+  disk) or its SDK.
+- **Tomes in 'part' resources are not read.** QuickDraw GX's installer
+  disks carry one-file Tomes as `'part'` resources of a Tome's resource
+  fork — 13 on the 8.6 CD, and `Tome2` has nothing else. Each is a whole
+  Tome; reading one needs a resource-fork input the engine does not take.
+- **`ircp`/`kakc`**: 16 files in MacStamp's census under the Tome's
+  creator, no specimen here. Not looked at.
+- **Text-codec forks with no oracle**: 81 forks of `tome-wild-modemscripts`
+  and `tome-wild-websharing` are graded by their exact end alone; deark has
+  no text codec and the 8.6 CD's files are not installed anywhere here.
+  Closes with an installed Mac OS 8.6, or Apple's Installer run on these
+  Tomes under emulation.
+- **deark widens InstaCompOne's long distance one output byte early** (at
+  1,644; the specification and Apple's installed files say 1,645). Not
+  reported upstream, and no minimal repro is written; the maintainer posts
+  upstream reports.
+
 ## The double-click helpers: what is left
 
 `companion/` works (DECISIONS.md 2026-10-11, *the stub that hands it on*);
 its helpers are in `dist/` and on both disk images since
-2026-11-04 (seventeen since 2026-11-10, Apple Backup's), in no release yet (DECISIONS.md 2026-11-04, *the helpers in
+2026-11-04 (eighteen since 2026-11-10: Apple Backup's and the Installer Tome's), in no release yet (DECISIONS.md 2026-11-04, *the helpers in
 dist*). Left:
 
 - **Which of a file's two dates System 7 compares** between two applications

@@ -183,7 +183,7 @@ def check(path, creator=CREATOR, types=TYPES, ceiling=CEILING):
 
 
 def check_dist(stub):
-    """The seventeen helpers dist/ ships: every row of companion/helpers.tsv
+    """The eighteen helpers dist/ ships: every row of companion/helpers.tsv
     stamped from this tree's stub passes check() for its own creator and
     types; dist/MacExtract-Helpers.zip is byte for byte the zip
     make_helpers.py writes from them (it is reproducible: fixed times), so a

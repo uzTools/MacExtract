@@ -339,6 +339,14 @@ python3 tools/run_lz4.py --macextract build/san/macextract \
 python3 tools/sandbox.py --selftest >/dev/null || fail "sandbox self-test"
 python3 tools/run_abk.py --macextract build/san/macextract \
     || fail "Apple Backup tests"
+# Apple Installer Tomes. No checksum anyone has identified, so what grades
+# them is two other readings: deark's Tome module for the stored and
+# InstaCompOne forks, and the files Apple's Installer put on the System
+# 7.5.5 disk the fixtures came from for the text codec's (skipped, loudly,
+# without that disk). Then changed and cut Tomes, and the control that
+# proves the exact end of a stream is checked.
+python3 tools/run_tome.py --macextract build/san/macextract \
+    || fail "Installer Tome tests"
 # The Finder metadata beyond type, creator and flags (`l --meta`): FInfo
 # and FXInfo whole, the backup date, the lock and the Get Info comment,
 # held to lsar where it reads them and to the synthesizers' own input where

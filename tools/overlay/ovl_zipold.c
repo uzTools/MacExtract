@@ -14,6 +14,7 @@
  * LZ4 frame's, the same day, the form mar 0.2.0 reads a MAR compressed in.
  * And Apple Backup's, since 2026-11-10, another reader that calls no codec,
  * with the match its set asks while it is read (src/fmt_abkset.c).
+ * And the Installer Tome's, the same day: its own window, no codec.
  *
  * Implode too (src/unc_implode.c), since 2026-10-17, when `ovl_exo` reached
  * the 32 KB it can span (DECISIONS.md 2026-10-17, *dates in the Macintosh's
@@ -60,6 +61,8 @@ int32_t ovl_main(const OverlayHost *host, int32_t which, void *a, void *b)
                                       (const uint8_t *)g->in,
                                       (int32_t)g->len);
     }
+    case OVL_TOME_EXTRACT:
+        return (int32_t)unc_tome_extract((UncCtx *)a);
     default:
         return -1;
     }

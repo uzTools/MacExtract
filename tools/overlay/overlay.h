@@ -177,6 +177,7 @@ typedef int32_t (*OverlayEntry)(const OverlayHost *host, int32_t which,
 #define OVL_SEG_MATCH          66  /* unc_segment_match: a = OvlArgs* (obj desc,
                                     * in head, len) */
 #define OVL_ABK_EXTRACT        67
+#define OVL_TOME_EXTRACT       68
 
 /* OVL_DEST_ASK's argument. Plain integers, so this header needs no Mac
  * one: `v`/`h` are the dialog's top left, `vol` is the reply's vRefNum. */

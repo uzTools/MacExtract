@@ -214,6 +214,7 @@ static const unsigned char gKeepSet[][2] = {
     { UNC_FORMAT_TAR,         KEEP(OVL_ID_ZIPOLD,     0) },
     /* No password anywhere in the format. */
     { UNC_FORMAT_MAR,         KEEP(OVL_ID_ZIPOLD,     0) },
+    { UNC_FORMAT_TOME,        KEEP(OVL_ID_ZIPOLD,     0) },
     /* Segment SCHEMES, from the other release site: a Compact Pro or spanned
      * zip set is read by that format's own reader over the joined parts. */
     { UNC_FORMAT_CPTSEG,      KEEP(OVL_ID_CPTDD,      KEEP_CRYPT) },

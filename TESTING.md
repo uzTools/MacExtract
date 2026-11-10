@@ -3473,6 +3473,50 @@ is — the Performa 5400/6400 Software Restore CD holds two, 67 and 38 `OBDc`
 `tools/vmac/interactive.py --abk` (tools/vmac/README.md), not in `ci.sh`.
 The box cannot stop a kernel bug reachable from an unprivileged process;
 there is no seccomp filter.
+## Apple Installer Tomes (`tools/run_tome.py`, in `ci.sh`)
+
+The forks carry a checksum nobody has identified, so the grade is two other
+readings of the same forks: deark's own Tome module, and the files Apple's
+Installer installed on the System 7.5.5 disk the `tome-wild-install*`
+fixtures came from (FORMATS.md, *Apple Installer Tomes*).
+
+    python3 tools/run_tome.py --macextract build/macextract
+    python3 tools/run_tome.py --extra DIR     # every Tome in DIR as well
+    python3 tools/run_tome.py --manifest FIXTURE...
+
+1. **deark**: every fork it decodes, byte for byte, with the names, lengths,
+   types, creators and Finder flags read from the record table here. It has
+   no text codec; those forks are counted.
+2. **Installed copies**: a file found on the disk by name, type and creator
+   must have the engine's data fork byte for byte and its resource fork
+   resource for resource; another release ('vers' 1 differs) is counted.
+   **Skipped, and said so, without `macosinstall755.dsk`** in the vmac cache.
+3. **Damage**: every 61st stream byte of the smallest fixture changed, and
+   cuts every 997th byte — no crash, no hang, no exit 0 past a cut. How many
+   changes are refused is printed, not required: there is no checksum.
+
+**Controls**: a record claiming one byte more than its stream's tokens use
+is refused; deark's fork and the resource comparison each see one changed
+byte. **Made to fail** (measured 2026-11-10): the exact-end check removed
+(the control), the early 11-bit distance removed (6 of `install7`'s 13
+entries refused), the copy one longer after a short run dropped (4 unit
+checks).
+
+**`--manifest`** writes the four manifests: deark's hashes, then Apple's
+installed data forks; a resource fork only the installed copy grades, and a
+fork neither does, are `unadjudicated` with the reason, so `run_diff.py`
+grades 81 forks of `modemscripts` and `websharing` by their exact end alone.
+
+**What it cannot see**: the checksum. A text-codec fork no installed copy
+holds. A stream cut short, which the format's end rule fills with zeros —
+no stream of the 39 here needs that rule, and it stays because the
+specification's author saw forks that do. The two longest text-codec
+length codes. Tomes in 'part' resources (OPEN_ITEMS.md). With `--extra` over
+the 39 Tomes off the 7.5.5 and 8.6 media it prints five failures that are
+not the engine's: three forks where deark widens a distance one position
+early, and Apple Menu Options' `sysz` and MacTCP's `DRVR` 22 and `ctrp` 130,
+which differ from the installed copies and have not been looked at
+(DECISIONS.md 2026-11-10, *the archive the Installer reads*).
 
 ## MacGzip's own output (`tools/run_macgzip.py`, in `ci.sh`)
 
@@ -4078,7 +4122,7 @@ short-circuited and subtract — the instrument sees only the total.
   instructions use `tools/m68kprof.py`; for real cost, the tick probe on an
   emulated Mac.
 - **The Macintosh's own I/O** (stdio is not the File Manager).
-- **Any file it is not handed**: the corpus is 1,010 files, and the
+- **Any file it is not handed**: the corpus is 1,014 files, and the
   population that matters for REJECTION cost is non-archives —
   `reference/`, this repository's trees, the specimen cache; 8,364 were
   swept on 2026-10-05 (BLOCKERS.md, *Withdrawn claims*).

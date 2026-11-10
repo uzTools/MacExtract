@@ -29,7 +29,12 @@ FIXTURES="derived-ASCbeep.sit derived-apple.art.sit alpha401.cpt \
           derived-MUSFMT10.ZIP ddtf-dd377ad.dd derived-800saywhat301j.sit \
           synth-sit14.sit synth-sqp-forks.pkg \
           synth-exo-zip-implode.zip mar-wild-mar020.mar \
-          synth-mar-single.mac"
+          synth-mar-single.mac tome-wild-install7"
+
+# `tome-wild-install7` was added 2026-11-10 with the Installer Tome: 13
+# of Apple's files in 45 InstaCompOne blocks, the window growing from 4 KB
+# to 64 KB and the early 11-bit distance at position 1,645, read through
+# `ovl_zipold` by the shell's own writer, big-endian.
 
 # `mar-wild-mar020.mar` and `synth-mar-single.mac` were added 2026-11-03
 # with MAR: hampa's own archive, a folder of two-fork applications, and a

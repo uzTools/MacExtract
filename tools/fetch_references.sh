@@ -148,6 +148,20 @@ done
     -o reference/notes/xxhash_spec.md \
     "https://raw.githubusercontent.com/Cyan4973/xxHash/v0.8.2/doc/xxhash_spec.md"
 
+# The Apple Installer Tome, as danifunker/rusty-backup issue 109 documents
+# it (v2 of its tome-support.zip, MIT): the write-up src/fmt_tome.c is
+# written from. Only the document is kept; the zip's Rust and Python
+# decoders are neither kept nor run here.
+if [ ! -f reference/notes/installer_tome.md ]; then
+    curl -sSfL -o /tmp/tome-support.zip \
+        "https://github.com/user-attachments/files/34523224/tome-support.zip"
+    echo "e3c12a31adf75748f6f1156ab25102ab69c4422e3dd34715496b50c1e5e64c74  /tmp/tome-support.zip" \
+        | sha256sum -c --quiet \
+        && unzip -p /tmp/tome-support.zip tome-support/docs/installer_tome.md \
+            > reference/notes/installer_tome.md
+    rm -f /tmp/tome-support.zip
+fi
+
 # NOT `cd reference/notes`, which is what these blocks used to open with.
 # Every block BELOW them names its file from the repository root, so the
 # cd made all of those write into reference/notes/reference/notes/ — a

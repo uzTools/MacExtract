@@ -5164,6 +5164,8 @@ static void test_foreign(void)
     CHECK(UNC_FORMAT_DL == 49);
     CHECK(UNC_FORMAT_MAR == 50);
     CHECK(UNC_FORMAT_LZ4 == 51);
+    CHECK(UNC_FORMAT_ABK == 52);
+    CHECK(UNC_FORMAT_TOME == 53);
     CHECK(!unc_format_extractable(UNC_FORMAT_SITX_RETIRED));
     for (i = 30; i <= 44; i++)
         CHECK(!unc_format_extractable((UncFormat)i));
@@ -6456,6 +6458,205 @@ static void test_mar_comment_listing(void)
     }
 }
 
+
+/* The Apple Installer Tome (src/fmt_tome.c): a Tome built here, one fork
+ * per path a stream can take — stored, InstaCompOne, the text codec, a
+ * fork the format fills with zeros, a copy reaching back into the block
+ * before — then each way a stream or a header must be refused. The tokens
+ * are written by hand from the tables in fmt_tome.c's header comment;
+ * tools/run_tome.py grades the real thing against deark and Apple's
+ * Installer. */
+#include "fmt_tome_priv.h"
+
+typedef struct { uint8_t *p; uint32_t bits; } TomeBW;
+
+static void tbw(TomeBW *w, uint32_t v, int n)
+{
+    while (n--) {
+        if ((v >> n) & 1u) w->p[w->bits >> 3] |= (uint8_t)(0x80u >> (w->bits & 7));
+        w->bits++;
+    }
+}
+
+/* A record for `name`: data fork (len, at, clen), resource fork none. */
+static void tome_rec(uint8_t *a, uint32_t i, const char *name, uint32_t len,
+                     uint32_t at, uint32_t clen)
+{
+    uint8_t *r = a + TOME_HDR + i * TOME_REC;
+    r[6] = (uint8_t)strlen(name);
+    memcpy(r + 7, name, r[6]);
+    memcpy(r + 0x26, "TEXTttxt", 8);
+    r[0x36] = 0x01;
+    mar_put32(r + 0x3c, len);
+    mar_put32(r + 0x40, at);
+    mar_put32(r + 0x44, clen);
+}
+
+static void tome_hdr(uint8_t *a, uint32_t n)
+{
+    mar_put32(a, TOME_MAGIC);
+    mar_put32(a + 0x16, TOME_HDR);
+    a[0x1a] = (uint8_t)(n >> 8);
+    a[0x1b] = (uint8_t)n;
+}
+
+static void test_tome(void)
+{
+    static uint8_t a[0x24 + 5 * 0x80 + 64];
+    static uint8_t big[0x24 + 0x80 + 4 + 65536 + 8];
+    uint32_t at = 0x24 + 5 * 0x80, s0, s1, s2, s3;
+    TomeBW w;
+    MemIO m;
+    UncIO io;
+    UncAlloc al;
+    UncSink sk;
+    CapSink cap;
+    UncOptions opt;
+
+    memset(a, 0, sizeof a);
+    tome_hdr(a, 5);
+    /* 0: stored. */
+    s0 = at;
+    memcpy(a + at, "\x01\x00\x00\x00" "plain", 9);
+    tome_rec(a, 0, "Stored", 5, s0, 9);
+    at += 9;
+    /* 1: InstaCompOne. c = 0 ('00') in mode 1, a run of n = 3 ('101'),
+     * three 8-bit literals; the run was short, so a copy follows, c = 0
+     * ('00') and one longer, 3, from distance 1 (level 0: '0' and no bits). */
+    s1 = at;
+    memcpy(a + at, "\x00\x01\x00\x00", 4);
+    w.p = a + at + 4;
+    w.bits = 0;
+    tbw(&w, 0, 2); tbw(&w, 5, 3);
+    tbw(&w, 'A', 8); tbw(&w, 'B', 8); tbw(&w, 'C', 8);
+    tbw(&w, 0, 2); tbw(&w, 0, 1);
+    CHECK(w.bits == 32);
+    tome_rec(a, 1, "IC1", 6, s1, 8);
+    at += 8;
+    /* 2: the text codec. Its c = 0 is '000', the run of 2 is '100', the
+     * literals are 7 bits, then the same copy with its '000'. */
+    s2 = at;
+    memcpy(a + at, "\x00\x00\x00\x00", 4);
+    w.p = a + at + 4;
+    w.bits = 0;
+    tbw(&w, 0, 3); tbw(&w, 4, 3);
+    tbw(&w, 'h', 7); tbw(&w, 'i', 7);
+    tbw(&w, 0, 3); tbw(&w, 0, 1);
+    CHECK(w.bits == 24);
+    tome_rec(a, 2, "Text", 5, s2, 7);
+    at += 7;
+    /* 3: the InstaCompOne stream again under a length of 8: the input ends
+     * first, and the fork's last two bytes are zeros. */
+    s3 = s1;
+    tome_rec(a, 3, "Padded", 8, s3, 8);
+    /* 4: no data fork at all. */
+    tome_rec(a, 4, "Empty", 0, 0, 0);
+
+    test_make_alloc(&al);
+    test_make_memio(&io, &m, a, at);
+    CHECK(unc_sniff(&io) == UNC_FORMAT_TOME);
+    cap_make(&sk, &cap);
+    CHECK(unc_extract_as(UNC_FORMAT_TOME, &io, &sk, &al, NULL, NULL) == UNC_OK);
+    CHECK(cap.count == 5);
+    CHECK(cap.status[0] == UNC_OK && cap.dlen[0] == 5 &&
+          memcmp(cap.data[0], "plain", 5) == 0);
+    CHECK(cap.info[0].name_len == 6 && memcmp(cap.info[0].name, "Stored", 6) == 0);
+    CHECK(cap.info[0].type == 0x54455854u && cap.info[0].creator == 0x74747874u &&
+          cap.info[0].finder_flags == 0x0100);
+    CHECK(cap.status[1] == UNC_OK && cap.dlen[1] == 6 &&
+          memcmp(cap.data[1], "ABCCCC", 6) == 0);
+    CHECK(cap.status[2] == UNC_OK && cap.dlen[2] == 5 &&
+          memcmp(cap.data[2], "hiiii", 5) == 0);
+    CHECK(cap.status[3] == UNC_OK && cap.dlen[3] == 8 &&
+          memcmp(cap.data[3], "ABCCCC\0\0", 8) == 0);
+    CHECK(cap.status[4] == UNC_OK && cap.dlen[4] == 0 && cap.rlen[4] == 0);
+
+    /* A stream longer than its tokens: the output is complete with a byte
+     * of input left. Refused, and the walk goes on. */
+    tome_rec(a, 1, "IC1", 6, s1, 9);
+    test_make_memio(&io, &m, a, at);
+    cap_make(&sk, &cap);
+    (void)unc_extract_as(UNC_FORMAT_TOME, &io, &sk, &al, NULL, NULL);
+    CHECK(cap.count == 5 && cap.status[1] == UNC_ERR_CORRUPT &&
+          cap.status[2] == UNC_OK);
+    tome_rec(a, 1, "IC1", 6, s1, 8);
+    /* A codec the format does not have. */
+    a[s2 + 1] = 2;
+    test_make_memio(&io, &m, a, at);
+    cap_make(&sk, &cap);
+    (void)unc_extract_as(UNC_FORMAT_TOME, &io, &sk, &al, NULL, NULL);
+    CHECK(cap.status[2] == UNC_ERR_UNSUPPORTED);
+    a[s2 + 1] = 0;
+    /* A copy before the start: the IC1 stream's first token made a copy
+     * (c = 1, '01') at position 0. */
+    a[s1 + 4] |= 0x40;
+    test_make_memio(&io, &m, a, at);
+    cap_make(&sk, &cap);
+    (void)unc_extract_as(UNC_FORMAT_TOME, &io, &sk, &al, NULL, NULL);
+    CHECK(cap.status[1] == UNC_ERR_CORRUPT);
+    a[s1 + 4] &= (uint8_t)~0x40;
+    /* A stream past the end of the file. */
+    tome_rec(a, 2, "Text", 5, s2, 7 + 64);
+    test_make_memio(&io, &m, a, at);
+    cap_make(&sk, &cap);
+    (void)unc_extract_as(UNC_FORMAT_TOME, &io, &sk, &al, NULL, NULL);
+    CHECK(cap.status[2] == UNC_ERR_TRUNCATED);
+    tome_rec(a, 2, "Text", 5, s2, 7);
+
+    /* What the probe refuses: the magic, the records' offset, no record,
+     * a table longer than the file. */
+    a[1] ^= 1;
+    test_make_memio(&io, &m, a, at);
+    CHECK(unc_sniff(&io) != UNC_FORMAT_TOME);
+    a[1] ^= 1;
+    a[0x19] = 0x25;
+    test_make_memio(&io, &m, a, at);
+    CHECK(unc_sniff(&io) != UNC_FORMAT_TOME);
+    a[0x19] = 0x24;
+    a[0x1b] = 0;
+    test_make_memio(&io, &m, a, at);
+    CHECK(unc_sniff(&io) != UNC_FORMAT_TOME);
+    a[0x1b] = 5;
+    test_make_memio(&io, &m, a, 0x24 + 4 * 0x80);
+    CHECK(unc_sniff(&io) != UNC_FORMAT_TOME);
+
+    /* Two blocks: 64 KB stored, then InstaCompOne whose one copy (c = 1,
+     * '01', 3 bytes) reaches 1,000 back into the first block — level 11
+     * at that position, the short form: '0' and 11 bits of 999. The ring
+     * has grown from 4 KB to 64 KB on the way. */
+    memset(big, 0, sizeof big);
+    tome_hdr(big, 1);
+    at = 0x24 + 0x80;
+    big[at] = 1;
+    {
+        uint32_t i;
+        for (i = 0; i < 65536; i++) big[at + 4 + i] = (uint8_t)(i * 7u);
+    }
+    memcpy(big + at + 4 + 65536, "\x00\x01\x00\x00", 4);
+    w.p = big + at + 4 + 65536 + 4;
+    w.bits = 0;
+    tbw(&w, 1, 2); tbw(&w, 0, 1); tbw(&w, 999, 11);
+    tome_rec(big, 0, "Two blocks", 65539, at, 4 + 65536 + 4 + 2);
+    memset(&opt, 0, sizeof opt);
+    opt.test_only = 1;
+    test_make_memio(&io, &m, big, sizeof big);
+    cap_make(&sk, &cap);
+    CHECK(unc_extract_as(UNC_FORMAT_TOME, &io, &sk, &al, NULL, &opt) == UNC_OK);
+    CHECK(cap.count == 1 && cap.status[0] == UNC_OK);
+    /* The farthest a copy reaches: the long form ('11') at level 11, its
+     * field 16 bits wide here and capped at 15, so 32,767 + 5 * 2^11 + 1
+     * = 43,008 back, the window's whole reach. */
+    w.p = big + at + 4 + 65536 + 4;
+    memset(w.p, 0, 2);
+    w.bits = 0;
+    tbw(&w, 1, 2); tbw(&w, 1, 1); tbw(&w, 1, 1); tbw(&w, 0x7FFF, 15);
+    tome_rec(big, 0, "Two blocks", 65539, at, 4 + 65536 + 4 + 3);
+    test_make_memio(&io, &m, big, sizeof big);
+    cap_make(&sk, &cap);
+    (void)unc_extract_as(UNC_FORMAT_TOME, &io, &sk, &al, NULL, &opt);
+    CHECK(cap.count == 1 && cap.status[0] == UNC_OK);
+}
+
 /* An LZ4 block whose sequences ask for more than the frame's block size
  * stops within that size: 4 KB of input whose one match is 255-runs long
  * would otherwise write about 1 MB before the block's end was checked
@@ -7030,6 +7231,7 @@ void run_format_tests(void)
     test_winzip_aes_pieces();
     test_btoa();
     test_mar();
+    test_tome();
     test_lz4_block_bound();
     test_mar_comment_listing();
     test_base64_mime();

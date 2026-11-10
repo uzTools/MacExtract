@@ -42,14 +42,15 @@ MacBinary, PackIt, AppleLink packages, DiskDoubler and MacCompress, Now Compress
 SpaceSaver, Alysis SuperDisk!, Private File, ARC, LZH/LHA, uuencode, btoa,
 base64 and MIME attachments, AppleSingle/AppleDouble, MAR (`.mar`, `.mac`, `.mar.lz4`),
 Apple Backup's floppies (a Performa's backup, even with disks missing),
-zip, gzip, tar and `.Z`.
+the Tomes on Apple's install disks (System 7.5 to Mac OS 9), zip, gzip, tar
+and `.Z`.
 
 - **Everything comes back as it was:** both forks, type and creator, dates,
   icon positions, folder windows, Get Info comments, the Locked box and
   custom icons, so an extracted application simply runs.
 - **Double-click an archive** and it opens in MacExtract: the "MacExtract
   Helpers" folder on the disks stands in for StuffIt, Compact Pro,
-  DiskDoubler and thirteen other programs, on every System. Copy it to your
+  DiskDoubler and fifteen other programs, on every System. Copy it to your
   disk with MacExtract and open both folders once.
 - **No StuffIt on the machine?** On Mac OS 9, double-clicking an archive
   whose program is missing asks which to use, and MacExtract is on the list.

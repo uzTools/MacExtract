@@ -67,6 +67,10 @@ IMPLEMENTED = {
     "MAR": "MAR",
     # Nor an LZ4 frame: the bytes liblz4 encoded (tools/run_lz4.py).
     "LZ4": "LZ4",
+    # Nor an Apple Installer Tome: deark's Tome module where it decodes,
+    # Apple's Installer's own output on the System 7.5.5 disk where it has
+    # no codec (tools/run_tome.py).
+    "Installer Tome": "Installer Tome",
 }
 
 # A fixture whose oracle names a format this engine does not have. Until

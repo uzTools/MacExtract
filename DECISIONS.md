@@ -586,6 +586,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-10 (the encoder make clean deleted) — Debian's `arc` lives in the machine's cache, not `build/`, and `ci.sh`'s last line says when its cases were skipped
 - 2026-11-10 (the peek that was turned round) — StuffIt method 13's canonical table built at bit-reversed indices in the same 1 KB, the reversal table gone: −1.6 to −2.75 % of Plus engine ticks, −104 B of bundle, heap 0; built a bit at a time it was −0.2 % on an archive of many forks
 - 2026-11-10 (the backup on floppies) — Apple Backup extracts: a Performa's backup read as a set of disks, with disks missing, graded by two readers others wrote, run only in a namespace box; 64 B off every budget
+- 2026-11-10 (the archive the Installer reads) — Apple Installer Tomes extract from rusty-backup's write-up, graded by deark and by what Apple's Installer installed; deark widens a distance one byte early, the padding rule never fires on two install media, and the ring is sized per fork: 71,712 B where doubling took 104,480
 
 ---
 
@@ -24415,3 +24416,69 @@ not run on the emulator for this creator.
 **Transferable.** **A probe and a describe are two gates; test the one the
 host calls.** The probe here was right from the first line; the describe
 of another scheme answered first.
+
+## 2026-11-10 (the archive the Installer reads) — Apple Installer Tomes extract from rusty-backup's write-up, graded by deark and by what Apple's Installer installed; deark widens a distance one byte early, the padding rule never fires on two install media, and the ring is sized per fork: 71,712 B where doubling took 104,480
+
+**Asked by the maintainer**, after pricing (XADMaster issue 71, open since
+2017; a comment of 2026-11-07 pointed at danifunker/rusty-backup issue 109,
+where the format and both codecs are written up, MIT). Built from that
+write-up alone: `reference/notes/installer_tome.md`, fetched and pinned by
+hash. Its Rust and Python decoders were neither copied nor run (the sandbox
+refused running the Python, and it was not needed).
+
+**Second readers were already here (measured).** deark 1.7.3 in
+`reference/` has a Tome module with its own InstaCompOne decoder and no text
+codec; the cached System 7.5.5 disk holds both the Installer's Tomes and
+the files it installed from them. Over the 39 Tomes on that disk and the
+Mac OS 8.6 CD, 1,201 forks: 1,030 equal deark's, 168 deark cannot decode,
+161 installed files equal the engine's forks resource for resource (data
+forks byte for byte, the text codec's PPDs among them), 6 installed from
+another release.
+
+**deark widens the long distance at 1,644, the write-up at 1,645
+(measured).** Three forks differ from deark's from byte 1,644 on. A build
+with deark's bound fails 19 entries of the 39 Tomes on the exact end; the
+write-up's fails none, and Color SW 2200, Color SW 2400 and Shortcuts, which
+reach that position, equal Apple's installed copies only with it. deark's
+own source calls its range a hack that "may be wrong". Not reported
+upstream.
+
+**The exact end is the only test, and the padding rule never fires
+(measured).** Every one of the 1,201 streams ends with its output complete
+and no bit of input left. The write-up's rule — a token running past the
+stream is padding, the rest of the fork zeros — is kept, since its author
+saw forks that need it; so a stream cut short is accepted, and the control
+is the other direction: a stream with a byte left is refused. Of 3,704
+single-byte changes to `modemscripts`, 1,308 are refused. The first control
+written (a stream one byte SHORT, refused) failed, which is how this was
+found.
+
+**The header word the probe adds was measured, and so was one it does not
+use.** The long at 0x16 is 0x24 in all 52 Tomes here (39, and 13 in GX's
+`'part'` resources); the word at 0x1e repeats the count in 38 of 39 and is
+not tested.
+
+**The ring is sized per fork (measured).** LZ4's doubling ring held a
+32 KB copy beside the 64 KB one: 104,480 B peak. A Tome states each fork's
+length and the window does not cross forks, so the ring is allocated once
+at the size the fork needs and never copied: 71,712 B.
+
+**The progress bar counted the record table twice (measured).** The first
+version counted each record as it was read and then, after each entry, set
+`done` to where the entry's streams end, as MAR does — a position that
+already holds the whole table. `tools/run_ticks.py` failed it: the bar ran
+up to 8,049 B past a Tome's end. Now each stream counts once, by the input
+buffer as it is read and the unread rest after the entry; every Tome ends
+within 563 B of its size (the header and the gaps between streams).
+
+**A helper, because nothing claims the creator.** The Installer is
+`APPL`/`kajr` and its bundle claims `kajr`, `bbkr`, `judy` and `bjbc`; a
+double-clicked Tome opened nothing. MacStamp's census has 253 `idcp`/`kakc`
+files.
+
+**Price (measured).** Shipped CODE +20 and A5 +12, plus the `idcp` type in
+the bundle; `ovl_zipold` +3,214 and `ovl_sniff` +168. The control +3,408
+(its code tables are `.data` there), so `OVL_SAVED` +3,376, `TIERS` −3,408:
+every grant 32 B lower, less its images' change. `run_tiers.py --shipped`
+over all 992 fixtures: 963 at System 3.0 / 512 KB, the earlier 959 and the
+four Tomes. Deepest chain 944 B.

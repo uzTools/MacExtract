@@ -310,7 +310,10 @@ TAKEN = "2026-11-03"
 # -> 201,136 2026-11-10: Apple Backup, its reader and its set's match in
 # `ovl_zipold` (+2,548), its probe and its set's identity in `ovl_sniff`
 # (+712) (DECISIONS.md 2026-11-10, *the backup on floppies*).
-EXPECT_BUNDLE = 201136
+# -> 204,520 the same day: the Installer Tome, its reader in `ovl_zipold`
+# (+3,214) and its probe in `ovl_sniff` (+168) (DECISIONS.md 2026-11-10,
+# *the archive the Installer reads*).
+EXPECT_BUNDLE = 204520
 TOLERANCE_BUNDLE = 2048
 TAKEN_BUNDLE = "2026-11-10"
 
