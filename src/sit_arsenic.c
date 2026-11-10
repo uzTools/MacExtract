@@ -283,19 +283,46 @@ static int32_t ars_decode(ArsDecoder *d, ArsModel *m)
         n++;
     }
 
-    /* Remove the symbol and renormalise. */
+    /* Remove the symbol and renormalise.
+     *
+     * The loop runs once per compressed bit, and through unc_bitin_bit
+     * and d-> it loaded and stored the bit reader's buffer and count,
+     * range and code on every one of them. Here all four are locals and
+     * go back once, after the loop. The bit order is the reader's MSB
+     * mode — ars_dec_init sets it up with unc_bitin_init and nothing
+     * here changes it — so this is unc_bitin_bit's own MSB path: refill
+     * a byte when the count is spent, then take bit `nbits`. */
     {
-        int32_t lowincr = (int32_t)ars_mulw((uint32_t)renorm, (uint32_t)low);
-        d->code -= lowincr;
-        if (low + freq[n] == m->total) d->range -= lowincr;
-        else d->range = (int32_t)ars_mulw((uint32_t)renorm,
-                                          (uint32_t)freq[n]);
-        while (d->range <= ARS_HALF) {
-            int bit = unc_bitin_bit(d->bi);
-            if (bit < 0) { d->err = d->bi->err; return -1; }
-            d->range <<= 1;
-            d->code = (d->code << 1) | bit;
+        uint32_t lowincr = ars_mulw((uint32_t)renorm, (uint32_t)low);
+        uint32_t range, code = (uint32_t)d->code - lowincr;
+        if (low + freq[n] == m->total) range = (uint32_t)d->range - lowincr;
+        else range = ars_mulw((uint32_t)renorm, (uint32_t)freq[n]);
+        if (range <= ARS_HALF) {
+            UncBitIn *bi = d->bi;
+            uint32_t buf = bi->bitbuf;
+            int32_t nb = bi->nbits;
+            do {
+                if (nb == 0) {
+                    int byte = unc_bufin_next(bi->in);
+                    if (byte < 0) {
+                        bi->err = bi->in->err;
+                        bi->bitbuf = buf;
+                        bi->nbits = 0;
+                        d->err = bi->err;
+                        return -1;
+                    }
+                    buf = (uint32_t)byte;
+                    nb = 8;
+                }
+                nb--;
+                range <<= 1;
+                code = (code << 1) | ((buf >> nb) & 1u);
+            } while (range <= ARS_HALF);
+            bi->bitbuf = buf;
+            bi->nbits = nb;
         }
+        d->range = (int32_t)range;
+        d->code = (int32_t)code;
     }
     ars_model_bump(m, n);
     return m->first + n;
