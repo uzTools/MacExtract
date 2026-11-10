@@ -222,6 +222,17 @@ overlay images' sizes are re-taken.
 16-bit node indices (CLAUDE.md, 68000 discipline: 32-bit arithmetic in hot
 paths).
 
+## Where a `.sit.hqx`'s time goes on a Plus: two costs not located
+
+**Filed by the maintainer 2026-11-10.** Both MEASURED on one archive only,
+`macburger-helper.hqx` (312 entries) on `mv-4M-1x`; the causes are
+HYPOTHESES.
+
+| what | evidence | what would close it |
+|---|---|---|
+| **`ovl_keep`'s `high_handle` on a 128K ROM: 9.6 s** | `MoveHHi` put back on today's tree: 223.6 → 213.8 s, twice (DECISIONS.md 2026-11-10, *the 12.8 seconds that were three commits*). The call runs a few times a run, so where it leaves the block is the hypothesis, about 30 ms an entry. Not measured: other archives, the 1 MB tier, the 64K ROM | an archive of few large entries and one of many small ones timed both ways, to say whether it scales per entry; a heap dump after `ovl_keep` both ways. Then either `high_handle` places the block where `MoveHHi` would (0 resident B), or the ROM test comes back (32 B off every budget) |
+| **create, `SetEOF`, close, `FlushVol` and catalog: 80 s** | 4,785 of 11,772 ticks, about 15 an entry, against the engine's 6,745 (FORMATS.md, *Where `macburger-helper.hqx`'s StuffIt layer goes*). Expander does no `FlushVol` (FORMATS.md, *Our figures include a `FlushVol`*) | the tick probe splitting the five calls, then whether the `FlushVol` after every fork is what costs |
+
 ## Resident bytes that could leave before extraction
 
 **Not started; each is its own change.** Sizes MEASURED 2026-10-22 at
