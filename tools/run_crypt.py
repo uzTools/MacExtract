@@ -49,8 +49,8 @@ ROOT = os.path.join(os.path.dirname(__file__), "..")
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import synth_crypt as SC                              # noqa: E402
 
-ARC_BIN = os.path.abspath(os.path.join(ROOT, "build", "arc", "usr", "bin",
-                                       "arc"))
+from arc_bin import arc_bin                           # noqa: E402
+ARC_BIN = arc_bin()
 SHORT_PW = "hushnow"          # seven bytes: see the note above
 LONG_PW = "swordfish-and-more"
 
@@ -967,7 +967,7 @@ def main():
             print("run_crypt: no `7z`, WinZip AES fixtures skipped")
 
         # ---- ARC, from Debian's `arc` if it is here -------------------
-        if os.path.exists(ARC_BIN):
+        if ARC_BIN:
             src = tempfile.mkdtemp()
             # noise.bin is stored and longer than a 4 KB refill, which
             # the 18-byte key does not divide: the garble's position
@@ -997,8 +997,9 @@ def main():
             ran += 1
             shutil.rmtree(src, ignore_errors=True)
         else:
-            print("run_crypt: no `arc` at %s — the garble is still graded, "
-                  "on the archive synth_crypt.py garbles itself" % ARC_BIN)
+            print("run_crypt: no `arc` encoder (tools/get_arc.sh) — the "
+                  "garble is still graded, on the archive synth_crypt.py "
+                  "garbles itself")
         check_encinfo(macextract, problems, tmp)
         ran += check_wild_sit(macextract, problems, tmp)
         ran += check_installermaker(macextract, problems, tmp)

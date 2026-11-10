@@ -622,4 +622,11 @@ if [ -f "$AT_CMAKE" ]; then
         || fail "autotest application build"
 fi
 
-echo "CI: all green"
+# A skip prints one line mid-log and the run still ends green, which is how
+# the real-arc cases went unrun for weeks (DECISIONS.md 2026-11-10, *the
+# encoder make clean deleted*). Said again where it is read.
+if [ -n "$(python3 tools/arc_bin.py)" ]; then
+    echo "CI: all green"
+else
+    echo "CI: all green, WITHOUT the real-arc cases (run tools/get_arc.sh once)"
+fi

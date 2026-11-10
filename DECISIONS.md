@@ -583,6 +583,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-10 (the division every byte paid for) — ARC's garble and PackIt's PMa5 wrap a key cursor instead of taking a `%` a byte: ~960 → ~64 cycles a byte (estimate), −24 B of `ovl_crypt`; no suite could tell a key restarted at every refill
 - 2026-11-10 (the window filled a byte at a time) — every decoder window is filled a long at a time: −2.5 % on a small `-lh5-` entry, −3.2 % on method 14, Compact Pro unchanged, for −304 B of bundle
 - 2026-11-10 (the 12.8 seconds that were three commits) — the shipped application's 12.8 s on `macburger-helper.hqx` between v0.41.0 and 2026-11-09 is 9.6 s from `ovl_keep`'s `high_handle` on a 128K ROM, 2.0 s from the 1 KB progress step and 1.0 s from v0.45.0's dialogs; `MoveHHi` put back gives the 9.6 s back
+- 2026-11-10 (the encoder make clean deleted) — Debian's `arc` lives in the machine's cache, not `build/`, and `ci.sh`'s last line says when its cases were skipped
 
 ---
 
@@ -24223,3 +24224,23 @@ any other archive.
 **Consequence.** `cbc07ee3` bought one path and 32 B onto every budget; on
 a 128K ROM it costs ~10 s on a 312-entry `.sit.hqx`. Which to keep is the
 maintainer's choice; nothing is changed here.
+## 2026-11-10 (the encoder make clean deleted) — Debian's `arc` lives in the machine's cache, not `build/`, and `ci.sh`'s last line says when its cases were skipped
+
+**Claim, evidence, consequence (measured).** `tools/get_arc.sh` put `arc` in
+`build/arc`, and `ci.sh` starts with `make clean`, which is `rm -rf build`.
+Every CI run since 2026-09-26 skipped the real encoder's cases: three in
+`run_arc.py`, three in `run_crypt.py`, including the 9,000 B garbled member
+of *the division every byte paid for*. It was recorded that day (*A skip
+whose remedy has to be re-run after every clean is a permanent skip*) and
+covered with a synthetic seed, not fixed. `arc` now installs in
+`~/.cache/macextract/arc` (`$UNC_ARC_HOME`), and `tools/arc_bin.py` finds it
+there, or in `build/arc`, for all three scripts. With it, after `make clean`:
+`run_arc.py` 222 archives and `run_crypt.py` 79 cases; without it, 219 and
+76, both skips printed.
+
+**Not fetched by `ci.sh`.** It is a `.deb` download, and a backgrounded
+process here has no network: it would stall, not fail. The other oracles
+(`deark`, `lha`, `mpack`, …) build from `reference/` offline, which is why
+they survive a clean and this did not. Instead the run's LAST line, the one
+that is read, says `CI: all green, WITHOUT the real-arc cases` when there
+is no encoder. A machine without the package still goes green.

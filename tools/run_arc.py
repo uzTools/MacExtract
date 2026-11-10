@@ -35,8 +35,8 @@ import synth_arc                                    # noqa: E402
 
 # Absolute: this is run with cwd set elsewhere, and a relative
 # program path would then resolve against THAT directory.
-ARC_BIN = os.path.abspath(os.path.join(ROOT, "build", "arc", "usr",
-                                       "bin", "arc"))
+from arc_bin import arc_bin                         # noqa: E402
+ARC_BIN = arc_bin()
 
 
 def extracted(outdir, name):
@@ -188,7 +188,7 @@ def main():
         ran += 1
 
         # Real archives from a real encoder, if it is here.
-        if os.path.exists(ARC_BIN):
+        if ARC_BIN:
             src = tempfile.mkdtemp()
             for name, content in data.items():
                 open(os.path.join(src, name), "wb").write(content)

@@ -234,8 +234,9 @@ mechanisms keep finding the next one (recounted 2026-10-11); the first two and
 - **a graded case that has never run on this machine, announcing itself
   in every CI run.** 2026-09-26: `run_crypt.py`'s "garbled ARC skipped",
   read as normal for five weeks; `tools/get_arc.sh` fetched the encoder first
-  try and the cases found a retry defect. `./ci.sh`'s `make clean` deletes
-  `build/arc` again. Ask what a familiar skip is the ONLY cover for.
+  try and the cases found a retry defect. `./ci.sh`'s `make clean` deleted
+  `build/arc` again, every run, until 2026-11-10. Ask what a familiar skip
+  is the ONLY cover for.
 - **a coverage figure with a cause attached, where the cause is in the
   source.** 2026-09-26: "PackIt's XOR and DES 0 in 30, because a flipped bit
   fails its header CRC first" — PackIt encrypts the header, and re-run it is

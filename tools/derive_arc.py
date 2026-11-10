@@ -10,8 +10,8 @@ parameter space of each coder and keeps what reproduces the input
 byte for byte. Without `--grid` it re-reads the corpus fixtures with
 the rules so derived and checks them against the oracle's sha256.
 
-    tools/derive_arc.py --grid    # derive, needs build/arc
-    tools/derive_arc.py --garble  # ARC's `g` against the garble rule, needs build/arc
+    tools/derive_arc.py --grid    # derive, needs tools/get_arc.sh
+    tools/derive_arc.py --garble  # ARC's `g` against the garble rule, needs tools/get_arc.sh
     tools/derive_arc.py           # verify against fixtures/manifests
 
 Not in `ci.sh`: it needs either the encoder or the fixtures, neither of
@@ -32,7 +32,9 @@ import sys
 import tempfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-ARC = os.path.join(ROOT, "build", "arc", "usr", "bin", "arc")
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from arc_bin import arc_bin                                 # noqa: E402
+ARC = arc_bin()
 
 
 # ---------------------------------------------------------------- container
@@ -239,8 +241,8 @@ def cmd_verify():
 
 
 def cmd_grid():
-    if not os.path.exists(ARC):
-        print("derive-arc: no build/arc — run tools/get_arc.sh first (skipped)")
+    if not ARC:
+        print("derive-arc: no `arc` encoder — run tools/get_arc.sh first (skipped)")
         return 0
     wd = tempfile.mkdtemp(prefix="arcderive-")
     import random
@@ -300,8 +302,8 @@ def cmd_garble():
     UNGARBLED archive's bytes for that member — its compressed stream,
     not its plaintext, whichever method ARC chose. Only ARC's output and
     this file are in the loop; no decoder runs."""
-    if not os.path.exists(ARC):
-        print("derive-arc: no build/arc — run tools/get_arc.sh first (skipped)")
+    if not ARC:
+        print("derive-arc: no `arc` encoder — run tools/get_arc.sh first (skipped)")
         return 0
     os.makedirs(os.path.join(ROOT, ".tmp"), exist_ok=True)
     wd = tempfile.mkdtemp(prefix="arcgarble-", dir=os.path.join(ROOT, ".tmp"))

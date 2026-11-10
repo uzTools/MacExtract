@@ -9,24 +9,29 @@
 # to our reading of the format.
 #
 # Same arrangement as tools/build_macunpack.sh: an oracle assembled on
-# demand, never committed. The binary lands in build/arc/, which is
-# ignored; run_arc.py picks it up if it is there and says so if it is
-# not.
+# demand, never committed. The binary lands in ~/.cache/macextract/arc
+# ($UNC_ARC_HOME), NOT build/: ci.sh's `make clean` deletes build/, and
+# the cases that need it skipped on every run while it lived there
+# (DECISIONS.md 2026-11-10, *the encoder make clean deleted*).
+# tools/arc_bin.py finds it for run_arc.py, run_crypt.py and
+# derive_arc.py. Run it in the FOREGROUND: it downloads, and a
+# backgrounded process here has no network.
 #
 # SPDX-License-Identifier: 0BSD
 set -e
 cd "$(dirname "$0")/.."
 
-if [ -x build/arc/usr/bin/arc ]; then
-    echo "get_arc: already present at build/arc/usr/bin/arc"
+DEST=${UNC_ARC_HOME:-$HOME/.cache/macextract/arc}
+if [ -x "$DEST/usr/bin/arc" ]; then
+    echo "get_arc: already present at $DEST/usr/bin/arc"
     exit 0
 fi
 
-mkdir -p build/arc
-cd build/arc
+mkdir -p "$DEST"
+cd "$DEST"
 apt-get download arc >/dev/null 2>&1 || {
     echo "get_arc: could not download the arc package" >&2
     exit 1
 }
 dpkg-deb -x arc_*.deb .
-echo "get_arc: build/arc/usr/bin/arc"
+echo "get_arc: $DEST/usr/bin/arc"

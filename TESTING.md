@@ -2457,10 +2457,10 @@ header can refuse*).
   `7z t` for AES — and all four must return the input. One flipped bit per
   zip shape fails `unar`, `7z` and our CLI alike (2026-09-26).
 
-**ARC's garble on every run is the synthetic shape**: `arc` lives in
-`build/arc`, which `ci.sh`'s `make clean` deletes and nothing re-fetches,
-so the three real-encoder cases skip (printed) unless `tools/get_arc.sh`
-is run between runs. The synthetic shape garbles three of `synth_arc.py`'s
+**ARC's garble on every run is the synthetic shape**, and the real
+encoder's three cases too wherever `tools/get_arc.sh` has been run once:
+it installs `arc` in `~/.cache/macextract/arc`, which `make clean` does not
+reach (before 2026-11-10 it was `build/arc`, and every CI run skipped them). The synthetic shape garbles three of `synth_arc.py`'s
 methods and failed against the engine of 2026-09-26 (DECISIONS.md
 2026-09-26, *the guard that was on the other side*); it also asserts that
 no password fails every entry rather than handing over garbled bytes.
@@ -2502,8 +2502,9 @@ capitals).
   `tools/vmac/cptcrypt.py --make --probe`; on a fresh clone the case
   skips, loudly. A round trip through our own cipher is deliberately NOT
   substituted.
-- The **`arc` cases skip** when `build/arc/` is empty (after `make clean`);
-  run `tools/get_arc.sh` first. The skip is printed.
+- The **`arc` cases skip** where `tools/get_arc.sh` has never been run
+  (`tools/arc_bin.py` says where it looks). The skip is printed, and
+  `ci.sh`'s last line says `WITHOUT the real-arc cases`.
 ## Now Compress: the archives the corpus does not have (`tools/run_now.py`, in `ci.sh`)
 
 The corpus's first real fixture reaches two block shapes; the rest had no
