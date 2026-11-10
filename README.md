@@ -147,8 +147,8 @@ On a 1 MB Mac Plus, the slowest machine supported:
 |---|---|
 | A few KB, any format | 2–16 seconds |
 | A few hundred KB, most formats | up to 2 minutes |
-| 150 KB StuffIt 5 | 6 minutes |
-| 200 KB StuffIt 5 unpacking to 640 KB, worst case measured | 12 minutes |
+| 150 KB StuffIt 5 | 4 minutes |
+| 200 KB StuffIt 5 unpacking to 640 KB, worst case measured | 11 minutes |
 
 A faster Mac is proportionally faster.
 

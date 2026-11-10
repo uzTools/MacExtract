@@ -4929,8 +4929,8 @@ output is still in every row** (measured: 341 ticks on `kermitut9test.bin`, 325 
 | `derived-EmpireBuilderDemo.sit` | StuffIt | 278 KB | **61 s** | 119 s | 3 s |
 | `derived-MacPass390.sea` | DiskDoubler | 156 KB | 61 s | 110 s | 3 s |
 | `derived-XferIt_1.5b4.sea` | Compact Pro | 285 KB | 122 s | 251 s | 3 s |
-| `derived-a2basic.dmg.sit` | StuffIt 5 (Arsenic) | 153 KB | 281 s | 321 s | 20 s |
-| `derived-Library_ISBN_Barcoder.sit` | StuffIt 5 (Arsenic) | 202 KB | 461 s | 542 s | 20 s |
+| `derived-a2basic.dmg.sit` | StuffIt 5 (Arsenic) | 153 KB | **241 s** (281 s before 2026-11-10) | 321 s | 20 s |
+| `derived-Library_ISBN_Barcoder.sit` | StuffIt 5 (Arsenic) | 202 KB | **381 s** (441 s before 2026-11-10) | 542 s | 20 s |
 
 **There is no boot column: this harness cannot measure boot.** It reports the
 first poll at which the grid is visible — 9.2 s at `--poll 3`, 20.1 s at
@@ -4941,20 +4941,28 @@ in about 10 s.
 both paths, on the purpose-built 1 MB 1x emulator (`build_mv mv-1M-1x 1M z`),
 one emulator at a time:
 
-| Fixture | Output | 4 MB — transform table | 1 MB — sampled index | ratio |
+| Fixture | Output | 4 MB — transform table | 1 MB | ratio |
 |---|---|---|---|---|
-| `derived-a2basic.dmg.sit` | 205,019 B | **281 s** (peak 829,041 B) | **341 s** (peak 703,565 B) | 1.21x |
-| `derived-Library_ISBN_Barcoder.sit` | 641,115 B | **461 s** (peak 1,353,789 B) | **742 s** (peak 644,858 B) | 1.61x |
+| `derived-a2basic.dmg.sit` | 205,019 B | **241 s**, 14,273 ticks | **241 s**, 14,583 ticks — the 2.5-byte table | 1.02x |
+| `derived-Library_ISBN_Barcoder.sit` | 641,115 B | **381 s**, 21,989 ticks | **682 s**, 39,775 ticks — the sampled index | 1.81x |
 
-**All four cells re-measured 2026-10-10**, byte-exact. **Since 2026-11-04
-a2basic does not take the sampled index at 1 MB**: its 197,515-byte block
-fits the 2.5-byte table (493,788 B) in the 750,902 B StuffIt 5 grant, and
-its engine time there is **17,163 ticks against the sampled index's 20,056
-(−14.4 %)**, 1.02x its 4 MB 16,845 (all `UNC_AT_TIMING`, measured
-2026-11-04; Mac peak **711,838 B**, measured the same day, byte-exact). ISBN's
+**All four cells re-measured 2026-11-10**, byte-exact, after Arsenic's
+divisions and renormalisation (DECISIONS.md 2026-11-10, *the division libgcc
+was asked to do*, *the count the bit buffer did not need*). Ticks are engine
+ticks (`UNC_AT_TIMING`, two runs each, ±5); the seconds are the extract
+column above, read-back included. The same day's baseline was a2basic 281 s
+and 281 s, ISBN 441 s and 742 s (16,834, 17,148, 25,941 and 43,711 ticks).
+Peaks are not re-taken: the change moves the heap by 24 B an entry. Mac peaks
+measured earlier: a2basic 829,041 B at 4 MB (2026-10-10) and **711,838 B**
+at 1 MB (2026-11-04); ISBN 1,353,789 B and 644,858 B (2026-10-10).
+**Since 2026-11-04 a2basic does not take the sampled index at 1 MB**: its
+197,515-byte block fits the 2.5-byte table (493,788 B) in the 750,902 B
+StuffIt 5 grant, where the sampled index had cost it 14.4 % (measured
+2026-11-04). ISBN's
 block (323,384 B) needs 808,460 B for it and still falls to the index
 (DECISIONS.md 2026-11-04, *the rung between the table and the index*). The fallback costs
-1.21x to 1.61x; the ratio widens with block fill, and neither the x86 ratio
+ISBN 1.81x, 1.68x the same morning: the arithmetic decoder got faster and the
+walk did not. The ratio widens with block fill, and neither the x86 ratio
 nor output size predicts it (DECISIONS.md 2026-08-07, *the inverse BWT falls
 back to a sampled occurrence index*). The sampled index sizes itself to the
 budget it is given (*Budget*), so a 1 MB peak that rises with the budget is
@@ -5315,7 +5323,7 @@ written is DECISIONS.md 2026-10-09 (*what GCC will not do with an index*).
 | **CRC-32** (`unc_crc32`; zip, gzip, StuffIt 5, Compact Pro, Private File — a third of Private File's instructions, FORMATS.md *What it costs*) | 8 instructions, ~111 cycles a byte | 7 instructions, ~77: the cleared-index trick, `add.w` twice to scale, `(d8,An,Dn.w)` | as RC4's row |
 | **CRC-16/XMODEM** (`unc_crc16_xmodem`; BinHex, MacBinary, PackIt) | 9 instructions, ~115 cycles a byte | 8 instructions, ~67: `rol.w #8` replaces two 22-cycle shifts; `clr.b`, then the cleared-index table read | as RC4's row |
 | **CRC-16/ARC** (`unc_crc16_arc`, `UNC_HOT`; StuffIt 1.5–4 forks) | 9 instructions, ~92 cycles a byte | 7 instructions, ~63: the cleared-index table read, one `lsr.w #8` | as RC4's row |
-| **Arsenic's sampled-index scan** (`ars_index_next`'s `do { i++; } while (block[i] != c)`; every StuffIt 5 entry on a 1 MB machine whose block outgrows the transform table — 742 s for the ISBN fixture, FORMATS.md *StuffIt 5 / Arsenic at 1x*) | 3 instructions, ~32 cycles a byte | ~16 cycles a byte: `cmp.b (An)+,Dn` with the sentinel ending the run, unrolled four times; `i` recovered once per scan | as RC4's row, plus the `UNC_ARS_FORCE_SAMPLED` build in the `qemu-m68k` lane; its share of a run is not measured (77 % before the sentinel) |
+| **Arsenic's sampled-index scan** (`ars_index_next`'s `do { i++; } while (block[i] != c)`; every StuffIt 5 entry on a 1 MB machine whose block outgrows the transform table — 682 s for the ISBN fixture, FORMATS.md *StuffIt 5 / Arsenic at 1x*) | 3 instructions, ~32 cycles a byte | ~16 cycles a byte: `cmp.b (An)+,Dn` with the sentinel ending the run, unrolled four times; `i` recovered once per scan | as RC4's row, plus the `UNC_ARS_FORCE_SAMPLED` build in the `qemu-m68k` lane; its share of a run is not measured (77 % before the sentinel) |
 | **LZW's string walk** (`lzw_emit`, `UNC_HOT`; compress, StuffIt method 2, DiskDoubler method 1, ARC) | 7 instructions, ~76 cycles a byte: `andi.l #65535` after every parent read, the `chr` base re-copied each byte | 4 instructions, ~50: upper word cleared once; both bases in address registers; `dbf` on `k` | as RC4's row |
 | **Compact Pro's match copy** (`cpt_rle_match`, `UNC_HOT`; DiskDoubler method 8 runs the same loop) | 8 instructions, ~64 cycles a byte | 6 instructions, ~46: `0x81` in a register; cursor post-incremented and corrected on the escape exit; `dbf` on `k` (≤ 8,192) | as RC4's row |
 | **The fork writer's run copy** (`unc_fork_write`; every output byte of StuffIt methods 5, 13 and 14, LZH's `-lh1-`/`-lh2-`/`-lh3-` and DART) | 12 instructions, ~154 cycles a byte: `o->buf`/`o->len` reloaded and stored every byte (aliasing), then `len == cap` tested | 2 instructions, ~22: `n` clipped once per piece, `move.b (An)+,(Am)+` / `dbf` (~8 a byte with `move.l` at equal parity). **A C loop over the clipped piece would get most of this too** (100 B; its time not recorded) | as RC4's row |
