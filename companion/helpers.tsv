@@ -34,3 +34,4 @@ LZIV	Compress	MacCompress	ZIVU,ZIVM	pair
 LARC	MacLHa	MacLHa	LHA 	pair
 arc*	ArcMac	ArcMac	mArc,ARC7	pair
 MARc	MAR	Hampa's Mac application	MARd,MARf,ZIVU,LZ4-	the maintainer
+OBBa	AppleBkp	Apple Backup	OBDa,OBDc	the maintainer (2026-11-10); OBDa read off three real disks, OBDc by the Kaitai description (mac/macextract_icons.r)

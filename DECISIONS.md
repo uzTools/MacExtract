@@ -24377,7 +24377,13 @@ writes there, masked as every emulator check here masks them.
 
 **The type no file here carries.** `OBDc`, a restore CD's copies, is in the
 bundle on the Kaitai description's word alone; `OBDa`
-is read off three real disks. 12 B of resource each.
+is read off three real disks. 12 B of resource each. **And an `OBBa`
+helper** (the maintainer, 2026-11-10), the seventeenth, claiming both: on a
+Mac without Apple Backup, a double-click on "Apple Backup Data" otherwise
+ends in "the application could not be found", and that Mac is the one that
+needs MacExtract. About 7 KB on each disk and in the helpers' zip; the
+hand-off is the stub every helper is, checked by `tools/check_helpers.py`,
+not run on the emulator for this creator.
 
 **Transferable.** **A probe and a describe are two gates; test the one the
 host calls.** The probe here was right from the first line; the describe

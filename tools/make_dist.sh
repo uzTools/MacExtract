@@ -119,13 +119,13 @@ text as "Read Me"; drag MacExtract onto your startup disk.
                   test: start up from the Hard Disk 20, put the floppy in,
                   double-click MacExtract-Helpers.zip and choose the Hard
                   Disk 20. Then tell us what happened, at
-                  https://github.com/uzTools/MacExtract/issues -- sixteen
+                  https://github.com/uzTools/MacExtract/issues -- seventeen
                   files in a "MacExtract Helpers" folder, or the ID number
                   if it bombs.
 
 Double-click helpers. The 800K and 1.44 MB disks also hold a "MacExtract
 Helpers" folder,
-and MacExtract-Helpers.zip has the same sixteen in one file: open it with
+and MacExtract-Helpers.zip has the same seventeen in one file: open it with
 MacExtract. Each one stands in
 for a program that made archives -- StuffIt, Compact Pro, DiskDoubler and
 others -- so that double-clicking one of its archives opens it in

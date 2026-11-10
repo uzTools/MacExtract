@@ -303,8 +303,8 @@ started**; the patches are drafted here and posted by the maintainer.
 ## The double-click helpers: what is left
 
 `companion/` works (DECISIONS.md 2026-10-11, *the stub that hands it on*);
-its sixteen helpers are in `dist/` and on both disk images since
-2026-11-04, in no release yet (DECISIONS.md 2026-11-04, *the helpers in
+its helpers are in `dist/` and on both disk images since
+2026-11-04 (seventeen since 2026-11-10, Apple Backup's), in no release yet (DECISIONS.md 2026-11-04, *the helpers in
 dist*). Left:
 
 - **Which of a file's two dates System 7 compares** between two applications

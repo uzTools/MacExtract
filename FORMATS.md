@@ -2599,7 +2599,8 @@ engine's 3,446 B.
 **Not restored**: the System Folder's blessing, which no host here writes;
 and a backup date, which the format does not store per item.
 
-**Finder**: `OBDa` and `OBDc` are in the application's bundle. `OBDc` is the type of a
+**Finder**: `OBDa` and `OBDc` are in the application's bundle, and an
+`OBBa` helper is among the double-click helpers. `OBDc` is the type of a
 restore CD's copies by Kaitai's description only; no file here carries it.
 
 ## Finder info in the archive: what each format's own expander puts back
