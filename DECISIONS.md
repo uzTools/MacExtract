@@ -24387,17 +24387,24 @@ password state now: shipped `CODE` −56, A5 +24 (alignment), 32 B onto every
 budget; the control −64. Nothing showed that the password half had bitten
 an encrypted set; it is set because it was not.
 
-**MacStamp has no row for it (checked 2026-11-10).** MacStamp, which
-stamps a downloaded file's type and creator, has no Apple Backup format and
-none of `OBBa`, `OBDa`, `OBDc` in its tables (macstamp cb7dc48), and its
-142,267-file census holds no file carrying either pair. So a disk's file
-downloaded raw — the six here are — arrives untyped, and neither the bundle
-nor the helper is reached by a double-click; MacExtract still opens it by
-content. Giving MacStamp the format is that project's change.
+**MacStamp had no row for it (checked 2026-11-10), and has one since the
+same day.** At macstamp cb7dc48 it had no Apple Backup format and none of
+`OBBa`, `OBDa`, `OBDc`, and its 142,267-file census no file carrying either
+pair, so a disk's file downloaded raw — the six here are — arrived untyped
+and reached neither the bundle nor the helper. Handed this entry's facts,
+MacStamp added the format (macstamp a960b6c): a blank file named "Data
+File" and a number is stamped `OBDc`/`OBBa`, any other `OBDa`/`OBBa` — the
+bytes cannot tell them apart. **Claims are checked against MacStamp
+before they ship, not after.**
 
-**The type no file here carries.** `OBDc`, a restore CD's copies, is in the
-bundle on the Kaitai description's word alone; `OBDa`
-is read off three real disks. 12 B of resource each. **And an `OBBa`
+**The type a restore CD carries (measured; CORRECTED the same day).**
+`OBDc` went into the bundle on the Kaitai description's word alone; MacStamp
+then read all 105 "Data File" files of the Performa 5400/6400 Software Restore CD (691-1264-A,B, 1996; archive.org item 691-1264-ABMacintosh_Performa_5400_and_6400_series._Software_Restore._SSW_v7.5.3, SHA-1 02933a3d4f562ea44d106006a7adf05aeaeaff5f) — "Restore All
+Software" 1..67, "Restore System Software" 1..38 — every one `OBDc`/`OBBa`,
+1,447,936 B, headers as the floppies' field for field, so this probe takes
+them. The program beside them, "Restore All Software" (`APPL`/`cdre`),
+claims no document type and holds `OBDc` in its code and never `OBDa`.
+`OBDa` is read off three real disks. 12 B of resource each. **And an `OBBa`
 helper** (the maintainer, 2026-11-10), the seventeenth, claiming both: on a
 Mac without Apple Backup, a double-click on "Apple Backup Data" otherwise
 ends in "the application could not be found", and that Mac is the one that

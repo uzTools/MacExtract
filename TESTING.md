@@ -3468,7 +3468,8 @@ writable (2026-11-10).
 
 **What it cannot see**: anything both readers get wrong the same way — both
 come from one article; a set with every disk present, real (neither here
-is); a restore CD's `OBDc` copies; and the Macintosh, which is
+is — the Performa 5400/6400 Software Restore CD holds two, 67 and 38 `OBDc`
+"Data File"s, read by MacStamp and not fetched here); and the Macintosh, which is
 `tools/vmac/interactive.py --abk` (tools/vmac/README.md), not in `ci.sh`.
 The box cannot stop a kernel bug reachable from an unprivileged process;
 there is no seccomp filter.

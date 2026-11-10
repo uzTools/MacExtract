@@ -300,11 +300,10 @@ resource 'FREF' (173) { 'LZ4-', 1, "" };
 resource 'FREF' (174) { 'LZ4 ', 1, "" };
 /* Apple Backup, creator `OBBa`: `OBDa`, the type of "Apple Backup Data" on
    each backup floppy (three real disks, fixtures/SOURCES.md, abk-perfB-*);
-   `OBDc`, the type of a restore CD's "Data File" copies by Em Adespoton's
-   description (reference/applebackup/kaitai-apple_backup.py), on no file
-   here. NOT from MacStamp, unlike the types above: it has no row for
-   either, and its 142,267-file census no file carrying them (macstamp
-   cb7dc48, 2026-11-10). DECISIONS.md 2026-11-10, *the backup on floppies*. */
+   `OBDc`, the type of a restore CD's "Data File" copies: all 105 on the
+   Performa 5400/6400 Software Restore CD (691-1264-A,B, 1996), read by
+   MacStamp (macstamp a960b6c), whose rows for both pairs came after these
+   claims. DECISIONS.md 2026-11-10, *the backup on floppies*. */
 resource 'FREF' (175) { 'OBDa', 1, "" };
 resource 'FREF' (176) { 'OBDc', 1, "" };
 

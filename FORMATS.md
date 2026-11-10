@@ -2601,7 +2601,10 @@ and a backup date, which the format does not store per item.
 
 **Finder**: `OBDa` and `OBDc` are in the application's bundle, and an
 `OBBa` helper is among the double-click helpers. `OBDc` is the type of a
-restore CD's copies by Kaitai's description only; no file here carries it.
+restore CD's copies: all 105 "Data File" files on the Performa 5400/6400 Software Restore CD (691-1264-A,B, 1996; archive.org item 691-1264-ABMacintosh_Performa_5400_and_6400_series._Software_Restore._SSW_v7.5.3, SHA-1 02933a3d4f562ea44d106006a7adf05aeaeaff5f) are `OBDc`/`OBBa`,
+read by MacStamp (macstamp a960b6c), headers as the floppies'. MacStamp
+stamps a blank one by its name ("Data File" and a number: `OBDc`; anything
+else: `OBDa`).
 
 ## Finder info in the archive: what each format's own expander puts back
 
