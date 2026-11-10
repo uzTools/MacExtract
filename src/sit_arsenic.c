@@ -167,7 +167,7 @@ static void ars_model_bump(ArsModel *m, int32_t n)
  * true product is bounded by `range`: renorm is range/total rounded
  * down and x <= total, so renorm * x <= range < 2^25. Unsigned
  * throughout, so the discarded bits are defined rather than overflow. */
-static uint32_t ars_mulw(uint32_t renorm, uint32_t x)
+static UNC_INLINE uint32_t ars_mulw(uint32_t renorm, uint32_t x)
 {
     uint32_t lo = (uint32_t)(uint16_t)renorm * (uint32_t)(uint16_t)x;
     uint32_t hi = (uint32_t)(uint16_t)(renorm >> 16) * (uint32_t)(uint16_t)x;
@@ -241,28 +241,72 @@ static UNC_INLINE uint32_t ars_div_renorm(uint32_t code, uint32_t renorm,
     return q;
 }
 
+/* The decoder's working state, as the symbol loop holds it: range and
+ * code, and the bit reader's buffer LEFT-aligned — the next bit is bit
+ * 31 — with a MARKER, a single 1, just below the last unread bit. The
+ * buffer is empty when the marker is all that is left (ARS_EMPTY), so
+ * there is no count to keep: taking a bit is a shift into the carry and
+ * an add, where the reader's right-aligned buffer wants a count, a shift
+ * by it and a mask. A 68000 has eight data registers and the symbol
+ * loop wanted a ninth; the count was the one spilled to the frame.
+ *
+ * ars_reg_load and ars_reg_store convert at the ends. The reader holds
+ * at most 31 bits (unc_bitin_fill stops at n <= 24, plus 7), so the
+ * marker always fits. ars_read_block converts once a block. */
+#define ARS_EMPTY 0x80000000u
+
+typedef struct ArsReg {
+    uint32_t range, code, buf;
+} ArsReg;
+
+static UNC_INLINE void ars_reg_load(ArsReg *r, const ArsDecoder *d)
+{
+    const UncBitIn *bi = d->bi;
+    int32_t nb = bi->nbits;
+    r->range = (uint32_t)d->range;
+    r->code = (uint32_t)d->code;
+    r->buf = nb > 0 ? (bi->bitbuf << (32 - nb)) | (ARS_EMPTY >> nb)
+                    : ARS_EMPTY;
+}
+
+static UNC_INLINE void ars_reg_store(const ArsReg *r, ArsDecoder *d)
+{
+    UncBitIn *bi = d->bi;
+    int32_t nb = 31;
+    while (!((r->buf >> (31 - nb)) & 1u)) nb--;
+    d->range = (int32_t)r->range;
+    d->code = (int32_t)r->code;
+    bi->nbits = nb;
+    bi->bitbuf = nb > 0 ? r->buf >> (32 - nb) : 0;
+}
+
 /* Decode one symbol under `m`: the write-up's "decode a frequency" and
- * "remove symbol", with the search over the group sums first.
+ * "remove symbol", with the search over the group sums first. Returns
+ * the symbol, or a (negative) UNC_ERR_*.
  *
  * Every operand is provably non-negative in a valid stream — `range` is
  * renormalised into (HALF, ONE], `code` lies in [0, range), totals are
  * positive — so the two divisions are UNSIGNED. The guard replaces the
  * narrower `total == 0` test and cannot fire on a valid stream; on a
- * corrupt one it is the same UNC_ERR_CORRUPT, sooner. */
-static int32_t ars_decode(ArsDecoder *d, ArsModel *m)
+ * corrupt one it is the same UNC_ERR_CORRUPT, sooner.
+ *
+ * Forced inline, and inlined into ONE hot place: the symbol loop of
+ * ars_read_block, where it was a call per symbol — eight registers
+ * saved and restored, the state loaded from and stored to the decoder
+ * — and reached through a register holding its address. The cold
+ * callers (block header, end-of-block bit, CRC, the archive's first
+ * bytes) go through ars_decode, the one other copy. */
+static UNC_INLINE int32_t ars_sym(ArsReg *r, ArsModel *m, UncBitIn *bi)
 {
-    int32_t renorm, frequency, low, n, g, hi;
+    uint32_t renorm, frequency, low, lowincr, range, code;
+    int32_t n, g, hi;
     const int32_t *freq = m->freq;
 
-    if (d->err != UNC_OK) return -1;
-    if (d->range <= 0 || m->total <= 0 || d->code < 0) {
-        d->err = UNC_ERR_CORRUPT;
-        return -1;
-    }
-    renorm = (int32_t)ars_div_total((uint32_t)d->range, (uint32_t)m->total);
-    if (renorm == 0) { d->err = UNC_ERR_CORRUPT; return -1; }
-    frequency = (int32_t)ars_div_renorm((uint32_t)d->code, (uint32_t)renorm,
-                                        (uint32_t)d->range);
+    if ((int32_t)r->range <= 0 || m->total <= 0 || (int32_t)r->code < 0)
+        return UNC_ERR_CORRUPT;
+    renorm = ars_div_total(r->range, (uint32_t)m->total);
+    if (renorm == 0) return UNC_ERR_CORRUPT;
+    frequency = ars_div_renorm(r->code, renorm, r->range);
 
     /* Which group, then which symbol in it. `frequency` can be equal to
      * or a little above the total — renorm is rounded down, so code can
@@ -272,60 +316,62 @@ static int32_t ars_decode(ArsDecoder *d, ArsModel *m)
     low = 0;
     g = 0;
     hi = (m->nsyms - 1) / ARS_GROUP;                /* last non-empty group */
-    while (g < hi && low + m->gsum[g] <= frequency) {
-        low += m->gsum[g];
+    while (g < hi && low + (uint32_t)m->gsum[g] <= frequency) {
+        low += (uint32_t)m->gsum[g];
         g++;
     }
     n = g * ARS_GROUP;
     hi = n + ARS_GROUP < m->nsyms ? n + ARS_GROUP : m->nsyms;
-    while (n < hi - 1 && low + freq[n] <= frequency) {
-        low += freq[n];
+    while (n < hi - 1 && low + (uint32_t)freq[n] <= frequency) {
+        low += (uint32_t)freq[n];
         n++;
     }
 
-    /* Remove the symbol and renormalise.
-     *
-     * The loop runs once per compressed bit, and through unc_bitin_bit
-     * and d-> it loaded and stored the bit reader's buffer and count,
-     * range and code on every one of them. Here all four are locals and
-     * go back once, after the loop. The bit order is the reader's MSB
-     * mode — ars_dec_init sets it up with unc_bitin_init and nothing
-     * here changes it — so this is unc_bitin_bit's own MSB path: refill
-     * a byte when the count is spent, then take bit `nbits`. */
-    {
-        uint32_t lowincr = ars_mulw((uint32_t)renorm, (uint32_t)low);
-        uint32_t range, code = (uint32_t)d->code - lowincr;
-        if (low + freq[n] == m->total) range = (uint32_t)d->range - lowincr;
-        else range = ars_mulw((uint32_t)renorm, (uint32_t)freq[n]);
-        if (range <= ARS_HALF) {
-            UncBitIn *bi = d->bi;
-            uint32_t buf = bi->bitbuf;
-            int32_t nb = bi->nbits;
-            do {
-                if (nb == 0) {
-                    int byte = unc_bufin_next(bi->in);
-                    if (byte < 0) {
-                        bi->err = bi->in->err;
-                        bi->bitbuf = buf;
-                        bi->nbits = 0;
-                        d->err = bi->err;
-                        return -1;
-                    }
-                    buf = (uint32_t)byte;
-                    nb = 8;
+    /* Remove the symbol and renormalise: once per compressed bit, all of
+     * it in registers. The bit order is the reader's MSB mode, which
+     * ars_dec_init sets up with unc_bitin_init and nothing changes. */
+    lowincr = ars_mulw(renorm, low);
+    code = r->code - lowincr;
+    if (low + (uint32_t)freq[n] == (uint32_t)m->total)
+        range = r->range - lowincr;
+    else
+        range = ars_mulw(renorm, (uint32_t)freq[n]);
+    if (range <= ARS_HALF) {
+        uint32_t buf = r->buf;
+        do {
+            if (buf == ARS_EMPTY) {
+                int byte = unc_bufin_next(bi->in);
+                if (byte < 0) {
+                    r->buf = ARS_EMPTY;
+                    bi->err = bi->in->err;
+                    return bi->err;
                 }
-                nb--;
-                range <<= 1;
-                code = (code << 1) | ((buf >> nb) & 1u);
-            } while (range <= ARS_HALF);
-            bi->bitbuf = buf;
-            bi->nbits = nb;
-        }
-        d->range = (int32_t)range;
-        d->code = (int32_t)code;
+                buf = ((uint32_t)byte << 24) | (ARS_EMPTY >> 8);
+            }
+            range <<= 1;
+            code = (code << 1) - (uint32_t)((int32_t)buf >> 31);
+            buf <<= 1;
+        } while (range <= ARS_HALF);
+        r->buf = buf;
     }
+    r->range = range;
+    r->code = code;
     ars_model_bump(m, n);
     return m->first + n;
+}
+
+/* One symbol for the cold callers: the state in and out of the decoder
+ * around one ars_sym. -1 with d->err set on failure, as before. */
+static int32_t ars_decode(ArsDecoder *d, ArsModel *m)
+{
+    ArsReg r;
+    int32_t s;
+    if (d->err != UNC_OK) return -1;
+    ars_reg_load(&r, d);
+    s = ars_sym(&r, m, d->bi);
+    ars_reg_store(&r, d);
+    if (s < 0) { d->err = s; return -1; }
+    return s;
 }
 
 /* n bits as a number, least significant first, each under `m`. */
@@ -957,10 +1003,14 @@ static int ars_block_reserve(Arsenic *a, UncAlloc *al, uint32_t need)
 /* is followed by the 32-bit CRC, sixteen bits at a time.              */
 /* ------------------------------------------------------------------ */
 
-static int ars_read_block(Arsenic *a, UncAlloc *al)
+static UNC_NOINLINE int ars_read_block(Arsenic *a, UncAlloc *al)
 {
-    int32_t sel, rank;
+    int32_t sym, rank;
     uint32_t pnext = ARS_PROGRESS_STEP;
+    uint32_t zerostate = 1, zerocount = 0;
+    ArsModel *m;
+    ArsReg r;
+    int err = UNC_OK;
 
     ars_mtf_reset(&a->mtf);
 
@@ -969,49 +1019,53 @@ static int ars_read_block(Arsenic *a, UncAlloc *al)
     if (a->dec.err != UNC_OK) return a->dec.err;
     a->numbytes = 0;
 
+    /* The symbol loop: ONE ars_sym, under whichever model the previous
+     * symbol chose, so the decoder's state lives in `r` — registers —
+     * for the whole block and goes back to a->dec once, at the end. */
+    ars_reg_load(&r, &a->dec);
+    m = &a->selector;
     for (;;) {
-        sel = ars_decode(&a->dec, &a->selector);
-        if (sel < 0) return a->dec.err != UNC_OK ? a->dec.err : UNC_ERR_CORRUPT;
+        sym = ars_sym(&r, m, &a->bi);
+        if (sym < 0) { err = sym; break; }
 
-        if (sel == 0 || sel == 1) {
-            /* Zero counting: each 0 adds the state, each 1 twice the
-             * state, and the state doubles every time. */
-            uint32_t zerostate = 1, zerocount = 0;
-            while (sel < 2) {
-                if (sel == 0) zerocount += zerostate;
-                else zerocount += 2 * zerostate;
-                zerostate *= 2;
-                sel = ars_decode(&a->dec, &a->selector);
-                if (sel < 0)
-                    return a->dec.err != UNC_OK ? a->dec.err : UNC_ERR_CORRUPT;
-                if (zerocount > a->blocksize) return UNC_ERR_CORRUPT;
+        if (m == &a->selector) {
+            /* Checked after the symbol that follows a count, as the
+             * count was always checked: a stream cut there reports the
+             * cut, not the count. */
+            if (zerocount > a->blocksize) { err = UNC_ERR_CORRUPT; break; }
+            if (sym < 2) {
+                /* Zero counting: each 0 adds the state, each 1 twice the
+                 * state, and the state doubles every time. */
+                zerocount += zerostate << sym;
+                zerostate <<= 1;
+                continue;
             }
-            if (a->numbytes + zerocount > a->blocksize) return UNC_ERR_CORRUPT;
-            {
-                int rerr = ars_block_reserve(a, al, a->numbytes + zerocount);
-                if (rerr != UNC_OK) return rerr;
-            }
-            {
-                uint8_t z = ars_mtf_decode(&a->mtf, 0);
+            if (zerocount) {
+                uint8_t z;
                 uint32_t i;
+                if (a->numbytes + zerocount > a->blocksize) {
+                    err = UNC_ERR_CORRUPT;
+                    break;
+                }
+                err = ars_block_reserve(a, al, a->numbytes + zerocount);
+                if (err != UNC_OK) break;
+                z = ars_mtf_decode(&a->mtf, 0);
                 for (i = 0; i < zerocount; i++) a->block[a->numbytes + i] = z;
+                a->numbytes += zerocount;
+                zerocount = 0;
+                zerostate = 1;
             }
-            a->numbytes += zerocount;
+            if (sym == 10) break;
+            if (sym != 2) { m = &a->mtfmodel[sym - 3]; continue; }
+            rank = 1;
+        } else {
+            rank = sym;
+            m = &a->selector;
         }
 
-        if (sel == 10) break;
-        else if (sel == 2) rank = 1;
-        else {
-            rank = ars_decode(&a->dec, &a->mtfmodel[sel - 3]);
-            if (rank < 0)
-                return a->dec.err != UNC_OK ? a->dec.err : UNC_ERR_CORRUPT;
-        }
-
-        if (a->numbytes >= a->blocksize) return UNC_ERR_CORRUPT;
-        {
-            int rerr = ars_block_reserve(a, al, a->numbytes + 1);
-            if (rerr != UNC_OK) return rerr;
-        }
+        if (a->numbytes >= a->blocksize) { err = UNC_ERR_CORRUPT; break; }
+        err = ars_block_reserve(a, al, a->numbytes + 1);
+        if (err != UNC_OK) break;
         a->block[a->numbytes++] = ars_mtf_decode(&a->mtf, rank);
 
         /* Decoding a block emits nothing, and at 4 MB it is most of the
@@ -1022,10 +1076,15 @@ static int ars_read_block(Arsenic *a, UncAlloc *al)
          * steps over multiples, and a mask cost KeyGraphics a third of
          * its reports. */
         if (a->numbytes >= pnext) {
-            int perr = unc_progress_at(a->bi.in->ps, a->ppos);
-            if (perr != UNC_OK) return perr;
+            err = unc_progress_at(a->bi.in->ps, a->ppos);
+            if (err != UNC_OK) break;
             pnext = a->numbytes + ARS_PROGRESS_STEP;
         }
+    }
+    ars_reg_store(&r, &a->dec);
+    if (err != UNC_OK) {
+        if (sym < 0) a->dec.err = err;
+        return err;
     }
 
     if (a->transformindex >= a->numbytes) return UNC_ERR_CORRUPT;
