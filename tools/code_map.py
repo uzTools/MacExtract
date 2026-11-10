@@ -37,7 +37,7 @@ import sys
 GROUPS = [
     ("Macintosh shell (UI, File Manager, memory)", ["macextract_mac"]),
     ("shared codec machinery (Huffman/LZW/LZ/BWT)",
-     ["unc_huffman", "unc_lzw", "unc_lzdyn", "unc_lzah", "crc32", "sit_arsenic"]),
+     ["unc_huffman", "unc_canon_dec", "unc_lzw", "unc_lzdyn", "unc_lzah", "crc32", "sit_arsenic"]),
     ("deflate (zip + gzip)",
      ["inflate", "inftrees", "inffast", "adler32", "unc_inflate", "zutil"]),
     ("engine core, util, segment joining",

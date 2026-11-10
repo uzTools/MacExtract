@@ -564,15 +564,21 @@ int unc_huff_decode(const UncHuff *h, UncBitIn *bi);
 typedef struct UncCanon {
     uint16_t count[UNC_CANON_MAX_BITS + 1]; /* codes per bit length */
     uint32_t first[UNC_CANON_MAX_BITS + 1]; /* first code value per length */
-    uint16_t cbase[UNC_CANON_MAX_BITS + 1]; /* sym[] index length l starts at */
+    /* Where length l's codes start in sym[], LESS first[l], mod 2^16: a
+     * code of length l is then sym[(int16_t)(code + cdelta[l])], one add
+     * and no compare. Exact while the true index is below 32,768; the
+     * largest alphabet is LZH's 510 literals.
+     * It was the start alone (`cbase`) until 2026-11-10; the subtraction
+     * per symbol is what moved into the build. */
+    uint16_t cdelta[UNC_CANON_MAX_BITS + 1];
     int16_t *sym;                           /* symbols in (len,sym) order */
     int16_t  maxlen;
     /* Next UNC_CANON_FAST_BITS bits -> the length of the code that
      * starts there, or 0 when it is longer than that and the
      * bit-at-a-time walk has to run. The symbol itself is not stored:
      * codes of one length are consecutive from first[l], so it is
-     * sym[cbase[l] + (code - first[l])], which is two shifts and a
-     * subtract against the 256 extra bytes a symbol table would cost. */
+     * sym[code + cdelta[l]], which is two shifts and an add against
+     * the 256 extra bytes a symbol table would cost. */
     uint8_t  fastlen[1u << UNC_CANON_FAST_BITS];
     int16_t  symstore[UNC_CANON_MAX_SYMS];  /* what `sym` points at unless
                                              * the caller supplied storage */

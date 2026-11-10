@@ -577,6 +577,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-09 (the inline the compiler declined) — `unc_bitin_bit` and `unc_bitin_fill` forced inline: −21 to −31 % on method 5, method 6 and implode for +1,160 B of images; `unc_bufin_next` and `unc_fork_put` measured and not kept
 - 2026-11-09 (the set's identity that left) — which set a file belongs to leaves resident `CODE` for `ovl_sniff`, beside the parsers it already carried, and Compact Pro's match for `ovl_cptdd` too; 1,584 B onto every budget that keeps neither, 52 B off one that keeps the bundle
 - 2026-11-09 (the match that was masked twice a byte) — methods 13 and 14 copy a match through cursors in one out-of-line function and share one flush: −2.2 to −5.2 % of Plus engine ticks for +44 B of `ovl_stuffit`; `-lh1-` and ARC Trimmed the same, inline, −1.3 to −17.2 % for +28 B of `ovl_codecs`
+- 2026-11-10 (the forward every symbol took) — the canonical decoder's table hit on locals, its walk out of line, and a copy in each image that calls it: −4.4 to −10.5 % of Plus engine ticks on all five of its users, +2,360 B of bundle, every kept set smaller
 
 ---
 
@@ -23972,3 +23973,41 @@ follows the share of match bytes, not the method**: the same decoder gained
 ordinary fork goes these runs do not say (OPEN_ITEMS.md, *`-lh1-`*, has the
 two candidates left).
 
+
+## 2026-11-10 (the forward every symbol took) — the canonical decoder's table hit on locals, its walk out of line, and a copy in each image that calls it: −4.4 to −10.5 % of Plus engine ticks on all five of its users, +2,360 B of bundle, every kept set smaller
+
+**Claim, evidence, consequence (measured).** `unc_canon_decode` moved to
+`src/unc_canon_dec.c`, which `ovl_cptdd`, `ovl_lzh`, `ovl_now` and
+`ovl_stuffit` each link, and left the host vector. Plus engine ticks, two runs
+a build, five fixtures one per user: Compact Pro −6.4 %, LZH −6.5 %, Now
+Compress −10.5 %, method 13 −4.4 %, DiskDoubler method 10 −6.0 % (FORMATS.md,
+*The canonical decoder in each image*). Every tally in `run_tiers.py --check`
+unmoved.
+
+**Two changes, measured one at a time, and both win on every user.**
+(a) alone, the function rewritten in place: −3.2 to −7.1 %, `ovl_codecs`
+−80 B. Under `UNC_HOT` it saved seven registers for a table hit that needed
+four, because the walk shared its frame; with the walk a separate
+`UNC_NOINLINE` function, reached by a tail jump, the hit saves four. The bit
+state is read once and stored once, the refill reads the window itself, and
+`cdelta[l] = cbase[l] − first[l]` (mod 2^16, same field, same size) makes the
+symbol `sym[code + cdelta[l]]`: one table read and one subtract fewer.
+(b) alone, the old function copied into each image: −1.1 to −3.3 %, ~860 B an
+image. The forward was three instructions, ~40 cycles (FORMATS.md's
+estimate), per symbol. (c), both: the two gains add to within half a
+point on four users; on LZH (c) is 2.2 points better than their sum, not
+located.
+
+**Why the bytes are not a cost to any kept set.** Every format that decodes
+canonical codes also keeps `ovl_codecs`, which gives the copy back (−868 B);
+what each holds falls 54–64 B, and a format that keeps none of the four
+images gains 868. What grows is the bundle, read whole at launch and kept by
+an envelope whose payload the peek cannot name: +2,360 B, the whole-bundle
+grant −2,344 B (−31,478 B). The control: CODE +8, A5 −8; the shipped A5 −16
+(the vector's slot); `OVL_SAVED` +16.
+
+**What this does not cover.** The 256 B bit-reversal table and the LSB-first
+half are in all four copies; only `ovl_stuffit` reads LSB-first. Building
+that table at bit-reversed indices (FORMATS.md, *Hand-written 68000
+assembly*, suggestions) is the method-13 work's, and would take the table out
+of the decoder. `unc_huff_decode` has the same shape and is not measured.

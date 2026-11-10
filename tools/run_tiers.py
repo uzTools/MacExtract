@@ -1197,7 +1197,12 @@ EXPECT = {
 # the control's +32 (CODE +28, A5 +4) against the shipped pair's 0, the code
 # in `ovl_codecs` (+28; DECISIONS.md 2026-11-09, *the match that was masked
 # twice a byte*). TIERS -32, which cancels: every grant moves +4.
-OVL_SAVED = 169440
+# **+16 2026-11-10, -> 169,456**: the canonical decoder copied into each
+# image that calls it, the shipped pair's A5 -16 (the vector's slot, 4 B,
+# and `.data` alignment) against the control's 0 (CODE +8, A5 -8;
+# DECISIONS.md 2026-11-10, *the forward every symbol took*). TIERS does not
+# move: the control did not.
+OVL_SAVED = 169456
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
 # every kept image is one — as is the bundle an envelope holds on to.
@@ -1334,15 +1339,15 @@ IMAGES = {
     "OVL_ID_ARC":         7924,
     "OVL_ID_BINHEX":      7630,
     "OVL_ID_BTOA":        2496,
-    "OVL_ID_CODECS":      6236,
-    "OVL_ID_CPTDD":       15290,
+    "OVL_ID_CODECS":      5368,
+    "OVL_ID_CPTDD":       16094,
     "OVL_ID_CRYPT":       9284,
     "OVL_ID_EXO":         30228,
-    "OVL_ID_LZH":         10702,
-    "OVL_ID_NOW":         4948,
+    "OVL_ID_LZH":         11506,
+    "OVL_ID_NOW":         5762,
     "OVL_ID_PACKIT":      2180,
     "OVL_ID_SPACESAVER":  16236,
-    "OVL_ID_STUFFIT":     28602,
+    "OVL_ID_STUFFIT":     29406,
     "OVL_ID_SQP":         1736,
     "OVL_ID_SUPERDISK":   6628,
     "OVL_ID_TEXT":        11438,
@@ -1497,7 +1502,11 @@ IMAGES = {
 # **CODECS +28, the bundle +28 B, the same day**: `-lh1-`'s match copied
 # through cursors (DECISIONS.md 2026-11-09, *the match that was masked twice
 # a byte*).
-BUNDLE = 198244
+# **CODECS -868, CPTDD +804, LZH +804, NOW +814, STUFFIT +804, the bundle
+# +2,360 B, 2026-11-10**: the canonical decoder copied into each image that
+# calls it, rewritten (DECISIONS.md 2026-11-10, *the forward every symbol
+# took*).
+BUNDLE = 200604
 
 # What the SHIPPED lane asserts, and it is the refused fixtures BY NAME
 # rather than a tally: a tier that refuses two different fixtures and still

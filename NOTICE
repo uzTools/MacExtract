@@ -208,7 +208,8 @@ This project's decoders are transcriptions/ports of algorithms from:
     `src/unc_lzw.c` is written from deark's `src/fmtutil-lzw.c` (below)
     and Welch's algorithm, and neither `LZW.c` nor
     `XADCompressHandle.m` is a source of it. Nor the canonical
-    code-length Huffman codes in `src/unc_huffman.c`, which follow
+    code-length Huffman codes in `src/unc_huffman.c` and
+    `src/unc_canon_dec.c`, which follow
     RFC 1951 section 3.2.2 and puff.c (below) rather than
     XADPrefixCode.m. Nor, since 2026-09-20, the bit-serialized TREE in
     that same file, nor the fact that DiskDoubler method 4 and PackIt
@@ -820,7 +821,8 @@ This project's decoders are transcriptions/ports of algorithms from:
 
   * RFC 1951 (DEFLATE, L. Peter Deutsch, 1996) and puff.c (Mark Adler,
     zlib licence) — REFERENCES ONLY, for the canonical code-length
-    Huffman codes in `src/unc_huffman.c`. Section 3.2.2 defines the
+    Huffman codes in `src/unc_huffman.c` (the build) and
+    `src/unc_canon_dec.c` (the decoder, since 2026-11-10). Section 3.2.2 defines the
     code shape and gives the assignment; puff.c's `construct()` and
     `decode()` are the build and the walk, and its contract that an
     INCOMPLETE code set is a legal outcome rather than an error is what
