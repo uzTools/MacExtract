@@ -6570,6 +6570,15 @@ within a second, 1.5–1.6 s on the screen clock in every 2026-10-19 run. On
 this emulator's seek-free disk that costs little; a real Mac Plus is not
 measured (MANUAL_TESTS.md).
 
+**Where `macburger-helper.hqx`'s StuffIt layer goes** (measured 2026-11-10
+at `c6554e68`: the inner `MacburgerHelper.sit`, 312 entries, through
+`run.py --emu mv-4M-1x -D UNC_AT_TIMING`, two runs a tick apart): of
+**11,772 ticks**, the engine **6,745** (112 s), File Manager reads 175 and
+writes 67, and **the rest of the File Manager 4,785 (80 s)**, which is
+create, `SetEOF`, close, `FlushVol` and catalog work together, about 15
+ticks an entry; the read-back's 731 are outside the total. Which of those
+calls the 80 s is, is not measured.
+
 ### Sources
 
 - The application itself, extracted as described above: `Read Me`, `What's new
