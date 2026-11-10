@@ -174,13 +174,79 @@ static uint32_t ars_mulw(uint32_t renorm, uint32_t x)
     return lo + (hi << 16);
 }
 
+/* The two divisions, without libgcc's __udivsi3.
+ *
+ * The 68000's divu.w divides 32 bits by 16 and traps on nothing but a
+ * zero divisor; a quotient that does not fit 16 bits sets V and leaves
+ * the register unchanged. GCC emits it only when both operands are 16
+ * bits, so every 32-bit dividend here went to __udivsi3: a call, two
+ * stacked arguments, a register saved, a test of the divisor's width,
+ * and for a divisor of 2^16 or more a loop of shifts. ars_divu is that
+ * one instruction, with a C body everywhere else so the arithmetic
+ * around it is what the x86 suites test.
+ *
+ * Precondition, checked by every caller: den in [1, 0xFFFF] and
+ * (num >> 16) < den, which is exactly "the quotient fits 16 bits".
+ * Result as divu leaves it: remainder in the high word, quotient low. */
+#if defined(__mc68000__) && !defined(UNC_ARS_C_DIVU)
+static UNC_INLINE uint32_t ars_divu(uint32_t num, uint32_t den)
+{
+    __asm__("divu.w %1,%0" : "+d"(num) : "d"((uint16_t)den) : "cc");
+    return num;
+}
+#else
+static UNC_INLINE uint32_t ars_divu(uint32_t num, uint32_t den)
+{
+    return ((num % den) << 16) | (num / den);
+}
+#endif
+
+/* range / total. total is at most limit + increment, 1032 — a model is
+ * halved as soon as it passes its limit (ars_model_bump), whatever the
+ * stream says — and at least 1, so it is a 16-bit divisor, and range
+ * <= ONE is 26 bits: long division in two 16-bit digits, of which the
+ * first is zero, and skipped, whenever total > range >> 16. */
+static UNC_INLINE uint32_t ars_div_total(uint32_t range, uint32_t total)
+{
+    uint32_t hi = range >> 16, q = 0, t;
+    if (hi >= total) {
+        t = ars_divu(hi, total);
+        q = t << 16;
+        hi = t >> 16;
+    }
+    return q | (ars_divu((hi << 16) | (range & 0xFFFFu), total) & 0xFFFFu);
+}
+
+/* code / renorm, exactly. On a valid stream code < range, so the
+ * quotient is at most total (range < renorm * (total + 1)) and fits 16
+ * bits. renorm itself is range / total, 2^24 / 1032 to 2^25 / 1: below
+ * 2^16 it is one divu; above, both are shifted right until the divisor
+ * fits, which can only round the estimate UP (the shifted divisor lost
+ * more, proportionally, than the dividend) and by less than
+ * quotient / divisor < 1033 / 2^15 — so by at most one, and one product
+ * tells which. That product is < code + renorm < 2^26, in range for
+ * ars_mulw. A code at or above range is a corrupt stream; it keeps the
+ * plain division, so the answer is the same either way. */
+static UNC_INLINE uint32_t ars_div_renorm(uint32_t code, uint32_t renorm,
+                                          uint32_t range)
+{
+    uint32_t c, dv, q;
+    if (code >= range) return code / renorm;
+    if (renorm <= 0xFFFFu) return ars_divu(code, renorm) & 0xFFFFu;
+    c = code;
+    dv = renorm;
+    do { c >>= 1; dv >>= 1; } while (dv > 0xFFFFu);
+    q = ars_divu(c, dv) & 0xFFFFu;
+    if (ars_mulw(renorm, q) > code) q--;
+    return q;
+}
+
 /* Decode one symbol under `m`: the write-up's "decode a frequency" and
  * "remove symbol", with the search over the group sums first.
  *
  * Every operand is provably non-negative in a valid stream — `range` is
  * renormalised into (HALF, ONE], `code` lies in [0, range), totals are
- * positive — so the two divisions are UNSIGNED: on a 68000 __divsi3 is a
- * sign wrapper around the unsigned helper. The guard replaces the
+ * positive — so the two divisions are UNSIGNED. The guard replaces the
  * narrower `total == 0` test and cannot fire on a valid stream; on a
  * corrupt one it is the same UNC_ERR_CORRUPT, sooner. */
 static int32_t ars_decode(ArsDecoder *d, ArsModel *m)
@@ -193,9 +259,10 @@ static int32_t ars_decode(ArsDecoder *d, ArsModel *m)
         d->err = UNC_ERR_CORRUPT;
         return -1;
     }
-    renorm = (int32_t)((uint32_t)d->range / (uint32_t)m->total);
+    renorm = (int32_t)ars_div_total((uint32_t)d->range, (uint32_t)m->total);
     if (renorm == 0) { d->err = UNC_ERR_CORRUPT; return -1; }
-    frequency = (int32_t)((uint32_t)d->code / (uint32_t)renorm);
+    frequency = (int32_t)ars_div_renorm((uint32_t)d->code, (uint32_t)renorm,
+                                        (uint32_t)d->range);
 
     /* Which group, then which symbol in it. `frequency` can be equal to
      * or a little above the total — renorm is rounded down, so code can
