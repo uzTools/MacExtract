@@ -283,13 +283,15 @@ REPO = os.path.dirname(HERE)
 # control's CODE -96 and A5 0; the shipped pair fell the same 96, OVL_SAVED
 # unmoved. They were 190,276 / 94,894 / 619,182.
 TIERS = {
-    "sys3-512K": (185764, "System 3.0, Macintosh 512Ke (222,070 B free)"),
-    "sys6-512K": (90382,  "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
-    "floor-1M":  (614670, "System 6.0.8, 1 MB Mac Plus — the floor target"),
+    "sys3-512K": (185828, "System 3.0, Macintosh 512Ke (222,070 B free)"),
+    "sys6-512K": (90446,  "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
+    "floor-1M":  (614734, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
 # -2,992 each 2026-11-10, DERIVED from TIERS_CONTROL +2,992 (Apple Backup,
 # DECISIONS.md 2026-11-10, *the backup on floppies*); they were 188,756 /
 # 93,374 / 617,662.
+# +64 each 2026-11-10, DERIVED from TIERS_CONTROL -64 (the joiner's options
+# zeroed, the same entry); they were 185,764 / 90,382 / 614,670.
 # +64 each 2026-11-10, DERIVED from TIERS_CONTROL -64 (method 13's
 # canonical table built at bit-reversed indices, DECISIONS.md 2026-11-10, *the peek that was turned round*); they were
 # 188,692 / 93,310 / 617,598.
@@ -550,7 +552,10 @@ TIERS = {
 # +192 2026-11-07: Now Compress polls Cancel inside a block (`ovl_now` +186;
 # DECISIONS.md 2026-11-07, *the block a click waited for*); CODE +180, A5 +12.
 # TIERS -192 and OVL_SAVED +192, which cancel: only a now-keeper moves.
-TIERS_CONTROL = 227168     # build/mac-resident, CODE + A5, 2026-11-10
+TIERS_CONTROL = 227104     # build/mac-resident, CODE + A5, 2026-11-10
+# -64 2026-11-10: the joiner zeroes its options when given none (CODE -52,
+# A5 -12; DECISIONS.md 2026-11-10, *the backup on floppies*); TIERS +64 and
+# OVL_SAVED -32, which leave every grant 32 B higher.
 # +2,992 2026-11-10: Apple Backup, its reader, set identity and probe
 # (`ovl_zipold` +2,548, `ovl_sniff` +712; CODE +2,928, A5 +64; DECISIONS.md
 # 2026-11-10, *the backup on floppies*); TIERS -2,992 and OVL_SAVED +2,928,
@@ -1257,7 +1262,10 @@ EXPECT = {
 # against the shipped pair's +64 (CODE -4, A5 +68); `ovl_zipold` +2,548,
 # `ovl_sniff` +712 (DECISIONS.md 2026-11-10, *the backup on floppies*).
 # TIERS -2,992: every grant moves by -64 less its images' change.
-OVL_SAVED = 172208
+# **-32 2026-11-10, -> 172,176**: the joiner's options zeroed, the control's
+# -64 against the shipped pair's -32 (CODE -56, A5 +24); TIERS +64, so every
+# grant +32 (the same entry).
+OVL_SAVED = 172176
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
 # every kept image is one — as is the bundle an envelope holds on to.

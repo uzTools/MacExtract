@@ -24375,6 +24375,26 @@ same. The same dialog had misled the Compact Pro check the day before.
 also differed in bytes 16..127, the file's name the Resource Manager
 writes there, masked as every emulator check here masks them.
 
+**The joiner's options, and a bug fixed once already (measured).**
+`unc_extract_segments` set four fields of `UncOptions` when a caller passed
+none — the list `unc_extract_as` replaced on 2026-08-27 with zeroing the
+whole struct, because `long_name` was read off the stack — and never set the
+password state. Apple Backup's reader is the first in a set to start a path
+walker, which reads `long_name`; its unit test passed natively and under
+ASan and corrupted the heap under `qemu-m68k`, 3 of 3 runs, where the tree
+before passed 3 of 3. The joiner zeroes the whole struct and starts the
+password state now: shipped `CODE` −56, A5 +24 (alignment), 32 B onto every
+budget; the control −64. Nothing showed that the password half had bitten
+an encrypted set; it is set because it was not.
+
+**MacStamp has no row for it (checked 2026-11-10).** MacStamp, which
+stamps a downloaded file's type and creator, has no Apple Backup format and
+none of `OBBa`, `OBDa`, `OBDc` in its tables (macstamp cb7dc48), and its
+142,267-file census holds no file carrying either pair. So a disk's file
+downloaded raw — the six here are — arrives untyped, and neither the bundle
+nor the helper is reached by a double-click; MacExtract still opens it by
+content. Giving MacStamp the format is that project's change.
+
 **The type no file here carries.** `OBDc`, a restore CD's copies, is in the
 bundle on the Kaitai description's word alone; `OBDa`
 is read off three real disks. 12 B of resource each. **And an `OBBa`

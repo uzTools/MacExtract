@@ -704,9 +704,22 @@ int unc_extract_segments(const UncSegmentDesc *desc, UncVolumeSource *vs,
     c.ps.since_tick = 0;
     c.ps.hold = 0;
     c.fmt = UNC_FORMAT_UNKNOWN;     /* no scheme here serves two formats */
-    if (opt) c.opt = *opt;
-    else { c.opt.list_only = 0; c.opt.test_only = 0;
-           c.opt.name_hint = 0; c.opt.name_hint_len = 0; }
+    /* The whole struct, as unc_extract_as does, and the password state
+     * with it: the list of four fields was the one unc_extract_as
+     * replaced on 2026-08-27, and `long_name` read off the stack here too
+     * — Apple Backup's reader, the first in a set to start a path walker,
+     * met it as heap corruption under qemu-m68k (DECISIONS.md 2026-11-10,
+     * *the backup on floppies*). */
+    if (opt) {
+        c.opt = *opt;
+    } else {
+        uint8_t *p = (uint8_t *)&c.opt;
+        uint32_t i;
+        for (i = 0; i < sizeof c.opt; i++) p[i] = 0;
+    }
+    c.pwlen = 0;
+    c.pwstate = UNC_PW_UNSET;
+    c.pwattempt = 0;
 
     if (j->sc->extract)
         ret = j->sc->extract(&c);

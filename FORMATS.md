@@ -4191,7 +4191,7 @@ Measured 2026-09-27:
 whose tallies it is quoted beside. It cancels in a difference taken from
 one probe pair (*What it buys, against the control*): **117,040 B saved
 between the shipped pair against 116,720 B between the probe pair**, both
-2026-09-27. The shipped pair is **172,208 B** (`OVL_SAVED`,
+2026-09-27. The shipped pair is **172,176 B** (`OVL_SAVED`,
 `tools/run_tiers.py`) since 2026-11-10 (*the backup on floppies*);
 the probe pair has not been re-measured, so the 320 B is that
 day's difference, not today's.
@@ -4257,7 +4257,7 @@ carries, and they were read again from the floppy (DECISIONS.md 2026-11-04,
 
 A tier's budget for a format is the resident build's budget for that tier
 (`TIERS`; *512 KB machines*, *Floor target verification*), plus
-the 172,208 B of `CODE` and A5 the shipped build does not carry (`OVL_SAVED`;
+the 172,176 B of `CODE` and A5 the shipped build does not carry (`OVL_SAVED`;
 *Three configurations, one tree*), less the images the format keeps and 8 B of
 block header each, less a **322 B residue** (`OVL_RESIDUE`, re-taken
 2026-10-22 from the shipped and resident budget probes on all three tiers;
@@ -4284,28 +4284,28 @@ comments, last on 2026-11-10 (*the backup on floppies*: −64 B less what the
 row's images grew — Tar, MAR, Apple Backup and zip −2,612, the envelope rows
 that keep the sniffer and `ovl_zipold` and the whole bundle's −3,324, a BinHex
 StuffIt −776, every other row −64; the control 2,992 B larger, so +2,928 B
-against it), with `run_tiers.py --check` moving no tally.
+against it; then +32 on every row, the joiner's options zeroed), with `run_tiers.py --check` moving no tally.
 **Re-taken from `gain()` that day**, and every row agreed with it before the
 change.
 
 | sniffed format | images kept | granted, against the control |
 |---|---|---|
-| **AppleLink package** | **sqp, codecs** | **+164,122 B** (arithmetic: no `.pkg` is in the Mac sample) — the largest grant, because `ovl_sqp` is the smallest decoder image at 1,736 B |
-| Now Compress | now, codecs | **+160,910 B** (measured) |
-| SuperDisk! | superdisk, codecs | +159,230 B (arithmetic: no SuperDisk! fixture is in the Mac sample) |
-| LZH | lzh, codecs | **+155,256 B** (measured) |
-| PackIt | packit, ciphers, codecs | **+154,410 B** (measured) |
-| DiskDoubler | cptdd, codecs | **+150,764 B** (measured) |
-| StuffIt SpaceSaver | spacesaver, codecs | +149,622 B (arithmetic: no SpaceSaver fixture is in the Mac sample) |
-| ARC | arc, ciphers, codecs | **+148,666 B** (measured) |
-| Compact Pro, Compact Pro segment | cptdd, ciphers, codecs | +141,496 B (arithmetic), and **+150,764 B** where the directory says no entry is encrypted (measured) |
-| Tar | zipold, codecs | **+147,138 B** (measured) |
-| MAR | zipold, codecs | +147,138 B (arithmetic: no MAR fixture is in the Mac sample) |
-| Apple Backup | zipold, codecs | +147,138 B (arithmetic: no Apple Backup set is in the Mac sample) |
-| StuffIt, StuffIt 5 | stuffit, ciphers, codecs | **+127,812 B** (measured), and **+137,080 B** for a StuffIt 5 archive whose header carries no password hash (measured, 2026-11-03) |
-| Zip, spanned zip | exo, zipold, ciphers, codecs | +107,634 B (arithmetic), **+116,902 B** unencrypted (measured) |
-| an envelope whose payload's first bytes name its format (`unc_envelope_peek`), since 2026-11-03 | its own reader, the sniffer, and what that format keeps | **+100,046 B** for a `.tar.Z` or `.tar.gz`, and an LZW-compressed MAR, which keeps the same (arithmetic), **+130,282 B** for a `.mar.lz4` (arithmetic), **+103,318 B** for a StuffIt archive in BinHex or MacBinary (measured) |
-| any other envelope, and every segment scheme that joins to a file | the whole bundle, kept | **−29,258 B** (−29,118 B measured, before 2026-11-07) |
+| **AppleLink package** | **sqp, codecs** | **+164,090 B** (arithmetic: no `.pkg` is in the Mac sample) — the largest grant, because `ovl_sqp` is the smallest decoder image at 1,736 B |
+| Now Compress | now, codecs | **+160,878 B** (measured) |
+| SuperDisk! | superdisk, codecs | +159,198 B (arithmetic: no SuperDisk! fixture is in the Mac sample) |
+| LZH | lzh, codecs | **+155,224 B** (measured) |
+| PackIt | packit, ciphers, codecs | **+154,378 B** (measured) |
+| DiskDoubler | cptdd, codecs | **+150,732 B** (measured) |
+| StuffIt SpaceSaver | spacesaver, codecs | +149,590 B (arithmetic: no SpaceSaver fixture is in the Mac sample) |
+| ARC | arc, ciphers, codecs | **+148,634 B** (measured) |
+| Compact Pro, Compact Pro segment | cptdd, ciphers, codecs | +141,464 B (arithmetic), and **+150,732 B** where the directory says no entry is encrypted (measured) |
+| Tar | zipold, codecs | **+147,106 B** (measured) |
+| MAR | zipold, codecs | +147,106 B (arithmetic: no MAR fixture is in the Mac sample) |
+| Apple Backup | zipold, codecs | +147,106 B (arithmetic: no Apple Backup set is in the Mac sample) |
+| StuffIt, StuffIt 5 | stuffit, ciphers, codecs | **+127,780 B** (measured), and **+137,048 B** for a StuffIt 5 archive whose header carries no password hash (measured, 2026-11-03) |
+| Zip, spanned zip | exo, zipold, ciphers, codecs | +107,602 B (arithmetic), **+116,870 B** unencrypted (measured) |
+| an envelope whose payload's first bytes name its format (`unc_envelope_peek`), since 2026-11-03 | its own reader, the sniffer, and what that format keeps | **+100,014 B** for a `.tar.Z` or `.tar.gz`, and an LZW-compressed MAR, which keeps the same (arithmetic), **+130,250 B** for a `.mar.lz4` (arithmetic), **+103,286 B** for a StuffIt archive in BinHex or MacBinary (measured) |
+| any other envelope, and every segment scheme that joins to a file | the whole bundle, kept | **−29,290 B** (−29,118 B measured, before 2026-11-07) |
 
 A change to resident code moves every row by the control's growth less the
 shipped build's; a change to an image moves only the rows that keep it — so a
@@ -4316,7 +4316,7 @@ left*).
 
 **The last row is the one no tally had shown**: a wrapper whose payload the
 peek cannot name keeps the bundle, and that layer runs with **less** memory than
-a resident build would give it — 201,136 B held against 172,208 B saved. Until
+a resident build would give it — 201,136 B held against 172,176 B saved. Until
 2026-11-03 that was every envelope, and it refused `a2ps.V4.3.tar.Z` and
 `popper-1.7.tar.Z` at System 6.0.8 / 512 KB; the peek names Tar from the first
 512 bytes and the `.Z` layer is granted 200,022 B there instead of 72,090 B

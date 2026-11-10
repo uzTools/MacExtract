@@ -302,7 +302,9 @@ resource 'FREF' (174) { 'LZ4 ', 1, "" };
    each backup floppy (three real disks, fixtures/SOURCES.md, abk-perfB-*);
    `OBDc`, the type of a restore CD's "Data File" copies by Em Adespoton's
    description (reference/applebackup/kaitai-apple_backup.py), on no file
-   here. DECISIONS.md 2026-11-10, *the backup on floppies*. */
+   here. NOT from MacStamp, unlike the types above: it has no row for
+   either, and its 142,267-file census no file carrying them (macstamp
+   cb7dc48, 2026-11-10). DECISIONS.md 2026-11-10, *the backup on floppies*. */
 resource 'FREF' (175) { 'OBDa', 1, "" };
 resource 'FREF' (176) { 'OBDc', 1, "" };
 
