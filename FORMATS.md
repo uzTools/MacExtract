@@ -6542,8 +6542,8 @@ instrument and what it cannot see are in `tools/vmac/README.md`.
 faster on all four.** The BinHex row is re-measured 2026-11-09 on that day's
 `dist/MacExtract.bin`, the line decoder's: 233.8 s twice, against **258.7 s**
 twice for the `dist/` committed before it, so the shipped application had
-lost 12.8 s on this archive since v0.41.0's 245.9 s (measured; where, not
-measured) and the line decoder gave back 24.9 s (DECISIONS.md 2026-11-09, *the group every line break cut*).
+lost 12.8 s on this archive since v0.41.0's 245.9 s (measured; 9.6 s of it
+`ovl_keep`'s `high_handle` on a 128K ROM, DECISIONS.md 2026-11-10, *the 12.8 seconds that were three commits*) and the line decoder gave back 24.9 s (DECISIONS.md 2026-11-09, *the group every line break cut*).
 Re-measured 2026-11-10 on `dist/` at `c6554e68`: **223.6 s** twice, 10.2 s
 under the line decoder's day, after that day's decoder commits (which of
 them, not measured).

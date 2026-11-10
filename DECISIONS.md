@@ -582,6 +582,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-10 (the count the bit buffer did not need) — Arsenic's renormalisation runs in registers on a bit buffer of its own: −7.4 % and −7.2 % of Plus engine ticks for +28 B of `ovl_stuffit`; the symbol decoder inlined into the block loop measured slower and was not kept
 - 2026-11-10 (the division every byte paid for) — ARC's garble and PackIt's PMa5 wrap a key cursor instead of taking a `%` a byte: ~960 → ~64 cycles a byte (estimate), −24 B of `ovl_crypt`; no suite could tell a key restarted at every refill
 - 2026-11-10 (the window filled a byte at a time) — every decoder window is filled a long at a time: −2.5 % on a small `-lh5-` entry, −3.2 % on method 14, Compact Pro unchanged, for −304 B of bundle
+- 2026-11-10 (the 12.8 seconds that were three commits) — the shipped application's 12.8 s on `macburger-helper.hqx` between v0.41.0 and 2026-11-09 is 9.6 s from `ovl_keep`'s `high_handle` on a 128K ROM, 2.0 s from the 1 KB progress step and 1.0 s from v0.45.0's dialogs; `MoveHHi` put back gives the 9.6 s back
 
 ---
 
@@ -23766,7 +23767,7 @@ StuffIt archive inside it (`expander.py --only ours`, two runs each, equal
 to the tick): **258.7 → 233.8 s** at 4 MB and **250.9 → 226.0 s** at 1 MB,
 the `dist/` committed before this against this one; the autotest's extract
 column 46 → 21 s. README's 246 s was v0.41.0's: the application had lost
-12.8 s on this archive since, which is measured and not located.
+12.8 s on this archive since (located 2026-11-10, *the 12.8 seconds that were three commits*).
 
 ~450 cycles an output byte, not the ~100 estimated: the CRC alone is ten
 instructions a byte. 68000 instructions 22.3 M → 10.5 M and 19.7 M → 9.1 M
@@ -24190,3 +24191,35 @@ Compact Pro and DiskDoubler 0, StuffIt −192, the whole bundle's +112, the rest
 −196. Heap 0; the deepest call chain 3,446 B before and after.
 `run_tiers.py --check` moves no tally. FORMATS.md, *The window fills a long at
 a time*.
+
+## 2026-11-10 (the 12.8 seconds that were three commits) — the shipped application's 12.8 s on `macburger-helper.hqx` between v0.41.0 and 2026-11-09 is 9.6 s from `ovl_keep`'s `high_handle` on a 128K ROM, 2.0 s from the 1 KB progress step and 1.0 s from v0.45.0's dialogs; `MoveHHi` put back gives the 9.6 s back
+
+**Measured.** Each `dist/MacExtract.bin` committed between v0.41.0 and
+`17f2982` (81 of them), `expander.py --only ours --emu mv-4M-1x` on
+`macburger-helper.hqx`, one run each, bisected on every stretch that gained
+more than 1 s. Every point re-run was equal to the tenth of a second;
+v0.41.0 itself measures 245.8 s today, so the harness has not moved.
+
+| commit | seconds | step |
+|---|---|---|
+| v0.41.0 | 245.8 | |
+| `15471f77` | 245.9 | |
+| `7a3f1aa2`, v0.45.0's dialogs and the Finder's progress window | 246.9 | **+1.0** |
+| `ba2023a2` | 247.6 | +0.7 over nine, not split |
+| `ad1b3e45` | 248.1 | +0.5 over fourteen, not split |
+| `1ff3a94c`, the progress step 8 KB → 1 KB | 250.1 | **+2.0** |
+| `ecb59322` | 249.1 | −1.0 over three, not split |
+| `cbc07ee3`, *one way to keep a decoder high* | 258.7 | **+9.6** (twice) |
+
+**The 9.6 s is that call, reduced.** Today's tree (`2cc3a486`, whose
+`build/mac` is `dist/`'s payload byte for byte, 223.6 s) with `ovl_keep`
+taking `NewHandle` + `MoveHHi` again where ROM85 > 0 measures **213.8 s
+twice**, −9.8 s. Why `high_handle`'s placement costs that is a hypothesis:
+it runs a few times a run, so the call itself cannot; what it leaves behind
+in the heap slows something done per entry (312 here, ~30 ms each), not
+measured. Not measured either: 1 MB, a 64K ROM (which has no `MoveHHi`),
+any other archive.
+
+**Consequence.** `cbc07ee3` bought one path and 32 B onto every budget; on
+a 128K ROM it costs ~10 s on a 312-entry `.sit.hqx`. Which to keep is the
+maintainer's choice; nothing is changed here.
