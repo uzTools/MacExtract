@@ -6534,7 +6534,7 @@ instrument and what it cannot see are in `tools/vmac/README.md`.
 | `derived-Export.sit` | StuffIt | 1.6 KB | **1.9 s** | 2.4–2.5 s | 1.26x |
 | `derived-EmpireBuilderDemo.sit` | StuffIt | 278 KB | **52.4 s** | 54.4 s | **1.04x** |
 | `derived-FirstClass_Demo.cpt` | Compact Pro | 249 KB | **79.5 s** | 155.2 s | **1.95x** |
-| `macburger-helper.hqx` | BinHex → StuffIt | 307 KB | **233.8 s** | 423.7 s | **1.81x** |
+| `macburger-helper.hqx` | BinHex → StuffIt | 307 KB | **223.6 s** | 423.7 s | **1.89x** |
 
 **Two runs of each agree to two ticks** (0.03 s): 117/117, 146/148,
 3,150/3,150, 3,274/3,274, 4,781/4,781, 9,333/9,334, 14,788/14,789 and
@@ -6544,6 +6544,9 @@ faster on all four.** The BinHex row is re-measured 2026-11-09 on that day's
 twice for the `dist/` committed before it, so the shipped application had
 lost 12.8 s on this archive since v0.41.0's 245.9 s (measured; where, not
 measured) and the line decoder gave back 24.9 s (DECISIONS.md 2026-11-09, *the group every line break cut*).
+Re-measured 2026-11-10 on `dist/` at `c6554e68`: **223.6 s** twice, 10.2 s
+under the line decoder's day, after that day's decoder commits (which of
+them, not measured).
 
 **Corrected 2026-10-19:** the earlier screenshot-poll figures were upper
 bounds, not lower bounds; the StuffIt row's "1.00x" is withdrawn (BLOCKERS.md,
@@ -6551,7 +6554,7 @@ bounds, not lower bounds; the StuffIt row's "1.00x" is withdrawn (BLOCKERS.md,
 
 **Not comparable with *Measured on a 7 MHz Mac Plus***, which times the
 autotest build (`RunExtract` once, CRC read-back): for `macburger-helper.hqx`
-21 s there is the BinHex decode alone, 234 s here includes the 312-file
+21 s there is the BinHex decode alone, 224 s here includes the 312-file
 archive inside.
 
 **They wrote the same names** on every fixture. Defaults differ: Expander
