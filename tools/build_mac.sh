@@ -804,11 +804,11 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # +28 on 2026-11-09, 187,608 -> 187,636, A5 +4 below: `-lh1-`'s match
 # (unc_lzah.c) copied through cursors, the same entry. In `ovl_codecs` on
 # the shipped pair, +28.
-# +8 on 2026-11-10, 187,636 -> 187,644, A5 -8 below: the canonical decoder's
-# table hit on locals with its walk out of line, in src/unc_canon_dec.c
-# (DECISIONS.md 2026-11-10, *the forward every symbol took*). On the shipped
-# pair it is a copy in each of four images, and `ovl_codecs` -868.
-UNC_MAC_CODE_DEFAULT=187644
+# -28 on 2026-11-10, 187,636 -> 187,608, A5 -4 below: the canonical
+# decoder's table hit on locals, its walk out of line (DECISIONS.md
+# 2026-11-10, *the forward every symbol took*). In `ovl_codecs` on the
+# shipped pair, -80.
+UNC_MAC_CODE_DEFAULT=187608
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -1089,9 +1089,9 @@ UNC_MAC_CODE_DEFAULT=187644
 # +24 (above); the match copy added no data.
 # +4 on 2026-11-09, 36,696 -> 36,700: `.data` alignment under the code's
 # +28 (above).
-# -8 on 2026-11-10, 36,700 -> 36,692: `.data` alignment under the code's +8
-# (above); the decoder's tables did not change.
-UNC_MAC_A5_DEFAULT=36692
+# -4 on 2026-11-10, 36,700 -> 36,696: `.data` alignment under the code's -28
+# (above); the decoder added no data.
+UNC_MAC_A5_DEFAULT=36696
 # A CEILING PER CONFIGURATION, because one ceiling measured on another build
 # cannot fire. The figures above are the RESIDENT control build, which carries
 # every decoder; the shipped build's resident code is a third of that, so
@@ -1688,12 +1688,8 @@ UNC_MAC_A5_DEFAULT=36692
 # (DECISIONS.md 2026-11-09, *the set's identity that left*). The A5 is the
 # joiner's table losing its two pointer columns. 1,584 B onto every budget
 # that keeps neither image.
-# 0 and -16 on 2026-11-10, 16,688 -> 16,672: the host vector's
-# unc_canon_decode slot gone, each image calling its own copy (DECISIONS.md
-# 2026-11-10, *the forward every symbol took*); 4 B of pointer and `.data`
-# alignment. 16 B onto every budget.
 UNC_MAC_CODE_EAGER=38208
-UNC_MAC_A5_EAGER=16672
+UNC_MAC_A5_EAGER=16688
 # +8 on 2026-10-02 for the same reason as the eager pair above: the
 # overlay call that now says WHICH of StuffIt 2.x's ciphers an entry
 # wants. A5 fell to 19,096 and its ceiling is left where it was.

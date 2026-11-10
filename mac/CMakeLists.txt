@@ -142,7 +142,6 @@ else()
     # The shared machinery leaves too — see tools/overlay/ovl_codecs.c for how
     # a blob can be called by other blobs at all.
     list(FILTER ENGINE_SRC EXCLUDE REGEX "unc_huffman\\.c$")
-    list(FILTER ENGINE_SRC EXCLUDE REGEX "unc_canon_dec\\.c$")
     list(FILTER ENGINE_SRC EXCLUDE REGEX "unc_lzw\\.c$")
     list(FILTER ENGINE_SRC EXCLUDE REGEX "unc_reduce\\.c$")
     list(FILTER ENGINE_SRC EXCLUDE REGEX "unc_shrink\\.c$")
@@ -288,7 +287,6 @@ add_custom_command(
             ${ENGINE_DIR}/src/fmt_cpt.c
             ${ENGINE_DIR}/src/fmt_dd.c
             ${ENGINE_DIR}/src/fmt_cptseg.c
-            ${ENGINE_DIR}/src/unc_canon_dec.c
     DEPENDS ${ENGINE_DIR}/tools/overlay/ovl_cptdd.c
             ${CMAKE_CURRENT_BINARY_DIR}/ovl_forwards_gen.c
             ${CMAKE_CURRENT_BINARY_DIR}/ovl_forwards_codecs_gen.c
@@ -296,7 +294,6 @@ add_custom_command(
             ${ENGINE_DIR}/src/fmt_cpt.c
             ${ENGINE_DIR}/src/fmt_dd.c
             ${ENGINE_DIR}/src/fmt_cptseg.c
-            ${ENGINE_DIR}/src/unc_canon_dec.c
             ${OVL_DEPS})
 
 add_custom_command(
@@ -309,14 +306,12 @@ add_custom_command(
             ${CMAKE_CURRENT_BINARY_DIR}/ovl_forwards_gen.c
             ${ENGINE_DIR}/src/fmt_lzh.c
             ${ENGINE_DIR}/src/unc_lzdyn.c
-            ${ENGINE_DIR}/src/unc_canon_dec.c
     DEPENDS ${ENGINE_DIR}/tools/overlay/ovl_lzh.c
             ${CMAKE_CURRENT_BINARY_DIR}/ovl_forwards_gen.c
             ${CMAKE_CURRENT_BINARY_DIR}/ovl_forwards_codecs_gen.c
             ${CMAKE_CURRENT_BINARY_DIR}/ovl_host_gen.h
             ${ENGINE_DIR}/src/fmt_lzh.c
             ${ENGINE_DIR}/src/unc_lzdyn.c
-            ${ENGINE_DIR}/src/unc_canon_dec.c
             ${OVL_DEPS})
 
 add_custom_command(
@@ -346,13 +341,11 @@ add_custom_command(
             ${ENGINE_DIR}/tools/overlay/ovl_now.c
             ${CMAKE_CURRENT_BINARY_DIR}/ovl_forwards_gen.c
             ${ENGINE_DIR}/src/fmt_now.c
-            ${ENGINE_DIR}/src/unc_canon_dec.c
     DEPENDS ${ENGINE_DIR}/tools/overlay/ovl_now.c
             ${CMAKE_CURRENT_BINARY_DIR}/ovl_forwards_gen.c
             ${CMAKE_CURRENT_BINARY_DIR}/ovl_forwards_codecs_gen.c
             ${CMAKE_CURRENT_BINARY_DIR}/ovl_host_gen.h
             ${ENGINE_DIR}/src/fmt_now.c
-            ${ENGINE_DIR}/src/unc_canon_dec.c
             ${OVL_DEPS})
 
 target_include_directories(MacExtract PRIVATE
@@ -689,7 +682,6 @@ add_custom_command(
             ${ENGINE_DIR}/src/sit14.c
             ${ENGINE_DIR}/src/sit_arsenic.c
             ${ENGINE_DIR}/src/sit_ccube.c
-            ${ENGINE_DIR}/src/unc_canon_dec.c
             ${ENGINE_DIR}/src/fmt_pf.c
             ${ENGINE_DIR}/src/fmt_pf_probe.c
     DEPENDS ${ENGINE_DIR}/tools/overlay/ovl_stuffit.c
@@ -703,7 +695,6 @@ add_custom_command(
             ${ENGINE_DIR}/src/sit14.c
             ${ENGINE_DIR}/src/sit_arsenic.c
             ${ENGINE_DIR}/src/sit_ccube.c
-            ${ENGINE_DIR}/src/unc_canon_dec.c
             ${ENGINE_DIR}/src/fmt_pf.c
             ${ENGINE_DIR}/src/fmt_pf_probe.c
             ${OVL_DEPS})

@@ -37,7 +37,7 @@ SYMBOLS = """
 unc_bitin_align unc_bitin_bits unc_bitin_bits_le unc_bitin_bytepos
 unc_bitin_init unc_bitin_init_le unc_bufin_init unc_bufin_init_mem
 unc_bufin_next_slow unc_bufin_skip_to unc_bufin_tell unc_canon_build
-unc_canon_build_ext unc_crc32 unc_crypt_cpt unc_crypt_xor
+unc_canon_build_ext unc_canon_decode unc_crc32 unc_crypt_cpt unc_crypt_xor
 unc_entry_clear unc_entry_path_append unc_entry_set_name unc_entry_set_path
 unc_fork_flush unc_fork_out unc_fork_split unc_fork_write unc_huff_decode unc_huff_read_tree
 unc_io_size32 unc_lzah_decode unc_lzw_free unc_macbinary_meta
@@ -77,7 +77,7 @@ SNIFF = ["unc_macbinary_probe", "unc_macbinary_meta", "unc_as_record"]
 CODECS = """
 unc_bitin_align unc_bitin_bits unc_bitin_bits_le unc_bitin_bytepos
 unc_bitin_init unc_bitin_init_le unc_canon_build unc_canon_build_ext
-unc_huff_decode unc_huff_read_tree unc_lzah_decode
+unc_canon_decode unc_huff_decode unc_huff_read_tree unc_lzah_decode
 unc_lzw_free unc_lzw_init unc_lzw_read
 """.split()
 

@@ -283,10 +283,13 @@ REPO = os.path.dirname(HERE)
 # control's CODE -96 and A5 0; the shipped pair fell the same 96, OVL_SAVED
 # unmoved. They were 190,276 / 94,894 / 619,182.
 TIERS = {
-    "sys3-512K": (188596, "System 3.0, Macintosh 512Ke (222,070 B free)"),
-    "sys6-512K": (93214,  "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
-    "floor-1M":  (617502, "System 6.0.8, 1 MB Mac Plus — the floor target"),
+    "sys3-512K": (188628, "System 3.0, Macintosh 512Ke (222,070 B free)"),
+    "sys6-512K": (93246,  "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
+    "floor-1M":  (617534, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
+# +32 each 2026-11-10, DERIVED from TIERS_CONTROL -32 (the canonical
+# decoder's table hit, DECISIONS.md 2026-11-10, *the forward every symbol
+# took*); they were 188,596 / 93,214 / 617,502.
 # -32 each 2026-11-09, DERIVED from TIERS_CONTROL +32 (`-lh1-`'s match
 # copied through cursors, DECISIONS.md 2026-11-09, *the match that was
 # masked twice a byte*); they were 188,628 / 93,246 / 617,534.
@@ -533,7 +536,11 @@ TIERS = {
 # +192 2026-11-07: Now Compress polls Cancel inside a block (`ovl_now` +186;
 # DECISIONS.md 2026-11-07, *the block a click waited for*); CODE +180, A5 +12.
 # TIERS -192 and OVL_SAVED +192, which cancel: only a now-keeper moves.
-TIERS_CONTROL = 224336     # build/mac-resident, CODE + A5, 2026-11-09
+TIERS_CONTROL = 224304     # build/mac-resident, CODE + A5, 2026-11-10
+# -32 2026-11-10: the canonical decoder's table hit on locals, its walk out
+# of line (`ovl_codecs` -80; CODE -28, A5 -4; DECISIONS.md 2026-11-10, *the
+# forward every symbol took*); TIERS +32 and OVL_SAVED -32, which cancel:
+# every format keeps the codecs, so every grant moves +48.
 # +32 2026-11-09: `-lh1-`'s match copied through cursors (`ovl_codecs` +28;
 # CODE +28, A5 +4, `.data` alignment; DECISIONS.md 2026-11-09, *the match
 # that was masked twice a byte*); TIERS -32 and OVL_SAVED +32, which cancel:
@@ -1197,12 +1204,11 @@ EXPECT = {
 # the control's +32 (CODE +28, A5 +4) against the shipped pair's 0, the code
 # in `ovl_codecs` (+28; DECISIONS.md 2026-11-09, *the match that was masked
 # twice a byte*). TIERS -32, which cancels: every grant moves +4.
-# **+16 2026-11-10, -> 169,456**: the canonical decoder copied into each
-# image that calls it, the shipped pair's A5 -16 (the vector's slot, 4 B,
-# and `.data` alignment) against the control's 0 (CODE +8, A5 -8;
-# DECISIONS.md 2026-11-10, *the forward every symbol took*). TIERS does not
-# move: the control did not.
-OVL_SAVED = 169456
+# **-32 2026-11-10, -> 169,408**: the canonical decoder's table hit, the
+# control's -32 (CODE -28, A5 -4) against the shipped pair's 0, the code in
+# `ovl_codecs` (-80; DECISIONS.md 2026-11-10, *the forward every symbol
+# took*). TIERS +32, which cancels: every grant moves +48.
+OVL_SAVED = 169408
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
 # every kept image is one — as is the bundle an envelope holds on to.
@@ -1339,15 +1345,15 @@ IMAGES = {
     "OVL_ID_ARC":         7924,
     "OVL_ID_BINHEX":      7630,
     "OVL_ID_BTOA":        2496,
-    "OVL_ID_CODECS":      5368,
-    "OVL_ID_CPTDD":       16094,
+    "OVL_ID_CODECS":      6156,
+    "OVL_ID_CPTDD":       15290,
     "OVL_ID_CRYPT":       9284,
     "OVL_ID_EXO":         30228,
-    "OVL_ID_LZH":         11506,
-    "OVL_ID_NOW":         5762,
+    "OVL_ID_LZH":         10702,
+    "OVL_ID_NOW":         4948,
     "OVL_ID_PACKIT":      2180,
     "OVL_ID_SPACESAVER":  16236,
-    "OVL_ID_STUFFIT":     29406,
+    "OVL_ID_STUFFIT":     28602,
     "OVL_ID_SQP":         1736,
     "OVL_ID_SUPERDISK":   6628,
     "OVL_ID_TEXT":        11438,
@@ -1502,11 +1508,10 @@ IMAGES = {
 # **CODECS +28, the bundle +28 B, the same day**: `-lh1-`'s match copied
 # through cursors (DECISIONS.md 2026-11-09, *the match that was masked twice
 # a byte*).
-# **CODECS -868, CPTDD +804, LZH +804, NOW +814, STUFFIT +804, the bundle
-# +2,360 B, 2026-11-10**: the canonical decoder copied into each image that
-# calls it, rewritten (DECISIONS.md 2026-11-10, *the forward every symbol
-# took*).
-BUNDLE = 200604
+# **CODECS -80, the bundle -80 B, 2026-11-10**: the canonical decoder's table
+# hit on locals, its walk out of line (DECISIONS.md 2026-11-10, *the forward
+# every symbol took*).
+BUNDLE = 198164
 
 # What the SHIPPED lane asserts, and it is the refused fixtures BY NAME
 # rather than a tally: a tier that refuses two different fixtures and still

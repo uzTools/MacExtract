@@ -298,11 +298,9 @@ TAKEN = "2026-11-03"
 # masked twice a byte*).
 # -> 198,244 the same day: `-lh1-`'s match copied through cursors in
 # `ovl_codecs` (+28) (the same entry).
-# -> 200,604 2026-11-10: the canonical decoder copied into `ovl_cptdd`,
-# `ovl_lzh`, `ovl_now` and `ovl_stuffit` (+804 to +814 each) and out of
-# `ovl_codecs` (-868) (DECISIONS.md 2026-11-10, *the forward every symbol
-# took*).
-EXPECT_BUNDLE = 200604
+# -> 198,164 2026-11-10: the canonical decoder's table hit in `ovl_codecs`
+# (-80) (DECISIONS.md 2026-11-10, *the forward every symbol took*).
+EXPECT_BUNDLE = 198164
 TOLERANCE_BUNDLE = 2048
 TAKEN_BUNDLE = "2026-11-10"
 
