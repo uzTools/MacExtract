@@ -578,6 +578,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-09 (the set's identity that left) — which set a file belongs to leaves resident `CODE` for `ovl_sniff`, beside the parsers it already carried, and Compact Pro's match for `ovl_cptdd` too; 1,584 B onto every budget that keeps neither, 52 B off one that keeps the bundle
 - 2026-11-09 (the match that was masked twice a byte) — methods 13 and 14 copy a match through cursors in one out-of-line function and share one flush: −2.2 to −5.2 % of Plus engine ticks for +44 B of `ovl_stuffit`; `-lh1-` and ARC Trimmed the same, inline, −1.3 to −17.2 % for +28 B of `ovl_codecs`
 - 2026-11-10 (the forward every symbol took) — the canonical decoder's table hit on locals, its walk out of line: −3.2 to −7.1 % of Plus engine ticks on all five of its users for −80 B; a copy in each image was −1.3 to −3.7 % more for +2,440 B of bundle, landed and taken back
+- 2026-11-10 (the division libgcc was asked to do) — Arsenic's two divisions are an inline `divu.w`, the engine's first instruction written by hand: −8.4 % and −8.6 % of Plus engine ticks for +116 B of `ovl_stuffit`
 
 ---
 
@@ -24007,3 +24008,54 @@ their sum by 2.2 points, not located.
 **What this does not cover.** The 256 B bit-reversal table stays in
 `ovl_codecs`; building the LSB-first table at bit-reversed indices is the
 method-13 work's. `unc_huff_decode` has the same shape and is not measured.
+## 2026-11-10 (the division libgcc was asked to do) — Arsenic's two divisions are an inline `divu.w`, the engine's first instruction written by hand: −8.4 % and −8.6 % of Plus engine ticks for +116 B of `ovl_stuffit`
+
+**Claim, evidence, consequence (measured).** `range / total` and `code /
+renorm` in `ars_decode` went through libgcc's `__udivsi3`: two stacked
+arguments, a call, a register saved, a test of the divisor's width and, for
+a divisor of 2^16 or more, a loop of shifts. They are now `ars_div_total`
+and `ars_div_renorm` around one primitive, `ars_divu`, which is `divu.w` on
+a 68000 and the same quotient and remainder in C elsewhere. Plus engine
+ticks (`mv-4M-1x`, `UNC_AT_TIMING`, two runs per build):
+`derived-a2basic.dmg.sit` **16,834/16,834 → 15,421/15,421 (−8.4 %)**,
+`derived-Library_ISBN_Barcoder.sit` **25,942/25,940 → 23,704/23,703
+(−8.6 %)**. The profile had put both divisions at 0.72 % of the
+instructions; it counts a `divu` and a helper's every instruction once
+whatever they cost, and here the clock moved twelve times further than
+that share.
+
+**Why the asm (measured, Retro68's GCC at `mkoverlay.sh`'s flags).** GCC
+emits `divu.w` only when both operands are 16 bits; a 32-bit dividend over a
+16-bit divisor, which is what both divisions are, always goes to
+`__udivsi3`, because `divu.w` cannot be trusted with a quotient GCC cannot
+bound. Long division in 16-bit-dividend digits would be three `divu` for the
+first division and is no better than the helper. The operand ranges are what
+make one instruction exact here, all read from the code: `total` is at most
+limit + increment, 1,032, whatever the stream says (`ars_model_bump` halves
+as soon as the limit is passed); `range` lives in (2^24, 2^25]; and on a
+valid stream `code < range`, so `code / renorm` is at most `total`.
+`range / total` is then two digits whose first is zero whenever `total >
+range >> 16`. `renorm` is 16,242 to 2^24: below 2^16 it is one `divu`;
+above, dividend and divisor are shifted right until the divisor fits, which
+rounds the estimate up by less than 1,033 / 2^15 and so by at most one, and
+one product decides. A `code` at or above `range` is a corrupt stream and
+keeps the plain C division, so every input gets the exact quotient.
+
+**Graded twice, and each grader can fail.** On x86 the C body runs through
+every lane. The asm runs under qemu-m68k in a new ci.sh lane
+(`tests/run_arsenic_m68k.sh`): the StuffIt 5 differential, 32/32, on the
+table, the 2.5-byte table and the sampled index, and at the 1 MB budget.
+Without the one-step correction it fails 16 of the 32. Off the decoder, 50
+million random operand triples on x86 and 5 million under qemu-m68k agree
+with plain division; the same mutant differs on 1,901 of 1 million.
+
+**The VM pass (OPEN_ITEMS.md, *Hand-written 68000 assembly*) is not
+started by this.** This one instruction was asked for directly. Its grading
+lane is the first prerequisite of that pass, for this file only.
+
+**Price (measured).** `ovl_stuffit` +116 B; the resident control's CODE
++116, A5 +12 (`.data` alignment); the shipped application 0; OVL_SAVED
++128, TIERS −128, stuffit-keeping grants +12, the rest +128;
+`run_tiers.py --check` moves no tally. The StuffIt 5 call chain is 2,958 B,
+unmoved, under DiskDoubler's 3,446 B (`tools/stack_depth.py`). FORMATS.md,
+*Decode cost, before and after the 2026-08-24 pass* (the changes since).

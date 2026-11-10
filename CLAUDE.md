@@ -35,7 +35,7 @@ BLOCKERS.md's (*Status*). The interactive UI is driven end to end on System
 That session-start reading is **~12.5k tokens** (PROGRESS 3.2k,
 OPEN_ITEMS 6.4k, BLOCKERS' first two sections 2.9k); BLOCKERS'
 withdrawn-claims archive is another **~41.4k** and is reference, not
-orientation. All five are ESTIMATES (bytes ÷ 3.93, ±5 %, 2026-11-09; no
+orientation. All five are ESTIMATES (bytes ÷ 3.93, ±5 %, 2026-11-10; no
 tokenizer is installed). `tools/check_docs.py` only fails at 25 % drift, and
 every one of them has gone stale before, so **re-measure them whenever you
 touch these files.** What makes them grow is table cells turning into

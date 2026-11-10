@@ -808,7 +808,9 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # decoder's table hit on locals, its walk out of line (DECISIONS.md
 # 2026-11-10, *the forward every symbol took*). In `ovl_codecs` on the
 # shipped pair, -80.
-UNC_MAC_CODE_DEFAULT=187608
+# +116 on 2026-11-10, 187,608 -> 187,724, A5 +12 below: Arsenic's two divisions inline (DECISIONS.md
+# 2026-11-10, *the division libgcc was asked to do*). In `ovl_stuffit` on the shipped pair, +116.
+UNC_MAC_CODE_DEFAULT=187724
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -1091,7 +1093,9 @@ UNC_MAC_CODE_DEFAULT=187608
 # +28 (above).
 # -4 on 2026-11-10, 36,700 -> 36,696: `.data` alignment under the code's -28
 # (above); the decoder added no data.
-UNC_MAC_A5_DEFAULT=36696
+# +12 on 2026-11-10, 36,696 -> 36,708: `.data` alignment under the code's
+# +116 (above); the change added no data.
+UNC_MAC_A5_DEFAULT=36708
 # A CEILING PER CONFIGURATION, because one ceiling measured on another build
 # cannot fire. The figures above are the RESIDENT control build, which carries
 # every decoder; the shipped build's resident code is a third of that, so

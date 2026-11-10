@@ -4069,6 +4069,22 @@ shell's two dialog images; and a wrong rule in `EDGE_RULES`, which prunes
 paths the code cannot take and would prune real ones just as quietly. The
 docstring has the list.
 
+## Arsenic's divu, under qemu-m68k (`tests/run_arsenic_m68k.sh`, in `ci.sh`)
+
+`src/sit_arsenic.c` divides with an inline `divu.w` on a 68000 and in C
+everywhere else (`ars_divu`), so every x86 lane runs the C. This lane builds
+the engine with `m68k-linux-gnu-gcc -Os -mcpu=68000`, checks the binary
+holds a `divu.w`, and runs the StuffIt 5 differential through `qemu-m68k` on
+all three inverse-BWT rungs (`UNC_ARS_FORCE_HALF`, `UNC_ARS_FORCE_SAMPLED`)
+and at the 1 MB budget: 32/32 each, about two minutes. **It can fail:**
+without the one-step correction after the shifted estimate it fails 16 of
+the 32 (measured 2026-11-10; DECISIONS.md 2026-11-10, *the division libgcc
+was asked to do*).
+
+**What it cannot see:** Retro68's code generation (a different GCC; the
+emulator tiers run that), cycles (the tick probe), and alignment —
+qemu-m68k's default CPU tolerates unaligned access (`tests/run_mac_sink.sh`).
+
 ## The 68000 profile (`tools/m68kprof.py`, not in `ci.sh`)
 
 **It ranks; it does not price.** The tick probe on an emulated Mac Plus

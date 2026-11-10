@@ -300,7 +300,9 @@ TAKEN = "2026-11-03"
 # `ovl_codecs` (+28) (the same entry).
 # -> 198,164 2026-11-10: the canonical decoder's table hit in `ovl_codecs`
 # (-80) (DECISIONS.md 2026-11-10, *the forward every symbol took*).
-EXPECT_BUNDLE = 198164
+# -> 198,280 on 2026-11-10: Arsenic's two divisions inline in `ovl_stuffit` (+116) (DECISIONS.md
+# 2026-11-10, *the division libgcc was asked to do*).
+EXPECT_BUNDLE = 198280
 TOLERANCE_BUNDLE = 2048
 TAKEN_BUNDLE = "2026-11-10"
 

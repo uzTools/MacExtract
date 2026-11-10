@@ -205,7 +205,7 @@ assembly: the candidates, estimated*).
 
 | what | why |
 |---|---|
-| **a `qemu-m68k` lane in `ci.sh`** running `run_crypt.py`, `run_privatefile.py`, the differential suite and a `UNC_ARS_FORCE_SAMPLED` build (build line: TESTING.md, *The 68000 profile*) | `ci.sh` runs x86, so nothing else would grade an assembly path |
+| **a `qemu-m68k` lane in `ci.sh`** running `run_crypt.py`, `run_privatefile.py`, the differential suite and a `UNC_ARS_FORCE_SAMPLED` build (build line: TESTING.md, *The 68000 profile*) | `ci.sh` runs x86, so nothing else would grade an assembly path. **The StuffIt 5 part exists since 2026-11-10** (TESTING.md, *Arsenic's divu, under qemu-m68k*), with the one instruction asked for outside the pass, Arsenic's `divu.w` (DECISIONS.md 2026-11-10, *the division libgcc was asked to do*) |
 | **a timing build that can open an encrypted archive**: the autotest app with a compile-time password beside `UNC_AT_TIMING` | the tick probe cannot reach any cipher today |
 
 **`-lh1-` (StuffIt method 5, LZH, ARC Trimmed), from MacMount's comparison

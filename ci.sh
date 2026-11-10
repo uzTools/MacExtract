@@ -446,6 +446,14 @@ fi
 echo "=== variant 3b: Mac sink (native ASan + big-endian m68k) ==="
 sh tests/run_mac_sink.sh || fail "mac sink tests"
 
+# Arsenic divides with an inline divu.w on a 68000 and in C elsewhere, so
+# every lane above runs the C. This runs the StuffIt 5 set through a 68000
+# build on all three inverse-BWT rungs (tests/run_arsenic_m68k.sh). Without
+# the one-step correction after the shifted estimate it fails 16 of 32
+# fixtures (TESTING.md, *Arsenic's divu, under qemu-m68k*).
+echo "=== variant 3e: Arsenic's divu, big-endian m68k ==="
+sh tests/run_arsenic_m68k.sh || fail "Arsenic m68k lane"
+
 # The OVERLAY LOADER, which no suite here reached until 2026-09-26. The
 # application's fifteen 'OVLY' images exist only in a Retro68 build, so every
 # lane above — and the 932 fixtures, and the 9,320 robustness variants — runs
