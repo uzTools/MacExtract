@@ -24635,6 +24635,22 @@ the same text on the untouched disk by **0 pixels** below the menu bar
 across families do not mix fonts. Palatino's bold and italic were not set:
 the test's second Bold toggled the style off.
 
+**Driver parts keep their ids, and decode right (measured, the same day).**
+The Spanish System 7.5 Update 2.0 refuses System 7.5.5 ("version 7.5,
+7.5.1 or 7.5.2 required") and accepts a second volume onto which Apple's
+own System 7.5 CD (archive.org `macintosh-system-7.5-691-0246-a-install-cd`,
+SHA-1 as published) installed 7.5.0. Its Easy Install, and a Custom Install
+of "Software de red" onto a fresh 7.5.0, were read back. Of the 32 records
+in `Compressed Network Items`'s 15 parts (a part may hold several, one
+resource each): **22 byte for byte what Apple's installers wrote at the id
+the record states** (the System file's `DRVR` 9 `.MPP` and 127 `.ENET`,
+`ltlk`, `atlk`, `AINI`, `iopc`, `STR#`; TokenTalk Prep's `ttut` 11 and 52
+and `llc ` 11); 6 identical but for version strings to the newer build the
+installers chose (AppleTalk 58.2.2 here, 58.5 in `Actualización Tomo 1`); 1
+equal to that file's copy; 3 not installed on a Mac II (`lmgr` 0, `llc `
+52, `DRVR` 125). `Actualización Tomo 1`, also `ircp`, holds no parts: 66
+plain resources, 44 of them installed unchanged under their own ids.
+
 ## 2026-11-11 (the stored bytes read one at a time) — zip, StuffIt and DiskDoubler copy stored data a span of the reader's buffer at a time, and LZ4's byte read is forced inline: a stored zip −65 %, DiskDoubler −13 %, LZ4 −2.9 %, StuffIt's stored forks −1.8 %, for +298 B of images
 
 **Claim, evidence, consequence (measured).** Four stored loops read a byte

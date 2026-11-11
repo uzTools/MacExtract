@@ -328,9 +328,9 @@ The Tome reader is in (FORMATS.md, *Apple Installer Tomes*). Left:
   Installer" message) and `vers` 2 (the package's version) dropped. Not
   built. System 7.5.5's fonts fit the same call: their `iFND`, retyped
   `FOND`, already names the parts' placeholder ids, and two such families
-  sharing every id render as the installed ones do, to the pixel. Left:
-  non-font parts (drivers), whose +6 holds the id they must keep (`DRVR` 9
-  is `.MPP`), which no run here installed.
+  sharing every id render as the installed ones do, to the pixel. Driver
+  parts keep their stated ids too: 22 of 32 records of AppleTalk's equal
+  what Apple's installers wrote there, 6 more but for version strings.
 - **The rest of `ircp`**: 6 of the 16 files in MacStamp's census are here
   (`.tmp/ircp/`, off El Mac 7's Spanish System 7.5 Update 2.0); the other
   10's sources were not kept.
