@@ -24471,6 +24471,13 @@ up to 8,049 B past a Tome's end. Now each stream counts once, by the input
 buffer as it is read and the unread rest after the entry; every Tome ends
 within 563 B of its size (the header and the gaps between streams).
 
+**Run on a Macintosh (measured, 2026-11-11).** All four fixtures byte-exact
+on System 6.0.8 at 1 MB and 512 KB, System 3.0 at 1 MB and 512 KB, and
+System 7.0.1; peak heap 71,744 B, the CLI's plus 32. On System 3.0 `install7`
+first stopped after 7 of 13 files with the sink's error: its 2.1 MB filled
+`sys30.py`'s fixed 1,440 KB Out volume, which `run.py` sizes with `--out-kb`.
+Given the same option, it passes on both. Mac OS 9.2 was not run.
+
 **A helper, because nothing claims the creator.** The Installer is
 `APPL`/`kajr` and its bundle claims `kajr`, `bbkr`, `judy` and `bjbc`; a
 double-clicked Tome opened nothing. MacStamp's census has 253 `idcp`/`kakc`

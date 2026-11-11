@@ -178,7 +178,7 @@ back **38/69** on 2026-09-05, every "failure" a missing oracle.
 |---|---|
 | `segcheck.py` | **replay every segmented-archive scenario in one command** |
 | `setup.sh` | fetch + build the emulators, ROMs and System images into `$UNC_VMAC_HOME` (default `~/.cache/macextract/vmac/`) |
-| `sys30.py` | the **System 3.0 / Finder 5.1** tier, launched by double-click |
+| `sys30.py` | the **System 3.0 / Finder 5.1** tier, launched by double-click; `--out-kb` sizes the Out volume as `run.py`'s does (since 2026-11-11: an Installer Tome of 2.1 MB filled the 1,440 KB default and read as a sink error) |
 | `mkboot.py` | strip a System image to System + Finder and boot straight into the application; `--keep-inits` leaves the System Folder as it is |
 | `drive.py` | boot a Mac and take clicks, keys and screenshots from a command file, one step at a time |
 | `run.py` | build the disks, boot, screenshot, decode, check. `--out-kb`/`--in-kb` size the volumes, `--rsrc` gives the fixture a resource fork. **It cannot grade more than 128 files** (`AT_MAXREC`; a 153-file set failed by count on 2026-10-16) |

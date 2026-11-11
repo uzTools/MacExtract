@@ -2645,6 +2645,13 @@ measurement, not re-measured on the probe. `ovl_zipold` 18,720 → 21,934 B,
 codecs (*What each format is granted*): 234,306 B at System 6.0.8 / 512 KB,
 three times its peak. Deepest chain 944 B (`tools/stack_depth.py`).
 
+**On a Macintosh** (Mini vMac, 2026-11-11): all four fixtures byte-exact
+(`vmac_check`'s aggregate) on System 6.0.8 at 1 MB and 512 KB, System 3.0
+at 1 MB and 512 KB, and System 7.0.1, peak heap 70.1 KB. `install7`, 2.1 MB
+out, needs `--out-kb 4096`: on the 1,440 KB default volume it stops after 7
+files with the sink's error, as a full disk should. Mac OS 9.2 not run; the
+`kakc` helper's hand-off not run.
+
 ## Finder info in the archive: what each format's own expander puts back
 
 **The engine reads what these tables mark restored since 2026-10-17** for

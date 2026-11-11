@@ -103,7 +103,7 @@ def _dclick(env, ox, oy, x, y):
 
 
 def run_one(fixture, bootimg, emu_dir, png, timeout, poll, probe=False,
-            keep=None, rom64=False):
+            keep=None, rom64=False, out_kb=R.FLOPPY_KB):
     """Boot, click the application into life, and wait for its grid.
 
     With `probe`, also returns run.py's budget_probe() of the In volume,
@@ -134,7 +134,7 @@ def run_one(fixture, bootimg, emu_dir, png, timeout, poll, probe=False,
             R.sh("cp", bootimg + ".app", boot + ".app")
             disks.append(boot + ".app")
         R.make_floppy(indsk, "In", payload=fixture)
-        R.make_floppy(outdsk, "Out")
+        R.make_floppy(outdsk, "Out", size_kb=out_kb)
         dpy = R.Display(limit=limit + 30)
         env = dict(os.environ, DISPLAY=dpy.name)
         started = time.time()
@@ -207,6 +207,10 @@ def main():
     ap.add_argument("-o", "--outdir", default="sys30-shots",
                     help="where each run's final screenshot is kept")
     ap.add_argument("--json", help="write per-fixture results here")
+    ap.add_argument("--out-kb", type=int, default=R.FLOPPY_KB,
+                    help="size of the DESTINATION volume in KB (default "
+                         "%d), as run.py's: a fixture whose output is "
+                         "larger needs a larger one" % R.FLOPPY_KB)
     ap.add_argument("--keep-disks", action="store_true",
                     help="keep each run's in.dsk and out.dsk under .tmp/")
     ap.add_argument("--rom64", action="store_true",
@@ -250,7 +254,7 @@ def main():
             probe = "UNC_AT_BUDGET" in a.defines
             vals, secs, fields = run_one(fixture, bootimg, emu_dir, png,
                                          a.timeout, a.poll, probe, keep,
-                                         a.rom64)
+                                         a.rom64, a.out_kb)
             man = os.path.join(manifests, base + ".json")
             if vals is None:
                 verdict = "NOGRID"
