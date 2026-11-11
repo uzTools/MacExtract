@@ -835,7 +835,11 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # span at a time and LZ4's byte read forced inline (DECISIONS.md 2026-11-11,
 # *the stored bytes read one at a time*). In four images on the shipped
 # pair, +296.
-UNC_MAC_CODE_DEFAULT=193944
+# -376 on 2026-11-11, 193,944 -> 193,568, A5 -8 below: FSRead, FSWrite,
+# SetFPos, GetEOF, SetEOF, FlushVol and FSClose expanded at each call
+# (mac/fm_inline.h) instead of Retro68's 298 B of library glue
+# (DECISIONS.md 2026-11-11, *the glue the shell expands*).
+UNC_MAC_CODE_DEFAULT=193568
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -1138,7 +1142,9 @@ UNC_MAC_CODE_DEFAULT=193944
 # alignment; the same entry as the code's +3,052 above.
 # -12 on 2026-11-11, 36,868 -> 36,856: `.data` alignment under the code's
 # +300 (above); the change added no data.
-UNC_MAC_A5_DEFAULT=36856
+# -8 on 2026-11-11, 36,856 -> 36,848: `.data` alignment under the inline
+# File Manager calls' -376 (above); no data was removed.
+UNC_MAC_A5_DEFAULT=36848
 # A CEILING PER CONFIGURATION, because one ceiling measured on another build
 # cannot fire. The figures above are the RESIDENT control build, which carries
 # every decoder; the shipped build's resident code is a third of that, so
@@ -1750,8 +1756,14 @@ UNC_MAC_A5_DEFAULT=36856
 # reads*). Its reader is in `ovl_zipold` and its probe in the sniffer's
 # image; resident are the decoder shim, the engine table's row and its
 # name, and the keep set's two bytes. 32 B off every budget.
-UNC_MAC_CODE_EAGER=38168
-UNC_MAC_A5_EAGER=16792
+# -344 and -24 on 2026-11-11, 38,168 -> 37,824 and 16,792 -> 16,768: seven
+# File Manager calls expanded at each call instead of linked
+# (mac/fm_inline.h), the setup image making four of them itself, so
+# `gSegSetupFns` loses 16 B; the other 8 are `.data` alignment
+# (DECISIONS.md 2026-11-11, *the glue the shell expands*). 368 B onto every
+# budget.
+UNC_MAC_CODE_EAGER=37824
+UNC_MAC_A5_EAGER=16768
 # +8 on 2026-10-02 for the same reason as the eager pair above: the
 # overlay call that now says WHICH of StuffIt 2.x's ciphers an entry
 # wants. A5 fell to 19,096 and its ceiling is left where it was.
@@ -1913,7 +1925,9 @@ UNC_MAC_A5_EAGER=16792
 # data + bss 16,768 (-8), under its ceiling.
 # +20 code the same day: the Installer Tome, as the eager pair; data + bss
 # 16,812 (+44), under its ceiling.
-UNC_MAC_CODE_LAZY=36948
+# -344 code on 2026-11-11: the inline File Manager calls, as the eager
+# pair; data + bss 16,788 (-24), under its ceiling.
+UNC_MAC_CODE_LAZY=36604
 UNC_MAC_A5_LAZY=19200
 if [ -n "$UNC_OVL_RESIDENT" ]; then
     UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-$UNC_MAC_CODE_DEFAULT}
@@ -1980,6 +1994,17 @@ if [ -x "$SIZE" ] && [ -f "$GDB" ]; then
             exit 1
         fi
         echo "mac: constructors, destructors, .init, .fini: none (mac_start.c runs none)"
+        # mac/fm_inline.h expands seven File Manager calls at each call
+        # site. A call GCC chose not to expand, or a pointer taken to one,
+        # links Retro68's library copy instead and compiles without a word;
+        # fail on it (DECISIONS.md 2026-11-11, *the glue the shell expands*).
+        glue=$("$NM" "$GDB" | awk '$3 ~ /^(FSREAD|FSWRITE|SETFPOS|GETEOF|SETEOF|FLUSHVOL|FSCLOSE)$/ {print $3}' | tr '\n' ' ')
+        if [ -n "$glue" ]; then
+            echo "mac: FAIL — library File Manager glue linked: $glue" >&2
+            echo "mac: mac/fm_inline.h expands these; find the call it did not." >&2
+            exit 1
+        fi
+        echo "mac: File Manager glue linked: none of the seven mac/fm_inline.h expands"
     else
         echo "mac: no m68k nm — the constructor guard NOT checked"
     fi

@@ -32,6 +32,7 @@
 #include <Devices.h>
 #include <Events.h>
 #include <Files.h>
+#include "fm_inline.h"     /* FSRead and six more, expanded inline */
 #include <Fonts.h>
 #include <Memory.h>
 #include <Menus.h>
@@ -3976,7 +3977,7 @@ static int SegAskUser(SegHost *h, int part)
 #ifdef UNC_SHELL_IMAGES
 /* The setup is an image (ovl_segsetup.c); this is what it calls back. */
 static const SegSetupFns gSegSetupFns = {
-    MyOpenFork, MyHDelete, FSClose, GetEOF, FSWrite, FlushVol,
+    MyOpenFork, MyHDelete,
     SegTmpOpen, SegRemember, SegScanDir, SegScanFamily, SegPartLength,
     SegPartOf, unc_sniff_envelope, unc_format_is_envelope, unc_extract_as,
     unc_segment_describe, unc_segment_match,

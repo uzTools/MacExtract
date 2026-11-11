@@ -591,6 +591,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-11 (the Installer's own code) — Mac OS 9's installed files grade 62 more Tome forks through a TN1150 reader held to 7-Zip; the Installer's code is InstaCompOne-compressed and holds no checksum; a 'part' is a Tome of one resource, and ircp a file of them
 - 2026-11-11 (what the Installer wrote) — Apple's Installer, run on QuickDraw GX 1.1.3 under emulation, writes every 'part' resource as this engine decodes it, byte for byte; it renumbers each sfnt, rewrites the FOND to match and drops two resources
 - 2026-11-11 (the stored bytes read one at a time) — zip, StuffIt and DiskDoubler copy stored data a span of the reader's buffer at a time, and LZ4's byte read is forced inline: a stored zip −65 %, DiskDoubler −13 %, LZ4 −2.9 %, StuffIt's stored forks −1.8 %, for +298 B of images
+- 2026-11-11 (the glue the shell expands) — the seven File Manager calls the shell linked from Retro68 are its own inline code: CODE −344, A5 −24, and every shipped budget 336 B higher on the machine
 
 ---
 
@@ -23637,7 +23638,7 @@ said the switch to `HOpen`/`HOpenRF`/`HDelete` would cost "about 0 B,
 hypothesis" once multiversal's glue was inline. Measured against a local
 header, `/opt/Retro68-build` untouched, on 17f2982.
 
-**Method.** `tools/glue_inline/glue_inline.h`: the ten bodies of
+**Method.** `tools/glue_inline/glue_inline.h` (at 049d687): the ten bodies of
 multiversal `custom/glue.c` (unchanged since `d7642c2`), checked against
 `objdump -d` of `glue.o` in the toolchain's `libInterface.a` (same traps,
 same block offsets), each wrapped as pull request 20's generator wraps a
@@ -23646,7 +23647,7 @@ trap with register outputs: `__gnu_inline__ extern __inline__ pascal` under
 **Read off the real glue:** every statement, the traps, the offsets, the
 wrapper. **Reconstruction (hypothesis):** that multiversal would emit
 these bodies this way; its generator has no path for `custom/glue.c`
-today. `tools/glue_inline/shell.patch` is the shell side, a no-op until
+today. `tools/glue_inline/shell.patch` (the same) is the shell side, a no-op until
 defined (`.text` and `.data` byte-identical). The three configurations
 `ci.sh` builds, in a scratch worktree; CODE / A5 as `build_mac.sh` prints
 them; functions by `nm -S` on `MacExtract.code.bin.gdb`.
@@ -24621,3 +24622,66 @@ the read that has no run to take: LZ4's, where it bought −3.1 % blanket and
 −2.9 % alone. PackIt's `pit_read` is the same stored loop, in a file other
 work owns; it was left to that work with its 2026-11-09 figure, 250 → 204
 ticks blanket.
+
+## 2026-11-11 (the glue the shell expands) — the seven File Manager calls the shell linked from Retro68 are its own inline code: CODE −344, A5 −24, and every shipped budget 336 B higher on the machine
+
+**The change.** `mac/fm_inline.h` defines `FSRead`, `FSWrite`, `SetFPos`,
+`GetEOF`, `SetEOF`, `FlushVol` and `FSClose` as `gnu_inline` bodies of
+their parameter-block traps, statement for statement multiversal
+`custom/glue.c`, which is what libInterface's 298 B of copies are (2026-11-09,
+*the glue that was measured inline*). `macextract_mac.c` and the setup image
+include it, so `SegSetupFns` loses its four File Manager pointers and
+`ovl_segsetup` makes those calls itself. The hand-built
+`HOpen`/`HOpenRF`/`HDelete` blocks stay: of the two variants that entry
+measured at −336 B, this is the one that keeps them. `tools/glue_inline/`
+is deleted (at 049d687); nothing in it is used any more. `tools/build_mac.sh`
+fails when any of the seven library copies is linked; the builds of
+c6ae39db link all seven, and the image without the header fails at
+`mkoverlay.sh`'s link (tried).
+
+**Five axes, on c6ae39db.** CODE / A5, `build_mac.sh`: shipped 38,168 /
+16,792 → 37,824 / 16,768, lazy 36,948 / 16,812 → 36,604 / 16,788, control
+193,944 / 36,856 → 193,568 / 36,848. The shipped A5 is `gSegSetupFns` −16
+and 8 B of `.data` alignment, the control's alignment alone (`nm -n`). On
+049d687 the same source measured shipped −344 / +8, the step falling the
+other way. `ovl_segsetup` 2,446 → 2,434, the bundle −12. Per function (on
+049d687): the seven −298; `SegAskUser`'s 1,172 B folded into `seg_need`
+(+1,184), `StreamClose` outlined (64), `StreamTrim` +6, six callers −10 to
+−54. Stack (`tools/stack_depth.py`): the engine's deepest chain 3,446 B
+before and after; `--shell` 6,260 → 6,244. Heap: nothing allocates. Lost
+extractions: none (`run_tiers.py --check`: resident 74/74, 70/74, 64/74,
+shipped 74/74, 72/74, 72/74, the same names).
+
+**The budgets, on the machine.** The probe pair (`-D UNC_AT_BUDGET`,
+resident and shipped, `derived-PCCTS.tar`) on c6ae39db and on this build,
+all three tiers. Shipped: **+336 B on every tier** (759,660 → 759,996,
+330,780 → 331,116, 235,372 → 235,708), 32 B under the builds' 368: the
+probe build's own `.data` step. Control: +384 on every tier, its ratchets'
+figure. c6ae39db's control read 612,188 / 183,304 / 87,900, **1,150 /
+1,172 / 1,150 B above** the derived `TIERS`, so both lanes had been that
+much too pessimistic. `TIERS` re-taken (612,572 / 183,688 / 88,284),
+`TIERS_MACHINE` with them, and `OVL_RESIDUE` −322 → −402 (−402 / −398 /
+−402; −370 / −366 / −370 on c6ae39db): Tar's modelled grant is the measured
+147,424 B. No tally moves. The same pair on 049d687 two days earlier
+gave the same +336 and +384, and a 1,176 B drift.
+
+**On the emulated Macs.** On the rebased tree (c6ae39db with this change):
+System 6.0.8 at 1 MB 74/74; System 3.0 / 512Ke and the 64K ROM 72/74, the
+two refusals by name; Mac OS 9.2 22/22 (two halves of 11), byte-exact; the
+six fixtures that were NOGRID or EMUDIED on the earlier tree, alone: four
+PASS, `synth-dd-m5.dd` refused per entry on both 512 KB machines as
+predicted; `interactive.py` on System 6.0.8 at 1x (progress, Cancel, Cmd-.,
+a run to the end; the names asserted). **System 6.0.8 / 512Ke read 68/74**:
+the two, and `synth-exo-tar-Z.tar.Z`, `a2ps.V4.3.tar.Z`, `popper-1.7.tar.Z`
+and `PCCTS.tar.gz` ending `UNC_ERR_MEM` with nothing written. c6ae39db
+without this change does the same on the two tried, and 049d687 with it
+passed all four, so it came in between. The budget probe on one reads `kf`
+2, `wa` 139, `short` 0, `why` 0: the release failed to keep an image, the
+budget was not short; the model says 72/74. Not reduced (BLOCKERS.md,
+*Status*). On the pre-rebase tree (049d687 with this change, 2026-11-09):
+System 6.0.8 at 4 MB 74/74 (four EMUDIED, each PASS alone on the rebased
+tree), System 7.0.1 74/74, and 74, 72, 72 and 72 at 1 MB, both 512Ke and
+the 64K ROM.
+
+**Consequence.** OPEN_ITEMS.md *The shell's own File Manager blocks* is
+down to the three calls, which still cost +32 to +64 B inline, and upstream.

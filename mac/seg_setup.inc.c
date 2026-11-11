@@ -8,7 +8,8 @@
  *
  * SS(f) is how this file reaches anything resident: the function itself
  * when it is compiled into the application, the entry in SegSetupFns when
- * it is an image, which cannot name an application symbol.
+ * it is an image, which cannot name an application symbol. The File
+ * Manager calls are made directly: both expand them (mac/fm_inline.h).
  *
  * SPDX-License-Identifier: 0BSD
  */
@@ -43,7 +44,7 @@ static int SegDescribeLast(SegHost *h, short vol, long dir,
     int ok;
 
     if (SS(MyOpenFork)(vol, dir, nm, fsRdPerm, 0, &ref) != noErr) return 0;
-    SS(GetEOF)(ref, &eof);
+    GetEOF(ref, &eof);
     probe.refNum = ref;
     probe.size = (uint32_t)eof;
     probe.pos = 0;
@@ -53,7 +54,7 @@ static int SegDescribeLast(SegHost *h, short vol, long dir,
     pio.tell = SS(fio_tell);
     pio.size = SS(fio_size);
     ok = SS(unc_segment_describe)(&pio, &cand) == UNC_OK && cand.nparts;
-    SS(FSClose)(ref);
+    FSClose(ref);
     if (!ok) return 0;
     h->desc = cand;
     SS(SegRemember)(h, (int)cand.nparts, vol, dir, nm);
@@ -77,7 +78,7 @@ static int env_write(void *ctx, UncFork fork, const void *buf, int32_t len)
     if (fork != UNC_FORK_DATA || len <= 0) return 0;
     if (e->outRef) {
         long count = (long)len;
-        if (SS(FSWrite)(e->outRef, &count, (const void *)buf) != noErr ||
+        if (FSWrite(e->outRef, &count, (const void *)buf) != noErr ||
             count != (long)len) { e->err = 1; return -1; }
         return 0;
     }
@@ -139,7 +140,7 @@ static int EnvRun(short vol, long dir, ConstStr255Param nm, EnvSink *es,
     int rc;
 
     if (SS(MyOpenFork)(vol, dir, nm, fsRdPerm, 0, &ref) != noErr) return 0;
-    SS(GetEOF)(ref, &eof);
+    GetEOF(ref, &eof);
     fio.refNum = ref;
     fio.size = (uint32_t)eof;
     fio.pos = 0;
@@ -151,7 +152,7 @@ static int EnvRun(short vol, long dir, ConstStr255Param nm, EnvSink *es,
 
     fmt = SS(unc_sniff_envelope)(&eio);
     if (!SS(unc_format_is_envelope)(fmt)) {
-        SS(FSClose)(ref);
+        FSClose(ref);
         return 0;
     }
     sk.ctx = es;
@@ -162,7 +163,7 @@ static int EnvRun(short vol, long dir, ConstStr255Param nm, EnvSink *es,
     prog.ctx = NULL;
     prog.tick = NULL;
     rc = SS(unc_extract_as)(fmt, &eio, &sk, al, NULL, NULL);
-    SS(FSClose)(ref);
+    FSClose(ref);
     if (es->outRef && rc != UNC_OK) es->err = 1;
     return 1;
 }
@@ -212,12 +213,12 @@ static int SegWrappedPartOf(SegHost *h, short vol, long dir,
     for (z = 0; z < (long)sizeof es; z++) ((char *)&es)[z] = 0;
     es.outRef = ref;
     if (!EnvRun(vol, dir, nm, &es, al) || es.err) {
-        SS(FSClose)(ref);
+        FSClose(ref);
         SS(MyHDelete)(h->tmpVol, h->tmpDir, tmp);
         return 0;
     }
-    SS(FSClose)(ref);
-    SS(FlushVol)(NULL, h->tmpVol);
+    FSClose(ref);
+    FlushVol(NULL, h->tmpVol);
     SS(SegRemember)(h, part, h->tmpVol, h->tmpDir, tmp);
     h->peeled = 1;
     return part;
@@ -279,7 +280,7 @@ static void SegFindLast(SegHost *h)
         if (!h->loc[p].name[0]) continue;
         if (SS(MyOpenFork)(h->loc[p].vRefNum, h->loc[p].dirID, h->loc[p].name,
                        fsRdPerm, 0, &ref) != noErr) continue;
-        SS(GetEOF)(ref, &eof);
+        GetEOF(ref, &eof);
         probe.refNum = ref;
         probe.size = (uint32_t)eof;
         probe.pos = 0;
@@ -290,10 +291,10 @@ static void SegFindLast(SegHost *h)
         pio.size = SS(fio_size);
         if (SS(unc_segment_describe)(&pio, &cand) == UNC_OK && cand.nparts) {
             h->desc = cand;
-            SS(FSClose)(ref);
+            FSClose(ref);
             return;
         }
-        SS(FSClose)(ref);
+        FSClose(ref);
     }
 }
 

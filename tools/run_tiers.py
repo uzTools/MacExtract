@@ -283,10 +283,18 @@ REPO = os.path.dirname(HERE)
 # control's CODE -96 and A5 0; the shipped pair fell the same 96, OVL_SAVED
 # unmoved. They were 190,276 / 94,894 / 619,182.
 TIERS = {
-    "sys3-512K": (182132, "System 3.0, Macintosh 512Ke (222,070 B free)"),
-    "sys6-512K": (86750,  "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
-    "floor-1M":  (611038, "System 6.0.8, 1 MB Mac Plus — the floor target"),
+    "sys3-512K": (183688, "System 3.0, Macintosh 512Ke (204,168 B free)"),
+    "sys6-512K": (88284,  "System 6.0.8, Macintosh 512Ke (108,764 B free)"),
+    "floor-1M":  (612572, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
+# **RE-TAKEN on all three machines 2026-11-11** (`-D UNC_OVL_RESIDENT -D
+# UNC_AT_BUDGET`, derived-PCCTS.tar) on c6ae39db and on the build with seven
+# File Manager calls expanded inline, back to back (DECISIONS.md 2026-11-11,
+# *the glue the shell expands*): c6ae39db read 183,304 / 87,900 / 612,188,
+# 1,172 / 1,150 / 1,150 B ABOVE the derived 182,132 / 86,750 / 611,038, so
+# the lanes had been that much too pessimistic; the new build 183,688 /
+# 88,284 / 612,572, +384 on all three, TIERS_CONTROL's -384. The free
+# figures in the labels are that day's.
 # -288 each 2026-11-11, DERIVED from TIERS_CONTROL +288 (stored data copied
 # a span at a time, DECISIONS.md 2026-11-11, *the stored bytes read one at a time*); they were 182,420 / 87,038 / 611,326.
 # -2,992 each 2026-11-10, DERIVED from TIERS_CONTROL +2,992 (Apple Backup,
@@ -562,7 +570,12 @@ TIERS = {
 # in this build; DECISIONS.md 2026-11-10, *the archive the Installer
 # reads*). TIERS -3,408 and OVL_SAVED +3,376: every grant 32 B lower, less
 # its images' change.
-TIERS_CONTROL = 230800     # build/mac-resident, CODE + A5, 2026-11-11
+TIERS_CONTROL = 230416     # build/mac-resident, CODE + A5, 2026-11-11
+# -384 2026-11-11: FSRead, FSWrite, SetFPos, GetEOF, SetEOF, FlushVol and
+# FSClose expanded at each call instead of linked (mac/fm_inline.h; CODE
+# -376, A5 -8, alignment; DECISIONS.md 2026-11-11, *the glue the shell
+# expands*); TIERS re-taken on the machine (above), +384 of it this
+# change's; OVL_SAVED -16.
 # +288 2026-11-11: stored data copied a span at a time and LZ4's byte read
 # forced inline (four images +298; CODE +300, A5 -12, alignment;
 # DECISIONS.md 2026-11-11, *the stored bytes read one at a time*); TIERS -288 and OVL_SAVED +288, which cancel: only the keepers of
@@ -698,9 +711,9 @@ TIERS_CONTROL = 230800     # build/mac-resident, CODE + A5, 2026-11-11
 # **-10 more 2026-11-04**: the layouts the launch no longer purges (TIERS
 # above); measured at floor-1M.
 TIERS_MACHINE = {
-    "sys3-512K": 412932,   # 201,590 + 211,616, measured 2026-10-22 (was
-    "sys6-512K": 317550,   # 106,208 + 211,616   413,492 / 318,092 / 842,380
-    "floor-1M":  841838,   # 630,496 + 211,616   from 2026-10-09)
+    "sys3-512K": 414104,   # 183,688 + 230,416, measured 2026-11-11 (was
+    "sys6-512K": 318700,   # 88,284 + 230,416    412,932 / 317,550 / 841,838
+    "floor-1M":  842988,   # 612,572 + 230,416   from 2026-10-22)
 }
 
 # DERIVED, not re-measured, 2026-10-01: all three fell by 2,024 B — the
@@ -1288,7 +1301,13 @@ EXPECT = {
 # LZ4's byte read forced inline, the control's +288 (CODE +300, A5 -12)
 # against the shipped pair's 0; the code in four images (+298 in all;
 # DECISIONS.md 2026-11-11, *the stored bytes read one at a time*). TIERS -288, which cancels: only those images' keepers move.
-OVL_SAVED = 175840
+# **-16 2026-11-11, -> 175,824**: seven File Manager calls expanded inline
+# (mac/fm_inline.h), the control's -384 (CODE -376, A5 -8) against the
+# shipped pair's -368 (CODE -344, A5 -24), the setup image making four of
+# them itself (`ovl_segsetup` -12; DECISIONS.md 2026-11-11, *the glue the
+# shell expands*). TIERS +384 on the machine and OVL_RESIDUE -32 of this
+# change's (below): 336 B onto every budget the probe pair reads.
+OVL_SAVED = 175824
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
 # every kept image is one — as is the bundle an envelope holds on to.
@@ -1330,7 +1349,13 @@ OVL_HANDLE = 8
 # own measured TIERS. The -666 was 2026-09-27's, two builds' worth of
 # instruments ago; -322 is the more pessimistic of this build's two values
 # (DECISIONS.md 2026-10-22, *the runtime the application did not need*).
-OVL_RESIDUE = -322
+# **RE-TAKEN 2026-11-11, -322 -> -402**, the same way: -402 / -398 / -402 B
+# on the build with the File Manager calls inline, -370 / -366 / -370 on
+# c6ae39db against its own measured TIERS. The probe pair moved +336 where
+# the shipped and control builds' CODE + A5 say +368: the probe build's own
+# `.data` step, which the residue takes. -402 is the more pessimistic
+# (DECISIONS.md 2026-11-11, *the glue the shell expands*).
+OVL_RESIDUE = -402
 
 # The seventeen images and the bundle they are read as, in bytes, measured
 # 2026-09-26 off `build/mac/` and STUFFIT re-taken 2026-09-28, +208 B for the
@@ -1440,7 +1465,7 @@ IMAGES = {
     "OVL_ID_ZIPOLD":      21970,
     "OVL_ID_SNIFF":       17016,
     "OVL_ID_DESTDLG":     1688,
-    "OVL_ID_SEGSETUP":    2446,
+    "OVL_ID_SEGSETUP":    2434,
 }
 # **ZIPOLD +3,374 B and EXO +972 B, the bundle +4,344 B, 2026-10-17**:
 # Mac OS X's sidecars, the shared code in ZIPOLD and zip's half in EXO,
@@ -1613,7 +1638,10 @@ IMAGES = {
 # 2026-11-11**: stored data copied a span at a time (zip method 0, StuffIt
 # method 0, DiskDoubler method 0 and AD's stored blocks) and LZ4's byte read
 # forced inline (DECISIONS.md 2026-11-11, *the stored bytes read one at a time*).
-BUNDLE = 204816
+# **SEGSETUP -12, the bundle -12 B, 2026-11-11**: the setup image makes
+# FSClose, GetEOF, FSWrite and FlushVol itself (mac/fm_inline.h) instead of
+# calling the application's (DECISIONS.md 2026-11-11, *the glue the shell expands*).
+BUNDLE = 204804
 
 # What the SHIPPED lane asserts, and it is the refused fixtures BY NAME
 # rather than a tally: a tier that refuses two different fixtures and still

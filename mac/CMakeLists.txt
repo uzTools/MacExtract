@@ -956,6 +956,7 @@ foreach(img destdlg segsetup)
                 ${CMAKE_CURRENT_SOURCE_DIR}/macextract_strings.h
                 ${CMAKE_CURRENT_SOURCE_DIR}/seg_setup.inc.c
                 ${CMAKE_CURRENT_SOURCE_DIR}/seg_types.h
+                ${CMAKE_CURRENT_SOURCE_DIR}/fm_inline.h
                 ${OVL_DEPS})
 endforeach()
 # The bundle. Depends on the per-format .r rules only so that their .bin

@@ -24,8 +24,8 @@ mv-512Ke` is **72/74** and `run.py --emu mv-512Ke --system System6.hfv` is
 **68/74** on the shipped build, the refusals per entry and by name (the
 current dates are BLOCKERS.md's, *Status*; FORMATS.md, *512 KB machines*).
 With every decoder resident (`-D UNC_OVL_RESIDENT`) the two are **68/72** and
-**63/72** (2026-10-09). The resident budgets measured are **205,476 B** and
-**110,076 B**, re-taken on the machine 2026-10-09 evening with the floor's.
+**63/72** (2026-10-09). The resident budgets measured are **183,688 B** and
+**88,284 B**, re-taken on the machine 2026-11-11 with the floor's.
 `tools/run_tiers.py` reproduces both lanes on all three tiers on Linux,
 fixture for fixture and by name.
 

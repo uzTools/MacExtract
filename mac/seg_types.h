@@ -82,18 +82,14 @@ typedef struct {
     long  inDir, origDir, outDir;
 } SegSetupArgs;
 
-/* What the image calls back: the application's own helpers, the engine's
- * entry points, and the File Manager calls Retro68 provides as library
- * glue rather than inline traps. Not in the Linux sink tests, whose mocks
- * have no `pascal` and which never run the image. */
+/* What the image calls back: the application's own helpers and the
+ * engine's entry points. The File Manager calls it makes are its own
+ * (mac/fm_inline.h). Not in the Linux sink tests, whose mocks have no
+ * `pascal` and which never run the image. */
 #ifndef UNC_SINK_TEST
 typedef struct {
     OSErr (*MyOpenFork)(short, long, ConstStr255Param, SignedByte, int, short *);
     OSErr (*MyHDelete)(short, long, ConstStr255Param);
-    pascal OSErr (*FSClose)(short);
-    pascal OSErr (*GetEOF)(short, long *);
-    pascal OSErr (*FSWrite)(short, long *, const void *);
-    pascal OSErr (*FlushVol)(ConstStringPtr, short);
     int  (*SegTmpOpen)(SegHost *, int, Str255, short *);
     void (*SegRemember)(SegHost *, int, short, long, ConstStr255Param);
     void (*SegScanDir)(SegHost *, short, long);

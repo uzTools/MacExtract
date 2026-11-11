@@ -2696,6 +2696,15 @@ since 2026-09-25 (`mac/CMakeLists.txt`) — and is followed by `run_tiers.py
 --check-images`; 4d is followed by `--check-saved`. All of them skip
 without a Retro68 toolchain.
 
+**Each build fails if Retro68's library copy of `FSRead`, `FSWrite`,
+`SetFPos`, `GetEOF`, `SetEOF`, `FlushVol` or `FSClose` is linked**
+(`tools/build_mac.sh`, since 2026-11-11): `mac/fm_inline.h` expands them,
+and a call GCC did not expand would link the copy without a warning.
+Made to fail: the builds of c6ae39db link all seven. It reads symbol
+names, so it cannot see the images, which have no library to link and
+fail at `mkoverlay.sh` instead (DECISIONS.md 2026-11-11, *the glue the
+shell expands*).
+
 **What these variants CANNOT see.** They compile; what the loader does
 with an image is variant 3c's (next section). What stays the emulator
 tiers' alone is Retro68's code generation, the real Resource Manager,

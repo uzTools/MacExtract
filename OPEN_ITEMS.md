@@ -290,15 +290,13 @@ converted*).
 Switching to `HOpen`/`HOpenRF`/`HDelete` costs **+160 B** shipped today
 (CODE +160, A5 0; +224 on 2026-10-19), so the hand-built blocks stay.
 Inline glue alone does not make it free: the three inline cost **+32 to
-+64 B** (measured with a local header, `tools/glue_inline/`; DECISIONS.md
-2026-11-09, *the glue that was measured inline*). The seven routines the
-shell links (298 B: `FSRead`, `FSWrite`, `SetFPos`, `GetEOF`, `SetEOF`,
-`FlushVol`, `FSClose`) inline, with the setup image calling four of them
-itself rather than through `SegSetupFns`, measure **−336 B** shipped, lazy
-too, and −352 in the control, with or without the three (−304 with them
-unless `MyOpenFork` stays out of line); no extraction moves (measured). Proposed upstream after MacExtract's first public release
-(the maintainer, 2026-10-19), which v0.44.0 was (2026-10-25): **not
-started**; the patches are drafted here and posted by the maintainer.
++64 B** (measured with a local header, at 049d687; DECISIONS.md
+2026-11-09, *the glue that was measured inline*). The seven I/O routines
+are the shell's own inline code since 2026-11-11 (`mac/fm_inline.h`;
+*the glue the shell expands*), so multiversal's generating them inline
+would give MacExtract nothing more. Proposed upstream after MacExtract's
+first public release (the maintainer, 2026-10-19), which v0.44.0 was
+(2026-10-25): **not started**; posted by the maintainer.
 
 ## Apple Installer Tomes: what is not read, and what is not graded
 

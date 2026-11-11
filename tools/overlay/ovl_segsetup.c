@@ -10,6 +10,7 @@
  */
 #include "overlay.h"
 #include <Files.h>
+#include "../../mac/fm_inline.h"  /* its own FSClose, GetEOF, FSWrite, FlushVol */
 #include <Memory.h>
 #include <Dialogs.h>
 #include <LowMem.h>
