@@ -111,12 +111,25 @@ static int dd_out_byte(DdFork *o, uint8_t b)
 
 static int dd_store(DdFork *o, UncBufIn *in, uint32_t complen)
 {
-    uint32_t i;
     int err;
-    for (i = 0; i < complen && o->left > 0; i++) {
-        int b = unc_bufin_next(in);
-        if (b < 0) return in->err;
-        if ((err = dd_out_byte(o, (uint8_t)b)) != UNC_OK) return err;
+    /* A span of what the reader holds at a time; a spent buffer is
+     * refilled through unc_bufin_next (FORMATS.md, *Stored copies*). */
+    while (complen > 0 && o->left > 0) {
+        const uint8_t *p;
+        uint32_t n = unc_bufin_span(in, &p);
+        if (n == 0) {
+            int b = unc_bufin_next(in);
+            if (b < 0) return in->err;
+            if ((err = dd_out_byte(o, (uint8_t)b)) != UNC_OK) return err;
+            complen--;
+            continue;
+        }
+        if (n > complen) n = complen;
+        if (n > o->left) n = o->left;     /* one byte out per byte in */
+        complen -= n;
+        unc_bufin_drop(in, n);
+        while (n-- > 0)
+            if ((err = dd_out_byte(o, *p++)) != UNC_OK) return err;
     }
     return UNC_OK;
 }
@@ -172,9 +185,19 @@ static int dd_adn(DdFork *o, UncBufIn *in, uint8_t *win)
         if (hx != (uint8_t)b) return UNC_ERR_CORRUPT;
 
         if (flags & 1) {
-            for (i = 0; i < uncompsize; i++) {
-                b = unc_bufin_next(in); if (b < 0) return in->err;
-                win[i] = (uint8_t)b;
+            /* Stored block: a span of what the reader holds at a time
+             * (FORMATS.md, *Stored copies*). */
+            for (i = 0; i < uncompsize; ) {
+                const uint8_t *p;
+                uint32_t k = unc_bufin_span(in, &p);
+                if (k == 0) {
+                    b = unc_bufin_next(in); if (b < 0) return in->err;
+                    win[i++] = (uint8_t)b;
+                    continue;
+                }
+                if (k > uncompsize - i) k = uncompsize - i;
+                unc_bufin_drop(in, k);
+                while (k-- > 0) win[i++] = *p++;
             }
             pos = uncompsize;
         } else {

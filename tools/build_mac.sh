@@ -831,7 +831,11 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # Tome, its reader and its probe (DECISIONS.md 2026-11-10, *the archive the
 # Installer reads*). In `ovl_zipold` +3,214 and `ovl_sniff` +168 on the
 # shipped pair.
-UNC_MAC_CODE_DEFAULT=193644
+# +300 on 2026-11-11, 193,644 -> 193,944, A5 -12 below: stored data copied a
+# span at a time and LZ4's byte read forced inline (DECISIONS.md 2026-11-11,
+# *the stored bytes read one at a time*). In four images on the shipped
+# pair, +296.
+UNC_MAC_CODE_DEFAULT=193944
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -1132,7 +1136,9 @@ UNC_MAC_CODE_DEFAULT=193644
 # level limits (302 B), which are `.data` in this build and in `ovl_zipold`
 # in the shipped one, its row and name in the engine's format table, and
 # alignment; the same entry as the code's +3,052 above.
-UNC_MAC_A5_DEFAULT=36868
+# -12 on 2026-11-11, 36,868 -> 36,856: `.data` alignment under the code's
+# +300 (above); the change added no data.
+UNC_MAC_A5_DEFAULT=36856
 # A CEILING PER CONFIGURATION, because one ceiling measured on another build
 # cannot fire. The figures above are the RESIDENT control build, which carries
 # every decoder; the shipped build's resident code is a third of that, so

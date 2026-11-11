@@ -434,22 +434,39 @@ static int zip_decode(UncCtx *c, UncBufIn *in, ExoSink *es, uint32_t method,
                                  ocap, zip_put, es);
 
     if (method == 0) {
-        uint32_t left = usize;
+        /* Stored: what the reader already holds is copied a span at a
+         * time, and only a spent buffer goes through unc_bufin_next to
+         * refill. The output is still handed over ocap bytes at a time,
+         * which zip_mb_peek counts on (FORMATS.md, *Stored copies*). */
+        uint32_t left = usize, have = 0;
         est = UNC_OK;
         while (left > 0) {
-            int b = unc_bufin_next(in);
-            if (b < 0) { est = in->err; break; }
-            obuf[produced % ocap] = (uint8_t)b;
-            if (++produced % ocap == 0) {
+            const uint8_t *p;
+            uint32_t n = unc_bufin_span(in, &p);
+            if (n == 0) {
+                int b = unc_bufin_next(in);
+                if (b < 0) { est = in->err; break; }
+                obuf[have++] = (uint8_t)b;
+                left--;
+            } else {
+                uint8_t *q = obuf + have;
+                if (n > left) n = left;
+                if (n > ocap - have) n = ocap - have;
+                unc_bufin_drop(in, n);
+                have += n;
+                left -= n;
+                while (n-- > 0) *q++ = *p++;
+            }
+            if (have == ocap) {
                 *crc = unc_crc32(*crc, obuf, (int32_t)ocap);
                 est = exo_emit(es, obuf, (int32_t)ocap);
                 if (est != UNC_OK) break;
+                have = 0;
             }
-            left--;
         }
-        if (est == UNC_OK && produced % ocap) {
-            *crc = unc_crc32(*crc, obuf, (int32_t)(produced % ocap));
-            est = exo_emit(es, obuf, (int32_t)(produced % ocap));
+        if (est == UNC_OK && have) {
+            *crc = unc_crc32(*crc, obuf, (int32_t)have);
+            est = exo_emit(es, obuf, (int32_t)have);
         }
         return est;
     }

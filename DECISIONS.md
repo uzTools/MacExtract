@@ -590,6 +590,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-11 (the restore CD's two whole sets) — the Performa 5400/6400 Software Restore CD's 67- and 38-disk Apple Backup sets, complete, extract with nothing failed, every fork as `unbak.py` writes it and none else; 8 of their disks hold nothing but a continuation
 - 2026-11-11 (the Installer's own code) — Mac OS 9's installed files grade 62 more Tome forks through a TN1150 reader held to 7-Zip; the Installer's code is InstaCompOne-compressed and holds no checksum; a 'part' is a Tome of one resource, and ircp a file of them
 - 2026-11-11 (what the Installer wrote) — Apple's Installer, run on QuickDraw GX 1.1.3 under emulation, writes every 'part' resource as this engine decodes it, byte for byte; it renumbers each sfnt, rewrites the FOND to match and drops two resources
+- 2026-11-11 (the stored bytes read one at a time) — zip, StuffIt and DiskDoubler copy stored data a span of the reader's buffer at a time, and LZ4's byte read is forced inline: a stored zip −65 %, DiskDoubler −13 %, LZ4 −2.9 %, StuffIt's stored forks −1.8 %, for +298 B of images
 
 ---
 
@@ -24587,3 +24588,36 @@ given a new id (2012 becomes 9217; Hoefler Text's five 9217-9221), each
 are chosen against the target System, so they are not a property of the
 file. Tekton Plus (`Utilidades para Adobe`) and 06's network items were not
 installed by Easy Install and are not graded.
+
+## 2026-11-11 (the stored bytes read one at a time) — zip, StuffIt and DiskDoubler copy stored data a span of the reader's buffer at a time, and LZ4's byte read is forced inline: a stored zip −65 %, DiskDoubler −13 %, LZ4 −2.9 %, StuffIt's stored forks −1.8 %, for +298 B of images
+
+**Claim, evidence, consequence (measured).** Four stored loops read a byte
+through `unc_bufin_next` and wrote it on, one call and one bounds test a
+byte: zip method 0 (`zip_decode`, which also took `produced % ocap` twice a
+byte, a run-time divisor), StuffIt method 0 (`sit_store`), DiskDoubler
+method 0 (`dd_store`) and AD's stored blocks (`dd_adn`). Each now takes
+what the reader already holds (`unc_bufin_span`, `unc_bufin_drop`, which
+BinHex had used alone since 2026-11-09) and copies it in one pass; a spent
+buffer still refills through `unc_bufin_next`, so a refill's progress tick,
+cipher and limit are untouched. Zip still hands its sink `ocap` bytes at a
+time, which `zip_mb_peek` counts on. LZ4's `lz_in` is a per-byte read with
+no loop to span, so it calls `unc_bufin_next_hot`, the reader with its fast
+path forced in (`UNC_INLINE`). Plus engine ticks, two runs each, within 2:
+stored zip **1,605 → 566**, DiskDoubler 1,845 → 1,604, LZ4 2,270 → 2,204,
+StuffIt with 68–76 KB stored 10,872 → 10,672 and 12,657 → 12,439
+(FORMATS.md, *Stored copies*). Output is byte-identical on every fixture.
+
+**Price (measured).** Images +298 B (CPTDD +150, EXO +56, STUFFIT +56,
+ZIPOLD +36), the bundle +296 B; the control's CODE +300, A5 −12
+(alignment); the shipped application 0; `OVL_SAVED` +288 and `TIERS` −288,
+which cancel, so a format's grant moves by +288 B less its images' growth;
+`run_tiers.py --check` moves no tally.
+
+**Why spans and not the inline mark, for the loops (measured).** The
+blanket `unc_bufin_next` mark of 2026-11-09 took a stored zip to 1,255 for
++3,500 B; the span takes it to 566 for +56 B, because it drops the bounds
+test and the cursor store a byte as well as the call. The mark is kept for
+the read that has no run to take: LZ4's, where it bought −3.1 % blanket and
+−2.9 % alone. PackIt's `pit_read` is the same stored loop, in a file other
+work owns; it was left to that work with its 2026-11-09 figure, 250 → 204
+ticks blanket.

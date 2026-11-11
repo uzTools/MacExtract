@@ -288,11 +288,22 @@ static unsigned sit_fork_module(const uint8_t *hdr, int rsrc, uint32_t len,
 /* Method 0: stored. */
 static int sit_store(UncForkOut *f, UncBufIn *in, uint32_t outlen)
 {
-    uint32_t i;
-    for (i = 0; i < outlen; i++) {
-        int b = unc_bufin_next(in);
-        if (b < 0) return in->err;
-        if (unc_fork_put(f, (uint8_t)b) != UNC_OK) return UNC_ERR_SINK;
+    /* A span of what the reader holds at a time; a spent buffer is
+     * refilled through unc_bufin_next (FORMATS.md, *Stored copies*). */
+    while (outlen > 0) {
+        const uint8_t *p;
+        uint32_t n = unc_bufin_span(in, &p);
+        if (n == 0) {
+            int b = unc_bufin_next(in);
+            if (b < 0) return in->err;
+            if (unc_fork_put(f, (uint8_t)b) != UNC_OK) return UNC_ERR_SINK;
+            outlen--;
+            continue;
+        }
+        if (n > outlen) n = outlen;
+        unc_bufin_drop(in, n);
+        outlen -= n;
+        if (unc_fork_write(f, p, n) != UNC_OK) return UNC_ERR_SINK;
     }
     return UNC_OK;
 }

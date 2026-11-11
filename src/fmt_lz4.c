@@ -151,7 +151,7 @@ static int lz_in(Lz4 *z)
     int b;
     uint8_t u;
     if (z->left == 0) return -1;
-    b = unc_bufin_next(&z->in);
+    b = unc_bufin_next_hot(&z->in);
     if (b < 0) return -1;
     z->left--;
     if (z->bsum) {

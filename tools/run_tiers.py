@@ -283,10 +283,12 @@ REPO = os.path.dirname(HERE)
 # control's CODE -96 and A5 0; the shipped pair fell the same 96, OVL_SAVED
 # unmoved. They were 190,276 / 94,894 / 619,182.
 TIERS = {
-    "sys3-512K": (182420, "System 3.0, Macintosh 512Ke (222,070 B free)"),
-    "sys6-512K": (87038,  "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
-    "floor-1M":  (611326, "System 6.0.8, 1 MB Mac Plus — the floor target"),
+    "sys3-512K": (182132, "System 3.0, Macintosh 512Ke (222,070 B free)"),
+    "sys6-512K": (86750,  "System 6.0.8, Macintosh 512Ke (126,688 B free)"),
+    "floor-1M":  (611038, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
+# -288 each 2026-11-11, DERIVED from TIERS_CONTROL +288 (stored data copied
+# a span at a time, DECISIONS.md 2026-11-11, *the stored bytes read one at a time*); they were 182,420 / 87,038 / 611,326.
 # -2,992 each 2026-11-10, DERIVED from TIERS_CONTROL +2,992 (Apple Backup,
 # DECISIONS.md 2026-11-10, *the backup on floppies*); they were 188,756 /
 # 93,374 / 617,662.
@@ -560,7 +562,11 @@ TIERS = {
 # in this build; DECISIONS.md 2026-11-10, *the archive the Installer
 # reads*). TIERS -3,408 and OVL_SAVED +3,376: every grant 32 B lower, less
 # its images' change.
-TIERS_CONTROL = 230512     # build/mac-resident, CODE + A5, 2026-11-10
+TIERS_CONTROL = 230800     # build/mac-resident, CODE + A5, 2026-11-11
+# +288 2026-11-11: stored data copied a span at a time and LZ4's byte read
+# forced inline (four images +298; CODE +300, A5 -12, alignment;
+# DECISIONS.md 2026-11-11, *the stored bytes read one at a time*); TIERS -288 and OVL_SAVED +288, which cancel: only the keepers of
+# those four images move.
 # -64 2026-11-10: the joiner zeroes its options when given none (CODE -52,
 # A5 -12; DECISIONS.md 2026-11-10, *the backup on floppies*); TIERS +64 and
 # OVL_SAVED -32, which leave every grant 32 B higher.
@@ -1278,7 +1284,11 @@ EXPECT = {
 # +3,214, `ovl_sniff` +168 (DECISIONS.md 2026-11-10, *the archive the
 # Installer reads*). TIERS -3,408: every grant moves by -32 less its images'
 # change.
-OVL_SAVED = 175552
+# **+288 2026-11-11, -> 175,840**: stored data copied a span at a time and
+# LZ4's byte read forced inline, the control's +288 (CODE +300, A5 -12)
+# against the shipped pair's 0; the code in four images (+298 in all;
+# DECISIONS.md 2026-11-11, *the stored bytes read one at a time*). TIERS -288, which cancels: only those images' keepers move.
+OVL_SAVED = 175840
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
 # every kept image is one — as is the bundle an envelope holds on to.
@@ -1416,18 +1426,18 @@ IMAGES = {
     "OVL_ID_BINHEX":      7630,
     "OVL_ID_BTOA":        2496,
     "OVL_ID_CODECS":      6012,
-    "OVL_ID_CPTDD":       15094,
+    "OVL_ID_CPTDD":       15244,
     "OVL_ID_CRYPT":       9260,
-    "OVL_ID_EXO":         30228,
+    "OVL_ID_EXO":         30284,
     "OVL_ID_LZH":         10602,
     "OVL_ID_NOW":         4948,
     "OVL_ID_PACKIT":      2180,
     "OVL_ID_SPACESAVER":  16236,
-    "OVL_ID_STUFFIT":     28778,
+    "OVL_ID_STUFFIT":     28834,
     "OVL_ID_SQP":         1736,
     "OVL_ID_SUPERDISK":   6628,
     "OVL_ID_TEXT":        11438,
-    "OVL_ID_ZIPOLD":      21934,
+    "OVL_ID_ZIPOLD":      21970,
     "OVL_ID_SNIFF":       17016,
     "OVL_ID_DESTDLG":     1688,
     "OVL_ID_SEGSETUP":    2446,
@@ -1599,7 +1609,11 @@ IMAGES = {
 # **ZIPOLD +3,214, SNIFF +168, the bundle +3,384 B, 2026-11-10**: the
 # Installer Tome, its reader in ZIPOLD and its probe in SNIFF (DECISIONS.md
 # 2026-11-10, *the archive the Installer reads*).
-BUNDLE = 204520
+# **CPTDD +150, EXO +56, STUFFIT +56, ZIPOLD +36, the bundle +296 B,
+# 2026-11-11**: stored data copied a span at a time (zip method 0, StuffIt
+# method 0, DiskDoubler method 0 and AD's stored blocks) and LZ4's byte read
+# forced inline (DECISIONS.md 2026-11-11, *the stored bytes read one at a time*).
+BUNDLE = 204816
 
 # What the SHIPPED lane asserts, and it is the refused fixtures BY NAME
 # rather than a tally: a tier that refuses two different fixtures and still
