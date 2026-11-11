@@ -14,16 +14,15 @@
   },
   {
    "creator": "udog",
+   "data_oracle": "Apple's Installer (Mac OS 9)",
+   "data_sha256": "eec6fdb38fbd92f17f825dcca746289d003734d11a8bd9bb8eb6101fa90370a4",
    "data_size": 9560,
    "finder_flags": 337,
    "name": "Calendar.html",
    "rsrc_oracle": "deark",
    "rsrc_sha256": "699b7829b5d6d8006c5bd1733ae79a45b63a27dbcccafd6e2dc8c2d194343eb0",
    "rsrc_size": 485,
-   "type": "TEXT",
-   "unadjudicated": {
-    "data": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
-   }
+   "type": "TEXT"
   },
   {
    "creator": "8BIM",
@@ -47,7 +46,7 @@
    "rsrc_size": 485,
    "type": "TEXT",
    "unadjudicated": {
-    "data": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+    "data": "no oracle: deark: [instacomp1] TODO code11 bd=1; no installed copy of this release is here; the stream ends exactly at its stated length"
    }
   },
   {
@@ -76,16 +75,15 @@
   },
   {
    "creator": "udog",
+   "data_oracle": "Apple's Installer (Mac OS 9)",
+   "data_sha256": "057c047c5aff62d0753c4018623cdc6906ffcda23ac958e72ea899e264bfa944",
    "data_size": 498,
    "finder_flags": 337,
    "name": "Linksample.html",
    "rsrc_oracle": "deark",
    "rsrc_sha256": "a0571c3b264adb6106bf5cb30bc4ee334bfff75813af63fbc1d1d46f44b69224",
    "rsrc_size": 485,
-   "type": "TEXT",
-   "unadjudicated": {
-    "data": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
-   }
+   "type": "TEXT"
   },
   {
    "creator": "udog",
@@ -97,7 +95,7 @@
    "rsrc_size": 485,
    "type": "TEXT",
    "unadjudicated": {
-    "data": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+    "data": "no oracle: deark: [instacomp1] Bad distance code: 45; no installed copy of this release is here; the stream ends exactly at its stated length"
    }
   },
   {
@@ -174,55 +172,51 @@
   },
   {
    "creator": "udog",
+   "data_oracle": "Apple's Installer (Mac OS 9)",
+   "data_sha256": "0b36f66155786e4ef76c64eb2501d716b0d12e2d6cc92b68256b3b35653c9d46",
    "data_size": 4930,
    "finder_flags": 337,
    "name": "Personal.html",
    "rsrc_oracle": "deark",
    "rsrc_sha256": "a32843395e86bbb9b731d219362421c29f8c5eaed0c393410ad0b2dce9383b43",
    "rsrc_size": 485,
-   "type": "TEXT",
-   "unadjudicated": {
-    "data": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
-   }
+   "type": "TEXT"
   },
   {
    "creator": "udog",
+   "data_oracle": "Apple's Installer (Mac OS 9)",
+   "data_sha256": "a017b95121c5de706d9b681189c912c2a4f948259c1fe56f53261b6e97791713",
    "data_size": 9070,
    "finder_flags": 337,
    "name": "template(calendar).html",
    "rsrc_oracle": "deark",
    "rsrc_sha256": "5a367d58353cc78e49f5c6dd88fb46c8ec598345882a6298d530b906cfa429f9",
    "rsrc_size": 485,
-   "type": "TEXT",
-   "unadjudicated": {
-    "data": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
-   }
+   "type": "TEXT"
   },
   {
    "creator": "udog",
+   "data_oracle": "Apple's Installer (Mac OS 9)",
+   "data_sha256": "1973fe6e30809d129c157e03c7f7ffbee4787836904857bc8d6096a372b09f15",
    "data_size": 4209,
    "finder_flags": 337,
    "name": "template(list).html",
    "rsrc_oracle": "deark",
    "rsrc_sha256": "a979b338c8fda074ba949ba27ddcd870d9cbaa2df4ab5034bd9425c20d962d11",
    "rsrc_size": 485,
-   "type": "TEXT",
-   "unadjudicated": {
-    "data": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
-   }
+   "type": "TEXT"
   },
   {
    "creator": "udog",
+   "data_oracle": "Apple's Installer (Mac OS 9)",
+   "data_sha256": "196496b33d2a89a8df03be6829cdaff5f44b5e05e2859119d24eb5bfe09750e9",
    "data_size": 4742,
    "finder_flags": 337,
    "name": "Template(personal).html",
    "rsrc_oracle": "deark",
    "rsrc_sha256": "ea94ab901859f41095a5041e17dd21e58165704635457b0c34a4acd602878da4",
    "rsrc_size": 485,
-   "type": "TEXT",
-   "unadjudicated": {
-    "data": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
-   }
+   "type": "TEXT"
   },
   {
    "creator": "udog",
@@ -234,7 +228,7 @@
    "rsrc_size": 627,
    "type": "TEXT",
    "unadjudicated": {
-    "data": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+    "data": "no oracle: deark: [instacomp1] TODO code11 bd=1; no installed copy of this release is here; the stream ends exactly at its stated length"
    }
   },
   {
@@ -245,8 +239,8 @@
    "rsrc_size": 673,
    "type": "TEXT",
    "unadjudicated": {
-    "data": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length",
-    "rsrc": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+    "data": "no oracle: deark: [instacomp1] Bad distance code: 45; no installed copy of this release is here; the stream ends exactly at its stated length",
+    "rsrc": "no oracle: deark: [instacomp1] TODO code11 bd=8; no installed copy of this release is here; the stream ends exactly at its stated length"
    }
   },
   {
@@ -288,7 +282,7 @@
  ],
  "fixture": "tome-wild-websharing",
  "format": "Installer Tome",
- "oracle": "deark's Tome module (stored and InstaCompOne forks), and Apple's Installer's own output on the System 7.5.5 disk for the rest (tools/run_tome.py)",
+ "oracle": "deark's Tome module (stored and InstaCompOne forks), and what Apple's Installer installed, on the System 7.5.5 disk and the Mac OS 9 image, for the rest (tools/run_tome.py)",
  "sha256": "8bc5b0d1e727fbc1b9b0710370cda1beee456cc788a0f2334a6586c996d625d7",
  "size": 588005
 }

@@ -2622,8 +2622,8 @@ codec. The forks' checksum is unidentified (OPEN_ITEMS.md).
 |---|---|---|---|
 | `tome-wild-install7` | System 7.5.5, Install Disk 7 | 45 InstaCompOne; 2 entries reach the early 11-bit distance | deark 17 forks, the installed copies 2 |
 | `tome-wild-install3` | System 7.5.5, Install Disk 3 | 103 InstaCompOne, 6 text | deark 91 forks, the installed PPDs 6 |
-| `tome-wild-websharing` | Mac OS 8.6, Personal Web Sharing | 5 stored, 43 InstaCompOne, 10 text | deark 35 forks; 11 by the exact end alone |
-| `tome-wild-modemscripts` | Mac OS 8.6, ARA Client Install 2 | 121 InstaCompOne, 15 text; 8 entries reach the early 11-bit distance | deark 66 forks; 70 by the exact end alone |
+| `tome-wild-websharing` | Mac OS 8.6, Personal Web Sharing | 5 stored, 43 InstaCompOne, 10 text | deark 35 forks, Mac OS 9's installed copies 6; 5 by the exact end alone |
+| `tome-wild-modemscripts` | Mac OS 8.6, ARA Client Install 2 | 121 InstaCompOne, 15 text; 8 entries reach the early 11-bit distance | deark 66 forks, Mac OS 9's installed copies 56 (46 resource for resource); 14 by the exact end alone |
 
 **All 39 Tomes on the two media** (`run_tome.py --extra`, 1,201 forks):
 every stream ends with its output complete and no bit left; 1,030 forks

@@ -588,6 +588,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-10 (the backup on floppies) — Apple Backup extracts: a Performa's backup read as a set of disks, with disks missing, graded by two readers others wrote, run only in a namespace box; 64 B off every budget
 - 2026-11-10 (the archive the Installer reads) — Apple Installer Tomes extract from rusty-backup's write-up, graded by deark and by what Apple's Installer installed; deark widens a distance one byte early, the padding rule never fires on two install media, and the ring is sized per fork: 71,712 B where doubling took 104,480
 - 2026-11-11 (the restore CD's two whole sets) — the Performa 5400/6400 Software Restore CD's 67- and 38-disk Apple Backup sets, complete, extract with nothing failed, every fork as `unbak.py` writes it and none else; 8 of their disks hold nothing but a continuation
+- 2026-11-11 (the Installer's own code) — Mac OS 9's installed files grade 62 more Tome forks through a TN1150 reader held to 7-Zip; the Installer's code is InstaCompOne-compressed and holds no checksum; a 'part' is a Tome of one resource, and ircp a file of them
 
 ---
 
@@ -24517,3 +24518,47 @@ has to open; TESTING.md, *Apple Backup*, says how to put them in the cache.
 Not run on the emulator: the three-floppy run covers the swap, and nothing
 in the reader scales with a set's length (one part open per disk, measured).
 
+## 2026-11-11 (the Installer's own code) — Mac OS 9's installed files grade 62 more Tome forks through a TN1150 reader held to 7-Zip; the Installer's code is InstaCompOne-compressed and holds no checksum; a 'part' is a Tome of one resource, and ircp a file of them
+
+**Asked by the maintainer**: the Tome open items 1 (the forks no reader
+graded), 2 (Tomes in 'part' resources), 3 (the checksum) and 5 (`ircp`),
+the files for 5 from MacStamp's agent.
+
+**Mac OS 9's System Folder is a second set of installed copies
+(measured).** hfsutils stops at its HFS Plus volume and 7-Zip reads it but
+gives its resource forks only through `-so`, so `tools/hfsplus.py` reads
+both forks from TN1150; its control holds all 2,337 files, both forks, to
+7-Zip's. It is a later release than the 8.6 Tomes: equal forks grade, and
+68 files differ only in 'vers' 2, the package stamp, which that comparison
+leaves out. Of the 81 forks no reader graded, 62 now are (16 data forks
+byte for byte, 46 resource forks resource for resource); 19 remain.
+
+**The 81 were mislabelled.** The manifests said "deark has no text codec";
+47 of them are InstaCompOne resource forks deark stops on with its own
+"TODO code11", a long copy near a fork's start it never implemented. The
+reason now quotes deark's message.
+
+**The Installer's code is compressed with the Tomes' codec (measured).**
+Its `CODE` 1-10 and 49 other resources are Apple compressed resources
+naming `'dcmp'` 3, which the Installer carries; the payload after the
+18-byte header decodes, as one InstaCompOne block, to its exact end and to
+68000 code (`4E56`, a LINK). `'dcmp'` 3 holds both codecs' limits; `CODE`
+66 is the hook that loads it (`Get1Resource('dcmp')`).
+
+**No checksum was found (measured, negative).** Not in `'dcmp'` 3 (its
+routines are the decoder and its bit reader), no CRC table and no `idcp` in
+the decoded `CODE`, none of 504 forks' values in the 7.5.5 script's
+resources, and no CRC-32 over eight polynomials and every reflection, init
+and final XOR on the smallest forks. The Installer may never check it.
+
+**A 'part' is a Tome of one resource (read off 18).** The word at 0x10 is
+2 (a file Tome's is 1); its record names a resource — id at +6, type at +8,
+a Pascal name at +12 — and one stream at +0x4e, which the Tome's coding
+decodes to its exact end in all 18. `ircp`/`kakc` files are resource forks
+of such parts beside plain resources (`FOND`, `vers`): GX fonts and a
+network driver set on El Mac 7's Spanish System 7.5 Update 2.0, six of
+MacStamp's sixteen. **Not built**: what the Installer writes from a part is
+unknown, and both decoded GX fonts carry 0x002e9340 in every table
+checksum where Mac OS 9's later copies are correct, while their `bsln`
+tables sum to Mac OS 9's exactly; inventing the installed file is what the
+rules forbid. It needs the Installer run on one.

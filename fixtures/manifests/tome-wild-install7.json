@@ -152,7 +152,7 @@
  ],
  "fixture": "tome-wild-install7",
  "format": "Installer Tome",
- "oracle": "deark's Tome module (stored and InstaCompOne forks), and Apple's Installer's own output on the System 7.5.5 disk for the rest (tools/run_tome.py)",
+ "oracle": "deark's Tome module (stored and InstaCompOne forks), and what Apple's Installer installed, on the System 7.5.5 disk and the Mac OS 9 image, for the rest (tools/run_tome.py)",
  "sha256": "6cc5e41b12598250984f555c6325af42989e0f0fdc8dbad7ad3610a92ac96611",
  "size": 851141
 }

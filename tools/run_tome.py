@@ -54,12 +54,15 @@ import struct
 import subprocess
 import sys
 import tempfile
+import unicodedata
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 FIXDIR = os.path.join(ROOT, "fixtures")
 VMAC = os.environ.get("UNC_VMAC_HOME",
                       os.path.expanduser("~/.cache/macextract/vmac"))
 DISK755 = os.path.join(VMAC, "macosinstall755.dsk")
+OS9IMG = os.path.expanduser(os.environ.get(
+    "UNC_OS9_IMG", "~/.cache/macextract/qemu-ppc/MacOS9.img"))
 FAILS = []
 LISTRE = re.compile(rb"^f +(\d+) +(\d+) ([0-9a-f]{8})/([0-9a-f]{8}) "
                     rb"([0-9a-f]{4}) (.*)$")
@@ -149,12 +152,12 @@ def deark_forks(deark, path, out, recs):
     reported failing is not taken, whatever it wrote."""
     r = run([deark, "-m", "tome", "-od", out, "-o", "x", path])
     errs = (r.stdout + r.stderr).decode("utf-8", "replace")
-    failed = set()
+    failed = {}
     for line in errs.splitlines():
-        m = re.search(r"Decompression failed for file (.*)\[(data|rsrc) fork\]",
-                      line)
+        m = re.search(r"Decompression failed for file (.*)\[(data|rsrc) fork\]"
+                      r": (.*)$", line)
         if m:
-            failed.add((m.group(1), m.group(2)))
+            failed[(m.group(1), m.group(2))] = m.group(3).strip()
     files = []
     for f in os.listdir(out):
         m = re.match(r"^x\.(\d{3,})\.(.*)$", f)
@@ -178,6 +181,11 @@ def deark_forks(deark, path, out, recs):
             got.setdefault(i, {})[fork] = adf_rsrc(blob) if adf else blob
         if adf:
             i += 1
+    for i, r in enumerate(recs):
+        for fork in ("data", "rsrc"):
+            why = failed.get((r["name"].decode("mac_roman"), fork))
+            if why:
+                got.setdefault(i, {})[fork + "_why"] = why
     return got
 
 
@@ -211,7 +219,12 @@ def resources(r):
 # --- the installed System 7.5.5 ------------------------------------------
 
 class Volume:
-    """hfsutils over one image, with a scratch HOME for its .hcwd."""
+    """hfsutils over one image, with a scratch HOME for its .hcwd. `strict`:
+    this disk holds what Apple's Installer installed out of these very
+    Tomes, so any difference between a file of one release is a failure."""
+
+    name = "System 7.5.5"
+    strict = True
 
     def __init__(self, img, home):
         self.env = dict(os.environ, HOME=home)
@@ -231,6 +244,12 @@ class Volume:
             if m:
                 self.index.setdefault((m[3], m[1], m[2]), []).append(d + m[3])
 
+    def lookup(self, rec):
+        return self.index.get((rec["name"], rec["type"], rec["creator"]), [])
+
+    def label(self, hp):
+        return hp.decode("mac_roman")
+
     def forks(self, hpath, tmp):
         dst = os.path.join(tmp, "inst.bin")
         if os.path.exists(dst):
@@ -247,40 +266,93 @@ class Volume:
             run(["humount"], env=self.env)
 
 
+class OS9Volume:
+    """The Mac OS 9 image's HFS Plus volume, both forks through
+    tools/hfsplus.py, whose own control agrees with 7-Zip on every file of
+    it. A LATER release than the Tomes here: equal bytes grade a fork, and a
+    difference fails only between two copies of one 'vers' 1. Resources
+    are compared without 'vers' 2, the release's own stamp."""
+
+    name = "Mac OS 9"
+    strict = False
+
+    def __init__(self, img):
+        sys.path.insert(0, os.path.join(ROOT, "tools"))
+        import hfsplus
+        self.v = hfsplus.Volume(img)
+        self.ok = True
+        self.index = {}
+        for p, (ty, cr, _, _) in self.v.files.items():
+            leaf = p.rsplit(":", 1)[-1]
+            self.index.setdefault((leaf, ty, cr), []).append(p)
+
+    def lookup(self, rec):
+        name = unicodedata.normalize("NFC", rec["name"].decode("mac_roman"))
+        return self.index.get((name, rec["type"], rec["creator"]), [])
+
+    def label(self, p):
+        return p
+
+    def forks(self, p, tmp):
+        try:
+            return self.v.forks(p)[2:]
+        except ValueError:
+            return None, None
+
+    def close(self):
+        pass
+
+
 def vers1(res):
     v = (res or {}).get((b"vers", 1))
     return v[2] if v else None
 
 
 def installed_verdict(vol, rec, mine, tmp):
-    """'equal', 'another release', 'absent', or a failure string."""
-    paths = vol.index.get((rec["name"], rec["type"], rec["creator"]))
-    if not paths:
-        return "absent"
-    verdict = None
-    for hp in paths:
+    """{'data'|'rsrc': 'equal' | 'release' | 'absent' | a failure string}
+    for the forks the record has: a data fork byte for byte, a resource
+    fork resource for resource (the map's header holds the Resource
+    Manager's run-time fields). 'release' is a difference between two
+    releases of the file: their 'vers' 1 differ, or on a non-strict volume
+    neither says."""
+    forks = [f for f in ("data", "rsrc") if rec[f][2]]
+    out = {f: "absent" for f in forks}
+    A = resources(mine[1] or b"")
+    for hp in vol.lookup(rec):
         d, r = vol.forks(hp, tmp)
         if d is None:
             continue
-        A, B = resources(mine[1] or b""), resources(r)
-        if vers1(A) != vers1(B):
-            verdict = verdict or "another release"
-            continue
-        if d != (mine[0] or b""):
-            return "data fork differs from %s" % hp.decode("mac_roman")
-        if A is None or B is None or A != B:
-            diff = sorted(k for k in set(A or {}) | set(B or {})
-                          if (A or {}).get(k) != (B or {}).get(k))
-            return "resources differ from %s: %r" % (
-                hp.decode("mac_roman"), diff[:6])
-        return "equal"
-    return verdict or "absent"
+        B = resources(r)
+        same = vers1(A) == vers1(B) and (vol.strict or vers1(A) is not None)
+        if not vol.strict and A is not None and B is not None:
+            # 'vers' 2 is the package's version, the release the file
+            # shipped in: Mac OS 9 restamps it on files it carries
+            # unchanged (measured: the only resource of 68 files that
+            # differs), so a later release is compared without it.
+            A = {k: x for k, x in A.items() if k != (b"vers", 2)}
+            B = {k: x for k, x in B.items() if k != (b"vers", 2)}
+        for f in forks:
+            if out[f] == "equal":
+                continue
+            if f == "data":
+                ok = d == (mine[0] or b"")
+                why = "data fork differs from %s" % vol.label(hp)
+            else:
+                ok = A is not None and B is not None and A == B
+                diff = sorted(k for k in set(A or {}) | set(B or {})
+                              if (A or {}).get(k) != (B or {}).get(k))
+                why = "resources differ from %s: %r" % (vol.label(hp),
+                                                        diff[:6])
+            out[f] = "equal" if ok else (why if same else "release")
+    return out
 
 
 # --- sections --------------------------------------------------------------
 
-def grade(mx, deark, tomes, work, vol):
-    tot = dict(deark=0, nodeark=0, inst=0, release=0, ungraded=0)
+def grade(mx, deark, tomes, work, vols):
+    tot = dict(deark=0, nodeark=0, ungraded=0)
+    for v in vols:
+        tot[v.name] = tot[v.name + " release"] = 0
     for t in tomes:
         base = os.path.basename(t)
         recs = records(open(t, "rb").read())
@@ -305,34 +377,38 @@ def grade(mx, deark, tomes, work, vol):
                 fail("%s: lengths %d/%d, the record says %d/%d"
                      % (tag, len(mine[0]), len(mine[1]), rec["data"][0],
                         rec["rsrc"][0]))
-            open_forks = []
+            open_forks = set()
             for fork, k in (("data", 0), ("rsrc", 1)):
                 if rec[fork][2] == 0:
                     continue
                 theirs = dk.get(i, {}).get(fork)
                 if theirs is None:
                     tot["nodeark"] += 1
-                    open_forks.append(fork)
+                    open_forks.add(fork)
                 elif theirs != mine[k]:
                     fail("%s %s: differs from deark" % (tag, fork))
                 else:
                     tot["deark"] += 1
-            if vol is not None and vol.ok:
-                v = installed_verdict(vol, rec, mine, work)
-                if v == "equal":
-                    tot["inst"] += 1
-                    open_forks = []
-                elif v == "another release":
-                    tot["release"] += 1
-                elif v != "absent":
-                    fail("%s: %s" % (tag, v))
+            for v in vols:
+                for f, verdict in installed_verdict(v, rec, mine,
+                                                    work).items():
+                    if verdict == "equal":
+                        if f in open_forks:
+                            tot[v.name] += 1
+                        open_forks.discard(f)
+                    elif verdict == "release":
+                        tot[v.name + " release"] += 1
+                    elif verdict != "absent":
+                        fail("%s: %s" % (tag, verdict))
             tot["ungraded"] += len(open_forks)
     print("  deark: %(deark)d forks equal; %(nodeark)d it cannot decode"
           % tot)
-    if vol is not None and vol.ok:
-        print("  installed 7.5.5: %(inst)d files equal, %(release)d another "
-              "release; %(ungraded)d forks graded by neither, by the exact "
-              "end alone" % tot)
+    for v in vols:
+        print("  installed, %s: %d forks deark could not grade equal; %d "
+              "forks another release" % (v.name, tot[v.name],
+                                         tot[v.name + " release"]))
+    print("  %(ungraded)d forks graded by no reader, by the exact end alone"
+          % tot)
     return tot
 
 
@@ -438,7 +514,7 @@ def controls(mx, t, work):
               "comparisons see one byte")
 
 
-def write_manifest(mx, deark, t, work, vol):
+def write_manifest(mx, deark, t, work, vols):
     """fixtures/manifests/<fixture>.json from deark and Apple's installed
     copies; a fork neither grades is unadjudicated, with the reason."""
     base = os.path.basename(t)
@@ -457,12 +533,9 @@ def write_manifest(mx, deark, t, work, vol):
                  type=rec["type"].decode("mac_roman"),
                  creator=rec["creator"].decode("mac_roman"),
                  finder_flags=rec["flags"])
-        inst = None
-        if vol is not None and vol.ok and got:
-            mine = (got[i][0] or b"", got[i][1] or b"")
-            if installed_verdict(vol, rec, mine, work) == "equal":
-                paths = vol.index[(rec["name"], rec["type"], rec["creator"])]
-                inst = vol.forks(paths[0], work)
+        mine = (got[i][0] or b"", got[i][1] or b"") if got else None
+        verdicts = [(v, installed_verdict(v, rec, mine, work))
+                    for v in vols] if mine else []
         un = {}
         for fork, k in (("data", 0), ("rsrc", 1)):
             e[fork + "_size"] = rec[fork][0]
@@ -470,28 +543,33 @@ def write_manifest(mx, deark, t, work, vol):
                 e[fork + "_sha256"] = sha(b"")
                 continue
             theirs = dk.get(i, {}).get(fork)
+            by = [v for v, vd in verdicts if vd.get(fork) == "equal"]
             if theirs is not None:
                 e[fork + "_sha256"] = sha(theirs)
                 e[fork + "_oracle"] = "deark"
-            elif inst is not None and fork == "data":
-                e[fork + "_sha256"] = sha(inst[0])
-                e[fork + "_oracle"] = "Apple's Installer (System 7.5.5)"
-            elif inst is not None:
+                continue
+            why = dk.get(i, {}).get(fork + "_why", "it wrote nothing")
+            if by and fork == "data":
+                # The installed copy's own bytes, equal to the engine's.
+                e[fork + "_sha256"] = sha(mine[0])
+                e[fork + "_oracle"] = "Apple's Installer (%s)" % by[0].name
+            elif by:
                 un[fork] = ("equal resource for resource to what Apple's "
-                            "Installer installed (tools/run_tome.py); deark "
-                            "has no text codec")
+                            "Installer installed on %s (tools/run_tome.py); "
+                            "deark: %s" % (by[0].name, why))
             else:
-                un[fork] = ("no oracle: deark has no text codec and no "
-                            "installed copy is here; the stream ends exactly "
-                            "at its stated length")
+                un[fork] = ("no oracle: deark: %s; no installed copy of "
+                            "this release is here; the stream ends exactly at "
+                            "its stated length" % why)
         if un:
             e["unadjudicated"] = un
         entries.append(e)
     data = open(t, "rb").read()
     man = dict(entries=entries, fixture=base, format="Installer Tome",
                oracle=("deark's Tome module (stored and InstaCompOne forks), "
-                       "and Apple's Installer's own output on the System 7.5.5 "
-                       "disk for the rest (tools/run_tome.py)"),
+                       "and what Apple's Installer installed, on the System "
+                       "7.5.5 disk and the Mac OS 9 image, for the rest "
+                       "(tools/run_tome.py)"),
                sha256=sha(data), size=len(data))
     out = os.path.join(FIXDIR, "manifests", base + ".json")
     with open(out, "w") as f:
@@ -518,23 +596,30 @@ def main():
     work = tempfile.mkdtemp(prefix="tome-", dir=tmpbase)
     home = os.path.join(work, "home")
     os.makedirs(home)
-    vol = Volume(DISK755, home) if os.path.exists(DISK755) else None
+    vols = []
+    if os.path.exists(DISK755):
+        v = Volume(DISK755, home)
+        if v.ok:
+            vols.append(v)
+    if os.path.exists(OS9IMG):
+        vols.append(OS9Volume(OS9IMG))
     try:
         if a.manifest:
             for t in a.manifest:
-                write_manifest(a.macextract, a.deark, t, work, vol)
+                write_manifest(a.macextract, a.deark, t, work, vols)
             return 0
         tomes = sorted(glob.glob(os.path.join(FIXDIR, "tome-*")))
         if not tomes:
             fail("no tome-* fixture in fixtures/")
         if a.extra:
             tomes += sorted(glob.glob(os.path.join(a.extra, "*")))
-        print("1-2. deark and the installed System 7.5.5, %d Tomes"
-              % len(tomes))
-        if vol is None or not vol.ok:
-            print("  SKIPPED section 2: no System 7.5.5 disk at %s "
-                  "(tools/vmac/README.md says where it comes from)" % DISK755)
-        grade(a.macextract, a.deark, tomes, work, vol)
+        print("1-2. deark and the installed copies, %d Tomes" % len(tomes))
+        for name, path in (("System 7.5.5", DISK755), ("Mac OS 9", OS9IMG)):
+            if not any(v.name == name for v in vols):
+                print("  SKIPPED in section 2: no %s image at %s "
+                      "(tools/vmac/README.md says where it comes from)"
+                      % (name, path))
+        grade(a.macextract, a.deark, tomes, work, vols)
         fx = [t for t in tomes if t.startswith(FIXDIR)]
         if fx:
             print("3. damage")
@@ -542,8 +627,8 @@ def main():
             damage(a.macextract, small, work)
             controls(a.macextract, small, work)
     finally:
-        if vol is not None:
-            vol.close()
+        for v in vols:
+            v.close()
         shutil.rmtree(work, ignore_errors=True)
     if FAILS:
         print("run_tome: %d FAILED" % len(FAILS))

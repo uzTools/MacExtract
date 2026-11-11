@@ -148,6 +148,24 @@ done
     -o reference/notes/xxhash_spec.md \
     "https://raw.githubusercontent.com/Cyan4973/xxHash/v0.8.2/doc/xxhash_spec.md"
 
+# HFS Plus, Apple's Technical Note TN1150: the volume header, the B-trees,
+# the catalog's file record and the HFS wrapper's embedding, which
+# tools/hfsplus.py reads both forks of a file on the Mac OS 9 image by.
+# Kept as text; the page's markup is not.
+if [ ! -f reference/notes/tn1150_hfsplus.txt ]; then
+    curl -sSfL -o /tmp/tn1150.html \
+        "https://developer.apple.com/library/archive/technotes/tn/tn1150.html"
+    python3 - <<'PY'
+import re, html
+t = open('/tmp/tn1150.html', encoding='utf-8', errors='replace').read()
+t = re.sub(r'(?is)<(script|style).*?</\1>', '', t)
+t = re.sub(r'(?i)<br\s*/?>|</p>|</pre>|</h\d>|</li>|</tr>', '\n', t)
+t = html.unescape(re.sub(r'<[^>]+>', '', t))
+open('reference/notes/tn1150_hfsplus.txt', 'w').write(re.sub(r'\n{3,}', '\n\n', t))
+PY
+    rm -f /tmp/tn1150.html
+fi
+
 # The Apple Installer Tome, as danifunker/rusty-backup issue 109 documents
 # it (v2 of its tome-support.zip, MIT): the write-up src/fmt_tome.c is
 # written from. Only the document is kept; the zip's Rust and Python

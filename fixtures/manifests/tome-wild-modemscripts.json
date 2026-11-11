@@ -10,7 +10,7 @@
    "rsrc_size": 733,
    "type": "mlts",
    "unadjudicated": {
-    "rsrc": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+    "rsrc": "equal resource for resource to what Apple's Installer installed on Mac OS 9 (tools/run_tome.py); deark: [instacomp1] TODO code11 bd=8"
    }
   },
   {
@@ -23,7 +23,7 @@
    "rsrc_size": 733,
    "type": "mlts",
    "unadjudicated": {
-    "rsrc": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+    "rsrc": "equal resource for resource to what Apple's Installer installed on Mac OS 9 (tools/run_tome.py); deark: [instacomp1] TODO code11 bd=8"
    }
   },
   {
@@ -48,7 +48,7 @@
    "rsrc_size": 733,
    "type": "mlts",
    "unadjudicated": {
-    "rsrc": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+    "rsrc": "equal resource for resource to what Apple's Installer installed on Mac OS 9 (tools/run_tome.py); deark: [instacomp1] TODO code11 bd=8"
    }
   },
   {
@@ -65,14 +65,15 @@
   },
   {
    "creator": "slnk",
+   "data_oracle": "Apple's Installer (Mac OS 9)",
+   "data_sha256": "72b1e8d4e2fa0b11eecf0cda833750a52a441b388541e0e4a43ee9822098fe30",
    "data_size": 9751,
    "finder_flags": 784,
    "name": "Apple Personal Modem",
    "rsrc_size": 742,
    "type": "mlts",
    "unadjudicated": {
-    "data": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length",
-    "rsrc": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+    "rsrc": "equal resource for resource to what Apple's Installer installed on Mac OS 9 (tools/run_tome.py); deark: [instacomp1] TODO code11 bd=8"
    }
   },
   {
@@ -85,7 +86,7 @@
    "rsrc_size": 647,
    "type": "mlts",
    "unadjudicated": {
-    "rsrc": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+    "rsrc": "no oracle: deark: [instacomp1] TODO code11 bd=8; no installed copy of this release is here; the stream ends exactly at its stated length"
    }
   },
   {
@@ -98,7 +99,7 @@
    "rsrc_size": 721,
    "type": "mlts",
    "unadjudicated": {
-    "rsrc": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+    "rsrc": "equal resource for resource to what Apple's Installer installed on Mac OS 9 (tools/run_tome.py); deark: [instacomp1] TODO code11 bd=8"
    }
   },
   {
@@ -111,7 +112,7 @@
    "rsrc_size": 721,
    "type": "mlts",
    "unadjudicated": {
-    "rsrc": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+    "rsrc": "equal resource for resource to what Apple's Installer installed on Mac OS 9 (tools/run_tome.py); deark: [instacomp1] TODO code11 bd=8"
    }
   },
   {
@@ -124,7 +125,7 @@
    "rsrc_size": 656,
    "type": "xlts",
    "unadjudicated": {
-    "data": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+    "data": "no oracle: deark: [instacomp1] Bad distance code: 175; no installed copy of this release is here; the stream ends exactly at its stated length"
    }
   },
   {
@@ -137,7 +138,7 @@
    "rsrc_size": 746,
    "type": "mlts",
    "unadjudicated": {
-    "rsrc": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+    "rsrc": "equal resource for resource to what Apple's Installer installed on Mac OS 9 (tools/run_tome.py); deark: [instacomp1] TODO code11 bd=8"
    }
   },
   {
@@ -150,7 +151,7 @@
    "rsrc_size": 665,
    "type": "xlts",
    "unadjudicated": {
-    "data": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+    "data": "no oracle: deark: [instacomp1] Bad distance code: 134; no installed copy of this release is here; the stream ends exactly at its stated length"
    }
   },
   {
@@ -163,7 +164,7 @@
    "rsrc_size": 722,
    "type": "mlts",
    "unadjudicated": {
-    "rsrc": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+    "rsrc": "equal resource for resource to what Apple's Installer installed on Mac OS 9 (tools/run_tome.py); deark: [instacomp1] TODO code11 bd=8"
    }
   },
   {
@@ -176,7 +177,7 @@
    "rsrc_size": 663,
    "type": "mlts",
    "unadjudicated": {
-    "rsrc": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+    "rsrc": "equal resource for resource to what Apple's Installer installed on Mac OS 9 (tools/run_tome.py); deark: [instacomp1] TODO code11 bd=8"
    }
   },
   {
@@ -189,7 +190,7 @@
    "rsrc_size": 663,
    "type": "mlts",
    "unadjudicated": {
-    "rsrc": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+    "rsrc": "equal resource for resource to what Apple's Installer installed on Mac OS 9 (tools/run_tome.py); deark: [instacomp1] TODO code11 bd=8"
    }
   },
   {
@@ -202,7 +203,7 @@
    "rsrc_size": 663,
    "type": "mlts",
    "unadjudicated": {
-    "rsrc": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+    "rsrc": "equal resource for resource to what Apple's Installer installed on Mac OS 9 (tools/run_tome.py); deark: [instacomp1] TODO code11 bd=8"
    }
   },
   {
@@ -215,7 +216,7 @@
    "rsrc_size": 663,
    "type": "mlts",
    "unadjudicated": {
-    "rsrc": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+    "rsrc": "equal resource for resource to what Apple's Installer installed on Mac OS 9 (tools/run_tome.py); deark: [instacomp1] TODO code11 bd=8"
    }
   },
   {
@@ -228,7 +229,7 @@
    "rsrc_size": 663,
    "type": "mlts",
    "unadjudicated": {
-    "rsrc": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+    "rsrc": "equal resource for resource to what Apple's Installer installed on Mac OS 9 (tools/run_tome.py); deark: [instacomp1] TODO code11 bd=8"
    }
   },
   {
@@ -241,7 +242,7 @@
    "rsrc_size": 741,
    "type": "mlts",
    "unadjudicated": {
-    "rsrc": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+    "rsrc": "equal resource for resource to what Apple's Installer installed on Mac OS 9 (tools/run_tome.py); deark: [instacomp1] TODO code11 bd=8"
    }
   },
   {
@@ -266,7 +267,7 @@
    "rsrc_size": 742,
    "type": "mlts",
    "unadjudicated": {
-    "rsrc": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+    "rsrc": "equal resource for resource to what Apple's Installer installed on Mac OS 9 (tools/run_tome.py); deark: [instacomp1] TODO code11 bd=8"
    }
   },
   {
@@ -291,7 +292,7 @@
    "rsrc_size": 656,
    "type": "xlts",
    "unadjudicated": {
-    "data": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+    "data": "no oracle: deark: [instacomp1] Bad distance code: 311; no installed copy of this release is here; the stream ends exactly at its stated length"
    }
   },
   {
@@ -304,7 +305,7 @@
    "rsrc_size": 737,
    "type": "mlts",
    "unadjudicated": {
-    "rsrc": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+    "rsrc": "equal resource for resource to what Apple's Installer installed on Mac OS 9 (tools/run_tome.py); deark: [instacomp1] TODO code11 bd=8"
    }
   },
   {
@@ -317,7 +318,7 @@
    "rsrc_size": 737,
    "type": "mlts",
    "unadjudicated": {
-    "rsrc": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+    "rsrc": "equal resource for resource to what Apple's Installer installed on Mac OS 9 (tools/run_tome.py); deark: [instacomp1] TODO code11 bd=8"
    }
   },
   {
@@ -330,7 +331,7 @@
    "rsrc_size": 656,
    "type": "xlts",
    "unadjudicated": {
-    "data": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+    "data": "no oracle: deark: [instacomp1] Bad distance code: 210; no installed copy of this release is here; the stream ends exactly at its stated length"
    }
   },
   {
@@ -343,7 +344,7 @@
    "rsrc_size": 806,
    "type": "mlts",
    "unadjudicated": {
-    "rsrc": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+    "rsrc": "equal resource for resource to what Apple's Installer installed on Mac OS 9 (tools/run_tome.py); deark: [instacomp1] TODO code11 bd=8"
    }
   },
   {
@@ -356,7 +357,7 @@
    "rsrc_size": 731,
    "type": "mlts",
    "unadjudicated": {
-    "rsrc": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+    "rsrc": "equal resource for resource to what Apple's Installer installed on Mac OS 9 (tools/run_tome.py); deark: [instacomp1] TODO code11 bd=8"
    }
   },
   {
@@ -369,19 +370,20 @@
    "rsrc_size": 731,
    "type": "mlts",
    "unadjudicated": {
-    "rsrc": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+    "rsrc": "equal resource for resource to what Apple's Installer installed on Mac OS 9 (tools/run_tome.py); deark: [instacomp1] TODO code11 bd=8"
    }
   },
   {
    "creator": "slnk",
+   "data_oracle": "Apple's Installer (Mac OS 9)",
+   "data_sha256": "dc32b291e6435415e36fddbaadee3800a2318caee08daff5e11d96cf0166f933",
    "data_size": 14507,
    "finder_flags": 265,
    "name": "Global Village x2",
    "rsrc_size": 800,
    "type": "mlts",
    "unadjudicated": {
-    "data": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length",
-    "rsrc": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+    "rsrc": "equal resource for resource to what Apple's Installer installed on Mac OS 9 (tools/run_tome.py); deark: [instacomp1] TODO code11 bd=8"
    }
   },
   {
@@ -394,7 +396,7 @@
    "rsrc_size": 722,
    "type": "mlts",
    "unadjudicated": {
-    "rsrc": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+    "rsrc": "equal resource for resource to what Apple's Installer installed on Mac OS 9 (tools/run_tome.py); deark: [instacomp1] TODO code11 bd=8"
    }
   },
   {
@@ -407,7 +409,7 @@
    "rsrc_size": 663,
    "type": "mlts",
    "unadjudicated": {
-    "rsrc": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+    "rsrc": "equal resource for resource to what Apple's Installer installed on Mac OS 9 (tools/run_tome.py); deark: [instacomp1] TODO code11 bd=8"
    }
   },
   {
@@ -420,7 +422,7 @@
    "rsrc_size": 722,
    "type": "mlts",
    "unadjudicated": {
-    "rsrc": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+    "rsrc": "equal resource for resource to what Apple's Installer installed on Mac OS 9 (tools/run_tome.py); deark: [instacomp1] TODO code11 bd=8"
    }
   },
   {
@@ -433,7 +435,7 @@
    "rsrc_size": 656,
    "type": "xlts",
    "unadjudicated": {
-    "data": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+    "data": "no oracle: deark: [instacomp1] Bad distance code: 255; no installed copy of this release is here; the stream ends exactly at its stated length"
    }
   },
   {
@@ -458,19 +460,20 @@
    "rsrc_size": 656,
    "type": "xlts",
    "unadjudicated": {
-    "data": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+    "data": "no oracle: deark: [instacomp1] Bad distance code: 1140; no installed copy of this release is here; the stream ends exactly at its stated length"
    }
   },
   {
    "creator": "slnk",
+   "data_oracle": "Apple's Installer (Mac OS 9)",
+   "data_sha256": "d490c1d651aee536f5caec98f61b923176317f89277eda3757daaee6159bd84e",
    "data_size": 9620,
    "finder_flags": 784,
    "name": "Megahertz CruiseCard 14.4",
    "rsrc_size": 732,
    "type": "mlts",
    "unadjudicated": {
-    "data": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length",
-    "rsrc": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+    "rsrc": "equal resource for resource to what Apple's Installer installed on Mac OS 9 (tools/run_tome.py); deark: [instacomp1] TODO code11 bd=8"
    }
   },
   {
@@ -483,7 +486,7 @@
    "rsrc_size": 732,
    "type": "mlts",
    "unadjudicated": {
-    "rsrc": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+    "rsrc": "equal resource for resource to what Apple's Installer installed on Mac OS 9 (tools/run_tome.py); deark: [instacomp1] TODO code11 bd=8"
    }
   },
   {
@@ -496,19 +499,20 @@
    "rsrc_size": 731,
    "type": "mlts",
    "unadjudicated": {
-    "rsrc": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+    "rsrc": "equal resource for resource to what Apple's Installer installed on Mac OS 9 (tools/run_tome.py); deark: [instacomp1] TODO code11 bd=8"
    }
   },
   {
    "creator": "slnk",
+   "data_oracle": "Apple's Installer (Mac OS 9)",
+   "data_sha256": "a92719cd9072adcf86fe21776b3dd8ecc4eee38d8d97e9887628be922ba1bed7",
    "data_size": 9369,
    "finder_flags": 784,
    "name": "Microcom DeskPorte Fast:288",
    "rsrc_size": 744,
    "type": "mlts",
    "unadjudicated": {
-    "data": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length",
-    "rsrc": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+    "rsrc": "equal resource for resource to what Apple's Installer installed on Mac OS 9 (tools/run_tome.py); deark: [instacomp1] TODO code11 bd=8"
    }
   },
   {
@@ -521,31 +525,33 @@
    "rsrc_size": 717,
    "type": "mlts",
    "unadjudicated": {
-    "rsrc": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+    "rsrc": "equal resource for resource to what Apple's Installer installed on Mac OS 9 (tools/run_tome.py); deark: [instacomp1] TODO code11 bd=8"
    }
   },
   {
    "creator": "slnk",
+   "data_oracle": "Apple's Installer (Mac OS 9)",
+   "data_sha256": "1b419dc9fcbd564c3192dd1a7bd6f7fdde3ad676b01f6de0f4dde6ba28789b6f",
    "data_size": 4805,
    "finder_flags": 784,
    "name": "Motorola BitSURFR 56K",
    "rsrc_size": 725,
    "type": "mlts",
    "unadjudicated": {
-    "data": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length",
-    "rsrc": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+    "rsrc": "equal resource for resource to what Apple's Installer installed on Mac OS 9 (tools/run_tome.py); deark: [instacomp1] TODO code11 bd=8"
    }
   },
   {
    "creator": "slnk",
+   "data_oracle": "Apple's Installer (Mac OS 9)",
+   "data_sha256": "bc8495fd1806e59b8ce424166b59a9e6b52ab621b636406b77444d0ccf87dbb2",
    "data_size": 4876,
    "finder_flags": 784,
    "name": "Motorola BitSURFR 56K MLPPP",
    "rsrc_size": 725,
    "type": "mlts",
    "unadjudicated": {
-    "data": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length",
-    "rsrc": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+    "rsrc": "equal resource for resource to what Apple's Installer installed on Mac OS 9 (tools/run_tome.py); deark: [instacomp1] TODO code11 bd=8"
    }
   },
   {
@@ -558,19 +564,20 @@
    "rsrc_size": 725,
    "type": "mlts",
    "unadjudicated": {
-    "rsrc": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+    "rsrc": "equal resource for resource to what Apple's Installer installed on Mac OS 9 (tools/run_tome.py); deark: [instacomp1] TODO code11 bd=8"
    }
   },
   {
    "creator": "slnk",
+   "data_oracle": "Apple's Installer (Mac OS 9)",
+   "data_sha256": "ebdac5774008ab63835d797ccf654062de40248c7f4b7bb57d6b6199e3d6f5a8",
    "data_size": 4876,
    "finder_flags": 784,
    "name": "Motorola BitSURFR 64K MLPPP",
    "rsrc_size": 725,
    "type": "mlts",
    "unadjudicated": {
-    "data": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length",
-    "rsrc": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+    "rsrc": "equal resource for resource to what Apple's Installer installed on Mac OS 9 (tools/run_tome.py); deark: [instacomp1] TODO code11 bd=8"
    }
   },
   {
@@ -595,7 +602,7 @@
    "rsrc_size": 725,
    "type": "mlts",
    "unadjudicated": {
-    "rsrc": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+    "rsrc": "equal resource for resource to what Apple's Installer installed on Mac OS 9 (tools/run_tome.py); deark: [instacomp1] TODO code11 bd=8"
    }
   },
   {
@@ -608,7 +615,7 @@
    "rsrc_size": 656,
    "type": "xlts",
    "unadjudicated": {
-    "data": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+    "data": "no oracle: deark: [instacomp1] Bad distance code: 175; no installed copy of this release is here; the stream ends exactly at its stated length"
    }
   },
   {
@@ -621,7 +628,7 @@
    "rsrc_size": 663,
    "type": "mlts",
    "unadjudicated": {
-    "rsrc": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+    "rsrc": "equal resource for resource to what Apple's Installer installed on Mac OS 9 (tools/run_tome.py); deark: [instacomp1] TODO code11 bd=8"
    }
   },
   {
@@ -634,7 +641,7 @@
    "rsrc_size": 663,
    "type": "mlts",
    "unadjudicated": {
-    "rsrc": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+    "rsrc": "equal resource for resource to what Apple's Installer installed on Mac OS 9 (tools/run_tome.py); deark: [instacomp1] TODO code11 bd=8"
    }
   },
   {
@@ -647,7 +654,7 @@
    "rsrc_size": 663,
    "type": "mlts",
    "unadjudicated": {
-    "rsrc": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+    "rsrc": "equal resource for resource to what Apple's Installer installed on Mac OS 9 (tools/run_tome.py); deark: [instacomp1] TODO code11 bd=8"
    }
   },
   {
@@ -660,7 +667,7 @@
    "rsrc_size": 663,
    "type": "mlts",
    "unadjudicated": {
-    "rsrc": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+    "rsrc": "equal resource for resource to what Apple's Installer installed on Mac OS 9 (tools/run_tome.py); deark: [instacomp1] TODO code11 bd=8"
    }
   },
   {
@@ -673,7 +680,7 @@
    "rsrc_size": 738,
    "type": "mlts",
    "unadjudicated": {
-    "rsrc": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+    "rsrc": "equal resource for resource to what Apple's Installer installed on Mac OS 9 (tools/run_tome.py); deark: [instacomp1] TODO code11 bd=8"
    }
   },
   {
@@ -686,7 +693,7 @@
    "rsrc_size": 656,
    "type": "xlts",
    "unadjudicated": {
-    "data": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+    "data": "no oracle: deark: [instacomp1] Bad distance code: 326; no installed copy of this release is here; the stream ends exactly at its stated length"
    }
   },
   {
@@ -699,19 +706,20 @@
    "rsrc_size": 648,
    "type": "xlts",
    "unadjudicated": {
-    "data": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+    "data": "no oracle: deark: [instacomp1] Bad distance code: 274; no installed copy of this release is here; the stream ends exactly at its stated length"
    }
   },
   {
    "creator": "slnk",
+   "data_oracle": "Apple's Installer (Mac OS 9)",
+   "data_sha256": "0bf0e7217bec021e12214849f357f62122c4547d540bb06468637aa6972d17da",
    "data_size": 9019,
    "finder_flags": 784,
    "name": "Supra 144",
    "rsrc_size": 734,
    "type": "mlts",
    "unadjudicated": {
-    "data": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length",
-    "rsrc": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+    "rsrc": "equal resource for resource to what Apple's Installer installed on Mac OS 9 (tools/run_tome.py); deark: [instacomp1] TODO code11 bd=8"
    }
   },
   {
@@ -724,7 +732,7 @@
    "rsrc_size": 734,
    "type": "mlts",
    "unadjudicated": {
-    "rsrc": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+    "rsrc": "equal resource for resource to what Apple's Installer installed on Mac OS 9 (tools/run_tome.py); deark: [instacomp1] TODO code11 bd=8"
    }
   },
   {
@@ -761,7 +769,7 @@
    "rsrc_size": 656,
    "type": "xlts",
    "unadjudicated": {
-    "data": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+    "data": "no oracle: deark: [instacomp1] Bad distance code: 255; no installed copy of this release is here; the stream ends exactly at its stated length"
    }
   },
   {
@@ -774,19 +782,20 @@
    "rsrc_size": 720,
    "type": "mlts",
    "unadjudicated": {
-    "rsrc": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+    "rsrc": "equal resource for resource to what Apple's Installer installed on Mac OS 9 (tools/run_tome.py); deark: [instacomp1] TODO code11 bd=8"
    }
   },
   {
    "creator": "slnk",
+   "data_oracle": "Apple's Installer (Mac OS 9)",
+   "data_sha256": "bb59fcd6d05fc32da33dea2b40ee575aaa19e37b550f8499d4b4a102353cbb21",
    "data_size": 8950,
    "finder_flags": 784,
    "name": "Telebit QBlazer",
    "rsrc_size": 741,
    "type": "mlts",
    "unadjudicated": {
-    "data": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length",
-    "rsrc": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+    "rsrc": "equal resource for resource to what Apple's Installer installed on Mac OS 9 (tools/run_tome.py); deark: [instacomp1] TODO code11 bd=8"
    }
   },
   {
@@ -799,7 +808,7 @@
    "rsrc_size": 649,
    "type": "xlts",
    "unadjudicated": {
-    "data": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+    "data": "no oracle: deark: [instacomp1] Bad distance code: 173; no installed copy of this release is here; the stream ends exactly at its stated length"
    }
   },
   {
@@ -812,19 +821,20 @@
    "rsrc_size": 649,
    "type": "xlts",
    "unadjudicated": {
-    "data": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+    "data": "no oracle: deark: [instacomp1] Bad distance code: 173; no installed copy of this release is here; the stream ends exactly at its stated length"
    }
   },
   {
    "creator": "slnk",
+   "data_oracle": "Apple's Installer (Mac OS 9)",
+   "data_sha256": "6ed7f830683309b76c369f1b7462b1d9a0ef36d12a7877c30cae8caa4270cd45",
    "data_size": 12787,
    "finder_flags": 288,
    "name": "U.S. Robotics High Speed",
    "rsrc_size": 705,
    "type": "mlts",
    "unadjudicated": {
-    "data": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length",
-    "rsrc": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+    "rsrc": "equal resource for resource to what Apple's Installer installed on Mac OS 9 (tools/run_tome.py); deark: [instacomp1] TODO code11 bd=8"
    }
   },
   {
@@ -837,7 +847,7 @@
    "rsrc_size": 736,
    "type": "mlts",
    "unadjudicated": {
-    "rsrc": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+    "rsrc": "equal resource for resource to what Apple's Installer installed on Mac OS 9 (tools/run_tome.py); deark: [instacomp1] TODO code11 bd=8"
    }
   },
   {
@@ -850,7 +860,7 @@
    "rsrc_size": 656,
    "type": "xlts",
    "unadjudicated": {
-    "data": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+    "data": "no oracle: deark: [instacomp1] Bad distance code: 1255; no installed copy of this release is here; the stream ends exactly at its stated length"
    }
   },
   {
@@ -863,13 +873,13 @@
    "rsrc_size": 739,
    "type": "mlts",
    "unadjudicated": {
-    "rsrc": "no oracle: deark has no text codec and no installed copy is here; the stream ends exactly at its stated length"
+    "rsrc": "equal resource for resource to what Apple's Installer installed on Mac OS 9 (tools/run_tome.py); deark: [instacomp1] TODO code11 bd=8"
    }
   }
  ],
  "fixture": "tome-wild-modemscripts",
  "format": "Installer Tome",
- "oracle": "deark's Tome module (stored and InstaCompOne forks), and Apple's Installer's own output on the System 7.5.5 disk for the rest (tools/run_tome.py)",
+ "oracle": "deark's Tome module (stored and InstaCompOne forks), and what Apple's Installer installed, on the System 7.5.5 disk and the Mac OS 9 image, for the rest (tools/run_tome.py)",
  "sha256": "7c02eb63130268505a79f3922b079b15f410c2aebed296379b63a35ff76cc4df",
  "size": 230867
 }

@@ -304,23 +304,36 @@ started**; the patches are drafted here and posted by the maintainer.
 
 The Tome reader is in (FORMATS.md, *Apple Installer Tomes*). Left:
 
-- **The per-fork checksum is unidentified** (+0x48, +0x58): not CRC-32,
-  Adler-32, CRC-16/XMODEM, sums or XOR, per the specification. Without it a
-  changed byte that decodes to the right length is not noticed — 1,308 of
-  3,704 single-byte changes are (`tools/run_tome.py`). Closes with the
-  algorithm, read out of Apple's Installer (`APPL`/`kajr`, on the 7.5.5
-  disk) or its SDK.
-- **Tomes in 'part' resources are not read.** QuickDraw GX's installer
-  disks carry one-file Tomes as `'part'` resources of a Tome's resource
-  fork — 13 on the 8.6 CD, and `Tome2` has nothing else. Each is a whole
-  Tome; reading one needs a resource-fork input the engine does not take.
-- **`ircp`/`kakc`**: 16 files in MacStamp's census under the Tome's
-  creator, no specimen here. Not looked at.
-- **Text-codec forks with no oracle**: 81 forks of `tome-wild-modemscripts`
-  and `tome-wild-websharing` are graded by their exact end alone; deark has
-  no text codec and the 8.6 CD's files are not installed anywhere here.
-  Closes with an installed Mac OS 8.6, or Apple's Installer run on these
-  Tomes under emulation.
+- **The per-fork checksum is unidentified** (+0x48, +0x58). Ruled out
+  (measured 2026-11-11): byte, word and long sums, XOR, a rotating add,
+  Adler-32, zlib's CRC-32, and every CRC-32 over eight polynomials, both bit
+  orders, two initial values and two final XORs, over the decoded fork and
+  over its stream with and without block headers; and in the 7.5.5
+  Installer, decompressed whole, no CRC table, no reference to `idcp`, and
+  no file atom of its script carrying any of 504 forks' values. So the
+  Installer may never check it. Without it 1,308 of 3,704 single-byte
+  changes are noticed (`tools/run_tome.py`). Closes with the routine that
+  writes it: Apple's Installer SDK packer, not on this machine.
+- **Resources compressed as `'part'`s are not read.** A `'part'` resource
+  is a Tome of version 2 (the word at 0x10), whose one record describes a
+  RESOURCE — id at +6, type at +8, name at +12, one stream at +0x4e — and
+  the stream is the Tome's own coding: 18 of 18 decode to their exact end
+  (DECISIONS.md 2026-11-11, *the Installer's own code*). They sit in
+  `ircp`/`kakc` files (fonts, network drivers) and beside a data-fork Tome
+  (QuickDraw GX's, 13 on the 8.6 CD). What the Installer WRITES from them is
+  not known, and in both decoded TrueType fonts every table-directory
+  checksum reads 0x002e9340 where Mac OS 9's later copies hold real ones.
+  Closes with Apple's Installer run on one under emulation (GX needs a
+  68020: Mini vMac's Mac II).
+- **The rest of `ircp`**: 6 of the 16 files in MacStamp's census are here
+  (`.tmp/ircp/`, off El Mac 7's Spanish System 7.5 Update 2.0); the other
+  10's sources were not kept.
+- **19 forks graded by their exact end alone**, of `tome-wild-modemscripts`
+  and `tome-wild-websharing` (81 until Mac OS 9's installed copies were
+  read, 2026-11-11): deark fails them with its own errors — "Bad distance
+  code" where it reads the text codec as InstaCompOne, "TODO code11" for a
+  long copy it does not implement — and no installed copy of their release
+  is here. Closes with an installed Mac OS 8.6.
 - **deark widens InstaCompOne's long distance one output byte early** (at
   1,644; the specification and Apple's installed files say 1,645). Not
   reported upstream, and no minimal repro is written; the maintainer posts

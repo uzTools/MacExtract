@@ -3499,10 +3499,16 @@ fixtures came from (FORMATS.md, *Apple Installer Tomes*).
 1. **deark**: every fork it decodes, byte for byte, with the names, lengths,
    types, creators and Finder flags read from the record table here. It has
    no text codec; those forks are counted.
-2. **Installed copies**: a file found on the disk by name, type and creator
-   must have the engine's data fork byte for byte and its resource fork
-   resource for resource; another release ('vers' 1 differs) is counted.
-   **Skipped, and said so, without `macosinstall755.dsk`** in the vmac cache.
+2. **Installed copies**, on two systems, a file found by name, type and
+   creator. On the System 7.5.5 disk, what the Installer installed out of
+   these Tomes: the engine's data fork byte for byte and its resource fork
+   resource for resource; another release ('vers' 1 differs) is counted. On
+   the Mac OS 9 image, read with `tools/hfsplus.py`, a later release: equal
+   forks grade, resources are compared without 'vers' 2 (the release's own
+   stamp, the only difference in 68 files), and a difference fails only
+   between two copies of one 'vers' 1. **Each skipped, and said so, without
+   its image** (`macosinstall755.dsk` in the vmac cache,
+   `qemu-ppc/MacOS9.img`).
 3. **Damage**: every 61st stream byte of the smallest fixture changed, and
    cuts every 997th byte — no crash, no hang, no exit 0 past a cut. How many
    changes are refused is printed, not required: there is no checksum.
@@ -3517,10 +3523,17 @@ checks).
 **`--manifest`** writes the four manifests: deark's hashes, then Apple's
 installed data forks; a resource fork only the installed copy grades, and a
 fork neither does, are `unadjudicated` with the reason, so `run_diff.py`
-grades 81 forks of `modemscripts` and `websharing` by their exact end alone.
+counts 65 forks of `modemscripts` and `websharing` unadjudicated: 46 graded
+resource for resource here, 19 by their exact end alone.
 
-**What it cannot see**: the checksum. A text-codec fork no installed copy
-holds. A stream cut short, which the format's end rule fills with zeros —
+**`tools/hfsplus.py`** reads both forks of an HFS Plus volume from
+TN1150; its own `--check` holds every file of the Mac OS 9 image, both
+forks, to 7-Zip's (2,337 of 2,337), and a reader that misplaces the
+resource fork by 4 bytes fails it. It cannot read a fork past eight extents
+and refuses one.
+
+**What it cannot see**: the checksum. A fork no installed copy of its
+release holds (19). A stream cut short, which the format's end rule fills with zeros —
 no stream of the 39 here needs that rule, and it stays because the
 specification's author saw forks that do. The two longest text-codec
 length codes. Tomes in 'part' resources (OPEN_ITEMS.md). With `--extra` over
