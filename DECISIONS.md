@@ -589,6 +589,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-10 (the archive the Installer reads) — Apple Installer Tomes extract from rusty-backup's write-up, graded by deark and by what Apple's Installer installed; deark widens a distance one byte early, the padding rule never fires on two install media, and the ring is sized per fork: 71,712 B where doubling took 104,480
 - 2026-11-11 (the restore CD's two whole sets) — the Performa 5400/6400 Software Restore CD's 67- and 38-disk Apple Backup sets, complete, extract with nothing failed, every fork as `unbak.py` writes it and none else; 8 of their disks hold nothing but a continuation
 - 2026-11-11 (the Installer's own code) — Mac OS 9's installed files grade 62 more Tome forks through a TN1150 reader held to 7-Zip; the Installer's code is InstaCompOne-compressed and holds no checksum; a 'part' is a Tome of one resource, and ircp a file of them
+- 2026-11-11 (what the Installer wrote) — Apple's Installer, run on QuickDraw GX 1.1.3 under emulation, writes every 'part' resource as this engine decodes it, byte for byte; it renumbers each sfnt, rewrites the FOND to match and drops two resources
 
 ---
 
@@ -24562,3 +24563,27 @@ unknown, and both decoded GX fonts carry 0x002e9340 in every table
 checksum where Mac OS 9's later copies are correct, while their `bsln`
 tables sum to Mac OS 9's exactly; inventing the installed file is what the
 rules forbid. It needs the Installer run on one.
+
+## 2026-11-11 (what the Installer wrote) — Apple's Installer, run on QuickDraw GX 1.1.3 under emulation, writes every 'part' resource as this engine decodes it, byte for byte; it renumbers each sfnt, rewrites the FOND to match and drops two resources
+
+**Asked by the maintainer**: find what the Installer really writes from a
+`'part'`.
+
+**Measured (Mini vMac's Mac II, System 7.5.5, 2026-11-11).** QuickDraw GX
+1.1.6 (the Mac OS 8.6 CD) refuses System 7.5.5: "You must install Mac OS
+8.0". GX 1.1.3, the System 7.5 version on El Mac 7's Spanish System 7.5
+Update 2.0, copied from MacStamp's image, installs with Easy Install. Its
+fonts are four of MacStamp's six `ircp` files. In the System Folder's Fonts
+folder after the install, Apple Chancery, Skia and Hoefler Text are
+`FFIL`/`DMOV` suitcases, and their seven `sfnt` resources equal this
+engine's decoding of the seven parts byte for byte (268,472 to 35,880 B).
+**The 0x002e9340 in every TrueType table checksum is Apple's as shipped**,
+not a decoding fault.
+
+**What the Installer changes is installation, not format.** Each `sfnt` is
+given a new id (2012 becomes 9217; Hoefler Text's five 9217-9221), each
+`FOND`'s font association entry rewritten to that id (its bytes 58-59:
+`07dc` to `2401`), and `STR ` -16397 and `vers` 2 left out. The new ids
+are chosen against the target System, so they are not a property of the
+file. Tekton Plus (`Utilidades para Adobe`) and 06's network items were not
+installed by Easy Install and are not graded.

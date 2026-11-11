@@ -316,15 +316,16 @@ The Tome reader is in (FORMATS.md, *Apple Installer Tomes*). Left:
   writes it: Apple's Installer SDK packer, not on this machine.
 - **Resources compressed as `'part'`s are not read.** A `'part'` resource
   is a Tome of version 2 (the word at 0x10), whose one record describes a
-  RESOURCE — id at +6, type at +8, name at +12, one stream at +0x4e — and
-  the stream is the Tome's own coding: 18 of 18 decode to their exact end
-  (DECISIONS.md 2026-11-11, *the Installer's own code*). They sit in
-  `ircp`/`kakc` files (fonts, network drivers) and beside a data-fork Tome
-  (QuickDraw GX's, 13 on the 8.6 CD). What the Installer WRITES from them is
-  not known, and in both decoded TrueType fonts every table-directory
-  checksum reads 0x002e9340 where Mac OS 9's later copies hold real ones.
-  Closes with Apple's Installer run on one under emulation (GX needs a
-  68020: Mini vMac's Mac II).
+  RESOURCE — id at +6, type at +8, name at +12, one stream at +0x4e — in the
+  Tome's own coding. They sit in `ircp`/`kakc` files (fonts, network
+  drivers) and beside a data-fork Tome (QuickDraw GX's). **What Apple's
+  Installer writes from one is measured** (DECISIONS.md 2026-11-11, *what
+  the Installer wrote*): the decoded resource byte for byte, all seven
+  `sfnt`s of three GX 1.1.3 fonts, renumbered to an id free on the target
+  System with the `FOND`'s entry rewritten to match, and `STR ` -16397 and
+  `vers` 2 dropped. Not built; the shape of the output — the file as
+  shipped with its parts expanded under their own ids, or as the Installer
+  leaves it — is the maintainer's to choose.
 - **The rest of `ircp`**: 6 of the 16 files in MacStamp's census are here
   (`.tmp/ircp/`, off El Mac 7's Spanish System 7.5 Update 2.0); the other
   10's sources were not kept.
