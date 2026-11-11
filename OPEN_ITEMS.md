@@ -326,12 +326,11 @@ The Tome reader is in (FORMATS.md, *Apple Installer Tomes*). Left:
   `ircp` file comes out as the font file, its parts expanded under their
   own ids — no renumbering — `STR ` -16397 (the Finder's "use the
   Installer" message) and `vers` 2 (the package's version) dropped. Not
-  built. Two cases that
-  call does not settle: System 7.5.5's fonts, whose parts carry placeholder
-  ids (5466 plus size and style) and whose `FOND`s the Installer builds
-  from `iFND` resources rather than ships; and non-font parts (drivers),
-  whose +6 holds the id they must keep (`DRVR` 9 is `.MPP`), which no run
-  here installed.
+  built. System 7.5.5's fonts fit the same call: their `iFND`, retyped
+  `FOND`, already names the parts' placeholder ids, and two such families
+  sharing every id render as the installed ones do, to the pixel. Left:
+  non-font parts (drivers), whose +6 holds the id they must keep (`DRVR` 9
+  is `.MPP`), which no run here installed.
 - **The rest of `ircp`**: 6 of the 16 files in MacStamp's census are here
   (`.tmp/ircp/`, off El Mac 7's Spanish System 7.5 Update 2.0); the other
   10's sources were not kept.

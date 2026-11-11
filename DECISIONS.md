@@ -24618,6 +24618,23 @@ Installer drops them. **And no renumbering** (the same day): each part
 keeps the id its record states, since nothing renumbers a font the user
 puts in the Fonts folder.
 
+**System 7.5.5's fonts need no renumbering either, and no invented `FOND`
+(measured, the same day).** An `iFND` is the `FOND` the Installer writes,
+byte for byte, but for the ids in its font association table: Chicago's
+152 bytes differ only in `155a` (5466) and `1566` (5478), which became
+9217 and 1025. So the `iFND` retyped `FOND`, beside the parts under the
+placeholder ids it already names, is a whole font; each association entry
+of Times and Palatino matched exactly one part (by its type, +6, and the
+family in its part id: an outline's id mod 32, a bitmap's mod 64). Both
+suitcases, put in the Fonts folder of a fresh System 7.5.5 in place of
+the installed ones and sharing `sfnt` 5466, 5966, 6466, 6966 and `NFNT`
+5476-5490 between them, set Times and Palatino at 12 points (bitmaps) and
+36 (outlines; Times also bold and italic) to a screen that differs from
+the same text on the untouched disk by **0 pixels** below the menu bar
+(the font menus' screens differ by 50, the clock). Placeholder ids shared
+across families do not mix fonts. Palatino's bold and italic were not set:
+the test's second Bold toggled the style off.
+
 ## 2026-11-11 (the stored bytes read one at a time) — zip, StuffIt and DiskDoubler copy stored data a span of the reader's buffer at a time, and LZ4's byte read is forced inline: a stored zip −65 %, DiskDoubler −13 %, LZ4 −2.9 %, StuffIt's stored forks −1.8 %, for +298 B of images
 
 **Claim, evidence, consequence (measured).** Four stored loops read a byte
