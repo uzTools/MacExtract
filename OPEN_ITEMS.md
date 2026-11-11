@@ -324,8 +324,9 @@ The Tome reader is in (FORMATS.md, *Apple Installer Tomes*). Left:
   shipped `FOND` and its decoded `sfnt`, dropped there by the Finder,
   renders and is not renumbered. The maintainer's call (2026-11-11): an
   `ircp` file comes out as the font file, its parts expanded under their
-  own ids, `STR ` -16397 (the Finder's "use the Installer" message) and
-  `vers` 2 (the package's version) dropped. Not built. Two cases that
+  own ids — no renumbering — `STR ` -16397 (the Finder's "use the
+  Installer" message) and `vers` 2 (the package's version) dropped. Not
+  built. Two cases that
   call does not settle: System 7.5.5's fonts, whose parts carry placeholder
   ids (5466 plus size and style) and whose `FOND`s the Installer builds
   from `iFND` resources rather than ships; and non-font parts (drivers),

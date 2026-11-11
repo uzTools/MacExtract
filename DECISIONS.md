@@ -24614,7 +24614,9 @@ archivos comprimidos. Por favor, utilice el Instalador…", the Finder's
 message for a double-clicked package; Spanish here because these files are
 the Spanish edition's) and `vers` 2 (1.1.2, region 8, the package's
 version) are the package's, not the font's, and are dropped, as the
-Installer drops them.
+Installer drops them. **And no renumbering** (the same day): each part
+keeps the id its record states, since nothing renumbers a font the user
+puts in the Fonts folder.
 
 ## 2026-11-11 (the stored bytes read one at a time) — zip, StuffIt and DiskDoubler copy stored data a span of the reader's buffer at a time, and LZ4's byte read is forced inline: a stored zip −65 %, DiskDoubler −13 %, LZ4 −2.9 %, StuffIt's stored forks −1.8 %, for +298 B of images
 
