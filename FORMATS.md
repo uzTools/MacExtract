@@ -5910,7 +5910,8 @@ and asks for 405,520 B. **Nor is the boundary a number**:
 its block is under the renegotiation floor.
 
 **System 6.0.8 on the same machine: 72/74 shipped** since 2026-11-03, 68/74
-before (BLOCKERS.md, *Status*),
+before and from 5dfe571a to 4171b4e6, a tar envelope's outer layer only
+(BLOCKERS.md, *Status*),
 **63/72 resident** (`run.py --emu mv-512Ke --system System6.hfv`, 2026-10-09,
 the nine `run_tiers.py` named). System 3.0's failures are a strict subset of
 System 6's, and the difference is the SYSTEM HEAP: free heap at extraction

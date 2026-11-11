@@ -285,6 +285,18 @@ converted*).
 | a segmented archive whose segments the user named freely (ZipIt asks "Save segment #%d as:") | not joined: parts are placed by `.zNN`/`.zip` (FORMATS.md, *Segments*); renamed, the set extracts byte for byte | an order read off the segments themselves, or the user's |
 | a ZipIt-encrypted archive, byte for byte | **the cipher is known, the engine reads it**: ZipIt 2.2.2's `decrypt_byte`/`crypthead`/`UnzipCryptHeader` are standard PKWARE ZipCrypto, which `unc_zip_extract` already decrypts (DECISIONS.md 2026-11-06, *what ZipIt does with a Macintosh file*) | one ZipIt-made encrypted `.zip` to confirm against a real file (none here; a registered copy would write one) |
 
+## A tar envelope's inner layer on System 6.0.8 / 512 KB
+
+**Measured, not reduced** (DECISIONS.md 2026-11-11, *the kilobyte under
+each copy*). The tier's 72/74 counts the outer layer; through the real
+application the layer under a `.tar.Z` does not come off on the 512Ke
+under System 6.0.8.
+
+| what | evidence | what would close it |
+|---|---|---|
+| **the sniffer not kept** | since 64af88c0 a tar envelope's four copies need 79,814 B where 70,006 B are above the bundle (probe build); the probe reads `kf` 2, the real chain leaves the `.tar` unopened | ~10 KB less kept or more room at the keep; the Tome's and Apple Backup's readers out of `ovl_zipold` are two candidates, priced in the entry, neither free |
+| **"Archive damaged." at 9593ad80**, every copy kept | `interactive.py --chain --emu mv-512Ke-1d`: `synth-exo-tar-Z.tar.Z` and `popper-1.7.tar.Z`, clean builds; at 1 MB the chain MATCHes. 2026-11-03 recorded both `.tar.Z` chains matching on this machine | the chain bisected from 2026-11-03, then reduced |
+
 ## The shell's own File Manager blocks, until multiversal's glue is inline
 
 Switching to `HOpen`/`HOpenRF`/`HDelete` costs **+160 B** shipped today

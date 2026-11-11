@@ -21,7 +21,7 @@ paths. Run the System 7 tier at 4 MB.
 **512 KB machines.** `--emu mv-512Ke` on either driver boots a Macintosh
 512Ke, the smallest machine this application runs on: `sys30.py --emu
 mv-512Ke` is **72/74** and `run.py --emu mv-512Ke --system System6.hfv` is
-**68/74** on the shipped build, the refusals per entry and by name (the
+**72/74** on the shipped build, the refusals per entry and by name (the
 current dates are BLOCKERS.md's, *Status*; FORMATS.md, *512 KB machines*).
 With every decoder resident (`-D UNC_OVL_RESIDENT`) the two are **68/72** and
 **63/72** (2026-10-09). The resident budgets measured are **183,688 B** and

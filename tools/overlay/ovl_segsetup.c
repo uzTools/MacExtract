@@ -29,14 +29,18 @@ static const SegSetupFns *gF = (const SegSetupFns *)1;
  * CompactMem gives the largest free block after compaction and purges
  * nothing; a pointer filling all of it but the handle's room takes its
  * bottom, since NewPtr places a block as low as it can; the handle takes
- * the top, and the filler goes. Failing that, a plain NewHandle. Source:
+ * the top, and the filler goes. Failing that, a plain NewHandle. The
+ * filler leaves 32 B beyond the handle's size: with 1 KB, until 2026-11-11,
+ * each copy sat 1,016 B under the last and on a 512Ke a tar envelope's
+ * fourth did not fit (DECISIONS.md 2026-11-11, *the kilobyte under each
+ * copy*). Source:
  * Inside Macintosh II, The Memory Manager (CompactMem, NewPtr, NewHandle).
  * In this image rather than resident, so it is carried only in the bundle
  * given back (mac/ovl_load_eager.c, ovl_keep; DECISIONS.md 2026-11-09,
  * *one way to keep a decoder high*). */
 static int32_t high_handle(Size len)
 {
-    Size room = CompactMem(0x7FFFFFF0L) - len - 1024;
+    Size room = CompactMem(0x7FFFFFF0L) - len - 32;
     Ptr fill = room > 0 ? NewPtr(room) : NULL;
     Handle h = NewHandle(len);
     if (fill != NULL) DisposePtr(fill);

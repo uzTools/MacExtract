@@ -1932,12 +1932,12 @@ different refusals:
   build last ran on all three machines on 2026-10-09 (72/72, 68/72 and
   63/72); every change since is DERIVED and recorded in `run_tiers.py`
   beside the name.
-- shipped: **74/74, 72/74 and 68/74**. The System 6.0.8 tier is the one
+- shipped: **74/74, 72/74 and 72/74**. The System 6.0.8 tier is the one
   this lane PREDICTED before any machine ran it (FORMATS.md, *512 KB
   machines*).
 
-The budgets are `TIERS` (624,952, 196,046 and 100,664 B as of
-2026-11-03, derived from the 2026-10-22 machine re-take); `TIERS_MACHINE`
+The budgets are `TIERS` (607,644, 178,760 and 83,356 B, re-taken on the
+machine 2026-11-11 and derived since); `TIERS_MACHINE`
 holds each plus the control it was read against. The keep set is parsed
 from `mac/ovl_load_eager.c`, format names and envelope flags from the
 engine's table, image sizes checked against `build/mac/`
@@ -1964,6 +1964,11 @@ either way the names are changed deliberately.
   `tools/encinfo_probe.c` for each Compact Pro, zip and StuffIt 5 layer, as
   the shell does; it cannot see a wrong answer, which is `run_crypt.py`'s
   (*Decryption*).
+- **The keep before the release.** The copies a format keeps must fit
+  beside the bundle, which is still in the heap; the model charges only
+  the grant after it. On System 6.0.8 / 512 KB a tar envelope's four no
+  longer do, and the model says 72/74 (DECISIONS.md 2026-11-11, *the
+  kilobyte under each copy*).
 - **Fragmentation.** The Memory Manager also needs one PIECE that big
   ("Memory is too broken up"); nothing here models it. No disagreement
   currently rests on it.

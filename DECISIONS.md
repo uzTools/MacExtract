@@ -593,6 +593,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-11 (the stored bytes read one at a time) — zip, StuffIt and DiskDoubler copy stored data a span of the reader's buffer at a time, and LZ4's byte read is forced inline: a stored zip −65 %, DiskDoubler −13 %, LZ4 −2.9 %, StuffIt's stored forks −1.8 %, for +298 B of images
 - 2026-11-11 (the glue the shell expands) — the seven File Manager calls the shell linked from Retro68 are its own inline code: CODE −344, A5 −24, and every shipped budget 336 B higher on the machine
 - 2026-11-11 (the parts the Installer expands) — a resource fork holding 'part's is read as a Tome: each iFND a suitcase of its own, the rest one file under the package's name, every record at its stated id; all nine of System 7.5.5's families equal the installed suitcases but for the FOND's ids; 288 B off every budget
+- 2026-11-11 (the kilobyte under each copy) — `high_handle`'s filler left 1 KB over every kept copy, and from 5dfe571a a tar envelope's last copy did not fit on System 6.0.8 / 512Ke; 32 B now, 0 B on every axis, 72/74 again, but the copies no longer all fit there and the real application's chain fails
 
 ---
 
@@ -24849,3 +24850,68 @@ and the writer an entry's info).
 **Consequence.** OPEN_ITEMS.md's item on 'part's is closed; the drivers'
 attributes and installed names (`drvr` 9 is `.MPP` installed and unnamed in
 its record) are the Installer script's, and not here.
+
+## 2026-11-11 (the kilobyte under each copy) — `high_handle`'s filler left 1 KB over every kept copy, and from 5dfe571a a tar envelope's last copy did not fit on System 6.0.8 / 512Ke; 32 B now, 0 B on every axis, 72/74 again, but the copies no longer all fit there and the real application's chain fails
+
+**The first bad commit (measured): 5dfe571a**, the Installer Tome. Bisected
+on the machine from 049d687 to c6ae39db, one `popper-1.7.tar.Z` per step
+(`run.py --emu mv-512Ke --system System6.hfv`, the shipped autotest, and
+the `-D UNC_AT_BUDGET` probe beside it): 43677c56, 4449c0a9 and 9593ad80
+PASS, `kf` 0; 5dfe571a, 991acdae and c6ae39db end `UNC_ERR_MEM`, `kf` 2,
+`wa` 139: the release failed to keep the codecs. 5dfe571a put the Tome's
+reader in `ovl_zipold` (18,720 → 21,934 B), which a tar keeps, and grew
+the bundle 3,384 B.
+
+**The cause (measured, a diagnostic probe build, not committed).** It
+walked the application heap before the keeps and at the failed one and
+recorded each keep's size, `MaxBlock` and `FreeMem`. On 4171b4e6 a tar
+envelope keeps `ovl_exo` 30,284 B, `ovl_zipold` 21,970, `ovl_sniff` 17,016
+and `ovl_codecs` 6,012 while the bundle, 204,812 B, is still locked, and
+the only room is above it: 74,618 B in one piece in the probe build.
+`high_handle` filled that block less the handle's size and **1,024 B**,
+so each copy sat 1,016 B under the one above it; the sniffer's 2,268 B
+filler fitted a hole under the shell's CODE, so the sniffer went to the
+bottom with 2,416 B over it; the codecs met `MaxBlock` 2,408 B with 6,888 B
+free in five pieces. The kilobyte came with `high_handle` (2026-11-07,
+*the decoders a 64K ROM kept low*) and was never measured.
+
+**Reduced to that constant.** 1,024 → 32 alone: the four PASS on the
+shipped autotest (4171b4e6), and in the probe build the copies sit flush,
+the codecs 768 B short where they were 3,604. The probe's code and
+`.bss` (which Retro68 allocates in the heap: the walk's 16,860 B block)
+are ~1,890 B the autotest does not spend (`m68k-apple-macos-size`), so
+the autotest's margin there was ~1.1 KB, DERIVED. Moving the Tome's reader
+into `ovl_sqp` passed `popper` without the constant and the four with it,
+and is not free: an AppleLink package keeps 3,222 B more, the bundle +4 B;
+into `ovl_segsetup`, which nothing keeps, the bundle +60 B (measured).
+
+**Five axes (measured, on 4171b4e6).** CODE / A5 37,824 / 16,768, the
+CODE resource byte-identical; `ovl_segsetup` 2,434 B and the bundle
+204,804, one immediate changed. Heap: no `FreeMem` moves; each copy after
+the first strands ~1 KB less between locked blocks. Stack
+(`stack_depth.py`): 3,446 B, `--shell` 6,244, unmoved. Sweeps, one fixture
+per boot: System 6.0.8 on the 512Ke **72/74** in one pass, the two
+refusals by name; the 1 MB floor 74/74 (`down-line-111.hqx` EMUDIED in
+the sweep, PASS alone); System 3.0 on the 512Ke 72/74
+(`derived-BootTime.cpt` NOGRID, PASS alone); the 64K ROM 72/74 in one
+pass.
+
+**What the tier cannot see, and what is not fixed (measured).** The
+autotest takes ONE layer: a tar envelope's run needs only `ovl_exo` and
+the codecs; the sniffer and `ovl_zipold` are kept for the layer under it.
+On 64af88c0 the Installer 'part' work had taken `ovl_zipold` to 26,070 B,
+`ovl_sniff` to 17,416 and the bundle to 209,404. With the constant at 32
+the four still PASS there, while the probe reads `kf` 2 and `wa` 0: the
+**sniffer** not kept (13,580 B left for 17,416; the room above the bundle
+70,006 B against 79,814 for the four). Through the real application
+(`interactive.py --chain --emu mv-512Ke-1d --system System6.hfv`) on that
+tree `synth-exo-tar-Z.tar.Z` leaves the `.tar` unopened; at 9593ad80,
+before any of this, it and `popper-1.7.tar.Z` end on "Archive damaged."
+with nothing written (clean builds); at 1 MB the same chain MATCHes. So
+this machine's 72/74 counts a tar envelope's outer layer, and the layer
+under it has not come off there since at least 9593ad80, why not reduced
+(OPEN_ITEMS.md, *A tar envelope's inner layer on System 6.0.8 / 512 KB*).
+
+**Taken: free on all five axes, and the tier back to 72/74** by the only
+measure the tier has. That the copies no longer all fit is the growth of
+`ovl_zipold` and the bundle since 5dfe571a, not this constant.
