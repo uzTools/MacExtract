@@ -592,6 +592,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-11 (what the Installer wrote) — Apple's Installer, run on QuickDraw GX 1.1.3 under emulation, writes every 'part' resource as this engine decodes it, byte for byte; it renumbers each sfnt, rewrites the FOND to match and drops two resources
 - 2026-11-11 (the stored bytes read one at a time) — zip, StuffIt and DiskDoubler copy stored data a span of the reader's buffer at a time, and LZ4's byte read is forced inline: a stored zip −65 %, DiskDoubler −13 %, LZ4 −2.9 %, StuffIt's stored forks −1.8 %, for +298 B of images
 - 2026-11-11 (the glue the shell expands) — the seven File Manager calls the shell linked from Retro68 are its own inline code: CODE −344, A5 −24, and every shipped budget 336 B higher on the machine
+- 2026-11-11 (the parts the Installer expands) — a resource fork holding 'part's is read as a Tome: each iFND a suitcase of its own, the rest one file under the package's name, every record at its stated id; all nine of System 7.5.5's families equal the installed suitcases but for the FOND's ids; 288 B off every budget
 
 ---
 
@@ -24642,13 +24643,15 @@ own System 7.5 CD (archive.org `macintosh-system-7.5-691-0246-a-install-cd`,
 SHA-1 as published) installed 7.5.0. Its Easy Install, and a Custom Install
 of "Software de red" onto a fresh 7.5.0, were read back. Of the 32 records
 in `Compressed Network Items`'s 15 parts (a part may hold several, one
-resource each): **22 byte for byte what Apple's installers wrote at the id
-the record states** (the System file's `DRVR` 9 `.MPP` and 127 `.ENET`,
-`ltlk`, `atlk`, `AINI`, `iopc`, `STR#`; TokenTalk Prep's `ttut` 11 and 52
-and `llc ` 11); 6 identical but for version strings to the newer build the
-installers chose (AppleTalk 58.2.2 here, 58.5 in `Actualización Tomo 1`); 1
-equal to that file's copy; 3 not installed on a Mac II (`lmgr` 0, `llc `
-52, `DRVR` 125). `Actualización Tomo 1`, also `ircp`, holds no parts: 66
+resource each): **16 byte for byte what Apple's installers wrote at the id
+the record states** (the System file's `DRVR` 9 `.MPP`, 125 `.TOKN` and 127
+`.ENET`, `ltlk` 4 and 5, `AINI`, `iopc`, `ROvr`, `lefT`, `STR#` -16503;
+TokenTalk Prep's `ttut` 11 and 52 and `llc ` 11); 15 installed from
+`Actualización Tomo 1`'s copy instead, the newer build the installers
+chose, 6 of them identical but for 4 bytes of version string (AppleTalk
+58.2.2 here, 58.5 there); `llc ` 52 not installed. **Corrected 2026-11-11**
+from 22 / 6 / 1 / 3, which the engine's own output does not reproduce
+against the same two disks (*the parts the Installer expands*). `Actualización Tomo 1`, also `ircp`, holds no parts: 66
 plain resources, 44 of them installed unchanged under their own ids.
 
 ## 2026-11-11 (the stored bytes read one at a time) — zip, StuffIt and DiskDoubler copy stored data a span of the reader's buffer at a time, and LZ4's byte read is forced inline: a stored zip −65 %, DiskDoubler −13 %, LZ4 −2.9 %, StuffIt's stored forks −1.8 %, for +298 B of images
@@ -24752,3 +24755,97 @@ the 64K ROM.
 
 **Consequence.** OPEN_ITEMS.md *The shell's own File Manager blocks* is
 down to the three calls, which still cost +32 to +64 B inline, and upstream.
+
+## 2026-11-11 (the parts the Installer expands) — a resource fork holding 'part's is read as a Tome: each iFND a suitcase of its own, the rest one file under the package's name, every record at its stated id; all nine of System 7.5.5's families equal the installed suitcases but for the FOND's ids; 288 B off every budget
+
+**Asked by the maintainer**: build it, with System 7.5.5's own font parts,
+no renumbering, and `STR ` -16397 and `vers` 2 dropped (*what the Installer
+wrote*, above).
+
+**What is read.** A resource fork whose map has a `'part'` among its first
+28 types, opening `kc 00 01` with version 2, sniffs as an Installer Tome
+(`src/fmt_tome_probe.c`), and `unc_tome_extract` dispatches on the first
+long: the Tome's magic, or a resource fork. Every resource is kept, every
+part's records expanded under the id, type and name each states, attributes
+0 (a record carries none). Each `iFND` comes out as a suitcase of its own,
+FFIL/DMOV, named by the resource: the iFND retyped FOND and, per association
+entry, the one record of its type and id whose part id is of the family
+(mod 32 for an outline, mod 64 for a bitmap). Everything else is one file
+named by the host's name hint, the package's name, as the Installer names
+the font it installs: FFIL/DMOV if it holds a FOND, else rsrc/RSED, and
+written only when it holds a record — so a Tome's icons and `vers` 1 make
+nothing. Two resources of one type and id in one file fail that entry
+(no specimen does).
+
+**Why per family, and why the mod rule (measured).** Placeholder ids repeat
+across families — Times and Palatino both name `sfnt` 5466 — so one file
+cannot hold two families. Over the 64 parts of Installation Tome 3, every
+association entry of the nine iFNDs matches exactly one record by type, id
+and family, and every part is matched once. Inside Macintosh: Text, *The
+Font Association Table*, is the table's layout (Text-271, fetched by
+`tools/fetch_references.sh`); FamRec's 52 bytes are multiversal's.
+
+**Graded (measured, 2026-11-11).** All nine families out of
+`tomeparts-wild-install3.bin` (the Tome with both forks, `hcopy -m` off the
+7.5.5 disk) equal the suitcases in that disk's Fonts folder: every `sfnt`
+and `NFNT` byte for byte, the FOND's header and tables but for the
+association table, whose ids the Installer renumbered and whose entries it
+sorted (Palatino's iFND lists italic before bold, as Hoefler Text's FOND
+lists bold italic before italic), and each file's length equal (`tools/run_tome.py`, section 4,
+with two controls). deark's `macrsrc` module, run in `tools/sandbox.py`,
+reads every resource of all 14 files the six specimens make (9 suitcases,
+5 files) as `tools/run_tome.py`'s own parser does: an independent reading of
+the map this engine writes. The four GX `ircp` files (`.tmp/ircp/`, not restorable
+here): every `sfnt` equal to the installed one, each FOND equal but for its
+association ids. `Compressed Network Items` (records against the 7.5.0 disk
+the update was installed on, Easy and Custom Install): 16 of its 32 records
+equal the installed resource at their stated id; 15 were installed from
+`Actualización Tomo 1`'s newer copy instead, 6 of them identical but for 4
+bytes of version string; `llc ` 52 was not installed (*what the Installer
+wrote*'s figures, corrected in place). The output's sniff: of the corpus's 1,015
+files and 5,648 others (`reference/`, the specimen cache, these outputs),
+only the six resource forks that hold parts change their answer.
+
+**The hosts.** An empty data fork makes the resource fork the archive: the
+CLI's sidecar (`NAME.rsrc` or `._NAME`) when the file it is given, or the
+one a layer wrote, is empty; the Mac shell's `OpenArchiveFork` in
+`RunExtract` and in the layer test. A Tome read from its data fork is
+followed by its resource fork, as a Tome without a sniff on the Mac (the
+sniffer has gone with the release, and the kept `ovl_zipold` answers
+UNC_ERR_FORMAT where there are no parts) and as a side layer in the CLI,
+which then deletes the envelope's output and renames a deferred write onto
+it, so `Compressed Network Items.bin` leaves the drivers under the
+package's own name. On the Mac that name is the package's too, so beside
+the package it takes the shell's `~1`. Not under the CLI's `--only`.
+
+**On a Macintosh (Mini vMac, System 6.0.8, 2026-11-11).** The autotest
+application, given a file with an empty data fork and Apple Chancery's
+resource fork, wrote one FFIL/DMOV suitcase whose resource fork is the
+CLI's but for the header bytes 16-127 the File Manager stamps (masked, as
+`vmac_check` masks them everywhere). The interactive application at 4 MB,
+`interactive.py --chain` on `tomeparts-wild-install3.bin`, took MacBinary,
+the Tome and its resource fork off in one operation: the 59 names the CLI
+writes, the nine suitcases among them, and the intermediate gone; the
+harness read MISMATCH only on five LaserWriter PPDs whose names hold a
+`/`, which the Mac keeps and the CLI writes `:` — the Tome's data fork,
+not this change. Mac OS 9 and System 7.5.5 not run.
+
+**The control lane** at System 6.0.8 / 512 KB refuses two more,
+`a2ps.V4.3.tar.Z` and `derived-PuzzleGetter_0.8.sit` (`run_tiers.py`,
+EXPECT), derived from the control's +4,800; the shipped lane's tallies do
+not move (74 / 72 / 72).
+
+**Price (measured).** `ovl_zipold` 21,970 → 26,070 (+4,100: the map's walk
+970 B, the writer 1,518 B, the dispatch, the families and the sort), `ovl_sniff` +400,
+the bundle 209,404 (with PackIt's +100 the same day). Shipped CODE +272, A5 +16: one `RunExtract` call site,
+looping over the two forks, because a second call site outlined it for
++440. Control CODE +4,800, A5 0: `OVL_SAVED` +4,512, `TIERS` −4,800,
+derived. Every grant 288 B lower, less its images' change (FORMATS.md,
+*What each format is granted*). Peak heap (CLI) 79,397 B for Tome 3's
+fork, 72,500 B for Hoefler Text's, under the Tome's grant. Deepest chain
+944 → 1,492 B (`tools/stack_depth.py`: the dispatch's frame holds a record
+and the writer an entry's info).
+
+**Consequence.** OPEN_ITEMS.md's item on 'part's is closed; the drivers'
+attributes and installed names (`drvr` 9 is `.MPP` installed and unnamed in
+its record) are the Installer script's, and not here.

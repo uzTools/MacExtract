@@ -4433,6 +4433,31 @@ static long gGapMark[4];
 #define GAP_MARK(i) ((void)0)
 #endif
 
+/* Which fork RunExtract reads: 0 the data fork, or the resource fork when
+ * the data fork is empty, and RunExtract then says so with 1; 2 the
+ * resource fork as a Tome's parts, without a sniff — a Tome's own
+ * resource fork, read after its data fork (src/fmt_tome.c, *Parts*). */
+static short gFork;
+
+/* The fork gFork names, and its length: for 0, the data fork, or the
+ * resource fork when the data fork is empty — an 'ircp' file's archive,
+ * whose parts the sniff recognises (DECISIONS.md 2026-11-11, *the parts
+ * the Installer expands*) — and gFork is then 1. */
+static OSErr OpenArchiveFork(short vol, long dir, ConstStr255Param name,
+                             short *ref, long *eof)
+{
+    OSErr err;
+    for (;;) {
+        err = MyOpenFork(vol, dir, name, fsRdPerm, gFork != 0, ref);
+        *eof = 0;
+        if (err != noErr) return err;
+        GetEOF(*ref, eof);
+        if (*eof > 0 || gFork != 0) return noErr;
+        FSClose(*ref);
+        gFork = 1;
+    }
+}
+
 static int RunExtract(short inVol, long inDir, ConstStr255Param name,
                       short outVol, long outDir,
                       short origVol, long origDir,
@@ -4470,10 +4495,9 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
      *     stays open for the whole extraction, including while output files
      *     are created on the same volume; UNC_AT_INTERLEAVE established that
      *     this is safe (see FileIO above). --- */
-    err = MyOpenFork(inVol, inDir, name, fsRdPerm, 0, &refNum);
+    if (gFork == 1) gFork = 0;
+    err = OpenArchiveFork(inVol, inDir, name, &refNum, &fileSize);
     if (err != noErr) return UNC_ERR_IO;
-    fileSize = 0;
-    GetEOF(refNum, &fileSize);
     if (fileSize <= 0) { FSClose(refNum); return UNC_ERR_FORMAT; }
     GAP_MARK(0);
 
@@ -4525,8 +4549,19 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
          * (DECISIONS.md 2026-11-08, *the scan made twice*). Over 7,276
          * files the two give every set part the same descriptor, byte
          * for byte. On a set, extractedAs is not read again. */
-        extractedAs = unc_sniff(&pio);
-        segOK = unc_segment_describe_as(&pio, extractedAs, &desc) == UNC_OK;
+        /* A Tome's resource fork, read after its data fork, is not
+         * sniffed: the sniffer went with the release, and the Tome's
+         * reader that was kept answers for the parts, or says there are
+         * none. */
+        if (gFork == 2) {
+            extractedAs = UNC_FORMAT_TOME;
+            segOK = 0;
+            famSplit = famZip = 0;
+        } else {
+            extractedAs = unc_sniff(&pio);
+            segOK = unc_segment_describe_as(&pio, extractedAs, &desc) ==
+                    UNC_OK;
+        }
         GAP_MARK(1);
         /* ...unless the file proves otherwise. A DiskDoubler `SPLT`
          * part carries its own index, count and identity, so a set
@@ -6538,10 +6573,34 @@ static void ExtractOne(short vRefNum, long dirID, ConstStr255Param name,
             /* Each layer counts its own bytes from zero, so the rate is
              * timed from where that layer started. */
             pr.startTicks = TickCount();
-            ret = RunExtract(curVol, curDir, curName, outVol, outDir,
-                             vRefNum, dirID,
-                             &prog, &entries, &errors, &shape);
-            if (depth == 0) outVol = gDestVol;
+            /* A Tome read from its data fork may hold parts in its
+             * resource fork — System 7.5.5's fonts are in Installation
+             * Tome 3's — and they come out beside its files, by a second
+             * pass over the same file; none is no error. One call site,
+             * so that RunExtract stays inlined here (two cost 440 B). */
+            gFork = 0;
+            for (;;) {
+                int e2, x2, r2;
+                r2 = RunExtract(curVol, curDir, curName, outVol, outDir,
+                                vRefNum, dirID, &prog, &e2, &x2,
+                                gFork == 2 ? NULL : &shape);
+                if (gFork == 2) {
+                    if (r2 != UNC_ERR_FORMAT) {
+                        ret = r2;
+                        entries += e2;
+                        errors += x2;
+                    }
+                    break;
+                }
+                ret = r2;
+                entries = e2;
+                errors = x2;
+                if (depth == 0) outVol = gDestVol;
+                if (ret != UNC_OK || errors || pr.cancelled || gFork != 0 ||
+                    shape.fmt != UNC_FORMAT_TOME)
+                    break;
+                gFork = 2;
+            }
             /* This layer worked, so the envelope it came out of is
              * litter now. Removed before the next layer runs, so a
              * chain does not leave a trail of intermediates. */
@@ -6580,9 +6639,9 @@ static void ExtractOne(short vRefNum, long dirID, ConstStr255Param name,
                 long eof = 0;
                 UncFormat inner;
 
-                if (MyOpenFork(outVol, shape.dirID, shape.name, fsRdPerm,
-                               0, &ref) != noErr) break;
-                GetEOF(ref, &eof);
+                gFork = 0;
+                if (OpenArchiveFork(outVol, shape.dirID, shape.name, &ref,
+                                    &eof) != noErr) break;
                 fio2.refNum = ref;
                 fio2.size = (uint32_t)eof;
                 fio2.pos = 0;

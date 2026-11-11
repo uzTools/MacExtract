@@ -1,13 +1,13 @@
 # PROGRESS.md — milestone status
 
 Every milestone is **DONE** and nothing is in flight; the current release is
-v0.45.0, and M74–M78 are on `main` after it. One line each: what it delivered,
+v0.45.0, and M74–M79 are on `main` after it. One line each: what it delivered,
 and where the detail lives. Numbers are in FORMATS.md, reasoning in
 DECISIONS.md, how a suite runs in TESTING.md, what is still missing in
 OPEN_ITEMS.md. A row is one sentence and a citation.
 
-**The suite is 992 fixtures**, byte-exact against `unar` and, where `unar`
-fails, `macunpack`; 9,920 robustness variants clean. The Macintosh tiers and
+**The suite is 993 fixtures**, byte-exact against `unar` and, where `unar`
+fails, `macunpack`; 9,930 robustness variants clean. The Macintosh tiers and
 their tallies are BLOCKERS.md's (*Status*); per-tier tables are FORMATS.md's.
 
 | Milestone | Delivered | Detail |
@@ -90,3 +90,4 @@ their tallies are BLOCKERS.md's (*Status*); per-tier tables are FORMATS.md's.
 | M76 A 64K ROM extracts | With the `Hard Disk 20` file's HFS a Macintosh 512K extracts, under emulation, for 0 B; a 400K MFS floppy in `dist/` | DECISIONS.md 2026-11-06 (*the floppy a 64K ROM reads*, *the two calls a 64K ROM lacks*), MANUAL_TESTS.md §6 |
 | M77 Apple Backup | A Performa's backup across floppies, read with disks missing; every fork of a restore CD's two complete sets (105 disks) and of two real partial sets as `unbak.py` writes it and every item's Finder info as Kaitai's parser reads it, both run in a sandbox; across three floppies on a one-drive Mac Plus; `OBDa`/`OBDc` in the bundle and an `OBBa` helper; 64 B off every budget | DECISIONS.md 2026-11-10 (*the backup on floppies*), FORMATS.md (*Apple Backup*) |
 | M78 Apple Installer Tomes | The archives Apple's Installer reads, System 7.5 to Mac OS 9: stored, InstaCompOne and text-codec blocks, from rusty-backup's write-up; every fork deark decodes and every file the 7.5.5 Installer installed, equal; `idcp` in the bundle and a `kakc` helper; 32 B off every budget | DECISIONS.md 2026-11-10 (*the archive the Installer reads*), FORMATS.md (*Apple Installer Tomes*) |
+| M79 Installer `'part'` resources | An `ircp` file's resource fork, and a Tome's, read as Tomes: each `iFND` a suitcase, every record at its stated id, the package's two resources dropped; System 7.5.5's nine families equal the installed suitcases but for the FOND's ids; `ircp` in the bundle; 288 B off every budget | DECISIONS.md 2026-11-11 (*the parts the Installer expands*), FORMATS.md (*Apple Installer Tomes*) |

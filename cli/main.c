@@ -2639,6 +2639,9 @@ typedef struct {
                                  * exit by the OS                        */
     char     pwbuf[UNC_PASSWORD_MAX + 2];   /* `-p -`, read once per run */
     int      pw_read;
+    int      side_ret;          /* a Tome's resource fork, read beside it:
+                                 * its exit code, 0 if none or clean     */
+    int      is_side;
 } LayerState;
 
 /* One layer's own plumbing: the engine's callbacks and what they hold. */
@@ -2655,6 +2658,9 @@ typedef struct {
     UncPasswordSource pwsrc;
     UncFormat   fmt;
     int         ret;            /* what the engine returned */
+    char        rfile[PATHBUF]; /* the file's resource fork, when that is
+                                 * what is read (parts_sidecar)          */
+    const char *hint;           /* then the file's own name, for the hint */
 } Layer;
 
 /* run_layer's answer when the chain goes on. */
@@ -2667,6 +2673,37 @@ static void fio_bind(UncIO *io, FileIO *f)
     io->seek = fio_seek;
     io->tell = fio_tell;
     io->size = fio_size;
+}
+
+/* A file's resource fork holding Installer parts (src/fmt_tome.c,
+ * *Parts*): its sidecar under either spelling, if it sniffs as a Tome.
+ * Copies the sidecar's path into `out` and returns 1, or returns 0. An
+ * 'ircp' file's data fork is empty and its resource fork is the archive;
+ * a Tome's own resource fork can hold parts beside the files its data
+ * fork holds (DECISIONS.md 2026-11-11, *the parts the Installer
+ * expands*). */
+static int parts_sidecar(const char *path, int hidden, char *out)
+{
+    int which;
+    for (which = 0; which < 2; which++) {
+        struct stat st;
+        FileIO pf;
+        UncIO pio;
+        UncFormat f;
+        if (rsrc_path(path, which == 0 ? hidden : !hidden, out, PATHBUF))
+            continue;
+        if (stat(out, &st) != 0 || !S_ISREG(st.st_mode) || st.st_size <= 0)
+            continue;
+        memset(&pf, 0, sizeof pf);
+        if (!(pf.f = fopen(out, "rb"))) continue;
+        pf.size = (unc_off_t)st.st_size;
+        fio_bind(&pio, &pf);
+        f = unc_sniff(&pio);
+        fclose(pf.f);
+        if (f == UNC_FORMAT_TOME) return 1;
+    }
+    out[0] = 0;
+    return 0;
 }
 
 /* Parse argv into `a`. Returns LAYER_NEXT to run, or the exit code. */
@@ -2778,6 +2815,8 @@ static void st_protect(LayerState *st, DiskSink *s)
     s->unwrap_rsrc = st->delrsrc;
     s->reading = st->kept;
     read_add(&s->reading, st->curfile);
+    if (strcmp(s->archive, st->curfile) != 0)   /* its resource fork */
+        read_add(&s->reading, s->archive);
     if (st->depth == 0) read_add(&st->kept, st->curfile);
 }
 
@@ -2847,6 +2886,12 @@ static UncFormat st_next_format(const CliArgs *a, const LayerState *st,
         fio_bind(&pio, &pio_f);
         next = unc_sniff(&pio);
         fclose(pf);
+        /* An empty data fork: the resource fork may be the archive. */
+        if (next == UNC_FORMAT_UNKNOWN && pio_f.size == 0) {
+            char rp[PATHBUF];
+            if (parts_sidecar(s->last_ok_at, a->hidden_forks, rp))
+                next = UNC_FORMAT_TOME;
+        }
     }
     return next;
 }
@@ -3014,10 +3059,14 @@ static int layer_format(const CliArgs *a, const LayerState *st, Layer *L)
  * its last extension, unar-style. */
 static void layer_name_hint(Layer *L)
 {
-    const char *base = strrchr(L->file, '/');
+    const char *file = L->hint ? L->hint : L->file;
+    const char *base = strrchr(file, '/');
     const char *dot;
-    base = base ? base + 1 : L->file;
+    base = base ? base + 1 : file;
     dot = strrchr(base, '.');
+    /* A resource fork read for its parts is named after its file, whose
+     * name is the package's, extension and all. */
+    if (L->hint) dot = NULL;
     /* SpaceSaver compresses a file in place and adds no extension,
      * so the whole basename is the name — stripping one here would
      * eat a real ".txt". */
@@ -3638,6 +3687,14 @@ static int run_layer(const CliArgs *a, LayerState *st)
 
     memset(&L, 0, sizeof L);
     L.file = st->curfile;
+    /* An empty data fork whose resource fork holds parts: that fork is
+     * the archive (an 'ircp' file), under the file's own name. */
+    if (!st_forced(a, st) && stat(L.file, &st_in) == 0 &&
+        S_ISREG(st_in.st_mode) && st_in.st_size == 0 &&
+        parts_sidecar(L.file, a->hidden_forks, L.rfile)) {
+        L.hint = L.file;
+        L.file = L.rfile;
+    }
     L.fio.f = fopen(L.file, "rb");
     if (!L.fio.f) {
         fprintf(stderr, "macextract: %s: %s\n", L.file, strerror(errno));
@@ -3654,6 +3711,37 @@ static int run_layer(const CliArgs *a, LayerState *st)
         fprintf(stderr, "alloc: high-water %u bytes, %u refused\n",
                 L.ba.high_water, L.ba.failed);
     if (layer_verdict(a, st, &L)) return 1;
+
+    /* A Tome's own resource fork may hold parts — System 7.5.5's fonts
+     * are in Installation Tome 3's — and they come out beside the files,
+     * read as a layer of their own before this one's input is deleted.
+     * Not under --only, whose names are the data fork's entries. */
+    if (L.fmt == UNC_FORMAT_TOME && !L.hint && !st->is_side && !a->nonly) {
+        static LayerState side;
+        int sret;
+        memset(&side, 0, sizeof side);
+        if (parts_sidecar(L.file, a->hidden_forks, side.curfile)) {
+            side.depth = st->depth + 1;
+            side.kept = st->kept;
+            side.longname = st->longname;
+            side.is_side = 1;
+            /* Under an envelope, the file both forks came out of is
+             * litter now, and its archive-named file is the parts' to
+             * replace: the deletion is the side layer's, which defers a
+             * write onto either path as any layer does. */
+            if (st->delfile[0] && !L.sink.deferred[0] &&
+                !L.sink.deferred[1]) {
+                memcpy(side.delfile, st->delfile, sizeof side.delfile);
+                memcpy(side.delrsrc, st->delrsrc, sizeof side.delrsrc);
+                st->delfile[0] = 0;
+                st->delrsrc[0] = 0;
+            }
+            if (a->verbose)
+                fprintf(stderr, "and its resource fork: %s\n", side.curfile);
+            sret = run_layer(a, &side);
+            if (sret != 0 && sret != LAYER_NEXT) st->side_ret = sret;
+        }
+    }
 
     st_drop_previous(st, &L.sink);
     next = st_next_format(a, st, L.fmt, &L.sink);
@@ -3692,7 +3780,7 @@ static int cli_main(int argc, char **argv)
     if ((ret = parse_args(argc, argv, &a)) != LAYER_NEXT) return ret;
     if (st_init(&st, &a)) return 1;
     do ret = run_layer(&a, &st); while (ret == LAYER_NEXT);
-    return ret;
+    return ret ? ret : st.side_ret;
 }
 
 /* A listing is the output of `l`, and one sent to a full disk is as lost

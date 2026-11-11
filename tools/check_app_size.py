@@ -313,9 +313,13 @@ TAKEN = "2026-11-03"
 # -> 204,520 the same day: the Installer Tome, its reader in `ovl_zipold`
 # (+3,214) and its probe in `ovl_sniff` (+168) (DECISIONS.md 2026-11-10,
 # *the archive the Installer reads*).
-EXPECT_BUNDLE = 204520
+# -> 209,404 2026-11-11: an Installer Tome's 'part' resources, their reader
+# in `ovl_zipold` (+4,100) and the probe's resource-fork case in
+# `ovl_sniff` (+400), with the stored spans' +296 and PackIt's +100 of the same day
+# (DECISIONS.md 2026-11-11, *the parts the Installer expands*).
+EXPECT_BUNDLE = 209404
 TOLERANCE_BUNDLE = 2048
-TAKEN_BUNDLE = "2026-11-10"
+TAKEN_BUNDLE = "2026-11-11"
 
 
 def main():

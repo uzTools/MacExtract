@@ -14,4 +14,10 @@
 #define TOME_HDR     0x24u         /* the header, and where the records start */
 #define TOME_REC     0x80u         /* one record */
 
+/* A resource fork holding 'part' resources (fmt_tome.c, *Parts*). */
+#define TOME_PART    0x70617274u   /* 'part' */
+#define TOME_PARTVER 2u            /* the word at 0x10 of a part's Tome */
+#define TOME_RMAP    30u           /* a resource map's header and type count */
+#define TOME_PTYPES  28u           /* the type entries the probe reads */
+
 #endif

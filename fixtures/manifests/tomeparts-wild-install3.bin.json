@@ -1,0 +1,19 @@
+{
+ "entries": [
+  {
+   "creator": "kakc",
+   "data_sha256": "5f87b259ed4c8a0e66a48b939a624543201cec1391d156b5e1572c3a1b4955ea",
+   "data_size": 491170,
+   "finder_flags": 1280,
+   "name": "Installation Tome 3",
+   "rsrc_sha256": "e33cecf5d0cbb5555fb9f52f146b1ed48076e6db06543dfc8a19def0b18dd8df",
+   "rsrc_size": 890345,
+   "type": "idcp"
+  }
+ ],
+ "fixture": "tomeparts-wild-install3.bin",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "sha256": "2e01fa92a37b4e94696428ffd5a3ad731b0bfcc25bef4c54cf6de357b6d1785d",
+ "size": 1381760
+}

@@ -283,10 +283,13 @@ REPO = os.path.dirname(HERE)
 # control's CODE -96 and A5 0; the shipped pair fell the same 96, OVL_SAVED
 # unmoved. They were 190,276 / 94,894 / 619,182.
 TIERS = {
-    "sys3-512K": (183560, "System 3.0, Macintosh 512Ke (204,168 B free)"),
-    "sys6-512K": (88156,  "System 6.0.8, Macintosh 512Ke (108,764 B free)"),
-    "floor-1M":  (612444, "System 6.0.8, 1 MB Mac Plus — the floor target"),
+    "sys3-512K": (178760, "System 3.0, Macintosh 512Ke (204,168 B free)"),
+    "sys6-512K": (83356,  "System 6.0.8, Macintosh 512Ke (108,764 B free)"),
+    "floor-1M":  (607644, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
+# -4,800 each 2026-11-11, DERIVED from TIERS_CONTROL +4,800 (an Installer
+# Tome's 'part' resources, DECISIONS.md 2026-11-11, *the parts the Installer
+# expands*); they were 183,560 / 88,156 / 612,444.
 # -128 each 2026-11-11, DERIVED from TIERS_CONTROL +128 (PackIt's stored
 # entries copied a span at a time, DECISIONS.md 2026-11-11, *the stored bytes read one at a time*); they were 183,688 / 88,284 /
 # 612,572.
@@ -573,7 +576,12 @@ TIERS = {
 # in this build; DECISIONS.md 2026-11-10, *the archive the Installer
 # reads*). TIERS -3,408 and OVL_SAVED +3,376: every grant 32 B lower, less
 # its images' change.
-TIERS_CONTROL = 230544     # build/mac-resident, CODE + A5, 2026-11-11
+# +4,800 2026-11-11: an Installer Tome's 'part' resources, their reader
+# and the probe's resource-fork case (`ovl_zipold` +4,100, `ovl_sniff`
+# +400; CODE +4,800, A5 0; DECISIONS.md 2026-11-11, *the parts the
+# Installer expands*). TIERS -4,800 and OVL_SAVED +4,512: every grant 288 B
+# lower, less its images' change.
+TIERS_CONTROL = 235344     # build/mac-resident, CODE + A5, 2026-11-11
 # +128 2026-11-11: PackIt's stored entries copied a span at a time
 # (`ovl_packit` +98; CODE +100, A5 +28, alignment: the change has no data;
 # DECISIONS.md 2026-11-11, *the stored bytes read one at a time*); TIERS -128 and OVL_SAVED +128, which cancel: only a packit-keeper
@@ -797,6 +805,7 @@ SHORT = re.compile(r"at least (\d+) bytes more memory")
 # (DECISIONS.md 2026-10-11, *the constant was a square*).
 # 64 -> 63 at sys6-512K on 2026-11-02, DERIVED: `derived-PuzzleGetter_0.8.sit`
 # (below). 63 -> 64 on 2026-11-03, DERIVED: it left again.
+# 64 -> 62 at sys6-512K on 2026-11-11, DERIVED: the 'part' resources (below).
 EXPECT = {
     "floor-1M": (),
     "sys3-512K": ("derived-Cool_Tools__.sit",
@@ -823,7 +832,13 @@ EXPECT = {
                   # control 10,176 B back, and this one needed less than
                   # that (DECISIONS.md 2026-10-22, *the names in the code*).
                   "derived-a2basic.dmg.sit", "popper-1.7.tar.Z",
-                  "synth-dd-m5.dd"),
+                  "synth-dd-m5.dd",
+                  # Both joined 2026-11-11, DERIVED: the control grew
+                  # 4,800 B with an Installer Tome's 'part' resources,
+                  # every reader resident in it. The shipped lane does
+                  # not move (DECISIONS.md 2026-11-11, *the parts the
+                  # Installer expands*).
+                  "a2ps.V4.3.tar.Z", "derived-PuzzleGetter_0.8.sit"),
 }
 
 # ---------------------------------------------------------------------------
@@ -1318,7 +1333,13 @@ EXPECT = {
 # a time, the control's +128 (CODE +100, A5 +28) against the shipped pair's
 # 0; the code in `ovl_packit` (+98; DECISIONS.md 2026-11-11, *the stored bytes read one at a time*). TIERS -128, which cancels: only a
 # packit-keeper's budget moves, -98.
-OVL_SAVED = 175952
+# **+4,512 2026-11-11, -> 180,464**: an Installer Tome's 'part'
+# resources, the control's +4,800 (CODE +4,800, A5 0) against the shipped
+# pair's +288 (CODE +272: the resource fork as the archive, and a Tome's
+# read after its data fork; A5 +16); `ovl_zipold` +4,100, `ovl_sniff` +400
+# (DECISIONS.md 2026-11-11, *the parts the Installer expands*). TIERS
+# -4,800: every grant moves by -288 less its images' change.
+OVL_SAVED = 180464
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
 # every kept image is one — as is the bundle an envelope holds on to.
@@ -1473,8 +1494,8 @@ IMAGES = {
     "OVL_ID_SQP":         1736,
     "OVL_ID_SUPERDISK":   6628,
     "OVL_ID_TEXT":        11438,
-    "OVL_ID_ZIPOLD":      21970,
-    "OVL_ID_SNIFF":       17016,
+    "OVL_ID_ZIPOLD":      26070,
+    "OVL_ID_SNIFF":       17416,
     "OVL_ID_DESTDLG":     1688,
     "OVL_ID_SEGSETUP":    2434,
 }
@@ -1654,7 +1675,11 @@ IMAGES = {
 # calling the application's (DECISIONS.md 2026-11-11, *the glue the shell expands*).
 # **PACKIT +98, the bundle +100 B, 2026-11-11**: PackIt's stored entries
 # copied a span at a time (DECISIONS.md 2026-11-11, *the stored bytes read one at a time*).
-BUNDLE = 204904
+# **ZIPOLD +4,100, SNIFF +400, the bundle +4,500 B, 2026-11-11**: an
+# Installer Tome's 'part' resources, their reader in ZIPOLD and the probe's
+# resource-fork case in SNIFF (DECISIONS.md 2026-11-11, *the parts the
+# Installer expands*).
+BUNDLE = 209404
 
 # What the SHIPPED lane asserts, and it is the refused fixtures BY NAME
 # rather than a tally: a tier that refuses two different fixtures and still

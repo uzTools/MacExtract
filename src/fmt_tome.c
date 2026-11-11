@@ -59,8 +59,8 @@
  * against what Apple's Installer installed for the rest (FORMATS.md,
  * *Apple Installer Tomes*).
  *
- * Not read: the Tomes QuickDraw GX keeps in 'part' resources of a Tome's
- * resource fork (OPEN_ITEMS.md).
+ * A RESOURCE FORK holding 'part' resources — each one a Tome of its own,
+ * version 2 — is read here too: *Parts*, below.
  *
  * Memory: a ring that is the window and the output's staging at once, as
  * fmt_lz4.c's, sized for each fork before it starts: the window starts
@@ -394,6 +394,470 @@ static int tome_fork(Tome *t, UncFork fork, uint32_t at, uint32_t clen,
     return consumed == clen ? UNC_OK : UNC_ERR_CORRUPT;
 }
 
+/* ------------------------------------------------------------------ */
+/* Parts                                                              */
+/*                                                                    */
+/* A 'part' resource is a Tome of version 2 (the word at 0x10), each  */
+/* of whose records is one RESOURCE: +0x06 the id it is meant to have, */
+/* +0x08 its type, +0x0c its name (a Pascal string, 65 bytes at most  */
+/* before +0x4e), +0x4e one stream as a fork's (its length, offset    */
+/* from the part's first byte, the stream's length, a checksum). The  */
+/* Installer keeps them in an 'ircp' file's resource fork (QuickDraw   */
+/* GX's fonts, AppleTalk's drivers) and in a Tome's own (System 7.5.5's */
+/* fonts). What it writes from one is MEASURED: every one of 37 font   */
+/* resources and 22 of 32 driver records is this engine's decoding at  */
+/* the id the record states, a font given a new id when installed     */
+/* (DECISIONS.md 2026-11-11, *what the Installer wrote*).              */
+/*                                                                    */
+/* So such a fork is read as a set of resource files, rebuilt and      */
+/* streamed: every resource kept as it is, every part's records       */
+/* expanded under the ids they state — no renumbering, and `STR `      */
+/* -16397 and `vers` 2 dropped, the package's and not the font's (the  */
+/* maintainer, 2026-11-11). An `iFND` is a FOND whose association      */
+/* table names placeholder ids (measured: System 7.5.5's nine are the   */
+/* FONDs the Installer writes but for those ids), so each comes out as */
+/* a suitcase of its own, FFIL/DMOV, named by the resource: the iFND   */
+/* retyped FOND and, for each association entry, the one part record  */
+/* of its type (size 0 an 'sfnt', else an 'NFNT') and id whose part's  */
+/* own id is of the family — that id mod 32 for an outline, mod 64 for */
+/* a bitmap, MEASURED on all 64 parts of System 7.5.5's fonts, each    */
+/* matched exactly once (DECISIONS.md 2026-11-11, *the parts the       */
+/* Installer expands*). Placeholder ids repeat across families, which  */
+/* is why each family is its own file. Everything else is one more     */
+/* file, named after the archive (the host's name hint, as the         */
+/* Installer names the font it installs), FFIL/DMOV if it holds a FOND  */
+/* and rsrc/RSED otherwise — written only when it holds a part's       */
+/* record, so a Tome's icons and version alone make nothing. A record  */
+/* states no attributes, so its resource has none; its name is the    */
+/* record's.                                                          */
+/*                                                                    */
+/* Source: the resource fork's header, map, type list and reference    */
+/* list are Inside Macintosh: More Macintosh Toolbox, "Resource File   */
+/* Format" (as src/unc_crypt.c transcribes them); the FOND's 52-byte   */
+/* header is FamRec (multiversal's Multiverse.h) and the association   */
+/* table after it — a count less one, then size, style and id —        */
+/* Inside Macintosh: Text, "The Font Association Table"                */
+/* (reference/notes/im_text_fond.txt, fetched by                       */
+/* tools/fetch_references.sh). The 'part' layout is DERIVED from the   */
+/* specimens, not transcribed: no document of it is known.             */
+/*                                                                    */
+/* Memory: the map, at most 64 KB; one TomeRes per resource out, at    */
+/* most TOME_MAXRES; the names they carry; and the Tome reader's own   */
+/* buffers, once.                                                     */
+/* ------------------------------------------------------------------ */
+
+#define TOME_MAXRES 1024u
+#define TOME_MAPMAX 65536u
+#define TOME_IFND 0x69464E44u   /* 'iFND' */
+#define TOME_FOND 0x464F4E44u   /* 'FOND' */
+#define TOME_SFNT 0x73666E74u   /* 'sfnt' */
+#define TOME_NFNT 0x4E464E54u   /* 'NFNT' */
+#define TOME_GREST 0xFFFFu      /* the archive's own file */
+#define TOME_GDROP 0xFFFEu      /* the package's, not written */
+#define TOME_NONAME 0xFFFFu
+
+typedef struct {
+    uint32_t type;
+    uint32_t at;       /* a plain resource's data, or a record's stream */
+    uint32_t len;      /* its bytes out */
+    uint32_t clen;     /* a record's stream length; 0 for plain */
+    int16_t  id;
+    int16_t  pid;      /* a record's part's id */
+    uint16_t name;     /* into the names, or TOME_NONAME */
+    uint16_t group;    /* the iFND's suitcase, TOME_GREST or TOME_GDROP */
+    uint16_t key;      /* the index of its type's first resource */
+    uint8_t  attr;
+    uint8_t  part;     /* 1: a record */
+} TomeRes;
+
+typedef struct {
+    UncCtx  *c;
+    TomeRes *r;
+    uint32_t n;
+    uint8_t *names;
+    uint32_t nlen, ncap;
+} TomeParts;
+
+/* Out of line: the map is a dozen of these, and each inlined is longer
+ * than the call. */
+static UNC_NOINLINE void tome_put16(uint8_t *p, uint32_t v)
+{
+    p[0] = (uint8_t)(v >> 8);
+    p[1] = (uint8_t)v;
+}
+
+static UNC_NOINLINE void tome_put32(uint8_t *p, uint32_t v)
+{
+    tome_put16(p, v >> 16);
+    tome_put16(p + 2, v);
+}
+
+static int tome_out(UncCtx *c, const uint8_t *p, uint32_t n)
+{
+    if (c->opt.test_only) return UNC_OK;
+    return c->sink->write(c->sink->ctx, UNC_FORK_RSRC, p, (int32_t)n) < 0
+           ? UNC_ERR_SINK : UNC_OK;
+}
+
+static uint16_t tome_name(TomeParts *P, const uint8_t *s, uint32_t len)
+{
+    uint32_t at = P->nlen, i;
+    if (len == 0) return TOME_NONAME;
+    if (len > 255u || at + 1u + len > P->ncap || at + 1u + len > 0xFFFEu)
+        return TOME_NONAME;
+    P->names[at] = (uint8_t)len;
+    for (i = 0; i < len; i++) P->names[at + 1u + i] = s[i];
+    P->nlen = at + 1u + len;
+    return (uint16_t)at;
+}
+
+/* The resources of the map, records expanded; `fill` 0 only counts them
+ * (into *n, and the records into *nrec). */
+static int tome_parts_scan(TomeParts *P, const uint8_t *map, uint32_t mlen,
+                           uint32_t doff, int fill, uint32_t *n,
+                           uint32_t *nrec)
+{
+    UncCtx *c = P->c;
+    uint32_t tl = unc_get_u16be(map + 24), nl = unc_get_u16be(map + 26);
+    uint32_t nt, i, k, out = 0, recs = 0;
+
+    if (tl + 2u > mlen) return UNC_ERR_CORRUPT;
+    nt = (unc_get_u16be(map + tl) + 1u) & 0xFFFFu;
+    if (tl + 2u + 8u * nt > mlen) return UNC_ERR_CORRUPT;
+    for (i = 0; i < nt; i++) {
+        const uint8_t *te = map + tl + 2 + 8 * i;
+        uint32_t ty = unc_get_u32be(te), cnt = unc_get_u16be(te + 4) + 1u;
+        uint32_t ro = tl + unc_get_u16be(te + 6);
+        if (ro + 12u * cnt > mlen) return UNC_ERR_CORRUPT;
+        for (k = 0; k < cnt; k++) {
+            const uint8_t *ref = map + ro + 12 * k;
+            uint32_t at = doff + ((uint32_t)ref[5] << 16 |
+                                  unc_get_u16be(ref + 6));
+            uint8_t b[TOME_HDR];
+            uint32_t len, nr = 1, j;
+            if (unc_read_at(c->io, at, b, 4) != UNC_OK)
+                return UNC_ERR_TRUNCATED;
+            len = unc_get_u32be(b);
+            if (ty == TOME_PART) {
+                if (len < TOME_HDR ||
+                    unc_read_at(c->io, at + 4u, b, (int32_t)TOME_HDR) != UNC_OK)
+                    return UNC_ERR_TRUNCATED;
+                if (unc_get_u32be(b) != TOME_MAGIC ||
+                    unc_get_u16be(b + 0x10) != TOME_PARTVER)
+                    return UNC_ERR_UNSUPPORTED;
+                nr = unc_get_u16be(b + 0x1a);
+                if (nr == 0 || TOME_HDR + nr * TOME_REC > len)
+                    return UNC_ERR_CORRUPT;
+            }
+            if (out + nr > TOME_MAXRES) return UNC_ERR_TOOLARGE;
+            if (!fill) {
+                out += nr;
+                if (ty == TOME_PART) recs += nr;
+                continue;
+            }
+            for (j = 0; j < nr; j++) {
+                TomeRes *r;
+                if (out >= P->n) return UNC_ERR_CORRUPT;
+                r = &P->r[out++];
+                r->type = ty;
+                r->id = (int16_t)unc_get_u16be(ref);
+                r->attr = ref[4];
+                r->at = at + 4u;
+                r->len = len;
+                r->clen = 0;
+                r->part = 0;
+                r->pid = r->id;
+                r->name = TOME_NONAME;
+                r->group = TOME_GREST;
+                if (ty == TOME_PART) {
+                    uint8_t rec[TOME_REC];
+                    uint32_t so, sl;
+                    if (unc_read_at(c->io, at + 4u + TOME_HDR + j * TOME_REC,
+                                    rec, (int32_t)TOME_REC) != UNC_OK)
+                        return UNC_ERR_TRUNCATED;
+                    r->part = 1;
+                    r->attr = 0;
+                    r->id = (int16_t)unc_get_u16be(rec + 6);
+                    r->type = unc_get_u32be(rec + 8);
+                    r->name = tome_name(P, rec + 13,
+                                        rec[12] > 65u ? 65u : rec[12]);
+                    r->len = unc_get_u32be(rec + 0x4e);
+                    so = unc_get_u32be(rec + 0x52);
+                    sl = unc_get_u32be(rec + 0x56);
+                    if (r->len > UNC_MAC_MAX || so > len || sl > len - so)
+                        return UNC_ERR_CORRUPT;
+                    r->at = at + 4u + so;
+                    r->clen = sl;
+                    /* An empty stream is an empty resource. */
+                    if (sl == 0) r->len = 0;
+                } else {
+                    uint32_t no = unc_get_u16be(ref + 2);
+                    if (no != 0xFFFFu && nl + no < mlen) {
+                        uint32_t sl = map[nl + no];
+                        if (nl + no + 1u + sl <= mlen)
+                            r->name = tome_name(P, map + nl + no + 1, sl);
+                    }
+                    /* The package's, not the font's (the maintainer,
+                     * 2026-11-11): the Finder's "use the Installer"
+                     * message and the package's version. */
+                    if ((ty == 0x53545220u && r->id == -16397) ||
+                        (ty == 0x76657273u && r->id == 2))
+                        r->group = TOME_GDROP;
+                }
+            }
+        }
+    }
+    *n = out;
+    if (nrec) *nrec = recs;
+    return UNC_OK;
+}
+
+/* Each iFND's family: its own suitcase, number `g`, of the records its
+ * association table names. An entry no record answers, or two do, takes
+ * none, and those records stay in the archive's own file. */
+static int tome_parts_family(TomeParts *P, uint32_t fi, uint16_t g)
+{
+    UncCtx *c = P->c;
+    TomeRes *f = &P->r[fi];
+    uint8_t b[6];
+    uint32_t na, i, k;
+
+    f->type = TOME_FOND;
+    f->group = g;
+    if (f->len < 54u) return UNC_OK;
+    if (unc_read_at(c->io, f->at + 52u, b, 2) != UNC_OK)
+        return UNC_ERR_TRUNCATED;
+    na = unc_get_u16be(b) + 1u;
+    if (na > TOME_MAXRES || 54u + 6u * na > f->len) return UNC_OK;
+    for (i = 0; i < na; i++) {
+        uint32_t want, hit = 0, fam;
+        int16_t id;
+        if (unc_read_at(c->io, f->at + 54u + 6u * i, b, 6) != UNC_OK)
+            return UNC_ERR_TRUNCATED;
+        want = unc_get_u16be(b) == 0 ? TOME_SFNT : TOME_NFNT;
+        id = (int16_t)unc_get_u16be(b + 4);
+        for (k = 0; k < P->n; k++) {
+            const TomeRes *r = &P->r[k];
+            fam = (uint16_t)r->pid & (want == TOME_SFNT ? 31u : 63u);
+            if (r->part && r->group == TOME_GREST && r->type == want &&
+                r->id == id && fam == ((uint16_t)f->id & 0xFFFFu)) {
+                if (hit) { hit = 0; break; }
+                hit = k + 1u;
+            }
+        }
+        if (hit) P->r[hit - 1u].group = g;
+    }
+    return UNC_OK;
+}
+
+/* Same types together, each where its first resource was: a stable
+ * insertion sort on the index of a type's first resource, so that any
+ * one file's resources, read in order, are its map's order. */
+static void tome_parts_sort(TomeParts *P)
+{
+    uint32_t i, k;
+    for (i = 0; i < P->n; i++) {
+        for (k = 0; k < i && P->r[k].type != P->r[i].type; k++) ;
+        P->r[i].key = (uint16_t)k;
+    }
+    for (i = 1; i < P->n; i++) {
+        TomeRes x = P->r[i];
+        for (k = i; k > 0 && P->r[k - 1u].key > x.key; k--)
+            P->r[k] = P->r[k - 1u];
+        P->r[k] = x;
+    }
+}
+
+/* One resource file: the resources of group `g`, header, data and map,
+ * streamed. Same types are together (tome_parts_sort), so the data is in
+ * the map's order and every offset is a running sum. */
+static int tome_parts_write(TomeParts *P, Tome *t, uint8_t *ibuf,
+                            uint16_t g, const uint8_t *name,
+                            uint32_t namelen)
+{
+    UncCtx *c = P->c;
+    UncEntryInfo e;
+    uint8_t h[16], b[16];
+    uint32_t i, k, nr = 0, nt = 0, dlen = 0, nlen = 0, clen = 0, mlen;
+    uint32_t refat, at, last = 0, run;
+    int fond = 0, est = UNC_OK, sret, pass;
+
+    for (i = 0; i < P->n; i++) {
+        const TomeRes *r = &P->r[i];
+        if (r->group != g) continue;
+        if (nr == 0 || r->type != last) nt++;
+        last = r->type;
+        nr++;
+        for (k = 0; k < i; k++)
+            if (P->r[k].group == g && P->r[k].type == r->type &&
+                P->r[k].id == r->id)
+                est = UNC_ERR_UNSUPPORTED;   /* two of one id: no file */
+        /* A resource fork's data offsets are 24 bits. */
+        if (r->len > 0xFFFFFBu || dlen > 0xFFFFFBu - r->len)
+            est = UNC_ERR_TOOLARGE;
+        else
+            dlen += 4u + r->len;
+        clen += r->part ? r->clen : r->len;
+        if (r->name != TOME_NONAME) nlen += 1u + P->names[r->name];
+        if (r->type == TOME_FOND) fond = 1;
+    }
+    mlen = 30u + 8u * nt + 12u * nr + nlen;
+    if (mlen - nlen > 0xFFFFu) est = UNC_ERR_TOOLARGE;
+
+    unc_entry_clear(&e);
+    if (namelen) unc_entry_set_name(&e, name, namelen);
+    e.type = fond ? 0x4646494Cu : 0x72737263u;      /* FFIL, rsrc */
+    e.creator = fond ? 0x444D4F56u : 0x52534544u;   /* DMOV, RSED */
+    e.data_size = 0;
+    e.comp_data_size = 0;
+    e.rsrc_size = 256u + dlen + mlen;
+    e.comp_rsrc_size = clen;
+
+    sret = c->sink->begin_entry(c->sink->ctx, &e);
+    if (sret < 0) return UNC_ERR_SINK;
+    if (sret > 0) return UNC_OK;
+    if (c->opt.list_only || est != UNC_OK) goto end;
+
+    /* The header, and the rest of its 256 bytes zeros. */
+    tome_put32(h, 256u);
+    tome_put32(h + 4, 256u + dlen);
+    tome_put32(h + 8, dlen);
+    tome_put32(h + 12, mlen);
+    if ((est = tome_out(c, h, 16)) != UNC_OK) goto end;
+    for (i = 0; i < sizeof b; i++) b[i] = 0;
+    for (i = 16; i < 256 && est == UNC_OK; i += 16) est = tome_out(c, b, 16);
+
+    /* The data. */
+    for (i = 0; i < P->n && est == UNC_OK; i++) {
+        const TomeRes *r = &P->r[i];
+        if (r->group != g) continue;
+        tome_put32(b, r->len);
+        if ((est = tome_out(c, b, 4)) != UNC_OK) break;
+        if (r->part) {
+            if (r->len)
+                est = tome_fork(t, UNC_FORK_RSRC, r->at, r->clen, r->len,
+                                ibuf);
+        } else if (c->io->seek(c->io->ctx, r->at) < 0) {
+            est = UNC_ERR_IO;
+        } else {
+            est = unc_copy_fork(c, UNC_FORK_RSRC, r->len, ibuf, UNC_IOBUF);
+        }
+    }
+
+    /* The map: the header again; no handle, file or attributes; the
+     * type list's and name list's offsets; the type count less one. */
+    if (est == UNC_OK) est = tome_out(c, h, 16);
+    if (est == UNC_OK) {
+        for (i = 0; i < 8; i++) b[i] = 0;
+        b[9] = 28;
+        b[8] = 0;
+        tome_put16(b + 10, mlen - nlen);
+        tome_put16(b + 12, nt - 1u);
+        est = tome_out(c, b, 14);
+    }
+    /* Then pass 0, the type list; pass 1, the references; pass 2, the
+     * names. */
+    for (pass = 0; pass < 3 && est == UNC_OK; pass++) {
+        refat = 2u + 8u * nt;
+        at = 0;
+        nlen = 0;
+        for (i = 0; i < P->n && est == UNC_OK; i++) {
+            const TomeRes *r = &P->r[i];
+            if (r->group != g) continue;
+            if (pass == 0) {
+                if (i > 0 && at && r->type == last) continue;
+                for (k = i, run = 0; k < P->n; k++)
+                    if (P->r[k].group == g) {
+                        if (P->r[k].type != r->type) break;
+                        run++;
+                    }
+                tome_put32(b, r->type);
+                tome_put16(b + 4, run - 1u);
+                tome_put16(b + 6, refat);
+                refat += 12u * run;
+                last = r->type;
+                at = 1;
+                est = tome_out(c, b, 8);
+            } else if (pass == 1) {
+                tome_put16(b, (uint16_t)r->id);
+                tome_put16(b + 2, r->name == TOME_NONAME ? 0xFFFFu : nlen);
+                tome_put32(b + 4, (uint32_t)r->attr << 24 | at);
+                tome_put32(b + 8, 0);
+                if (r->name != TOME_NONAME) nlen += 1u + P->names[r->name];
+                at += 4u + r->len;
+                est = tome_out(c, b, 12);
+            } else if (r->name != TOME_NONAME) {
+                est = tome_out(c, P->names + r->name, 1u + P->names[r->name]);
+            }
+        }
+    }
+end:
+    if (c->sink->end_entry(c->sink->ctx, est) < 0) return UNC_ERR_SINK;
+    return unc_fatal(est) ? est : UNC_OK;
+}
+
+/* A resource fork holding parts, its 16-byte header in `h`. */
+static int tome_parts(UncCtx *c, Tome *t, uint8_t *ibuf, const uint8_t *h)
+{
+    TomeParts P;
+    uint8_t *map;
+    uint32_t doff = unc_get_u32be(h), moff = unc_get_u32be(h + 4);
+    uint32_t mlen = unc_get_u32be(h + 12), n = 0, nrec = 0, i;
+    uint16_t g = 0;
+    int err, rest = 0;
+
+    if (mlen < TOME_RMAP || mlen > TOME_MAPMAX) return UNC_ERR_FORMAT;
+    map = (uint8_t *)unc_alloc(c->al, mlen);
+    if (!map) return UNC_ERR_MEM;
+    P.c = c;
+    P.r = NULL;
+    P.names = NULL;
+    if (unc_read_at(c->io, moff, map, (int32_t)mlen) != UNC_OK) {
+        err = UNC_ERR_TRUNCATED;
+        goto out;
+    }
+    if ((err = unc_progress_add(&c->ps, mlen)) != UNC_OK) goto out;
+    if ((err = tome_parts_scan(&P, map, mlen, doff, 0, &n, &nrec)) != UNC_OK)
+        goto out;
+    if (nrec == 0) { err = UNC_ERR_FORMAT; goto out; }
+    P.ncap = mlen + 66u * nrec;
+    P.r = (TomeRes *)unc_alloc(c->al, n * (uint32_t)sizeof(TomeRes) + P.ncap);
+    if (!P.r) { err = UNC_ERR_MEM; goto out; }
+    P.names = (uint8_t *)(P.r + n);
+    P.nlen = 0;
+    P.n = n;
+    if ((err = tome_parts_scan(&P, map, mlen, doff, 1, &n, NULL)) != UNC_OK)
+        goto out;
+    unc_free(c->al, map);
+    map = NULL;
+
+    for (i = 0; i < P.n; i++)
+        if (P.r[i].type == TOME_IFND && !P.r[i].part &&
+            (err = tome_parts_family(&P, i, g++)) != UNC_OK)
+            goto out;
+    for (i = 0; i < P.n; i++)
+        if (P.r[i].group == TOME_GREST && P.r[i].part) rest = 1;
+    tome_parts_sort(&P);
+
+    for (i = 0; i < P.n && err == UNC_OK; i++) {
+        const TomeRes *f = &P.r[i];
+        if (f->type != TOME_FOND || f->group == TOME_GREST || f->part)
+            continue;
+        err = tome_parts_write(&P, t, ibuf, f->group,
+                               f->name == TOME_NONAME ? NULL
+                                   : P.names + f->name + 1,
+                               f->name == TOME_NONAME ? 0
+                                   : P.names[f->name]);
+    }
+    if (err == UNC_OK && rest)
+        err = tome_parts_write(&P, t, ibuf, TOME_GREST, c->opt.name_hint,
+                               c->opt.name_hint ? c->opt.name_hint_len : 0);
+out:
+    if (map) unc_free(c->al, map);
+    if (P.r) unc_free(c->al, P.r);
+    return err;
+}
+
 int unc_tome_extract(UncCtx *c)
 {
     uint8_t r[TOME_REC];
@@ -403,11 +867,15 @@ int unc_tome_extract(UncCtx *c)
     unc_off_t fsize = c->io->size(c->io->ctx);
     int err = UNC_OK;
 
-    if (unc_read_at(c->io, 0, r, (int32_t)TOME_HDR) != UNC_OK ||
-        unc_get_u32be(r) != TOME_MAGIC)
-        return UNC_ERR_FORMAT;
-    n = unc_get_u16be(r + 0x1a);
-    if (n == 0) return UNC_ERR_FORMAT;
+    if (unc_read_at(c->io, 0, r, 16) != UNC_OK) return UNC_ERR_FORMAT;
+    if (unc_get_u32be(r) == TOME_MAGIC) {
+        if (unc_read_at(c->io, 0, r, (int32_t)TOME_HDR) != UNC_OK)
+            return UNC_ERR_FORMAT;
+        n = unc_get_u16be(r + 0x1a);
+        if (n == 0) return UNC_ERR_FORMAT;
+    } else {
+        n = 0;   /* a resource fork: its parts, below */
+    }
 
     /* One block for what never grows: the input buffer and the three
      * tables. The ring is its own, since it does. */
@@ -423,6 +891,7 @@ int unc_tome_extract(UncCtx *c)
     tome_lut(t.lut_lit, TOME_LITW, tome_lit, N_LIT);
     t.ring = NULL;
     t.cap = 0;
+    if (n == 0) err = tome_parts(c, &t, mem, r);
 
     for (i = 0; i < n; i++) {
         UncEntryInfo e;

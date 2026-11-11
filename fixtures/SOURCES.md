@@ -1047,5 +1047,6 @@ a comment was found.
 | synth-mar020.mar.lz4 | 33b808060c0ab5d7f5d644b65e4c8e08a121f246ffa3d209f1717ddadd5b6018 | 74922 | synthetic:tools/synth_lz4.py fixtures/mar-wild-mar020.mar --block 4 --linked --content-checksum --block-checksum |
 | tome-wild-install7 | 6cc5e41b12598250984f555c6325af42989e0f0fdc8dbad7ad3610a92ac96611 | 851141 | derived:hfsvol:macosinstall755.dsk:r:files:Install:Install Disk 7:Installation Tome 7 |
 | tome-wild-install3 | 5f87b259ed4c8a0e66a48b939a624543201cec1391d156b5e1572c3a1b4955ea | 491170 | derived:hfsvol:macosinstall755.dsk:r:files:Install:Install Disk 3:Installation Tome 3 |
+| tomeparts-wild-install3.bin | 2e01fa92a37b4e94696428ffd5a3ad731b0bfcc25bef4c54cf6de357b6d1785d | 1381760 | derived:hfsvol:macosinstall755.dsk:m:files:Install:Install Disk 3:Installation Tome 3 |
 | tome-wild-modemscripts | 7c02eb63130268505a79f3922b079b15f410c2aebed296379b63a35ff76cc4df | 230867 | derived:hfsvol:../macos86/MacOS8.6.iso:r:Full Install Pieces:Software Installers:ARA Client Only:ARA Client Install 2:Modem Scripts Archive |
 | tome-wild-websharing | 8bc5b0d1e727fbc1b9b0710370cda1beee456cc788a0f2334a6586c996d625d7 | 588005 | derived:hfsvol:../macos86/MacOS8.6.iso:r:Full Install Pieces:Software Installers:Personal Web Sharing:WebSharing.Tome |

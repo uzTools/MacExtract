@@ -166,6 +166,28 @@ PY
     rm -f /tmp/tn1150.html
 fi
 
+# Inside Macintosh: Text, the font family resource and its association
+# table (Text-269 and Text-271): the FOND layout src/fmt_tome.c reads an
+# iFND's association table by. Kept as text, as TN1150 is.
+if [ ! -f reference/notes/im_text_fond.txt ]; then
+    for n in 269 271; do
+        curl -sSfL -o /tmp/imtext-$n.html \
+            "https://developer.apple.com/library/archive/documentation/mac/Text/Text-$n.html"
+    done
+    python3 - <<'PY'
+import re, html
+out = []
+for n in (269, 271):
+    t = open('/tmp/imtext-%d.html' % n, encoding='latin-1').read()
+    t = re.sub(r'(?is)<(script|style).*?</\1>', '', t)
+    t = re.sub(r'(?i)<br\s*/?>|</p>|</pre>|</h\d>|</li>|</tr>', '\n', t)
+    out.append(html.unescape(re.sub(r'<[^>]+>', '', t)))
+open('reference/notes/im_text_fond.txt', 'w').write(
+    re.sub(r'\n{3,}', '\n\n', '\n'.join(out)))
+PY
+    rm -f /tmp/imtext-269.html /tmp/imtext-271.html
+fi
+
 # The Apple Installer Tome, as danifunker/rusty-backup issue 109 documents
 # it (v2 of its tome-support.zip, MIT): the write-up src/fmt_tome.c is
 # written from. Only the document is kept; the zip's Rust and Python

@@ -25,6 +25,13 @@ flag word compared.
      where the installed copy's 'vers' 1 differs it is another release and
      is counted, not graded. Skipped, LOUDLY, where the disk image is not
      cached.
+  4. 'part' resources (the `tomeparts-*` fixtures, MacBinary, so both
+     forks): every `iFND` of the Tome's resource fork comes out as a
+     suitcase that is the one in the 7.5.5 disk's Fonts folder, resource for
+     resource, but for its FOND's association ids and their order — which
+     the Installer renumbers and sorts — and nothing named after the
+     package comes out. Two controls must fail: a changed byte of a font,
+     and an association id that names nothing.
   3. Damage: every 61st byte of a fork stream changed, and the file cut at
      every 997th byte. There is no checksum, so a change can decode to the
      right length silently; what must hold is no crash, no hang, and every
@@ -40,8 +47,12 @@ its output complete and no bit of input left.
 identified. A text-codec fork with no installed copy here (the 8.6
 fixtures' modem scripts and Web Sharing's text forks): only the exact end
 grades it. The two longest text-codec length codes, which no stream here
-uses. Tomes in 'part' resources, which the engine does not read
-(OPEN_ITEMS.md). Dates, which run_diff.py does not compare either.
+uses. Dates, which run_diff.py does not compare either. In section 4, the
+'part's of an `ircp` file — QuickDraw GX's fonts, AppleTalk's drivers —
+whose source disk is not here (DECISIONS.md 2026-11-11, *the parts the
+Installer expands*, has the one-off grading); the resources' attributes,
+which a record does not carry; and whether the fonts render, which the
+emulator settled once.
 """
 import argparse
 import glob
@@ -514,6 +525,126 @@ def controls(mx, t, work):
               "comparisons see one byte")
 
 
+# ---- 4. 'part' resources ----------------------------------------------
+
+FFIL, DMOV = b"FFIL", b"DMOV"
+
+
+def fond_shape(f):
+    """A FOND as the Installer may rewrite it: its 52-byte header, the
+    association table as a sorted list of (size, style) with the ids left
+    out, and what follows the table (Inside Macintosh: Text, *The Font
+    Association Table*). The Installer renumbers the ids and sorts the
+    entries (measured, DECISIONS.md 2026-11-11, *the parts the Installer
+    expands*); nothing else may differ."""
+    n = struct.unpack(">H", f[52:54])[0] + 1
+    ents = sorted(struct.unpack(">hh", f[54 + 6 * i:58 + 6 * i])
+                  for i in range(n))
+    return f[:52], ents, f[54 + 6 * n:]
+
+
+def fond_ids(f):
+    n = struct.unpack(">H", f[52:54])[0] + 1
+    return [struct.unpack(">hhh", f[54 + 6 * i:60 + 6 * i]) for i in range(n)]
+
+
+def suitcase_verdict(ours, theirs):
+    """None if `ours` is the installed suitcase but for the FOND's ids and
+    their order, or the first difference. Every font resource must be one
+    of the installed ones byte for byte, and every installed one ours."""
+    A, B = resources(ours), resources(theirs)
+    if A is None or B is None:
+        return "not a resource fork"
+    fa = [v[2] for k, v in A.items() if k[0] == b"FOND"]
+    fb = [v[2] for k, v in B.items() if k[0] == b"FOND"]
+    if len(fa) != 1 or len(fb) != 1:
+        return "%d and %d FONDs" % (len(fa), len(fb))
+    if fond_shape(fa[0]) != fond_shape(fb[0]):
+        return "the FOND differs beyond its association ids"
+    named = [(b"sfnt" if e[0] == 0 else b"NFNT", e[2]) for e in fond_ids(fa[0])]
+    for k in A:
+        if k[0] in (b"sfnt", b"NFNT") and named.count(k) != 1:
+            return "%r %d is named by %d association entries" % (
+                k[0], k[1], named.count(k))
+    for ent in fond_ids(fa[0]):
+        ty = b"sfnt" if ent[0] == 0 else b"NFNT"
+        if (ty, ent[2]) not in A:
+            return "association entry %r names no %r" % (ent, ty)
+    fonts = lambda R: sorted(v[2] for k, v in R.items()
+                             if k[0] in (b"sfnt", b"NFNT"))
+    if fonts(A) != fonts(B):
+        return "the font resources differ"
+    extra = sorted(k for k in A if k[0] not in (b"FOND", b"sfnt", b"NFNT"))
+    if extra:
+        return "resources beside the family's: %r" % extra
+    return None
+
+
+def parts(mx, fixtures, work, vol):
+    """A Tome's resource fork holding 'part's: each iFND comes out as a
+    suitcase of its own, which must be what Apple's Installer installed
+    in the Fonts folder of the System 7.5.5 disk, resource for resource,
+    but for the FOND's association ids and their order; the package's
+    resources go nowhere; and two controls must fail."""
+    for fx in fixtures:
+        base = os.path.basename(fx)
+        out = os.path.join(work, "parts")
+        shutil.rmtree(out, ignore_errors=True)
+        os.makedirs(out)
+        r = run([mx, "x", "-o", out, fx])
+        if r.returncode != 0:
+            fail("%s: exit %d: %s" % (base, r.returncode, r.stderr[-200:]))
+            continue
+        mb = readf(fx)
+        name = mb[2:2 + mb[1]]
+        dl, rl = struct.unpack(">II", mb[83:91])
+        recs = records(mb[128:128 + dl])
+        tome = {x["name"].decode("mac_roman").replace("/", ":") for x in recs}
+        made = sorted(f[:-5] for f in os.listdir(out)
+                      if f.endswith(".rsrc") and f[:-5] not in tome)
+        if name.decode("mac_roman") in made or \
+                os.path.exists(os.path.join(out, name.decode("mac_roman"))):
+            fail("%s: the package itself came out, or was left" % base)
+        rsrc = mb[128 + ((dl + 127) // 128) * 128:][:rl]
+        ifnd = sorted(v[1].decode("mac_roman") for k, v in
+                      (resources(rsrc) or {}).items() if k[0] == b"iFND")
+        if made != ifnd:
+            fail("%s: %r came out, the iFNDs are %r" % (base, made, ifnd))
+        graded = 0
+        for fam in made:
+            ours = readf(os.path.join(out, fam + ".rsrc"))
+            hits = vol.index.get((fam.encode("mac_roman"), FFIL, DMOV),
+                                 []) if vol else []
+            if not hits:
+                print("  %s: no installed %s here, not graded" % (base, fam))
+                continue
+            _, theirs = vol.forks(hits[0], work)
+            why = suitcase_verdict(ours, theirs)
+            if why:
+                fail("%s: %s: %s" % (base, fam, why))
+                continue
+            graded += 1
+            if graded == 1:
+                # Controls: one byte of a font, and one association id.
+                A = resources(ours)
+                k = next(k for k in A if k[0] == b"sfnt")
+                body = A[k][2]
+                bad = bytearray(ours)
+                bad[bytes(bad).find(body) + len(body) // 2] ^= 1
+                if suitcase_verdict(bytes(bad), theirs) is None:
+                    fail("CONTROL: a changed byte in %r is invisible" % (k,))
+                f = next(v[2] for kk, v in A.items() if kk[0] == b"FOND")
+                bad = bytearray(ours)
+                at = bytes(bad).find(f) + 58
+                bad[at] ^= 0x40
+                if suitcase_verdict(bytes(bad), theirs) is None:
+                    fail("CONTROL: an association id naming nothing passes")
+        print("  %s: %d families out, %d equal what Apple's Installer "
+              "installed but for the FOND's ids" % (base, len(made), graded))
+        if vol and graded != len(made):
+            fail("%s: %d of %d families graded" % (base, graded, len(made)))
+
+
 def write_manifest(mx, deark, t, work, vols):
     """fixtures/manifests/<fixture>.json from deark and Apple's installed
     copies; a fork neither grades is unadjudicated, with the reason."""
@@ -626,6 +757,16 @@ def main():
             small = min(fx, key=os.path.getsize)
             damage(a.macextract, small, work)
             controls(a.macextract, small, work)
+        pf = sorted(glob.glob(os.path.join(FIXDIR, "tomeparts-*")))
+        print("4. 'part' resources, %d Tome%s with both forks"
+              % (len(pf), "" if len(pf) == 1 else "s"))
+        if not pf:
+            fail("no tomeparts-* fixture in fixtures/")
+        v755 = next((v for v in vols if v.name == "System 7.5.5"), None)
+        if not v755:
+            print("  SKIPPED in section 4: no System 7.5.5 image at %s"
+                  % DISK755)
+        parts(a.macextract, pf, work, v755)
     finally:
         for v in vols:
             v.close()

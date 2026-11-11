@@ -6500,6 +6500,199 @@ static void tome_hdr(uint8_t *a, uint32_t n)
     a[0x1b] = (uint8_t)n;
 }
 
+/* A resource fork for the parts reader, built here: a growing data area,
+ * then a map of up to eight types. */
+typedef struct {
+    uint8_t *f;
+    uint32_t dlen;               /* data so far, after the 256-byte header */
+    uint32_t type[8];
+    uint16_t cnt[8];
+    uint8_t  ref[8][4][12];
+    uint8_t  names[64];
+    uint32_t nlen, nt;
+} TPFork;
+
+static void tp_add(TPFork *k, uint32_t type, int16_t id, const char *name,
+                   const uint8_t *data, uint32_t len)
+{
+    uint32_t t, at = k->dlen;
+    uint8_t *r;
+    for (t = 0; t < k->nt && k->type[t] != type; t++) ;
+    if (t == k->nt) { k->type[t] = type; k->cnt[t] = 0; k->nt++; }
+    r = k->ref[t][k->cnt[t]++];
+    memset(r, 0, 12);
+    r[0] = (uint8_t)((uint16_t)id >> 8);
+    r[1] = (uint8_t)id;
+    if (name) {
+        r[2] = (uint8_t)(k->nlen >> 8);
+        r[3] = (uint8_t)k->nlen;
+        k->names[k->nlen] = (uint8_t)strlen(name);
+        memcpy(k->names + k->nlen + 1, name, strlen(name));
+        k->nlen += 1u + (uint32_t)strlen(name);
+    } else {
+        r[2] = r[3] = 0xFF;
+    }
+    r[5] = (uint8_t)(at >> 16);
+    r[6] = (uint8_t)(at >> 8);
+    r[7] = (uint8_t)at;
+    mar_put32(k->f + 256 + at, len);
+    memcpy(k->f + 256 + at + 4, data, len);
+    k->dlen += 4u + len;
+}
+
+static uint32_t tp_finish(TPFork *k)
+{
+    uint8_t *m = k->f + 256 + k->dlen;
+    uint32_t t, i, refs = 0, tl = 28, at;
+    for (t = 0; t < k->nt; t++) refs += k->cnt[t];
+    memset(m, 0, 30);
+    m[24] = 0; m[25] = 28;
+    at = 30u + 8u * k->nt + 12u * refs;
+    m[26] = (uint8_t)(at >> 8); m[27] = (uint8_t)at;
+    m[28] = (uint8_t)((k->nt - 1u) >> 8); m[29] = (uint8_t)(k->nt - 1u);
+    at = 2u + 8u * k->nt;
+    for (t = 0; t < k->nt; t++) {
+        uint8_t *te = m + tl + 2 + 8 * t;
+        mar_put32(te, k->type[t]);
+        te[4] = 0; te[5] = (uint8_t)(k->cnt[t] - 1u);
+        te[6] = (uint8_t)(at >> 8); te[7] = (uint8_t)at;
+        for (i = 0; i < k->cnt[t]; i++)
+            memcpy(m + tl + at + 12 * i, k->ref[t][i], 12);
+        at += 12u * k->cnt[t];
+    }
+    memcpy(m + tl + at, k->names, k->nlen);
+    at = tl + at + k->nlen;
+    mar_put32(k->f, 256);
+    mar_put32(k->f + 4, 256 + k->dlen);
+    mar_put32(k->f + 8, k->dlen);
+    mar_put32(k->f + 12, at);
+    return 256u + k->dlen + at;
+}
+
+/* A part: a version-2 Tome of `n` records, each one stored block. */
+static uint32_t tp_part(uint8_t *p, uint32_t n, const uint32_t *type,
+                        const int16_t *id, const char *const *name,
+                        const char *const *data)
+{
+    uint32_t i, at = 0x24 + n * 0x80;
+    memset(p, 0, at);
+    tome_hdr(p, n);
+    p[0x10] = 0; p[0x11] = 2;
+    for (i = 0; i < n; i++) {
+        uint8_t *r = p + 0x24 + i * 0x80;
+        uint32_t len = (uint32_t)strlen(data[i]);
+        r[6] = (uint8_t)((uint16_t)id[i] >> 8);
+        r[7] = (uint8_t)id[i];
+        mar_put32(r + 8, type[i]);
+        r[12] = (uint8_t)strlen(name[i]);
+        memcpy(r + 13, name[i], strlen(name[i]));
+        mar_put32(r + 0x4e, len);
+        mar_put32(r + 0x52, at);
+        mar_put32(r + 0x56, 4u + len);
+        memcpy(p + at, "\x01\x00\x00\x00", 4);
+        memcpy(p + at + 4, data[i], len);
+        at += 4u + len;
+    }
+    return at;
+}
+
+static int tp_has(const CapSink *cap, int e, uint32_t type, int16_t id,
+                  const char *want)
+{
+    uint32_t off, len;
+    if (unc_resfork_find(cap->rsrc[e], cap->rlen[e], type, id, &off,
+                         &len) != UNC_OK)
+        return want == NULL;
+    return want && len == strlen(want) &&
+           memcmp(cap->rsrc[e] + off, want, len) == 0;
+}
+
+static void test_tome_parts(void)
+{
+    static uint8_t f[4096];
+    uint8_t part[512], ifnd[60];
+    static const uint32_t ty1[2] = { 0x73666E74u, 0x44525652u };
+    static const int16_t id1[2] = { 300, 9 };
+    static const char *const nm1[2] = { "Out", ".MPP" };
+    static const char *const dt1[2] = { "OUTLINE", "DRV" };
+    static const uint32_t ty2[1] = { 0x73666E74u };
+    static const int16_t id2[1] = { 5466 };
+    static const char *const nm2[1] = { "Times" };
+    static const char *const dt2[1] = { "T5466" };
+    TPFork k;
+    uint32_t n, len;
+    MemIO m;
+    UncIO io;
+    UncAlloc al;
+    UncSink sk;
+    CapSink cap;
+    UncOptions opt;
+
+    memset(f, 0, sizeof f);
+    memset(&k, 0, sizeof k);
+    k.f = f;
+    tp_add(&k, 0x464F4E44u, 128, "Fam", (const uint8_t *)"FONDDATA", 8);
+    len = tp_part(part, 2, ty1, id1, nm1, dt1);
+    tp_add(&k, 0x70617274u, 129, NULL, part, len);
+    /* An iFND of family 20 naming placeholder 5466, and part 20 holding
+     * it: a suitcase of its own. */
+    memset(ifnd, 0, sizeof ifnd);
+    ifnd[57] = 0; ifnd[58] = 0x15; ifnd[59] = 0x5a;   /* (0, 0, 5466) */
+    tp_add(&k, 0x69464E44u, 20, "Times", ifnd, 60);
+    len = tp_part(part, 1, ty2, id2, nm2, dt2);
+    tp_add(&k, 0x70617274u, 20, NULL, part, len);
+    tp_add(&k, 0x53545220u, -16397, NULL, (const uint8_t *)"pkg", 3);
+    tp_add(&k, 0x76657273u, 2, NULL, (const uint8_t *)"v", 1);
+    n = tp_finish(&k);
+
+    test_make_alloc(&al);
+    test_make_memio(&io, &m, f, n);
+    CHECK(unc_sniff(&io) == UNC_FORMAT_TOME);
+    memset(&opt, 0, sizeof opt);
+    opt.name_hint = (const uint8_t *)"Pkg";
+    opt.name_hint_len = 3;
+    cap_make(&sk, &cap);
+    CHECK(unc_extract_as(UNC_FORMAT_TOME, &io, &sk, &al, NULL, &opt) == UNC_OK);
+    CHECK(cap.count == 2);
+    /* The family's suitcase: the iFND as a FOND, its record at its id. */
+    CHECK(cap.status[0] == UNC_OK && cap.info[0].name_len == 5 &&
+          memcmp(cap.info[0].name, "Times", 5) == 0);
+    CHECK(cap.info[0].type == 0x4646494Cu && cap.info[0].creator == 0x444D4F56u);
+    CHECK(cap.dlen[0] == 0 && cap.rlen[0] == cap.info[0].rsrc_size);
+    CHECK(tp_has(&cap, 0, 0x73666E74u, 5466, "T5466"));
+    CHECK(unc_resfork_find(cap.rsrc[0], cap.rlen[0], 0x464F4E44u, 20, &n,
+                           &len) == UNC_OK && len == 60 &&
+          memcmp(cap.rsrc[0] + n, ifnd, 60) == 0);
+    CHECK(tp_has(&cap, 0, 0x69464E44u, 20, NULL));
+    /* The rest, under the archive's name: the FOND makes it a suitcase,
+     * the records are at their stated ids, the package's two are gone. */
+    CHECK(cap.status[1] == UNC_OK && cap.info[1].name_len == 3 &&
+          memcmp(cap.info[1].name, "Pkg", 3) == 0);
+    CHECK(cap.info[1].type == 0x4646494Cu && cap.rlen[1] == cap.info[1].rsrc_size);
+    CHECK(tp_has(&cap, 1, 0x464F4E44u, 128, "FONDDATA"));
+    CHECK(tp_has(&cap, 1, 0x73666E74u, 300, "OUTLINE"));
+    CHECK(tp_has(&cap, 1, 0x44525652u, 9, "DRV"));
+    CHECK(tp_has(&cap, 1, 0x53545220u, -16397, NULL));
+    CHECK(tp_has(&cap, 1, 0x76657273u, 2, NULL));
+    CHECK(tp_has(&cap, 1, 0x70617274u, 129, NULL));
+
+    /* Listing announces the sizes extraction writes. */
+    test_make_memio(&io, &m, f, tp_finish(&k));
+    opt.list_only = 1;
+    cap_make(&sk, &cap);
+    CHECK(unc_extract_as(UNC_FORMAT_TOME, &io, &sk, &al, NULL, &opt) == UNC_OK);
+    CHECK(cap.count == 2 && cap.info[1].rsrc_size > 256u);
+
+    /* No part: not this format, and not sniffed as it. */
+    k.type[1] = 0x78617274u;   /* 'xart' */
+    test_make_memio(&io, &m, f, tp_finish(&k));
+    CHECK(unc_sniff(&io) != UNC_FORMAT_TOME);
+    opt.list_only = 0;
+    cap_make(&sk, &cap);
+    CHECK(unc_extract_as(UNC_FORMAT_TOME, &io, &sk, &al, NULL, &opt) ==
+          UNC_ERR_FORMAT);
+}
+
 static void test_tome(void)
 {
     static uint8_t a[0x24 + 5 * 0x80 + 64];
@@ -7232,6 +7425,7 @@ void run_format_tests(void)
     test_btoa();
     test_mar();
     test_tome();
+    test_tome_parts();
     test_lz4_block_bound();
     test_mar_comment_listing();
     test_base64_mime();

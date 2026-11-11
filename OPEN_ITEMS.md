@@ -7,7 +7,7 @@
    withdrawn claim to BLOCKERS.md, numbers to FORMATS.md).
 
 Nothing here stops the engine or the CLI, which are byte-exact against the
-oracle across 992 fixtures in `./ci.sh`.
+oracle across 993 fixtures in `./ci.sh`.
 
 **Filing something here is a decision to stop looking, so ask first.** Each
 of these questions has emptied a row at least once (BLOCKERS.md, *Withdrawn
@@ -103,7 +103,7 @@ not move the licence; only the second does.
 
 ### What grades a fork
 
-`unar` 1.10.8 grades most of the 992 fixtures' manifests; `macunpack` and
+`unar` 1.10.8 grades most of the 993 fixtures' manifests; `macunpack` and
 deark grade the forks it fails (TESTING.md, *The oracle*). The writers' own
 readers already grade StuffIt Deluxe 2.0.1's output, SuperDisk!'s modules,
 DiskDoubler's methods 3–5, Now Compress, Private File, AppleLink packages
@@ -300,7 +300,8 @@ first public release (the maintainer, 2026-10-19), which v0.44.0 was
 
 ## Apple Installer Tomes: what is not read, and what is not graded
 
-The Tome reader is in (FORMATS.md, *Apple Installer Tomes*). Left:
+The Tome reader is in, and the 'part' resources of an `ircp` file's or a
+Tome's resource fork (FORMATS.md, *Apple Installer Tomes*). Left:
 
 - **The per-fork checksum is unidentified** (+0x48, +0x58). Ruled out
   (measured 2026-11-11): byte, word and long sums, XOR, a rotating add,
@@ -312,28 +313,12 @@ The Tome reader is in (FORMATS.md, *Apple Installer Tomes*). Left:
   Installer may never check it. Without it 1,308 of 3,704 single-byte
   changes are noticed (`tools/run_tome.py`). Closes with the routine that
   writes it: Apple's Installer SDK packer, not on this machine.
-- **Resources compressed as `'part'`s are not read.** A `'part'` resource
-  is a Tome of version 2 (the word at 0x10) whose one record describes a
-  RESOURCE — the id it is meant to take at +6, type at +8, name at +12, one
-  stream at +0x4e — in the Tome's own coding. They sit in `ircp`/`kakc`
-  files (GX fonts, AppleTalk drivers) and in a Tome's resource fork (System
-  7.5.5's own fonts, QuickDraw GX's). Measured (DECISIONS.md 2026-11-11,
-  *what the Installer wrote*): Apple's Installer writes every one of 37 font
-  resources as this engine decodes it, under a NEW id, and the font works
-  from the Fonts folder under its own ids — a suitcase of a GX font's
-  shipped `FOND` and its decoded `sfnt`, dropped there by the Finder,
-  renders and is not renumbered. The maintainer's call (2026-11-11): an
-  `ircp` file comes out as the font file, its parts expanded under their
-  own ids — no renumbering — `STR ` -16397 (the Finder's "use the
-  Installer" message) and `vers` 2 (the package's version) dropped. Not
-  built. System 7.5.5's fonts fit the same call: their `iFND`, retyped
-  `FOND`, already names the parts' placeholder ids, and two such families
-  sharing every id render as the installed ones do, to the pixel. Driver
-  parts keep their stated ids too: 22 of 32 records of AppleTalk's equal
-  what Apple's installers wrote there, 6 more but for version strings.
-- **The rest of `ircp`**: 6 of the 16 files in MacStamp's census are here
-  (`.tmp/ircp/`, off El Mac 7's Spanish System 7.5 Update 2.0); the other
-  10's sources were not kept.
+- **No `ircp` file is a fixture**: the 6 here (`.tmp/ircp/`, off El Mac 7's
+  Spanish System 7.5 Update 2.0, from MacStamp) were graded once
+  (DECISIONS.md 2026-11-11, *the parts the Installer expands*), and El Mac
+  7's image is not in the cache, so no SOURCES row can restore one; the
+  other 10 of MacStamp's census were not kept. Closes with that image
+  cached and a `derived:hfsvol` row for each.
 - **19 forks graded by their exact end alone**, of `tome-wild-modemscripts`
   and `tome-wild-websharing` (81 until Mac OS 9's installed copies were
   read, 2026-11-11): deark fails them with its own errors — "Bad distance

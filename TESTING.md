@@ -1928,7 +1928,7 @@ format, and one per layer*). Both assert the refused fixtures **BY NAME**
 different refusals:
 
 - resident, from `EXPECT`: **74/74** at the 1 MB floor target, **70/74**
-  at System 3.0 / 512 KB, **64/74** at System 6.0.8 / 512 KB. The resident
+  at System 3.0 / 512 KB, **62/74** at System 6.0.8 / 512 KB. The resident
   build last ran on all three machines on 2026-10-09 (72/72, 68/72 and
   63/72); every change since is DERIVED and recorded in `run_tiers.py`
   beside the name.
@@ -3521,6 +3521,14 @@ fixtures came from (FORMATS.md, *Apple Installer Tomes*).
 3. **Damage**: every 61st stream byte of the smallest fixture changed, and
    cuts every 997th byte — no crash, no hang, no exit 0 past a cut. How many
    changes are refused is printed, not required: there is no checksum.
+4. **'part' resources**, the `tomeparts-*` fixtures (MacBinary, both forks):
+   one suitcase per `iFND`, nothing under the package's name, and each
+   suitcase the one in the 7.5.5 disk's Fonts folder, every `sfnt` and
+   `NFNT` byte for byte and its FOND but for the association table's ids
+   and order. Controls: a changed font byte, and an association id naming
+   nothing. **Made to fail** (2026-11-11): the family rule narrowed (exit 1).
+   It cannot see an `ircp` file's parts (no fixture), attributes, or
+   whether the fonts render.
 
 **Controls**: a record claiming one byte more than its stream's tokens use
 is refused; deark's fork and the resource comparison each see one changed
@@ -4156,7 +4164,7 @@ short-circuited and subtract — the instrument sees only the total.
   instructions use `tools/m68kprof.py`; for real cost, the tick probe on an
   emulated Mac.
 - **The Macintosh's own I/O** (stdio is not the File Manager).
-- **Any file it is not handed**: the corpus is 1,014 files, and the
+- **Any file it is not handed**: the corpus is 1,015 files, and the
   population that matters for REJECTION cost is non-archives —
   `reference/`, this repository's trees, the specimen cache; 8,364 were
   swept on 2026-10-05 (BLOCKERS.md, *Withdrawn claims*).

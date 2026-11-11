@@ -842,7 +842,11 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # +100 on 2026-11-11, 193,568 -> 193,668, A5 +28 below: PackIt's stored
 # entries copied a span at a time (DECISIONS.md 2026-11-11, *the stored
 # bytes read one at a time*). In `ovl_packit` on the shipped pair, +98.
-UNC_MAC_CODE_DEFAULT=193668
+# +4,800 on 2026-11-11, 193,668 -> 198,468, A5 unmoved: an Installer
+# Tome's 'part' resources, their reader and the probe's resource-fork case
+# (DECISIONS.md 2026-11-11, *the parts the Installer expands*). In
+# `ovl_zipold` +4,100 and `ovl_sniff` +400 on the shipped pair.
+UNC_MAC_CODE_DEFAULT=198468
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -1767,8 +1771,14 @@ UNC_MAC_A5_DEFAULT=36876
 # `gSegSetupFns` loses 16 B; the other 8 are `.data` alignment
 # (DECISIONS.md 2026-11-11, *the glue the shell expands*). 368 B onto every
 # budget.
-UNC_MAC_CODE_EAGER=37824
-UNC_MAC_A5_EAGER=16768
+# +272 and +16 on 2026-11-11, 37,824 -> 38,096 and 16,768 -> 16,784: the
+# resource fork as the archive when the data fork is empty (an `ircp`
+# file), and a Tome's resource fork read after its data fork for its
+# parts, through RunExtract's one call site; the A5 is the fork selector,
+# 2 B, and `.data` alignment (DECISIONS.md 2026-11-11, *the parts the
+# Installer expands*). 288 B off every budget.
+UNC_MAC_CODE_EAGER=38096
+UNC_MAC_A5_EAGER=16784
 # +8 on 2026-10-02 for the same reason as the eager pair above: the
 # overlay call that now says WHICH of StuffIt 2.x's ciphers an entry
 # wants. A5 fell to 19,096 and its ceiling is left where it was.
@@ -1932,7 +1942,9 @@ UNC_MAC_A5_EAGER=16768
 # 16,812 (+44), under its ceiling.
 # -344 code on 2026-11-11: the inline File Manager calls, as the eager
 # pair; data + bss 16,788 (-24), under its ceiling.
-UNC_MAC_CODE_LAZY=36604
+# +272 code on 2026-11-11: an Installer Tome's parts, as the eager pair;
+# data + bss 16,804 (+16), under its ceiling.
+UNC_MAC_CODE_LAZY=36876
 UNC_MAC_A5_LAZY=19200
 if [ -n "$UNC_OVL_RESIDENT" ]; then
     UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-$UNC_MAC_CODE_DEFAULT}

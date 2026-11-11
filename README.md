@@ -42,7 +42,8 @@ MacBinary, PackIt, AppleLink packages, DiskDoubler and MacCompress, Now Compress
 SpaceSaver, Alysis SuperDisk!, Private File, ARC, LZH/LHA, uuencode, btoa,
 base64 and MIME attachments, AppleSingle/AppleDouble, MAR (`.mar`, `.mac`, `.mar.lz4`),
 Apple Backup's floppies (a Performa's backup, even with disks missing),
-the Tomes on Apple's install disks (System 7.5 to Mac OS 9), zip, gzip, tar
+the Tomes on Apple's install disks (System 7.5 to Mac OS 9) and the fonts and
+network software its Installer keeps compressed, zip, gzip, tar
 and `.Z`.
 
 - **Everything comes back as it was:** both forks, type and creator, dates,
