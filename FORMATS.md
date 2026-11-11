@@ -79,7 +79,7 @@ below it. Per-format detail is under *Table notes*.
 | Tar (ustar/v7) | extract | — (links reported unsupported); bsdtar's `._name` sidecar put on the member after it, Spotlight comment included; a pax `comment` marked UTF-8; a pax `g` header's mtime and comment on every member after it | 3 fixtures (2 real 1990 v7 tars) + unit tests | 8 KB | full |
 | MAR (.mar, .mac) | extract | — (stored blocks, a CRC-32 on each and on every header); a whole archive LZW-compressed by mar 0.2.0 comes out through the `.Z` envelope | 2 real archives by its author, each with a StuffIt twin, + 2 synthetic (*MAR*, below) | 9 KB | full |
 | LZ4 frame (.lz4) | extract | — (an envelope: stored and compressed blocks, header, block and content checksums, concatenated and skippable frames; no dictionary, no legacy frame) | 2 synthetic, liblz4's own frames, + 165 in `tools/run_lz4.py` (*LZ4 frames*, below) | 68 KB | full |
-| Apple Backup (a set of floppies) | extract | — (stored forks; a file cut at a disk's end continues on the next under a repeat of its header; a set read with disks missing, what they held reported) | 6 real disks of 2 partial backups + 1 synthetic 3-disk set, graded by two other readers run in a sandbox (*Apple Backup*, below) | 8 KB | full |
+| Apple Backup (a set of floppies) | extract | — (stored forks; a file cut at a disk's end continues on the next under a repeat of its header; a set read with disks missing, what they held reported) | 2 complete real backups (105 disks, a restore CD) and 6 disks of 2 partial ones + 1 synthetic 3-disk set, graded by two other readers run in a sandbox (*Apple Backup*, below) | 8 KB | full |
 | Apple Installer Tome (`idcp`) | extract | stored, InstaCompOne, the text codec; the forks' checksum unidentified, so a stream must end exactly where its record says | 4 real Tomes off the System 7.5.5 and Mac OS 8.6 media, graded by deark and by the files Apple's Installer installed, + 35 more off the same media with `run_tome.py --extra` (*Apple Installer Tomes*, below) | 22–70 KB | full |
 | StuffIt segment (multi-part) | extract | — (join only; the joined file is the next layer) | 7 synthetic sets, oracle-adjudicated, + 3 with each part in its own envelope (CLI only), + **11 sets StuffIt itself cut** (Deluxe 2.0.1 ×5, four of them from files with a resource fork, Lite 3.0.5 ×2, Deluxe 5.0 ×2, DropSegment 5.0, InstallerMaker 2.0), graded by their originals and the running CRCs (extracting since 2026-10-24; BLOCKERS.md, *Withdrawn claims*) | 8 KB | full |
 | Zip segment (spanned, .z01…/.zip) | extract | store, deflate — the zip reader, over the joined parts | 5 generated sets, adjudicated 4 ways (source tree, `unar`, us split, us unsplit) | 12–13 KB¶ | full |
@@ -2567,8 +2567,8 @@ reader opens disk after disk through the joiner's addressed mode
 cut at a disk's end continues at 0x600 of the next under a repeat of its
 header. **A disk that is not to be had is skipped**: what it would have
 finished is reported as missing a part, what continues past it is reported
-once and passed over, and the rest of the set comes out — the case every
-real set here is, as was Apple Backup Extractor's (`reference/applebackup/
+once and passed over, and the rest of the set comes out — the case most
+surviving floppy sets are, as was Apple Backup Extractor's (`reference/applebackup/
 abe-README.md`). On the Macintosh the part dialog asks for each disk in turn,
 "Insert the disk with Part 2 of "<drive>"", named after the drive backed up.
 
@@ -2577,16 +2577,18 @@ abe-README.md`). On the Macintosh the part dialog asks for each disk in turn,
 grades it against two readers others wrote from the same article, each run
 only inside `tools/sandbox.py`'s box:
 
-| what | graded against | measured 2026-11-10 |
+| what | graded against | measured 2026-11-10, the CD 2026-11-11 |
 |---|---|---|
-| every fork's bytes | `unbak.py` (Sidney S.M.) | 125 forks of backup A (disks 1, 5, 6 of 6), 72 of backup B (1, 4, 7 of 7), the 4 of a synthetic three-disk set, identical; 8 entries reported failed, exactly those cut by the missing disks |
-| FInfo, FXInfo, lock, both dates | Em Adespoton's Kaitai description, compiled | all 120 items of the two real sets |
+| every fork's bytes | `unbak.py` (Sidney S.M.) | **the two complete sets of the Performa 5400/6400 Software Restore CD**, 67 and 38 disks: 2,329 and 1,118 forks, identical and none else, nothing failed, each disk opened once and in order; 125 forks of floppy backup A (disks 1, 5, 6 of 6) and 72 of B (1, 4, 7 of 7), identical, 8 entries reported failed, exactly those cut by the missing disks; the 4 of a synthetic three-disk set |
+| FInfo, FXInfo, lock, both dates | Em Adespoton's Kaitai description, compiled | every item whose first part is on a disk: 1,276 and 617 on the CD, 120 on the floppies |
 | sniff | the corpus | the six disks, and no other file's answer changed in 1,010 |
 
-The one real file whose fork crosses a cut, backup A's `System`, 936,189 B
-of resource fork from disk 5 into disk 6, comes out whole. **No real set
-here has a disk holding nothing but a continuation**; the synthetic set has
-one, with a 2,965,872 B resource fork across all three disks.
+The CD's two sets cut 102 items at a disk's end, one of them across four
+disks, and **8 of their disks hold nothing but a continuation** — the shape
+only the synthetic set had until the CD (CORRECTED 2026-11-11); all of them
+come out whole. The restore CD is in the specimen cache, not the corpus:
+325 MB, graded when present (TESTING.md, *Apple Backup*). The heap is the
+same 8,488 B on a 67-disk set.
 
 **What it costs.** Shipped `CODE` −4 and A5 +68: its rows in the joiner's
 scheme table, the engine's format table and the release's keep set, and its

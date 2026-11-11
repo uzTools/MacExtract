@@ -3455,21 +3455,33 @@ inside `tools/sandbox.py`'s box:
 3. **Finder info**: Kaitai's compiled parser, in the box under a driver
    that prints JSON, against `l --meta` for every item whose first part is
    on a disk: FInfo, FXInfo, lock, created and modified.
-4. **A set made here**: three disks, one file across all of them, opened at
+4. **Two complete real sets**, the Performa 5400/6400 Software Restore CD's
+   67 and 38 "Data File"s, from the specimen cache: as 2 and 3, and held
+   to more — exit 0, nothing reported failed, unbak's tree and the
+   engine's the same file for file, every disk opened once and in order
+   (`t --stats`). Skipped, and said, where the cache does not have them.
+   To put them there (325 MB; archive.org item
+   `691-1264-ABMacintosh_Performa_5400_and_6400_series._Software_Restore._SSW_v7.5.3`,
+   the `.toast`, SHA-1 `02933a3d4f562ea44d106006a7adf05aeaeaff5f`):
+   fetch it into `~/.cache/macextract/specimens/applebackup/cd/`, then
+   `hmount` it (partition 1, "Performa CD") and `hcopy -r` each
+   `:Restore All Software:Data File N` and `:Restore System Software:Data
+   File N` into `Restore_All_Software/` and `Restore_System_Software/`.
+5. **A set made here**: three disks, one file across all of them, opened at
    disk 1; graded by unbak, not by what made it.
-5. **Damage**: every real disk cut at 1, 25, 50 and 98 % and bit-flipped six
+6. **Damage**: every real disk cut at 1, 25, 50 and 98 % and bit-flipped six
    ways, each variant alone in a directory, `t` under the sanitizers.
 
 **Made to fail** (each in the run, every time): a fork changed by one byte
 must compare unequal; a date changed in Kaitai's reading must be caught; a
-set whose two disks swapped their numbers must not test clean. The box's
+set whose two disks swapped their numbers must not test clean; and, with
+the CD present, its 38-disk set less disk 19 must not extract clean. The box's
 self-test failed on its first version, which left the box's own root
 writable (2026-11-10).
 
 **What it cannot see**: anything both readers get wrong the same way — both
-come from one article; a set with every disk present, real (neither here
-is — the Performa 5400/6400 Software Restore CD holds two, 67 and 38 `OBDc`
-"Data File"s, read by MacStamp and not fetched here); and the Macintosh, which is
+come from one article; a complete set off floppies (the two complete ones
+are a restore CD's, typed `OBDc`); the CD's sets where the cache lacks them; and the Macintosh, which is
 `tools/vmac/interactive.py --abk` (tools/vmac/README.md), not in `ci.sh`.
 The box cannot stop a kernel bug reachable from an unprivileged process;
 there is no seccomp filter.

@@ -50,6 +50,14 @@ ROOT = os.path.normpath(os.path.join(os.path.dirname(__file__), ".."))
 FIX = os.path.join(ROOT, "fixtures")
 REF = os.path.join(ROOT, "reference", "applebackup")
 SETS = {"perfA": (1, 5, 6), "perfB": (1, 4, 7)}
+# The two COMPLETE sets on the Performa 5400/6400 Software Restore CD
+# (691-1264-A,B, 1996; archive.org, SHA-1 02933a3d4f562ea44d106006a7adf05a
+# eaeaff5f), 67 and 38 "Data File"s, OBDc/OBBa, copied off its HFS volume
+# into the specimen cache (TESTING.md, *Apple Backup*, says how). Too big for
+# the corpus; graded when present, and said when not.
+CD = os.path.join(os.path.expanduser("~"), ".cache", "macextract",
+                  "specimens", "applebackup", "cd")
+CD_SETS = {"Restore_All_Software": 67, "Restore_System_Software": 38}
 
 # unbak.py writes a resource fork to NAME/..namedfork/rsrc, which only
 # macOS has; makes folders only for nested paths; and lets pathlib split
@@ -388,6 +396,36 @@ def main():
                   + (f" — {bad + mbad} FAILURES" if bad + mbad else ""))
             fails += bad + mbad
 
+        # Complete real sets: nothing may fail, the two trees must be the
+        # same file for file, and every disk opened once, in order.
+        for name, n in CD_SETS.items():
+            sd = os.path.join(CD, name)
+            disks = [os.path.join(sd, f"Data File {i}") for i in range(1, n + 1)]
+            if not all(os.path.exists(d) for d in disks):
+                print(f"run_abk: {name}: not in the specimen cache, skipped "
+                      f"(TESTING.md, *Apple Backup*)")
+                continue
+            same, nfail, bad, r = grade_bytes(mx, sd, os.path.join(work,
+                                              name + ".x"), name)
+            st = subprocess.run([mx, "t", "--stats", disks[0]],
+                                capture_output=True, text=True)
+            want = f"segments: {n} part opens, 0 of them backward"
+            if r.returncode != 0 or nfail or want not in st.stderr:
+                print(f"  {name}: exit {r.returncode}, {nfail} failed, "
+                      f"{st.stderr.strip()[-300:]}")
+                bad += 1
+            k = mbad = 0
+            for d in disks:
+                a, b = grade_meta(mx, d)
+                k += a
+                mbad += b
+            print(f"run_abk: {name}: a complete set of {n} disks, {same} "
+                  f"forks as unbak.py writes them and none else, every disk "
+                  f"opened once in order, {k} items' Finder info and dates "
+                  f"as Kaitai reads them"
+                  + (f" — {bad + mbad} FAILURES" if bad + mbad else ""))
+            fails += bad + mbad
+
         # Made here: a file across three disks.
         sd = os.path.join(work, "synth")
         synth_set(sd)
@@ -429,7 +467,24 @@ def main():
         if r.returncode == 0:
             print("  control: two disks swapped in their numbers tested clean")
             ctl += 1
-        print(f"run_abk: controls: 3, {3 - ctl} caught")
+        # A complete set less one disk must not grade as complete.
+        nctl = 3
+        cd1 = os.path.join(CD, "Restore_System_Software")
+        if os.path.exists(os.path.join(cd1, "Data File 38")):
+            nctl += 1
+            less = os.path.join(work, "cd-less-one")
+            os.makedirs(less)
+            for i in range(1, 39):
+                if i != 19:
+                    os.link(os.path.join(cd1, f"Data File {i}"),
+                            os.path.join(less, f"Data File {i}"))
+            r = subprocess.run([mx, "x", "-o", os.path.join(less, "x"),
+                                os.path.join(less, "Data File 1")],
+                               capture_output=True, text=True)
+            if r.returncode == 0 or not failed_entries(r.stderr):
+                print("  control: a complete set less disk 19 graded clean")
+                ctl += 1
+        print(f"run_abk: controls: {nctl}, {nctl - ctl} caught")
         fails += ctl
 
         # Damaged disks, each alone.

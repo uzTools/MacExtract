@@ -587,6 +587,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-10 (the peek that was turned round) — StuffIt method 13's canonical table built at bit-reversed indices in the same 1 KB, the reversal table gone: −1.6 to −2.75 % of Plus engine ticks, −104 B of bundle, heap 0; built a bit at a time it was −0.2 % on an archive of many forks
 - 2026-11-10 (the backup on floppies) — Apple Backup extracts: a Performa's backup read as a set of disks, with disks missing, graded by two readers others wrote, run only in a namespace box; 64 B off every budget
 - 2026-11-10 (the archive the Installer reads) — Apple Installer Tomes extract from rusty-backup's write-up, graded by deark and by what Apple's Installer installed; deark widens a distance one byte early, the padding rule never fires on two install media, and the ring is sized per fork: 71,712 B where doubling took 104,480
+- 2026-11-11 (the restore CD's two whole sets) — the Performa 5400/6400 Software Restore CD's 67- and 38-disk Apple Backup sets, complete, extract with nothing failed, every fork as `unbak.py` writes it and none else; 8 of their disks hold nothing but a continuation
 
 ---
 
@@ -24489,3 +24490,30 @@ the bundle; `ovl_zipold` +3,214 and `ovl_sniff` +168. The control +3,408
 every grant 32 B lower, less its images' change. `run_tiers.py --shipped`
 over all 992 fixtures: 963 at System 3.0 / 512 KB, the earlier 959 and the
 four Tomes. Deepest chain 944 B.
+
+## 2026-11-11 (the restore CD's two whole sets) — the Performa 5400/6400 Software Restore CD's 67- and 38-disk Apple Backup sets, complete, extract with nothing failed, every fork as `unbak.py` writes it and none else; 8 of their disks hold nothing but a continuation
+
+**Claim, evidence, consequence (measured).** Every real set graded on
+2026-11-10 was partial, so "complete" had never been tested. MacStamp found
+two complete ones on the Performa 5400/6400 Software Restore CD (archive.org
+`.toast`, SHA-1 02933a3d4f562ea44d106006a7adf05aeaeaff5f, the hash MacStamp
+read); fetched into the specimen cache and copied off its HFS volume, its
+67 and 38 "Data File"s (`OBDc`/`OBBa`, 1,447,936 B each) extract with exit
+0 and nothing failed, 2,329 and 1,118 forks identical to `unbak.py`'s with
+no file either side has alone, 1,893 items' Finder info and dates as
+Kaitai's parser reads them, every disk opened once and in order, heap
+8,488 B — under the sanitizers too. `tools/run_abk.py` grades them when the
+cache holds them, with a control: the 38-disk set less disk 19 must not
+extract clean, and does not.
+
+**The shape the synthetic set stood in for is real (CORRECTED).** "No real
+set here has a disk holding nothing but a continuation" was true of the six
+floppy disks and is not of the CD: 8 of its 105 disks hold only a
+continuation, 102 items are cut, one across four disks. The synthetic set
+stays, as the one in `ci.sh` everywhere.
+
+**Not in the corpus.** 105 disks are 152 MB, from a 325 MB image hfsutils
+has to open; TESTING.md, *Apple Backup*, says how to put them in the cache.
+Not run on the emulator: the three-floppy run covers the swap, and nothing
+in the reader scales with a set's length (one part open per disk, measured).
+
