@@ -24590,6 +24590,32 @@ are chosen against the target System, so they are not a property of the
 file. Tekton Plus (`Utilidades para Adobe`) and 06's network items were not
 installed by Easy Install and are not graded.
 
+**Every font resource is renumbered, and only installing needs it
+(measured).** System 7.5.5's own fonts are 64 parts in Installation Tome
+3's resource fork; the 30 `sfnt` and `NFNT` resources of Chicago, Geneva,
+Times and Palatino on the same disk equal their decoded parts byte for
+byte, each under a new and scattered id (Chicago's outline, part 0, is
+`sfnt` 9217; Times's are 9261, 18109, 30537 and 30756). Those parts' +6
+holds placeholders, 5466 plus 500 a style and the point size, and the
+`FOND`s are built from nine `iFND` resources, not shipped. In AppleTalk's
+parts +6 is the id the resource must have — `DRVR` 9 `.MPP`, 10 `.ATP`,
+`STR#` -16408 — so a font's id, which only its own file's `FOND` refers
+to, is the one the Installer may move, as Font/DA Mover did when it merged
+fonts into the System file (a reading, not a trace). **And a font left
+under its own ids works**: a suitcase of Apple Chancery's shipped `FOND`
+2011 and its decoded `sfnt` 2012, `FFIL`/`DMOV`, dragged onto the System
+Folder of a fresh System 7.5.5 without GX, went into the Fonts folder at
+the Finder's offer, set SimpleText's text in Apple Chancery, and read back
+from the Fonts folder byte for byte as written. Nothing renumbers a font
+the user puts there.
+
+**Decided by the maintainer (2026-11-11)**: `STR ` -16397 ("Conjunto de
+archivos comprimidos. Por favor, utilice el Instalador…", the Finder's
+message for a double-clicked package; Spanish here because these files are
+the Spanish edition's) and `vers` 2 (1.1.2, region 8, the package's
+version) are the package's, not the font's, and are dropped, as the
+Installer drops them.
+
 ## 2026-11-11 (the stored bytes read one at a time) — zip, StuffIt and DiskDoubler copy stored data a span of the reader's buffer at a time, and LZ4's byte read is forced inline: a stored zip −65 %, DiskDoubler −13 %, LZ4 −2.9 %, StuffIt's stored forks −1.8 %, for +298 B of images
 
 **Claim, evidence, consequence (measured).** Four stored loops read a byte

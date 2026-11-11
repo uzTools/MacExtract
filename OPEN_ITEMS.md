@@ -313,17 +313,24 @@ The Tome reader is in (FORMATS.md, *Apple Installer Tomes*). Left:
   changes are noticed (`tools/run_tome.py`). Closes with the routine that
   writes it: Apple's Installer SDK packer, not on this machine.
 - **Resources compressed as `'part'`s are not read.** A `'part'` resource
-  is a Tome of version 2 (the word at 0x10), whose one record describes a
-  RESOURCE — id at +6, type at +8, name at +12, one stream at +0x4e — in the
-  Tome's own coding. They sit in `ircp`/`kakc` files (fonts, network
-  drivers) and beside a data-fork Tome (QuickDraw GX's). **What Apple's
-  Installer writes from one is measured** (DECISIONS.md 2026-11-11, *what
-  the Installer wrote*): the decoded resource byte for byte, all seven
-  `sfnt`s of three GX 1.1.3 fonts, renumbered to an id free on the target
-  System with the `FOND`'s entry rewritten to match, and `STR ` -16397 and
-  `vers` 2 dropped. Not built; the shape of the output — the file as
-  shipped with its parts expanded under their own ids, or as the Installer
-  leaves it — is the maintainer's to choose.
+  is a Tome of version 2 (the word at 0x10) whose one record describes a
+  RESOURCE — the id it is meant to take at +6, type at +8, name at +12, one
+  stream at +0x4e — in the Tome's own coding. They sit in `ircp`/`kakc`
+  files (GX fonts, AppleTalk drivers) and in a Tome's resource fork (System
+  7.5.5's own fonts, QuickDraw GX's). Measured (DECISIONS.md 2026-11-11,
+  *what the Installer wrote*): Apple's Installer writes every one of 37 font
+  resources as this engine decodes it, under a NEW id, and the font works
+  from the Fonts folder under its own ids — a suitcase of a GX font's
+  shipped `FOND` and its decoded `sfnt`, dropped there by the Finder,
+  renders and is not renumbered. The maintainer's call (2026-11-11): an
+  `ircp` file comes out as the font file, its parts expanded under their
+  own ids, `STR ` -16397 (the Finder's "use the Installer" message) and
+  `vers` 2 (the package's version) dropped. Not built. Two cases that
+  call does not settle: System 7.5.5's fonts, whose parts carry placeholder
+  ids (5466 plus size and style) and whose `FOND`s the Installer builds
+  from `iFND` resources rather than ships; and non-font parts (drivers),
+  whose +6 holds the id they must keep (`DRVR` 9 is `.MPP`), which no run
+  here installed.
 - **The rest of `ircp`**: 6 of the 16 files in MacStamp's census are here
   (`.tmp/ircp/`, off El Mac 7's Spanish System 7.5 Update 2.0); the other
   10's sources were not kept.
