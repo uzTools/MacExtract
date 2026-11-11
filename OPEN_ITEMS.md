@@ -313,7 +313,7 @@ Tome's resource fork (FORMATS.md, *Apple Installer Tomes*). Left:
   Installer may never check it. Without it 1,308 of 3,704 single-byte
   changes are noticed (`tools/run_tome.py`). Closes with the routine that
   writes it: Apple's Installer SDK packer, not on this machine.
-- **No `ircp` file is a fixture**: the 6 here (`.tmp/ircp/`, off El Mac 7's
+- **No `ircp` file is a fixture**: the 6 here (`~/.cache/macextract/specimens/ircp/`, off El Mac 7's
   Spanish System 7.5 Update 2.0, from MacStamp) were graded once
   (DECISIONS.md 2026-11-11, *the parts the Installer expands*), and El Mac
   7's image is not in the cache, so no SOURCES row can restore one; the

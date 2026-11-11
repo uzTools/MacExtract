@@ -2658,7 +2658,7 @@ after its data fork, on both hosts.
 | from | parts | out | graded by |
 |---|---|---|---|
 | `tomeparts-wild-install3.bin` (Installation Tome 3, both forks) | 64 | 9 suitcases | the 7.5.5 disk's Fonts folder: every `sfnt` and `NFNT`, each FOND but for its association ids and their order |
-| 4 GX `ircp` files (`.tmp/ircp/`, El Mac 7; no fixture) | 12 | 4 files | QuickDraw GX 1.1.3 installed: Apple Chancery, Skia, Hoefler Text; Tekton Plus not installed |
+| 4 GX `ircp` files (`~/.cache/macextract/specimens/ircp/`, El Mac 7; no fixture) | 12 | 4 files | QuickDraw GX 1.1.3 installed: Apple Chancery, Skia, Hoefler Text; Tekton Plus not installed |
 | `Compressed Network Items` (`ircp`, same source) | 15, 32 records | 3 files | 16 records equal what the update installed, 15 installed from another file's newer copy, 1 not installed |
 
 **Peak heap** 79,397 B (Tome 3's fork), 72,500 B (Hoefler Text's). **Cost**

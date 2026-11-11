@@ -24795,7 +24795,7 @@ lists bold italic before italic), and each file's length equal (`tools/run_tome.
 with two controls). deark's `macrsrc` module, run in `tools/sandbox.py`,
 reads every resource of all 14 files the six specimens make (9 suitcases,
 5 files) as `tools/run_tome.py`'s own parser does: an independent reading of
-the map this engine writes. The four GX `ircp` files (`.tmp/ircp/`, not restorable
+the map this engine writes. The four GX `ircp` files (`~/.cache/macextract/specimens/ircp/`, not restorable
 here): every `sfnt` equal to the installed one, each FOND equal but for its
 association ids. `Compressed Network Items` (records against the 7.5.0 disk
 the update was installed on, Easy and Custom Install): 16 of its 32 records
