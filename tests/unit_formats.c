@@ -5076,6 +5076,392 @@ static void test_abk(void)
 }
 
 /* ------------------------------------------------------------------ */
+/* Installer VISE (src/fmt_vise.c): installers built here, by hand,    */
+/* from the layout in fmt_vise.c's header comment. The streams are     */
+/* STORED blocks, written in VISE's own framing — 16-bit aligned, an    */
+/* odd length padded, every pair of bytes swapped and every byte        */
+/* substituted — so that what a Huffman block would hide is in plain    */
+/* view; tools/run_vise.py grades the dynamic blocks on real            */
+/* installers, against their own CRC-32s.                               */
+/* ------------------------------------------------------------------ */
+
+#include "fmt_vise_priv.h"
+
+/* The substitution as the reader undoes it (ScummVM's table, a second
+ * copy: a typo in the engine's is then a failure here). */
+static const uint8_t vt_subst[256] = {
+    0x6a,0xb7,0x36,0xec,0x15,0xd9,0xc8,0x73,0xe8,0x38,0x9a,0xdf,0x21,0x25,0xd0,0xcc,
+    0xfd,0xdc,0x16,0xd7,0xe3,0x43,0x05,0xc5,0x8f,0x48,0xda,0xf2,0x3f,0x10,0x23,0x6c,
+    0x77,0x7c,0xf9,0xa0,0xa3,0xe9,0xed,0x46,0x8b,0xd8,0xac,0x54,0xce,0x2d,0x19,0x5e,
+    0x6d,0x7d,0x87,0x5d,0xfa,0x5b,0x9b,0xe0,0xc7,0xee,0x9f,0x52,0xa9,0xb9,0x0a,0xd1,
+    0xfe,0x78,0x76,0x4a,0x3d,0x44,0x5a,0x96,0x90,0x1f,0x26,0x9d,0x58,0x1b,0x8e,0x57,
+    0x59,0xc3,0x0b,0x6b,0xfc,0x1d,0xe6,0xa2,0x7f,0x92,0x4f,0x40,0xb4,0x06,0x72,0x4d,
+    0xf4,0x34,0xaa,0xd2,0x49,0xad,0xef,0x22,0x1a,0xb5,0xba,0xbf,0x29,0x68,0x89,0x93,
+    0x3e,0x32,0x04,0xf5,0xde,0xe1,0x6f,0xfb,0x67,0xe4,0x7e,0x08,0xaf,0xf0,0xab,0x41,
+    0x82,0xea,0x50,0x0f,0x2a,0xc6,0x35,0xb3,0xa8,0xca,0xe5,0x4c,0x45,0x8a,0x97,0xae,
+    0xd6,0x66,0x27,0x53,0xc9,0x1c,0x3c,0x03,0x99,0xc1,0x09,0x2e,0x69,0x37,0x8d,0x2f,
+    0x60,0xc2,0xa6,0x18,0x4e,0x7a,0xb8,0xcf,0xa7,0x3a,0x17,0xd5,0x9e,0xf1,0x84,0x51,
+    0x0d,0xa4,0x64,0xc4,0x1e,0xb1,0x30,0x98,0xbb,0x79,0x01,0xf6,0x62,0x0e,0xb2,0x63,
+    0x91,0xcb,0xff,0x80,0x71,0xe7,0xd4,0x00,0xdb,0x75,0x2c,0xbd,0x39,0x33,0x94,0xbc,
+    0x8c,0x3b,0xb6,0x20,0x85,0x24,0x88,0x2b,0x70,0x83,0x6e,0x7b,0x9c,0xbe,0x14,0x47,
+    0x65,0x4b,0x56,0x81,0xf8,0x12,0x11,0x28,0xeb,0x55,0x74,0xa1,0x31,0xf7,0xb0,0x13,
+    0x86,0xdd,0x5f,0x42,0xd3,0x02,0x61,0x95,0x0c,0x5c,0xa5,0xcd,0xc0,0x07,0xe2,0xf3,
+};
+
+#define VT_CAP 8192u
+static uint8_t vt_a[VT_CAP], vt_b[VT_CAP];
+
+/* A pattern a test can recognise: byte i of stream `seed`. */
+static uint8_t vt_byte(uint32_t seed, uint32_t i)
+{
+    return (uint8_t)(seed * 37u + i * 11u + (i >> 3));
+}
+
+/* `n` bytes of pattern `seed` as one VISE stream at a[at...], in stored
+ * blocks of at most `blk` bytes; substituted unless `plain`. Returns the
+ * stream's length (even: a stream ends on a word). */
+static uint32_t vt_stream(uint8_t *a, uint32_t at, uint32_t seed, uint32_t n,
+                          uint32_t blk, int plain)
+{
+    uint8_t s[2048];
+    uint32_t k = 0, done = 0, i, inv[256];
+    do {
+        uint32_t m = n - done < blk ? n - done : blk;
+        s[k++] = (uint8_t)(done + m == n ? 1 : 0);   /* BFINAL, BTYPE 0 */
+        s[k++] = 0;                                    /* to the word     */
+        s[k++] = (uint8_t)m;  s[k++] = (uint8_t)(m >> 8);
+        s[k++] = (uint8_t)~m; s[k++] = (uint8_t)(~m >> 8);
+        for (i = 0; i < m; i++) s[k++] = vt_byte(seed, done + i);
+        if (m & 1u) s[k++] = 0;                        /* the pad byte    */
+        done += m;
+    } while (done < n);
+    for (i = 0; i < 256; i++) inv[vt_subst[i]] = i;
+    for (i = 0; i < k; i++) {
+        uint8_t b = s[i ^ 1u];                         /* the pair swap   */
+        a[at + i] = plain ? b : (uint8_t)inv[b];
+    }
+    return k;
+}
+
+/* The CRC-32 of pattern `sd` (n bytes) then pattern `sr` (m bytes). */
+static uint32_t vt_crc(uint32_t sd, uint32_t n, uint32_t sr, uint32_t m)
+{
+    uint32_t c = UNC_CRC32_INIT, i;
+    uint8_t b;
+    for (i = 0; i < n; i++) { b = vt_byte(sd, i); c = unc_crc32(c, &b, 1); }
+    for (i = 0; i < m; i++) { b = vt_byte(sr, i); c = unc_crc32(c, &b, 1); }
+    return ~c;
+}
+
+static uint32_t vt_dir(uint8_t *a, uint32_t at, const char *name,
+                       uint32_t depth)
+{
+    uint32_t nl = (uint32_t)strlen(name);
+    memcpy(a + at, "DVCT", 4);
+    memset(a + at + 4, 0, 78);
+    unc_put_u32be(a + at + 4 + 16, 0xA1000001u);
+    put16be(a + at + 4 + 68, depth);
+    a[at + 4 + 76] = (uint8_t)nl;
+    memcpy(a + at + 4 + 78, name, nl);
+    return at + 4 + 78 + nl;
+}
+
+static uint32_t vt_file(uint8_t *a, uint32_t at, const char *name,
+                        uint32_t depth, uint32_t seg, uint32_t pos,
+                        uint32_t dc, uint32_t dl, uint32_t rc, uint32_t rl,
+                        uint32_t crc, int shared, uint32_t s0, uint32_t s1)
+{
+    uint8_t *r = a + at + 4;
+    uint32_t nl = (uint32_t)strlen(name);
+    memcpy(a + at, "FVCT", 4);
+    memset(r, 0, 120);
+    r[8] = shared ? 0x10 : 0;
+    memcpy(r + 40, "TEXTttxt", 8);
+    put16be(r + 48, 0x0100);
+    unc_put_u32be(r + 56, 0xA2000002u);
+    unc_put_u32be(r + 60, 0xA3000003u);
+    unc_put_u32be(r + 64, dc); unc_put_u32be(r + 68, dl);
+    unc_put_u32be(r + 72, rc); unc_put_u32be(r + 76, rl);
+    unc_put_u32be(r + 80, crc);
+    put16be(r + 92, depth); put16be(r + 94, seg);
+    unc_put_u32be(r + 96, pos);
+    unc_put_u32be(r + 100, s0); unc_put_u32be(r + 104, s1);
+    r[118] = (uint8_t)nl;
+    memcpy(r + 120, name, nl);
+    return at + 4 + 120 + nl;
+}
+
+static void vt_head(uint8_t *a, uint32_t part, uint32_t count, uint32_t cat)
+{
+    memset(a, 0, VISE_HDR);
+    memcpy(a, "SVCT", 4);
+    unc_put_u32be(a + 4, part);
+    unc_put_u32be(a + 12, 0x5EED5EEDu);
+    unc_put_u32be(a + 16, 0x80010202u);
+    unc_put_u32be(a + 20, part == 1 ? count : 0);
+    unc_put_u32be(a + 36, part == 1 ? cat : 0);
+}
+
+/* The test installer: folder F with a two-fork file, two files sharing a
+ * block (catalogued in the reverse of their bytes), F/G/e at depth 2, a
+ * folder E that holds only a record of segment 0, and d at the root. */
+static uint32_t vt_build(uint8_t *a)
+{
+    uint32_t at = VISE_HDR, p_a, da, ra, p_b, blk, p_e, de, p_d, dd, cat, c,
+             body, n = 0;
+    p_a = at; da = vt_stream(a, at, 1, 301, 121, 0); at += da;
+    ra = vt_stream(a, at, 2, 40, 512, 0); at += ra;
+    /* The shared block: b's data (30), b's rsrc (7), c's data (21). */
+    p_b = at;
+    {
+        uint8_t s[64];
+        uint32_t i, inv[256], k = 0;
+        s[k++] = 1; s[k++] = 0; s[k++] = 58; s[k++] = 0;
+        s[k++] = (uint8_t)~58u; s[k++] = 0xFF;
+        for (i = 0; i < 30; i++) s[k++] = vt_byte(3, i);
+        for (i = 0; i < 7; i++) s[k++] = vt_byte(4, i);
+        for (i = 0; i < 21; i++) s[k++] = vt_byte(5, i);
+        for (i = 0; i < 256; i++) inv[vt_subst[i]] = i;
+        for (i = 0; i < k; i++) a[at + i] = (uint8_t)inv[s[i ^ 1u]];
+        blk = k;
+        at += k;
+    }
+    p_e = at; de = vt_stream(a, at, 6, 9, 512, 0); at += de;
+    p_d = at; dd = vt_stream(a, at, 7, 1, 512, 0); at += dd;
+    cat = at;
+    memcpy(a + cat, "CVCT", 4);
+    memset(a + cat + 4, 0, 16);
+    c = body = cat + VISE_CAT_HDR;
+    c = vt_dir(a, c, "F", 0); n++;
+    c = vt_file(a, c, "a", 1, 1, p_a, da, 301, ra, 40,
+                vt_crc(1, 301, 2, 40), 0, 0, 0); n++;
+    c = vt_file(a, c, "c", 1, 1, p_b, blk, 21, 58, 0,
+                vt_crc(5, 21, 0, 0), 1, 37, 0); n++;
+    c = vt_file(a, c, "b", 1, 1, p_b, blk, 30, 58, 7,
+                vt_crc(3, 30, 4, 7), 1, 0, 30); n++;
+    c = vt_dir(a, c, "G", 1); n++;
+    c = vt_file(a, c, "e", 2, 1, p_e, de, 9, 0, 0,
+                vt_crc(6, 9, 0, 0), 0, 0, 0); n++;
+    c = vt_dir(a, c, "E", 0); n++;
+    c = vt_file(a, c, "not here", 1, 0, 0x7FFF, 4, 4, 0, 0, 0, 0, 0, 0);
+    n++;
+    memcpy(a + c, "A trailing alert's text, no record", 34); c += 34;
+    c = vt_file(a, c, "d", 0, 1, p_d, dd, 1, 0, 0,
+                vt_crc(7, 1, 0, 0), 0, 0, 0); n++;
+    unc_put_u32be(a + cat + 4, c - body);
+    put16be(a + cat + 16, n);
+    vt_head(a, 1, 1, cat);
+    return c;
+}
+
+static int vt_pattern(const uint8_t *p, uint32_t n, uint32_t seed)
+{
+    uint32_t i;
+    for (i = 0; i < n; i++) if (p[i] != vt_byte(seed, i)) return 0;
+    return 1;
+}
+
+static int vt_run(const uint8_t *p1, uint32_t l1, const uint8_t *p2,
+                  uint32_t l2, int nparts, int missing, CapSink *cap)
+{
+    UncSegmentDesc desc;
+    UncVolumeSource vs;
+    SegParts sp;
+    UncSink sk;
+    UncAlloc al;
+    MemIO m;
+    UncIO io;
+    void *scratch;
+    int r;
+
+    test_make_memio(&io, &m, p1, l1);
+    if (unc_segment_describe(&io, &desc) != UNC_OK) return 99;
+    memset(&sp, 0, sizeof sp);
+    sp.part[0] = p1; sp.len[0] = l1;
+    sp.part[1] = p2; sp.len[1] = l2;
+    sp.nparts = nparts;
+    sp.missing = missing;
+    memset(&vs, 0, sizeof vs);
+    vs.ctx = &sp; vs.need = segsrc_need;
+    scratch = malloc(unc_segment_scratch_size());
+    test_make_alloc(&al);
+    cap_make(&sk, cap);
+    r = unc_extract_segments(&desc, &vs, scratch, &sk, &al, NULL, NULL);
+    free(scratch);
+    return r;
+}
+
+static int vt_named(const CapSink *cap, int i, const char *name)
+{
+    size_t n = strlen(name);
+    return cap->info[i].name_len == n && memcmp(cap->info[i].name, name, n) == 0;
+}
+
+static void test_vise(void)
+{
+    UncSegmentDesc desc;
+    CapSink cap;
+    MemIO m;
+    UncIO io;
+    uint8_t head[VISE_HDR];
+    uint32_t len = vt_build(vt_a), cat = unc_get_u32be(vt_a + 36);
+
+    /* --- the probe, the sniff, the set's identity ------------------- */
+    test_make_memio(&io, &m, vt_a, len);
+    CHECK(unc_vise_probe(vt_a, VISE_HDR, &io) == UNC_FORMAT_VISE);
+    test_make_memio(&io, &m, vt_a, len);
+    CHECK(unc_sniff(&io) == UNC_FORMAT_VISE);
+    test_make_memio(&io, &m, vt_a, len);
+    CHECK(unc_segment_describe(&io, &desc) == UNC_OK);
+    CHECK(desc.scheme == UNC_FORMAT_VISE && desc.part == 1 &&
+          desc.nparts == 1 && desc.head_len == VISE_HDR);
+    CHECK(unc_segment_match(&desc, vt_a, VISE_HDR) == 1);
+    memcpy(head, vt_a, VISE_HDR);
+    head[15] ^= 1;                                      /* another stamp */
+    CHECK(unc_segment_match(&desc, head, VISE_HDR) == 0);
+    /* Refused: each fact in turn. */
+    memcpy(head, vt_a, VISE_HDR); head[0] = 'X';
+    CHECK(unc_vise_probe(head, VISE_HDR, &io) == UNC_FORMAT_UNKNOWN);
+    memcpy(head, vt_a, VISE_HDR); unc_put_u32be(head + 16, 0x80010306u);
+    CHECK(unc_vise_probe(head, VISE_HDR, &io) == UNC_FORMAT_UNKNOWN);
+    memcpy(head, vt_a, VISE_HDR); unc_put_u32be(head + 4, 2);
+    CHECK(unc_vise_probe(head, VISE_HDR, &io) == UNC_FORMAT_UNKNOWN);
+    memcpy(head, vt_a, VISE_HDR); unc_put_u32be(head + 20, 0);
+    CHECK(unc_vise_probe(head, VISE_HDR, &io) == UNC_FORMAT_UNKNOWN);
+    memcpy(vt_b, vt_a, len); vt_b[cat] = 'X';           /* no 'CVCT' */
+    test_make_memio(&io, &m, vt_b, len);
+    CHECK(unc_vise_probe(vt_b, VISE_HDR, &io) == UNC_FORMAT_UNKNOWN);
+
+    /* --- the installer: folders that hold a stored file first, then the
+     * files in the order of their bytes; E and "not here" not at all -- */
+    CHECK(vt_run(vt_a, len, NULL, 0, 1, 0, &cap) == UNC_OK);
+    CHECK(cap.count == 7);
+    CHECK(cap.info[0].is_dir && vt_named(&cap, 0, "F"));
+    CHECK(cap.info[0].create_date == 0xA1000001u);
+    CHECK(cap.info[1].is_dir && vt_named(&cap, 1, "F/G"));
+    CHECK(vt_named(&cap, 2, "F/a") && cap.status[2] == UNC_OK);
+    CHECK(cap.dlen[2] == 301 && vt_pattern(cap.data[2], 301, 1));
+    CHECK(cap.rlen[2] == 40 && vt_pattern(cap.rsrc[2], 40, 2));
+    CHECK(cap.info[2].type == 0x54455854u && cap.info[2].creator == 0x74747874u);
+    CHECK(cap.info[2].finder_flags == 0x0100 &&
+          cap.info[2].create_date == 0xA2000002u &&
+          cap.info[2].mod_date == 0xA3000003u);
+    /* The shared block, b before c however the catalogue lists them. */
+    CHECK(vt_named(&cap, 3, "F/b") && cap.status[3] == UNC_OK);
+    CHECK(cap.dlen[3] == 30 && vt_pattern(cap.data[3], 30, 3));
+    CHECK(cap.rlen[3] == 7 && vt_pattern(cap.rsrc[3], 7, 4));
+    CHECK(vt_named(&cap, 4, "F/c") && cap.status[4] == UNC_OK);
+    CHECK(cap.dlen[4] == 21 && vt_pattern(cap.data[4], 21, 5));
+    CHECK(vt_named(&cap, 5, "F/G/e") && cap.status[5] == UNC_OK &&
+          vt_pattern(cap.data[5], 9, 6));
+    /* The depth after a deeper folder: back at the root. */
+    CHECK(vt_named(&cap, 6, "d") && cap.status[6] == UNC_OK &&
+          cap.dlen[6] == 1 && vt_pattern(cap.data[6], 1, 7));
+
+    /* --- a wrong CRC is that entry's, and the walk goes on ---------- */
+    memcpy(vt_b, vt_a, len);
+    {
+        uint32_t at = 0;
+        /* "a"'s record: the first FVCT after the catalogue's start. */
+        for (at = cat; memcmp(vt_b + at, "FVCT", 4) != 0; at++) {}
+        vt_b[at + 4 + 83] ^= 1;
+    }
+    CHECK(vt_run(vt_b, len, NULL, 0, 1, 0, &cap) == UNC_OK);
+    CHECK(cap.count == 7 && cap.status[2] == UNC_ERR_CRC &&
+          cap.status[3] == UNC_OK);
+    /* A stored block whose NLEN is not its LEN's complement. */
+    memcpy(vt_b, vt_a, len);
+    vt_b[VISE_HDR + 4] ^= 0x40;
+    CHECK(vt_run(vt_b, len, NULL, 0, 1, 0, &cap) == UNC_OK);
+    CHECK(cap.status[2] == UNC_ERR_CORRUPT && cap.status[6] == UNC_OK);
+    /* A slice past its block's end. */
+    memcpy(vt_b, vt_a, len);
+    {
+        uint32_t at;
+        for (at = cat; memcmp(vt_b + at, "FVCT", 4) != 0 ||
+                       vt_b[at + 4 + 120] != 'c'; at++) {}
+        unc_put_u32be(vt_b + at + 4 + 100, 40);
+    }
+    CHECK(vt_run(vt_b, len, NULL, 0, 1, 0, &cap) == UNC_OK);
+    CHECK(cap.status[4] == UNC_ERR_CORRUPT && cap.status[3] == UNC_OK);
+    /* A depth past the folders open: the catalogue cannot be placed. */
+    memcpy(vt_b, vt_a, len);
+    {
+        uint32_t at;
+        for (at = cat; memcmp(vt_b + at, "FVCT", 4) != 0 ||
+                       vt_b[at + 4 + 120] != 'e'; at++) {}
+        put16be(vt_b + at + 4 + 92, 4);
+    }
+    CHECK(vt_run(vt_b, len, NULL, 0, 1, 0, &cap) == UNC_ERR_CORRUPT);
+    CHECK(cap.count == 0);
+    /* Cut inside the catalogue, and inside a stream. */
+    CHECK(vt_run(vt_a, cat + 40, NULL, 0, 1, 0, &cap) != UNC_OK);
+    CHECK(vt_run(vt_a, VISE_HDR + 100, NULL, 0, 1, 0, &cap) != UNC_OK);
+
+    /* --- an installer that stores nothing it installs ------------- */
+    {
+        uint32_t c, body, at = VISE_HDR;
+        vt_head(vt_b, 1, 1, at);
+        memcpy(vt_b + at, "CVCT", 4);
+        memset(vt_b + at + 4, 0, 16);
+        c = body = at + VISE_CAT_HDR;
+        c = vt_dir(vt_b, c, "F", 0);
+        c = vt_file(vt_b, c, "fetched", 1, 0, 0, 9, 9, 0, 0, 0, 0, 0, 0);
+        unc_put_u32be(vt_b + at + 4, c - body);
+        put16be(vt_b + at + 16, 2);
+        CHECK(vt_run(vt_b, c, NULL, 0, 1, 0, &cap) == UNC_ERR_UNSUPPORTED);
+        CHECK(cap.count == 0);
+    }
+
+    /* --- two segments: a stream that runs from the end of segment 1's
+     * payload, which is where its catalogue starts, on at +44 of
+     * segment 2; and segment 2 not to be had --------------------- */
+    {
+        uint32_t s1len, s2len, at = VISE_HDR, st, c, body, cat1, cut;
+        st = vt_stream(vt_a, at, 9, 200, 512, 0);   /* scratch copy */
+        cut = 80;                                     /* bytes in seg 1 */
+        memcpy(vt_b + at, vt_a + at, cut);
+        cat1 = at + cut;
+        memcpy(vt_b + cat1, "CVCT", 4);
+        memset(vt_b + cat1 + 4, 0, 16);
+        c = body = cat1 + VISE_CAT_HDR;
+        c = vt_file(vt_b, c, "across", 0, 1, at, st, 200, 0, 0,
+                    vt_crc(9, 200, 0, 0), 0, 0, 0);
+        c = vt_file(vt_b, c, "second", 0, 2, VISE_HDR + st - cut, 
+                    vt_stream(vt_a + 4096, 0, 10, 5, 512, 0), 5, 0, 0,
+                    vt_crc(10, 5, 0, 0), 0, 0, 0);
+        unc_put_u32be(vt_b + cat1 + 4, c - body);
+        put16be(vt_b + cat1 + 16, 2);
+        vt_head(vt_b, 1, 2, cat1);
+        s1len = c;
+        /* Segment 2: its header, the rest of "across", then "second". */
+        {
+            static uint8_t s2[1024];
+            uint32_t k = VISE_HDR, t = vt_stream(s2 + 512, 0, 10, 5, 512, 0);
+            vt_head(s2, 2, 0, 0);
+            memcpy(s2 + k, vt_a + at + cut, st - cut); k += st - cut;
+            memcpy(s2 + k, s2 + 512, t); k += t;
+            s2len = k;
+            CHECK(vt_run(vt_b, s1len, s2, s2len, 2, 0, &cap) == UNC_OK);
+            CHECK(cap.count == 2);
+            CHECK(vt_named(&cap, 0, "across") && cap.status[0] == UNC_OK &&
+                  cap.dlen[0] == 200 && vt_pattern(cap.data[0], 200, 9));
+            CHECK(vt_named(&cap, 1, "second") && cap.status[1] == UNC_OK &&
+                  vt_pattern(cap.data[1], 5, 10));
+            CHECK(unc_segment_match(&desc, s2, VISE_HDR) == 0);
+            test_make_memio(&io, &m, vt_b, s1len);
+            CHECK(unc_segment_describe(&io, &desc) == UNC_OK &&
+                  desc.nparts == 2);
+            CHECK(unc_segment_match(&desc, s2, VISE_HDR) == 2);
+            CHECK(vt_run(vt_b, s1len, s2, s2len, 2, 2, &cap) ==
+                  UNC_ERR_SEGMENTED);
+            CHECK(cap.count == 2 && cap.status[0] == UNC_ERR_SEGMENTED &&
+                  cap.status[1] == UNC_ERR_SEGMENTED);
+        }
+    }
+}
+
+/* ------------------------------------------------------------------ */
 /* AppleLink package (`.pkg`) — NOT recognised, deliberately          */
 /*                                                                    */
 /* `unc_applelink_probe` shipped from 2026-08-23 to 2026-09-27 and    */
@@ -7426,6 +7812,7 @@ void run_format_tests(void)
     test_mar();
     test_tome();
     test_tome_parts();
+    test_vise();
     test_lz4_block_bound();
     test_mar_comment_listing();
     test_base64_mime();

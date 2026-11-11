@@ -846,7 +846,11 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # Tome's 'part' resources, their reader and the probe's resource-fork case
 # (DECISIONS.md 2026-11-11, *the parts the Installer expands*). In
 # `ovl_zipold` +4,100 and `ovl_sniff` +400 on the shipped pair.
-UNC_MAC_CODE_DEFAULT=198468
+# +8,744 on 2026-11-11, 198,468 -> 207,212, A5 +536 below: Installer VISE,
+# its reader, inflater, set identity and probe (DECISIONS.md 2026-11-11,
+# *the installer that was an archive*). In `ovl_vise` (8,858 B) and
+# `ovl_sniff` +968 on the shipped pair.
+UNC_MAC_CODE_DEFAULT=207212
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -1153,7 +1157,11 @@ UNC_MAC_CODE_DEFAULT=198468
 # File Manager calls' -376 (above); no data was removed.
 # +28 on 2026-11-11, 36,848 -> 36,876: `.data` alignment under the code's
 # +100 (above); the change added no data.
-UNC_MAC_A5_DEFAULT=36876
+# +536 on 2026-11-11, 36,876 -> 37,412: Installer VISE's tables, the
+# substitution and DEFLATE's, `.data` in this build, its format and scheme
+# rows, and alignment (DECISIONS.md 2026-11-11, *the installer that was an
+# archive*).
+UNC_MAC_A5_DEFAULT=37412
 # A CEILING PER CONFIGURATION, because one ceiling measured on another build
 # cannot fire. The figures above are the RESIDENT control build, which carries
 # every decoder; the shipped build's resident code is a third of that, so
@@ -1777,8 +1785,15 @@ UNC_MAC_A5_DEFAULT=36876
 # parts, through RunExtract's one call site; the A5 is the fork selector,
 # 2 B, and `.data` alignment (DECISIONS.md 2026-11-11, *the parts the
 # Installer expands*). 288 B off every budget.
-UNC_MAC_CODE_EAGER=38096
-UNC_MAC_A5_EAGER=16784
+# +244 and +76 on 2026-11-11, 38,096 -> 38,340 and 16,784 -> 16,860:
+# Installer VISE's shim and part-search mapping, its format, scheme and
+# keep rows, +32 and +64 (DECISIONS.md 2026-11-11, *the installer that was
+# an archive*); and the release of an envelope whose head named nothing,
+# keeping its reader, the codecs and the sniffer and three images where
+# they fit, +212 and +12 (*the head that named nothing*). 320 B off every
+# budget.
+UNC_MAC_CODE_EAGER=38340
+UNC_MAC_A5_EAGER=16860
 # +8 on 2026-10-02 for the same reason as the eager pair above: the
 # overlay call that now says WHICH of StuffIt 2.x's ciphers an entry
 # wants. A5 fell to 19,096 and its ceiling is left where it was.
@@ -1944,7 +1959,10 @@ UNC_MAC_A5_EAGER=16784
 # pair; data + bss 16,788 (-24), under its ceiling.
 # +272 code on 2026-11-11: an Installer Tome's parts, as the eager pair;
 # data + bss 16,804 (+16), under its ceiling.
-UNC_MAC_CODE_LAZY=36876
+# +32 on 2026-11-11: Installer VISE's shim and part-search mapping (A5
+# 16,884, +80, under its ceiling; DECISIONS.md 2026-11-11, *the installer
+# that was an archive*).
+UNC_MAC_CODE_LAZY=36908
 UNC_MAC_A5_LAZY=19200
 if [ -n "$UNC_OVL_RESIDENT" ]; then
     UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-$UNC_MAC_CODE_DEFAULT}

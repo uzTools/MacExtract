@@ -1,0 +1,21 @@
+{
+ "entries": [
+  {
+   "creator": "????",
+   "data_oracle": "the record's CRC-32 over both forks, and installer-vise",
+   "data_sha256": "632d4e890f73437cebfc0f9f642723fb24d7e72e4dda973f848914a914742365",
+   "data_size": 42860,
+   "finder_flags": 256,
+   "name": "REX-PCI30HX Driver",
+   "rsrc_oracle": "the record's CRC-32 over both forks, and installer-vise",
+   "rsrc_sha256": "1932d0a8fbf33fdbe0044502cc93f331c74b95e277b7951927ee5c6a7227753a",
+   "rsrc_size": 466,
+   "type": "ndrv"
+  }
+ ],
+ "fixture": "vise-wild-ratoc-pci",
+ "format": "Installer VISE",
+ "oracle": "each file's own CRC-32, data then resource fork, as the installer stores it, with the catalogue read independently of the engine; installer-vise for the compressed catalogues (tools/run_vise.py)",
+ "sha256": "b9ff3204f1ddc44f5e1fb7468e4945e95d788f11e9a6742d509326581f5afff9",
+ "size": 19480
+}

@@ -132,7 +132,12 @@ typedef int32_t (*OverlayEntry)(const OverlayHost *host, int32_t which,
                                     * before the release, in no keep set */
 #define OVL_ID_SEGSETUP      146   /* a segmented set's
                                    * setup, before the join (seg_setup.inc.c). */
-#define OVL_IMAGE_MAX         20
+#define OVL_ID_VISE          147   /* Installer VISE: its catalogue, its
+                                    * inflater and its set's match. It
+                                    * calls into the codecs image for the
+                                    * bit reader and the canonical decoder,
+                                    * and nothing calls into it         */
+#define OVL_IMAGE_MAX         24
 
 #define OVL_SPACESAVER_EXTRACT 30
 #define OVL_CPT_EXTRACT        31
@@ -178,6 +183,7 @@ typedef int32_t (*OverlayEntry)(const OverlayHost *host, int32_t which,
                                     * in head, len) */
 #define OVL_ABK_EXTRACT        67
 #define OVL_TOME_EXTRACT       68
+#define OVL_VISE_EXTRACT       69
 
 /* OVL_DEST_ASK's argument. Plain integers, so this header needs no Mac
  * one: `v`/`h` are the dialog's top left, `vol` is the reply's vRefNum. */

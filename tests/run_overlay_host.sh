@@ -1,7 +1,7 @@
 #!/bin/sh
 # run_overlay_host.sh — the overlay loader, run and asserted off the Macintosh.
 #
-# The application ships seventeen 'OVLY' images and until 2026-09-26 no
+# The application ships eighteen 'OVLY' images and until 2026-09-26 no
 # automated suite reached one: the images exist only in a Retro68 build, so the
 # 932-fixture corpus, the 9,320 robustness variants and every sanitiser build
 # exercise the decoders as ordinary linked code. Whether an image is FOUND,
@@ -12,7 +12,7 @@
 #
 # What this does about it, in four lanes:
 #
-#   1. the seventeen images, built from the SAME sources with the SAME flags by
+#   1. the eighteen images, built from the SAME sources with the SAME flags by
 #      tools/overlay/mkoverlay.sh, with the m68k-linux toolchain instead of
 #      Retro68's (OVL_TOOL);
 #   2. the REAL loader — mac/ovl_load_eager.c or mac/ovl_load_lazy.c,
@@ -72,7 +72,7 @@ if [ "$MODE" = "--shipped-only" ]; then
         exit 0; }
 else
 
-echo "overlay-host: seventeen images, m68k-linux toolchain"
+echo "overlay-host: eighteen images, m68k-linux toolchain"
 python3 tools/overlay/images.py > $B/inv.txt
 while read -r ident srcs; do
     resolved=""
@@ -87,7 +87,7 @@ while read -r ident srcs; do
     cp $IMG/$ident.bin $IMG/$id.bin          # the loader test wants them by id
     printf '%s %s/%s.bin\n' "$id" "$IMG" "$id" >> $B/manifest_lazy.txt
 done < $B/inv.txt
-[ "$(wc -l < $B/manifest_lazy.txt)" = 17 ] || fail "not seventeen images"
+[ "$(wc -l < $B/manifest_lazy.txt)" = 18 ] || fail "not eighteen images"
 
 # The eager lifetime reads ONE resource: the bundle, with every image in it.
 pairs=""
@@ -143,12 +143,12 @@ if [ "$MODE" = "--shipped-only" ]; then
         cp "$f" $IMG/$id.bin
         printf '%s %s/%s.bin\n' "$id" "$IMG" "$id" >> $B/manifest_lazy.txt
     done
-    # Nineteen since v0.45.0: the seventeen above and the shell's two, the
+    # Twenty since 2026-11-11: the eighteen above and the shell's two, the
     # destination dialog and a set's setup (mac/macextract_mac.c,
     # UNC_SHELL_IMAGES), which only the Retro68 build makes — they are
     # Toolbox code, so tools/overlay/images.py does not list them.
-    [ "$(wc -l < $B/manifest_lazy.txt)" = 19 ] \
-        || fail "not nineteen shipped images"
+    [ "$(wc -l < $B/manifest_lazy.txt)" = 20 ] \
+        || fail "not twenty shipped images"
     cp build/mac/ovl_bundle.bin $IMG/bundle.bin
     printf '128 %s/bundle.bin\n' "$IMG" > $B/manifest_eager.txt
     echo "overlay-host: the SHIPPED images (Retro68), $(stat -c%s $IMG/bundle.bin) B of bundle"
@@ -231,7 +231,7 @@ build_sink $B/sink_resident "src/*.c third_party/zlib/*.c" ""
 ORACLE_FIXTURES=$(sed -n '/^FIXTURES="/,/"$/p;/^BOTHFORK_FIXTURES="/,/"$/p' \
                   tests/run_mac_sink.sh | sed 's/^[A-Z_]*="//; s/"$//; s/\\$//')
 # One per image, smallest first because every run is emulated. Between them
-# these reach sixteen of the seventeen images (every one of them runs the
+# these reach seventeen of the eighteen images (every one of them runs the
 # sniffer's); the ciphers are loaded and kept
 # by the loader lane above, and no fixture here can exercise them because the
 # sink harness has no password to give.
@@ -243,7 +243,7 @@ CONTROL_FIXTURES="synth-sit-rle90.sit derived-KeyGraphics.sit
                   synth-exo-tar.tar synth-exo-gz.gz synth-exo-Z.Z
                   export-hc.hqx synth-uu-mac.uu derived-SD__Utilities.x
                   synth-os9-btoa.btoa synth-os9-mime.mim
-                  synth-sqp-forks.pkg"
+                  synth-sqp-forks.pkg vise-wild-sizzler"
 
 graded=0
 for fx in $ORACLE_FIXTURES; do

@@ -29,7 +29,13 @@ FIXTURES="derived-ASCbeep.sit derived-apple.art.sit alpha401.cpt \
           derived-MUSFMT10.ZIP ddtf-dd377ad.dd derived-800saywhat301j.sit \
           synth-sit14.sit synth-sqp-forks.pkg \
           synth-exo-zip-implode.zip mar-wild-mar020.mar \
-          synth-mar-single.mac tome-wild-install7"
+          synth-mar-single.mac tome-wild-install7 \
+          vise-wild-retrospect-client"
+
+# `vise-wild-retrospect-client` was added 2026-11-11 with Installer VISE:
+# a compressed catalogue, a shared block of four files and 13 files in
+# all, each held to its own CRC-32, through `ovl_vise` by the shell's own
+# writer, big-endian.
 
 # `tome-wild-install7` was added 2026-11-10 with the Installer Tome: 13
 # of Apple's files in 45 InstaCompOne blocks, the window growing from 4 KB

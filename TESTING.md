@@ -3565,6 +3565,47 @@ early, and Apple Menu Options' `sysz` and MacTCP's `DRVR` 22 and `ctrp` 130,
 which differ from the installed copies and have not been looked at
 (DECISIONS.md 2026-11-10, *the archive the Installer reads*).
 
+## Installer VISE (`tools/run_vise.py`, in `ci.sh`)
+
+Every record an installer stores carries the CRC-32 of its file's data fork
+then resource fork, written by the installer's builder, so that is the
+grade; the catalogue it is read against is parsed by this script,
+independently of the engine (FORMATS.md, *Installer VISE*).
+
+    python3 tools/run_vise.py --macextract build/macextract
+    python3 tools/run_vise.py --extra DIR     # every installer in DIR as well
+    python3 tools/run_vise.py --manifest FIXTURE...
+
+1. **The CRC-32s**: every `vise-wild-*` and `vise-x-*` fixture, and from the
+   specimen cache the Myth demo's installer and the Office 2004 updater
+   (VISE X, its `Installer.data` given with `--part`) where they are there.
+   Each stored file's forks must have the record's CRC-32, and its path
+   (folders by depth), sizes, type, creator and flags must be the
+   catalogue's; nothing of segment 0 may come out.
+2. **installer-vise**, run in `tools/sandbox.py` from
+   `reference/installer-vise` (`tools/fetch_references.sh`), on the
+   compressed catalogues it reads (0x80010308 and later, VISE X aside): its
+   forks, written flat, must be the engine's as a multiset. A stand-in
+   `rich.progress` is written into the box; it imports that for a progress
+   bar.
+3. **The set**: `vise-set-epson-sp700` and its `.2` and `.3`, every file;
+   then with `.3` left out, its files and the one that runs into it
+   refused by name and the rest out.
+4. **A downloader** (`vise-wild-netscape-stub`): refused, nothing listed.
+5. **Damage** on the smallest installer: 40 payload bytes changed one at a
+   time, every one refused (the CRC sees it), and 30 cuts, every one
+   refused; no crash, no hang.
+
+**Controls**, each made to fail: a fork changed after extraction against
+section 1's comparison, a record's CRC-32 changed in the archive against
+the engine's own check, and the folders read as indexes, as ScummVM reads
+3.5's, which must give `vise-wild-acrobat-movie` other paths.
+
+**What it cannot see**: what an installer writes when it runs (the paths,
+flags and dates are two readings of one layout), dates, a record whose
+trailing bytes hold a signature, and the versions no specimen here has
+(OPEN_ITEMS.md, *Installer VISE*).
+
 ## MacGzip's own output (`tools/run_macgzip.py`, in `ci.sh`)
 
 Eleven files **MacGzip 1.1.3 68K** wrote on emulated Mac OS 8.1 from one
@@ -4169,7 +4210,7 @@ short-circuited and subtract — the instrument sees only the total.
   instructions use `tools/m68kprof.py`; for real cost, the tick probe on an
   emulated Mac.
 - **The Macintosh's own I/O** (stdio is not the File Manager).
-- **Any file it is not handed**: the corpus is 1,015 files, and the
+- **Any file it is not handed**: the corpus is 1,036 files, and the
   population that matters for REJECTION cost is non-archives —
   `reference/`, this repository's trees, the specimen cache; 8,364 were
   swept on 2026-10-05 (BLOCKERS.md, *Withdrawn claims*).

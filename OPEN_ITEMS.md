@@ -7,7 +7,7 @@
    withdrawn claim to BLOCKERS.md, numbers to FORMATS.md).
 
 Nothing here stops the engine or the CLI, which are byte-exact against the
-oracle across 993 fixtures in `./ci.sh`.
+oracle across 1,010 fixtures in `./ci.sh`.
 
 **Filing something here is a decision to stop looking, so ask first.** Each
 of these questions has emptied a row at least once (BLOCKERS.md, *Withdrawn
@@ -103,7 +103,7 @@ not move the licence; only the second does.
 
 ### What grades a fork
 
-`unar` 1.10.8 grades most of the 993 fixtures' manifests; `macunpack` and
+`unar` 1.10.8 grades most of the 1,010 fixtures' manifests; `macunpack` and
 deark grade the forks it fails (TESTING.md, *The oracle*). The writers' own
 readers already grade StuffIt Deluxe 2.0.1's output, SuperDisk!'s modules,
 DiskDoubler's methods 3–5, Now Compress, Private File, AppleLink packages
@@ -342,6 +342,49 @@ Tome's resource fork (FORMATS.md, *Apple Installer Tomes*). Left:
   1,644; the specification and Apple's installed files say 1,645). Not
   reported upstream, and no minimal repro is written; the maintainer posts
   upstream reports.
+
+## Installer VISE: what is not read, and what is not graded
+
+The reader is in, 3.5 to VISE X with a set's segments (FORMATS.md,
+*Installer VISE*). Left:
+
+- **Installer VISE before 3.5 is not recognised**: files that open `VISE`
+  rather than `SVCT`, 11 of 55 small Discmaster installers of 1992-1996,
+  often a separate `.vct` beside the installer. Its catalogue is legible
+  (a count, ~68-byte entries, type, creator, dates and a padded Str31) but
+  its compression is another one, which no reader here or elsewhere
+  documents. Closes with the decompressor read out of one of its
+  installers, and a specimen whose installed files are known to grade it.
+- **0x80010306** has no specimen (systemless reads it as 0x80010307's
+  layout); not recognised until one is found.
+- **What an installer writes is not compared.** The paths (folders by
+  depth), Finder flags and dates are this engine's reading of the
+  catalogue, held to `run_vise.py`'s own reading of the same layout, not
+  to an installer's output; the CRC-32 grades the forks only. Closes with
+  installers run under emulation (one with its resource fork: the Epson
+  driver's, `fixtures/SOURCES.md`) and what they install compared.
+- **A folder that holds no stored file is not created**, where the
+  installer may create it empty (not measured).
+- **A downloader that stores nothing** (Netscape's, QuickTime's) is refused
+  with UNC_ERR_UNSUPPORTED, whose message names a compression method; it
+  should say the installer holds none of its files. The wording is the
+  maintainer's to choose.
+- **A record whose bytes after its name hold `FVCT` or `DVCT`** would be
+  taken for the next record, by this reader and by `run_vise.py` alike; no
+  installer here has one.
+- **Speed on a Mac Plus** is not measured: on x86 the inflater takes 42-73
+  instructions an output byte to zlib's 24.
+- **VISE X's segments after `Installer.data`** are not known: no set of
+  them was found.
+
+## A format read only as a set, which the tick probe does not see
+
+`tools/tick_probe` extracts through `unc_extract`, which answers
+UNC_ERR_UNSUPPORTED for Apple Backup, so `run_ticks.py` grades nothing of
+its progress (found 2026-11-11; Installer VISE was given a direct extract
+so that it is graded, DECISIONS.md 2026-11-11, *the installer that was an
+archive*). Closes with the probe driving a set through
+`unc_extract_segments`.
 
 ## The double-click helpers: what is left
 

@@ -594,6 +594,8 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-11 (the glue the shell expands) — the seven File Manager calls the shell linked from Retro68 are its own inline code: CODE −344, A5 −24, and every shipped budget 336 B higher on the machine
 - 2026-11-11 (the parts the Installer expands) — a resource fork holding 'part's is read as a Tome: each iFND a suitcase of its own, the rest one file under the package's name, every record at its stated id; all nine of System 7.5.5's families equal the installed suitcases but for the FOND's ids; 288 B off every budget
 - 2026-11-11 (the kilobyte under each copy) — `high_handle`'s filler left 1 KB over every kept copy, and from 5dfe571a a tar envelope's last copy did not fit on System 6.0.8 / 512Ke; 32 B now, 0 B on every axis, 72/74 again, but the copies no longer all fit there and the real application's chain fails
+- 2026-11-11 (the installer that was an archive) — Installer VISE installers extract, 3.5 to VISE X, a set's Segment.N floppies with them: every one of 488 stored files equals the CRC-32 its installer stores; the folders are depths, 3.5's included; 320 B off every budget with the next entry
+- 2026-11-11 (the head that named nothing) — an envelope whose first bytes name nothing keeps its reader, the codecs and the sniffer, and Compact Pro's, SuperDisk!'s and the ciphers where they fit, instead of the whole bundle; the maintainer's choice when Installer VISE's image put two gzip fixtures 8,146 B short on System 6.0.8 / 512Ke
 
 ---
 
@@ -24915,3 +24917,128 @@ under it has not come off there since at least 9593ad80, why not reduced
 **Taken: free on all five axes, and the tier back to 72/74** by the only
 measure the tier has. That the copies no longer all fit is the growth of
 `ovl_zipold` and the bundle since 5dfe571a, not this constant.
+
+
+## 2026-11-11 (the installer that was an archive) — Installer VISE installers extract, 3.5 to VISE X, a set's Segment.N floppies with them: every one of 488 stored files equals the CRC-32 its installer stores; the folders are depths, 3.5's included; 320 B off every budget with the next entry
+
+**Asked by the maintainer**, from a Macintosh Garden thread about an Eye
+Candy 3.0.1 installer that had lost its resource fork: everything needed to
+support the format. An Installer VISE installer keeps all it installs in
+its data fork; the resource fork is the program (`src/fmt_vise.c`'s
+header comment has the layout and the source of every field).
+
+**Read, not guessed.** Three outside readers, none of which reads more than
+a few versions: ScummVM's `vise.cpp` (3.5 Lite and 3.6 Lite), systemless's
+`vise.rs` (six versions, Rust, no licence stated) and mrmidi/installer-vise
+(the compressed catalogues of 2001-2006, MIT). The rest was MEASURED on 29
+installers downloaded from Discmaster, chosen by reading the header of 84
+with range requests (after a first survey of 24), a request every 3 s: the count at +20 and
+the stamp at +12 of segment 1; +8 of the catalogue as its compression flag
+(1 in the two compressed ones of five 'PACK' catalogues); +4 as the length
+past the 80-byte prefix in every 'PACK' catalogue, not only the compressed
+ones (an end at the first of 'PACK''s pointers, `vise-wild-okipage`); the
+suffixes of 0x80010301, 0x80010302, 0x80010303, 0x8001030A and 0x8001030C,
+which no outside reader has; and VISE X (0x80010A50, 0x80010B00), whose name
+lengths are two bytes later and whose files are in `Installer.data`, a
+second file in the bundle with the installer's stamp and no count.
+
+**The folders are DEPTHS in every version, 3.5 included.** ScummVM reads
+3.5's parent as a 1-based index into the folders; on three installers that
+puts files in a sibling folder — the Acrobat Movie plug-in in `Help`,
+IBM's drive pages under `Western Digital`, the 68K export filter in `PPC`
+— where depth puts them under `Plug-Ins`, `IBM` and `68K`. `run_vise.py`'s
+third control is that the two readings differ there. Whether the paths are
+the ones the installer writes is graded only by the emulator (below).
+
+**Its own inflater, not zlib.** A stored block is aligned to 16 bits, and
+zlib, given the swapped stream as ScummVM does, refuses the Myth demo's
+51-byte URL file (`Z_DATA_ERROR`) that the record's CRC-32 says this reads
+right. So the reader inflates through the codecs' LSB-first bit reader and
+canonical decoder, resumable at any output byte, so that a shared block's
+members are read on from where the last one ended; the files come out in
+the order of their bytes (segment, offset, slice) rather than the
+catalogue's, which interleaves blocks (`vise-wild-hdt-updater`), so each
+block is decoded once and a set's disks are wanted in order.
+
+**Graded.** Every stored file of 17 fixtures, the Myth demo's installer
+and the Office 2004 11.5.1 updater: 488 files, each the CRC-32 its record
+holds over the data fork then the resource fork, the catalogue read by
+`tools/run_vise.py` independently of the engine, and the 19 files of the
+five compressed catalogues equal installer-vise's run in `tools/sandbox.py`.
+The Epson Stylus Photo 700 driver's three floppies give 56 files, two of
+them across a disk's end; without the third, its 10 files and the one that
+runs into it are refused by name and the rest come out. 1,680 truncated or
+changed variants under ASan and UBSan, and every changed payload byte of
+`run_vise.py`'s damage section refused. An installer that stores none of
+what it installs — Netscape's and QuickTime's downloaders, records of
+segment 0 — is refused, UNC_ERR_UNSUPPORTED, whose words ("compression
+method") are wrong for it (OPEN_ITEMS.md).
+
+**On a Macintosh (measured, one boot a fixture).** The 14 installers of
+`tools/vmac/vise-sample.txt` that the autotest can grade (the 249-file one
+is past its 128-file read-back) PASS on System 6.0.8 at 1 MB and on the
+512Ke, System 3.0 at 1 MB and on the 512Ke, and System 7.0.1, each
+byte-exact against the CLI; VISE X's pair at 1 MB with `Installer.data`
+beside it. **The bundle's growth costs the System 6.0.8 / 512Ke tier**:
+63/74, every zip and tar envelope of the sample writing nothing — their
+copies no longer fit above a bundle 9,840 B larger (zip's ~62 KB against
+~60 KB, DERIVED from 2026-11-11, *the kilobyte under each copy*). The 1 MB
+floor 74/74, System 3.0 / 512Ke 72/74. **Not landed while it does**: the
+maintainer stopped it there, another session reorganising the overlays.
+
+**Cost (measured).** `ovl_vise`, the eighteenth image, 8,858 B; `ovl_sniff`
++968 (probe, describe, match); the bundle +9,840 B. Shipped CODE +32 and A5
++64; the control +8,744 and +536, so TIERS −9,280 and OVL_SAVED +9,184. The
+resident lane's System 6.0.8 / 512Ke refuses five more fixtures; the
+shipped lane's tallies do not move, over the 74 or over all 1,010
+(`run_tiers.py --shipped`, every tier, the same refusals by name). Peak heap
+9.7 KB (a downloader) to 81 KB (249 files), a 32 KB window only where a
+stream's output needs one; deepest chain 976 B, 1,546 B with the shell.
+On x86, 42-73 instructions an output byte against zlib's 24 on a zip.
+
+**Found on the way.** `run_diff.py` split the listing with `splitlines()`,
+which also breaks at a CR, so no folder's `Icon\r` row was ever read and its
+Finder flags never compared; fixed, StuffIt's 233 unmoved.
+`tick_probe` cannot see a format read only as a set: Apple Backup returns
+UNC_ERR_UNSUPPORTED there and `run_ticks.py` grades nothing of it
+(OPEN_ITEMS.md); VISE extracts alone as well as through the joiner, and the
+probe found its progress running 101,821 B past an installer's end, a
+shared block credited twice when its first member was empty — fixed, 0 on
+every installer now.
+
+**Not read.** Installer VISE before 3.5: files opening `VISE`, not `SVCT`,
+11 of 55 small Discmaster installers of 1992-1996, a different compression
+nobody documents (OPEN_ITEMS.md).
+
+## 2026-11-11 (the head that named nothing) — an envelope whose first bytes name nothing keeps its reader, the codecs and the sniffer, and Compact Pro's, SuperDisk!'s and the ciphers where they fit, instead of the whole bundle; the maintainer's choice when Installer VISE's image put two gzip fixtures 8,146 B short on System 6.0.8 / 512Ke
+
+**The trigger.** An envelope whose payload the peek could not name kept the
+whole bundle, so every image added to the bundle came off its grant. With
+Installer VISE's +9,840 B, `synth-exo-gz.gz` and `synth-exo-gz-named.gz`
+were 8,146 B short on System 6.0.8 / 512Ke (`run_tiers.py`), the tier
+72/74 → 70/74. Three ways were put to the maintainer: accept it, keep
+`ovl_vise` out of the bundle (a disk access after the archive is chosen),
+or this. **The maintainer chose this.**
+
+**What it keeps.** Its own reader, the codecs and the sniffer, copied
+first; where there is not room for those three while the bundle is in, it
+keeps the bundle whole, as before. Then `ovl_cptdd`, `ovl_superdisk` and
+the ciphers, where they fit: Compact Pro and SuperDisk! are the two formats
+only an end can name (`src/unc_peek.c`), and a `.cpt.hqx` is common. The
+layer under it keeps what it has when it is one of those and its images
+were kept, and otherwise reads the bundle again, as under a peek that was
+wrong (2026-11-05, *the head that was not the file*): a zip behind other
+bytes, an archive shorter than the peek's 512 bytes.
+
+**Cost (measured).** Shipped CODE +212, A5 +12; OVL_SAVED −224. Unnamed
+envelopes are granted +103,162 B (gzip, `.Z`) to +130,950 B (btoa) against
+the control, where the bundle gave −30,230. `run_tiers.py --shipped` over
+all 1,010 fixtures refuses the same fixtures by name on every tier;
+`tests/run_overlay_host.sh` holds the next layer's two cases. What the
+model cannot see is whether the copies fit while the bundle is in, which
+is what 2026-11-11 (*the kilobyte under each copy*) found is not certain on
+the 512Ke: the emulator tiers are what grade it (below).
+
+**On a Macintosh.** Not what it was for: at System 6.0.8 / 512Ke the
+copies of the images a format keeps do not fit above the larger bundle,
+named or not (the entry above), so this rule saves nothing there yet.

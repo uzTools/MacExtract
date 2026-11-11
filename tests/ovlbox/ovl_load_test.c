@@ -73,7 +73,7 @@ static const short kIds[] = {
     OVL_ID_CRYPT, OVL_ID_SPACESAVER, OVL_ID_CPTDD, OVL_ID_LZH, OVL_ID_ARC,
     OVL_ID_NOW, OVL_ID_SUPERDISK, OVL_ID_PACKIT, OVL_ID_TEXT, OVL_ID_STUFFIT,
     OVL_ID_EXO, OVL_ID_CODECS, OVL_ID_BINHEX, OVL_ID_BTOA, OVL_ID_SQP,
-    OVL_ID_ZIPOLD, OVL_ID_SNIFF
+    OVL_ID_ZIPOLD, OVL_ID_SNIFF, OVL_ID_VISE
 };
 #define NIDS ((int)(sizeof kIds / sizeof kIds[0]))
 
@@ -436,6 +436,27 @@ int main(int argc, char **argv)
               "bundle %ld time(s)", ovlbox_reads - reads0);
         CHECK(gPeeked == 0, "a layer that was taken left gPeeked at %d",
               gPeeked);
+        /* A head that named nothing (DECISIONS.md 2026-11-11, *the head
+         * that named nothing*), set as the release leaves it but with none
+         * of its copies made: a SuperDisk! layer whose image was not kept
+         * reads the bundle again, once, and an LZH layer does too. (Not
+         * Compact Pro: its release asks the archive whether it is
+         * encrypted, which runs an image, and nothing here can.) */
+        reads0 = ovlbox_reads;
+        gPeeked = -1;
+        ovl_release_if_unwanted(UNC_FORMAT_SUPERDISK, &io);
+        CHECK(ovlbox_reads == reads0 + 1, "a SuperDisk! layer with nothing "
+              "kept took %ld read(s), not 1", ovlbox_reads - reads0);
+        CHECK(ovl_image_q(OVL_ID_SUPERDISK, 1) != NULL,
+              "the SuperDisk! decoder is not there after the reload");
+        CHECK(gPeeked == 0, "that layer left gPeeked at %d", gPeeked);
+        reads0 = ovlbox_reads;
+        gPeeked = -1;
+        ovl_release_if_unwanted(UNC_FORMAT_LZH, &io);
+        CHECK(ovlbox_reads == reads0 + 1, "an LZH layer under a head that "
+              "named nothing took %ld read(s), not 1", ovlbox_reads - reads0);
+        CHECK(ovl_image_q(OVL_ID_LZH, 1) != NULL,
+              "the LZH decoder is not there after a head that named nothing");
     }
 #else
     /* The lazy lifetime releases nothing, and its release entry point must be

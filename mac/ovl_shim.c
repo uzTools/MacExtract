@@ -183,6 +183,7 @@ int unc_segment_match(const UncSegmentDesc *desc, const uint8_t *head,
     int32_t r;
     if (desc && desc->scheme == UNC_FORMAT_CPTSEG) id = OVL_ID_CPTDD;
     if (desc && desc->scheme == UNC_FORMAT_ABK) id = OVL_ID_ZIPOLD;
+    if (desc && desc->scheme == UNC_FORMAT_VISE) id = OVL_ID_VISE;
     r = seg_id(id, OVL_SEG_MATCH, desc, head, (uint32_t)len);
     return r > 0 ? (int)r : 0;
 }
@@ -398,3 +399,6 @@ DECODER(unc_lz4_extract,        OVL_ID_ZIPOLD,     OVL_LZ4_EXTRACT,        0)
 DECODER(unc_abk_extract,        OVL_ID_ZIPOLD,     OVL_ABK_EXTRACT,        0)
 /* And the Installer Tome: its own window, no codec (src/fmt_tome.c). */
 DECODER(unc_tome_extract,       OVL_ID_ZIPOLD,     OVL_TOME_EXTRACT,       0)
+/* Installer VISE, its own image: the bit reader and the canonical decoder
+ * are the codecs' (src/fmt_vise.c). */
+DECODER(unc_vise_extract,       OVL_ID_VISE,       OVL_VISE_EXTRACT,       RUN_CODECS)

@@ -1,0 +1,21 @@
+{
+ "entries": [
+  {
+   "creator": "MOSS",
+   "data_oracle": "the record's CRC-32 over both forks, and installer-vise",
+   "data_sha256": "87c8fd9bb09b0aeb22c1beaa6b84fe5df09934a33ab9450be223cb7cb2f680f4",
+   "data_size": 960424,
+   "finder_flags": 256,
+   "name": "Shockwave Flash NP-PPC",
+   "rsrc_oracle": "the record's CRC-32 over both forks, and installer-vise",
+   "rsrc_sha256": "287cd51c6eac75f1ba4de9e01b37579776465bef2eecf569f5d9595dba457c7e",
+   "rsrc_size": 19375,
+   "type": "NSPL"
+  }
+ ],
+ "fixture": "vise-wild-flash6",
+ "format": "Installer VISE",
+ "oracle": "each file's own CRC-32, data then resource fork, as the installer stores it, with the catalogue read independently of the engine; installer-vise for the compressed catalogues (tools/run_vise.py)",
+ "sha256": "526f0d2dbbd9cf38d7f748c542c1d702a1afa8ade6d689ecca70d968ba18bfe9",
+ "size": 437582
+}

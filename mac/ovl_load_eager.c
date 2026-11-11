@@ -33,8 +33,11 @@ static int    gBundleTried;
 static Handle gKept[KEPT_SLOTS];
 static short  gKeptId[KEPT_SLOTS];
 int           gPeeked;          /* slots 0 and 4 are for the layer above;
-                                 * the format the peek named. Not static:
+                                 * the format the peek named, or
+                                 * OVL_PEEK_UNNAMED. Not static:
                                  * tests/ovlbox sets it, having no peek */
+/* An envelope whose head named nothing (below, ovl_release_if_unwanted). */
+#define OVL_PEEK_UNNAMED (-1)
 
 /* Find an image inside the bundle. Returns NULL if this bundle has no such
  * id, which is a build mismatch rather than a run-time condition. */
@@ -221,6 +224,10 @@ static const unsigned char gKeepSet[][2] = {
     { UNC_FORMAT_ZIPSEG,      KEEP(OVL_ID_EXO,        KEEP_CRYPT) },
     /* An Apple Backup set: its reader and its match, no password. */
     { UNC_FORMAT_ABK,         KEEP(OVL_ID_ZIPOLD,     0) },
+    /* An Installer VISE set: its reader and its match. VISE has a
+     * password option (installer-vise's docs, *runtime pipeline*), unused
+     * on every installer here and not read: no ciphers kept. */
+    { UNC_FORMAT_VISE,        KEEP(OVL_ID_VISE,       0) },
     /* Envelopes, by the image their reader is in. */
     { UNC_FORMAT_BINHEX,      KEEP(OVL_ID_BINHEX,     KEEP_PEEK) },
     { UNC_FORMAT_BINHEX_OLD,  KEEP(OVL_ID_BINHEX,     KEEP_PEEK) },
@@ -289,6 +296,17 @@ void ovl_release_if_unwanted(UncFormat fmt, UncIO *io)
          * archives, and release for what this layer is (DECISIONS.md
          * 2026-11-05, *the head that was not the file*). */
         if (gPeeked == (int)fmt) { gPeeked = 0; return; }
+        /* A head that named nothing kept the readers of the formats only
+         * an end can name, and the ciphers: their layers have what they
+         * need. Any other is read as a wrong peek is. */
+        if (gPeeked == OVL_PEEK_UNNAMED &&
+            (((fmt == UNC_FORMAT_COMPACTPRO || fmt == UNC_FORMAT_CPTSEG) &&
+              gKept[5] && gKept[1]) ||
+             (fmt == UNC_FORMAT_DISKDOUBLER && gKept[5]) ||
+             (fmt == UNC_FORMAT_SUPERDISK && gKept[3]))) {
+            gPeeked = 0;
+            return;
+        }
         if (!ovl_reload()) { StopAlert(135, NULL); return; }  /* kNoReloadALRT */
     }
 
@@ -307,6 +325,34 @@ void ovl_release_if_unwanted(UncFormat fmt, UncIO *io)
         pal.alloc = peek_alloc;
         pal.free = peek_free;
         as = unc_envelope_peek(io, &pal, &enc);
+        if (as == UNC_FORMAT_UNKNOWN) {
+            /* The head names nothing: a file that is no archive, or one
+             * whose format only its END can name — Compact Pro's index and
+             * SuperDisk!'s last record (src/unc_peek.c). So the envelope
+             * keeps its own reader, the sniffer for the layer under, and
+             * those two formats' readers with the ciphers Compact Pro may
+             * want, and gives back the rest: a layer that is anything else
+             * reads the bundle again, as under a peek that was wrong
+             * (DECISIONS.md 2026-11-11, *the head that named nothing*). */
+            ovl_keep(want, 0);
+            ovl_keep((short)OVL_ID_CODECS, 2);
+            ovl_keep(OVL_ID_SNIFF, 4);
+            /* The copies are made while the bundle is in: where there is
+             * not room for the three this layer and the next cannot do
+             * without, the bundle stays whole, as before. The other three
+             * are a layer's to have or to read again. */
+            if (!gKept[0] || !gKept[2] || !gKept[4]) {
+                ovl_drop(0);
+                ovl_drop(2);
+                ovl_drop(4);
+                return;
+            }
+            ovl_keep(OVL_ID_CPTDD, 5);
+            ovl_keep(OVL_ID_SUPERDISK, 3);
+            ovl_keep(OVL_ID_CRYPT, 1);
+            gPeeked = OVL_PEEK_UNNAMED;
+            goto release;
+        }
         row = keep_row(as);
         if (row < 0 || (gKeepSet[row][1] & KEEP_PEEK)) return;
         inner = (short)(OVL_ID_CRYPT + (gKeepSet[row][1] & 0x1f));
@@ -358,6 +404,7 @@ void ovl_release_if_unwanted(UncFormat fmt, UncIO *io)
      * every decoder stub failed at ovl_codecs_ready() and the archive
      * produced nothing. */
     ovl_keep(OVL_ID_CODECS, 2);
+release:
     /* The vector must be re-patched to the COPY's address, so make the next
      * caller do it. */
     ovl_codecs_invalidate();
