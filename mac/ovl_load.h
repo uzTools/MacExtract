@@ -79,7 +79,7 @@ int ovl_spent(void);
 
 /* Read the bundle again after a release, so the next archive in the
  * Finder's list can be of any format (DECISIONS.md 2026-10-12, *the reload
- * that the list needs*). Eager: gives back the kept copies and repeats the
+ * that the list needs*). Eager: gives back what the release kept and repeats the
  * launch-time read; nonzero if the bundle is in memory again. Lazy: nothing
  * was given back, so always nonzero. */
 int ovl_reload(void);

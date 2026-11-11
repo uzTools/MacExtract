@@ -18,6 +18,7 @@
 Handle NewHandle(Size n);
 void   DisposeHandle(Handle h);
 Size   GetHandleSize(Handle h);
+void   SetHandleSize(Handle h, Size n);
 void   HLock(Handle h);
 void   HUnlock(Handle h);
 void   HNoPurge(Handle h);

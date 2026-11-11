@@ -1964,11 +1964,11 @@ either way the names are changed deliberately.
   `tools/encinfo_probe.c` for each Compact Pro, zip and StuffIt 5 layer, as
   the shell does; it cannot see a wrong answer, which is `run_crypt.py`'s
   (*Decryption*).
-- **The keep before the release.** The copies a format keeps must fit
-  beside the bundle, which is still in the heap; the model charges only
-  the grant after it. On System 6.0.8 / 512 KB a tar envelope's four no
-  longer do, and the model says 72/74 (DECISIONS.md 2026-11-11, *the
-  kilobyte under each copy*).
+- **The layer under an envelope.** The autotest the tiers were measured
+  with takes one layer; `interactive.py --chain` is the only run of the
+  layer under it, by hand (tools/vmac/README.md). The keep itself needs no
+  room since 2026-11-11, so it cannot fail for memory (DECISIONS.md
+  2026-11-11, *the copies that moved down*).
 - **Fragmentation.** The Memory Manager also needs one PIECE that big
   ("Memory is too broken up"); nothing here models it. No disagreement
   currently rests on it.
@@ -2755,7 +2755,7 @@ Four lanes, in one script, ~65 s, plus `--shipped-only` as variant 3d:
 | lane | what it grades |
 |---|---|
 | the images | seventeen of them, from `tools/overlay/images.py`'s inventory — the shell's two since v0.45.0 are Toolbox code, Retro68's only, and counted by the shipped lane alone — PARSED out of `mac/CMakeLists.txt`, so an image cannot exist in the build and be missing here; the asserted count has to be raised with each new image (`ovl_sniff` was the seventeenth; DECISIONS.md, *the probes that left with the bundle*) |
-| the loader | both lifetimes, natively under ASan+UBSan and big-endian under `qemu-m68k`: read counts, keep and release per format (including that a StuffIt release gives `ovl_zipold` back), the `wa`/`kf`/`rf`/`fc`/`fn` probe fields, and **every relocation in every image checked against the raw file's own trailer at the address the image runs at** — including a kept copy, relocated by the difference of two addresses |
+| the loader | both lifetimes, natively under ASan+UBSan and big-endian under `qemu-m68k`: read counts, keep and release per format (including that a StuffIt release gives `ovl_zipold` back), the `wa`/`kf`/`rf`/`fc`/`fn` probe fields, and **every relocation in every image checked against the raw file's own trailer at the address the image runs at** — including a kept image moved down in the bundle's block, relocated by the difference of two addresses |
 | extraction | the sink suite's fixture list, extracted THROUGH the images under `qemu-m68k` and compared with the oracle manifests by `tools/check_mac_sink.py`: **20 fixtures, byte-exact, in both lifetimes**, including `synth-exo-zip-implode.zip` (the only run zip method 6 gets through its own image). **The only check that zip KEEPS `ovl_zipold`**: with that keep removed, the eager lane fails on `derived-MUSFMT10.ZIP` (bent by hand once; not a `--mutate` break) |
 | one per image | twenty fixtures reaching sixteen of the seventeen images (every one runs the sniffer's, released before the decoder's is called; `shrink-wild-BBA.zip` and `reduce-wild-fractlan.zip` for `ovl_zipold`), each compared with the RESIDENT build of the same engine — the only oracle for an image no manifest covers (SuperDisk!, btoa, MIME, AppleLink). Exit status is compared too |
 | the SHIPPED images (`--shipped-only`, `ci.sh` variant 3d) | the same loader against the images **Retro68** just built — the bytes `dist/` ships — in both lifetimes: found, relocated, kept, released. The only check on the bundle's own directory and on **30 relocations across six images** (the m68k-linux build emits 15 in one). They cannot be CALLED: a Retro68 image entered from an m68k-linux host binary segfaults (measured) |

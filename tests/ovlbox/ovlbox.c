@@ -191,6 +191,18 @@ Size GetHandleSize(Handle h)
     return b ? b->size : 0;
 }
 
+/* Shrinking only, which is all the loader asks (ovl_pack): in place, as a
+ * Macintosh shrinks a locked block; the bytes cut off are overwritten, so
+ * a kept image that was not moved below the cut is garbage here. */
+void SetHandleSize(Handle h, Size n)
+{
+    Blk *b = blk_of(h);
+    if (b == NULL || n > b->size) return;
+    memset(b->cell + n, 0xA5, (size_t)(b->size - n));
+    gLive -= (long)(b->size - n);
+    b->size = n;
+}
+
 void HLock(Handle h)   { Blk *b = blk_of(h); if (b) b->locked = 1; }
 void HUnlock(Handle h) { Blk *b = blk_of(h); if (b) b->locked = 0; }
 void HNoPurge(Handle h) { (void)h; }
@@ -210,16 +222,6 @@ void MoveHHi(Handle h)
     munmap(b->map, b->maplen);
     b->map = m; b->maplen = maplen; b->cell = (Ptr)data;
     ovlbox_moves++;
-}
-
-/* ovl_keep's placing (mac/ovl_load_eager.c, OVL_KEEP_HIGH): on a Macintosh
- * the segsetup image's high_handle, which no lane here can call; the mock's
- * NewHandle and MoveHHi in its place, so a copy still MOVES before its lock. */
-Handle ovlbox_keep_high(unsigned long len)
-{
-    Handle h = NewHandle((Size)len);
-    if (h != NULL) MoveHHi(h);
-    return h;
 }
 
 OSErr MemError(void) { return 0; }

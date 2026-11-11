@@ -289,7 +289,6 @@ CLASSES["peekhead.seek"] = ["unc_peek.c:ph_seek"]
 # Indirect calls this tool knows it does not follow, by callee expression.
 NOT_FOLLOWED = {
     "RETRO68_RELOCATE": "the startup relocation, before main",
-    "OVL_KEEP_HIGH": "ovl_segsetup.c's high_handle, at launch",
     "e@macextract_mac.c": "the shell's dialog images (ovl_destdlg, "
                           "ovl_segsetup), not compiled here",
 }

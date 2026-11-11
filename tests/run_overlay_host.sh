@@ -112,12 +112,12 @@ INC="-Iinclude -Isrc -Imac -Itools/overlay -Itests/ovlbox -Itests/ovlbox/toolbox
 # UNC_AT_BUDGET is what defines gWantedAfterRelease/gKeepFail/gFlushHas/
 # gFlushCalls — the probe fields a Macintosh only shows on its completion
 # alert. Here they are assertions.
-DEFS="-DUNC_AT_OVERLAY -DUNC_AT_BUDGET '-DOVL_LOWMEM_ROM85=ovlbox_rom85()' '-DOVL_KEEP_HIGH(n)=ovlbox_keep_high(n)'"
+DEFS="-DUNC_AT_OVERLAY -DUNC_AT_BUDGET '-DOVL_LOWMEM_ROM85=ovlbox_rom85()'"
 # The sink lane does NOT define UNC_AT_BUDGET: in mac/macextract_mac.c that
 # switch turns on a heap probe built out of ApplicationZone, LMGetApplLimit and
 # MaxBlock, which the mock Toolbox does not carry and which has nothing to do
 # with overlays. The loader test is where those fields are read.
-SINK_DEFS="-DUNC_AT_OVERLAY '-DOVL_LOWMEM_ROM85=ovlbox_rom85()' '-DOVL_KEEP_HIGH(n)=ovlbox_keep_high(n)'"
+SINK_DEFS="-DUNC_AT_OVERLAY '-DOVL_LOWMEM_ROM85=ovlbox_rom85()'"
 
 build_loadtest() {   # <out> <loader.c> <extra-defs> <cc...>
     out=$1; loader=$2; extra=$3; shift 3
@@ -338,7 +338,7 @@ if [ "$1" = "--mutate" ]; then
     # subtlest line in either loader, and the one no tier can see fail.
     mutate "the kept copy relocated by its own address" mac/ovl_load_eager.c \
         -DOVL_LANE_EAGER $B/manifest_eager.txt ovl_load_eager.c \
-        "(long)*h - (long)p);" "(long)*h);"
+        "(long)dst - (long)src);" "(long)dst);"
     # The documented instruction-cache flush, at the bundle site.
     mutate "the bundle fixup does not flush" mac/ovl_load_eager.c \
         -DOVL_LANE_EAGER $B/manifest_eager.txt ovl_load_eager.c \
@@ -356,7 +356,7 @@ if [ "$1" = "--mutate" ]; then
     # every decoder reaches through the host vector.
     mutate "the codecs image is not kept" mac/ovl_load_eager.c -DOVL_LANE_EAGER \
         $B/manifest_eager.txt ovl_load_eager.c \
-        "    ovl_keep(OVL_ID_CODECS, 2);" "    /* not kept */"
+        "    ovl_keep(OVL_ID_CODECS);" "    /* not kept */"
 fi
 
 echo "overlay-host: ok"

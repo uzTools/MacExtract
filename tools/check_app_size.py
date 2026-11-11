@@ -317,7 +317,10 @@ TAKEN = "2026-11-03"
 # in `ovl_zipold` (+4,100) and the probe's resource-fork case in
 # `ovl_sniff` (+400), with the stored spans' +296 and PackIt's +100 of the same day
 # (DECISIONS.md 2026-11-11, *the parts the Installer expands*).
-EXPECT_BUNDLE = 209404
+# -> 209,324 the same day: `high_handle` gone from `ovl_segsetup` (-78), the
+# release keeping its images in the bundle's own block (DECISIONS.md
+# 2026-11-11, *the copies that moved down*).
+EXPECT_BUNDLE = 209324
 TOLERANCE_BUNDLE = 2048
 TAKEN_BUNDLE = "2026-11-11"
 

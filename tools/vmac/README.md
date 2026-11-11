@@ -2386,10 +2386,11 @@ Saving a SECOND time puts both records in the catalog: the first was
                                     # dialog (System 3.0 and 6.0.8)
     interactive.py --chain          # .sit.hqx: do ALL the envelope layers come off?
                                     # The only run of the layer UNDER an envelope:
-                                    # the autotest build takes one. Names only, against
+                                    # the autotest build takes one. Names against
                                     # the CLI's hidden forks (visible `.rsrc` sidecars
                                     # failed every file with a resource fork until
-                                    # 2026-11-03)
+                                    # 2026-11-03), then every DATA fork under them
+                                    # byte for byte (since 2026-11-11)
     interactive.py --wrapped        # a set whose parts are each in an envelope
     interactive.py --wd             # output lands in the archive's folder, not at /
     interactive.py --dest           # output lands on the volume the user CHOSE
@@ -3289,7 +3290,15 @@ fam=0` said the application had never seen a family).
 
 `--chain` and `--wrapped` compare NAMES on the volume against what the Linux
 CLI produces, and require the application to have tidied up (the intermediate
-layer for `--chain`, the decoded parts for `--wrapped`). A CLI that exits
+layer for `--chain`, the decoded parts for `--wrapped`). `--chain` then
+compares every data fork under those names with the CLI's, byte for byte; a
+resource fork the CLI writes as `._NAME` is counted, not compared. **The tar
+envelopes on the 512Ke are its sweep**, one boot each, a few minutes:
+`--chain --emu mv-512Ke-1d --system System6.hfv` on `a2ps.V4.3.tar.Z`,
+`popper-1.7.tar.Z`, `PCCTS.tar.gz` and `synth-exo-tar-Z.tar.Z`. On ea48a1a8
+all four left the `.tar` unopened and read 0 of 4, 29, 49 and 4 forks; since
+2026-11-11 all four match (DECISIONS.md 2026-11-11, *the copies that moved
+down*). A CLI that exits
 non-zero fails `--chain`: on 2026-11-07 the CLI and the Mac both left the
 intermediate alone and it read MATCH. `--chain` is what
 tests README.md's envelope claim, and **the only harness that can see a

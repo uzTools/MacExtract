@@ -6736,9 +6736,13 @@ static void ExtractOne(short vRefNum, long dirID, ConstStr255Param name,
         else
             PStrCat(outcome, S_OUT_NEEDS_FREE);
     }
-    else if (gShortPiece)
+    else if (gShortPiece || ret == UNC_ERR_MEM)
         /* The budget had room and the Memory Manager still could not find
-         * one piece that big, so a bigger memory size need not help. */
+         * one piece that big, so a bigger memory size need not help. Or
+         * the shell's own memory said no outside the budget — a set's
+         * part table, or an image the release could not keep, which said
+         * "Archive damaged." of a `.tar.Z` on a 512Ke until 2026-11-11
+         * (DECISIONS.md, *the copies that moved down*). */
         PStrCat(outcome, S_OUT_FRAGMENTED);
     else if (ret != UNC_OK && entries > 0)
         /* The archive stopped being readable part way down, and what

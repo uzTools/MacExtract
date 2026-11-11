@@ -594,6 +594,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-11 (the glue the shell expands) — the seven File Manager calls the shell linked from Retro68 are its own inline code: CODE −344, A5 −24, and every shipped budget 336 B higher on the machine
 - 2026-11-11 (the parts the Installer expands) — a resource fork holding 'part's is read as a Tome: each iFND a suitcase of its own, the rest one file under the package's name, every record at its stated id; all nine of System 7.5.5's families equal the installed suitcases but for the FOND's ids; 288 B off every budget
 - 2026-11-11 (the kilobyte under each copy) — `high_handle`'s filler left 1 KB over every kept copy, and from 5dfe571a a tar envelope's last copy did not fit on System 6.0.8 / 512Ke; 32 B now, 0 B on every axis, 72/74 again, but the copies no longer all fit there and the real application's chain fails
+- 2026-11-11 (the copies that moved down) — the release keeps its images where they already are, packed down to the start of the bundle's own block, instead of copying each above it; a tar envelope's inner layer comes off on System 6.0.8 / 512Ke byte for byte, for CODE −24, A5 −40, every grant +34 to +44 B and 10 s off a 128K ROM's `.sit.hqx`; "Archive damaged." was the codecs' keep failing, and says "Memory is too broken up" now
 
 ---
 
@@ -24915,3 +24916,87 @@ under it has not come off there since at least 9593ad80, why not reduced
 **Taken: free on all five axes, and the tier back to 72/74** by the only
 measure the tier has. That the copies no longer all fit is the growth of
 `ovl_zipold` and the bundle since 5dfe571a, not this constant.
+
+## 2026-11-11 (the copies that moved down) — the release keeps its images where they already are, packed down to the start of the bundle's own block, instead of copying each above it; a tar envelope's inner layer comes off on System 6.0.8 / 512Ke byte for byte, for CODE −24, A5 −40, every grant +34 to +44 B and 10 s off a 128K ROM's `.sit.hqx`; "Archive damaged." was the codecs' keep failing, and says "Memory is too broken up" now
+
+**The test that sees it (measured).** `interactive.py --chain` now
+compares every data fork under the names it already compared. On
+ea48a1a8, on the 512Ke under System 6.0.8, all four tar envelopes leave
+the `.tar` unopened: `a2ps.V4.3.tar.Z` 0 of 4 forks, `popper-1.7.tar.Z`
+0 of 29, `PCCTS.tar.gz` 0 of 49, `synth-exo-tar-Z.tar.Z` 0 of 4. The
+tier's 72/74 cannot see it: the autotest takes one layer.
+
+**"Archive damaged." (measured, then reduced to its cause).** At 9593ad80
+the interactive build with `-D UNC_AT_BUDGET` ends `popper-1.7.tar.Z`'s
+chain on `e1=0 wa=139 kf=2 rf=11 … Archive damaged.`: the release's last
+keep, the codecs (139), got no handle (`kf` 2), the `.Z` layer's shim
+returned `UNC_ERR_MEM` from `ovl_codecs_ready` before the archive was
+opened, and with no entry and no budget refusal behind it the outcome
+read that as a damaged archive. The plain build ends the same on it and on
+`synth-exo-tar-Z.tar.Z`, nothing written. The autotest the bisect graded
+read `kf` 0 at that commit: the real application has less room at the
+keep. So it is the same shortfall that later took the sniffer, one image
+earlier, surfacing as a decode error. **2026-11-03's claim stands**: at
+933306db the same chain on the same machine matches the CLI for both
+`.tar.Z` by name, the harness of the day (re-run today); it broke between there and 9593ad80, as the
+images grew, and was never seen because nothing ran the chain.
+
+**The fix.** A keep allocates nothing. It counts in the image's own
+directory entry (the zero half-word `mkbundle.py` writes); `ovl_pack`
+moves the kept entries and then the kept images down to the start of the
+bundle's block, each relocated by the difference, and `SetHandleSize`
+gives the rest back. The block is detached from the resource map so the
+next `GetResource` reads afresh. The bundle is the lowest block the
+application allocates (launch; `ovl_reload`'s `ReserveMem`), so what is
+kept sits at the bottom and what is cut joins the free space above it in
+one piece — what `high_handle` was for (2026-11-07, 2026-11-09), without
+a copy, a filler or a second block; it is gone from `ovl_segsetup`. The
+layer under an envelope gives back the envelope's reader and the sniffer
+by count and packs again, so an image kept for both layers (an LZ4 frame
+and its MAR) is a count of two rather than a slot of its own. What is
+kept is a subset of what is already in memory, so the question "do the
+copies fit" no longer exists, on any machine.
+
+**The misreport.** `UNC_ERR_MEM` at archive level with no budget refusal
+— the shell's own memory: a set's part table, or an image not kept —
+now joins the fragmentation branch, "Memory is too broken up. Quit other
+programs and try again." +8 B of code. After the fix an image is missing
+only in a mismatched build, but a set's part table can still be refused.
+
+**Five axes (measured).** CODE / A5 38,072 / 16,744, −24 / −40: the
+slot tables' 60 B of `.bss` became the count byte, `ovl_keep` and both
+drops a lookup, `ovl_pack` the copy and fixup they did. `ovl_segsetup`
+−78 B, the bundle −80. The lazy pair CODE +8 / A5 −8 and the control
++4 / −4, the outcome line; their sums unmoved, so `TIERS_CONTROL` holds.
+Heap: the probe's budget on `derived-PCCTS.tar`, `synth-sit-rle90.sit`,
+`synth-dd-m5.dd` and `popper-1.7.tar.Z` rose +42, +38, +44 and +34 B on
+all three tiers, `gain()`'s 52 B less 4 B an image kept less alignment,
+to the byte; `OVL_RESIDUE` stays −402. The exception is the one this
+fixes: `popper-1.7.tar.Z` on System 6.0.8 / 512Ke is granted 17,390 B
+LESS (183,858 B), because on main its sniffer was never kept there and
+the outer layer ran with room the inner one then lacked; its LZW needs
+147,764. `synth-dd-m5.dd`'s shortfall 1,018 → 974 B (System 3.0) and 194
+→ 150 B (System 6.0.8). Stack (`stack_depth.py`) 3,446 B, `--shell`
+6,244, unmoved. Extractions, the sample one fixture per boot, one pass
+each: System 6.0.8 on the 512Ke **72/74**, System 3.0 on the 512Ke
+**72/74**, the 64K ROM **72/74**, each refusing `synth-dd-m5.dd` and
+Library_ISBN per entry as before; the 1 MB floor, System 6.0.8 at 4 MB
+with its INITs and System 7.0.1 **74/74**; Mac OS 9.2 `os9.py --autotest`
+**22/22** (15 in one run, which the 2-hour limit stopped, the other 7 in
+a second).
+
+**Chains (measured).** The four tar envelopes byte-exact on the 512Ke
+under System 6.0.8 (4/4, 29/29, 49/49, 4/4 forks) and on the 1 MB Mac
+Plus; on the 512Ke too `synth-mar020.mar.lz4` (the image kept twice,
+7/7), `mystic_8-ball.sit.bin` (1/1) and `bitmap11.sit.bin` (29/29), their
+resource forks not compared.
+
+**Speed (measured).** `expander.py --only ours --emu mv-4M-1x` on
+`macburger-helper.hqx`, each `build/mac` twice, alternated: **224.8 s on
+ea48a1a8, 214.6 s with this**, every run equal to the tenth. That is the
+9.6 s 2026-11-10 measured `high_handle` costing on a 128K ROM (*the 12.8
+seconds that were three commits*), given back with the placement it
+bought kept. Not measured: other archives, a 64K ROM.
+
+**Taken: free or better on all five axes and faster**, every tier's tally as it was,
+and the tar envelopes' inner layer back on the 512Ke under System 6.0.8.

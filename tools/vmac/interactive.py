@@ -2059,10 +2059,37 @@ def phase_chain(args, appbin, workdir, shot):
     ok = got == want and cli.returncode == 0
     print(f"interactive: after the chain, the volume holds {sorted(got)}")
     print(f"interactive: the Linux CLI produces           {sorted(want)}")
+    # And the BYTES, every file under those names (2026-11-11): a name
+    # set cannot see a layer that came off empty or short. Data forks
+    # only; a file the CLI gives a `._` fork is counted and not compared.
+    onvol = mac_forks(os.path.join(workdir, "boot.hfv"), workdir)
+    seen, bad, nrsrc = set(), [], 0
+    for top, dirs, files in os.walk(ref):
+        for f in files:
+            if f.startswith("._"):
+                nrsrc += 1
+                continue
+            rel = os.path.relpath(os.path.join(top, f), ref)
+            comps = tuple(rel.split(os.sep))
+            seen.add(comps)
+            mine = onvol.get(comps)
+            if mine is None or mine[0] != open(os.path.join(top, f),
+                                                "rb").read():
+                bad.append(rel + (" missing" if mine is None else
+                                  f" {len(mine[0])} B, want "
+                                  f"{os.path.getsize(os.path.join(top, f))}"))
+    extra = [":".join(c) for c in onvol if c[0] in want and c not in seen]
+    print(f"interactive: {len(seen) - len(bad)}/{len(seen)} data forks "
+          f"byte-exact" + (f", {nrsrc} resource forks not compared"
+                           if nrsrc else "")
+          + (f"; extra on the Mac: {extra[:5]}" if extra else ""))
+    for b in bad[:10]:
+        print(f"interactive:   DIFFERS {b}")
+    ok = ok and not bad and not extra
+    left = sorted(got - want)
     print("interactive: " + ("MATCH" if ok else "MISMATCH")
-          + " — and the intermediate is "
-          + ("gone" if not any(g.endswith(".sit") and g != onmac for g in got)
-             else "STILL THERE"))
+          + (" — and the intermediate is gone" if not left
+             else f" — left on the volume and not by the CLI: {left}"))
     return ok
 
 

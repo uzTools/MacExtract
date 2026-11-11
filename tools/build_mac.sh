@@ -846,7 +846,11 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # Tome's 'part' resources, their reader and the probe's resource-fork case
 # (DECISIONS.md 2026-11-11, *the parts the Installer expands*). In
 # `ovl_zipold` +4,100 and `ovl_sniff` +400 on the shipped pair.
-UNC_MAC_CODE_DEFAULT=198468
+# +4 on 2026-11-11, 198,468 -> 198,472, A5 -4 below: an archive-level
+# UNC_ERR_MEM the budget never saw says "Memory is too broken up", not
+# "Archive damaged." (DECISIONS.md 2026-11-11, *the copies that moved
+# down*). CODE + A5 unmoved, so TIERS_CONTROL holds.
+UNC_MAC_CODE_DEFAULT=198472
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -1153,7 +1157,9 @@ UNC_MAC_CODE_DEFAULT=198468
 # File Manager calls' -376 (above); no data was removed.
 # +28 on 2026-11-11, 36,848 -> 36,876: `.data` alignment under the code's
 # +100 (above); the change added no data.
-UNC_MAC_A5_DEFAULT=36876
+# -4 on 2026-11-11, 36,876 -> 36,872: `.data` alignment under the code's
+# +4 (above); the change removed no data.
+UNC_MAC_A5_DEFAULT=36872
 # A CEILING PER CONFIGURATION, because one ceiling measured on another build
 # cannot fire. The figures above are the RESIDENT control build, which carries
 # every decoder; the shipped build's resident code is a third of that, so
@@ -1777,8 +1783,14 @@ UNC_MAC_A5_DEFAULT=36876
 # parts, through RunExtract's one call site; the A5 is the fork selector,
 # 2 B, and `.data` alignment (DECISIONS.md 2026-11-11, *the parts the
 # Installer expands*). 288 B off every budget.
-UNC_MAC_CODE_EAGER=38096
-UNC_MAC_A5_EAGER=16784
+# -24 and -40 on 2026-11-11, 38,096 -> 38,072 and 16,784 -> 16,744: the
+# release keeps its images in the bundle's own block, packed, instead of
+# copying each to a handle of its own; the slot tables (60 B of `.bss`)
+# become a count in each image's directory entry, and an archive-level
+# UNC_ERR_MEM says "Memory is too broken up" (+8 of the code; DECISIONS.md
+# 2026-11-11, *the copies that moved down*). 64 B onto every budget.
+UNC_MAC_CODE_EAGER=38072
+UNC_MAC_A5_EAGER=16744
 # +8 on 2026-10-02 for the same reason as the eager pair above: the
 # overlay call that now says WHICH of StuffIt 2.x's ciphers an entry
 # wants. A5 fell to 19,096 and its ceiling is left where it was.
@@ -1944,7 +1956,10 @@ UNC_MAC_A5_EAGER=16784
 # pair; data + bss 16,788 (-24), under its ceiling.
 # +272 code on 2026-11-11: an Installer Tome's parts, as the eager pair;
 # data + bss 16,804 (+16), under its ceiling.
-UNC_MAC_CODE_LAZY=36876
+# +8 code on 2026-11-11: an archive-level UNC_ERR_MEM no longer says
+# "Archive damaged." (DECISIONS.md 2026-11-11, *the copies that moved
+# down*); data + bss 16,796 (-8), under its ceiling.
+UNC_MAC_CODE_LAZY=36884
 UNC_MAC_A5_LAZY=19200
 if [ -n "$UNC_OVL_RESIDENT" ]; then
     UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-$UNC_MAC_CODE_DEFAULT}

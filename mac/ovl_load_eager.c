@@ -23,44 +23,46 @@
 #include <Resources.h>
 #include <Dialogs.h>
 
-static Handle gBundle;          /* the whole thing, until the release */
+/* The whole thing until the release; after it, the same block detached
+ * from the resource map and cut down to what was kept (ovl_pack). */
+static Handle gBundle;
 static int    gBundleTried;
-/* The images we copied out, locked. Slot 0 is the sniffed format's own
- * decoder, 1 the ciphers, 2 the codecs, 3 zip's Shrink and Reduce; an
- * envelope that was peeked into (ovl_release_if_unwanted) also keeps the
- * sniffer in 4 and the inner format's decoder in 5. */
-#define KEPT_SLOTS 6
-static Handle gKept[KEPT_SLOTS];
-static short  gKeptId[KEPT_SLOTS];
-int           gPeeked;          /* slots 0 and 4 are for the layer above;
-                                 * the format the peek named. Not static:
-                                 * tests/ovlbox sets it, having no peek */
+static int    gPacked;          /* gBundle holds only what the release kept */
+short         gDrop;            /* the envelope's own reader, for the layer
+                                 * under it to give back */
+int           gPeeked;          /* the format the peek named. These two are
+                                 * not static: tests/ovlbox sets them, having
+                                 * no peek */
 
-/* Find an image inside the bundle. Returns NULL if this bundle has no such
- * id, which is a build mismatch rather than a run-time condition. */
-static const unsigned char *ovl_find(Handle h, short id, unsigned long *len)
+/* An image's directory entry in the bundle: id, keep count, offset, length,
+ * twelve bytes (tools/overlay/mkbundle.py, which writes the count as 0).
+ * NULL if this bundle has no such id — before the release a build mismatch,
+ * after it an image that was not kept. */
+static unsigned char *ovl_entry(short id)
 {
-    const unsigned char *p;
-    unsigned short n, i;
-    if (h == NULL || *h == NULL) return NULL;
-    p = (const unsigned char *)*h;
-    n = ovl_be16(p);
-    for (i = 0; i < n; i++) {
-        const unsigned char *e = p + 4 + (unsigned long)i * 12;
-        if (ovl_be16(e) == (unsigned short)id) {
-            *len = ovl_be32(e + 8);
-            return p + ovl_be32(e + 4);
-        }
-    }
+    unsigned char *e;
+    unsigned short n;
+    if (gBundle == NULL || *gBundle == NULL) return NULL;
+    e = (unsigned char *)*gBundle;
+    for (n = ovl_be16(e), e += 4; n != 0; n--, e += 12)
+        if (ovl_be16(e) == (unsigned short)id) return e;
     return NULL;
+}
+
+static void ovl_put32(unsigned char *p, unsigned long v)
+{
+    p[0] = (unsigned char)(v >> 24);
+    p[1] = (unsigned char)(v >> 16);
+    p[2] = (unsigned char)(v >> 8);
+    p[3] = (unsigned char)v;
 }
 
 /* Relocate every image where it sits IN THE BUNDLE, once, at load.
  *
- * An image is executed in place unless it is copied out, so its relocations
- * have to be applied at its bundle address; ovl_keep applies them again to
- * the copy, at the copy's address. Doing it here rather than per image keeps
- * the "exactly once" property that makes a fixup safe. */
+ * Every image is executed where it sits in the bundle, so its relocations
+ * have to be applied at its bundle address; ovl_pack applies them again,
+ * by the difference, to an image it moves. Doing it here rather than per
+ * image keeps the "exactly once" property that makes a fixup safe. */
 static void ovl_bundle_fixup(void)
 {
     const unsigned char *p;
@@ -105,18 +107,14 @@ void ovl_preload(void)
  * ciphers. */
 OverlayEntry ovl_image_q(short id, int expected)
 {
-    const unsigned char *p;
-    unsigned long len;
-    int i;
-    for (i = 0; i < KEPT_SLOTS; i++)
-        if (gKept[i] != NULL && gKeptId[i] == id)
-            return (OverlayEntry)(void *)*gKept[i];
-    if (gBundle == NULL) {
-        if (!expected) OVL_DIAG(gWantedAfterRelease = id);
+    const unsigned char *e = ovl_entry(id);
+    if (e == NULL) {
+        OVL_DIAG(if (!expected && (gPacked || gBundle == NULL))
+                     gWantedAfterRelease = id);
+        (void)expected;
         return NULL;
     }
-    p = ovl_find(gBundle, id, &len);
-    return p ? (OverlayEntry)(void *)p : NULL;
+    return (OverlayEntry)(void *)(*gBundle + ovl_be32(e + 4));
 }
 
 OverlayEntry ovl_image(short id) { return ovl_image_q(id, 0); }
@@ -128,47 +126,68 @@ OverlayEntry ovl_image(short id) { return ovl_image_q(id, 0); }
  * and always the codecs, below. Encryption is discovered per ENTRY, as
  * the entry is read, so a format that can carry one has to keep the ciphers
  * whatever this archive turns out to hold — the eligibility rule the mechanism
- * has always had, applied to a bundle rather than to one blob. */
-/* A macro so that tests/ovlbox/, whose lanes cannot call an image, can put
- * the mock's NewHandle and MoveHHi in its place (tests/run_overlay_host.sh),
- * as it does with OVL_LOWMEM_ROM85. */
-#ifndef OVL_KEEP_HIGH
-#define OVL_KEEP_HIGH(len) ((Handle)ovl_image(OVL_ID_SEGSETUP)(NULL, \
-                                OVL_HIGH_HANDLE, NULL, (void *)(len)))
-#else
-Handle ovlbox_keep_high(unsigned long len);   /* tests/ovlbox/ovlbox.c */
-#endif
-
-static void ovl_keep(short id, int slot)
+ * has always had, applied to a bundle rather than to one blob.
+ *
+ * A keep is a count in the image's directory entry: one image can be kept
+ * twice, an LZ4 frame's and the MAR's in it, and given back once. */
+static void ovl_keep(short id)
 {
+    unsigned char *e = ovl_entry(id);
+    if (e == NULL) { OVL_DIAG(gKeepFail = 1); return; }
+    e[3]++;
+}
+
+static void ovl_drop(short id)
+{
+    unsigned char *e = ovl_entry(id);
+    if (e != NULL && e[3] != 0) e[3]--;
+}
+
+/* What was kept goes to the start of the bundle's own block, the directory
+ * first and then the images, and the rest of the block is given back. In
+ * place, so it needs no room and cannot fail: until 2026-11-11 each kept
+ * image was COPIED to a block of its own high in the heap while the bundle
+ * was still locked below them, and on a 512Ke under System 6.0.8 a tar
+ * envelope's four copies needed 79,814 B where 70,006 B were free
+ * (DECISIONS.md 2026-11-11, *the copies that moved down*). The bundle is the
+ * lowest block the application allocates (ovl_preload at launch; ovl_reload
+ * reserves its place), so what stays is at the bottom of the heap and what
+ * is cut off joins the free space above it in one piece.
+ *
+ * Run again for the layer under an envelope, once it has given back the
+ * envelope's reader and the sniffer. The directory is in offset order
+ * (mkbundle.py) and stays so; each entry and each image is moved to the end
+ * of the last, so a destination is never above its source nor over anything
+ * not yet moved, and BlockMove copies an overlapping range correctly
+ * (Inside Macintosh II, The Memory Manager). An image that moves is
+ * relocated AGAIN, by the difference: the fixup is relative to wherever it
+ * sat. */
+static void ovl_pack(void)
+{
+    unsigned char *b = (unsigned char *)*gBundle, *e, *w, *src, *dst;
+    unsigned short n = ovl_be16(b), k = 0;
     unsigned long len;
-    const unsigned char *p = ovl_find(gBundle, id, &len);
-    Handle h;
-    if (p == NULL || len == 0) { OVL_DIAG(gKeepFail = 1); return; }
-    /* High in the heap before the lock. These copies are locked for the
-     * rest of the run, and a locked block in the middle of the heap splits
-     * it. Measured on a Macintosh 512Ke: with the copies left where
-     * NewHandle put them, `derived-a2basic.dmg.sit` was granted 317,838 B
-     * and still failed — `gRefusedWhy` = 2, NewPtr returning NULL for a
-     * 205 KB block against a largest free block of 169,298 B. The memory
-     * was there, in two pieces. The placing is an image's,
-     * tools/overlay/ovl_segsetup.c, high_handle, on every ROM: a 64K ROM
-     * has no MoveHHi, and one path for all of them is 32 B onto every
-     * budget, with every refusal on a 128K ROM 32 B nearer (measured
-     * 2026-11-09). No `*h == NULL` test: len is non-zero here, and a
-     * NewHandle of a non-zero size that succeeds has a block. */
-    h = OVL_KEEP_HIGH(len);
-    if (h == NULL) { OVL_DIAG(gKeepFail = 2); return; }
-    HLock(h);
-    BlockMoveData(p, *h, (Size)len);
-    /* Relocated AGAIN, for the address the copy runs at: the fixup is
-     * relative to wherever the image sits, and this one has moved. */
-    ovl_fixup((unsigned char *)*h, (unsigned long)len,
-              (long)*h - (long)p);   /* by the DIFFERENCE: p was relocated
-                                      * for its place in the bundle */
+    for (e = w = b + 4; n != 0; n--, e += 12)
+        if (e[3] != 0) {
+            BlockMoveData(e, w, 12);
+            w += 12;
+            k++;
+        }
+    b[0] = (unsigned char)(k >> 8);
+    b[1] = (unsigned char)k;
+    for (e = b + 4, dst = w; e < w; e += 12) {
+        src = b + ovl_be32(e + 4);
+        len = ovl_be32(e + 8);
+        BlockMoveData(src, dst, (Size)len);
+        ovl_fixup(dst, len, (long)dst - (long)src);
+        ovl_put32(e + 4, (unsigned long)(dst - b));
+        dst += (len + 3) & ~3UL;          /* aligned as mkbundle.py aligns */
+    }
     ovl_flush_code();
-    gKept[slot] = h;
-    gKeptId[slot] = id;
+    SetHandleSize(gBundle, (Size)(dst - b));
+    /* The codecs may have moved: the vector is re-patched to wherever they
+     * are now by its next caller. */
+    ovl_codecs_invalidate();
 }
 
 /* What each format keeps (DECISIONS.md 2026-10-23, *the shims that were
@@ -261,34 +280,26 @@ static int keep_row(UncFormat fmt)
  * allocation, which is where the budget is taken. So what it frees is heap
  * the engine is simply measured against a moment later — there is nothing to
  * credit back, and no ordering to get wrong. */
-static void ovl_drop(int slot)
-{
-    if (gKept[slot] != NULL) {
-        DisposeHandle(gKept[slot]);        /* locked is fine to dispose */
-        gKept[slot] = NULL;
-    }
-}
-
 void ovl_release_if_unwanted(UncFormat fmt, UncIO *io)
 {
-    short want, inner = 0, wslot = 0;
+    short want, inner = 0;
     int crypt, row, enc = UNC_ENC_UNKNOWN;
     UncFormat as = fmt;     /* whose rules the ciphers and zipold follow */
 
-    if (gBundle == NULL) {
+    if (gBundle == NULL || gPacked) {
         /* The layer under an envelope that was peeked into: its own sniff
          * has run, so the envelope's reader and the sniffer go back, and it
          * keeps what it would have kept had it been opened on its own. */
         if (!gPeeked) return;
-        ovl_drop(0);
-        ovl_drop(4);
+        ovl_drop(gDrop);
+        ovl_drop(OVL_ID_SNIFF);
         /* Unless the whole file is not what its head said: a probe ahead
          * of the peek's answer that reads past 512 bytes — a zip found by
          * its end record behind a tar header — claims it, and its decoder
          * went with the bundle. Read the bundle again, as between two
          * archives, and release for what this layer is (DECISIONS.md
          * 2026-11-05, *the head that was not the file*). */
-        if (gPeeked == (int)fmt) { gPeeked = 0; return; }
+        if (gPeeked == (int)fmt) { gPeeked = 0; ovl_pack(); return; }
         if (!ovl_reload()) { StopAlert(135, NULL); return; }  /* kNoReloadALRT */
     }
 
@@ -310,12 +321,11 @@ void ovl_release_if_unwanted(UncFormat fmt, UncIO *io)
         row = keep_row(as);
         if (row < 0 || (gKeepSet[row][1] & KEEP_PEEK)) return;
         inner = (short)(OVL_ID_CRYPT + (gKeepSet[row][1] & 0x1f));
-        /* One copy serves both, kept in the INNER layer's slot: slot 0 is
-         * dropped when that layer starts, and an LZ4 frame and the MAR in
-         * it are both `ovl_zipold`'s — kept in slot 0 the MAR layer ran
-         * with its image gone, "Archive damaged." (measured 2026-11-03;
-         * DECISIONS.md, *the frame mar 0.2.0 reads*). */
-        if (inner == want) { inner = 0; wslot = 5; }
+        /* One image can serve both: an LZ4 frame and the MAR in it are
+         * both `ovl_zipold`'s, kept twice and given back once. Kept once
+         * and given back with the frame, the MAR layer ran with its image
+         * gone, "Archive damaged." (measured 2026-11-03; DECISIONS.md, *the
+         * frame mar 0.2.0 reads*). */
     }
     crypt = gKeepSet[row][1] & KEEP_CRYPT;
 
@@ -339,17 +349,18 @@ void ovl_release_if_unwanted(UncFormat fmt, UncIO *io)
         crypt = 0;
 
     OVL_DIAG(gRelFmt = (short)fmt);
-    ovl_keep(want, wslot);
+    ovl_keep(want);
     if (as != fmt) {
-        if (inner) ovl_keep(inner, 5);
-        ovl_keep(OVL_ID_SNIFF, 4);
+        gDrop = want;
+        ovl_keep(inner);
+        ovl_keep(OVL_ID_SNIFF);
         gPeeked = (int)as;
     }
     /* Zip, and a spanned zip, also keep Shrink and Reduce, which nothing
      * else calls. */
     if (as == UNC_FORMAT_ZIP || as == UNC_FORMAT_ZIPSEG)
-        ovl_keep(OVL_ID_ZIPOLD, 3);
-    if (crypt) ovl_keep(OVL_ID_CRYPT, 1);
+        ovl_keep(OVL_ID_ZIPOLD);
+    if (crypt) ovl_keep(OVL_ID_CRYPT);
     /* And ALWAYS the codecs, because every decoder calls into them: the bit
      * reader, the Huffman and canonical coders, LZW and LZAH live there and
      * are reached through pointers in the host vector. Releasing the bundle
@@ -357,15 +368,13 @@ void ovl_release_if_unwanted(UncFormat fmt, UncIO *io)
      * been given back — which is not a wrong answer but no answer at all:
      * every decoder stub failed at ovl_codecs_ready() and the archive
      * produced nothing. */
-    ovl_keep(OVL_ID_CODECS, 2);
-    /* The vector must be re-patched to the COPY's address, so make the next
-     * caller do it. */
-    ovl_codecs_invalidate();
+    ovl_keep(OVL_ID_CODECS);
 
-    HUnlock(gBundle);
-    ReleaseResource(gBundle);
-    gBundle = NULL;
-
+    /* Out of the resource map, so that a later GetResource reads the bundle
+     * afresh rather than handing back this block. Still locked. */
+    DetachResource(gBundle);
+    gPacked = 1;
+    ovl_pack();
 }
 
 /* The one disk read after launch this lifetime makes, and only when the
@@ -375,8 +384,9 @@ void ovl_release_if_unwanted(UncFormat fmt, UncIO *io)
  * bundle is read into as much of the heap as there is. */
 int ovl_reload(void)
 {
-    int i;
-    for (i = 0; i < KEPT_SLOTS; i++) ovl_drop(i);
+    if (gBundle != NULL) DisposeHandle(gBundle);  /* what the release kept */
+    gBundle = NULL;
+    gPacked = 0;
     gPeeked = 0;
     ovl_codecs_invalidate();
     /* Only called once ovl_spent() says the bundle was released. */
@@ -402,10 +412,10 @@ int ovl_reload(void)
     return gBundle != NULL;
 }
 
-/* Tried and gone is released: nothing else sets gBundle back to NULL.
- * A bundle that never loaded reads as spent too, and that is right — with
- * no images, no format can be opened a second time either. */
+/* Released is packed. A bundle that never loaded reads as spent too, and
+ * that is right — with no images, no format can be opened a second time
+ * either. */
 int ovl_spent(void)
 {
-    return gBundleTried && gBundle == NULL;
+    return gPacked || (gBundleTried && gBundle == NULL);
 }

@@ -169,8 +169,8 @@ typedef int32_t (*OverlayEntry)(const OverlayHost *host, int32_t which,
                                     * returns (enc + 1) << 8 | the UncFormat */
 #define OVL_MAR_EXTRACT        62
 #define OVL_LZ4_EXTRACT        63
-#define OVL_HIGH_HANDLE        64  /* NewHandle + MoveHHi, on any ROM: b = the size;
-                                    * returns the Handle, or 0 */
+/* 64 was OVL_HIGH_HANDLE, a kept copy's placing, until 2026-11-11: the
+ * release keeps its images in the bundle's own block (ovl_load_eager.c). */
 #define OVL_SEG_DESCRIBE       65  /* unc_segment_describe(_as): a = OvlArgs* (in io,
                                     * obj desc, len the scheme or OVL_SEG_EVERY) */
 #define OVL_SEG_EVERY  0xFFFFFFFFul

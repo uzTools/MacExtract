@@ -235,11 +235,7 @@ int main(int argc, char **argv)
     CHECK(ovlbox_reads == 1, "the bundle took %ld reads, not 1", ovlbox_reads);
     CHECK(ovlbox_flushes == (getenv("OVLBOX_NO_FLUSH_ROUTE") ? 0 : 1),
           "the bundle fixup flushed %ld time(s)", ovlbox_flushes);
-    /* The flush route is latched now. Every keep calls the segsetup
-     * image's high_handle (mac/ovl_load_eager.c, ovl_keep), which no lane
-     * here can call, so the keeps below take the mock's NewHandle and
-     * MoveHHi (ovlbox_keep_high). What this cannot see: high_handle, which
-     * every emulator tier runs. */
+    /* The flush route is latched now. */
     ovlbox_set_rom85(1);
 #else
     printf("lazy: preload read %ld resource(s) (it reads nothing, by design)\n",
@@ -284,7 +280,7 @@ int main(int argc, char **argv)
      * relocations are then wrong for where it sits.
      *
      * Neither lifetime has ever moved one; the eager one locks the bundle at
-     * preload and each copy after MoveHHi, and the lazy one locks each image
+     * preload and never unlocks it, and the lazy one locks each image
      * before its first fixup. This is what says so without a Macintosh. */
     printf("every image stays put across a compaction\n");
     {
@@ -310,18 +306,21 @@ int main(int argc, char **argv)
 #ifdef OVL_LANE_EAGER
     /* The release, for StuffIt: three keeps — the decoder, the ciphers
      * (StuffIt flags encryption per entry, so the release cannot know and
-     * must keep them) and always the codecs. StuffIt rather than LZH because
-     * its image is the one carrying real relocations, and a KEPT image is
-     * relocated a second time, by the DIFFERENCE between the copy's address
-     * and the bundle's. That arithmetic is the subtlest line in either
-     * loader and this is the only test of it anywhere. */
+     * must keep them) and always the codecs — moved down to the start of
+     * the bundle's own block, the rest of it cut off (ovl_pack). StuffIt
+     * rather than LZH because its image is the one carrying real
+     * relocations, and a KEPT image is relocated a second time, by the
+     * DIFFERENCE between where it went and where it sat. That arithmetic is
+     * the subtlest line in either loader and this is the only test of it
+     * anywhere; the mock overwrites what the cut gave back, so an image
+     * left above it fails here too. */
     printf("the release, for a StuffIt\n");
     ovl_release_if_unwanted(UNC_FORMAT_SIT, &io);
     CHECK(gKeepFail == 0, "a keep failed: kf=%d", (int)gKeepFail);
     CHECK(ovlbox_reads == reads0, "the release cost %ld disk read(s)",
           ovlbox_reads - reads0);
-    CHECK(ovlbox_flushes == flushes0 + (getenv("OVLBOX_NO_FLUSH_ROUTE") ? 0 : 3),
-          "three keeps flushed %ld time(s)", ovlbox_flushes - flushes0);
+    CHECK(ovlbox_flushes == flushes0 + (getenv("OVLBOX_NO_FLUSH_ROUTE") ? 0 : 1),
+          "the pack flushed %ld time(s)", ovlbox_flushes - flushes0);
     {
         long rawlen = 0;
         unsigned char *raw = raw_image(rawdir, OVL_ID_STUFFIT, &rawlen);
@@ -365,8 +364,8 @@ int main(int argc, char **argv)
            (int)gFlushCalls);
 
     /* The reload, for the next archive in a Finder list (DECISIONS.md
-     * 2026-10-12, *the reload that the list needs*): the three copies the
-     * StuffIt release kept go, the bundle comes back in ONE read after a
+     * 2026-10-12, *the reload that the list needs*): the block the StuffIt
+     * release kept goes, the bundle comes back in ONE read after a
      * reservation of exactly its size, what the release gave back is
      * reachable again and correctly relocated, and a second release keeps
      * what the next format wants. */
@@ -384,9 +383,9 @@ int main(int argc, char **argv)
               "ReserveMem asked %ld time(s), last for %ld B, the bundle is %ld B",
               ovlbox_reserves, ovlbox_reserved,
               ovlbox_resource_len(OVL_ID_BUNDLE));
-        CHECK(ovlbox_handles == handles0 - 3 + 1,
-              "%ld handle(s) after the reload, %ld before: the three kept "
-              "copies were not given back", ovlbox_handles, handles0);
+        CHECK(ovlbox_handles == handles0,
+              "%ld handle(s) after the reload, %ld before: the kept block "
+              "was not given back", ovlbox_handles, handles0);
         e = ovl_image_q(OVL_ID_LZH, 1);
         CHECK(e != NULL, "an image the last release gave back is still gone");
         raw = raw_image(rawdir, OVL_ID_STUFFIT, &rawlen);
@@ -436,6 +435,38 @@ int main(int argc, char **argv)
               "bundle %ld time(s)", ovlbox_reads - reads0);
         CHECK(gPeeked == 0, "a layer that was taken left gPeeked at %d",
               gPeeked);
+    }
+
+    /* The layer under an envelope gives back the envelope's reader, and
+     * what it keeps is packed down again over it (ovl_pack, the second time
+     * it runs for one archive). With the ciphers standing in for the
+     * envelope's reader: they sit below StuffIt's image, which carries real
+     * relocations, so StuffIt's image moves and must be relocated for where
+     * it is now. */
+    printf("the layer under an envelope packs what it keeps again\n");
+    {
+        extern int gPeeked;
+        extern short gDrop;
+        long rawlen = 0;
+        unsigned char *raw;
+        OverlayEntry before, e;
+        CHECK(ovl_reload() != 0, "the reload did not bring the bundle back");
+        ovl_release_if_unwanted(UNC_FORMAT_SIT, &io);
+        before = ovl_image_q(OVL_ID_STUFFIT, 1);
+        gPeeked = UNC_FORMAT_SIT;
+        gDrop = OVL_ID_CRYPT;
+        ovl_release_if_unwanted(UNC_FORMAT_SIT, &io);
+        CHECK(ovl_image_q(OVL_ID_CRYPT, 1) == NULL,
+              "the envelope's reader survived the layer under it");
+        raw = raw_image(rawdir, OVL_ID_STUFFIT, &rawlen);
+        e = ovl_image_q(OVL_ID_STUFFIT, 1);
+        CHECK(e != NULL && e != before,
+              "the StuffIt image did not move down over the one given back");
+        if (e && raw) check_relocs("moved down", OVL_ID_STUFFIT,
+                                   (const unsigned char *)e, raw, rawlen);
+        free(raw);
+        CHECK(ovl_image_q(OVL_ID_CODECS, 1) != NULL,
+              "the codecs went with the layer above");
     }
 #else
     /* The lazy lifetime releases nothing, and its release entry point must be

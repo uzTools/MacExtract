@@ -1339,11 +1339,19 @@ EXPECT = {
 # read after its data fork; A5 +16); `ovl_zipold` +4,100, `ovl_sniff` +400
 # (DECISIONS.md 2026-11-11, *the parts the Installer expands*). TIERS
 # -4,800: every grant moves by -288 less its images' change.
-OVL_SAVED = 180464
+# **+64 2026-11-11, -> 180,528**: the release packs what it keeps into the
+# bundle's own block, the shipped pair's CODE -24 and A5 -40, the control's
+# CODE + A5 unmoved (DECISIONS.md 2026-11-11, *the copies that moved down*).
+OVL_SAVED = 180528
 
-# A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
-# every kept image is one — as is the bundle an envelope holds on to.
+# A relocatable block costs 8 bytes of header (Inside Macintosh: Memory).
+# Since 2026-11-11 what a release keeps is ONE block, the bundle's own, cut
+# down to a directory of 4 B and 12 B an image, then the images, each
+# aligned to 4 as tools/overlay/mkbundle.py aligns them (mac/ovl_load_eager.c,
+# ovl_pack); until then each kept image was a handle of its own.
 OVL_HANDLE = 8
+OVL_DIR_HEAD = 4
+OVL_DIR_ENTRY = 12
 
 # The constant the machine-measured granted budgets leave over the arithmetic
 # above. **Re-measured 2026-09-27 with base and grant from one tree and one
@@ -1497,7 +1505,7 @@ IMAGES = {
     "OVL_ID_ZIPOLD":      26070,
     "OVL_ID_SNIFF":       17416,
     "OVL_ID_DESTDLG":     1688,
-    "OVL_ID_SEGSETUP":    2434,
+    "OVL_ID_SEGSETUP":    2356,
 }
 # **ZIPOLD +3,374 B and EXO +972 B, the bundle +4,344 B, 2026-10-17**:
 # Mac OS X's sidecars, the shared code in ZIPOLD and zip's half in EXO,
@@ -1679,7 +1687,10 @@ IMAGES = {
 # Installer Tome's 'part' resources, their reader in ZIPOLD and the probe's
 # resource-fork case in SNIFF (DECISIONS.md 2026-11-11, *the parts the
 # Installer expands*).
-BUNDLE = 209404
+# **SEGSETUP -78, the bundle -80 B, 2026-11-11**: `high_handle` gone, the
+# release keeping its images in the bundle's own block (DECISIONS.md
+# 2026-11-11, *the copies that moved down*).
+BUNDLE = 209324
 
 # What the SHIPPED lane asserts, and it is the refused fixtures BY NAME
 # rather than a tally: a tier that refuses two different fixtures and still
@@ -1784,7 +1795,7 @@ def keep_sets(path=os.path.join(REPO, "mac", "ovl_load_eager.c")):
     # `ovl_keep(` it cannot attribute is refused rather than skipped.
     tail = text.split("void ovl_release_if_unwanted(", 1)[1]
     extra = 0
-    for m in re.finditer(r"if\s*\(([^;{}]*?)\)\s*ovl_keep\((OVL_ID_\w+)\s*,",
+    for m in re.finditer(r"if\s*\(([^;{}]*?)\)\s*ovl_keep\((OVL_ID_\w+)\s*\)",
                          tail):
         fmts = re.findall(r"(?:fmt|as)\s*==\s*(UNC_FORMAT_\w+)", m.group(1))
         if not fmts:
@@ -1797,8 +1808,8 @@ def keep_sets(path=os.path.join(REPO, "mac", "ovl_load_eager.c")):
         extra += 1
     # The two a peeked envelope adds, the inner format's reader and the
     # sniffer, are peek_keep()'s.
-    if ("ovl_keep(inner, 5)" not in tail or
-            "ovl_keep(OVL_ID_SNIFF, 4)" not in tail):
+    if ("ovl_keep(inner)" not in tail or
+            "ovl_keep(OVL_ID_SNIFF)" not in tail):
         raise SystemExit("run_tiers: a peeked envelope's keeps changed shape")
     if tail.count("ovl_keep(") != 5 + extra:
         raise SystemExit("run_tiers: the loader has an ovl_keep this model "
@@ -1999,8 +2010,8 @@ def gain(keep):
     """What the overlay release gives this format's layer, in bytes."""
     if not keep:                          # the whole bundle stays
         return OVL_SAVED + OVL_RESIDUE - BUNDLE - OVL_HANDLE
-    return (OVL_SAVED + OVL_RESIDUE - sum(IMAGES[i] for i in keep)
-            - OVL_HANDLE * len(keep))
+    return (OVL_SAVED + OVL_RESIDUE - OVL_HANDLE - OVL_DIR_HEAD
+            - sum((IMAGES[i] + 3) // 4 * 4 + OVL_DIR_ENTRY for i in keep))
 
 
 def names(listfile):
