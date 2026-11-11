@@ -112,17 +112,17 @@ INC="-Iinclude -Isrc -Imac -Itools/overlay -Itests/ovlbox -Itests/ovlbox/toolbox
 # UNC_AT_BUDGET is what defines gWantedAfterRelease/gKeepFail/gFlushHas/
 # gFlushCalls — the probe fields a Macintosh only shows on its completion
 # alert. Here they are assertions.
-DEFS="-DUNC_AT_OVERLAY -DUNC_AT_BUDGET '-DOVL_LOWMEM_ROM85=ovlbox_rom85()'"
+DEFS="-DUNC_AT_OVERLAY -DUNC_AT_BUDGET '-DOVL_LOWMEM_ROM85=ovlbox_rom85()' -DOVL_PLAN=ovlbox_plan"
 # The sink lane does NOT define UNC_AT_BUDGET: in mac/macextract_mac.c that
 # switch turns on a heap probe built out of ApplicationZone, LMGetApplLimit and
 # MaxBlock, which the mock Toolbox does not carry and which has nothing to do
 # with overlays. The loader test is where those fields are read.
-SINK_DEFS="-DUNC_AT_OVERLAY '-DOVL_LOWMEM_ROM85=ovlbox_rom85()'"
+SINK_DEFS="-DUNC_AT_OVERLAY '-DOVL_LOWMEM_ROM85=ovlbox_rom85()' -DOVL_PLAN=ovlbox_plan"
 
 build_loadtest() {   # <out> <loader.c> <extra-defs> <cc...>
     out=$1; loader=$2; extra=$3; shift 3
     eval "$* -std=gnu99 $INC $DEFS $extra \
-        tests/ovlbox/ovl_load_test.c tests/ovlbox/ovlbox.c \
+        tests/ovlbox/ovl_load_test.c tests/ovlbox/ovlbox.c tests/ovlbox/ovlbox_plan.c \
         mac/ovl_shim.c mac/ovl_reloc.c $loader $RESIDENT_SRC -o $out" \
         2>$B/cc.log || { grep -v multi-char $B/cc.log | head -20; \
                          fail "building $out"; }
@@ -205,7 +205,7 @@ build_sink() {  # <out> <loader.c|""> <defs>
         || { grep -v multi-char $B/cc.log | head -20; fail "building $out"; }
 }
 echo "overlay-host: extraction through the images (qemu-m68k)"
-build_sink $B/sink_eager "tests/ovlbox/ovlbox.c mac/ovl_shim.c mac/ovl_reloc.c mac/ovl_load_eager.c $RESIDENT_SRC" "$SINK_DEFS"
+build_sink $B/sink_eager "tests/ovlbox/ovlbox.c tests/ovlbox/ovlbox_plan.c mac/ovl_shim.c mac/ovl_reloc.c mac/ovl_load_eager.c $RESIDENT_SRC" "$SINK_DEFS"
 build_sink $B/sink_lazy  "tests/ovlbox/ovlbox.c mac/ovl_shim.c mac/ovl_reloc.c mac/ovl_load_lazy.c $RESIDENT_SRC"  "$SINK_DEFS"
 # The control: the same engine with every decoder LINKED, which is the only
 # oracle for an image no manifest covers.
@@ -310,11 +310,13 @@ if [ "$1" = "--mutate" ]; then
     mutate() {
         name=$1; loader=$2; extra=$3; man=$4; target=$5; old=$6; new=$7
         rm -rf $MUT; mkdir -p $MUT
-        cp mac/ovl_reloc.c mac/ovl_load_eager.c mac/ovl_load_lazy.c $MUT/
+        cp mac/ovl_reloc.c mac/ovl_load_eager.c mac/ovl_load_lazy.c \
+           mac/release_plan.inc.c $MUT/
         python3 tests/ovlbox/mutate.py "$MUT/$target" "$old" "$new" \
             || fail "the mutation '$name' did not apply"
         eval "$NATIVE -std=gnu99 -I$MUT $INC $DEFS $extra \
             tests/ovlbox/ovl_load_test.c tests/ovlbox/ovlbox.c \
+            tests/ovlbox/ovlbox_plan.c \
             mac/ovl_shim.c $MUT/ovl_reloc.c $MUT/$(basename $loader) \
             $RESIDENT_SRC -o $B/mut_bin" 2>$B/cc.log \
             || { grep -v multi-char $B/cc.log | head; fail "building mutant $name"; }
@@ -353,10 +355,11 @@ if [ "$1" = "--mutate" ]; then
         $B/manifest_lazy.txt ovl_load_lazy.c \
         "        HLock(h);" "        /* HLock(h); */"
     # And the release that keeps nothing it must: the codecs image, which
-    # every decoder reaches through the host vector.
+    # every decoder reaches through the host vector. The plan is the set's
+    # setup image's on the Macintosh and compiled in here (ovlbox_plan.c).
     mutate "the codecs image is not kept" mac/ovl_load_eager.c -DOVL_LANE_EAGER \
-        $B/manifest_eager.txt ovl_load_eager.c \
-        "    ovl_keep(OVL_ID_CODECS);" "    /* not kept */"
+        $B/manifest_eager.txt release_plan.inc.c \
+        "    *k++ = OVL_ID_CODECS - OVL_ID_CRYPT;" "    /* not kept */"
 fi
 
 echo "overlay-host: ok"

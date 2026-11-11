@@ -84,6 +84,9 @@ int ovl_spent(void);
  * was given back, so always nonzero. */
 int ovl_reload(void);
 
+/* The host the images are called with (mac/ovl_shim.c). */
+extern const OverlayHost gOvlHost;
+
 /* The codec vector lives in the shim, which plants it; the eager release
  * invalidates it because the copy it keeps is at a different address. */
 void ovl_codecs_invalidate(void);

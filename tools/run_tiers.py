@@ -48,7 +48,7 @@ machines*).
 How the shipped lane gets a budget per format
 ---------------------------------------------
 Everything below is derived rather than restated: the keep set comes out
-of `mac/ovl_load_eager.c`'s own table, the format names out of the
+of `mac/release_plan.inc.c`'s own table, the format names out of the
 engine's table, the image sizes out of the build. A second copy of any
 of them would grade something other than what the Macintosh runs.
 
@@ -79,7 +79,7 @@ What it CANNOT see, and why the emulator stays
 - **Nothing about encryption it does not ask.** The shell drops the
   ciphers for the formats its release condition names when
   `unc_archive_encrypted` says NO; since 2026-11-03 this lane reads that
-  condition out of `mac/ovl_load_eager.c` and asks the same function
+  condition out of `mac/release_plan.inc.c` and asks the same function
   through `tools/encinfo_probe.c`, layer by layer. Until then it kept the
   ciphers for Compact Pro and zip always and granted 10,252 B less than the
   machine (DECISIONS.md 2026-11-03, *the ciphers a header can refuse*).
@@ -1342,7 +1342,11 @@ EXPECT = {
 # **+64 2026-11-11, -> 180,528**: the release packs what it keeps into the
 # bundle's own block, the shipped pair's CODE -24 and A5 -40, the control's
 # CODE + A5 unmoved (DECISIONS.md 2026-11-11, *the copies that moved down*).
-OVL_SAVED = 180528
+# **+784 2026-11-11, -> 181,312**: the decoder names one dispatch and the
+# release's decision in the set's setup image, the shipped pair's CODE -840
+# and A5 +56, the control's CODE + A5 unmoved (DECISIONS.md 2026-11-11, *the
+# release decided in the bundle*).
+OVL_SAVED = 181312
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory).
 # Since 2026-11-11 what a release keeps is ONE block, the bundle's own, cut
@@ -1505,7 +1509,7 @@ IMAGES = {
     "OVL_ID_ZIPOLD":      26070,
     "OVL_ID_SNIFF":       17416,
     "OVL_ID_DESTDLG":     1688,
-    "OVL_ID_SEGSETUP":    2356,
+    "OVL_ID_SEGSETUP":    2764,
 }
 # **ZIPOLD +3,374 B and EXO +972 B, the bundle +4,344 B, 2026-10-17**:
 # Mac OS X's sidecars, the shared code in ZIPOLD and zip's half in EXO,
@@ -1690,7 +1694,10 @@ IMAGES = {
 # **SEGSETUP -78, the bundle -80 B, 2026-11-11**: `high_handle` gone, the
 # release keeping its images in the bundle's own block (DECISIONS.md
 # 2026-11-11, *the copies that moved down*).
-BUNDLE = 209324
+# **SEGSETUP +408, the bundle +408 B, 2026-11-11**: the release's plan
+# (mac/release_plan.inc.c) in the set's setup image (DECISIONS.md
+# 2026-11-11, *the release decided in the bundle*).
+BUNDLE = 209732
 
 # What the SHIPPED lane asserts, and it is the refused fixtures BY NAME
 # rather than a tally: a tier that refuses two different fixtures and still
@@ -1746,74 +1753,71 @@ def formats(path=os.path.join(REPO, "src", "unc_engine.c")):
     return out
 
 
-def keep_sets(path=os.path.join(REPO, "mac", "ovl_load_eager.c")):
-    """Which images each format keeps, read out of the loader that does it.
+PLAN = os.path.join(REPO, "mac", "release_plan.inc.c")
+
+
+def plan_rows(text):
+    """The release table's rows, `[UNC_FORMAT_X] = KEEP(OVL_ID_Y, flags),`,
+    as (format, image, set of flags). Since 2026-11-11 the table is indexed
+    by format and lives with the decision in the set's setup image
+    (DECISIONS.md 2026-11-11, *the release decided in the bundle*)."""
+    body = text.split("gKeepSet[UNC_FORMAT__COUNT] = {", 1)
+    if len(body) != 2:
+        raise SystemExit("run_tiers: cannot find the release table in %s"
+                         % PLAN)
+    body = body[1].split("};", 1)[0]
+    rows = re.findall(r"\[\s*(UNC_FORMAT_\w+)\s*\]\s*=\s*KEEP\(\s*"
+                      r"(OVL_ID_\w+)\s*,\s*([A-Z_|\s0]+?)\s*\)\s*,", body)
+    if body.count("KEEP(") != len(rows):
+        raise SystemExit("run_tiers: a release-table row this model cannot "
+                         "read")
+    out = []
+    for fmt, image, flags in rows:
+        fl = set(f.strip() for f in flags.split("|")) - {"0"}
+        if fl - {"KEEP_CRYPT", "KEEP_PEEK", "KEEP_ZIPOLD"}:
+            raise SystemExit("run_tiers: a release flag this model does not "
+                             "know: %s" % flags)
+        out.append((fmt, image, fl))
+    return out
+
+
+def keep_sets(path=PLAN):
+    """Which images each format keeps, read out of the plan the loader keeps.
 
     Returns {UNC_FORMAT_*: frozenset(OVL_ID_*)} plus the key "default" for
     everything the table does not name. An empty set means the BUNDLE is
     kept whole, which is what an envelope does.
     """
     text = CCOMMENT.sub(" ", open(path, encoding="utf-8").read())
-    if "ovl_keep(OVL_ID_CODECS" not in text:
-        raise SystemExit("run_tiers: the loader no longer always keeps the "
-                         "codecs image — this model says it does")
-    if "if (crypt) ovl_keep(OVL_ID_CRYPT" not in text:
-        raise SystemExit("run_tiers: the loader's cipher keep changed shape")
-    # The keep table, one row a format since 2026-10-23 (DECISIONS.md
-    # 2026-10-23, *the shims that were one function*):
-    # `{ UNC_FORMAT_X, KEEP(OVL_ID_Y, KEEP_CRYPT) }`, or 0 for no ciphers. A
-    # format that is not a row keeps the whole bundle — every envelope, and
-    # anything not taught to the table yet.
-    body = text.split("gKeepSet[][2] = {", 1)
-    if len(body) != 2:
-        raise SystemExit("run_tiers: cannot find the release table in %s"
-                         % path)
-    body = body[1].split("};", 1)[0]
-    if "for (i = 0; i < sizeof gKeepSet" not in text:
-        raise SystemExit("run_tiers: the release no longer looks its format "
-                         "up in gKeepSet")
+    # The plan's keeps, one `*k++ =` each: the format's own image, the two a
+    # peeked envelope adds (peek_keep()'s), zip's old methods, the ciphers
+    # and the codecs. A keep of another shape would be an image the model
+    # under-charges, so anything else is refused rather than skipped.
+    keeps = re.findall(r"(?:if\s*\(([^;{}]*?)\)\s*)?\*k\+\+\s*=\s*([^;]+);",
+                       text)
+    want = [("", "(unsigned char)want"),
+            ("", "(unsigned char)inner"),
+            ("", "OVL_ID_SNIFF - OVL_ID_CRYPT"),
+            ("row & KEEP_ZIPOLD", "OVL_ID_ZIPOLD - OVL_ID_CRYPT"),
+            ("row & KEEP_CRYPT", "0"),
+            ("", "OVL_ID_CODECS - OVL_ID_CRYPT")]
+    if [(c.strip(), v.strip()) for c, v in keeps] != want:
+        raise SystemExit("run_tiers: the release plan's keeps changed shape "
+                         "— this model reads six, the codecs always: %r"
+                         % keeps)
     out = {"default": frozenset()}
-    rows = re.findall(r"\{\s*(UNC_FORMAT_\w+)\s*,\s*KEEP\(\s*(OVL_ID_\w+)"
-                      r"\s*,\s*(KEEP_CRYPT|KEEP_PEEK|0)\s*\)\s*\}", body)
-    if body.count("{") != len(rows):
-        raise SystemExit("run_tiers: a release-table row this model cannot "
-                         "read")
-    for fmt, image, crypt in rows:
-        if crypt == "KEEP_PEEK":
+    for fmt, image, fl in plan_rows(text):
+        if "KEEP_PEEK" in fl:
             continue                     # an envelope: peek_rows()
         keep = {image, "OVL_ID_CODECS"}
-        if crypt == "KEEP_CRYPT":
+        if "KEEP_CRYPT" in fl:
             keep.add("OVL_ID_CRYPT")
+        if "KEEP_ZIPOLD" in fl:
+            keep.add("OVL_ID_ZIPOLD")
         out[fmt] = frozenset(keep)
     if len(out) < 15:
         raise SystemExit("run_tiers: parsed %d release rows, expected 15+"
                          % len(out))
-    # And the keeps AFTER the table that only some formats get, written
-    # `if (fmt == A || fmt == B) ovl_keep(ID, n);` — zip's Shrink and
-    # Reduce (tools/overlay/ovl_zipold.c). A keep of that shape this does
-    # not read would be a format the model under-charges, so an
-    # `ovl_keep(` it cannot attribute is refused rather than skipped.
-    tail = text.split("void ovl_release_if_unwanted(", 1)[1]
-    extra = 0
-    for m in re.finditer(r"if\s*\(([^;{}]*?)\)\s*ovl_keep\((OVL_ID_\w+)\s*\)",
-                         tail):
-        fmts = re.findall(r"(?:fmt|as)\s*==\s*(UNC_FORMAT_\w+)", m.group(1))
-        if not fmts:
-            continue                     # `if (want)`, `if (crypt)`
-        for f in fmts:
-            if f not in out or not out[f]:
-                raise SystemExit("run_tiers: %s keeps %s after the table "
-                                 "and is not a releasing case" % (f, m.group(2)))
-            out[f] = out[f] | {m.group(2)}
-        extra += 1
-    # The two a peeked envelope adds, the inner format's reader and the
-    # sniffer, are peek_keep()'s.
-    if ("ovl_keep(inner)" not in tail or
-            "ovl_keep(OVL_ID_SNIFF)" not in tail):
-        raise SystemExit("run_tiers: a peeked envelope's keeps changed shape")
-    if tail.count("ovl_keep(") != 5 + extra:
-        raise SystemExit("run_tiers: the loader has an ovl_keep this model "
-                         "cannot attribute to a format")
     for keep in out.values():
         for image in keep:
             if image not in IMAGES:
@@ -1822,26 +1826,26 @@ def keep_sets(path=os.path.join(REPO, "mac", "ovl_load_eager.c")):
     return out
 
 
-def cipher_release(path=os.path.join(REPO, "mac", "ovl_load_eager.c")):
+def cipher_release(path=PLAN):
     """The formats whose ciphers the loader drops on a definite NO from
     unc_archive_encrypted, read out of the condition that does it."""
     text = CCOMMENT.sub(" ", open(path, encoding="utf-8").read())
-    m = re.search(r"if\s*\(\s*crypt\s*&&\s*\(([^;{}]*?)\)\s*&&[^;{}]*?"
-                  r"unc_archive_encrypted\(\s*as\s*,\s*io\s*\)[^;{}]*?==\s*"
-                  r"UNC_ENC_NO\s*\)", text)
+    m = re.search(r"if\s*\(\s*\(row\s*&\s*KEEP_CRYPT\)\s*&&\s*\(([^;{}]*?)\)"
+                  r"\s*\)\s*\{[^{}]*?OVL_ARCHIVE_ENCRYPTED[^{}]*?"
+                  r"if\s*\(\s*enc\s*==\s*UNC_ENC_NO\s*\)\s*row\s*&=\s*~KEEP_CRYPT",
+                  text)
     if not m:
         raise SystemExit("run_tiers: the loader's cipher release changed "
                          "shape")
     return frozenset(re.findall(r"as\s*==\s*(UNC_FORMAT_\w+)", m.group(1)))
 
 
-def peek_rows(path=os.path.join(REPO, "mac", "ovl_load_eager.c")):
+def peek_rows(path=PLAN):
     """The envelopes the loader peeks into, and the image each one's reader
     is in: the KEEP_PEEK rows of its table."""
     text = CCOMMENT.sub(" ", open(path, encoding="utf-8").read())
-    body = text.split("gKeepSet[][2] = {", 1)[1].split("};", 1)[0]
-    return dict(re.findall(r"\{\s*(UNC_FORMAT_\w+)\s*,\s*KEEP\(\s*"
-                           r"(OVL_ID_\w+)\s*,\s*KEEP_PEEK\s*\)\s*\}", body))
+    return {fmt: image for fmt, image, fl in plan_rows(text)
+            if "KEEP_PEEK" in fl}
 
 
 def encinfo_probe(tmp):

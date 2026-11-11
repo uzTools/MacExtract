@@ -139,9 +139,13 @@ import sys
 # RE-TAKEN 2026-11-03, 46,976 -> 47,616: the day's commits, and the queueing
 # File > Open... (DECISIONS.md 2026-11-01, *the Open item MultiFinder looks
 # for*).
-EXPECT = 47616
+# RE-TAKEN 2026-11-11, 47,616 -> 45,312: the month's resident savings, the
+# last of them the decoder names as one dispatch and the release's plan in
+# the set's setup image (DECISIONS.md 2026-11-11, *the release decided in the
+# bundle*), which took it past the tolerance.
+EXPECT = 45312
 TOLERANCE = 2048
-TAKEN = "2026-11-03"
+TAKEN = "2026-11-11"
 
 # And the BUNDLE, watched from 2026-09-26 for one reason: FORMATS.md quotes it
 # in three places and nothing measured it, so it was wrong by 544 B — the
@@ -320,7 +324,9 @@ TAKEN = "2026-11-03"
 # -> 209,324 the same day: `high_handle` gone from `ovl_segsetup` (-78), the
 # release keeping its images in the bundle's own block (DECISIONS.md
 # 2026-11-11, *the copies that moved down*).
-EXPECT_BUNDLE = 209324
+# -> 209,732 the same day: the release's plan in `ovl_segsetup` (+408)
+# (DECISIONS.md 2026-11-11, *the release decided in the bundle*).
+EXPECT_BUNDLE = 209732
 TOLERANCE_BUNDLE = 2048
 TAKEN_BUNDLE = "2026-11-11"
 

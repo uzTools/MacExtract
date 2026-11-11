@@ -1939,7 +1939,7 @@ different refusals:
 The budgets are `TIERS` (607,644, 178,760 and 83,356 B, re-taken on the
 machine 2026-11-11 and derived since); `TIERS_MACHINE`
 holds each plus the control it was read against. The keep set is parsed
-from `mac/ovl_load_eager.c`, format names and envelope flags from the
+from `mac/release_plan.inc.c`, format names and envelope flags from the
 engine's table, image sizes checked against `build/mac/`
 (`--check-images`), and `OVL_SAVED` against `build/mac` and
 `build/mac-resident` (`--check-saved`; FORMATS.md, *What each format is
@@ -2768,7 +2768,7 @@ gone, the next `GetResource` counted as a fresh read.
 **Made to fail, every run.** `--mutate` breaks the loader six ways and
 requires each to be caught: the delta dropped, the trailer's table
 mislocated, a kept copy relocated by its own address, the bundle fixup not
-flushing, the lazy loader not locking, the codecs image not kept.
+flushing, the lazy loader not locking, the codecs image not kept (in the plan).
 `tests/ovlbox/mutate.py` FAILS when its pattern is absent (a `sed` version
 had reported unapplied mutations as uncaught defects).
 
@@ -2781,6 +2781,13 @@ emulator tiers cover these):
 - **Not Retro68's code generation, where an image is EXECUTED** (variant 3d
   loads the shipped images but cannot run them).
 - **No Resource Manager**: no resource map, no purging, no file.
+- **Not the release's plan as an image.** The Macintosh decides what a
+  release keeps in the set's setup image (`mac/release_plan.inc.c`, in
+  `ovl_segsetup`), which only Retro68 builds; this lane compiles the same
+  source into its binaries (`tests/ovlbox/ovlbox_plan.c`, through
+  `OVL_PLAN`), and under `qemu-m68k` that plan asks the real sniffer image
+  for its peek (DECISIONS.md 2026-11-11, *the release decided in the
+  bundle*).
 - **No fragmentation** — `tools/run_tiers.py`'s blind spot too.
 - **Nothing about the interface**, and no budget: `UNC_AT_BUDGET` is
   defined for the loader lane only.

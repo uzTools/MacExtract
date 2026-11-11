@@ -703,7 +703,10 @@ int unc_extract_segments(const UncSegmentDesc *desc, UncVolumeSource *vs,
     c.ps.done = 0;
     c.ps.since_tick = 0;
     c.ps.hold = 0;
-    c.fmt = UNC_FORMAT_UNKNOWN;     /* no scheme here serves two formats */
+    /* The scheme, which names the reader as well as a format would: no
+     * reader here serves two of them, and the Macintosh build finds the
+     * reader's image by it (mac/ovl_shim.c, gRun). */
+    c.fmt = (uint8_t)j->sc->scheme;
     /* The whole struct, as unc_extract_as does, and the password state
      * with it: the list of four fields was the one unc_extract_as
      * replaced on 2026-08-27, and `long_name` read off the stack here too

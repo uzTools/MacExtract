@@ -103,7 +103,7 @@ void ovl_preload(void)
  * That makes the release decision load-bearing rather than an optimisation:
  * an image released is gone for this archive. It is safe because nothing is
  * released without the archive's own directory saying so — see
- * ovl_release_if_unwanted, where anything short of a definite NO keeps the
+ * mac/release_plan.inc.c, where anything short of a definite NO keeps the
  * ciphers. */
 OverlayEntry ovl_image_q(short id, int expected)
 {
@@ -123,10 +123,7 @@ OverlayEntry ovl_image(short id) { return ovl_image_q(id, 0); }
  *
  * The keep set is the decoder for the format — for zip, two images, the
  * reader and Shrink/Reduce — the ciphers where an entry might be encrypted,
- * and always the codecs, below. Encryption is discovered per ENTRY, as
- * the entry is read, so a format that can carry one has to keep the ciphers
- * whatever this archive turns out to hold — the eligibility rule the mechanism
- * has always had, applied to a bundle rather than to one blob.
+ * and always the codecs; the plan below lists it (mac/release_plan.inc.c).
  *
  * A keep is a count in the image's directory entry: one image can be kept
  * twice, an LZ4 frame's and the MAR's in it, and given back once. */
@@ -190,91 +187,28 @@ static void ovl_pack(void)
     ovl_codecs_invalidate();
 }
 
-/* What each format keeps (DECISIONS.md 2026-10-23, *the shims that were
- * one function*): the format, then its decoder's image as an offset from 128
- * with KEEP_CRYPT set if an entry might be encrypted. That second column is
- * the eligibility rule the mechanism has always had: a format that MAY carry
- * an encrypted entry keeps the ciphers, because encryption is discovered per
- * entry and the release must decide before it knows. Two bytes a format, in
- * place of a `switch` that was 354 B of code with the rest of this function.
- *
- * An ENVELOPE, KEEP_PEEK, keeps its own reader and what the format under it
- * keeps, when the first bytes of its payload say what that is
- * (unc_envelope_peek; DECISIONS.md 2026-11-03, *the envelope that said what
- * it held*); when they do not, or say another envelope, it keeps the whole
- * bundle, as every envelope did before.
- *
- * A format that is NOT here keeps the whole bundle, which costs memory and
- * loses nothing: MIME, whose parts can be anything; the segment schemes
- * that join to a FILE (StuffIt's, DiskDoubler's, plain NAME.001, MIME's
- * partial), because what they join is unknown until it is joined; Private
- * File, whose reader is in the StuffIt image and its key setup in the
- * ciphers', and which always decrypts to a StuffIt archive unwrapped next;
- * and any format nobody has added here yet, which is the answer that cannot
- * be wrong. */
-#define KEEP_CRYPT 0x80
-#define KEEP_PEEK  0x40
-#define KEEP(id, crypt) ((unsigned char)(((id) - OVL_ID_CRYPT) | (crypt)))
-static const unsigned char gKeepSet[][2] = {
-    { UNC_FORMAT_SPACESAVER,  KEEP(OVL_ID_SPACESAVER, 0) },
-    { UNC_FORMAT_COMPACTPRO,  KEEP(OVL_ID_CPTDD,      KEEP_CRYPT) },
-    { UNC_FORMAT_DISKDOUBLER, KEEP(OVL_ID_CPTDD,      0) },
-    { UNC_FORMAT_LZH,         KEEP(OVL_ID_LZH,        0) },
-    { UNC_FORMAT_ARC,         KEEP(OVL_ID_ARC,        KEEP_CRYPT) },
-    { UNC_FORMAT_NOWCOMPRESS, KEEP(OVL_ID_NOW,        0) },
-    { UNC_FORMAT_SUPERDISK,   KEEP(OVL_ID_SUPERDISK,  0) },
-    { UNC_FORMAT_PACKIT,      KEEP(OVL_ID_PACKIT,     KEEP_CRYPT) },
-    /* An AppleLink package cannot be encrypted: the format has no password
-     * anywhere in it, and its own expander never asks for one. */
-    { UNC_FORMAT_SQP,         KEEP(OVL_ID_SQP,        0) },
-    { UNC_FORMAT_SIT,         KEEP(OVL_ID_STUFFIT,    KEEP_CRYPT) },
-    { UNC_FORMAT_SIT5,        KEEP(OVL_ID_STUFFIT,    KEEP_CRYPT) },
-    { UNC_FORMAT_ZIP,         KEEP(OVL_ID_EXO,        KEEP_CRYPT) },
-    { UNC_FORMAT_TAR,         KEEP(OVL_ID_ZIPOLD,     0) },
-    /* No password anywhere in the format. */
-    { UNC_FORMAT_MAR,         KEEP(OVL_ID_ZIPOLD,     0) },
-    { UNC_FORMAT_TOME,        KEEP(OVL_ID_ZIPOLD,     0) },
-    /* Segment SCHEMES, from the other release site: a Compact Pro or spanned
-     * zip set is read by that format's own reader over the joined parts. */
-    { UNC_FORMAT_CPTSEG,      KEEP(OVL_ID_CPTDD,      KEEP_CRYPT) },
-    { UNC_FORMAT_ZIPSEG,      KEEP(OVL_ID_EXO,        KEEP_CRYPT) },
-    /* An Apple Backup set: its reader and its match, no password. */
-    { UNC_FORMAT_ABK,         KEEP(OVL_ID_ZIPOLD,     0) },
-    /* Envelopes, by the image their reader is in. */
-    { UNC_FORMAT_BINHEX,      KEEP(OVL_ID_BINHEX,     KEEP_PEEK) },
-    { UNC_FORMAT_BINHEX_OLD,  KEEP(OVL_ID_BINHEX,     KEEP_PEEK) },
-    { UNC_FORMAT_DL,          KEEP(OVL_ID_BINHEX,     KEEP_PEEK) },
-    { UNC_FORMAT_MACBINARY,   KEEP(OVL_ID_BINHEX,     KEEP_PEEK) },
-    { UNC_FORMAT_APPLESINGLE, KEEP(OVL_ID_BINHEX,     KEEP_PEEK) },
-    { UNC_FORMAT_APPLEDOUBLE, KEEP(OVL_ID_BINHEX,     KEEP_PEEK) },
-    { UNC_FORMAT_GZIP,        KEEP(OVL_ID_EXO,        KEEP_PEEK) },
-    { UNC_FORMAT_COMPRESS_Z,  KEEP(OVL_ID_EXO,        KEEP_PEEK) },
-    { UNC_FORMAT_LZ4,         KEEP(OVL_ID_ZIPOLD,     KEEP_PEEK) },
-    { UNC_FORMAT_UU,          KEEP(OVL_ID_TEXT,       KEEP_PEEK) },
-    { UNC_FORMAT_BASE64,      KEEP(OVL_ID_TEXT,       KEEP_PEEK) },
-    { UNC_FORMAT_BTOA,        KEEP(OVL_ID_BTOA,       KEEP_PEEK) },
-};
-
-/* The peek's own allocator: plain NewPtr and DisposePtr, outside the
- * engine's budget, which is not taken until after the release. */
-static void *peek_alloc(void *ctx, uint32_t size)
+/* What to keep is decided in the bundle, by the set's setup image, while
+ * the bundle is whole (mac/release_plan.inc.c, which says what each format
+ * keeps and why): this file keeps what the plan lists. The host lane has no
+ * such image and compiles the plan natively instead (tests/ovlbox), so it is
+ * reached through OVL_PLAN, as the ROM test once was through a
+ * macro of its own. No image is no plan, and no plan keeps the whole
+ * bundle, which costs memory and loses nothing. */
+#ifndef OVL_PLAN
+static int ovl_plan(UncFormat fmt, UncIO *io, unsigned char *out)
 {
-    (void)ctx;
-    return NewPtr((Size)size);
+    OverlayEntry e = ovl_image(OVL_ID_SEGSETUP);
+    OvlArgs g;
+    if (!e) return 0;
+    g.obj = (void *)ovl_image(OVL_ID_SNIFF);
+    g.in = io;
+    g.len = (uint32_t)fmt;
+    return (int)e(&gOvlHost, OVL_RELEASE_PLAN, &g, out);
 }
-static void peek_free(void *ctx, void *ptr)
-{
-    (void)ctx;
-    if (ptr) DisposePtr((Ptr)ptr);
-}
-
-static int keep_row(UncFormat fmt)
-{
-    unsigned i;
-    for (i = 0; i < sizeof gKeepSet / sizeof gKeepSet[0]; i++)
-        if (gKeepSet[i][0] == (unsigned char)fmt) return (int)i;
-    return -1;
-}
+#define OVL_PLAN ovl_plan
+#else
+int OVL_PLAN(UncFormat fmt, UncIO *io, unsigned char *out);
+#endif
 
 /* Runs immediately after the sniff and therefore BEFORE the engine's first
  * allocation, which is where the budget is taken. So what it frees is heap
@@ -282,9 +216,8 @@ static int keep_row(UncFormat fmt)
  * credit back, and no ordering to get wrong. */
 void ovl_release_if_unwanted(UncFormat fmt, UncIO *io)
 {
-    short want, inner = 0;
-    int crypt, row, enc = UNC_ENC_UNKNOWN;
-    UncFormat as = fmt;     /* whose rules the ciphers and zipold follow */
+    unsigned char plan[8];
+    int n;
 
     if (gBundle == NULL || gPacked) {
         /* The layer under an envelope that was peeked into: its own sniff
@@ -303,72 +236,12 @@ void ovl_release_if_unwanted(UncFormat fmt, UncIO *io)
         if (!ovl_reload()) { StopAlert(135, NULL); return; }  /* kNoReloadALRT */
     }
 
-    /* The sniffer's image (OVL_ID_SNIFF) is in no keep set, on purpose: it
-     * has answered by the time this runs, and every later sniff — the next
-     * archive after the reload — finds the bundle whole (DECISIONS.md
-     * 2026-10-21, *the probes that left with the bundle*). An envelope that
-     * was peeked into keeps it for the layer under it, which is sniffed
-     * after this. */
-    row = keep_row(fmt);
-    if (row < 0) return;
-    want = (short)(OVL_ID_CRYPT + (gKeepSet[row][1] & 0x1f));
-    if (gKeepSet[row][1] & KEEP_PEEK) {
-        UncAlloc pal;
-        pal.ctx = NULL;
-        pal.alloc = peek_alloc;
-        pal.free = peek_free;
-        as = unc_envelope_peek(io, &pal, &enc);
-        row = keep_row(as);
-        if (row < 0 || (gKeepSet[row][1] & KEEP_PEEK)) return;
-        inner = (short)(OVL_ID_CRYPT + (gKeepSet[row][1] & 0x1f));
-        /* One image can serve both: an LZ4 frame and the MAR in it are
-         * both `ovl_zipold`'s, kept twice and given back once. Kept once
-         * and given back with the frame, the MAR layer ran with its image
-         * gone, "Archive damaged." (measured 2026-11-03; DECISIONS.md, *the
-         * frame mar 0.2.0 reads*). */
-    }
-    crypt = gKeepSet[row][1] & KEEP_CRYPT;
-
-    /* Compact Pro and zip keep a per-entry encryption flag in a directory
-     * that can be walked before anything is decoded, and StuffIt 5's header
-     * says whether its reader can decrypt anything at all, so for those
-     * three the ciphers are kept only when an entry can need them
-     * (unc_archive_encrypted; under an envelope, the peek's answer over the
-     * first bytes, which only StuffIt 5's header can give). Anything else —
-     * a format that flags encryption per entry with no directory (StuffIt,
-     * PackIt), one that does not flag it at all (ARC), or a header or
-     * directory that would not read — answers UNKNOWN, and UNKNOWN is
-     * treated as YES.
-     *
-     * This is the only place the answer may be acted on: there is no reload,
-     * so releasing the ciphers on a maybe would lose an entry rather than
-     * cost a disk access. */
-    if (crypt && (as == UNC_FORMAT_COMPACTPRO || as == UNC_FORMAT_ZIP ||
-                  as == UNC_FORMAT_SIT5) &&
-        (as != fmt ? enc : unc_archive_encrypted(as, io)) == UNC_ENC_NO)
-        crypt = 0;
-
+    n = OVL_PLAN(fmt, io, plan);
+    if (n <= 0) return;
     OVL_DIAG(gRelFmt = (short)fmt);
-    ovl_keep(want);
-    if (as != fmt) {
-        gDrop = want;
-        ovl_keep(inner);
-        ovl_keep(OVL_ID_SNIFF);
-        gPeeked = (int)as;
-    }
-    /* Zip, and a spanned zip, also keep Shrink and Reduce, which nothing
-     * else calls. */
-    if (as == UNC_FORMAT_ZIP || as == UNC_FORMAT_ZIPSEG)
-        ovl_keep(OVL_ID_ZIPOLD);
-    if (crypt) ovl_keep(OVL_ID_CRYPT);
-    /* And ALWAYS the codecs, because every decoder calls into them: the bit
-     * reader, the Huffman and canonical coders, LZW and LZAH live there and
-     * are reached through pointers in the host vector. Releasing the bundle
-     * without keeping this image left those pointers aimed at memory that had
-     * been given back — which is not a wrong answer but no answer at all:
-     * every decoder stub failed at ovl_codecs_ready() and the archive
-     * produced nothing. */
-    ovl_keep(OVL_ID_CODECS);
+    gPeeked = plan[0];
+    gDrop = (short)(OVL_ID_CRYPT + plan[1]);
+    do ovl_keep((short)(OVL_ID_CRYPT + plan[1 + n])); while (--n);
 
     /* Out of the resource map, so that a later GetResource reads the bundle
      * afresh rather than handing back this block. Still locked. */

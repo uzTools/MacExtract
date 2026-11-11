@@ -23,10 +23,16 @@ static const SegSetupFns *gF = (const SegSetupFns *)1;
 #define SS(f) (gF->f)
 
 #include "../../mac/seg_setup.inc.c"
+#include "unc_internal.h"             /* UNC_ENC_*, for the release's plan */
+#include "../../mac/release_plan.inc.c"
 
 int32_t ovl_main(const OverlayHost *host, int32_t which, void *a, void *b)
 {
-    (void)host;
+    if (which == OVL_RELEASE_PLAN) {
+        const OvlArgs *g = (const OvlArgs *)a;
+        return release_plan(host, (OverlayEntry)g->obj, (UncFormat)g->len,
+                            (UncIO *)g->in, (unsigned char *)b);
+    }
     if (which != OVL_SEGSETUP_RUN) return UNC_ERR_IO;
     gF = (const SegSetupFns *)b;
     return SegSetup((const SegSetupArgs *)a);

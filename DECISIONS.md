@@ -595,6 +595,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-11 (the parts the Installer expands) — a resource fork holding 'part's is read as a Tome: each iFND a suitcase of its own, the rest one file under the package's name, every record at its stated id; all nine of System 7.5.5's families equal the installed suitcases but for the FOND's ids; 288 B off every budget
 - 2026-11-11 (the kilobyte under each copy) — `high_handle`'s filler left 1 KB over every kept copy, and from 5dfe571a a tar envelope's last copy did not fit on System 6.0.8 / 512Ke; 32 B now, 0 B on every axis, 72/74 again, but the copies no longer all fit there and the real application's chain fails
 - 2026-11-11 (the copies that moved down) — the release keeps its images where they already are, packed down to the start of the bundle's own block, instead of copying each above it; a tar envelope's inner layer comes off on System 6.0.8 / 512Ke byte for byte, for CODE −24, A5 −40, every grant +34 to +44 B and 10 s off a 128K ROM's `.sit.hqx`; "Archive damaged." was the codecs' keep failing, and says "Memory is too broken up" now
+- 2026-11-11 (the release decided in the bundle) — every decoder name is one dispatch on the format being read, a 2-byte row each instead of an 18-byte shim, and what the release keeps is decided in the set's setup image while the bundle is whole: CODE −840, A5 +56, every grant +784 B and the whole bundle's +376; a new format costs 2 B resident
 
 ---
 
@@ -25000,3 +25001,89 @@ bought kept. Not measured: other archives, a 64K ROM.
 
 **Taken: free or better on all five axes and faster**, every tier's tally as it was,
 and the tar envelopes' inner layer back on the 512Ke under System 6.0.8.
+
+## 2026-11-11 (the release decided in the bundle) — every decoder name is one dispatch on the format being read, a 2-byte row each instead of an 18-byte shim, and what the release keeps is decided in the set's setup image while the bundle is whole: CODE −840, A5 +56, every grant +784 B and the whole bundle's +376; a new format costs 2 B resident
+
+**The open item (OPEN_ITEMS.md, asked by the maintainer).** Every format
+added resident code twice: a `DECODER` shim in `mac/ovl_shim.c` (27 of them,
+18 B each, `nm -S`) and a row plus its share of `ovl_release_if_unwanted`
+(496 B), which runs only before the release, with the whole bundle in
+memory.
+
+**Idea 2, one dispatch (measured).** The engine calls `d->extract(&c)` with
+`c.fmt` set by `unc_extract_as`; the segment joiner set it to UNKNOWN and
+called Compact Pro's, zip's, Apple Backup's and MIME's readers directly. It
+now sets the scheme (`src/unc_segment.c`, one line; the CLI reads `c->fmt`
+only in BinHex and hex/hcx, neither a scheme's reader). Every
+`unc_*_extract` name is `__attribute__((alias("ovl_run")))`, and `ovl_run`
+reads its constant from `gRun[c->fmt]`, 2 B per format value (108 B, A5).
+Alone: shipped CODE −468 / A5 +132 (−336), lazy −468 / +100, control
++4 / −4 (the joiner's line). `ovl_run` 124 → 140 B. Without the engine line,
+the four readers the joiner calls would need their shims back (+64 B).
+
+**Idea 1, the decision in an image (measured).** `mac/release_plan.inc.c`
+holds the keep table, indexed by format now (54 B; one byte a row with
+KEEP_CRYPT, KEEP_PEEK and KEEP_ZIPOLD), the peek and the encryption check,
+and writes a list of keeps; it is compiled into `ovl_segsetup`, which is in
+the bundle whenever a release is decided and is never kept. The resident
+release asks it (`ovl_plan`, the sniffer's entry handed over so the image
+can ask it) and counts what it lists. `unc_archive_encrypted`'s and
+`unc_envelope_peek`'s shims, the peek allocator and `gKeepSet` leave the
+resident link; `ovl_release_if_unwanted` 496 → 296 B with `ovl_keep`
+inlined. Alone: shipped CODE −372 / A5 −44 (−416); lazy and control
+unmoved (no release). The image +408 B, the bundle +408 B — so a layer
+that keeps the WHOLE bundle gains only 8 B from this half. The first
+version, with the two-byte-row table searched, was +460 and would have cost
+that layer 44 B; indexing the table took 52 B off it.
+
+**Together (measured).** Shipped 38,072 / 16,744 → **37,232 / 16,800**,
+−784; lazy 36,884 / 16,796 → 36,416 / 16,896; control 198,472 / 36,872 →
+198,476 / 36,868, its sum unmoved, so `TIERS_CONTROL` holds. `OVL_SAVED`
+180,528 → 181,312; `BUNDLE` 209,324 → 209,732; every row of *What each
+format is granted* +784, the whole bundle's +376. A new format now costs
+2 B of `gRun` resident, and 1 B of the setup image's table if it releases.
+
+**Heap (measured, `-D UNC_AT_BUDGET`, each fixture against the same probe
+built from ce765e3b).** Budgets +784 B on `synth-sit-rle90.sit`,
+`popper-1.7.tar.Z`, `derived-PCCTS.tar` and `synth-dd-m5.dd`, and +376 B on
+`synth-os9-mime.mim`, which keeps the whole bundle, on all three tiers —
+`gain()` to the byte. `synth-dd-m5.dd` is still refused per entry: on
+System 3.0 / 512Ke 974 → 190 B short; on System 6.0.8 / 512Ke 150 → 918,
+the request that was 150 B short now granted and a later one refused.
+
+**Stack (`stack_depth.py`).** The engine's deepest chain 3,446 → 3,430 B,
+`--shell` 7,858 → 7,842: an alias has no frame. The tool learned aliases
+(a callgraph node with no frame, its one edge a tail call). The release
+path now runs the setup image's `ovl_main` (68 B frame) before the
+sniffer's: about 100 B deeper than before, derived, under the shell's
+`ExtractOne` before the engine starts, not the deepest chain; the tool
+lists the call into the image as not followed.
+
+**The host lane.** It has no setup image (Toolbox code, Retro68's only), so
+the loader reaches the plan through `OVL_PLAN`, and `tests/ovlbox/
+ovlbox_plan.c` compiles the same source in; under `qemu-m68k` the plan asks
+the real sniffer image. `--mutate`'s codecs break moved into the plan and
+is still caught. `run_tiers.py` reads the keep set from the plan.
+
+**Extractions (measured, the shipped autotest build, one fixture per
+boot, one pass each).** The 1 MB floor **74/74**; System 3.0 on the 512Ke
+**72/74**; System 6.0.8 on the 512Ke **72/74**; the 64K ROM **72/74** —
+each refusing `synth-dd-m5.dd` and Library_ISBN per entry, as before;
+`run_tiers.py --check` moves no tally. Mac OS 9.2 `os9.py --autotest`
+**22/22** (8, 7 and 7 in three runs). **Chains**, `interactive.py --chain` on the 512Ke under System
+6.0.8: the four tar envelopes 4/4, 29/29, 49/49 and 4/4 data forks
+byte-exact, `synth-mar020.mar.lz4` 7/7 and `mystic_8-ball.sit.bin` 1/1.
+**Sets**, `segcheck.py --mem 1M` 9/10, the joiner's new line exercised by
+`cpt-middle`, `cpt-truncated`, `zip-named` and `mimeseg`; `split-named`
+fails, and fails the same way at ce765e3b (measured, alone, both trees):
+part 1 of the three-part `Ablob.001` set asks for a part 4 that does not
+exist ("Part 4 of "Ablob" has not been found"), so it is not this change;
+BLOCKERS.md last recorded it passing. Not chased here.
+
+**Speed (measured).** `expander.py --only ours --emu mv-4M-1x` on
+`macburger-helper.hqx`, ce765e3b's `dist/` and this build twice each,
+alternated: **214.6 s all four**. The dispatch's table read and the
+release's call into an image run once a layer.
+
+**Taken: free or better on all five axes**, both halves; idea 1 alone
+would have been +8 B for a whole-bundle layer, the least it pays.

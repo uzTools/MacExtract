@@ -178,6 +178,10 @@ typedef int32_t (*OverlayEntry)(const OverlayHost *host, int32_t which,
                                     * in head, len) */
 #define OVL_ABK_EXTRACT        67
 #define OVL_TOME_EXTRACT       68
+#define OVL_RELEASE_PLAN       69  /* what the eager release keeps, in the set's
+                                    * setup image: a = OvlArgs* (obj the sniffer's
+                                    * entry, in io, len the format), b = the plan
+                                    * (mac/release_plan.inc.c); returns its length */
 
 /* OVL_DEST_ASK's argument. Plain integers, so this header needs no Mac
  * one: `v`/`h` are the dialog's top left, `vol` is the reply's vRefNum. */

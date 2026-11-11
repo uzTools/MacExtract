@@ -167,8 +167,11 @@ CLASSES = {
     "end_entry": ["unc_peek.c:ph_end", SH + "macextract_mac.c:sink_end"],
     "comment": [SH + "macextract_mac.c:sink_comment"],
     # UncAlloc, and zlib's own pair (unc_inflate.c installs unc_z*)
-    "alloc": ["ovl_load_eager.c:peek_alloc", SH + "macextract_mac.c:mal_alloc"],
-    "free": ["ovl_load_eager.c:peek_free", SH + "macextract_mac.c:mal_free"],
+    # The release's peek allocator is the set's setup image's since
+    # 2026-11-11 (mac/release_plan.inc.c), which is not compiled here; it
+    # runs before the engine, and calls NewPtr and nothing else.
+    "alloc": [SH + "macextract_mac.c:mal_alloc"],
+    "free": [SH + "macextract_mac.c:mal_free"],
     "ZALLOC": ["unc_inflate.c:unc_zalloc", "zutil.c:zcalloc"],
     "ZFREE": ["unc_inflate.c:unc_zfree", "zutil.c:zcfree"],
     # UncProgress, UncPasswordAsk, UncVolumeSource
@@ -291,6 +294,9 @@ NOT_FOLLOWED = {
     "RETRO68_RELOCATE": "the startup relocation, before main",
     "e@macextract_mac.c": "the shell's dialog images (ovl_destdlg, "
                           "ovl_segsetup), not compiled here",
+    "e@ovl_load_eager.c": "the release's plan, in the set's setup image "
+                          "(ovl_segsetup), not compiled here; it runs "
+                          "before the engine",
 }
 # Address-taken functions no class needs to list: (file the address is
 # taken in, regex on the function's name, why).
@@ -477,7 +483,13 @@ def read_unit(u):
             name = title.split(":")[-1]
             f = Fn(None, u.image, u, name)
             mm = re.search(r"\\n(\d+) bytes \(([^)]*)\)", label)
-            f.su, f.kind = int(mm.group(1)), mm.group(2)
+            if mm is None and "triangle" in rest:
+                # An alias: another name for a function defined here, with
+                # no frame of its own (mac/ovl_shim.c's decoder names, each
+                # ovl_run since 2026-11-11). Its one edge is a tail call.
+                f.kind = "alias"
+            else:
+                f.su, f.kind = int(mm.group(1)), mm.group(2)
             fns[title] = f
             local[name] = title
             continue
@@ -539,7 +551,8 @@ def read_unit(u):
     for f in fns.values():
         for t in f.calls:
             n = t.split(":")[-1]
-            if n in jmp_to.get(f.name, ()) and n not in jsr_to.get(f.name, ()):
+            if f.kind == "alias" or (n in jmp_to.get(f.name, ()) and
+                                     n not in jsr_to.get(f.name, ())):
                 f.tail.add(t)
     # data sections: relocations from initialised tables
     for line in run([TOOL + "objdump", "-r", u.obj]).splitlines():
