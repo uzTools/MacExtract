@@ -107,6 +107,32 @@ static int pit_next(PitStream *s)
 static int pit_read(PitStream *s, uint8_t *buf, uint32_t n)
 {
     uint32_t i;
+    if (!s->huff) {
+        /* Stored: a span of what the reader holds at a time; a spent
+         * buffer is refilled through unc_bufin_next (FORMATS.md,
+         * *Stored copies*). */
+        while (n > 0) {
+            const uint8_t *p;
+            uint32_t k;
+            if (s->err != UNC_OK) return s->err;
+            k = unc_bufin_span(s->in, &p);
+            if (k == 0) {
+                int b = unc_bufin_next(s->in);
+                if (b < 0) {
+                    s->err = s->in->err;
+                    return s->err != UNC_OK ? s->err : UNC_ERR_TRUNCATED;
+                }
+                *buf++ = (uint8_t)b;
+                n--;
+                continue;
+            }
+            if (k > n) k = n;
+            unc_bufin_drop(s->in, k);
+            n -= k;
+            while (k-- > 0) *buf++ = *p++;
+        }
+        return UNC_OK;
+    }
     for (i = 0; i < n; i++) {
         int b = pit_next(s);
         if (b < 0) return s->err != UNC_OK ? s->err : UNC_ERR_TRUNCATED;

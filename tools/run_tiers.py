@@ -283,10 +283,13 @@ REPO = os.path.dirname(HERE)
 # control's CODE -96 and A5 0; the shipped pair fell the same 96, OVL_SAVED
 # unmoved. They were 190,276 / 94,894 / 619,182.
 TIERS = {
-    "sys3-512K": (183688, "System 3.0, Macintosh 512Ke (204,168 B free)"),
-    "sys6-512K": (88284,  "System 6.0.8, Macintosh 512Ke (108,764 B free)"),
-    "floor-1M":  (612572, "System 6.0.8, 1 MB Mac Plus — the floor target"),
+    "sys3-512K": (183560, "System 3.0, Macintosh 512Ke (204,168 B free)"),
+    "sys6-512K": (88156,  "System 6.0.8, Macintosh 512Ke (108,764 B free)"),
+    "floor-1M":  (612444, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
+# -128 each 2026-11-11, DERIVED from TIERS_CONTROL +128 (PackIt's stored
+# entries copied a span at a time, DECISIONS.md 2026-11-11, *the stored bytes read one at a time*); they were 183,688 / 88,284 /
+# 612,572.
 # **RE-TAKEN on all three machines 2026-11-11** (`-D UNC_OVL_RESIDENT -D
 # UNC_AT_BUDGET`, derived-PCCTS.tar) on c6ae39db and on the build with seven
 # File Manager calls expanded inline, back to back (DECISIONS.md 2026-11-11,
@@ -570,7 +573,11 @@ TIERS = {
 # in this build; DECISIONS.md 2026-11-10, *the archive the Installer
 # reads*). TIERS -3,408 and OVL_SAVED +3,376: every grant 32 B lower, less
 # its images' change.
-TIERS_CONTROL = 230416     # build/mac-resident, CODE + A5, 2026-11-11
+TIERS_CONTROL = 230544     # build/mac-resident, CODE + A5, 2026-11-11
+# +128 2026-11-11: PackIt's stored entries copied a span at a time
+# (`ovl_packit` +98; CODE +100, A5 +28, alignment: the change has no data;
+# DECISIONS.md 2026-11-11, *the stored bytes read one at a time*); TIERS -128 and OVL_SAVED +128, which cancel: only a packit-keeper
+# moves, -98.
 # -384 2026-11-11: FSRead, FSWrite, SetFPos, GetEOF, SetEOF, FlushVol and
 # FSClose expanded at each call instead of linked (mac/fm_inline.h; CODE
 # -376, A5 -8, alignment; DECISIONS.md 2026-11-11, *the glue the shell
@@ -1307,7 +1314,11 @@ EXPECT = {
 # them itself (`ovl_segsetup` -12; DECISIONS.md 2026-11-11, *the glue the
 # shell expands*). TIERS +384 on the machine and OVL_RESIDUE -32 of this
 # change's (below): 336 B onto every budget the probe pair reads.
-OVL_SAVED = 175824
+# **+128 2026-11-11, -> 175,952**: PackIt's stored entries copied a span at
+# a time, the control's +128 (CODE +100, A5 +28) against the shipped pair's
+# 0; the code in `ovl_packit` (+98; DECISIONS.md 2026-11-11, *the stored bytes read one at a time*). TIERS -128, which cancels: only a
+# packit-keeper's budget moves, -98.
+OVL_SAVED = 175952
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
 # every kept image is one — as is the bundle an envelope holds on to.
@@ -1456,7 +1467,7 @@ IMAGES = {
     "OVL_ID_EXO":         30284,
     "OVL_ID_LZH":         10602,
     "OVL_ID_NOW":         4948,
-    "OVL_ID_PACKIT":      2180,
+    "OVL_ID_PACKIT":      2278,
     "OVL_ID_SPACESAVER":  16236,
     "OVL_ID_STUFFIT":     28834,
     "OVL_ID_SQP":         1736,
@@ -1641,7 +1652,9 @@ IMAGES = {
 # **SEGSETUP -12, the bundle -12 B, 2026-11-11**: the setup image makes
 # FSClose, GetEOF, FSWrite and FlushVol itself (mac/fm_inline.h) instead of
 # calling the application's (DECISIONS.md 2026-11-11, *the glue the shell expands*).
-BUNDLE = 204804
+# **PACKIT +98, the bundle +100 B, 2026-11-11**: PackIt's stored entries
+# copied a span at a time (DECISIONS.md 2026-11-11, *the stored bytes read one at a time*).
+BUNDLE = 204904
 
 # What the SHIPPED lane asserts, and it is the refused fixtures BY NAME
 # rather than a tally: a tier that refuses two different fixtures and still

@@ -24680,9 +24680,15 @@ blanket `unc_bufin_next` mark of 2026-11-09 took a stored zip to 1,255 for
 +3,500 B; the span takes it to 566 for +56 B, because it drops the bounds
 test and the cursor store a byte as well as the call. The mark is kept for
 the read that has no run to take: LZ4's, where it bought −3.1 % blanket and
-−2.9 % alone. PackIt's `pit_read` is the same stored loop, in a file other
-work owns; it was left to that work with its 2026-11-09 figure, 250 → 204
-ticks blanket.
+−2.9 % alone.
+
+**PackIt, the same day (measured).** `pit_read`'s stored path, first left
+to the work that owned `fmt_packit.c`, then done at the maintainer's
+request: `derived-PackIt.pit` **252 → 95** ticks, both runs, for +98 B of
+`ovl_packit`, the control's CODE +100 and A5 +28 (alignment); grants +128 B,
+PackIt's +30. A shape that refilled through `pit_next` was 30 B smaller
+(object) and 105 ticks; the 10 ticks were kept for the 30 B, as DiskDoubler's
+13 % was for 150.
 
 ## 2026-11-11 (the glue the shell expands) — the seven File Manager calls the shell linked from Retro68 are its own inline code: CODE −344, A5 −24, and every shipped budget 336 B higher on the machine
 
