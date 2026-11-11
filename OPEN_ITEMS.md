@@ -356,3 +356,16 @@ dist*). Left:
   (FORMATS.md, *Icons*). A colour family is about 2.3 KB of the helper
   and a black-and-white one (`ICN#`, `ics#`) about 320 B; the helpers zip
   is 64,171 B today and rides on the 400K floppy.
+- **The helpers in Macintosh Easy Open's lists.** Easy Open steps in only
+  when no application has a document's creator, and then lists every
+  application that can open its type (*Inside Macintosh: More Macintosh
+  Toolbox*, Translation Manager, 7-5 to 7-6). A helper's `FREF`s make it
+  one, so an orphaned `SITD` would offer MacExtract and the `StuffIt` and
+  `Expander` helpers beside it (hypothesis, read off our bundles: not run).
+  An `'open'` resource in an application's own fork overrides the types
+  its `FREF`s list (7-44), so a helper's `'open'` with no types should drop
+  it from those lists and keep its icons; whether a count of 0 is honoured
+  is what one Mac OS 8 or 9 boot with Easy Open would settle. The same list
+  holds at most 64 types (`TypesBlock`, `GetFileTypesThatAppCanNativelyOpen`,
+  7-37); a bundle's `FREF` count has no such limit (*Macintosh Toolbox
+  Essentials*, 7-64 to 7-67), and MacExtract claims 51.
