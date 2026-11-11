@@ -344,3 +344,15 @@ dist*). Left:
   opened by itself takes its creator back from StuffIt Expander
   (DECISIONS.md 2026-10-31, *the stub that sorts*); System 7.x and the
   stub's alert on Systems without a desktop database are not run.
+- **An icon per document type, drawn by the maintainer.** Every helper's
+  bundle points all its types at one family, MacExtract's archive icon
+  (`companion/make_stub.py`); the eighteen helpers claim 51 types between
+  them (`DDAP` 15, `SIT!` 8, `SITx` 5, `MARc` 4, the rest 1 or 2;
+  `companion/helpers.tsv`). The Finder draws a file's icon from the
+  application that owns its creator, so these show on archives that keep
+  their original creators, and cost MacExtract nothing: a helper's
+  resource map is in the helper's heap. MacExtract's own bundle keeps the
+  one archive icon, since a family there costs 72 B of its resource map
+  (FORMATS.md, *Icons*). A colour family is about 2.3 KB of the helper
+  and a black-and-white one (`ICN#`, `ics#`) about 320 B; the helpers zip
+  is 64,171 B today and rides on the 400K floppy.
