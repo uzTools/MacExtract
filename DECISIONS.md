@@ -25087,3 +25087,23 @@ release's call into an image run once a layer.
 
 **Taken: free or better on all five axes**, both halves; idea 1 alone
 would have been +8 B for a whole-bundle layer, the least it pays.
+
+**Re-run on the committed build (measured, 2026-11-12, d7fed5b7).** The
+sweeps and chains above ran before a final rebuild of `mac/ovl_shim.c` and
+`mac/ovl_load_eager.c`, so every Mini vMac tier and chain was run again on
+`dist/MacExtract.bin`'s forks (equal to a fresh build; autotest build
+`2c4a3ff2…`): 74/74, 72/74, 72/74 and 72/74, the same two refusals by name,
+one EMUDIED and one NOGRID each PASS alone; the four tar chains 4/4, 29/29,
+49/49 and 4/4 byte-exact. The `derived-PCCTS.tar` probe reads 756,654 /
+327,766 / 232,366 B, ce765e3b's 755,870 and 231,582 +784 to the byte.
+
+**The probe is 220 B above `gain()` (measured; why, hypothesis).** The three
+absolute budgets are 220 / 216 / 220 B over `TIERS` + `gain()` (756,434 /
+327,550 / 232,146). On 1 MB, 4171b4e6 and e7de5a4c read the model exactly,
+and 64af88c0 (*the parts the Installer expands*), whose `TIERS` −4,800 was
+derived, reads 220 above. There the shipped build grew 288 B of CODE + A5
+and the autotest probe build 64 B: the model, derived from the
+interactive builds, took 224 B off a grant the probe lost only 64 of. Hypothesis, not
+measured: the interactive application's own budget still equals `gain()`,
+and the model is pessimistic only against the autotest probe. No tally
+moves either way.

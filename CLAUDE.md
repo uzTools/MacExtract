@@ -32,7 +32,7 @@ BLOCKERS.md's (*Status*). The interactive UI is driven end to end on System
 | `tools/vmac/README.md` | how to run the emulator harnesses and probes | before booting anything |
 | `MANUAL_TESTS.md` | what only somebody outside this machine can do — hardware, a copy of the software, an account to post from | when something needs one of those |
 
-That session-start reading is **~14.8k tokens** (PROGRESS 3.6k,
+That session-start reading is **~14.9k tokens** (PROGRESS 3.6k,
 OPEN_ITEMS 8.2k, BLOCKERS' first two sections 3.1k); BLOCKERS'
 withdrawn-claims archive is another **~41.5k** and is reference, not
 orientation. All five are ESTIMATES (characters ÷ 3.93, ±5 %, 2026-11-12; no

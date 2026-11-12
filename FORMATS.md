@@ -4344,8 +4344,11 @@ aligned to 4 B with a 12 B directory entry, and 12 B for the one block they
 are kept in (DECISIONS.md 2026-11-11, *the copies that moved down*), less a
 **402 B residue** (`OVL_RESIDUE`, re-taken 2026-11-11 from the shipped and
 resident budget probes on all three tiers; DECISIONS.md 2026-11-11, *the glue
-the shell expands*; the packed layout's budgets agreed with it to the byte on
-four keep sets and three tiers the same day).
+the shell expands*; the packed layout's budgets moved by it to the byte on
+four keep sets and three tiers the same day). The `UNC_AT_BUDGET` probe has
+read 220 B above it (216 on System 3.0) since 64af88c0 (measured 2026-11-12;
+corrected that day from "agreed with it to the byte"; DECISIONS.md
+2026-11-11, *the release decided in the bundle*).
 `run_tiers.gain()` computes it and `tools/run_tiers.py --shipped` applies it
 (TESTING.md, *The tiers a budget predicts*; DECISIONS.md 2026-09-26, *a budget
 per format, and one per layer*).
