@@ -83,7 +83,7 @@ below it. Per-format detail is under *Table notes*.
 | LZ4 frame (.lz4) | extract | — (an envelope: stored and compressed blocks, header, block and content checksums, concatenated and skippable frames; no dictionary, no legacy frame) | 2 synthetic, liblz4's own frames, + 165 in `tools/run_lz4.py` (*LZ4 frames*, below) | 68 KB | full |
 | Apple Backup (a set of floppies) | extract | — (stored forks; a file cut at a disk's end continues on the next under a repeat of its header; a set read with disks missing, what they held reported) | 2 complete real backups (105 disks, a restore CD) and 6 disks of 2 partial ones + 1 synthetic 3-disk set, graded by two other readers run in a sandbox (*Apple Backup*, below) | 8 KB | full |
 | Apple Installer Tome (`idcp`), and the `'part'` resources of an `ircp` file's or a Tome's resource fork | extract | stored, InstaCompOne, the text codec; the forks' checksum unidentified, so a stream must end exactly where its record says; a part's records come out at their stated ids, each `iFND` a suitcase | 4 real Tomes off the System 7.5.5 and Mac OS 8.6 media, graded by deark and by the files Apple's Installer installed, + 35 more off the same media with `run_tome.py --extra`; Installation Tome 3 with both forks, its nine font families graded by the installed suitcases (*Apple Installer Tomes*, below) | 22–79 KB | full |
-| Installer VISE (3.5 to VISE X), with a set's `Segment.N` floppies and VISE X's `Installer.data` | extract | DEFLATE's stored and dynamic blocks in VISE's own framing, a file's streams substituted; shared blocks; catalogues stored or compressed; folders by depth; records not stored in the installer (segment 0) passed over | 17 fixtures — 15 installers of 14 versions, a three-floppy set and VISE X's pair — and 2 specimens: 488 files, each equal to the CRC-32 its record holds, 19 of them to installer-vise's as well (*Installer VISE*, below) | 9.7–81 KB | full |
+| Installer VISE (3.5 to VISE X), with a set's `Segment.N` floppies and VISE X's `Installer.data`; and the `VISE` archive before it (1992–1996), an installer's data fork or a `.vct` | extract | DEFLATE's stored and dynamic blocks in VISE's own framing, a file's streams substituted; shared blocks; catalogues stored or compressed; folders by depth; records not stored in the installer (segment 0) passed over. Before 3.5: one LZ77 stream, three Shannon-Fano trees | 17 fixtures — 15 installers of 14 versions, a three-floppy set and VISE X's pair — and 2 specimens: 488 files, each equal to the CRC-32 its record holds, 19 of them to installer-vise's as well; 8 archives before 3.5, 99 files, two of them equal to installed copies (*Installer VISE*, below) | 9.7–81 KB | full |
 | StuffIt segment (multi-part) | extract | — (join only; the joined file is the next layer) | 7 synthetic sets, oracle-adjudicated, + 3 with each part in its own envelope (CLI only), + **11 sets StuffIt itself cut** (Deluxe 2.0.1 ×5, four of them from files with a resource fork, Lite 3.0.5 ×2, Deluxe 5.0 ×2, DropSegment 5.0, InstallerMaker 2.0), graded by their originals and the running CRCs (extracting since 2026-10-24; BLOCKERS.md, *Withdrawn claims*) | 8 KB | full |
 | Zip segment (spanned, .z01…/.zip) | extract | store, deflate — the zip reader, over the joined parts | 5 generated sets, adjudicated 4 ways (source tree, `unar`, us split, us unsplit) | 12–13 KB¶ | full |
 | Compact Pro segment (multi-part) | extract | RLE / LZH+RLE — the Compact Pro reader, over the segments | 2 generated sets + 2 cut by Compact Pro 1.51 itself | 20 KB | full |
@@ -2159,7 +2159,7 @@ decoder, `src/fmt_sqp_probe.c` the sniffer, `tools/run_sqp.py` the suite
 (TESTING.md, *AppleLink packages: SqueezePlay*). Every LZW fork is a Unix
 `compress` code stream, decoded identically by **`gzip`** (*The codec*).
 The sniffer answers
-*AppleLink package* for **exactly the 7 of 1,036 corpus files that are
+*AppleLink package* for **exactly the 7 of 1,044 corpus files that are
 packages and for nothing else** (re-measured 2026-11-11 with Installer VISE's; 2026-11-10 with Apple Backup's
 probe in the sniffer; no file's answer changed but the six Apple Backup
 disks'), a sweep
@@ -2716,9 +2716,28 @@ graded by `run_vise.py` where the cache holds them. `vise-wild-netscape-stub`
 the catalogue, the input buffer and a window no larger than the largest
 stream's output, 32 KB at most.
 
-**Not read**: Installer VISE before 3.5, whose files open `VISE` rather
-than `SVCT` (OPEN_ITEMS.md, *Installer VISE*); 0x80010306, of which no
-specimen was found.
+**Not read**: 0x80010306, of which no specimen was found.
+
+### Before 3.5: the `VISE` archive
+
+One stream behind a 24-byte header, and 80-byte records after it, no
+checksum (`src/fmt_viseold.c`; DECISIONS.md 2026-11-12, *the VISE before
+VISE*). `tools/run_viseold.py` reads each archive itself and holds the
+engine to it; its stream must end at its catalogue to the byte.
+
+| fixture | dated | files | expands to | peak heap | also graded by |
+|---|---|---|---|---|---|
+| `vise-old-deltagraph-tutorial` | 1992-08-25 | 2 | 38,072 B | 73,656 B | the fork order (an EPSF) |
+| `vise-old-deltasymbol` | 1992-08-25 | 1 | 33,288 B | 73,416 B | PC World's installed copy |
+| `vise-old-deskwriter-c` | 1993-02-22 | 1 | 409,269 B | 73,416 B | — |
+| `vise-old-ziffnet-modemdb` | 1994-05-06 | 1 | 6,187 B | 16,072 B | damage |
+| `vise-old-powertalk-cis` | 1994-05-13 | 31 | 589,566 B | 75,976 B | four installed Serial Tools |
+| `vise-old-compuserve-mail` | 1995-02-28 | 32 | 610,849 B | 76,056 B | — |
+| `vise-old-cim-tools` | 1995-08-24 | 1 | 32,350 B | 40,648 B | — |
+| `vise-old-maccim-ccls` | 1995-09-19 | 30 | 94,915 B | 75,896 B | — |
+
+Measured 2026-11-12 (`macextract t --stats`). The peak is the window,
+2^16 in all eight, cut to what the archive expands to.
 
 ## Finder info in the archive: what each format's own expander puts back
 
@@ -2913,7 +2932,7 @@ Archives written and read back by libNeoAppleArchive; StuffIt X, the three
 RAR signatures, Cabinet, Zoo, ARJ and lzip headers identified by deark;
 Zstandard and lrzip on their published magics; and `synth-os9-rar.rar`.
 **No fixture changes format in
-1,036 corpus files**: each manifest's fixture sniffs as its oracle names it,
+1,044 corpus files**: each manifest's fixture sniffs as its oracle names it,
 and the only one that went to `unknown` is that RAR. The CLI before the
 change fails 52 of the 97 checks (TESTING.md, *Archives this engine does
 not have*).
@@ -3192,7 +3211,7 @@ joiner matches on all 26 identity bytes anyway.
 
 ## Hardening
 
-- Differential: 1,010 fixtures byte-exact against `unar` manifests (both
+- Differential: 1,018 fixtures byte-exact against `unar` manifests (both
   forks + type/creator + Finder flags), `./ci.sh`; the DiskDoubler corpus's
   manifests are built from the files it was made from rather than from a
   decoder (TESTING.md). `run_diff.py` prints the number it ran, plus two
@@ -4318,12 +4337,12 @@ Measured 2026-09-27:
 whose tallies it is quoted beside. It cancels in a difference taken from
 one probe pair (*What it buys, against the control*): **117,040 B saved
 between the shipped pair against 116,720 B between the probe pair**, both
-2026-09-27. The shipped pair is **190,496 B** (`OVL_SAVED`,
-`tools/run_tiers.py`) since 2026-11-11 (*the release decided in the bundle*);
+2026-09-27. The shipped pair is **194,144 B** (`OVL_SAVED`,
+`tools/run_tiers.py`) since 2026-11-12 (*the VISE before VISE*);
 the probe pair has not been re-measured, so the 320 B is that
 day's difference, not today's.
 
-The bundle is **219,640 B** — the twenty images sum to 219,380 B, so its
+The bundle is **223,308 B** — the twenty images sum to 223,048 B, so its
 index costs **260 B** (`tools/run_tiers.py` `BUNDLE`, `IMAGES`): a
 4-byte header, 12 bytes of directory per image and padding of each image to
 a multiple of 4 — the padding is why the index is not a constant. The
@@ -4384,7 +4403,7 @@ carries, and they were read again from the floppy (DECISIONS.md 2026-11-04,
 
 A tier's budget for a format is the resident build's budget for that tier
 (`TIERS`; *512 KB machines*, *Floor target verification*), plus
-the 190,496 B of `CODE` and A5 the shipped build does not carry (`OVL_SAVED`;
+the 194,144 B of `CODE` and A5 the shipped build does not carry (`OVL_SAVED`;
 *Three configurations, one tree*), less the images the format keeps, each
 aligned to 4 B with a 12 B directory entry, and 12 B for the one block they
 are kept in (DECISIONS.md 2026-11-11, *the copies that moved down*), less a
@@ -4438,32 +4457,35 @@ image kept and its alignment — +34 to +44, the whole bundle's +144; then
 bundle's, which carries the release's plan); then 2026-11-12, *the
 installer that was an archive* and *the head that named nothing*: +9,184 B
 against the control on every row but the sniffer's (+8,216) and the whole
-bundle's (−724), the control 9,280 B larger, so −96 B on the machine), with
+bundle's (−724), the control 9,280 B larger, so −96 B on the machine; then
+*the VISE before VISE*: +3,648 B against the control on every row but
+VISE's (+308), the envelope rows' (+3,320) and the whole bundle's (−20), the
+control 3,648 B larger, so nothing on the machine but those images), with
 `run_tiers.py --check` moving no tally.
 **Re-taken from `gain()` on 2026-11-11**, and every row agreed with it before the
 change.
 
 | sniffed format | images kept | granted, against the control |
 |---|---|---|
-| **AppleLink package** | **sqp, codecs** | **+182,310 B** (arithmetic: no `.pkg` is in the Mac sample) — the largest grant, because `ovl_sqp` is the smallest decoder image at 1,736 B |
-| Now Compress | now, codecs | **+179,098 B** (measured) |
-| SuperDisk! | superdisk, codecs | +177,418 B (arithmetic: no SuperDisk! fixture is in the Mac sample) |
-| LZH | lzh, codecs | **+173,442 B** (measured) |
-| PackIt | packit, ciphers, codecs | **+172,494 B** (measured) |
-| DiskDoubler | cptdd, codecs | **+168,802 B** (measured) |
-| StuffIt SpaceSaver | spacesaver, codecs | +167,810 B (arithmetic: no SpaceSaver fixture is in the Mac sample) |
-| ARC | arc, ciphers, codecs | **+166,850 B** (measured) |
-| Compact Pro, Compact Pro segment | cptdd, ciphers, codecs | +159,530 B (arithmetic), and **+168,802 B** where the directory says no entry is encrypted (measured) |
-| Tar | zipold, codecs | **+157,974 B** (measured) |
-| MAR | zipold, codecs | +157,974 B (arithmetic: no MAR fixture is in the Mac sample) |
-| Apple Backup | zipold, codecs | +157,974 B (arithmetic: no Apple Backup set is in the Mac sample) |
-| Installer Tome | zipold, codecs | +157,974 B (arithmetic: no Tome is in the Mac sample) |
-| Installer VISE | vise, codecs | +175,186 B (arithmetic: no installer is in the Mac sample) |
-| StuffIt, StuffIt 5 | stuffit, ciphers, codecs | **+145,938 B** (measured), and **+155,210 B** for a StuffIt 5 archive whose header carries no password hash (measured, 2026-11-03) |
-| Zip, spanned zip | exo, zipold, ciphers, codecs | +118,406 B (arithmetic), **+127,678 B** unencrypted (measured) |
-| an envelope whose payload's first bytes name its format (`unc_envelope_peek`), since 2026-11-03 | its own reader, the sniffer, and what that format keeps | **+109,282 B** for a `.tar.Z` or `.tar.gz`, and an LZW-compressed MAR, which keeps the same (arithmetic), **+139,578 B** for a `.mar.lz4` (arithmetic), **+119,898 B** for a StuffIt archive in BinHex or MacBinary (measured) |
-| an envelope whose payload's first bytes name nothing, since 2026-11-12 (DECISIONS.md 2026-11-11, *the head that named nothing*) | its own reader, the sniffer, cptdd and superdisk (the two formats only an end names), the ciphers, codecs | **+104,198 B** for a `.gz` or `.Z`, +108,410 B for an `.lz4`, +126,850 B for BinHex or MacBinary, +123,042 B for uuencode or base64, +131,986 B for btoa (arithmetic) |
-| any other envelope, and every segment scheme that joins to a file | the whole bundle, kept | **−29,554 B** (−29,118 B measured, before 2026-11-07) |
+| **AppleLink package** | **sqp, codecs** | **+185,958 B** (arithmetic: no `.pkg` is in the Mac sample) — the largest grant, because `ovl_sqp` is the smallest decoder image at 1,736 B |
+| Now Compress | now, codecs | **+182,746 B** (measured) |
+| SuperDisk! | superdisk, codecs | +181,066 B (arithmetic: no SuperDisk! fixture is in the Mac sample) |
+| LZH | lzh, codecs | **+177,090 B** (measured) |
+| PackIt | packit, ciphers, codecs | **+176,142 B** (measured) |
+| DiskDoubler | cptdd, codecs | **+172,450 B** (measured) |
+| StuffIt SpaceSaver | spacesaver, codecs | +171,458 B (arithmetic: no SpaceSaver fixture is in the Mac sample) |
+| ARC | arc, ciphers, codecs | **+170,498 B** (measured) |
+| Compact Pro, Compact Pro segment | cptdd, ciphers, codecs | +163,178 B (arithmetic), and **+172,450 B** where the directory says no entry is encrypted (measured) |
+| Tar | zipold, codecs | **+161,622 B** (measured) |
+| MAR | zipold, codecs | +161,622 B (arithmetic: no MAR fixture is in the Mac sample) |
+| Apple Backup | zipold, codecs | +161,622 B (arithmetic: no Apple Backup set is in the Mac sample) |
+| Installer Tome | zipold, codecs | +161,622 B (arithmetic: no Tome is in the Mac sample) |
+| Installer VISE | vise, codecs | +175,494 B (arithmetic: no installer is in the Mac sample) |
+| StuffIt, StuffIt 5 | stuffit, ciphers, codecs | **+149,586 B** (measured), and **+158,858 B** for a StuffIt 5 archive whose header carries no password hash (measured, 2026-11-03) |
+| Zip, spanned zip | exo, zipold, ciphers, codecs | +122,054 B (arithmetic), **+131,326 B** unencrypted (measured) |
+| an envelope whose payload's first bytes name its format (`unc_envelope_peek`), since 2026-11-03 | its own reader, the sniffer, and what that format keeps | **+112,602 B** for a `.tar.Z` or `.tar.gz`, and an LZW-compressed MAR, which keeps the same (arithmetic), **+142,898 B** for a `.mar.lz4` (arithmetic), **+123,218 B** for a StuffIt archive in BinHex or MacBinary (measured) |
+| an envelope whose payload's first bytes name nothing, since 2026-11-12 (DECISIONS.md 2026-11-11, *the head that named nothing*) | its own reader, the sniffer, cptdd and superdisk (the two formats only an end names), the ciphers, codecs | **+107,518 B** for a `.gz` or `.Z`, +111,730 B for an `.lz4`, +130,170 B for BinHex or MacBinary, +126,362 B for uuencode or base64, +135,306 B for btoa (arithmetic) |
+| any other envelope, and every segment scheme that joins to a file | the whole bundle, kept | **−29,574 B** (−29,118 B measured, before 2026-11-07) |
 
 A change to resident code moves every row by the control's growth less the
 shipped build's; a change to an image moves only the rows that keep it — so a
@@ -4474,7 +4496,7 @@ left*).
 
 **The last row is the one no tally had shown**: a wrapper that keeps the
 bundle runs with **less** memory than a resident build would give it —
-219,640 B held against 190,496 B saved. Until 2026-11-12 that was every
+223,308 B held against 194,144 B saved. Until 2026-11-12 that was every
 envelope whose payload the peek could not name (the row above it since;
 DECISIONS.md 2026-11-11, *the head that named nothing*), and until
 2026-11-03 every envelope, and it refused `a2ps.V4.3.tar.Z` and
@@ -4539,7 +4561,7 @@ with File > Open...'s record placed after the last before it, 250,752 B with
 MacBinary I read without padding before that, 250,496 B with Arsenic's
 2.5-byte table before that, 250,240 B before that, CORRECTED the same day
 from 250,112). **48,000 B** is
-`MacExtract.code.bin`, read at launch and never purged, and **219,640 B** is
+`MacExtract.code.bin`, read at launch and never purged, and **223,308 B** is
 the `'OVLY'` bundle, read at launch and mostly given back before the engine
 takes its budget (*Overlays*). What stays costs the heap one for one: the
 link produces a single `MacExtract.code.bin`, and `Elf2Mac/LdScript.cc`
@@ -6197,7 +6219,7 @@ data and relocations. 63,744 B was measured against 2026-09-01's build;
 `ApplLimit − ApplZone` = **78,568 B**, leaving 20,956 B for every buffer
 (*derived*; DECISIONS.md 2026-10-22, *the runtime the application did not
 need*). `CODE` has since fallen 2,584 B; the sum has not been re-derived. The
-eager loader then asks for the `'OVLY'` bundle as ONE **219,640 B** block
+eager loader then asks for the `'OVLY'` bundle as ONE **223,308 B** block
 (*Overlays*). The bound is the RAM under the screen buffer, so no smaller
 System moves it (*What the application costs the engine*); the margin is
 kilobytes, which is why MANUAL_TESTS.md §6's HD20 question is about a
@@ -6500,7 +6522,7 @@ StuffIt Engine to work with this archive."*
 | System 7 conveniences | drag-and-drop of files, folders and whole disks; watch folders; background expansion; Apple events | an archive dropped on the application's icon opens it, whatever its type (System 7 and later, measured: DECISIONS.md 2026-08-31, *the drop the Finder does not make*); otherwise Standard File, one archive at a time; no watch folders, background expansion or Apple events |
 | Self-mounting disk images (`.img`, `.smi`) | **no, read from its own files 2026-10-11**: the `open` 128 resource lists the 21 types it accepts (`SIT!`, `SITD`, `PACT`, `HBSF`, `TEXT`, five segment types, `SPSV`, `mArc`, `m@rc`, `ZIVU`, `ZIVM`, `Gzip`, `pZIP`, `ZIP `, `fold`, `disk`, `****`) and none is a disk image; no disk-image string occurs in the application or its documents. Not run on a `.img` | no — disk images are out of scope (OPEN_ITEMS.md, Part 1) |
 | StuffIt Deluxe 2.0's Optimizers and ciphers | **measured 2026-10-11**: `Text 1` extracts, byte-identical to this engine's; the other four Optimizers and all five ciphers are refused with *"Unable to decompress some items due to use of optimizers."* | all ten (*StuffIt 2.0's pluggable modules*, above) |
-| Verification | none published | 1,010 fixtures byte-exact against `unar`/`macunpack` — bar the three uuencode fixtures, which `unar` cannot read at all: one is its generator's input with `hexbin` agreeing, and the two wild ones are graded by `hexbin` and by the CRCs of the archive one of them decodes to |
+| Verification | none published | 1,018 fixtures byte-exact against `unar`/`macunpack` — bar the three uuencode fixtures, which `unar` cannot read at all: one is its generator's input with `hexbin` agreeing, and the two wild ones are graded by `hexbin` and by the CRCs of the archive one of them decodes to |
 | Licence | free, closed | free, 0BSD; the files NOTICE lists LGPL-2.1-or-later |
 | Memory partition | **512 KB preferred, 384 KB minimum** (`SIZE` (-1), measured 2026-08-29; BLOCKERS.md) | 2,048 KB preferred, 400 KB minimum (`SIZE` (-1) of `dist/MacExtract.bin`, re-read 2026-10-25); engine peak heap per format in the matrix above |
 

@@ -1,0 +1,21 @@
+{
+ "entries": [
+  {
+   "creator": "CIM ",
+   "data_oracle": "tools/run_viseold.py's own decoder, read out of the 68k; the stream ends at its catalogue",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 256,
+   "name": "Modem Database",
+   "rsrc_oracle": "tools/run_viseold.py's own decoder, read out of the 68k; the stream ends at its catalogue",
+   "rsrc_sha256": "572e73b7b5de55d83638597b6a2f74977dbd101f45904135b2874328338fef89",
+   "rsrc_size": 6187,
+   "type": "MoDB"
+  }
+ ],
+ "fixture": "vise-old-ziffnet-modemdb",
+ "format": "Installer VISE",
+ "oracle": "tools/run_viseold.py's own reading of the stream and catalogue; DeltaSymbol.TT and Serial Tool also against installed copies",
+ "sha256": "c18f7ae8a918a9eb8165b6a89eec37f0df96b862e2c4f65055d0c1a931ef15d8",
+ "size": 4102
+}

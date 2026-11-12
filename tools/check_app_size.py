@@ -331,7 +331,7 @@ TAKEN = "2026-11-11"
 # `ovl_segsetup` (+2) (DECISIONS.md 2026-11-11, *the installer that was an
 # archive*); the plan's keeps for an envelope whose head named nothing
 # (+64; *the head that named nothing*).
-EXPECT_BUNDLE = 219640
+EXPECT_BUNDLE = 223308
 TOLERANCE_BUNDLE = 2048
 TAKEN_BUNDLE = "2026-11-11"
 

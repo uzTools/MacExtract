@@ -857,7 +857,10 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # +8,744 on 2026-11-12, A5 +536 below: Installer VISE, its reader, inflater,
 # set identity and probe (DECISIONS.md 2026-11-11, *the installer that was
 # an archive*). In `ovl_vise` (8,858 B) and `ovl_sniff` +968 on the shipped pair.
-UNC_MAC_CODE_DEFAULT=207220
+# +3,660 on 2026-11-12, A5 -12 below: the VISE before 3.5, its reader and
+# probe (DECISIONS.md 2026-11-12, *the VISE before VISE*). In `ovl_vise`
+# +3,340 and `ovl_sniff` +328 on the shipped pair, whose CODE and A5 hold.
+UNC_MAC_CODE_DEFAULT=210880
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -1171,7 +1174,10 @@ UNC_MAC_CODE_DEFAULT=207220
 # +536 on 2026-11-12: Installer VISE's tables, the substitution and
 # DEFLATE's, `.data` in this build, its format and scheme rows, and
 # alignment (DECISIONS.md 2026-11-11, *the installer that was an archive*).
-UNC_MAC_A5_DEFAULT=37404
+# -12 on 2026-11-12: `.data` alignment under the code's +3,660 (above); the
+# VISE before 3.5 adds no data (DECISIONS.md 2026-11-12, *the VISE before
+# VISE*).
+UNC_MAC_A5_DEFAULT=37392
 # A CEILING PER CONFIGURATION, because one ceiling measured on another build
 # cannot fire. The figures above are the RESIDENT control build, which carries
 # every decoder; the shipped build's resident code is a third of that, so

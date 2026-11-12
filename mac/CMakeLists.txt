@@ -128,6 +128,7 @@ else()
     list(FILTER ENGINE_SRC EXCLUDE REGEX "fmt_abk\\.c$")
     list(FILTER ENGINE_SRC EXCLUDE REGEX "fmt_tome\\.c$")
     list(FILTER ENGINE_SRC EXCLUDE REGEX "fmt_vise\\.c$")
+    list(FILTER ENGINE_SRC EXCLUDE REGEX "fmt_viseold\\.c$")
     list(FILTER ENGINE_SRC EXCLUDE REGEX "unc_sniff\\.c$")
     # Which set a file belongs to goes with the sniffer, whose image holds
     # every parser it calls; mac/ovl_shim.c is what the shell links against
@@ -956,11 +957,13 @@ add_custom_command(
             ${ENGINE_DIR}/tools/overlay/ovl_vise.c
             ${CMAKE_CURRENT_BINARY_DIR}/ovl_forwards_gen.c
             ${ENGINE_DIR}/src/fmt_vise.c
+            ${ENGINE_DIR}/src/fmt_viseold.c
             ${ENGINE_DIR}/src/fmt_viseset.c
     DEPENDS ${ENGINE_DIR}/tools/overlay/ovl_vise.c
             ${CMAKE_CURRENT_BINARY_DIR}/ovl_forwards_gen.c
             ${CMAKE_CURRENT_BINARY_DIR}/ovl_host_gen.h
             ${ENGINE_DIR}/src/fmt_vise.c
+            ${ENGINE_DIR}/src/fmt_viseold.c
             ${ENGINE_DIR}/src/fmt_viseset.c
             ${ENGINE_DIR}/src/fmt_vise_priv.h
             ${OVL_DEPS})

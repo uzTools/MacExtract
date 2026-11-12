@@ -372,8 +372,9 @@ carried them), AppleSingle/AppleDouble, MAR (.mar, .mac, and .mar.lz4),
 Apple Backup's floppies (a Performa's backup, even with disks missing),
 the Tomes on Apple's install disks (System 7.5 to Mac OS 9) and the fonts
 and network software its Installer keeps compressed, installers made with
-Installer VISE 3.5 and later (with a set's Segment.N floppies; drop the
-installer on MacExtract, as double-clicking one runs it), zip, gzip, tar
+MindVision's VISE from 1992 on and their .vct files (with a set's
+Segment.N floppies; drop the installer on MacExtract, as double-clicking
+one runs it), zip, gzip, tar
 and Unix compress (.Z).
 Nested files like .sit.hqx or .tar.Z are unwrapped automatically, by looking
 inside them

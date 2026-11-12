@@ -3626,6 +3626,37 @@ flags and dates are two readings of one layout), dates, a record whose
 trailing bytes hold a signature, and the versions no specimen here has
 (OPEN_ITEMS.md, *Installer VISE*).
 
+## The VISE before 3.5 (`tools/run_viseold.py`, in `ci.sh`)
+
+The format has no checksum, so the grade is copies of its files installed
+elsewhere, and this script's own reading of every archive, with a
+decoder transcribed from MindVision's 68k (FORMATS.md, *Before 3.5*).
+
+    python3 tools/run_viseold.py --macextract build/macextract
+    python3 tools/run_viseold.py --manifest FIXTURE...
+
+1. **Every `vise-old-*` fixture**: its stream must end at its catalogue to
+   the byte and expand to the records' sum; the engine's files must be
+   this reading's, every path, both forks, type, creator and flags.
+2. **Installed copies**, from the specimen cache: DeltaSymbol.TT against
+   PC World's, the whole fork but the Resource Manager's reserved 16..255;
+   Serial Tool against four Serial Tool 1.0.2, every resource but
+   `'vers'` 2. Reported NOT RUN without the cache.
+3. **Damage** on the smallest archive: 40 stream bytes changed, how many
+   refused printed (7 were not, measured 2026-11-12), and 30 cuts, every
+   one refused; no crash, no hang.
+
+**Controls**, each made to fail: a stable sort in place of the quicksort
+(no stream may end at its catalogue), a resource of DeltaSymbol.TT changed
+against section 2, a record a byte longer than its stream against the
+engine. An engine writing the data fork first failed section 1 83 times
+(measured 2026-11-12).
+
+**What it cannot see**: dates and the Finder location; a damaged stream
+that keeps its length; where an Apple Installer script puts a `.vct`'s
+files. Section 1 is one author's reading twice: sections 2 and the first
+control are what test the reading.
+
 ## MacGzip's own output (`tools/run_macgzip.py`, in `ci.sh`)
 
 Eleven files **MacGzip 1.1.3 68K** wrote on emulated Mac OS 8.1 from one
@@ -4230,7 +4261,7 @@ short-circuited and subtract — the instrument sees only the total.
   instructions use `tools/m68kprof.py`; for real cost, the tick probe on an
   emulated Mac.
 - **The Macintosh's own I/O** (stdio is not the File Manager).
-- **Any file it is not handed**: the corpus is 1,036 files, and the
+- **Any file it is not handed**: the corpus is 1,044 files, and the
   population that matters for REJECTION cost is non-archives —
   `reference/`, this repository's trees, the specimen cache; 8,364 were
   swept on 2026-10-05 (BLOCKERS.md, *Withdrawn claims*).

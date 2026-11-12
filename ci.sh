@@ -360,6 +360,11 @@ python3 tools/run_tome.py --macextract build/san/macextract \
 # (DECISIONS.md 2026-11-11, *the installer that was an archive*).
 python3 tools/run_vise.py --macextract build/san/macextract \
     || fail "Installer VISE tests"
+# The VISE before 3.5: its own stream read here, two of its files against
+# installed copies, damage, and three controls (DECISIONS.md 2026-11-12,
+# *the VISE before VISE*).
+python3 tools/run_viseold.py --macextract build/san/macextract \
+    || fail "pre-3.5 VISE tests"
 # The Finder metadata beyond type, creator and flags (`l --meta`): FInfo
 # and FXInfo whole, the backup date, the lock and the Get Info comment,
 # held to lsar where it reads them and to the synthesizers' own input where

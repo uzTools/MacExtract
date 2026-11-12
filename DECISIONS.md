@@ -598,6 +598,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-11 (the release decided in the bundle) — every decoder name is one dispatch on the format being read, a 2-byte row each instead of an 18-byte shim, and what the release keeps is decided in the set's setup image while the bundle is whole: CODE −840, A5 +56, every grant +784 B and the whole bundle's +376; a new format costs 2 B resident
 - 2026-11-11 (the installer that was an archive) — Installer VISE installers extract, 3.5 to VISE X, a set's Segment.N floppies with them: every one of 488 stored files equals the CRC-32 its installer stores; the folders are depths, 3.5's included; 64 B off every budget
 - 2026-11-11 (the head that named nothing) — an envelope whose first bytes name nothing keeps its reader, the sniffer, Compact Pro's and SuperDisk!'s readers, the ciphers and the codecs instead of the whole bundle; the maintainer's choice when Installer VISE's image put two gzip fixtures short on System 6.0.8 / 512Ke; 32 B
+- 2026-11-12 (the VISE before VISE) — MindVision's archive before Installer VISE 3.5, 1992-1996, extracts: the decompressor read out of an installer's own 'Dcmp', 99 files of eight archives, DeltaSymbol.TT and Serial Tool equal to installed copies; 0 B resident
 
 ---
 
@@ -25205,7 +25206,8 @@ every installer now.
 
 **Not read.** Installer VISE before 3.5: files opening `VISE`, not `SVCT`,
 11 of 55 small Discmaster installers of 1992-1996, a different compression
-nobody documents (OPEN_ITEMS.md).
+nobody documents (OPEN_ITEMS.md). Read since 2026-11-12 (*the VISE before
+VISE*).
 
 ## 2026-11-11 (the head that named nothing) — an envelope whose first bytes name nothing keeps its reader, the sniffer, Compact Pro's and SuperDisk!'s readers, the ciphers and the codecs instead of the whole bundle; the maintainer's choice when Installer VISE's image put two gzip fixtures short on System 6.0.8 / 512Ke; 32 B
 
@@ -25242,3 +25244,86 @@ shipped lane's own `synth-exo-gz*.gz` are not in the sample.
 **Tried, not kept (measured).** The resident check asking whether the
 layer's own image was kept, through a function over `gRun`, in place of
 four comparisons: CODE +36 and A5 +28 more.
+
+## 2026-11-12 (the VISE before VISE) — MindVision's archive before Installer VISE 3.5, 1992-1996, extracts: the decompressor read out of an installer's own 'Dcmp', 99 files of eight archives, DeltaSymbol.TT and Serial Tool equal to installed copies; 0 B resident
+
+**Asked by the maintainer** after the 3.5 reader landed. The open item
+said the compression was documented nowhere and would close "with the
+decompressor read out of one of its installers".
+
+**Where the decompressor was.** A `.vct` is the data fork of an Apple
+Installer setup, and the script beside it carries the code as a `'Dcmp'`
+resource. ZiffNet/Mac's (1994, `'Dcmp'` 2001) is itself packed, opening
+`A89F 000C`, so it was not used. CompuServe Mail Installer (1995) is a
+self-contained installer whose `'Dcmp'` 2002 is plain 68k code (14,906 B,
+`LINK A6` at 0). Disassembled with Retro68's objdump and read by function:
+0x2b6c decodes, 0xc3e reads a tree, 0x924 and 0x8cc assign its codes,
+0x7cc is a quicksort, 0x9f0 builds the tree, 0xd2c writes the files.
+Nothing was run. The scheme is an LZ77 window of 2^13 to 2^16 with three
+Shannon-Fano trees, close to Implode's in shape: their lengths
+run-length coded as `(b >> 5) + 1` symbols of length `b & 31`, LSB-first
+bits, a literal flag bit, and distances `raw + (high << (bits - 8)) + 3`
+(fmt_viseold.c's header comment has the layout).
+
+**The quicksort is the format.** Codes go to the sorted symbols from the
+last one back, so the order an UNSTABLE sort leaves equal lengths in
+decides which symbol has which code. A stable sort in its place decodes
+none of the eight archives, measured, and `run_viseold.py` keeps that as
+its first control. The engine copies the 68k's sort step for step, its
+recursion turned into a stack of ranges with the smaller pushed last,
+which changes no order because the two ranges are disjoint.
+
+**The container, measured on eight archives (1992-1995).** 'VISE', a
+date, 0x04000004 at +8, the stream's length at +12, and the catalogue at
++20, which is always +12 plus 24. One stream holds every fork of every
+file, the resource fork first, and then 80-byte records follow. 0x80 and
+0xC0 open and close a folder (a 0xC0 record carries its predecessor's
+leftovers, the name included), 0x33 is a file. Each stream ends at its
+catalogue to the byte and expands to the sum of its records' lengths:
+the format has no checksum, and that is the one check it allows, made on
+the last file. The fork order is measured on the 1992 DeltaGraph tutorial,
+whose EPSF's first fork has a resource map that adds up and whose second
+opens `%!PS-Adobe-2.0 EPSF-1.2`.
+
+**Graded against copies nobody here produced.** DeltaSymbol.TT, from a
+`.vct` of 1992, against the copy installed on PC World's July 1994 disc:
+33,286 of 33,288 bytes equal and all six resources. The other two bytes,
+at 94-95, are in the 240 the Resource Manager reserves, where the
+installed file keeps a copy of its own Finder record. Serial Tool, the
+last file of PowerTalkCIS's 589 KB stream, against four Serial Tool 1.0.2
+(Apple's Basic Connectivity Set 1.1.1 twice, a Telecom disk, a System 7.5
+Update): 51 of 52 resources equal. The 52nd, `'vers'` 2, names the bundle
+each shipped in ("PowerTalk Direct Dialup Mail 1.0" here). A desync
+anywhere in those 550 KB would have reached Serial Tool, so the data
+forks before it are graded through it.
+
+**One format and one image, not two.** The engine's format stays
+`UNC_FORMAT_VISE`, `unc_vise_extract` hands a 'VISE' file to the new
+reader, the probe and the set's identity learn the header, and an archive
+of it is a set of one whose fingerprint no 'SVCT' segment matches. So
+nothing resident moved: shipped CODE 37,280 and A5 16,848 as before.
+`ovl_vise` +3,340 B, `ovl_sniff` +328, the bundle +3,668, the control
++3,648 (CODE +3,660, A5 −12). Every grant is unmoved on the machine but
+for those images. An 'SVCT' installer's grant falls 3,340 B with its
+image. Peak heap 16-76 KB on the host, mostly the window, sized to the
+smaller of 2^bits and what the archive expands to.
+
+**Tried, not kept.** The codecs' arbitrary-tree decoder (`UncHuff`) in
+place of the reader's own walk: each carries a 2 KB fast table this LSB-first
+stream cannot use, 6 KB of heap for nothing. The canonical decoder
+(`UncCanon`) cannot take the quicksort's order without reversing the
+stream's bits.
+
+**What is not graded.** Dates, and the Finder location. A damaged stream
+that keeps its length: 7 of 40 changed bytes in the smallest archive come
+out unrefused (`run_viseold.py`, section 3). Where an Apple Installer
+script puts a `.vct`'s files ('infa' atoms): they come out under the
+catalogue's names.
+
+**On a Macintosh** (Mini vMac, one boot an archive, the final build): the
+74-archive sample and the eight, 82/82 at 1 MB, and 80/82 on System 6.0.8 /
+512Ke, System 3.0 / 512Ke and the 64K ROM. Every tier refuses the same two
+as main (`synth-dd-m5.dd`, `derived-Library_ISBN_Barcoder.sit`), and the
+eight pass on all four. One EMUDIED and two NOGRID beside another
+session's emulator each PASS or refuse as expected when run alone.
+

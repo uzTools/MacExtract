@@ -1,0 +1,21 @@
+{
+ "entries": [
+  {
+   "creator": "ZEUS",
+   "data_oracle": "tools/run_viseold.py's own decoder, read out of the 68k; the stream ends at its catalogue",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 8448,
+   "name": "DW C 3.0 (Serial)",
+   "rsrc_oracle": "tools/run_viseold.py's own decoder, read out of the 68k; the stream ends at its catalogue",
+   "rsrc_sha256": "dd63c1dd485f57836c143eeaefb20285767c7e29ef051c91c7166a000f045ac7",
+   "rsrc_size": 409269,
+   "type": "PRER"
+  }
+ ],
+ "fixture": "vise-old-deskwriter-c",
+ "format": "Installer VISE",
+ "oracle": "tools/run_viseold.py's own reading of the stream and catalogue; DeltaSymbol.TT and Serial Tool also against installed copies",
+ "sha256": "51d9e2f9336a1ff1bcf55a47ee8e7d7df7049bb1abb000b40e0c317559741bf4",
+ "size": 181041
+}

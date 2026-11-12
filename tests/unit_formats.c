@@ -5461,6 +5461,190 @@ static void test_vise(void)
     }
 }
 
+/* The VISE before 3.5 (fmt_viseold.c). Every tree here has one symbol of
+ * length 1, whose code is 0 whatever order the quicksort leaves: the order
+ * itself is graded by tools/run_viseold.py on real archives. */
+static uint8_t vo_a[4096], vo_b[4096];
+
+static void vo_u16(uint8_t *p, uint32_t v)
+{
+    p[0] = (uint8_t)(v >> 8);
+    p[1] = (uint8_t)v;
+}
+
+typedef struct VoBits { uint8_t *p; uint32_t bit; } VoBits;
+static void vo_put(VoBits *w, uint32_t v, int n)
+{
+    int k;
+    for (k = 0; k < n; k++, w->bit++)
+        if ((v >> k) & 1u) w->p[w->bit >> 3] |= (uint8_t)(1u << (w->bit & 7));
+}
+
+/* A tree whose only symbol is `sym`: zeros before it eight at a time. */
+static uint32_t vo_tree(uint8_t *a, uint32_t at, int sym)
+{
+    uint32_t n0 = (uint32_t)sym, at0 = at++;
+    uint8_t cnt = 0;
+    while (n0 >= 8) { a[at++] = 7u << 5; n0 -= 8; cnt++; }
+    if (n0) { a[at++] = (uint8_t)((n0 - 1) << 5); cnt++; }
+    a[at++] = 1;
+    a[at0] = (uint8_t)(cnt + 1);
+    return at;
+}
+
+static uint32_t vo_rec(uint8_t *a, uint32_t at, uint8_t kind,
+                       const char *name, uint32_t rl, uint32_t dl)
+{
+    memset(a + at, 0, VISEO_REC);
+    a[at] = kind;
+    a[at + 1] = kind == VISEO_FILE ? 0 : 0x10;
+    if (kind == VISEO_FILE) {
+        memcpy(a + at + 2, "TEXTttxt", 8);
+        unc_put_u32be(a + at + 26, rl);
+        unc_put_u32be(a + at + 34, dl);
+    }
+    vo_u16(a + at + 10, 0x0100);
+    unc_put_u32be(a + at + 18, 0xA1000001u);
+    unc_put_u32be(a + at + 22, 0xA2000002u);
+    a[at + 48] = (uint8_t)strlen(name);
+    memcpy(a + at + 49, name, strlen(name));
+    return at + VISEO_REC;
+}
+
+/* F/ (a: 3 resource, 5 data), then b: 300 data; 308 bytes of 'X', the
+ * first three literals and the rest matches of three, three back. */
+static uint32_t vo_build(uint8_t *a, uint32_t pad)
+{
+    VoBits w;
+    uint32_t at, clen, cat, i;
+    memset(a, 0, 4096);
+    memcpy(a, "VISE", 4);
+    unc_put_u32be(a + 4, 0xA9EFCE34u);
+    unc_put_u32be(a + 8, 0x04000004u);
+    unc_put_u32be(a + 24, 308);
+    a[28] = 0x0C;                          /* window bits 13 + 3 = 16 */
+    at = vo_tree(a, 29, 'X');
+    at = vo_tree(a, at, 0);                /* lengths: 0 + 3          */
+    at = vo_tree(a, at, 0);                /* distances' high byte: 0 */
+    w.p = a + at;
+    w.bit = 0;
+    for (i = 0; i < 3; i++) { vo_put(&w, 1, 1); vo_put(&w, 0, 1); }
+    for (i = 0; i < 305 / 3 + 1; i++) {
+        vo_put(&w, 0, 1);                  /* a match              */
+        vo_put(&w, 0, 8);                  /* low 8 bits: 0        */
+        vo_put(&w, 0, 1);                  /* high byte 0          */
+        vo_put(&w, 0, 1);                  /* length 3             */
+    }
+    at += (w.bit + 7) / 8 + pad;
+    clen = at - VISEO_HDR;
+    cat = at;
+    unc_put_u32be(a + 12, clen);
+    unc_put_u32be(a + 20, cat);
+    vo_u16(a + at, 4);
+    vo_u16(a + at + 2, 0);
+    at += 4;
+    at = vo_rec(a, at, VISEO_DIR, "F", 0, 0);
+    at = vo_rec(a, at, VISEO_FILE, "a", 3, 5);
+    at = vo_rec(a, at, VISEO_END, "a", 0, 0);
+    at = vo_rec(a, at, VISEO_FILE, "b", 0, 300);
+    return at;
+}
+
+static int vo_all(const uint8_t *p, uint32_t n)
+{
+    uint32_t i;
+    for (i = 0; i < n; i++) if (p[i] != 'X') return 0;
+    return 1;
+}
+
+static void test_viseold(void)
+{
+    UncSegmentDesc desc;
+    CapSink cap;
+    MemIO m;
+    UncIO io;
+    uint8_t head[VISE_HDR];
+    uint32_t len = vo_build(vo_a, 0), cat = unc_get_u32be(vo_a + 20);
+
+    /* --- the probe, the sniff, a set of one ------------------------- */
+    test_make_memio(&io, &m, vo_a, len);
+    CHECK(unc_vise_probe(vo_a, VISEO_HDR, &io) == UNC_FORMAT_VISE);
+    test_make_memio(&io, &m, vo_a, len);
+    CHECK(unc_sniff(&io) == UNC_FORMAT_VISE);
+    test_make_memio(&io, &m, vo_a, len);
+    CHECK(unc_segment_describe(&io, &desc) == UNC_OK);
+    CHECK(desc.scheme == UNC_FORMAT_VISE && desc.part == 1 &&
+          desc.nparts == 1);
+    CHECK(unc_segment_match(&desc, vo_a, VISE_HDR) == 0);
+    memcpy(head, vo_a, VISE_HDR); unc_put_u32be(head + 8, 0x04000005u);
+    CHECK(unc_vise_probe(head, VISEO_HDR, &io) == UNC_FORMAT_UNKNOWN);
+    memcpy(head, vo_a, VISE_HDR); head[23] ^= 1;   /* +20 is not +12 + 24 */
+    CHECK(unc_vise_probe(head, VISEO_HDR, &io) == UNC_FORMAT_UNKNOWN);
+    memcpy(vo_b, vo_a, len); vo_u16(vo_b + cat + 2, 1);
+    test_make_memio(&io, &m, vo_b, len);
+    CHECK(unc_vise_probe(vo_b, VISEO_HDR, &io) == UNC_FORMAT_UNKNOWN);
+    test_make_memio(&io, &m, vo_a, len - 1);          /* a record cut   */
+    CHECK(unc_vise_probe(vo_a, VISEO_HDR, &io) == UNC_FORMAT_UNKNOWN);
+
+    /* --- the archive: the folder, a in it, b after it --------------- */
+    CHECK(vt_run(vo_a, len, NULL, 0, 1, 0, &cap) == UNC_OK);
+    CHECK(cap.count == 3);
+    CHECK(cap.info[0].is_dir && vt_named(&cap, 0, "F"));
+    CHECK(vt_named(&cap, 1, "F/a") && cap.status[1] == UNC_OK);
+    CHECK(cap.rlen[1] == 3 && cap.dlen[1] == 5 &&
+          vo_all(cap.rsrc[1], 3) && vo_all(cap.data[1], 5));
+    CHECK(cap.info[1].type == 0x54455854u &&
+          cap.info[1].creator == 0x74747874u &&
+          cap.info[1].finder_flags == 0x0100 &&
+          cap.info[1].create_date == 0xA1000001u &&
+          cap.info[1].mod_date == 0xA2000002u);
+    /* b starts inside a match a's data fork left half done. */
+    CHECK(vt_named(&cap, 2, "b") && cap.status[2] == UNC_OK &&
+          cap.dlen[2] == 300 && cap.rlen[2] == 0 && vo_all(cap.data[2], 300));
+
+    /* --- refusals ---------------------------------------------------- */
+    /* A stream that does not end at the catalogue: the last file's. */
+    len = vo_build(vo_b, 1);
+    CHECK(vt_run(vo_b, len, NULL, 0, 1, 0, &cap) == UNC_OK);
+    CHECK(cap.status[1] == UNC_OK && cap.status[2] == UNC_ERR_CORRUPT);
+    /* A stream that expands to other than the records' sum: every file. */
+    len = vo_build(vo_b, 0);
+    unc_put_u32be(vo_b + 24, 309);
+    CHECK(vt_run(vo_b, len, NULL, 0, 1, 0, &cap) == UNC_OK);
+    CHECK(cap.count == 3 && cap.status[1] == UNC_ERR_CORRUPT &&
+          cap.status[2] == UNC_ERR_CORRUPT);
+    /* A match from before the start. */
+    len = vo_build(vo_b, 0);
+    {
+        uint32_t at = 29;
+        int t;
+        for (t = 0; t < 3; t++) at += 1u + vo_b[at];
+        vo_b[at] = 0;                      /* the first bit: a match */
+    }
+    CHECK(vt_run(vo_b, len, NULL, 0, 1, 0, &cap) == UNC_OK);
+    CHECK(cap.status[1] == UNC_ERR_CORRUPT &&
+          cap.status[2] == UNC_ERR_CORRUPT);
+    /* A folder closed that was never opened; a kind not known. */
+    len = vo_build(vo_b, 0);
+    vo_b[cat + 4] = VISEO_END;
+    CHECK(vt_run(vo_b, len, NULL, 0, 1, 0, &cap) == UNC_ERR_CORRUPT);
+    len = vo_build(vo_b, 0);
+    vo_b[cat + 4 + VISEO_REC] = 0x34;
+    CHECK(vt_run(vo_b, len, NULL, 0, 1, 0, &cap) == UNC_ERR_CORRUPT);
+    /* The catalogue cut. */
+    len = vo_build(vo_b, 0);
+    CHECK(vt_run(vo_b, len - 1, NULL, 0, 1, 0, &cap) == UNC_ERR_TRUNCATED);
+    /* Files that are all empty: nothing to decode, and nothing wrong. */
+    len = vo_build(vo_b, 0);
+    unc_put_u32be(vo_b + cat + 4 + VISEO_REC + 26, 0);
+    unc_put_u32be(vo_b + cat + 4 + VISEO_REC + 34, 0);
+    unc_put_u32be(vo_b + cat + 4 + 3 * VISEO_REC + 34, 0);
+    unc_put_u32be(vo_b + 24, 0);
+    CHECK(vt_run(vo_b, len, NULL, 0, 1, 0, &cap) == UNC_OK);
+    CHECK(cap.count == 3 && cap.status[1] == UNC_OK &&
+          cap.status[2] == UNC_OK && cap.dlen[2] == 0);
+}
+
 /* ------------------------------------------------------------------ */
 /* AppleLink package (`.pkg`) — NOT recognised, deliberately          */
 /*                                                                    */
@@ -7813,6 +7997,7 @@ void run_format_tests(void)
     test_tome();
     test_tome_parts();
     test_vise();
+    test_viseold();
     test_lz4_block_bound();
     test_mar_comment_listing();
     test_base64_mime();

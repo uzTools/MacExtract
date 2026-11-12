@@ -70,4 +70,26 @@ static inline int vise_first_ok(const uint8_t *h)
            unc_get_u32be(h + VISE_H_CAT) >= VISE_HDR;
 }
 
+/* The archive before Installer VISE 3.5 (fmt_viseold.c): 'VISE', one
+ * stream from +24 and a catalogue of 80-byte records. +8 is 0x04000004
+ * and +20 is +12 plus 24 in all eight archives measured. */
+#define VISEO_MAGIC  0x56495345ul  /* 'VISE' */
+#define VISEO_HDR    24u
+#define VISEO_H_LEN  12u           /* the stream's length               */
+#define VISEO_H_CAT  20u           /* the catalogue's offset            */
+#define VISEO_REC    80u
+#define VISEO_DIR    0x80u
+#define VISEO_END    0xC0u
+#define VISEO_FILE   0x33u
+static inline int vise_old_ok(const uint8_t *h)
+{
+    return unc_get_u32be(h) == VISEO_MAGIC &&
+           unc_get_u32be(h + 8) == 0x04000004ul &&
+           unc_get_u32be(h + VISEO_H_LEN) <= 0xFFFFFFFFul - VISEO_HDR &&
+           unc_get_u32be(h + VISEO_H_CAT) ==
+               unc_get_u32be(h + VISEO_H_LEN) + VISEO_HDR;
+}
+
+int unc_viseold_extract(UncCtx *c, const uint8_t *h);
+
 #endif

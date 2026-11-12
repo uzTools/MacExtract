@@ -1,5 +1,7 @@
 /*
  * fmt_vise.c — Installer VISE 3.x, MindVision's installer, as an archive.
+ * The 'VISE' archive before 3.5 is another format, read by fmt_viseold.c,
+ * which unc_vise_extract hands it to.
  *
  * An installer built by Installer VISE 3.5 and later keeps everything it
  * installs in its DATA fork (the resource fork is the installer program,
@@ -955,9 +957,12 @@ int unc_vise_extract(UncCtx *c)
     if (c->segmap ? c->segmap->seek_part(c->segmap->ctx, 1, 0) < 0
                   : c->io->seek(c->io->ctx, 0) < 0)
         return UNC_ERR_FORMAT;
-    if (unc_read_full(c->io, h, (int32_t)VISE_HDR) != UNC_OK ||
-        !vise_first_ok(h))
+    if (unc_read_full(c->io, h, (int32_t)VISE_HDR) != UNC_OK)
         return UNC_ERR_FORMAT;
+    /* The archive of the VISE before 3.5 is another format under the
+     * same name (fmt_viseold.c). */
+    if (vise_old_ok(h)) return unc_viseold_extract(c, h);
+    if (!vise_first_ok(h)) return UNC_ERR_FORMAT;
 
     V.c = c;
     V.cat = NULL;

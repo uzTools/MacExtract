@@ -15,3 +15,11 @@ vise-wild-seti-106
 vise-wild-sizzler
 vise-wild-speed-doubler-81
 vise-x-flash9
+vise-old-cim-tools
+vise-old-compuserve-mail
+vise-old-deltagraph-tutorial
+vise-old-deltasymbol
+vise-old-deskwriter-c
+vise-old-maccim-ccls
+vise-old-powertalk-cis
+vise-old-ziffnet-modemdb

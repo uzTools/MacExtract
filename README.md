@@ -44,8 +44,9 @@ base64 and MIME attachments, AppleSingle/AppleDouble, MAR (`.mar`, `.mac`, `.mar
 Apple Backup's floppies (a Performa's backup, even with disks missing),
 the Tomes on Apple's install disks (System 7.5 to Mac OS 9) and the fonts and
 network software its Installer keeps compressed, installers made with
-Installer VISE 3.5 and later (a set's `Segment.N` floppies too; drop the
-installer on MacExtract, since double-clicking runs it), zip, gzip, tar
+MindVision's VISE from 1992 on and their `.vct` files (a set's
+`Segment.N` floppies too; drop the installer on MacExtract, since
+double-clicking runs it), zip, gzip, tar
 and `.Z`.
 
 - **Everything comes back as it was:** both forks, type and creator, dates,

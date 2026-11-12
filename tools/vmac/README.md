@@ -186,7 +186,7 @@ back **38/69** on 2026-09-05, every "failure" a missing oracle.
 | `os9.py` | Mac OS 9 on emulated PowerPC, both forks checked off the disk |
 | `os9probe.py` | diagnostic: which input primitives reach the Mac OS 9 guest. Not part of any suite |
 | `os9sample.txt` | the fixtures replayed on Mac OS 9, one per format |
-| `vise-sample.txt` | every Installer VISE fixture, one installer per boot (`--out-kb 8192`: two write more than a floppy). `vise-wild-java-api-docs` writes 249 files, past the 128 the autotest build reads back (`AT_MAXREC`), so it is graded through `--keep-disks` instead; `vise-x-flash9` wants `--extra-file fixtures/vise-x-flash9.data:Installer.data --in-kb 4096`; `vise-wild-netscape-stub` has no manifest to grade against |
+| `vise-sample.txt` | every Installer VISE fixture, the eight `vise-old-*` archives before 3.5 among them, one installer per boot (`--out-kb 8192`: two write more than a floppy). `vise-wild-java-api-docs` writes 249 files, past the 128 the autotest build reads back (`AT_MAXREC`), so it is graded through `--keep-disks` instead; `vise-x-flash9` wants `--extra-file fixtures/vise-x-flash9.data:Installer.data --in-kb 4096`; `vise-wild-netscape-stub` has no manifest to grade against |
 | `mountcheck.py` | boot a system image with disks attached and photograph the desktop |
 | `mkapmdisk.py` | build an Apple-partitioned transfer disk Mac OS on PowerPC will mount |
 | `checkdisk.py` | verify a run by READING its Out volume: both forks, and names |

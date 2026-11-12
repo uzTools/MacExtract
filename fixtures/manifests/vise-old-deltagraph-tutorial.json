@@ -1,0 +1,33 @@
+{
+ "entries": [
+  {
+   "creator": "XCEL",
+   "data_oracle": "tools/run_viseold.py's own decoder, read out of the 68k; the stream ends at its catalogue",
+   "data_sha256": "f4343be7ce127081e97c80e0c1074d4cca254cd3e2f0e12d5ffd22ff76e2d03b",
+   "data_size": 11609,
+   "finder_flags": 256,
+   "name": "Tutorial Files/Scatter.XL",
+   "rsrc_oracle": "tools/run_viseold.py's own decoder, read out of the 68k; the stream ends at its catalogue",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "XLS3"
+  },
+  {
+   "creator": "DGRH",
+   "data_oracle": "tools/run_viseold.py's own decoder, read out of the 68k; the stream ends at its catalogue",
+   "data_sha256": "f16be00bfcede9d09f77f27f80da9ebbd13589cfacc080129fdd38546baeb1dd",
+   "data_size": 19777,
+   "finder_flags": 256,
+   "name": "Tutorial Files/WRI Logo",
+   "rsrc_oracle": "tools/run_viseold.py's own decoder, read out of the 68k; the stream ends at its catalogue",
+   "rsrc_sha256": "18eeb75be3d6a02f0802182f0ec304d82065f4c79b5f3cf79e548d101de1c0b5",
+   "rsrc_size": 6686,
+   "type": "EPSF"
+  }
+ ],
+ "fixture": "vise-old-deltagraph-tutorial",
+ "format": "Installer VISE",
+ "oracle": "tools/run_viseold.py's own reading of the stream and catalogue; DeltaSymbol.TT and Serial Tool also against installed copies",
+ "sha256": "4f52ea8fc4fb497c4e8655ed489e0d0fb66c9683c6af6d7437291b2b3f66366c",
+ "size": 13217
+}

@@ -7,7 +7,7 @@
    withdrawn claim to BLOCKERS.md, numbers to FORMATS.md).
 
 Nothing here stops the engine or the CLI, which are byte-exact against the
-oracle across 1,010 fixtures in `./ci.sh`.
+oracle across 1,018 fixtures in `./ci.sh`.
 
 **Filing something here is a decision to stop looking, so ask first.** Each
 of these questions has emptied a row at least once (BLOCKERS.md, *Withdrawn
@@ -103,7 +103,7 @@ not move the licence; only the second does.
 
 ### What grades a fork
 
-`unar` 1.10.8 grades most of the 1,010 fixtures' manifests; `macunpack` and
+`unar` 1.10.8 grades most of the 1,018 fixtures' manifests; `macunpack` and
 deark grade the forks it fails (TESTING.md, *The oracle*). The writers' own
 readers already grade StuffIt Deluxe 2.0.1's output, SuperDisk!'s modules,
 DiskDoubler's methods 3–5, Now Compress, Private File, AppleLink packages
@@ -365,16 +365,24 @@ Tome's resource fork (FORMATS.md, *Apple Installer Tomes*). Left:
 
 ## Installer VISE: what is not read, and what is not graded
 
-The reader is in, 3.5 to VISE X with a set's segments (FORMATS.md,
-*Installer VISE*). Left:
+The readers are in, the `VISE` archive of 1992-1996 and 3.5 to VISE X
+with a set's segments (FORMATS.md, *Installer VISE*). Left:
 
-- **Installer VISE before 3.5 is not recognised**: files that open `VISE`
-  rather than `SVCT`, 11 of 55 small Discmaster installers of 1992-1996,
-  often a separate `.vct` beside the installer. Its catalogue is legible
-  (a count, ~68-byte entries, type, creator, dates and a padded Str31) but
-  its compression is another one, which no reader here or elsewhere
-  documents. Closes with the decompressor read out of one of its
-  installers, and a specimen whose installed files are known to grade it.
+- **Before 3.5, a damaged stream that keeps its length is not seen**: the
+  format has no checksum, and 7 of 40 changed bytes in the smallest
+  archive came out unrefused (`run_viseold.py`). Nothing closes it in the
+  format; an installed copy of each file would grade it.
+- **Before 3.5, where an Apple Installer script puts a `.vct`'s files** is
+  not read: its 'infa' atoms may name another target; the files come out
+  under the catalogue's names. Closes with the script's atoms read beside
+  the `.vct`, or the Installer run under emulation.
+- **Before 3.5, two files of 99 are graded by an independent copy**
+  (DeltaSymbol.TT, Serial Tool). Installer VISE 3.0 (1994) is on the
+  maintainer's share (MacStamp's `apps.tsv`); an archive it builds under
+  emulation from known files would grade every byte, and say whether 3.0
+  writes this format (not established).
+- **A `.vct`'s type and creator are not known**: the eight came as data
+  forks, so the bundle claims none and one is dropped on the application.
 - **0x80010306** has no specimen (systemless reads it as 0x80010307's
   layout); not recognised until one is found.
 - **What an installer writes is not compared.** The paths (folders by

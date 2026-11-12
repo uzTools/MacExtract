@@ -1,5 +1,6 @@
 /* fmt_viseset.c — which Installer VISE set a segment belongs to, and which
- * segment of it it is.
+ * segment of it it is. An archive of the VISE before 3.5 (fmt_viseold.c)
+ * is a set of one.
  *
  * In a file of its own for the reason fmt_abkset.c is: the Macintosh build
  * carries it in two images, the sniffer's and the reader's, which is the
@@ -20,23 +21,36 @@ int unc_vise_describe(UncIO *io, UncSegmentDesc *desc)
     uint8_t h[VISE_HDR];
     unsigned i;
 
+    if (unc_read_at(io, 0, h, (int32_t)VISEO_HDR) != UNC_OK)
+        return UNC_ERR_FORMAT;
+    for (i = 0; i < UNC_SEG_FP_LEN; i++) desc->fp[i] = 0;
+    /* Before 3.5 there are no segments: a set of one, whose fingerprint
+     * no 'SVCT' segment can match. */
+    if (vise_old_ok(h)) {
+        for (i = 0; i < 4; i++) {
+            desc->fp[i] = h[4 + i];
+            desc->fp[4 + i] = h[i];
+        }
+        desc->nparts = 1;
+        goto common;
+    }
     if (unc_read_at(io, 0, h, (int32_t)VISE_HDR) != UNC_OK ||
         !vise_first_ok(h))
         return UNC_ERR_FORMAT;
-    for (i = 0; i < UNC_SEG_FP_LEN; i++) desc->fp[i] = 0;
     for (i = 0; i < 4; i++) {
         desc->fp[i] = h[VISE_H_STAMP + i];
         desc->fp[4 + i] = h[VISE_H_VER + i];
     }
-    desc->name[0] = 0;          /* the installer's name is the host's */
-    desc->name_len = 0;
-    desc->scheme    = UNC_FORMAT_VISE;
-    desc->part      = 1;
     desc->nparts    = (uint16_t)unc_get_u32be(h + VISE_H_COUNT);
     /* VISE X: the installer holds the catalogue alone, and what the
      * records call segment 1 is the second file of the set. */
     if (vise_suffixes(unc_get_u32be(h + VISE_H_VER)) & VISE_X)
         desc->nparts++;
+common:
+    desc->name[0] = 0;          /* the installer's name is the host's */
+    desc->name_len = 0;
+    desc->scheme    = UNC_FORMAT_VISE;
+    desc->part      = 1;
     desc->head_len  = VISE_HDR;
     desc->total     = UNC_SIZE_UNKNOWN;   /* addressed: not the host's */
     desc->data_size = desc->rsrc_size = 0;

@@ -1,0 +1,21 @@
+{
+ "entries": [
+  {
+   "creator": "CIM ",
+   "data_oracle": "tools/run_viseold.py's own decoder, read out of the 68k; the stream ends at its catalogue",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 256,
+   "name": "CIM-Tools",
+   "rsrc_oracle": "tools/run_viseold.py's own decoder, read out of the 68k; the stream ends at its catalogue",
+   "rsrc_sha256": "b857a0e68d1085d448d75b46c826277934008cd034be4d10dac487d0e86f890e",
+   "rsrc_size": 32350,
+   "type": "CTls"
+  }
+ ],
+ "fixture": "vise-old-cim-tools",
+ "format": "Installer VISE",
+ "oracle": "tools/run_viseold.py's own reading of the stream and catalogue; DeltaSymbol.TT and Serial Tool also against installed copies",
+ "sha256": "484cb1bef8fd482616c5643f72dbde88e2869e51defa23f9b6ebbc3bbab90b45",
+ "size": 30510
+}

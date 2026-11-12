@@ -1,0 +1,21 @@
+{
+ "entries": [
+  {
+   "creator": "DMOV",
+   "data_oracle": "tools/run_viseold.py's own decoder, read out of the 68k; the stream ends at its catalogue",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 256,
+   "name": "DeltaSymbol.TT",
+   "rsrc_oracle": "tools/run_viseold.py's own decoder, read out of the 68k; the stream ends at its catalogue",
+   "rsrc_sha256": "9cbc2f2138ca0e968ad8d6b1f3b05c8e7053931c0ee732f9507df6e7bdbabb5b",
+   "rsrc_size": 33288,
+   "type": "FFIL"
+  }
+ ],
+ "fixture": "vise-old-deltasymbol",
+ "format": "Installer VISE",
+ "oracle": "tools/run_viseold.py's own reading of the stream and catalogue; DeltaSymbol.TT and Serial Tool also against installed copies",
+ "sha256": "e7f8f9b02bfa8cb7efcb832ceca993bf723ef9522d511868ea6d60a781d5cb2a",
+ "size": 15708
+}

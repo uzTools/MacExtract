@@ -1,13 +1,13 @@
 # PROGRESS.md — milestone status
 
 Every milestone is **DONE** and nothing is in flight; the current release is
-v0.45.0, and M74–M80 are on `main` after it. One line each: what it delivered,
+v0.45.0, and M74–M81 are on `main` after it. One line each: what it delivered,
 and where the detail lives. Numbers are in FORMATS.md, reasoning in
 DECISIONS.md, how a suite runs in TESTING.md, what is still missing in
 OPEN_ITEMS.md. A row is one sentence and a citation.
 
-**The suite is 1,010 fixtures**, byte-exact against `unar` and, where `unar`
-fails, `macunpack`; 10,100 robustness variants clean. The Macintosh tiers and
+**The suite is 1,018 fixtures**, byte-exact against `unar` and, where `unar`
+fails, `macunpack`; 10,180 robustness variants clean. The Macintosh tiers and
 their tallies are BLOCKERS.md's (*Status*); per-tier tables are FORMATS.md's.
 
 | Milestone | Delivered | Detail |
@@ -92,3 +92,4 @@ their tallies are BLOCKERS.md's (*Status*); per-tier tables are FORMATS.md's.
 | M78 Apple Installer Tomes | The archives Apple's Installer reads, System 7.5 to Mac OS 9: stored, InstaCompOne and text-codec blocks, from rusty-backup's write-up; every fork deark decodes and every file the 7.5.5 Installer installed, equal; `idcp` in the bundle and a `kakc` helper; 32 B off every budget | DECISIONS.md 2026-11-10 (*the archive the Installer reads*), FORMATS.md (*Apple Installer Tomes*) |
 | M79 Installer `'part'` resources | An `ircp` file's resource fork, and a Tome's, read as Tomes: each `iFND` a suitcase, every record at its stated id, the package's two resources dropped; System 7.5.5's nine families equal the installed suitcases but for the FOND's ids; `ircp` in the bundle; 288 B off every budget | DECISIONS.md 2026-11-11 (*the parts the Installer expands*), FORMATS.md (*Apple Installer Tomes*) |
 | M80 Installer VISE | MindVision's installers, 3.5 to VISE X, a set's `Segment.N` floppies and VISE X's `Installer.data` with them: every one of 488 stored files equals the CRC-32 its installer stores, the 19 of five compressed catalogues equal installer-vise's; folders by depth, 3.5's too; an envelope that names nothing keeps less than the bundle; 96 B off every budget | DECISIONS.md 2026-11-11 (*the installer that was an archive*, *the head that named nothing*), FORMATS.md (*Installer VISE*) |
+| M81 VISE before 3.5 | MindVision's `VISE` archive of 1992–1996, an installer's data fork or a `.vct`: the decompressor read out of an installer's own 'Dcmp', 99 files of eight archives, DeltaSymbol.TT and Serial Tool equal to installed copies; 0 B resident | DECISIONS.md 2026-11-12 (*the VISE before VISE*), FORMATS.md (*Before 3.5*) |
