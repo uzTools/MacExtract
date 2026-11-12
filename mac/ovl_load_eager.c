@@ -233,6 +233,16 @@ void ovl_release_if_unwanted(UncFormat fmt, UncIO *io)
          * archives, and release for what this layer is (DECISIONS.md
          * 2026-11-05, *the head that was not the file*). */
         if (gPeeked == (int)fmt) { gPeeked = 0; ovl_pack(); return; }
+        /* A head that named nothing kept the readers of the two formats
+         * only an end can name, and the ciphers (mac/release_plan.inc.c,
+         * gUnnamed); any other layer is read as a wrong peek is. */
+        if (gPeeked == OVL_PEEK_UNNAMED &&
+            (fmt == UNC_FORMAT_COMPACTPRO || fmt == UNC_FORMAT_CPTSEG ||
+             fmt == UNC_FORMAT_DISKDOUBLER || fmt == UNC_FORMAT_SUPERDISK)) {
+            gPeeked = 0;
+            ovl_pack();
+            return;
+        }
         if (!ovl_reload()) { StopAlert(135, NULL); return; }  /* kNoReloadALRT */
     }
 

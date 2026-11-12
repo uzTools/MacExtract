@@ -5,16 +5,16 @@
 ## Mission
 
 1. **`libmacextract`** — a portable, dependency-free C99 extraction engine for classic Macintosh archive and encoding formats, plus a Linux CLI (`macextract`).
-2. **A Retro68 Toolbox application** wrapping the same engine. Floor target: **System 3.0, 68000, 1 MB RAM** (a January 1986 Macintosh Plus); it also runs in **512 KB**, refusing the heaviest archives per entry, and the same binary runs unchanged through Mac OS 9. Its decoders and its sniffer ship as **seventeen `'OVLY'` images**, and two of its dialogs' code as two more, read at launch and released once the archive's format is known (FORMATS.md, *Overlays*).
+2. **A Retro68 Toolbox application** wrapping the same engine. Floor target: **System 3.0, 68000, 1 MB RAM** (a January 1986 Macintosh Plus); it also runs in **512 KB**, refusing the heaviest archives per entry, and the same binary runs unchanged through Mac OS 9. Its decoders and its sniffer ship as **eighteen `'OVLY'` images**, and two of its dialogs' code as two more, read at launch and released once the archive's format is known (FORMATS.md, *Overlays*).
 
 The engine is the product. The Mac app is a thin shell.
 
 ## Where things stand
 
-**M0–M79 are DONE and nothing is in flight.** Every format in FORMATS.md's
+**M0–M80 are DONE and nothing is in flight.** Every format in FORMATS.md's
 table extracts, and the engine recognises nothing it does not extract
-(DECISIONS.md 2026-10-18, *the formats it only named*). The engine passes a **993-fixture** differential suite
-against `unar` and, where `unar` fails, `macunpack`, plus 9,930 robustness variants. The Macintosh application extracts byte-exact on every
+(DECISIONS.md 2026-10-18, *the formats it only named*). The engine passes a **1,010-fixture** differential suite
+against `unar` and, where `unar` fails, `macunpack`, plus 10,100 robustness variants. The Macintosh application extracts byte-exact on every
 emulated tier from System 3.0 at 1 MB to Mac OS 9.2; the tallies are
 BLOCKERS.md's (*Status*). The interactive UI is driven end to end on System
 3.0 and System 6; above those it is deliberate scope, not an open item.
@@ -32,8 +32,8 @@ BLOCKERS.md's (*Status*). The interactive UI is driven end to end on System
 | `tools/vmac/README.md` | how to run the emulator harnesses and probes | before booting anything |
 | `MANUAL_TESTS.md` | what only somebody outside this machine can do — hardware, a copy of the software, an account to post from | when something needs one of those |
 
-That session-start reading is **~14.9k tokens** (PROGRESS 3.6k,
-OPEN_ITEMS 8.2k, BLOCKERS' first two sections 3.1k); BLOCKERS'
+That session-start reading is **~15.6k tokens** (PROGRESS 3.7k,
+OPEN_ITEMS 8.8k, BLOCKERS' first two sections 3.1k); BLOCKERS'
 withdrawn-claims archive is another **~41.5k** and is reference, not
 orientation. All five are ESTIMATES (characters ÷ 3.93, ±5 %, 2026-11-12; no
 tokenizer is installed). `tools/check_docs.py` only fails at 25 % drift, and

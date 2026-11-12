@@ -680,3 +680,26 @@ done
 [ -f reference/notes/splay_jones_minunsplay.c ] || \
     curl -sL -o reference/notes/splay_jones_minunsplay.c \
         "https://homepage.cs.uiowa.edu/~dwjones/compress/minunsplay.c"
+
+# Installer VISE (src/fmt_vise.c, since 2026-11-11). mrmidi/installer-vise
+# (MIT) is read for the stream's framing, the shared blocks, the CRC-32 and
+# the 'PACK' prefix, and RUN, in tools/sandbox.py, as the second reader of
+# the compressed catalogues (tools/run_vise.py). ScummVM's vise.cpp
+# (GPL-3.0-or-later) is read for the header's two fields, the record
+# offsets, the substitution table and the pair swap, and is neither
+# transcribed nor run. systemless's vise.rs (no licence stated), read for
+# the record suffixes and the parent as a depth, is cited by commit and not
+# kept: https://github.com/benletchford/systemless/blob/
+# 5b5df152e00ac016c71bab323682340e2a7824e7/src/systems/macintosh/game/vise.rs
+if [ ! -d reference/installer-vise ]; then
+    git clone -q https://github.com/mrmidi/installer-vise reference/installer-vise
+    git -C reference/installer-vise checkout -q \
+        8b1525ab98f9cca88ff6428b64af6c91bf6033db
+fi
+if [ ! -f reference/notes/scummvm_vise.cpp ]; then
+    curl -sSfL -o /tmp/scummvm_vise.cpp \
+        "https://raw.githubusercontent.com/scummvm/scummvm/209976fdaa3d3081ed22d82bfbae606177f21534/common/compression/vise.cpp"
+    echo "c6541eb3407668fe24a723a1987cf3493ad7f250d669e83b399ca827f5e27029  /tmp/scummvm_vise.cpp" \
+        | sha256sum -c --quiet \
+        && mv /tmp/scummvm_vise.cpp reference/notes/scummvm_vise.cpp
+fi

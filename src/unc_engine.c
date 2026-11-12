@@ -87,6 +87,10 @@ static const UncFormatDesc unc_formats[] = {
      * of one included, because only the joiner can hand the reader the
      * next disk (fmt_abk.c). */
     { UNC_FORMAT_ABK,         "Apple Backup",        0, NULL },
+    /* The installer and its Segment.N files are one set, which the hosts
+     * read as one, an installer of one segment a set of one; extracted
+     * directly, it is that segment alone (fmt_vise.c). */
+    { UNC_FORMAT_VISE,        "Installer VISE",      0, unc_vise_extract },
     { UNC_FORMAT_UU,          "uuencode",            1, unc_uu_extract },
     { UNC_FORMAT_ARC,         "ARC",                 0, unc_arc_extract },
     { UNC_FORMAT_SUPERDISK,   "SuperDisk!",          0, unc_superdisk_extract },

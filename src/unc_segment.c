@@ -113,6 +113,11 @@ static const SegScheme seg_schemes[] = {
      * and never reading past one's used length (fmt_abk.c). */
     { UNC_FORMAT_ABK, 1, 0, 0,
       NULL, NULL, NULL, 0, NULL, 0, unc_abk_extract },
+    /* Installer VISE: addressed, its records stating segment and offset,
+     * its reader stepping from one segment's payload to the next
+     * (fmt_vise.c). */
+    { UNC_FORMAT_VISE, 1, 0, 0,
+      NULL, NULL, NULL, 0, NULL, 0, unc_vise_extract },
     /* message/partial. The parts join into a MESSAGE, so the reader
      * for the joined stream is the MIME walk — no file is emitted in
      * between. */

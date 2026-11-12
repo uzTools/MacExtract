@@ -73,7 +73,7 @@ static const short kIds[] = {
     OVL_ID_CRYPT, OVL_ID_SPACESAVER, OVL_ID_CPTDD, OVL_ID_LZH, OVL_ID_ARC,
     OVL_ID_NOW, OVL_ID_SUPERDISK, OVL_ID_PACKIT, OVL_ID_TEXT, OVL_ID_STUFFIT,
     OVL_ID_EXO, OVL_ID_CODECS, OVL_ID_BINHEX, OVL_ID_BTOA, OVL_ID_SQP,
-    OVL_ID_ZIPOLD, OVL_ID_SNIFF
+    OVL_ID_ZIPOLD, OVL_ID_SNIFF, OVL_ID_VISE
 };
 #define NIDS ((int)(sizeof kIds / sizeof kIds[0]))
 
@@ -435,6 +435,24 @@ int main(int argc, char **argv)
               "bundle %ld time(s)", ovlbox_reads - reads0);
         CHECK(gPeeked == 0, "a layer that was taken left gPeeked at %d",
               gPeeked);
+        /* A head that named nothing (DECISIONS.md 2026-11-11, *the head
+         * that named nothing*), as the release leaves it: the layer under
+         * it, when it is SuperDisk!, keeps what was kept and reads
+         * nothing; when it is LZH, it reads the bundle again, once. */
+        reads0 = ovlbox_reads;
+        gPeeked = OVL_PEEK_UNNAMED;
+        ovl_release_if_unwanted(UNC_FORMAT_SUPERDISK, &io);
+        CHECK(ovlbox_reads == reads0, "a SuperDisk! layer under a head that "
+              "named nothing re-read the bundle %ld time(s)",
+              ovlbox_reads - reads0);
+        CHECK(gPeeked == 0, "that layer left gPeeked at %d", gPeeked);
+        reads0 = ovlbox_reads;
+        gPeeked = OVL_PEEK_UNNAMED;
+        ovl_release_if_unwanted(UNC_FORMAT_LZH, &io);
+        CHECK(ovlbox_reads == reads0 + 1, "an LZH layer under a head that "
+              "named nothing took %ld read(s), not 1", ovlbox_reads - reads0);
+        CHECK(ovl_image_q(OVL_ID_LZH, 1) != NULL,
+              "the LZH decoder is not there after a head that named nothing");
     }
 
     /* The layer under an envelope gives back the envelope's reader, and

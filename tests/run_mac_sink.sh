@@ -29,7 +29,14 @@ FIXTURES="derived-ASCbeep.sit derived-apple.art.sit alpha401.cpt \
           derived-MUSFMT10.ZIP ddtf-dd377ad.dd derived-800saywhat301j.sit \
           synth-sit14.sit synth-sqp-forks.pkg \
           synth-exo-zip-implode.zip mar-wild-mar020.mar \
-          synth-mar-single.mac tome-wild-install7"
+          synth-mar-single.mac tome-wild-install7 \
+          vise-wild-ic-module"
+
+# `vise-wild-ic-module` was added 2026-11-12 with Installer VISE: an
+# undocumented version (0x80010303), a shared block and nine files, each
+# held to its own CRC-32, through `ovl_vise` by the shell's own writer,
+# big-endian. Not the compressed-catalogue `vise-wild-retrospect-client`:
+# its folder `TCP/IP Client` cannot be made on the host this lane writes to.
 
 # `tome-wild-install7` was added 2026-11-10 with the Installer Tome: 13
 # of Apple's files in 45 InstaCompOne blocks, the window growing from 4 KB

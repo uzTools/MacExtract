@@ -71,6 +71,11 @@ IMPLEMENTED = {
     # Apple's Installer's own output on the System 7.5.5 disk where it has
     # no codec (tools/run_tome.py).
     "Installer Tome": "Installer Tome",
+    # Nor an Installer VISE installer: every file's own CRC-32 as the
+    # installer stores it, over a catalogue read independently of the
+    # engine, and installer-vise for the compressed catalogues
+    # (tools/run_vise.py).
+    "Installer VISE": "Installer VISE",
 }
 
 # A fixture whose oracle names a format this engine does not have. Until
@@ -176,7 +181,11 @@ def parse_listing(out):
     half of MacRoman.
     """
     meta, unparsed = {}, 0
-    for line in out.splitlines():
+    # On newlines alone: splitlines() also breaks at a CR, which ends the
+    # name of every folder's custom icon file ("Icon\r"), and such a row
+    # was then never read (found 2026-11-11 by the first manifests to state
+    # the Finder flags of one).
+    for line in out.split("\n"):
         if not (line.startswith("f ") or line.startswith("d ")):
             continue
         m = LISTING_ROW.match(line)

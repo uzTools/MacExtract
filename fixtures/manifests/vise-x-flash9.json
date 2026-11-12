@@ -1,0 +1,117 @@
+{
+ "entries": [
+  {
+   "creator": "\u0000\u0000\u0000\u0000",
+   "data_oracle": "the record's CRC-32 over both forks",
+   "data_sha256": "946c2d7808b0f256e5f6b62655246dc9c247833fb2f578519e4354f91deb6e1b",
+   "data_size": 856,
+   "finder_flags": 0,
+   "name": "flashplayer.xpt",
+   "rsrc_oracle": "the record's CRC-32 over both forks",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "\u0000\u0000\u0000\u0000"
+  },
+  {
+   "creator": "\u0000\u0000\u0000\u0000",
+   "data_oracle": "the record's CRC-32 over both forks",
+   "data_sha256": "e86b0699b659046059499382751e6768033a373fc311c75ba327085f22468701",
+   "data_size": 8,
+   "finder_flags": 0,
+   "name": "Macromedia/Flash Player/version.txt",
+   "rsrc_oracle": "the record's CRC-32 over both forks",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "\u0000\u0000\u0000\u0000"
+  },
+  {
+   "creator": "\u0000\u0000\u0000\u0000",
+   "data_oracle": "the record's CRC-32 over both forks",
+   "data_sha256": "a8114a0306baea8d43a31893265b4a2388f427f42f1fd4c79aa3361cf8b5c614",
+   "data_size": 6148,
+   "finder_flags": 16384,
+   "name": "Macromedia/.DS_Store",
+   "rsrc_oracle": "the record's CRC-32 over both forks",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "\u0000\u0000\u0000\u0000"
+  },
+  {
+   "creator": "CWIE",
+   "data_oracle": "the record's CRC-32 over both forks",
+   "data_sha256": "0bda2e8d2e19cb5552f12c8382e4119dd42fb513199b3b7652f76a9ff3ef5e64",
+   "data_size": 981,
+   "finder_flags": 0,
+   "name": "Flash Player.plugin/Contents/Info.plist",
+   "rsrc_oracle": "the record's CRC-32 over both forks",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "\u0000\u0000\u0000\u0000",
+   "data_oracle": "the record's CRC-32 over both forks",
+   "data_sha256": "01dd3b2ea215f7a19a7d50b7c86a9bbc43ac11d49a288f12ad51a0edf2f76c74",
+   "data_size": 3706628,
+   "finder_flags": 0,
+   "name": "Flash Player.plugin/Contents/MacOS/Flash Player",
+   "rsrc_oracle": "the record's CRC-32 over both forks",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "\u0000\u0000\u0000\u0000"
+  },
+  {
+   "creator": "CWIE",
+   "data_oracle": "the record's CRC-32 over both forks",
+   "data_sha256": "f043487d244816127aeae20ebbd2a4323da119a98030201321bd7b746c74aec4",
+   "data_size": 8,
+   "finder_flags": 0,
+   "name": "Flash Player.plugin/Contents/PkgInfo",
+   "rsrc_oracle": "the record's CRC-32 over both forks",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "RSED",
+   "data_oracle": "the record's CRC-32 over both forks",
+   "data_sha256": "6c2a09078e6a588232f6bd16c1a3e3520317eb23fc9f8f862f805c1fb60407f0",
+   "data_size": 30276,
+   "finder_flags": 0,
+   "name": "Flash Player.plugin/Contents/Resources/Flash Player.rsrc",
+   "rsrc_oracle": "the record's CRC-32 over both forks",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "rsrc"
+  },
+  {
+   "creator": "CWIE",
+   "data_oracle": "the record's CRC-32 over both forks",
+   "data_sha256": "c28036a7e944a34aa87c70cd383100f43ed975772a4d8a5e8e3ad4bbf6396b0b",
+   "data_size": 323,
+   "finder_flags": 0,
+   "name": "Flash Player.plugin/Contents/version.plist",
+   "rsrc_oracle": "the record's CRC-32 over both forks",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "\u0000\u0000\u0000\u0000",
+   "data_oracle": "the record's CRC-32 over both forks",
+   "data_sha256": "e501c959bab7d2b1db2be10a5e7d07852d262077a9b78be445f8d45aaeec0b06",
+   "data_size": 460,
+   "finder_flags": 0,
+   "name": "ReplaceCR.sh",
+   "rsrc_oracle": "the record's CRC-32 over both forks",
+   "rsrc_sha256": "3194e90c7b821c6042bb24a2a0132c6a8dbaa58fe13eddde5fdf6d4cd1002a71",
+   "rsrc_size": 410,
+   "type": "UScr"
+  }
+ ],
+ "fixture": "vise-x-flash9",
+ "format": "Installer VISE",
+ "oracle": "each file's own CRC-32, data then resource fork, as the installer stores it, with the catalogue read independently of the engine; installer-vise for the compressed catalogues (tools/run_vise.py)",
+ "sha256": "c2dbc62183f4cc36b5075cc41bd818272b55a113b5458b2143eabc666363a338",
+ "size": 523510
+}

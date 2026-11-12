@@ -353,6 +353,13 @@ python3 tools/run_abk.py --macextract build/san/macextract \
 # proves the exact end of a stream is checked.
 python3 tools/run_tome.py --macextract build/san/macextract \
     || fail "Installer Tome tests"
+# Installer VISE: every stored file's own CRC-32 over a catalogue read
+# independently of the engine, installer-vise (sandboxed) for the
+# compressed catalogues, the three-floppy set with and without its last
+# disk, a downloader that stores nothing, damage, and three controls
+# (DECISIONS.md 2026-11-11, *the installer that was an archive*).
+python3 tools/run_vise.py --macextract build/san/macextract \
+    || fail "Installer VISE tests"
 # The Finder metadata beyond type, creator and flags (`l --meta`): FInfo
 # and FXInfo whole, the backup date, the lock and the Get Info comment,
 # held to lsar where it reads them and to the synthesizers' own input where

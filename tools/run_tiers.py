@@ -283,10 +283,13 @@ REPO = os.path.dirname(HERE)
 # control's CODE -96 and A5 0; the shipped pair fell the same 96, OVL_SAVED
 # unmoved. They were 190,276 / 94,894 / 619,182.
 TIERS = {
-    "sys3-512K": (178760, "System 3.0, Macintosh 512Ke (204,168 B free)"),
-    "sys6-512K": (83356,  "System 6.0.8, Macintosh 512Ke (108,764 B free)"),
-    "floor-1M":  (607644, "System 6.0.8, 1 MB Mac Plus — the floor target"),
+    "sys3-512K": (169480, "System 3.0, Macintosh 512Ke (204,168 B free)"),
+    "sys6-512K": (74076,  "System 6.0.8, Macintosh 512Ke (108,764 B free)"),
+    "floor-1M":  (598364, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
+# -9,280 each 2026-11-12, DERIVED from TIERS_CONTROL +9,280 (Installer
+# VISE, DECISIONS.md 2026-11-11, *the installer that was an archive*); they
+# were 178,760 / 83,356 / 607,644.
 # -4,800 each 2026-11-11, DERIVED from TIERS_CONTROL +4,800 (an Installer
 # Tome's 'part' resources, DECISIONS.md 2026-11-11, *the parts the Installer
 # expands*); they were 183,560 / 88,156 / 612,444.
@@ -581,7 +584,14 @@ TIERS = {
 # +400; CODE +4,800, A5 0; DECISIONS.md 2026-11-11, *the parts the
 # Installer expands*). TIERS -4,800 and OVL_SAVED +4,512: every grant 288 B
 # lower, less its images' change.
-TIERS_CONTROL = 235344     # build/mac-resident, CODE + A5, 2026-11-11
+TIERS_CONTROL = 244624     # build/mac-resident, CODE + A5, 2026-11-12
+# +9,280 2026-11-12: Installer VISE, its reader, inflater, set identity and
+# probe (`ovl_vise` 8,858, `ovl_sniff` +968; CODE +8,744, A5 +536, the
+# substitution and DEFLATE tables `.data` in this build; DECISIONS.md
+# 2026-11-11, *the installer that was an archive*). TIERS -9,280 and
+# OVL_SAVED +9,216: every grant 64 B lower, less its images' change. And
+# OVL_SAVED -32 the same day, the shipped pair's +36 and -4: the layer under
+# an envelope whose head named nothing (*the head that named nothing*).
 # +128 2026-11-11: PackIt's stored entries copied a span at a time
 # (`ovl_packit` +98; CODE +100, A5 +28, alignment: the change has no data;
 # DECISIONS.md 2026-11-11, *the stored bytes read one at a time*); TIERS -128 and OVL_SAVED +128, which cancel: only a packit-keeper
@@ -838,7 +848,15 @@ EXPECT = {
                   # every reader resident in it. The shipped lane does
                   # not move (DECISIONS.md 2026-11-11, *the parts the
                   # Installer expands*).
-                  "a2ps.V4.3.tar.Z", "derived-PuzzleGetter_0.8.sit"),
+                  "a2ps.V4.3.tar.Z", "derived-PuzzleGetter_0.8.sit",
+                  # All five joined 2026-11-12, DERIVED: the control grew
+                  # 9,280 B with Installer VISE, every reader resident in
+                  # it; four of them by 636-638 B. The shipped lane does
+                  # not move (DECISIONS.md 2026-11-11, *the installer that
+                  # was an archive*).
+                  "derived-SNDPatchV2.sit", "derived-Unzip101.sit",
+                  "derived-EmpireBuilderDemo.sit", "derived-BitMap11.sit",
+                  "derived-unshar_1.11_folder.sit"),
 }
 
 # ---------------------------------------------------------------------------
@@ -1346,7 +1364,7 @@ EXPECT = {
 # release's decision in the set's setup image, the shipped pair's CODE -840
 # and A5 +56, the control's CODE + A5 unmoved (DECISIONS.md 2026-11-11, *the
 # release decided in the bundle*).
-OVL_SAVED = 181312
+OVL_SAVED = 190496
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory).
 # Since 2026-11-11 what a release keeps is ONE block, the bundle's own, cut
@@ -1507,9 +1525,10 @@ IMAGES = {
     "OVL_ID_SUPERDISK":   6628,
     "OVL_ID_TEXT":        11438,
     "OVL_ID_ZIPOLD":      26070,
-    "OVL_ID_SNIFF":       17416,
+    "OVL_ID_SNIFF":       18384,
+    "OVL_ID_VISE":        8858,
     "OVL_ID_DESTDLG":     1688,
-    "OVL_ID_SEGSETUP":    2764,
+    "OVL_ID_SEGSETUP":    2830,
 }
 # **ZIPOLD +3,374 B and EXO +972 B, the bundle +4,344 B, 2026-10-17**:
 # Mac OS X's sidecars, the shared code in ZIPOLD and zip's half in EXO,
@@ -1697,7 +1716,14 @@ IMAGES = {
 # **SEGSETUP +408, the bundle +408 B, 2026-11-11**: the release's plan
 # (mac/release_plan.inc.c) in the set's setup image (DECISIONS.md
 # 2026-11-11, *the release decided in the bundle*).
-BUNDLE = 209732
+# **VISE, the eighteenth image, 8,858 B, SNIFF +968, the bundle +9,844 B,
+# 2026-11-12**: Installer VISE's reader, inflater and set match in its own
+# image, kept for an installer alone; its probe and set identity in SNIFF
+# (DECISIONS.md 2026-11-11, *the installer that was an archive*).
+# **SEGSETUP +64, the bundle +64 B, 2026-11-12**: the release plan's keeps
+# for an envelope whose head named nothing (DECISIONS.md 2026-11-11, *the
+# head that named nothing*).
+BUNDLE = 219640
 
 # What the SHIPPED lane asserts, and it is the refused fixtures BY NAME
 # rather than a tally: a tier that refuses two different fixtures and still
@@ -1886,16 +1912,42 @@ def encinfo_probe(tmp):
 RESERVE = 20480
 
 
+def unnamed_keeps(path=PLAN):
+    """What an envelope whose payload's first bytes name nothing keeps beside
+    its own reader: the plan's `gUnnamed` table (DECISIONS.md 2026-11-11,
+    *the head that named nothing*), each entry an offset from OVL_ID_CRYPT."""
+    text = CCOMMENT.sub(" ", open(path, encoding="utf-8").read())
+    m = re.search(r"gUnnamed\[\]\s*=\s*\{([^}]*)\}", text)
+    if not m:
+        raise SystemExit("run_tiers: the plan's gUnnamed changed shape")
+    out = set()
+    for e in m.group(1).split(","):
+        e = e.strip()
+        if not e:
+            continue
+        if e == "0":
+            out.add("OVL_ID_CRYPT")
+            continue
+        mm = re.fullmatch(r"(OVL_ID_\w+)\s*-\s*OVL_ID_CRYPT", e)
+        if not mm or mm.group(1) not in IMAGES:
+            raise SystemExit("run_tiers: a gUnnamed entry this model cannot "
+                             "read: %r" % e)
+        out.add(mm.group(1))
+    return frozenset(out)
+
+
 def peek_keep(ident, path, base, keep, peek, release, ask, fmts):
     """What an envelope layer keeps, as ovl_release_if_unwanted decides it:
     its own reader, the format its first bytes name and what that keeps, and
-    the sniffer — or the whole bundle (an empty set) when the peek names
-    nothing this table keeps, or would not fit the heap the bundle leaves."""
+    the sniffer; its own reader and gUnnamed when the peek names nothing, or
+    cannot run in the heap the bundle leaves (a peek that fails names
+    nothing); or the whole bundle (an empty set) when it names a format this
+    table does not keep, or another envelope."""
     name, enc, peak = ask(path, peek=True)
+    if name is None or peak > base + gain(frozenset()) + RESERVE:
+        return frozenset(unnamed_keeps() | {peek[ident]})
     inner = next((k for k, (n, _env) in fmts.items() if n == name), None)
     if inner is None or inner not in keep or inner in peek:
-        return frozenset()
-    if peak > base + gain(frozenset()) + RESERVE:
         return frozenset()
     k = set(keep[inner]) | {peek[ident], "OVL_ID_SNIFF"}
     if inner in release and enc == "no":

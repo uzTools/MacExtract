@@ -72,7 +72,7 @@ else()
     endif()
     # Printed because the two differ by a disk access per format and by
     # nothing a build output would otherwise show.
-    message(STATUS "overlay: seventeen images, ${OVL_LIFETIME}")
+    message(STATUS "overlay: eighteen images, ${OVL_LIFETIME}")
     # The dispatch, the relocation trailer and the cache flush are shared; the
     # loader is the lifetime.
     set(OVERLAY_SHIM ovl_shim.c ovl_reloc.c)
@@ -84,7 +84,7 @@ else()
     else()
         list(APPEND OVERLAY_SHIM ovl_load_lazy.c)
         foreach(img crypt spacesaver cptdd lzh arc now superdisk packit text
-                    stuffit exo codecs binhex btoa sqp zipold sniff)
+                    stuffit exo codecs binhex btoa sqp zipold sniff vise)
             list(APPEND OVERLAY_R ${CMAKE_CURRENT_BINARY_DIR}/ovl_${img}.r)
         endforeach()
     endif()
@@ -127,6 +127,7 @@ else()
     list(FILTER ENGINE_SRC EXCLUDE REGEX "fmt_lz4\\.c$")
     list(FILTER ENGINE_SRC EXCLUDE REGEX "fmt_abk\\.c$")
     list(FILTER ENGINE_SRC EXCLUDE REGEX "fmt_tome\\.c$")
+    list(FILTER ENGINE_SRC EXCLUDE REGEX "fmt_vise\\.c$")
     list(FILTER ENGINE_SRC EXCLUDE REGEX "unc_sniff\\.c$")
     # Which set a file belongs to goes with the sniffer, whose image holds
     # every parser it calls; mac/ovl_shim.c is what the shell links against
@@ -872,6 +873,7 @@ add_custom_command(
             ${ENGINE_DIR}/src/fmt_abk_probe.c
             ${ENGINE_DIR}/src/fmt_lz4_probe.c
             ${ENGINE_DIR}/src/fmt_tome_probe.c
+            ${ENGINE_DIR}/src/fmt_vise_probe.c
             ${ENGINE_DIR}/src/fmt_mime_probe.c
             ${ENGINE_DIR}/src/fmt_mimeseg_probe.c
             ${ENGINE_DIR}/src/fmt_now_probe.c
@@ -895,6 +897,7 @@ add_custom_command(
             ${ENGINE_DIR}/src/fmt_mimeseg.c
             ${ENGINE_DIR}/src/fmt_sitseg.c
             ${ENGINE_DIR}/src/fmt_abkset.c
+            ${ENGINE_DIR}/src/fmt_viseset.c
     DEPENDS ${ENGINE_DIR}/tools/overlay/ovl_sniff.c
             ${CMAKE_CURRENT_BINARY_DIR}/ovl_forwards_sniff_gen.c
             ${CMAKE_CURRENT_BINARY_DIR}/ovl_host_gen.h
@@ -915,6 +918,7 @@ add_custom_command(
             ${ENGINE_DIR}/src/fmt_abk_probe.c
             ${ENGINE_DIR}/src/fmt_lz4_probe.c
             ${ENGINE_DIR}/src/fmt_tome_probe.c
+            ${ENGINE_DIR}/src/fmt_vise_probe.c
             ${ENGINE_DIR}/src/fmt_mime_probe.c
             ${ENGINE_DIR}/src/fmt_mimeseg_probe.c
             ${ENGINE_DIR}/src/fmt_now_probe.c
@@ -938,6 +942,27 @@ add_custom_command(
             ${ENGINE_DIR}/src/fmt_mimeseg.c
             ${ENGINE_DIR}/src/fmt_sitseg.c
             ${ENGINE_DIR}/src/fmt_abkset.c
+            ${ENGINE_DIR}/src/fmt_viseset.c
+            ${OVL_DEPS})
+# Installer VISE: its reader, its inflater and its set's match, which a set
+# still asks while it is read. The probe is the sniffer's; the bit reader and
+# the canonical decoder are the codecs image's.
+add_custom_command(
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/ovl_vise.r
+    COMMAND ${CMAKE_COMMAND} -E env OVL_ID=OVL_ID_VISE
+            OVL_INC=${CMAKE_CURRENT_BINARY_DIR}
+            sh ${ENGINE_DIR}/tools/overlay/mkoverlay.sh
+            ${CMAKE_CURRENT_BINARY_DIR}/ovl_vise.r
+            ${ENGINE_DIR}/tools/overlay/ovl_vise.c
+            ${CMAKE_CURRENT_BINARY_DIR}/ovl_forwards_gen.c
+            ${ENGINE_DIR}/src/fmt_vise.c
+            ${ENGINE_DIR}/src/fmt_viseset.c
+    DEPENDS ${ENGINE_DIR}/tools/overlay/ovl_vise.c
+            ${CMAKE_CURRENT_BINARY_DIR}/ovl_forwards_gen.c
+            ${CMAKE_CURRENT_BINARY_DIR}/ovl_host_gen.h
+            ${ENGINE_DIR}/src/fmt_vise.c
+            ${ENGINE_DIR}/src/fmt_viseset.c
+            ${ENGINE_DIR}/src/fmt_vise_priv.h
             ${OVL_DEPS})
 # The destination dialog and a set's setup: shell code in images of their
 # own, bundled so that they are read at launch and given back with the bundle
@@ -989,6 +1014,7 @@ add_custom_command(
             OVL_ID_BTOA:${CMAKE_CURRENT_BINARY_DIR}/ovl_btoa.bin
             OVL_ID_SQP:${CMAKE_CURRENT_BINARY_DIR}/ovl_sqp.bin
             OVL_ID_ZIPOLD:${CMAKE_CURRENT_BINARY_DIR}/ovl_zipold.bin
+            OVL_ID_VISE:${CMAKE_CURRENT_BINARY_DIR}/ovl_vise.bin
             OVL_ID_SNIFF:${CMAKE_CURRENT_BINARY_DIR}/ovl_sniff.bin
             OVL_ID_DESTDLG:${CMAKE_CURRENT_BINARY_DIR}/ovl_destdlg.bin
             OVL_ID_SEGSETUP:${CMAKE_CURRENT_BINARY_DIR}/ovl_segsetup.bin
@@ -1009,6 +1035,7 @@ add_custom_command(
             ${CMAKE_CURRENT_BINARY_DIR}/ovl_btoa.r
             ${CMAKE_CURRENT_BINARY_DIR}/ovl_sqp.r
             ${CMAKE_CURRENT_BINARY_DIR}/ovl_zipold.r
+            ${CMAKE_CURRENT_BINARY_DIR}/ovl_vise.r
             ${CMAKE_CURRENT_BINARY_DIR}/ovl_sniff.r
             ${CMAKE_CURRENT_BINARY_DIR}/ovl_destdlg.r
             ${CMAKE_CURRENT_BINARY_DIR}/ovl_segsetup.r

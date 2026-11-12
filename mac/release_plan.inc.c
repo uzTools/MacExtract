@@ -30,8 +30,9 @@
  * An ENVELOPE, KEEP_PEEK, keeps its own reader and what the format under it
  * keeps, when the first bytes of its payload say what that is
  * (unc_envelope_peek; DECISIONS.md 2026-11-03, *the envelope that said what
- * it held*); when they do not, or say another envelope, it keeps the whole
- * bundle, as every envelope did before.
+ * it held*); when they say another envelope, it keeps the whole bundle, and
+ * when they say nothing, its own reader and `gUnnamed` below (DECISIONS.md
+ * 2026-11-11, *the head that named nothing*).
  *
  * A format that is NOT here keeps the whole bundle, which costs memory and
  * loses nothing: MIME, whose parts can be anything; the segment schemes
@@ -70,6 +71,10 @@ static const unsigned char gKeepSet[UNC_FORMAT__COUNT] = {
     [UNC_FORMAT_ZIPSEG]      = KEEP(OVL_ID_EXO,        KEEP_CRYPT | KEEP_ZIPOLD),
     /* An Apple Backup set: its reader and its match, no password. */
     [UNC_FORMAT_ABK]         = KEEP(OVL_ID_ZIPOLD,     0),
+    /* An Installer VISE set: its reader and its match. VISE has a
+     * password option (installer-vise's docs), unused on every installer
+     * here and not read: no ciphers kept. */
+    [UNC_FORMAT_VISE]        = KEEP(OVL_ID_VISE,       0),
     /* Envelopes, by the image their reader is in. */
     [UNC_FORMAT_BINHEX]      = KEEP(OVL_ID_BINHEX,     KEEP_PEEK),
     [UNC_FORMAT_BINHEX_OLD]  = KEEP(OVL_ID_BINHEX,     KEEP_PEEK),
@@ -83,6 +88,17 @@ static const unsigned char gKeepSet[UNC_FORMAT__COUNT] = {
     [UNC_FORMAT_UU]          = KEEP(OVL_ID_TEXT,       KEEP_PEEK),
     [UNC_FORMAT_BASE64]      = KEEP(OVL_ID_TEXT,       KEEP_PEEK),
     [UNC_FORMAT_BTOA]        = KEEP(OVL_ID_BTOA,       KEEP_PEEK),
+};
+
+/* What an envelope whose payload's first bytes name nothing keeps beside its
+ * own reader: the sniffer for the layer under it, the readers of the two
+ * formats only an END can name — Compact Pro's index, SuperDisk!'s last
+ * record (src/unc_peek.c) — the ciphers Compact Pro may want, and the
+ * codecs. A layer that is anything else reads the bundle again, as under a
+ * peek that was wrong (mac/ovl_load_eager.c). Each an offset from 128. */
+static const unsigned char gUnnamed[] = {
+    OVL_ID_SNIFF - OVL_ID_CRYPT, OVL_ID_CPTDD - OVL_ID_CRYPT,
+    OVL_ID_SUPERDISK - OVL_ID_CRYPT, 0, OVL_ID_CODECS - OVL_ID_CRYPT
 };
 
 /* The row for `fmt`, or 0. A peek answers in a byte, so the bound is
@@ -126,6 +142,14 @@ static int release_plan(const OverlayHost *host, OverlayEntry sniff,
         r = sniff(host, OVL_ENVELOPE_PEEK, io, &pal);
         enc = (int)((r >> 8) & 0xff) - 1;
         as = (UncFormat)(r & 0xff);
+        if (as == UNC_FORMAT_UNKNOWN) {
+            unsigned i;
+            out[0] = OVL_PEEK_UNNAMED;
+            out[1] = (unsigned char)want;
+            k[0] = (unsigned char)want;
+            for (i = 0; i < sizeof gUnnamed; i++) k[1 + i] = gUnnamed[i];
+            return 1 + (int)sizeof gUnnamed;
+        }
         row = keep_row(as);
         if (!row || (row & KEEP_PEEK)) return 0;
         inner = (row & 0x1f) - 1;
