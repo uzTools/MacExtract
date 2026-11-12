@@ -266,24 +266,38 @@ a program's name and description; none has been held against a file.**
 Closing a row: a specimen written by the program, then a second reader to
 grade against.
 
-## UnZip's `pZIP` and `pBIN`: what the files are
+## Types MacExtract's bundle does not claim: Expander's, and real files'
 
-Read off MacStamp's committed tables by its own session on 2026-11-12
-(`fixtures/manifests/apps.tsv`, programs' bundles; `pair-census.csv`,
-143,723 files). Creator `pZIP` is UnZip (1.01, 1.10, 2.0.1 by A. P. Maika);
-the census holds `TEXT/pZIP` 26, `pBIN/pZIP` 19 and the three programs. As a
-file TYPE, `pZIP` is claimed by seven programs' bundles (UnZip 2.0.1, ZipIt
-1.0–1.3.5, MacGzip) and by StuffIt Expander 5.5's `'open'`; `m@rc` only by
-ArcMac 1.3c's and Expander's; no file in the census carries either type.
-**Not established:** that the `pBIN`/`pZIP` and `TEXT`/`pZIP` files are
-members UnZip wrote out rather than archives (MacStamp's hypothesis; the
-census keeps no paths, so their bytes were not read), and what a `pZIP`- or
-`m@rc`-typed file would hold. MacExtract's bundle claims neither type;
-claiming one costs 12 B of resource map, for a type no file here carries.
+Two sources, compared on 2026-11-12 with MacExtract's 51 `FREF`s (read off
+`dist/MacExtract.bin`): StuffIt Expander 5.5's `'open'` 128 and its three
+bundles (read off its resource fork in the cache), and MacStamp's census
+(`fixtures/manifests/pair-census.csv`, 143,723 files), filtered to archive
+programs' creators. **No row is established: no file's bytes were read**
+(the census keeps no paths). Claiming a type costs 12 B of resource map.
 
-What would settle it: UnZip 2.0.1 run on chosen zips, under the emulator,
-and the types and creators it gives what it writes; the census files'
-bytes, if their sources can be found; any file typed `pZIP` or `m@rc`.
+| type | in Expander 5.5 | files in the census, by creator | note |
+|---|---|---|---|
+| `Part` | `FREF`, its `SIT!` bundle | `SIT!` 8, `SITx` 2 | unknown; beside its StuffIt archive and segment types |
+| `PCFA` | `FREF`, its `crsX` bundle | none | unidentified |
+| `pZIP` | `'open'` | none as a type; `pZIP` is UnZip's creator | claimed by UnZip 2.0.1, ZipIt 1.0–1.3.5, MacGzip (MacStamp's `apps.tsv`) |
+| `m@rc` | `'open'` | none | claimed only by ArcMac 1.3c |
+| `pBIN` | — | `pZIP` 19 (also `pGeN` 188 outside archive creators) | MacStamp's hypothesis: members UnZip wrote out, not archives |
+| `SITo` | — | `SIT!` 10 | unknown |
+| `bzy ` | — | `SIT!` 2 | unknown |
+| `DDDA`, `DDf3`, `DDTM` | — | `DDAP` 2, 1, 1 | DiskDoubler's; `DDf3` sits beside the claimed `DDf4` |
+| `Bzp2` | both lists | — | bzip2, out of scope (Part 1) |
+| `SITX` | — | `SIT!` 1 | StuffIt X, out of scope (Part 1) |
+| `fold`, `disk` | both lists | — | Expander's for a dropped folder or disk; MacExtract takes neither |
+
+Also in the census under those creators and left out as not archives:
+`adrp`/`SITx` 2, `pref`/`SITx` 1, `Pref`/`SIT!` 1. Creator `pZIP` is
+UnZip 1.01, 1.10 and 2.0.1 (A. P. Maika), and `TEXT`/`pZIP` 26 files.
+
+What would settle a row: a file of that type, from MacStamp's sources or
+written to order by the program under the emulator (UnZip 2.0.1 on chosen
+zips; StuffIt or Expander for `Part` and `SITo`; DiskDoubler for its
+three), run through the CLI; a type is claimed only if it is an archive
+MacExtract reads.
 
 ## BinHex before 4.0: what is not graded
 
