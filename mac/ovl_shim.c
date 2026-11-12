@@ -237,9 +237,6 @@ static const unsigned short gRun[UNC_FORMAT__COUNT] = {
     [UNC_FORMAT_ABK]         = RUN(OVL_ID_ZIPOLD,     OVL_ABK_EXTRACT,        RUN_MATCH),
     /* And the Installer Tome: its own window, no codec (src/fmt_tome.c). */
     [UNC_FORMAT_TOME]        = RUN(OVL_ID_ZIPOLD,     OVL_TOME_EXTRACT,       0),
-    /* Installer VISE, its own image, alone or as a set: the bit reader and
-     * the canonical decoder are the codecs' (src/fmt_vise.c). */
-    [UNC_FORMAT_VISE]        = RUN(OVL_ID_VISE,       OVL_VISE_EXTRACT,       RUN_CODECS | RUN_MATCH),
 };
 
 int unc_segment_match(const UncSegmentDesc *desc, const uint8_t *head,
@@ -453,4 +450,3 @@ DECODER(unc_mar_extract)
 DECODER(unc_lz4_extract)
 DECODER(unc_abk_extract)
 DECODER(unc_tome_extract)
-DECODER(unc_vise_extract)

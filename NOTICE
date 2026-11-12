@@ -800,38 +800,6 @@ This project's decoders are transcriptions/ports of algorithms from:
     `tools/fetch_references.sh`. DECISIONS.md 2026-11-10 (*the archive the
     Installer reads*).
 
-  * Installer VISE, MindVision's installer, from three outside readers
-    and the installers themselves. mrmidi/installer-vise (MIT,
-    commit 8b1525ab) is read for the stream's word framing, the stored
-    block's alignment and padding, the shared blocks, the CRC-32 and the
-    'PACK' prefix's length, and RUN in tools/sandbox.py as the second
-    reader of the compressed catalogues (tools/run_vise.py); it is linked
-    into nothing. ScummVM's common/compression/vise.cpp (GPL-3.0-or-later,
-    commit 209976fd) is read for the header's version and catalogue
-    offsets, the records' fixed offsets, the pair swap and the substitution
-    table, which installer-vise's docs/compression.md publishes byte for
-    byte as well; nothing of it is transcribed and it is not run.
-    benletchford/systemless's vise.rs (no licence stated, commit 5b5df152)
-    is read for the record suffixes and the parent as a depth, and is not
-    kept here. `src/fmt_vise.c`, its probe and its set identity are this
-    project's own (0BSD), and everything else they do — the set's count
-    and stamp, the catalogue's compression flag, four versions' suffixes
-    and VISE X's layout — was measured on the installers
-    (fixtures/SOURCES.md). `reference/installer-vise` and
-    `reference/notes/scummvm_vise.cpp` are fetched by
-    `tools/fetch_references.sh`. DECISIONS.md 2026-11-11 (*the installer
-    that was an archive*).
-
-  * The VISE before Installer VISE 3.5, from MindVision's own
-    decompressor: the 'Dcmp' 2002 resource of CompuServe Mail Installer
-    (1995), disassembled and read for the stream's layout, the tree
-    encoding, the code assignment and the quicksort whose order it
-    depends on, which the engine repeats step for step in C written
-    here; the resource is not run and not kept here. No other reader of the format was found. `src/fmt_viseold.c`
-    is this project's own (0BSD), and the header and catalogue were
-    measured on eight archives (fixtures/SOURCES.md). DECISIONS.md
-    2026-11-12 (*the VISE before VISE*).
-
   * lhasa 0.4.0, by Simon Howard — https://github.com/fragglet/lhasa,
     ISC licence. Since 2026-09-19 `src/fmt_lzh.c`'s decoders follow it
     rather than XADMaster: `lh_new_decoder.c` and `tree_decode.c` for
@@ -1010,15 +978,10 @@ DATA THAT IS NOT OURS AND IS SHIPPED ANYWAY
     2026-08-25): the tail of the `CMod 4` resource, which is the string
     every unfilled entry of method 2's dictionary points at, so a
     method 2 fork that names one cannot be decoded without it either.
-  * `src/fmt_vise.c`'s `vise_subst` is 256 bytes of **MindVision
-    Software's**: the permutation Installer VISE puts every byte of a
-    file's stream through, published by ScummVM and installer-vise alike.
-    It is not code: no installer can be decoded without exactly these.
-
     Everything else in this repository is either ours (0BSD), LGPL,
-    zlib's, CC0, or fetched rather than committed. These two are the
-    exceptions, they are marked as such, and they are not covered by
-    either of this project's licences.
+    zlib's, CC0, or fetched rather than committed. This is the
+    exception, it is marked as one, and it is not covered by either of
+    this project's licences.
 
 The `DDA2` entry that carries no file header of its own — DiskDoubler
 Pro's form for a file it could not compress — and the whole of the

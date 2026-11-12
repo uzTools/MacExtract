@@ -127,8 +127,7 @@ SHARED_SHIMS = {
     "ovl_run": {},
     "seg_id": {"unc_segment_match": [("sniff", "unc_segment_match"),
                                      ("cptdd", "unc_cptseg_match"),
-                                     ("zipold", "unc_abk_match"),
-                                     ("vise", "unc_vise_match")]},
+                                     ("zipold", "unc_abk_match")]},
 }
 
 # Library routines the resident link takes from Retro68 (an image links
@@ -155,16 +154,12 @@ SH = "SHELL:"
 CLASSES = {
     # UncIO (include/macextract.h): the engine's own streams, then the shell's
     "read": ["unc_segment.c:seg_read", "unc_peek.c:pw_read",
-             "fmt_vise.c:vise_src_read",
              "unc_peek.c:ph_read", SH + "macextract_mac.c:fio_read"],
     "seek": ["unc_segment.c:seg_seek", "unc_peek.c:pw_seek",
-             "fmt_vise.c:vise_src_seek",
              "unc_peek.c:ph_seek", SH + "macextract_mac.c:fio_seek"],
     "tell": ["unc_segment.c:seg_tell", "unc_peek.c:pw_tell",
-             "fmt_vise.c:vise_src_tell",
              "unc_peek.c:ph_tell", SH + "macextract_mac.c:fio_tell"],
     "size": ["unc_segment.c:seg_size", "unc_peek.c:pw_size",
-             "fmt_vise.c:vise_src_size",
              "unc_peek.c:ph_size", SH + "macextract_mac.c:fio_size"],
     # UncSink
     "begin_entry": ["unc_peek.c:ph_begin", SH + "macextract_mac.c:sink_begin"],
@@ -194,10 +189,9 @@ CLASSES = {
     # unc_segid.c's table, then unc_segment.c's
     "describe": ["unc_sitseg_describe", "unc_cptseg_describe",
                  "unc_ddseg_describe", "unc_zipseg_describe",
-                 "unc_mimeseg_describe", "unc_abk_describe",
-                 "unc_vise_describe"],
+                 "unc_mimeseg_describe", "unc_abk_describe"],
     "match": ["unc_sitseg_match", "unc_cptseg_match", "unc_ddseg_match",
-              "unc_abk_match", "unc_vise_match"],
+              "unc_abk_match"],
     "payload": ["unc_ddseg_payload"],
     "stored_crc": ["unc_sitseg_stored_crc", "unc_ddseg_stored_crc"],
     "crc_fold": ["unc_crc16_arc", "unc_crc16_xmodem"],
@@ -211,8 +205,7 @@ CLASSES = {
     "order": [],
     # callbacks a decoder hands a codec
     "emit": ["fmt_exo.c:exo_emit", "fmt_exo.c:zip_emit", "fmt_exo.c:zip_put",
-             "fmt_exo.c:zip_attr_emit", "fmt_vise.c:vise_cat_count",
-             "fmt_vise.c:vise_cat_fill", "fmt_vise.c:vise_out"],
+             "fmt_exo.c:zip_attr_emit"],
     "put": ["fmt_lzh.c:lzh_put_run", "fmt_sit.c:sit_put_run",
             "fmt_arc.c:arc_trim_put"],
     "rd": ["fmt_exo.c:zip_scan_read", "zs_io_read_at",
@@ -225,8 +218,7 @@ for _op in ("read", "seek", "tell", "size"):
 # Callbacks that wrap another of their own kind: a joined set's stream and
 # the envelope peek's window wrap an UncIO, MIME's relay wraps the
 # progress callback. A path never has one under itself (bit per file).
-WRAPPERS = {"unc_segment.c": 1, "unc_peek.c": 2, "fmt_mime.c": 4,
-            "fmt_vise.c": 512}
+WRAPPERS = {"unc_segment.c": 1, "unc_peek.c": 2, "fmt_mime.c": 4}
 WRAPPED = ("read", "seek", "tell", "size", "tick", "seek_part", "skip",
            "part_size")
 # Which callbacks a path can meet depends on how it got there, and these
@@ -259,7 +251,7 @@ ANYSET = JOINSET | MIMESET | ADDRSET
 EDGE_RULES = [
     ("scheme.extract", None, None, None, r"^unc_mime_extract$",
      MIMESET, 0, 0),
-    ("scheme.extract", None, None, None, r"^unc_(cpt|zip|vise)_extract$",
+    ("scheme.extract", None, None, None, r"^unc_(cpt|zip)_extract$",
      ADDRSET, 0, 0),
     ("", "unc_segment.c", r"^unc_extract_segments$", None,
      r"^unc_sitseg_emit$", JOINSET, 0, 0),
@@ -595,7 +587,7 @@ def source_readers():
                        r"\s*(\w+)\s*\)", eng)
     sets = re.findall(r"\{\s*UNC_FORMAT_\w+\s*,[^{}\n]*SEG_READ\(\s*(\w+)\s*\)",
                       seg)
-    if len(files) < 30 or len(sets) < 5:
+    if len(files) < 30 or len(sets) < 4:
         die("source_readers: parsed %d extractors and %d set readers — the "
             "tables changed shape" % (len(files), len(sets)))
     return files, sets

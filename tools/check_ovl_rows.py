@@ -102,7 +102,7 @@ def problems(shim_text):
                                 "mac/release_plan.inc.c")))
     # A parse that finds next to nothing is a parse that broke.
     if len(aliases) < 20 or len(files) < 30 or len(sets) < 4 or \
-            len(schemes) < 5 or len(grun) < 25 or len(here) < 3 or \
+            len(schemes) < 4 or len(grun) < 25 or len(here) < 3 or \
             len(ids) < 6 or len(keep) < 20:
         out.append("parsed %d aliases, %d file rows, %d set rows, %d "
                    "readers of a set, %d gRun rows, %d resident readers, "
@@ -183,7 +183,7 @@ def main():
         cuts = [(c, "") for c in cuts]
         flags = [m.group(0) for m in
                  re.finditer(r"\[UNC_FORMAT_\w+\][^\n]*RUN_MATCH\)", text)]
-        if len(flags) < 3:
+        if len(flags) < 2:
             print("check_ovl_rows: selftest found %d RUN_MATCH rows"
                   % len(flags))
             return 1

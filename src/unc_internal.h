@@ -1572,12 +1572,6 @@ int unc_abk_describe(UncIO *io, UncSegmentDesc *desc);
 int unc_abk_match(const UncSegmentDesc *desc, const uint8_t *head,
                   int32_t len);
 int unc_abk_extract(UncCtx *c);
-/* Installer VISE (fmt_vise.c): an installer and its segments, addressed. */
-UncFormat unc_vise_probe(const uint8_t *head, int32_t len, UncIO *io);
-int unc_vise_describe(UncIO *io, UncSegmentDesc *desc);
-int unc_vise_match(const UncSegmentDesc *desc, const uint8_t *head,
-                   int32_t len);
-int unc_vise_extract(UncCtx *c);
 int unc_dd_extract(UncCtx *c);
 int unc_now_extract(UncCtx *c);
 int unc_superdisk_extract(UncCtx *c);

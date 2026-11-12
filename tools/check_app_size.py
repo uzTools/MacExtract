@@ -326,12 +326,7 @@ TAKEN = "2026-11-11"
 # 2026-11-11, *the copies that moved down*).
 # -> 209,732 the same day: the release's plan in `ovl_segsetup` (+408)
 # (DECISIONS.md 2026-11-11, *the release decided in the bundle*).
-# -> 219,640 on 2026-11-12: `ovl_vise`, the eighteenth image (8,858), its
-# probe and set identity in `ovl_sniff` (+968) and its release-plan row in
-# `ovl_segsetup` (+2) (DECISIONS.md 2026-11-11, *the installer that was an
-# archive*); the plan's keeps for an envelope whose head named nothing
-# (+64; *the head that named nothing*).
-EXPECT_BUNDLE = 223308
+EXPECT_BUNDLE = 209732
 TOLERANCE_BUNDLE = 2048
 TAKEN_BUNDLE = "2026-11-11"
 

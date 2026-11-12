@@ -71,11 +71,6 @@ IMPLEMENTED = {
     # Apple's Installer's own output on the System 7.5.5 disk where it has
     # no codec (tools/run_tome.py).
     "Installer Tome": "Installer Tome",
-    # Nor an Installer VISE installer: every file's own CRC-32 as the
-    # installer stores it, over a catalogue read independently of the
-    # engine, and installer-vise for the compressed catalogues
-    # (tools/run_vise.py).
-    "Installer VISE": "Installer VISE",
 }
 
 # A fixture whose oracle names a format this engine does not have. Until

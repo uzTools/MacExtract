@@ -142,10 +142,6 @@ static const SegScheme seg_schemes[] = {
     /* Apple Backup: addressed, its reader asking for each disk in turn
      * and never reading past one's used length (fmt_abk.c). */
     { UNC_FORMAT_ABK,     SEG_ADDRESSED SEG_READ(unc_abk_extract) },
-    /* Installer VISE: addressed, its records stating segment and offset,
-     * its reader stepping from one segment's payload to the next
-     * (fmt_vise.c). */
-    { UNC_FORMAT_VISE,    SEG_ADDRESSED SEG_READ(unc_vise_extract) },
     /* message/partial. The parts join into a MESSAGE, so the reader
      * for the joined stream is the MIME walk — no file is emitted in
      * between. */

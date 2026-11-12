@@ -53,16 +53,6 @@ def fetch(url, timeout=120):
         where, _, hfspath = url[8:].partition("#")
         return dc42_file(fetch(where, timeout),
                          urllib.parse.unquote(hfspath))
-    # `macbin-data+<url>`: the file is served as MacBinary and the fixture
-    # is its data fork (an application whose data fork is the archive, an
-    # Installer VISE installer). The lengths are MacBinary's own header's:
-    # the data fork's at 83, after the 128-byte header.
-    if url.startswith("macbin-data+"):
-        blob = fetch(url[12:], timeout)
-        dlen = struct.unpack(">I", blob[83:87])[0]
-        if blob[0] != 0 or len(blob) < 128 + dlen:
-            raise ValueError("not a MacBinary file")
-        return blob[128:128 + dlen]
     req = urllib.request.Request(url, headers={"User-Agent": "macextract-harvest/1.0"})
     with urllib.request.urlopen(req, timeout=timeout) as r:
         return r.read()

@@ -283,13 +283,16 @@ REPO = os.path.dirname(HERE)
 # control's CODE -96 and A5 0; the shipped pair fell the same 96, OVL_SAVED
 # unmoved. They were 190,276 / 94,894 / 619,182.
 TIERS = {
-    "sys3-512K": (165976, "System 3.0, Macintosh 512Ke (204,168 B free)"),
-    "sys6-512K": (70572,  "System 6.0.8, Macintosh 512Ke (108,764 B free)"),
-    "floor-1M":  (594860, "System 6.0.8, 1 MB Mac Plus — the floor target"),
+    "sys3-512K": (178904, "System 3.0, Macintosh 512Ke (204,168 B free)"),
+    "sys6-512K": (83500,  "System 6.0.8, Macintosh 512Ke (108,764 B free)"),
+    "floor-1M":  (607788, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
 # +144 each 2026-11-12, DERIVED from TIERS_CONTROL -144 (the segment
 # schemes' rows and hooks, DECISIONS.md 2026-11-12, *the format table that
 # became three bitmaps*); they were 165,832 / 70,428 / 594,716.
+# +12,928 each 2026-11-12, DERIVED from TIERS_CONTROL -12,928 (Installer
+# VISE parked, DECISIONS.md 2026-11-12, *VISE parked*); they were 165,976 /
+# 70,572 / 594,860.
 # -3,648 each 2026-11-12, DERIVED from TIERS_CONTROL +3,648 (the VISE
 # before 3.5, DECISIONS.md 2026-11-12, *the VISE before VISE*); they were
 # 169,480 / 74,076 / 598,364.
@@ -590,7 +593,11 @@ TIERS = {
 # +400; CODE +4,800, A5 0; DECISIONS.md 2026-11-11, *the parts the
 # Installer expands*). TIERS -4,800 and OVL_SAVED +4,512: every grant 288 B
 # lower, less its images' change.
-TIERS_CONTROL = 248128     # build/mac-resident, CODE + A5, 2026-11-12
+TIERS_CONTROL = 235200     # build/mac-resident, CODE + A5, 2026-11-12
+# -12,928 2026-11-12: Installer VISE parked, both readers, its image and
+# probe out (CODE -12,404, A5 -524; DECISIONS.md 2026-11-12, *VISE
+# parked*). TIERS +12,928 and OVL_SAVED -12,928: the shipped pair holds,
+# so no grant moves but for the images a format keeps.
 # -144 2026-11-12: the segment schemes' rows two bytes and a reader, their
 # hooks a table of four (CODE -16, A5 -128; DECISIONS.md 2026-11-12, *the
 # format table that became three bitmaps*). TIERS +144, and OVL_SAVED -144
@@ -863,15 +870,10 @@ EXPECT = {
                   # every reader resident in it. The shipped lane does
                   # not move (DECISIONS.md 2026-11-11, *the parts the
                   # Installer expands*).
-                  "a2ps.V4.3.tar.Z", "derived-PuzzleGetter_0.8.sit",
-                  # All five joined 2026-11-12, DERIVED: the control grew
-                  # 9,280 B with Installer VISE, every reader resident in
-                  # it; four of them by 636-638 B. The shipped lane does
-                  # not move (DECISIONS.md 2026-11-11, *the installer that
-                  # was an archive*).
-                  "derived-SNDPatchV2.sit", "derived-Unzip101.sit",
-                  "derived-EmpireBuilderDemo.sit", "derived-BitMap11.sit",
-                  "derived-unshar_1.11_folder.sit"),
+                  "a2ps.V4.3.tar.Z", "derived-PuzzleGetter_0.8.sit"),
+                  # Five more were refused from 2026-11-12 while Installer
+                  # VISE was resident in the control, and left with it the
+                  # same day (DECISIONS.md 2026-11-12, *VISE parked*).
 }
 
 # ---------------------------------------------------------------------------
@@ -1386,7 +1388,10 @@ EXPECT = {
 # dispatch, the schemes' rows two bytes, the part search by gRun, the
 # shipped pair's CODE +16 and A5 -1,152 (-1,136) against the control's -144
 # (DECISIONS.md 2026-11-12, *the format table that became three bitmaps*).
-OVL_SAVED = 195136
+# **-12,928 2026-11-12, -> 182,208**: Installer VISE parked, the control's
+# CODE -12,404 and A5 -524, the shipped pair's CODE + A5 unmoved
+# (DECISIONS.md 2026-11-12, *VISE parked*).
+OVL_SAVED = 182208
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory).
 # Since 2026-11-11 what a release keeps is ONE block, the bundle's own, cut
@@ -1547,8 +1552,7 @@ IMAGES = {
     "OVL_ID_SUPERDISK":   6628,
     "OVL_ID_TEXT":        11438,
     "OVL_ID_ZIPOLD":      26070,
-    "OVL_ID_SNIFF":       18712,
-    "OVL_ID_VISE":        12198,
+    "OVL_ID_SNIFF":       17416,
     "OVL_ID_DESTDLG":     1688,
     "OVL_ID_SEGSETUP":    2830,
 }
@@ -1748,7 +1752,10 @@ IMAGES = {
 # **VISE +3,340, SNIFF +328, the bundle +3,668 B, 2026-11-12**: the VISE
 # before 3.5, its reader in VISE and its probe in SNIFF (DECISIONS.md
 # 2026-11-12, *the VISE before VISE*).
-BUNDLE = 223308
+# **VISE out, SNIFF -1,296, the bundle -13,508 B, 2026-11-12**: Installer
+# VISE parked, its image and its probe (DECISIONS.md 2026-11-12, *VISE
+# parked*).
+BUNDLE = 209800
 
 # What the SHIPPED lane asserts, and it is the refused fixtures BY NAME
 # rather than a tally: a tier that refuses two different fixtures and still

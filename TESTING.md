@@ -3047,9 +3047,8 @@ probes accepted, in a buffer of zeros and one of 0xFF, without tools.
 
 **The corpus is swept**: every fixture with a manifest must sniff as its
 oracle's format (`run_diff.py`'s `IMPLEMENTED`), every other fixture as
-something, except Installer VISE's three later parts, which must sniff as
-`unknown` (OPEN_ITEMS.md, *Installer VISE*); and `synth-os9-rar.rar` (the
-Mac OS 9 tier's refusal sample) must meet the specimens' contract.
+something, and `synth-os9-rar.rar` (the Mac OS 9 tier's refusal sample)
+must meet the specimens' contract.
 
 **It can fail, measured 2026-10-18**: `origin/main`'s CLI, which still
 named them, fails 52 of 97 checks (all 26 specimens); a probe claiming
@@ -3590,78 +3589,6 @@ not the engine's: three forks where deark widens a distance one position
 early, and Apple Menu Options' `sysz` and MacTCP's `DRVR` 22 and `ctrp` 130,
 which differ from the installed copies and have not been looked at
 (DECISIONS.md 2026-11-10, *the archive the Installer reads*).
-
-## Installer VISE (`tools/run_vise.py`, in `ci.sh`)
-
-Every record an installer stores carries the CRC-32 of its file's data fork
-then resource fork, written by the installer's builder, so that is the
-grade; the catalogue it is read against is parsed by this script,
-independently of the engine (FORMATS.md, *Installer VISE*).
-
-    python3 tools/run_vise.py --macextract build/macextract
-    python3 tools/run_vise.py --extra DIR     # every installer in DIR as well
-    python3 tools/run_vise.py --manifest FIXTURE...
-
-1. **The CRC-32s**: every `vise-wild-*` and `vise-x-*` fixture, and from the
-   specimen cache the Myth demo's installer and the Office 2004 updater
-   (VISE X, its `Installer.data` given with `--part`) where they are there.
-   Each stored file's forks must have the record's CRC-32, and its path
-   (folders by depth), sizes, type, creator and flags must be the
-   catalogue's; nothing of segment 0 may come out.
-2. **installer-vise**, run in `tools/sandbox.py` from
-   `reference/installer-vise` (`tools/fetch_references.sh`), on the
-   compressed catalogues it reads (0x80010308 and later, VISE X aside): its
-   forks, written flat, must be the engine's as a multiset. A stand-in
-   `rich.progress` is written into the box; it imports that for a progress
-   bar.
-3. **The set**: `vise-set-epson-sp700` and its `.2` and `.3`, every file;
-   then with `.3` left out, its files and the one that runs into it
-   refused by name and the rest out.
-4. **A downloader** (`vise-wild-netscape-stub`): refused, nothing listed.
-5. **Damage** on the smallest installer: 40 payload bytes changed one at a
-   time, every one refused (the CRC sees it), and 30 cuts, every one
-   refused; no crash, no hang.
-
-**Controls**, each made to fail: a fork changed after extraction against
-section 1's comparison, a record's CRC-32 changed in the archive against
-the engine's own check, and the folders read as indexes, as ScummVM reads
-3.5's, which must give `vise-wild-acrobat-movie` other paths.
-
-**What it cannot see**: what an installer writes when it runs (the paths,
-flags and dates are two readings of one layout), dates, a record whose
-trailing bytes hold a signature, and the versions no specimen here has
-(OPEN_ITEMS.md, *Installer VISE*).
-
-## The VISE before 3.5 (`tools/run_viseold.py`, in `ci.sh`)
-
-The format has no checksum, so the grade is copies of its files installed
-elsewhere, and this script's own reading of every archive, with a
-decoder transcribed from MindVision's 68k (FORMATS.md, *Before 3.5*).
-
-    python3 tools/run_viseold.py --macextract build/macextract
-    python3 tools/run_viseold.py --manifest FIXTURE...
-
-1. **Every `vise-old-*` fixture**: its stream must end at its catalogue to
-   the byte and expand to the records' sum; the engine's files must be
-   this reading's, every path, both forks, type, creator and flags.
-2. **Installed copies**, from the specimen cache: DeltaSymbol.TT against
-   PC World's, the whole fork but the Resource Manager's reserved 16..255;
-   Serial Tool against four Serial Tool 1.0.2, every resource but
-   `'vers'` 2. Reported NOT RUN without the cache.
-3. **Damage** on the smallest archive: 40 stream bytes changed, how many
-   refused printed (7 were not, measured 2026-11-12), and 30 cuts, every
-   one refused; no crash, no hang.
-
-**Controls**, each made to fail: a stable sort in place of the quicksort
-(no stream may end at its catalogue), a resource of DeltaSymbol.TT changed
-against section 2, a record a byte longer than its stream against the
-engine. An engine writing the data fork first failed section 1 83 times
-(measured 2026-11-12).
-
-**What it cannot see**: dates and the Finder location; a damaged stream
-that keeps its length; where an Apple Installer script puts a `.vct`'s
-files. Section 1 is one author's reading twice: sections 2 and the first
-control are what test the reading.
 
 ## MacGzip's own output (`tools/run_macgzip.py`, in `ci.sh`)
 
@@ -4267,7 +4194,7 @@ short-circuited and subtract — the instrument sees only the total.
   instructions use `tools/m68kprof.py`; for real cost, the tick probe on an
   emulated Mac.
 - **The Macintosh's own I/O** (stdio is not the File Manager).
-- **Any file it is not handed**: the corpus is 1,044 files, and the
+- **Any file it is not handed**: the corpus is 1,015 files, and the
   population that matters for REJECTION cost is non-archives —
   `reference/`, this repository's trees, the specimen cache; 8,364 were
   swept on 2026-10-05 (BLOCKERS.md, *Withdrawn claims*).

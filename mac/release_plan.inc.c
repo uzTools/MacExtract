@@ -71,10 +71,6 @@ static const unsigned char gKeepSet[UNC_FORMAT__COUNT] = {
     [UNC_FORMAT_ZIPSEG]      = KEEP(OVL_ID_EXO,        KEEP_CRYPT | KEEP_ZIPOLD),
     /* An Apple Backup set: its reader and its match, no password. */
     [UNC_FORMAT_ABK]         = KEEP(OVL_ID_ZIPOLD,     0),
-    /* An Installer VISE set: its reader and its match. VISE has a
-     * password option (installer-vise's docs), unused on every installer
-     * here and not read: no ciphers kept. */
-    [UNC_FORMAT_VISE]        = KEEP(OVL_ID_VISE,       0),
     /* Envelopes, by the image their reader is in. */
     [UNC_FORMAT_BINHEX]      = KEEP(OVL_ID_BINHEX,     KEEP_PEEK),
     [UNC_FORMAT_BINHEX_OLD]  = KEEP(OVL_ID_BINHEX,     KEEP_PEEK),

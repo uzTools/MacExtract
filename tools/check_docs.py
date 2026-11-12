@@ -664,12 +664,6 @@ CORPUS_SCAN = ("CLAUDE.md", "PROGRESS.md", "OPEN_ITEMS.md", "FORMATS.md",
 CORPUS_HISTORICAL = {
     # One entry per (file, kind, figure); it covers every occurrence of
     # that figure in that file. Each was read before it was declared.
-    ("FORMATS.md", "files", 1015):
-        "the Installer Tome's sniff sweep, which says what ITS change "
-        "moved (2026-11-10/11, dated in its section)",
-    ("FORMATS.md", "manifests", 993):
-        "the whole-corpus sweep at both 512 KB tiers on a6668bd, "
-        "2026-11-04, dated in the sentence",
     ("FORMATS.md", "files", 983):
         "two sweeps dated in their sentences: btoa's probe over the corpus "
         "on 2026-10-11, and the AppleLink sniffer's 6 of 983, re-measured "

@@ -7,7 +7,7 @@
    withdrawn claim to BLOCKERS.md, numbers to FORMATS.md).
 
 Nothing here stops the engine or the CLI, which are byte-exact against the
-oracle across 1,018 fixtures in `./ci.sh`.
+oracle across 993 fixtures in `./ci.sh`.
 
 **Filing something here is a decision to stop looking, so ask first.** Each
 of these questions has emptied a row at least once (BLOCKERS.md, *Withdrawn
@@ -103,7 +103,7 @@ not move the licence; only the second does.
 
 ### What grades a fork
 
-`unar` 1.10.8 grades most of the 1,018 fixtures' manifests; `macunpack` and
+`unar` 1.10.8 grades most of the 993 fixtures' manifests; `macunpack` and
 deark grade the forks it fails (TESTING.md, *The oracle*). The writers' own
 readers already grade StuffIt Deluxe 2.0.1's output, SuperDisk!'s modules,
 DiskDoubler's methods 3–5, Now Compress, Private File, AppleLink packages
@@ -243,7 +243,7 @@ costs the engine*).
 
 | what | resident | what would close it |
 |---|---|---|
-| segment joining: the joiner (`unc_segment.c`), the schemes' join hooks and readers, their parsers, the shims to `src/unc_segid.c` | 6,788 B of code on 2026-11-09, after describe and match left for `ovl_sniff` and `ovl_cptdd` (−1,584 B; DECISIONS.md 2026-11-09, *the set's identity that left*); its scheme table 272 → 96 B of A5 and its code −16 on 2026-11-12, a scheme's row 2 B (DECISIONS.md 2026-11-12, *the format table that became three bitmaps*) | the joiner is read while a Compact Pro, spanned-zip, Apple Backup or VISE set is, which keep only their readers' images, so it stays. The hooks only bundle-keeping schemes call (MIME's header walk 1,840 B, `SPLT`'s 772 B, StuffIt's emit 578 B) could go to `ovl_sniff`: ~3,190 B onto every released layer, and an estimated 120–160 B of shims and dispatch cases off every layer that keeps the whole bundle, those sets among them (hypothesis, not built; the same entry) — not free, so the maintainer's call |
+| segment joining: the joiner (`unc_segment.c`), the schemes' join hooks and readers, their parsers, the shims to `src/unc_segid.c` | 6,788 B of code on 2026-11-09, after describe and match left for `ovl_sniff` and `ovl_cptdd` (−1,584 B; DECISIONS.md 2026-11-09, *the set's identity that left*); its scheme table 272 → 96 B of A5 and its code −16 on 2026-11-12, a scheme's row 2 B (DECISIONS.md 2026-11-12, *the format table that became three bitmaps*) | the joiner is read while a Compact Pro, spanned-zip or Apple Backup set is, which keep only their readers' images, so it stays. The hooks only bundle-keeping schemes call (MIME's header walk 1,840 B, `SPLT`'s 772 B, StuffIt's emit 578 B) could go to `ovl_sniff`: ~3,190 B onto every released layer, and an estimated 120–160 B of shims and dispatch cases off every layer that keeps the whole bundle, those sets among them (hypothesis, not built; the same entry) — not free, so the maintainer's call |
 | the shell's set code (`SegAskUser`, `SegPartOf`, the part dialog's scans) | 3,166 B of code on 2026-10-22, not re-measured since the setup half (`SegScanWrapped` and the rest of `mac/seg_setup.inc.c`) left as `ovl_segsetup` in v0.45.0 | the same table of function pointers the setup image is given (DECISIONS.md 2026-11-02, *the dialogs that became the application*); not priced |
 | the relocator, `Retro68Relocate` and `Retro68ApplyRelocations` | 1,656 B of code | Elf2Mac places it at the start of `.text`; needs a layout Elf2Mac does not offer |
 
@@ -254,8 +254,8 @@ row in each of up to seven tables: the enum (`include/macextract.h`),
 `unc_formats`, the sniffer's probe order, `seg_schemes` and the match code
 for a set scheme, `gRun`, the release plan, and the overlay image list,
 with the budget constants moving after. Installer VISE's two commits
-(700fb893, 1b6042e7) touched about 80 files; removing it, asked by the
-maintainer on 2026-11-12, has to find every row by hand.
+(700fb893, 1b6042e7) touched about 80 files, and parking it the same day
+took finding every row by hand (DECISIONS.md 2026-11-12, *VISE parked*).
 `tools/check_ovl_rows.py` already cross-checks two of the tables. What
 would close it: one descriptor per format (name, probe and its place in
 the sniff order, extractor, image, keep set, set scheme), from which the
@@ -378,61 +378,6 @@ Tome's resource fork (FORMATS.md, *Apple Installer Tomes*). Left:
   1,644; the specification and Apple's installed files say 1,645). Not
   reported upstream, and no minimal repro is written; the maintainer posts
   upstream reports.
-
-## Installer VISE: what is not read, and what is not graded
-
-The readers are in, the `VISE` archive of 1992-1996 and 3.5 to VISE X
-with a set's segments (FORMATS.md, *Installer VISE*). Left:
-
-- **Before 3.5, a damaged stream that keeps its length is not seen**: the
-  format has no checksum, and 7 of 40 changed bytes in the smallest
-  archive came out unrefused (`run_viseold.py`). Nothing closes it in the
-  format; an installed copy of each file would grade it.
-- **Before 3.5, where an Apple Installer script puts a `.vct`'s files** is
-  not read: its 'infa' atoms may name another target; the files come out
-  under the catalogue's names. Closes with the script's atoms read beside
-  the `.vct`, or the Installer run under emulation.
-- **Before 3.5, two files of 99 are graded by an independent copy**
-  (DeltaSymbol.TT, Serial Tool). Installer VISE 3.0 (1994) is on the
-  maintainer's share (MacStamp's `apps.tsv`); an archive it builds under
-  emulation from known files would grade every byte, and say whether 3.0
-  writes this format (not established).
-- **A `.vct`'s type and creator are not known**: the eight came as data
-  forks, so the bundle claims none and one is dropped on the application.
-- **0x80010306** has no specimen (systemless reads it as 0x80010307's
-  layout); not recognised until one is found.
-- **What an installer writes is not compared.** The paths (folders by
-  depth), Finder flags and dates are this engine's reading of the
-  catalogue, held to `run_vise.py`'s own reading of the same layout, not
-  to an installer's output; the CRC-32 grades the forks only. Closes with
-  installers run under emulation (one with its resource fork: the Epson
-  driver's, `fixtures/SOURCES.md`) and what they install compared.
-- **A folder that holds no stored file is not created**, where the
-  installer may create it empty (not measured).
-- **A downloader that stores nothing** (Netscape's, QuickTime's) is refused
-  with UNC_ERR_UNSUPPORTED, whose message names a compression method; it
-  should say the installer holds none of its files. The wording is the
-  maintainer's to choose.
-- **A record whose bytes after its name hold `FVCT` or `DVCT`** would be
-  taken for the next record, by this reader and by `run_vise.py` alike; no
-  installer here has one.
-- **Speed on a Mac Plus** is not measured: on x86 the inflater takes 42-73
-  instructions an output byte to zlib's 24.
-- **VISE X's segments after `Installer.data`** are not known: no set of
-  them was found.
-- **A later segment opened alone is not recognised**: `Segment.2` onward,
-  or `Installer.data`, sniffs as unknown (only segment 1 is probed), where
-  a later DiskDoubler or Apple Backup part names its format. Closes with a
-  probe of a later segment and the set search started from it, priced.
-
-## A format read only as a set, which the tick probe does not see
-
-`tools/tick_probe` extracts through `unc_extract`, which answers
-UNC_ERR_UNSUPPORTED for Apple Backup, so `run_ticks.py` grades nothing of
-its progress (found 2026-11-11; Installer VISE was given a direct extract
-so that it is graded, DECISIONS.md 2026-11-11, *the installer that was an
-archive*). Closes with the probe driving a set through
-`unc_extract_segments`.
 
 ## The double-click helpers: what is left
 

@@ -93,16 +93,6 @@ with types, creators and dates, the destination dialog, other volumes
 through Desktop, `/` in names, `~1` on a second run, a desk accessory over
 the progress window, Cmd-. on a U.S. layout and on AZERTY (BLOCKERS.md, *Status*).
 
-**Not yet done there: an Installer VISE set from its floppies.** Drop a
-VISE installer whose files continue on `Segment.2` and later disks on
-MacExtract, and insert each disk as it is asked for, on a Mac with one
-floppy drive; then run the same installer and compare what it installs
-with what MacExtract wrote (names, folders, Finder flags, dates). The Epson
-Stylus Photo 700 driver's three disks are one such set
-(`fixtures/SOURCES.md`, `vise-set-epson-sp700`). Emulation puts every disk
-in a drive of its own, and no installer has been run to compare with
-(OPEN_ITEMS.md, *Installer VISE*).
-
 ## 5. Things the Toolbox promises
 
 - [ ] **`SFReply.vRefNum`** is a working-directory reference passed with

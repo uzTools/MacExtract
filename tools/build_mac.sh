@@ -864,7 +864,10 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # schemes' rows two bytes and a reader, their parts' hooks a table of four
 # (DECISIONS.md 2026-11-12, *the format table that became three bitmaps*).
 # 144 B off the control; the format table is unchanged in this build.
-UNC_MAC_CODE_DEFAULT=210864
+# -12,404 on 2026-11-12, A5 -524 below: Installer VISE parked, both of its
+# readers, its image and its probe out (DECISIONS.md 2026-11-12, *VISE
+# parked*); the shipped pair holds.
+UNC_MAC_CODE_DEFAULT=198460
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -1183,7 +1186,9 @@ UNC_MAC_CODE_DEFAULT=210864
 # VISE*).
 # -128 on 2026-11-12, 37,392 -> 37,264: the segment schemes' table 272 ->
 # 48 B of rows (6 each) and 80 of hooks (the code's -16 above).
-UNC_MAC_A5_DEFAULT=37264
+# -524 on 2026-11-12: Installer VISE parked, its tables and alignment
+# (DECISIONS.md 2026-11-12, *VISE parked*).
+UNC_MAC_A5_DEFAULT=36740
 # A CEILING PER CONFIGURATION, because one ceiling measured on another build
 # cannot fire. The figures above are the RESIDENT control build, which carries
 # every decoder; the shipped build's resident code is a third of that, so

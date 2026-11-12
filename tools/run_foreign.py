@@ -60,12 +60,6 @@ NOT_RECOGNIZED = "format not recognized"
 # Fixtures that are not archives on purpose, and must stay that way.
 NOT_ARCHIVES = ("synth-os9-rar.rar",)
 
-# Installer VISE's probe claims a set's first segment only (src/fmt_vise_probe.c):
-# a later Segment.N, or VISE X's Installer.data, is joined from the first and
-# sniffs as unknown alone. These must STAY unknown, not merely be excused.
-LATER_PARTS = ("vise-set-epson-sp700.2", "vise-set-epson-sp700.3",
-               "vise-x-flash9.data")
-
 
 def build(script, binary):
     path = os.path.abspath(os.path.join(ROOT, binary))
@@ -302,10 +296,6 @@ def main():
                 continue
             seen += 1
             got = sniff(macextract, p)
-            if name in LATER_PARTS:
-                check("the later part %s sniffs as unknown" % name,
-                      got == "unknown", "sniffed as %s" % got)
-                continue
             if name in want:
                 ours = run_diff.IMPLEMENTED.get(want[name])
                 if got != ours:

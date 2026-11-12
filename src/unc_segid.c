@@ -35,8 +35,6 @@ static const SegId seg_ids[] = {
      * are all a Compact Pro segment has to show. 'CMWL' at +2 is what an
      * Apple Backup disk has, and every disk states the count. */
     { UNC_FORMAT_ABK,     unc_abk_describe,     unc_abk_match },
-    /* Installer VISE: 'SVCT' at 0, and only segment 1 describes. */
-    { UNC_FORMAT_VISE,    unc_vise_describe,    unc_vise_match },
     /* Compact Pro next: like StuffIt it decides on a header at offset 0.
      * Unlike StuffIt, a part that is not the LAST one answers with
      * nparts == 0 - it knows the set it belongs to but not how big the

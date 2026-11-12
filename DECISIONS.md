@@ -601,6 +601,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-12 (the VISE before VISE) — MindVision's archive before Installer VISE 3.5, 1992-1996, extracts: the decompressor read out of an installer's own 'Dcmp', 99 files of eight archives, DeltaSymbol.TT and Serial Tool equal to installed copies; 0 B resident
 - 2026-11-12 (the format table that became three bitmaps) — on the Macintosh a format's resident rows are a bit in three 8-byte maps and its 2-byte `gRun` row, a segment scheme's row 2 bytes, and a set's part search found through `gRun`: CODE +16, A5 −1,152, 1,136 B onto every budget; a new format costs 2 B resident where Installer VISE cost 64, and 4 B if it is a set
 
+- 2026-11-12 (VISE parked) — every Installer VISE reader, 1992 to VISE X, taken off main on the maintainer's word and kept on the branch `parked/vise`; the format's number reserved; the control 12,928 B smaller
 ---
 
 ## M0
@@ -25454,3 +25455,50 @@ re-run there: the rebased tree superseded them).
 - *`unc_has`*: with the map's address as its argument it compiled 6 B
   smaller alone (a test object, measured), and each of its three callers
   would push a 6-byte address where it pushes 0 to 4; not built.
+
+## 2026-11-12 (VISE parked) — every Installer VISE reader, 1992 to VISE X, taken off main on the maintainer's word and kept on the branch `parked/vise`; the format's number reserved; the control 12,928 B smaller
+
+**The maintainer's decision**, the day both readers landed: "I'm still not
+convinced we should support it." All of it comes off main in one commit:
+the 3.5-to-X reader of *the installer that was an archive* and the 'VISE'
+archive of *the VISE before VISE*, their image, probe and set identity,
+`run_vise.py` and `run_viseold.py`, the 25 manifests and their sources,
+and the docs. A VISE installer now reads "format not recognized"
+(measured, `vise-wild-sizzler` and `vise-old-deltasymbol`). The two
+entries above stay as what was found. Nothing is lost:
+
+- **The code** is on `parked/vise` (87782bf1): main as it was at
+  20267a57, VISE in, plus the clang cast on fmt_viseold.c that was queued
+  for main. That tip has not been through `ci.sh` itself; 1b6042e7 below
+  it had.
+- **The 29 fixtures** (21 installers and segments of 3.5 and later, 8
+  archives before it) are in `~/.cache/macextract/specimens/vise/fixtures`,
+  and the installed copies that grade the old format in
+  `specimens/vise/old/oracle`.
+
+**Kept on main, on purpose.** `UNC_FORMAT_VISE` stays in the enum as a
+reserved number, so that no later format's number moves (`gRun` and the
+release plan are indexed by it). The release plan's rule for an envelope
+whose head names nothing (*the head that named nothing*) stays: it was
+added because VISE's image crowded the 512Ke, but it holds no VISE code,
+and it is what grants a gzip or `.Z` of an unnamed payload +96,878 B
+against the control where the whole bundle would give −28,002. The `Icon\r` fix in `run_diff.py`, found
+with VISE's manifests, is a fix to that tool and stays too.
+
+**What it gives back (measured).** Shipped CODE and A5 unmoved (37,296 /
+15,696); `ovl_sniff` −1,296, the bundle −13,508 (209,800 B); the control
+CODE −12,404 and A5 −524, so `OVL_SAVED` −12,928 and `TIERS` +12,928. On
+the machine a grant moves only by the images it keeps: the envelope rows
++1,296, the whole bundle +13,508. The control lane at System 6.0.8 /
+512Ke passes 62/74 again, the five VISE had pushed out back in;
+`run_tiers.py --check` holds the shipped lane at 74/74, 72/74 and 72/74.
+
+**To bring it back**: rebase `parked/vise` onto main, re-take the budget
+constants (*the installer that was an archive* lists them), and put the
+29 fixtures back in `fixtures/`. `OPEN_ITEMS.md`'s *One registration per
+format* is what would make that one row instead of eighty files.
+
+**On a Macintosh** (Mini vMac, the 74-archive sample, one boot an archive):
+72/74 on System 6.0.8 / 512Ke and on System 3.0 / 512Ke, the same two
+refused as before (`synth-dd-m5.dd`, `derived-Library_ISBN_Barcoder.sit`).
+

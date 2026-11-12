@@ -58,9 +58,6 @@ static const UncProbe unc_sniff_order[] = {
      * (fmt_tome_probe.c). Byte 0 is 'k', which MacBinary below wants
      * zero. */
     unc_tome_probe,
-    /* 'SVCT', a version, segment 1 of a count and 'CVCT' where the
-     * header puts the catalogue (fmt_vise_probe.c). Byte 0 is 'S'. */
-    unc_vise_probe,
     /* MacBinary has no magic number, only a header CRC and structural
      * constraints, which is why it used to sit LAST — the weakest test
      * claims a file only when nothing stronger has. It is here instead

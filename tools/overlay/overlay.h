@@ -132,12 +132,7 @@ typedef int32_t (*OverlayEntry)(const OverlayHost *host, int32_t which,
                                     * before the release, in no keep set */
 #define OVL_ID_SEGSETUP      146   /* a segmented set's
                                    * setup, before the join (seg_setup.inc.c). */
-#define OVL_ID_VISE          147   /* Installer VISE: its catalogue, its
-                                    * inflater and its set's match. It
-                                    * calls into the codecs image for the
-                                    * bit reader and the canonical decoder,
-                                    * and nothing calls into it         */
-#define OVL_IMAGE_MAX         24
+#define OVL_IMAGE_MAX         20
 
 #define OVL_SPACESAVER_EXTRACT 30
 #define OVL_CPT_EXTRACT        31
@@ -187,7 +182,6 @@ typedef int32_t (*OverlayEntry)(const OverlayHost *host, int32_t which,
                                     * setup image: a = OvlArgs* (obj the sniffer's
                                     * entry, in io, len the format), b = the plan
                                     * (mac/release_plan.inc.c); returns its length */
-#define OVL_VISE_EXTRACT       70
 /* The release plan's out[0] for an envelope whose payload's first bytes name
  * nothing (mac/release_plan.inc.c): no format's number. */
 #define OVL_PEEK_UNNAMED       0xFF

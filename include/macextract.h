@@ -131,9 +131,10 @@ typedef enum UncFormat {
     UNC_FORMAT_ABK,           /* one disk of an Apple Backup set      */
     /* Brought in scope 2026-11-10; appended for the same ABI reason. */
     UNC_FORMAT_TOME,          /* Apple Installer Tome ('idcp')        */
-    /* Brought in scope 2026-11-11; appended for the same ABI reason.
-     * Read only as a set, a set of one included, as UNC_FORMAT_ABK. */
-    UNC_FORMAT_VISE,          /* an Installer VISE 3.x installer      */
+    /* RESERVED: Installer VISE, in scope 2026-11-11 and parked 2026-11-12
+     * on the branch `parked/vise` (DECISIONS.md 2026-11-12, *VISE
+     * parked*). Kept so that no later number moves; nothing returns it. */
+    UNC_FORMAT_VISE,
 
     UNC_FORMAT__COUNT
 } UncFormat;
