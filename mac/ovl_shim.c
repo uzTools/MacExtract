@@ -153,14 +153,107 @@ int unc_segment_describe(UncIO *io, UncSegmentDesc *desc)
                        OVL_SEG_EVERY);
 }
 
+/* Every decoder, by one table and one function (DECISIONS.md 2026-10-23,
+ * *the shims that were one function*, and 2026-11-11, *the release
+ * decided in the bundle*).
+ *
+ * The engine calls each format's entry point by name, as it does on Linux,
+ * and on this build every one of those names did the same four things with
+ * two different constants: plant the codec vector, find the image, return
+ * UNC_ERR_MEM if either failed, and call the image at its entry point. Since
+ * 2026-10-23 the four things are ovl_run, once; since 2026-11-11 every name
+ * IS ovl_run, an alias, and the constants are a row of gRun, found by the
+ * format the engine is reading — UncCtx.fmt, which unc_extract_as sets, and
+ * which the segment joiner sets to the set's scheme (src/unc_segment.c). A
+ * row is the image (as an offset from 128, five bits), the entry point
+ * (eight) and what has to be planted first; two bytes a format, where a
+ * name of its own was an 18-byte call.
+ *
+ * A format with no row reaches the ciphers' self-test and returns its
+ * 0x4F4B, which the shell reports as an error of no name: every format the
+ * engine table or a segment scheme sends here needs one, and
+ * tools/check_ovl_rows.py (ci.sh) fails on one that has none.
+ *
+ * Failure to load is a per-entry error like any other allocation failure —
+ * UNC_ERR_MEM, and the rest of the archive still comes out. */
+#define RUN_CODECS 0x2000   /* the shared codecs, which every decoder calls
+                             * into through the vector — all but the readers
+                             * that copy stored forks */
+#define RUN_ZIPOLD 0x4000   /* zip's Shrink, Reduce and Implode, which only
+                             * zip calls */
+#define RUN_MATCH  0x8000   /* a set whose release keeps this image and not
+                             * the sniffer's: its parts are matched here
+                             * (unc_segment_match), by OVL_SEG_MATCH */
+#define RUN(id, which, flags) \
+    ((unsigned short)((((id) - OVL_ID_CRYPT) << 8) | (which) | (flags)))
+
+static const unsigned short gRun[UNC_FORMAT__COUNT] = {
+    [UNC_FORMAT_SPACESAVER]  = RUN(OVL_ID_SPACESAVER, OVL_SPACESAVER_EXTRACT, RUN_CODECS),
+    [UNC_FORMAT_COMPACTPRO]  = RUN(OVL_ID_CPTDD,      OVL_CPT_EXTRACT,        RUN_CODECS),
+    /* A Compact Pro set, read by the same reader over the joined parts. */
+    [UNC_FORMAT_CPTSEG]      = RUN(OVL_ID_CPTDD,      OVL_CPT_EXTRACT,        RUN_CODECS | RUN_MATCH),
+    [UNC_FORMAT_DISKDOUBLER] = RUN(OVL_ID_CPTDD,      OVL_DD_EXTRACT,         RUN_CODECS),
+    [UNC_FORMAT_LZH]         = RUN(OVL_ID_LZH,        OVL_LZH_EXTRACT,        RUN_CODECS),
+    [UNC_FORMAT_ARC]         = RUN(OVL_ID_ARC,        OVL_ARC_EXTRACT,        RUN_CODECS),
+    [UNC_FORMAT_NOWCOMPRESS] = RUN(OVL_ID_NOW,        OVL_NOW_EXTRACT,        RUN_CODECS),
+    [UNC_FORMAT_SUPERDISK]   = RUN(OVL_ID_SUPERDISK,  OVL_SUPERDISK_EXTRACT,  RUN_CODECS),
+    [UNC_FORMAT_PACKIT]      = RUN(OVL_ID_PACKIT,     OVL_PACKIT_EXTRACT,     RUN_CODECS),
+    [UNC_FORMAT_SQP]         = RUN(OVL_ID_SQP,        OVL_SQP_EXTRACT,        RUN_CODECS),
+    [UNC_FORMAT_MIME]        = RUN(OVL_ID_TEXT,       OVL_MIME_EXTRACT,       RUN_CODECS),
+    /* A message/partial set joins into a message, read by the MIME walk. */
+    [UNC_FORMAT_MIMESEG]     = RUN(OVL_ID_TEXT,       OVL_MIME_EXTRACT,       RUN_CODECS),
+    [UNC_FORMAT_UU]          = RUN(OVL_ID_TEXT,       OVL_UU_EXTRACT,         RUN_CODECS),
+    [UNC_FORMAT_BTOA]        = RUN(OVL_ID_BTOA,       OVL_BTOA_EXTRACT,       RUN_CODECS),
+    [UNC_FORMAT_BASE64]      = RUN(OVL_ID_TEXT,       OVL_B64_EXTRACT,        RUN_CODECS),
+    /* BinHex 4, and before it .hex/.hcx and .dl: one entry point, which
+     * reads UncCtx.fmt itself (src/fmt_binhex.c). */
+    [UNC_FORMAT_BINHEX]      = RUN(OVL_ID_BINHEX,     OVL_BINHEX_EXTRACT,     RUN_CODECS),
+    [UNC_FORMAT_BINHEX_OLD]  = RUN(OVL_ID_BINHEX,     OVL_BINHEX_EXTRACT,     RUN_CODECS),
+    [UNC_FORMAT_DL]          = RUN(OVL_ID_BINHEX,     OVL_BINHEX_EXTRACT,     RUN_CODECS),
+    /* MacBinary and AppleSingle/AppleDouble, beside BinHex: readers with no
+     * codecs, which copy forks through the resident helpers. */
+    [UNC_FORMAT_MACBINARY]   = RUN(OVL_ID_BINHEX,     OVL_MACBINARY_EXTRACT,  0),
+    [UNC_FORMAT_APPLESINGLE] = RUN(OVL_ID_BINHEX,     OVL_APPLEDOUBLE_EXTRACT, 0),
+    [UNC_FORMAT_APPLEDOUBLE] = RUN(OVL_ID_BINHEX,     OVL_APPLEDOUBLE_EXTRACT, 0),
+    [UNC_FORMAT_SIT]         = RUN(OVL_ID_STUFFIT,    OVL_SIT_EXTRACT,        RUN_CODECS),
+    [UNC_FORMAT_SIT5]        = RUN(OVL_ID_STUFFIT,    OVL_SIT5_EXTRACT,       RUN_CODECS),
+    /* Private File: a reader with no codecs, in the StuffIt image beside the
+     * archive it always decrypts to. Its cipher calls cross to the crypt
+     * image through the resident shims above, as StuffIt 5's do. */
+    [UNC_FORMAT_PRIVATEFILE] = RUN(OVL_ID_STUFFIT,    OVL_PF_EXTRACT,         0),
+    [UNC_FORMAT_ZIP]         = RUN(OVL_ID_EXO,        OVL_ZIP_EXTRACT,        RUN_CODECS | RUN_ZIPOLD),
+    /* A spanned zip, read by zip's reader over the joined parts. */
+    [UNC_FORMAT_ZIPSEG]      = RUN(OVL_ID_EXO,        OVL_ZIP_EXTRACT,        RUN_CODECS | RUN_ZIPOLD),
+    [UNC_FORMAT_GZIP]        = RUN(OVL_ID_EXO,        OVL_GZIP_EXTRACT,       RUN_CODECS),
+    [UNC_FORMAT_COMPRESS_Z]  = RUN(OVL_ID_EXO,        OVL_COMPRESSZ_EXTRACT,  RUN_CODECS),
+    /* Tar is in zip's old-methods image; src/fmt_tar.c says why. */
+    [UNC_FORMAT_TAR]         = RUN(OVL_ID_ZIPOLD,     OVL_TAR_EXTRACT,        RUN_CODECS),
+    /* MAR beside it: stored forks, no codec (src/fmt_mar.c). */
+    [UNC_FORMAT_MAR]         = RUN(OVL_ID_ZIPOLD,     OVL_MAR_EXTRACT,        0),
+    /* An LZ4 frame beside it: its own window, no codec (src/fmt_lz4.c). */
+    [UNC_FORMAT_LZ4]         = RUN(OVL_ID_ZIPOLD,     OVL_LZ4_EXTRACT,        0),
+    /* Apple Backup beside it: stored forks across disks, no codec
+     * (src/fmt_abk.c); read only as a set. */
+    [UNC_FORMAT_ABK]         = RUN(OVL_ID_ZIPOLD,     OVL_ABK_EXTRACT,        RUN_MATCH),
+    /* And the Installer Tome: its own window, no codec (src/fmt_tome.c). */
+    [UNC_FORMAT_TOME]        = RUN(OVL_ID_ZIPOLD,     OVL_TOME_EXTRACT,       0),
+    /* Installer VISE, its own image, alone or as a set: the bit reader and
+     * the canonical decoder are the codecs' (src/fmt_vise.c). */
+    [UNC_FORMAT_VISE]        = RUN(OVL_ID_VISE,       OVL_VISE_EXTRACT,       RUN_CODECS | RUN_MATCH),
+};
+
 int unc_segment_match(const UncSegmentDesc *desc, const uint8_t *head,
                       int32_t len)
 {
     short id = OVL_ID_SNIFF;
     int32_t r;
-    if (desc && desc->scheme == UNC_FORMAT_CPTSEG) id = OVL_ID_CPTDD;
-    if (desc && desc->scheme == UNC_FORMAT_ABK) id = OVL_ID_ZIPOLD;
-    if (desc && desc->scheme == UNC_FORMAT_VISE) id = OVL_ID_VISE;
+    /* A scheme whose set keeps its reader's image and not the sniffer's
+     * is matched in that image, which gRun names (RUN_MATCH above). */
+    if (desc) {
+        unsigned short how = gRun[desc->scheme];
+        if (how & RUN_MATCH)
+            id = (short)(OVL_ID_CRYPT + ((how >> 8) & 0x1f));
+    }
     r = seg_id(id, OVL_SEG_MATCH, desc, head, (uint32_t)len);
     return r > 0 ? (int)r : 0;
 }
@@ -303,92 +396,6 @@ int unc_resfork_find(const uint8_t *fork, uint32_t forklen, uint32_t type,
     return (int)OVL_CALL(OVL_RESFORK_FIND, &g);
 }
 
-/* Every decoder, by one table and one function (DECISIONS.md 2026-10-23,
- * *the shims that were one function*, and 2026-11-11, *the release
- * decided in the bundle*).
- *
- * The engine calls each format's entry point by name, as it does on Linux,
- * and on this build every one of those names did the same four things with
- * two different constants: plant the codec vector, find the image, return
- * UNC_ERR_MEM if either failed, and call the image at its entry point. Since
- * 2026-10-23 the four things are ovl_run, once; since 2026-11-11 every name
- * IS ovl_run, an alias, and the constants are a row of gRun, found by the
- * format the engine is reading — UncCtx.fmt, which unc_extract_as sets, and
- * which the segment joiner sets to the set's scheme (src/unc_segment.c). A
- * row is the image (as an offset from 128, five bits), the entry point
- * (eight) and what has to be planted first; two bytes a format, where a
- * name of its own was an 18-byte call.
- *
- * A format with no row reaches the ciphers' self-test and returns its
- * 0x4F4B, which the shell reports as an error of no name: every format the
- * engine table or a segment scheme sends here needs one, and
- * tools/check_ovl_rows.py (ci.sh) fails on one that has none.
- *
- * Failure to load is a per-entry error like any other allocation failure —
- * UNC_ERR_MEM, and the rest of the archive still comes out. */
-#define RUN_CODECS 0x2000   /* the shared codecs, which every decoder calls
-                             * into through the vector — all but the readers
-                             * that copy stored forks */
-#define RUN_ZIPOLD 0x4000   /* zip's Shrink, Reduce and Implode, which only
-                             * zip calls */
-#define RUN(id, which, flags) \
-    ((unsigned short)((((id) - OVL_ID_CRYPT) << 8) | (which) | (flags)))
-
-static const unsigned short gRun[UNC_FORMAT__COUNT] = {
-    [UNC_FORMAT_SPACESAVER]  = RUN(OVL_ID_SPACESAVER, OVL_SPACESAVER_EXTRACT, RUN_CODECS),
-    [UNC_FORMAT_COMPACTPRO]  = RUN(OVL_ID_CPTDD,      OVL_CPT_EXTRACT,        RUN_CODECS),
-    /* A Compact Pro set, read by the same reader over the joined parts. */
-    [UNC_FORMAT_CPTSEG]      = RUN(OVL_ID_CPTDD,      OVL_CPT_EXTRACT,        RUN_CODECS),
-    [UNC_FORMAT_DISKDOUBLER] = RUN(OVL_ID_CPTDD,      OVL_DD_EXTRACT,         RUN_CODECS),
-    [UNC_FORMAT_LZH]         = RUN(OVL_ID_LZH,        OVL_LZH_EXTRACT,        RUN_CODECS),
-    [UNC_FORMAT_ARC]         = RUN(OVL_ID_ARC,        OVL_ARC_EXTRACT,        RUN_CODECS),
-    [UNC_FORMAT_NOWCOMPRESS] = RUN(OVL_ID_NOW,        OVL_NOW_EXTRACT,        RUN_CODECS),
-    [UNC_FORMAT_SUPERDISK]   = RUN(OVL_ID_SUPERDISK,  OVL_SUPERDISK_EXTRACT,  RUN_CODECS),
-    [UNC_FORMAT_PACKIT]      = RUN(OVL_ID_PACKIT,     OVL_PACKIT_EXTRACT,     RUN_CODECS),
-    [UNC_FORMAT_SQP]         = RUN(OVL_ID_SQP,        OVL_SQP_EXTRACT,        RUN_CODECS),
-    [UNC_FORMAT_MIME]        = RUN(OVL_ID_TEXT,       OVL_MIME_EXTRACT,       RUN_CODECS),
-    /* A message/partial set joins into a message, read by the MIME walk. */
-    [UNC_FORMAT_MIMESEG]     = RUN(OVL_ID_TEXT,       OVL_MIME_EXTRACT,       RUN_CODECS),
-    [UNC_FORMAT_UU]          = RUN(OVL_ID_TEXT,       OVL_UU_EXTRACT,         RUN_CODECS),
-    [UNC_FORMAT_BTOA]        = RUN(OVL_ID_BTOA,       OVL_BTOA_EXTRACT,       RUN_CODECS),
-    [UNC_FORMAT_BASE64]      = RUN(OVL_ID_TEXT,       OVL_B64_EXTRACT,        RUN_CODECS),
-    /* BinHex 4, and before it .hex/.hcx and .dl: one entry point, which
-     * reads UncCtx.fmt itself (src/fmt_binhex.c). */
-    [UNC_FORMAT_BINHEX]      = RUN(OVL_ID_BINHEX,     OVL_BINHEX_EXTRACT,     RUN_CODECS),
-    [UNC_FORMAT_BINHEX_OLD]  = RUN(OVL_ID_BINHEX,     OVL_BINHEX_EXTRACT,     RUN_CODECS),
-    [UNC_FORMAT_DL]          = RUN(OVL_ID_BINHEX,     OVL_BINHEX_EXTRACT,     RUN_CODECS),
-    /* MacBinary and AppleSingle/AppleDouble, beside BinHex: readers with no
-     * codecs, which copy forks through the resident helpers. */
-    [UNC_FORMAT_MACBINARY]   = RUN(OVL_ID_BINHEX,     OVL_MACBINARY_EXTRACT,  0),
-    [UNC_FORMAT_APPLESINGLE] = RUN(OVL_ID_BINHEX,     OVL_APPLEDOUBLE_EXTRACT, 0),
-    [UNC_FORMAT_APPLEDOUBLE] = RUN(OVL_ID_BINHEX,     OVL_APPLEDOUBLE_EXTRACT, 0),
-    [UNC_FORMAT_SIT]         = RUN(OVL_ID_STUFFIT,    OVL_SIT_EXTRACT,        RUN_CODECS),
-    [UNC_FORMAT_SIT5]        = RUN(OVL_ID_STUFFIT,    OVL_SIT5_EXTRACT,       RUN_CODECS),
-    /* Private File: a reader with no codecs, in the StuffIt image beside the
-     * archive it always decrypts to. Its cipher calls cross to the crypt
-     * image through the resident shims above, as StuffIt 5's do. */
-    [UNC_FORMAT_PRIVATEFILE] = RUN(OVL_ID_STUFFIT,    OVL_PF_EXTRACT,         0),
-    [UNC_FORMAT_ZIP]         = RUN(OVL_ID_EXO,        OVL_ZIP_EXTRACT,        RUN_CODECS | RUN_ZIPOLD),
-    /* A spanned zip, read by zip's reader over the joined parts. */
-    [UNC_FORMAT_ZIPSEG]      = RUN(OVL_ID_EXO,        OVL_ZIP_EXTRACT,        RUN_CODECS | RUN_ZIPOLD),
-    [UNC_FORMAT_GZIP]        = RUN(OVL_ID_EXO,        OVL_GZIP_EXTRACT,       RUN_CODECS),
-    [UNC_FORMAT_COMPRESS_Z]  = RUN(OVL_ID_EXO,        OVL_COMPRESSZ_EXTRACT,  RUN_CODECS),
-    /* Tar is in zip's old-methods image; src/fmt_tar.c says why. */
-    [UNC_FORMAT_TAR]         = RUN(OVL_ID_ZIPOLD,     OVL_TAR_EXTRACT,        RUN_CODECS),
-    /* MAR beside it: stored forks, no codec (src/fmt_mar.c). */
-    [UNC_FORMAT_MAR]         = RUN(OVL_ID_ZIPOLD,     OVL_MAR_EXTRACT,        0),
-    /* An LZ4 frame beside it: its own window, no codec (src/fmt_lz4.c). */
-    [UNC_FORMAT_LZ4]         = RUN(OVL_ID_ZIPOLD,     OVL_LZ4_EXTRACT,        0),
-    /* Apple Backup beside it: stored forks across disks, no codec
-     * (src/fmt_abk.c); read only as a set. */
-    [UNC_FORMAT_ABK]         = RUN(OVL_ID_ZIPOLD,     OVL_ABK_EXTRACT,        0),
-    /* And the Installer Tome: its own window, no codec (src/fmt_tome.c). */
-    [UNC_FORMAT_TOME]        = RUN(OVL_ID_ZIPOLD,     OVL_TOME_EXTRACT,       0),
-    /* Installer VISE, its own image, alone or as a set: the bit reader and
-     * the canonical decoder are the codecs' (src/fmt_vise.c). */
-    [UNC_FORMAT_VISE]        = RUN(OVL_ID_VISE,       OVL_VISE_EXTRACT,       RUN_CODECS),
-};
-
 static int ovl_run(UncCtx *c)
 {
     unsigned short how = gRun[c->fmt];
@@ -399,6 +406,23 @@ static int ovl_run(UncCtx *c)
     e = ovl_image((short)(OVL_ID_CRYPT + ((how >> 8) & 0x1f)));
     if (!e) return UNC_ERR_MEM;
     return (int)e(&gOvlHost, how & 0xff, c, NULL);
+}
+
+/* The engine's two dispatches (src/unc_internal.h). A set's reader is
+ * gRun's row for the scheme; a format read as a file is gRun's row for the
+ * format, but for the three readers of one part of a set that are
+ * resident, beside the joiner that shares their code: a zip part's row is
+ * the set's, zip's reader, and one part on its own is what
+ * unc_zipseg_extract refuses. tools/check_ovl_rows.py reads these three
+ * comparisons as rows. */
+int unc_run(UncCtx *c) __attribute__((alias("ovl_run")));
+
+int unc_run_file(UncCtx *c)
+{
+    if (c->fmt == UNC_FORMAT_SITSEG) return unc_sitseg_extract(c);
+    if (c->fmt == UNC_FORMAT_DDSEG)  return unc_ddseg_extract(c);
+    if (c->fmt == UNC_FORMAT_ZIPSEG) return unc_zipseg_extract(c);
+    return ovl_run(c);
 }
 
 #define DECODER(fn) int fn(UncCtx *c) __attribute__((alias("ovl_run")));

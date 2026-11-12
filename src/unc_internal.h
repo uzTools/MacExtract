@@ -860,6 +860,15 @@ struct UncCtx;
 typedef UncFormat (*UncProbe)(const uint8_t *head, int32_t len, UncIO *io);
 typedef int (*UncExtract)(struct UncCtx *c);
 
+#ifdef UNC_AT_OVERLAY
+/* The Macintosh build with images dispatches every reader on UncCtx.fmt
+ * (mac/ovl_shim.c): unc_run_file for a format read as a file
+ * (unc_extract_as), unc_run for the reader of a set's joined stream
+ * (unc_extract_segments), whose fmt is the scheme. */
+int unc_run_file(struct UncCtx *c);
+int unc_run(struct UncCtx *c);
+#endif
+
 /* Reading a segmented archive by the addresses it actually stores.
  *
  * Only formats that address themselves as (part, offset within that

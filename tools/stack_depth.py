@@ -274,7 +274,7 @@ EDGE_RULES = [
      ANYSET, 0),
     ("", "unc_peek.c", r"^unc_envelope_peek$", None, None, PEEKSET, 0, 0),
     ("*", None, None, "unc_peek.c", r"^p[hw]_", 0, PEEKSET, 0),
-    ("extract", "unc_engine.c", None, None,
+    ("extract", None, None, None,
      r"^unc_(?!(%s)_extract$)" % "|".join(ENVELOPES), 0, 0, PEEKSET),
     (None, None, None, None, r"^unc_(%s)_extract$" % "|".join(CIPHERED),
      CRYPTSET, 0, 0),
@@ -292,11 +292,20 @@ SITE_CLASS = {
     ("unc_peek.c", "w->io->tell"): "base.tell",
     ("unc_peek.c", "io->seek"): "base.seek",   # unc_envelope_peek's own io
     ("unc_peek.c", "hio.seek"): "peekhead.seek",
-    ("unc_segment.c", "j->sc->extract"): "scheme.extract",
+    ("unc_segment.c", "sc->reader"): "scheme.extract",
     ("unc_segment.c", "j->cur.read"): "base.read",
     ("unc_segment.c", "j->cur.seek"): "base.seek",
 }
 CLASSES["peekhead.seek"] = ["unc_peek.c:ph_seek"]
+# Direct calls that stand for a class: in the shipped build every reader is
+# one dispatch on UncCtx.fmt (mac/ovl_shim.c), so the engine's two calls
+# through a pointer are calls to ovl_run, from unc_run_file (a format read
+# as a file) and from unc_run (a set's reader, an alias). Each is followed
+# as the class its pointer was: (file, caller, callee) -> class.
+DIRECT_CLASS = {
+    ("ovl_shim.c", "unc_run_file", "ovl_run"): "extract",
+    ("ovl_shim.c", "unc_run", "ovl_run"): "scheme.extract",
+}
 # Indirect calls this tool knows it does not follow, by callee expression.
 NOT_FOLLOWED = {
     "RETRO68_RELOCATE": "the startup relocation, before main",
@@ -577,6 +586,21 @@ def read_unit(u):
     return fns, taken
 
 
+def source_readers():
+    """The extractors src/unc_engine.c's F() rows name, and the readers
+    src/unc_segment.c's seg_schemes rows name with SEG_READ()."""
+    eng = open(os.path.join(ROOT, "src", "unc_engine.c")).read()
+    seg = open(os.path.join(ROOT, "src", "unc_segment.c")).read()
+    files = re.findall(r"\bF\(\s*UNC_FORMAT_\w+\s*,\s*\"[^\"]*\"\s*,\s*\d\s*,"
+                       r"\s*(\w+)\s*\)", eng)
+    sets = re.findall(r"\{\s*UNC_FORMAT_\w+\s*,[^{}\n]*SEG_READ\(\s*(\w+)\s*\)",
+                      seg)
+    if len(files) < 30 or len(sets) < 5:
+        die("source_readers: parsed %d extractors and %d set readers — the "
+            "tables changed shape" % (len(files), len(sets)))
+    return files, sets
+
+
 def callee_expr(loc):
     """The callee expression of the indirect call at file:line:col."""
     path, line, col = loc.rsplit(":", 2)
@@ -665,6 +689,10 @@ class Graph:
                     CLASSES["scheme.extract"].append(sym)
             if fil == "unc_sniff.c" and re.match(r"unc_\w+_probe", sym):
                 CLASSES["order"].append(sym)
+        # The rows themselves, which the shipped build no longer takes the
+        # addresses of (DIRECT_CLASS).
+        CLASSES["extract"] += source_readers()[0]
+        CLASSES["scheme.extract"] += source_readers()[1]
         for k in CLASSES:
             CLASSES[k] = sorted(set(CLASSES[k]))
         listed = set()
@@ -686,6 +714,13 @@ class Graph:
             out = []
             for t in f.calls:
                 tail = t in f.tail
+                cls = DIRECT_CLASS.get((self.file_of(f), f.name,
+                                        t.split(":")[-1]))
+                if cls:
+                    for tt in CLASSES[cls]:
+                        out += [(x, tail, cls)
+                                for x in self.lookup(tt, f.image)]
+                    continue
                 if ":" in t:
                     out.append(((f.image, t), tail, ""))
                     continue

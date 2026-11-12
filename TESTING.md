@@ -121,16 +121,22 @@
    directly in the boolean position is examined.
 
 0c. **gRun rows** (`tools/check_ovl_rows.py --selftest`, in `ci.sh` since
-   2026-11-12; no build, under a second): every (format, extractor) pair in
-   `src/unc_engine.c`'s `unc_formats` and `src/unc_segment.c`'s
-   `seg_schemes` whose extractor is a `DECODER()` alias in `mac/ovl_shim.c`
-   must have a row in `gRun`; a missing one fails on the Macintosh only, as
-   an error of no name. It also fails on a decoder called by name inside
-   `src/`. `--selftest` removes each of the 33 rows in turn and requires
-   each removal to fail. **What it cannot see:** whether a row names the
-   right image and entry point (the emulator tiers and the overlay host
-   lane do), and a table in a shape its regexes do not parse, which fails as
-   "stopped checking" rather than passing.
+   2026-11-12; no build, under a second): every format `src/unc_engine.c`'s
+   `UNC_FORMAT_ROWS` reads as a file (an `F()` row) must have a row in
+   `mac/ovl_shim.c`'s `gRun` or be one of `unc_run_file`'s three resident
+   readers, and every set `src/unc_segment.c`'s `seg_schemes` reads with
+   `SEG_READ()` a `gRun` row; a missing one fails on the Macintosh only, as
+   an error of no name. A scheme with a match (`src/unc_segid.c`) whose set
+   the release plan reduces to a keep row needs `RUN_MATCH` on its `gRun`
+   row, naming an image that compiles the match and answers
+   `OVL_SEG_MATCH` (since 2026-11-12, DECISIONS.md, *the format table that
+   became three bitmaps*). It also fails on a decoder called by name inside
+   `src/`. `--selftest` removes each of the 34 rows, the 3 `RUN_MATCH`
+   flags and the 3 resident readers in turn and requires each removal to
+   fail. **What it cannot see:** whether a row names the right image and
+   entry point (the emulator tiers and the overlay host lane do), and a
+   table in a shape its regexes do not parse, which fails as "stopped
+   checking" rather than passing.
 
 ## The oracle
 

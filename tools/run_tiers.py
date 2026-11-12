@@ -283,10 +283,13 @@ REPO = os.path.dirname(HERE)
 # control's CODE -96 and A5 0; the shipped pair fell the same 96, OVL_SAVED
 # unmoved. They were 190,276 / 94,894 / 619,182.
 TIERS = {
-    "sys3-512K": (165832, "System 3.0, Macintosh 512Ke (204,168 B free)"),
-    "sys6-512K": (70428,  "System 6.0.8, Macintosh 512Ke (108,764 B free)"),
-    "floor-1M":  (594716, "System 6.0.8, 1 MB Mac Plus — the floor target"),
+    "sys3-512K": (165976, "System 3.0, Macintosh 512Ke (204,168 B free)"),
+    "sys6-512K": (70572,  "System 6.0.8, Macintosh 512Ke (108,764 B free)"),
+    "floor-1M":  (594860, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
+# +144 each 2026-11-12, DERIVED from TIERS_CONTROL -144 (the segment
+# schemes' rows and hooks, DECISIONS.md 2026-11-12, *the format table that
+# became three bitmaps*); they were 165,832 / 70,428 / 594,716.
 # -3,648 each 2026-11-12, DERIVED from TIERS_CONTROL +3,648 (the VISE
 # before 3.5, DECISIONS.md 2026-11-12, *the VISE before VISE*); they were
 # 169,480 / 74,076 / 598,364.
@@ -587,7 +590,11 @@ TIERS = {
 # +400; CODE +4,800, A5 0; DECISIONS.md 2026-11-11, *the parts the
 # Installer expands*). TIERS -4,800 and OVL_SAVED +4,512: every grant 288 B
 # lower, less its images' change.
-TIERS_CONTROL = 248272     # build/mac-resident, CODE + A5, 2026-11-12
+TIERS_CONTROL = 248128     # build/mac-resident, CODE + A5, 2026-11-12
+# -144 2026-11-12: the segment schemes' rows two bytes and a reader, their
+# hooks a table of four (CODE -16, A5 -128; DECISIONS.md 2026-11-12, *the
+# format table that became three bitmaps*). TIERS +144, and OVL_SAVED -144
+# of that change's +992 (below).
 # +3,648 2026-11-12: the VISE before 3.5, its reader and probe (`ovl_vise`
 # +3,340, `ovl_sniff` +328; CODE +3,660, A5 -12, alignment: the change has
 # no data; DECISIONS.md 2026-11-12, *the VISE before VISE*). TIERS -3,648
@@ -1375,7 +1382,11 @@ EXPECT = {
 # **+3,648 2026-11-12, -> 194,144**: the VISE before 3.5, the control's
 # CODE +3,660 and A5 -12, the shipped pair's CODE + A5 unmoved
 # (DECISIONS.md 2026-11-12, *the VISE before VISE*).
-OVL_SAVED = 194144
+# **+992 2026-11-12, -> 195,136**: the format table three bitmaps and one
+# dispatch, the schemes' rows two bytes, the part search by gRun, the
+# shipped pair's CODE +16 and A5 -1,152 (-1,136) against the control's -144
+# (DECISIONS.md 2026-11-12, *the format table that became three bitmaps*).
+OVL_SAVED = 195136
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory).
 # Since 2026-11-11 what a release keeps is ONE block, the bundle's own, cut
@@ -1778,15 +1789,19 @@ def formats(path=os.path.join(REPO, "src", "unc_engine.c")):
     would be a model of a different program.
     """
     text = CCOMMENT.sub(" ", open(path, encoding="utf-8").read())
-    body = text.split("unc_formats[] = {", 1)
+    body = text.split("#define UNC_FORMAT_ROWS(F, S)", 1)
     if len(body) != 2:
-        raise SystemExit("run_tiers: cannot find unc_formats[] in %s" % path)
+        raise SystemExit("run_tiers: cannot find UNC_FORMAT_ROWS in %s"
+                         % path)
     out = {}
-    # { fmt, name, envelope, extract } since 2026-10-18, when the
-    # `extractable` column went with the formats it only named.
-    for m in re.finditer(r"\{\s*(UNC_FORMAT_\w+),\s*\"([^\"]*)\",\s*(\d)\s*,",
-                         body[1]):
+    # F(fmt, name, envelope, extract) and S(fmt, name) since 2026-11-12,
+    # one list the table and the Macintosh's bitmaps are both made of.
+    body = body[1].split("\n\n", 1)[0]
+    for m in re.finditer(r"\bF\(\s*(UNC_FORMAT_\w+),\s*\"([^\"]*)\",\s*(\d)\s*,",
+                         body):
         out[m.group(1)] = (m.group(2), m.group(3) == "1")
+    for m in re.finditer(r"\bS\(\s*(UNC_FORMAT_\w+),\s*\"([^\"]*)\"\s*\)", body):
+        out[m.group(1)] = (m.group(2), False)
     if len(out) < 30:
         raise SystemExit("run_tiers: parsed %d formats, expected 30+ — the "
                          "engine's table changed shape" % len(out))

@@ -53,18 +53,9 @@
 
 #define SEG_HEAD_MAX UNC_SEG_HEAD     /* the longest header a hook reads */
 
-typedef struct SegScheme {
-    UncFormat scheme;
-    /* The archive stores (part, offset) pairs, so the joiner keeps them
-     * as pairs instead of flattening the set. See the file header. */
-    uint8_t   addressed;
-    /* The joined stream starts with the DATA fork. StuffIt's split puts
-     * the resource fork first; DiskDoubler's puts the data fork. */
-    uint8_t   data_first;
-    /* A part carries no header at all - no identity, no length, not
-     * even a magic. The host's names and sizes are the whole map, and
-     * the descriptor is the host's to build. */
-    uint8_t   anonymous;
+/* What a part's own header tells the joiner, for the three schemes whose
+ * parts have one it reads. Every other scheme has row 0, all NULL. */
+typedef struct SegHooks {
     /* This part's payload length out of its OWN header. NULL means the
      * host's part size is all there is to go on. */
     int      (*payload)(const UncSegmentDesc *d, const uint8_t *head,
@@ -81,7 +72,6 @@ typedef struct SegScheme {
      * across the fork boundary, so each read is in one sum (seg_read). */
     uint16_t (*stored_crc)(const uint8_t *head, int fork);
     uint16_t (*crc_fold)(uint16_t crc, const uint8_t *buf, int32_t len);
-    uint8_t   crc_runs;
     /* How many bytes this part spends on its header, when that is not
      * the same for every part of the set. NULL means desc->head_len,
      * which is every scheme but message/partial: mail headers differ
@@ -89,58 +79,94 @@ typedef struct SegScheme {
      * identity while it is in there. */
     int      (*hdr)(const UncSegmentDesc *d, UncIO *io, int part,
                     uint32_t size, uint32_t *out);
-    uint32_t  head_len;      /* bytes the two hooks above want read */
-    /* The reader for a scheme whose parts hold an ARCHIVE. NULL when
-     * they join into one FILE, which unc_sitseg_emit writes. */
-    int      (*extract)(UncCtx *c);
-} SegScheme;
+    uint8_t   head_len;      /* bytes payload() and stored_crc() read */
+    uint8_t   crc_runs;
+    /* The joined stream starts with the DATA fork. StuffIt's split puts
+     * the resource fork first; DiskDoubler's puts the data fork. */
+    uint8_t   data_first;
+} SegHooks;
 
-static const SegScheme seg_schemes[] = {
-    { UNC_FORMAT_SITSEG, 0, 0, 0,
-      NULL, unc_sitseg_stored_crc, unc_crc16_arc, 1, NULL, UNC_SEG_HEAD,
-      NULL },
-    { UNC_FORMAT_CPTSEG, 1, 0, 0,
-      NULL, NULL, NULL, 0, NULL, 0, unc_cpt_extract },
+enum { SEG_PLAIN, SEG_HOOK_SIT, SEG_HOOK_DD, SEG_HOOK_MIME };
+
+static const SegHooks seg_hooks[] = {
+    /* SEG_PLAIN */    { NULL, NULL, NULL, NULL, 0, 0, 0 },
+    /* SEG_HOOK_SIT */ { NULL, unc_sitseg_stored_crc, unc_crc16_arc, NULL,
+                         UNC_SEG_HEAD, 1, 0 },
     /* DiskDoubler's `SPLT`, the only scheme whose parts state their own
      * payload length; its CRC is each part's own, where StuffIt's runs
      * across the set. */
-    { UNC_FORMAT_DDSEG, 0, 1, 0,
-      unc_ddseg_payload, unc_ddseg_stored_crc, unc_crc16_xmodem, 0, NULL,
-      UNC_DDSEG_HEAD, NULL },
-    { UNC_FORMAT_ZIPSEG, 1, 0, 0,
-      NULL, NULL, NULL, 0, NULL, 0, unc_zip_extract },
+    /* SEG_HOOK_DD */  { unc_ddseg_payload, unc_ddseg_stored_crc,
+                         unc_crc16_xmodem, NULL, UNC_DDSEG_HEAD, 0, 1 },
+    /* SEG_HOOK_MIME */{ NULL, NULL, NULL, unc_mimeseg_head, 0, 0, 0 }
+};
+
+/* A scheme's flags, beside its hooks' row in the low two bits. */
+#define SEG_HOOKS     0x03
+/* The archive stores (part, offset) pairs, so the joiner keeps them as
+ * pairs instead of flattening the set. See the file header. */
+#define SEG_ADDRESSED 0x04
+/* A part carries no header at all - no identity, no length, not even a
+ * magic. The host's names and sizes are the whole map, and the
+ * descriptor is the host's to build. */
+#define SEG_ANONYMOUS 0x08
+/* The parts hold an ARCHIVE, read by the reader SEG_READ names. Without
+ * it they join into one FILE, which unc_sitseg_emit writes. */
+#define SEG_READER    0x10
+
+/* A row is the scheme and its flags, two bytes, and on every build but
+ * the Macintosh's with images the reader too. There the reader is found
+ * by the scheme itself, which UncCtx.fmt carries (mac/ovl_shim.c, gRun),
+ * so a new scheme costs two bytes there (DECISIONS.md 2026-11-12, *the
+ * format table that became three bitmaps*). */
+typedef struct SegScheme {
+    uint8_t    scheme;
+    uint8_t    flags;
+#ifndef UNC_AT_OVERLAY
+    UncExtract reader;
+#endif
+} SegScheme;
+
+#ifndef UNC_AT_OVERLAY
+#define SEG_READ(fn) | SEG_READER, fn
+#define SEG_EMITS    , NULL
+#else
+#define SEG_READ(fn) | SEG_READER
+#define SEG_EMITS
+#endif
+
+static const SegScheme seg_schemes[] = {
+    { UNC_FORMAT_SITSEG,  SEG_HOOK_SIT SEG_EMITS },
+    { UNC_FORMAT_CPTSEG,  SEG_ADDRESSED SEG_READ(unc_cpt_extract) },
+    { UNC_FORMAT_DDSEG,   SEG_HOOK_DD SEG_EMITS },
+    { UNC_FORMAT_ZIPSEG,  SEG_ADDRESSED SEG_READ(unc_zip_extract) },
     /* Apple Backup: addressed, its reader asking for each disk in turn
      * and never reading past one's used length (fmt_abk.c). */
-    { UNC_FORMAT_ABK, 1, 0, 0,
-      NULL, NULL, NULL, 0, NULL, 0, unc_abk_extract },
+    { UNC_FORMAT_ABK,     SEG_ADDRESSED SEG_READ(unc_abk_extract) },
     /* Installer VISE: addressed, its records stating segment and offset,
      * its reader stepping from one segment's payload to the next
      * (fmt_vise.c). */
-    { UNC_FORMAT_VISE, 1, 0, 0,
-      NULL, NULL, NULL, 0, NULL, 0, unc_vise_extract },
+    { UNC_FORMAT_VISE,    SEG_ADDRESSED SEG_READ(unc_vise_extract) },
     /* message/partial. The parts join into a MESSAGE, so the reader
      * for the joined stream is the MIME walk — no file is emitted in
      * between. */
-    { UNC_FORMAT_MIMESEG, 0, 0, 0,
-      NULL, NULL, NULL, 0, unc_mimeseg_head, 0, unc_mime_extract },
+    { UNC_FORMAT_MIMESEG, SEG_HOOK_MIME SEG_READ(unc_mime_extract) },
     /* SPLIT: a part of a plain NAME.001 split is an anonymous slice of
      * bytes, and the host's names and sizes are the whole map. */
-    { UNC_FORMAT_SPLIT, 0, 0, 1, NULL, NULL, NULL, 0, NULL, 0,
-      NULL }
+    { UNC_FORMAT_SPLIT,   SEG_ANONYMOUS SEG_EMITS }
 };
 
 static const SegScheme *seg_scheme(UncFormat f)
 {
-    unsigned i;
-    for (i = 0; i < sizeof seg_schemes / sizeof seg_schemes[0]; i++)
-        if (seg_schemes[i].scheme == f) return &seg_schemes[i];
+    const SegScheme *s = seg_schemes;
+    for (; s < seg_schemes + sizeof seg_schemes / sizeof seg_schemes[0]; s++)
+        if (s->scheme == f) return s;
     return NULL;
 }
 
 typedef struct SegJoin {
     UncIO                 io;      /* what the engine reads through */
     const UncSegmentDesc *desc;
-    const SegScheme      *sc;
+    const SegHooks       *hk;      /* the scheme's, seg_hooks[] */
     UncVolumeSource      *vs;
 
     /* SPLIT only: the caller's descriptor with the sizes filled in.
@@ -330,9 +356,9 @@ static int seg_open(SegJoin *j, int part)
      * make start[] non-monotonic. */
     size = unc_io_size32(&j->cur);
     j->curhdr = j->desc->head_len;
-    if (j->sc->hdr && size != UNC_SIZE_UNKNOWN) {
+    if (j->hk->hdr && size != UNC_SIZE_UNKNOWN) {
         uint32_t h = j->curhdr;
-        int e = j->sc->hdr(j->desc, &j->cur, part, size, &h);
+        int e = j->hk->hdr(j->desc, &j->cur, part, size, &h);
         if (e != UNC_OK) { seg_release(j); return e; }
         j->curhdr = h;
     }
@@ -350,11 +376,11 @@ static int seg_open(SegJoin *j, int part)
          * same header re-proves that this file belongs to this set and
          * is this part. Every other scheme here has to take what the
          * host handed it. */
-        if (j->sc->payload) {
+        if (j->hk->payload) {
             uint8_t h[SEG_HEAD_MAX];
-            int e = unc_read_at(&j->cur, 0, h, (int32_t)j->sc->head_len);
+            int e = unc_read_at(&j->cur, 0, h, (int32_t)j->hk->head_len);
             if (e == UNC_OK)
-                e = j->sc->payload(j->desc, h, (int32_t)j->sc->head_len,
+                e = j->hk->payload(j->desc, h, (int32_t)j->hk->head_len,
                                    part, size, &payload);
             if (e != UNC_OK) { seg_release(j); return e; }
         }
@@ -374,7 +400,7 @@ static int seg_open(SegJoin *j, int part)
      * for the first time or re-opened after a backward seek. One that
      * runs across the set is carried over: a re-open leaves it where it
      * was, and the first read at any other offset drops it. */
-    if (j->sc->stored_crc && !j->sc->crc_runs) {
+    if (j->hk->stored_crc && !j->hk->crc_runs) {
         j->crc = 0;
         j->crc_pos = j->start[part];
         j->crc_ok = 1;
@@ -544,18 +570,18 @@ static int32_t seg_read(void *ctx, void *buf, int32_t len)
      * it fork by fork (unc_copy_fork, never more than the fork has
      * left). A reader that did straddle would be refused as a checksum
      * mismatch, not joined wrong. */
-    if (j->sc->stored_crc && r > 0) {
+    if (j->hk->stored_crc && r > 0) {
         if (j->crc_ok && j->pos == j->crc_pos) {
             uint32_t end = j->start[j->curpart + 1];
-            uint32_t rsrc = j->sc->crc_runs ? j->desc->rsrc_size : 0;
+            uint32_t rsrc = j->hk->crc_runs ? j->desc->rsrc_size : 0;
             if (end > j->total) end = j->total;
-            j->crc = j->sc->crc_fold(j->crc, buf, r);
+            j->crc = j->hk->crc_fold(j->crc, buf, r);
             j->crc_pos += (uint32_t)r;
             if (j->crc_pos == end) {
                 uint8_t h[SEG_HEAD_MAX];
                 if (unc_read_at(&j->cur, 0, h,
-                                (int32_t)j->sc->head_len) != UNC_OK ||
-                    j->sc->stored_crc(h, j->crc_pos > rsrc) != j->crc) {
+                                (int32_t)j->hk->head_len) != UNC_OK ||
+                    j->hk->stored_crc(h, j->crc_pos > rsrc) != j->crc) {
                     j->err = UNC_ERR_CRC;
                     return -1;
                 }
@@ -622,18 +648,20 @@ int unc_extract_segments(const UncSegmentDesc *desc, UncVolumeSource *vs,
                          UncProgress *prog, const UncOptions *opt)
 {
     SegJoin *j = (SegJoin *)scratch;
+    const SegScheme *sc;
     UncSegMap map;
     UncCtx c;
     int ret;
 
     if (!desc || !vs || !vs->need || !scratch || !sink || !al)
         return UNC_ERR_IO;
-    j->sc = seg_scheme(desc->scheme);
-    if (!j->sc) return UNC_ERR_UNSUPPORTED;
+    sc = seg_scheme(desc->scheme);
+    if (!sc) return UNC_ERR_UNSUPPORTED;
+    j->hk = &seg_hooks[sc->flags & SEG_HOOKS];
     if (desc->nparts > UNC_SEG_MAX_PARTS) return UNC_ERR_UNSUPPORTED;
     /* Neither a size nor a count is a set nobody can tell the end of. */
     if (desc->nparts == 0 && desc->total == UNC_SIZE_UNKNOWN &&
-        !j->sc->anonymous)                 /* a split may be open-ended */
+        !(sc->flags & SEG_ANONYMOUS))         /* a split may be open-ended */
         return UNC_ERR_CORRUPT;
 
     j->desc = desc;
@@ -641,7 +669,7 @@ int unc_extract_segments(const UncSegmentDesc *desc, UncVolumeSource *vs,
     j->curpart = 0;
     j->cursize = 0;
     j->curhdr = desc->head_len;
-    j->addressed = j->sc->addressed;
+    j->addressed = sc->flags & SEG_ADDRESSED;
     j->start[1] = 0;
     j->known = 1;
     j->total = desc->total;
@@ -671,7 +699,7 @@ int unc_extract_segments(const UncSegmentDesc *desc, UncVolumeSource *vs,
      * for (a directory lookup). Measuring instead — opening every part
      * before extracting — is the prepass the addressed mode exists to
      * avoid, and on removable media it is a disk swap each. */
-    if (j->sc->anonymous) {
+    if (sc->flags & SEG_ANONYMOUS) {
         /* No part count: OPEN-ENDED. The host is asked for each next part
          * as the walk reaches it and says where the set ends
          * (UNC_SEG_ENDS), so neither a count nor a length is needed, and
@@ -711,7 +739,7 @@ int unc_extract_segments(const UncSegmentDesc *desc, UncVolumeSource *vs,
     /* The scheme, which names the reader as well as a format would: no
      * reader here serves two of them, and the Macintosh build finds the
      * reader's image by it (mac/ovl_shim.c, gRun). */
-    c.fmt = (uint8_t)j->sc->scheme;
+    c.fmt = (uint8_t)sc->scheme;
     /* The whole struct, as unc_extract_as does, and the password state
      * with it: the list of four fields was the one unc_extract_as
      * replaced on 2026-08-27, and `long_name` read off the stack here too
@@ -729,14 +757,18 @@ int unc_extract_segments(const UncSegmentDesc *desc, UncVolumeSource *vs,
     c.pwstate = UNC_PW_UNSET;
     c.pwattempt = 0;
 
-    if (j->sc->extract)
-        ret = j->sc->extract(&c);
+    if (sc->flags & SEG_READER)
+#ifndef UNC_AT_OVERLAY
+        ret = sc->reader(&c);
+#else
+        ret = unc_run(&c);
+#endif
     else
         /* SITSEG, SPLIT (the copy above) and DDSEG all join into one
          * file; only the fork order differs. The joiner's own verdict -
          * a CRC that did not match - reaches the entry through the last
          * argument, since a failed read says only that it failed. */
-        ret = unc_sitseg_emit(&c, j->desc, 0, j->sc->data_first, &j->err);
+        ret = unc_sitseg_emit(&c, j->desc, 0, j->hk->data_first, &j->err);
     seg_release(j);
 
     /* A missing part is the archive's verdict, not the entry's: the

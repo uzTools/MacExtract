@@ -599,6 +599,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-11 (the installer that was an archive) — Installer VISE installers extract, 3.5 to VISE X, a set's Segment.N floppies with them: every one of 488 stored files equals the CRC-32 its installer stores; the folders are depths, 3.5's included; 64 B off every budget
 - 2026-11-11 (the head that named nothing) — an envelope whose first bytes name nothing keeps its reader, the sniffer, Compact Pro's and SuperDisk!'s readers, the ciphers and the codecs instead of the whole bundle; the maintainer's choice when Installer VISE's image put two gzip fixtures short on System 6.0.8 / 512Ke; 32 B
 - 2026-11-12 (the VISE before VISE) — MindVision's archive before Installer VISE 3.5, 1992-1996, extracts: the decompressor read out of an installer's own 'Dcmp', 99 files of eight archives, DeltaSymbol.TT and Serial Tool equal to installed copies; 0 B resident
+- 2026-11-12 (the format table that became three bitmaps) — on the Macintosh a format's resident rows are a bit in three 8-byte maps and its 2-byte `gRun` row, a segment scheme's row 2 bytes, and a set's part search found through `gRun`: CODE +16, A5 −1,152, 1,136 B onto every budget; a new format costs 2 B resident where Installer VISE cost 64, and 4 B if it is a set
 
 ---
 
@@ -25327,3 +25328,129 @@ as main (`synth-dd-m5.dd`, `derived-Library_ISBN_Barcoder.sit`), and the
 eight pass on all four. One EMUDIED and two NOGRID beside another
 session's emulator each PASS or refuse as expected when run alone.
 
+## 2026-11-12 (the format table that became three bitmaps) — on the Macintosh a format's resident rows are a bit in three 8-byte maps and its 2-byte `gRun` row, a segment scheme's row 2 bytes, and a set's part search found through `gRun`: CODE +16, A5 −1,152, 1,136 B onto every budget; a new format costs 2 B resident where Installer VISE cost 64, and 4 B if it is a set
+
+**The open item (the maintainer's).** Installer VISE measured what a new
+format still cost resident after 2026-11-11 (*the release decided in the
+bundle*): `gRun` +2, `unc_formats` +16 and its name, `seg_schemes` +34 and
+`unc_segment_match` +12 — 64 B, and the name.
+
+**What the Macintosh build read of them (measured, `nm -S` and the
+callers).** Nothing in the shell shows a format's name, and
+`unc_format_name` was not linked, yet `unc_formats` (608 B) and every name
+were in `.data`, held there by `unc_desc`. Every extractor in the table was
+`ovl_run` but for three resident readers of one part of a set
+(`unc_sitseg_extract`, `unc_ddseg_extract`, `unc_zipseg_extract`). Every
+scheme's reader in `seg_schemes` was `ovl_run` too, and its five hook
+pointers were NULL in five of eight rows. And `unc_segment_match` chose
+the image by three comparisons, each scheme's image the one its `gRun` row
+names.
+
+**What changed.**
+- `src/unc_engine.c`: the rows are one list, `UNC_FORMAT_ROWS`, `F()` for
+  a format read as a file and `S()` for one read only as a set, expanded
+  into the same table everywhere but in a build with `UNC_AT_OVERLAY`
+  (the shipped and lazy Macintosh configurations and the overlay host
+  lane), and there into three bitmaps, constants the compiler folds (a
+  row, an extractor, an envelope; 24 B). `unc_extract_as` there calls
+  `unc_run_file`, `unc_format_name` is not defined.
+- `src/unc_segment.c`: a scheme's row is its scheme and its flags, 2 B,
+  and on the host its reader; the hooks are a table of four (none,
+  StuffIt, `SPLT`, message/partial), which the row's low bits select. On
+  a build with `UNC_AT_OVERLAY` the joiner calls `unc_run`, an alias of
+  `ovl_run`. The joiner's scratch block is unchanged: the hooks' pointer
+  replaced the row's.
+- `mac/ovl_shim.c`: `unc_run_file` sends the three resident readers by
+  comparison and every other format to `ovl_run`; `gRun` gains
+  `RUN_MATCH`, bit 15, on Compact Pro's, Apple Backup's and VISE's rows,
+  and `unc_segment_match` asks the image a flagged row names.
+- `tools/check_ovl_rows.py` reads the new rows and adds two failures: an
+  `F()` format with neither a `gRun` row nor a resident reader, and a
+  scheme with a match whose set the release plan keeps a row for without
+  `RUN_MATCH`, or with one naming an image that does not compile its match
+  or answer `OVL_SEG_MATCH`. `--selftest` removes each of 34 rows, 3 flags
+  and 3 resident readers and each is caught. `tools/stack_depth.py` follows
+  `unc_run_file` and `unc_run` as the classes their pointers were
+  (`DIRECT_CLASS`), the class members read from the rows.
+  `tools/run_tiers.py` reads names and envelopes from the list.
+
+**Cost (measured, `nm -S` against 700fb893, and again rebased onto 1b6042e7, the VISE before 3.5, with the same differences).**
+
+| configuration | CODE | A5 | sum |
+|---|---|---|---|
+| shipped, eager | 37,280 → 37,296 (+16) | 16,848 → 15,696 (−1,152) | **−1,136** |
+| lazy | 36,428 → 36,444 (+16) | 16,996 → 15,812 (−1,184) | −1,168 |
+| resident control | 210,880 → 210,864 (−16) | 37,392 → 37,264 (−128) | −144 |
+
+Shipped, by symbol: `unc_formats` −608 and the names, `unc_desc` −48,
+`seg_schemes` 272 → 16, `seg_hooks` +80, `unc_maps` +24, `unc_has` +54,
+`unc_run_file` +54, `unc_extract_segments` −24, `unc_segment_match` −10,
+`seg_open` and `seg_read` +4 each (the hook's one-byte header length). The
+control keeps the format table and its rows are 6 B with the reader.
+`OVL_SAVED` 194,144 → 195,136, `TIERS` +144 each (derived from
+`TIERS_CONTROL` −144), and every row of FORMATS.md *What each format is
+granted* +992 B against the control, the whole bundle's included: the
+images did not move, byte for byte (`--check-images`).
+
+**What a new format costs now (measured, a dummy format in a scratch build
+of both trees).** A format read as a file whose image dispatches it, and
+also a set matched in that image: on 700fb893 `gRun` +2, `unc_formats`
++16, `seg_schemes` +34, `unc_segment_match` +4 and the name, CODE +4 and
+A5 +92 with alignment; on this tree `gRun` +2 and `seg_schemes` +2, and
+CODE + A5 unmoved, the 4 B inside alignment. **2 B for a format, 2 B more
+for a set**, until there are 64 formats; then each map grows a byte.
+
+**Stack (`stack_depth.py`, measured).** The engine's deepest chain 3,486 B
+on both trees, every format's own figure equal; `--shell` 6,830 B both;
+`--config host` identical to the byte.
+
+**Host (measured).** The CLI's table is the same rows, expanded into the
+same table; unit tests 2,420 checks, `tests/run_diff.sh` 1,010/1,010,
+`tests/run_overlay_host.sh` ok on both lifetimes (24 byte-exact, 21 equal
+to the resident build).
+
+**Heap (measured, `-D UNC_AT_BUDGET`, `derived-PCCTS.tar`, this tree
+against 1b6042e7, back to back).** 757,694 / 328,806 / 233,406 B on System
+6.0.8 at 1 MB, System 3.0 / 512Ke and System 6.0.8 / 512Ke, against
+756,542 / 327,654 / 232,254: **+1,152 on all three**, 16 B above the
+shipped pair's 1,136, the probe build's own alignment. Against `TIERS` +
+`gain()` the probe reads 220 / 216 / 220 B above the model, as on 7bae0991
+(*the release decided in the bundle*); 1b6042e7 read 204 / 200 / 204,
+which this change's derived `TIERS` does not touch.
+
+**Speed (measured).** `run.py --emu mv-4M-1x -D UNC_AT_TIMING` on
+`popper-1.7.tar.Z`, this tree and 1b6042e7 alternated, twice each: the
+four tick slots read 652 / 3 / 6 / 3 on all four boots. The format
+table is read once a layer; its search became a bit test.
+
+**On a Macintosh (measured, rebased onto 1b6042e7; the autotest build
+`432773819b09…`, one boot a fixture).** The sample **74/74** at 1 MB (one
+EMUDIED, `macpostmanager10b1.sit`, PASS alone); System 3.0 / 512Ke,
+System 6.0.8 / 512Ke and the 64K ROM **72/74**, each refusing
+`synth-dd-m5.dd` and Library_ISBN per entry, as before. Installer VISE's
+22 gradable installers of `vise-sample.txt` 22/22 at 1 MB and on the
+512Ke, VISE X's with `Installer.data` 1/1. Mac OS 9.2 `os9.py
+--autotest` **22/22** (8, 7 and 7). Chains, `interactive.py --chain` on
+the 512Ke under System 6.0.8: the four tar envelopes 4/4, 29/29, 49/49
+and 4/4 data forks byte-exact, each intermediate gone. Before the rebase,
+on 700fb893, the same sweeps read the same tallies, with four NOGRID and
+three EMUDIED while another session's emulator ran beside them (not
+re-run there: the rebased tree superseded them).
+
+**Not done, priced.**
+- *The join hooks only bundle-keeping sets call*, MIME's header walk
+  (1,840 B), `SPLT`'s parser (772 B) and StuffIt's emit (578 B), into
+  `ovl_sniff`: about 3,190 B onto every layer that releases, and an
+  estimated 120–160 B of shims and dispatch cases (the 18 B a call the
+  2026-11-11 entry measured, four calls, and their cases in the image)
+  off every layer that keeps the whole bundle, those sets among them —
+  hypothesis, not built. Not free on that row, so OPEN_ITEMS.md
+  (*Resident bytes that could leave before extraction*) keeps it for the
+  maintainer.
+- *The unnamed envelope's four comparisons* (`ovl_release_if_unwanted`,
+  36 B): a rule, not a row, which a new format does not grow; the check
+  over `gRun` was measured 64 B dearer (*the head that named nothing*),
+  and `gRun` has no bit left for a flag.
+- *`unc_has`*: with the map's address as its argument it compiled 6 B
+  smaller alone (a test object, measured), and each of its three callers
+  would push a 6-byte address where it pushes 0 to 4; not built.

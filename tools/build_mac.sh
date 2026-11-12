@@ -860,7 +860,11 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # +3,660 on 2026-11-12, A5 -12 below: the VISE before 3.5, its reader and
 # probe (DECISIONS.md 2026-11-12, *the VISE before VISE*). In `ovl_vise`
 # +3,340 and `ovl_sniff` +328 on the shipped pair, whose CODE and A5 hold.
-UNC_MAC_CODE_DEFAULT=210880
+# -16 on 2026-11-12, 210,880 -> 210,864, A5 -128 below: the segment
+# schemes' rows two bytes and a reader, their parts' hooks a table of four
+# (DECISIONS.md 2026-11-12, *the format table that became three bitmaps*).
+# 144 B off the control; the format table is unchanged in this build.
+UNC_MAC_CODE_DEFAULT=210864
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -1177,7 +1181,9 @@ UNC_MAC_CODE_DEFAULT=210880
 # -12 on 2026-11-12: `.data` alignment under the code's +3,660 (above); the
 # VISE before 3.5 adds no data (DECISIONS.md 2026-11-12, *the VISE before
 # VISE*).
-UNC_MAC_A5_DEFAULT=37392
+# -128 on 2026-11-12, 37,392 -> 37,264: the segment schemes' table 272 ->
+# 48 B of rows (6 each) and 80 of hooks (the code's -16 above).
+UNC_MAC_A5_DEFAULT=37264
 # A CEILING PER CONFIGURATION, because one ceiling measured on another build
 # cannot fire. The figures above are the RESIDENT control build, which carries
 # every decoder; the shipped build's resident code is a third of that, so
@@ -1821,8 +1827,17 @@ UNC_MAC_A5_DEFAULT=37392
 # 64 B off every budget. And +36 and -4 the same day: the layer under an
 # envelope whose head named nothing keeps what that envelope kept, when it
 # is Compact Pro, DiskDoubler or SuperDisk! (*the head that named nothing*).
-UNC_MAC_CODE_EAGER=37280
-UNC_MAC_A5_EAGER=16848
+# +16 and -1,152 on 2026-11-12, 37,280 -> 37,296 and 16,848 -> 15,696:
+# the format table three bitmaps of 8 B (`unc_formats` 608 B and every
+# format's name, which nothing here shows, gone), every extractor reached
+# through one dispatch on the format (`unc_run_file`), the segment
+# schemes' rows two bytes each with their hooks a table of four, and a
+# scheme's part search in the image its gRun row flags RUN_MATCH
+# (DECISIONS.md 2026-11-12, *the format table that became three bitmaps*).
+# 1,136 B onto every budget; a new format costs 2 B resident, and 2 B more
+# if it is a set.
+UNC_MAC_CODE_EAGER=37296
+UNC_MAC_A5_EAGER=15696
 # +8 on 2026-10-02 for the same reason as the eager pair above: the
 # overlay call that now says WHICH of StuffIt 2.x's ciphers an entry
 # wants. A5 fell to 19,096 and its ceiling is left where it was.
@@ -1996,7 +2011,10 @@ UNC_MAC_A5_EAGER=16848
 # + bss 16,896 (+100, `gRun`), under its ceiling.
 # +12 on 2026-11-12: Installer VISE's rows (A5 16,996, under its
 # ceiling; DECISIONS.md 2026-11-11, *the installer that was an archive*).
-UNC_MAC_CODE_LAZY=36428
+# +16 on 2026-11-12: the format table as three bitmaps, as the eager pair
+# (A5 15,812, -1,184, under its ceiling; DECISIONS.md 2026-11-12, *the
+# format table that became three bitmaps*).
+UNC_MAC_CODE_LAZY=36444
 UNC_MAC_A5_LAZY=19200
 if [ -n "$UNC_OVL_RESIDENT" ]; then
     UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-$UNC_MAC_CODE_DEFAULT}
