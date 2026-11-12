@@ -120,6 +120,18 @@
    reached indirectly (`x = f()` then `if x:`) — only a call written
    directly in the boolean position is examined.
 
+0c. **gRun rows** (`tools/check_ovl_rows.py --selftest`, in `ci.sh` since
+   2026-11-12; no build, under a second): every (format, extractor) pair in
+   `src/unc_engine.c`'s `unc_formats` and `src/unc_segment.c`'s
+   `seg_schemes` whose extractor is a `DECODER()` alias in `mac/ovl_shim.c`
+   must have a row in `gRun`; a missing one fails on the Macintosh only, as
+   an error of no name. It also fails on a decoder called by name inside
+   `src/`. `--selftest` removes each of the 33 rows in turn and requires
+   each removal to fail. **What it cannot see:** whether a row names the
+   right image and entry point (the emulator tiers and the overlay host
+   lane do), and a table in a shape its regexes do not parse, which fails as
+   "stopped checking" rather than passing.
+
 ## The oracle
 
 The oracle is The Unarchiver's CLI (`unar`/`lsar` 1.10.8, Debian

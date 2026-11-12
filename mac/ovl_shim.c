@@ -320,7 +320,8 @@ int unc_resfork_find(const uint8_t *fork, uint32_t forklen, uint32_t type,
  *
  * A format with no row reaches the ciphers' self-test and returns its
  * 0x4F4B, which the shell reports as an error of no name: every format the
- * engine table or a segment scheme sends here needs one.
+ * engine table or a segment scheme sends here needs one, and
+ * tools/check_ovl_rows.py (ci.sh) fails on one that has none.
  *
  * Failure to load is a per-entry error like any other allocation failure —
  * UNC_ERR_MEM, and the rest of the archive still comes out. */

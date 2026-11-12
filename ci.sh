@@ -45,6 +45,12 @@ python3 tools/check_crc_tables.py --selftest || fail "CRC table check"
 echo "=== provenance inventory matches the source ==="
 python3 tools/check_provenance.py --selftest || fail "provenance inventory"
 
+# A format with no row in mac/ovl_shim.c's gRun fails on the Macintosh
+# only, as an error of no name; nothing on Linux reaches ovl_run. This reads
+# the two tables that set UncCtx.fmt; --selftest removes each row in turn.
+echo "=== every format sent to ovl_run has a gRun row ==="
+python3 tools/check_ovl_rows.py --selftest || fail "gRun rows"
+
 echo "=== variant 1: sanitizers (ASan+UBSan+alignment) ==="
 make clean >/dev/null
 make BUILD=build/san \
