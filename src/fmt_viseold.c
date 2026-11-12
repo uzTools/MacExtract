@@ -199,7 +199,7 @@ static int vo_open(VoDec *d, UncCtx *c, uint32_t clen, uint32_t total)
     }
     if (unc_get_u32be(h) != total) return UNC_ERR_CORRUPT;
     d->lowb = (int)((h[4] >> 2) & 3u) + 5;
-    win = 1ul << (d->lowb + 8);
+    win = (uint32_t)1 << (d->lowb + 8);
     /* No match reaches past the start, so a window larger than all there
      * is to produce is never read. */
     while (need < total && need < win) need <<= 1;
