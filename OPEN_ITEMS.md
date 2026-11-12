@@ -247,6 +247,22 @@ costs the engine*).
 | the shell's set code (`SegAskUser`, `SegPartOf`, the part dialog's scans) | 3,166 B of code on 2026-10-22, not re-measured since the setup half (`SegScanWrapped` and the rest of `mac/seg_setup.inc.c`) left as `ovl_segsetup` in v0.45.0 | the same table of function pointers the setup image is given (DECISIONS.md 2026-11-02, *the dialogs that became the application*); not priced |
 | the relocator, `Retro68Relocate` and `Retro68ApplyRelocations` | 1,656 B of code | Elf2Mac places it at the start of `.text`; needs a layout Elf2Mac does not offer |
 
+## One registration per format
+
+A format's decoder is its own files and image, but registering it is a
+row in each of up to seven tables: the enum (`include/macextract.h`),
+`unc_formats`, the sniffer's probe order, `seg_schemes` and the match code
+for a set scheme, `gRun`, the release plan, and the overlay image list,
+with the budget constants moving after. Installer VISE's two commits
+(700fb893, 1b6042e7) touched about 80 files; removing it, asked by the
+maintainer on 2026-11-12, has to find every row by hand.
+`tools/check_ovl_rows.py` already cross-checks two of the tables. What
+would close it: one descriptor per format (name, probe and its place in
+the sniff order, extractor, image, keep set, set scheme), from which the
+build generates the rest, so a format is its files and one row; after the
+resident per-format tables change lands, since it rewrites the same
+tables.
+
 ## Formats classic Mac programs wrote that nothing here opens — leads, not findings
 
 From Macintosh Repository's *Compression & Archiving* category, read
