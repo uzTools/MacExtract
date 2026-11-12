@@ -266,6 +266,25 @@ a program's name and description; none has been held against a file.**
 Closing a row: a specimen written by the program, then a second reader to
 grade against.
 
+## UnZip's `pZIP` and `pBIN`: what the files are
+
+Read off MacStamp's committed tables by its own session on 2026-11-12
+(`fixtures/manifests/apps.tsv`, programs' bundles; `pair-census.csv`,
+143,723 files). Creator `pZIP` is UnZip (1.01, 1.10, 2.0.1 by A. P. Maika);
+the census holds `TEXT/pZIP` 26, `pBIN/pZIP` 19 and the three programs. As a
+file TYPE, `pZIP` is claimed by seven programs' bundles (UnZip 2.0.1, ZipIt
+1.0–1.3.5, MacGzip) and by StuffIt Expander 5.5's `'open'`; `m@rc` only by
+ArcMac 1.3c's and Expander's; no file in the census carries either type.
+**Not established:** that the `pBIN`/`pZIP` and `TEXT`/`pZIP` files are
+members UnZip wrote out rather than archives (MacStamp's hypothesis; the
+census keeps no paths, so their bytes were not read), and what a `pZIP`- or
+`m@rc`-typed file would hold. MacExtract's bundle claims neither type;
+claiming one costs 12 B of resource map, for a type no file here carries.
+
+What would settle it: UnZip 2.0.1 run on chosen zips, under the emulator,
+and the types and creators it gives what it writes; the census files'
+bytes, if their sources can be found; any file typed `pZIP` or `m@rc`.
+
 ## BinHex before 4.0: what is not graded
 
 - **No `.hex` from any writer but BinHex 2.0.** BinHex 1.0 and the BASIC
