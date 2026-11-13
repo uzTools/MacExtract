@@ -2693,7 +2693,7 @@ behind its tree.)
 Builds `companion/stub`, stamps a `SIT!` helper with `companion/make_stub.py`,
 and reads off the file what the Finder needs: the flags, one `CODE`
 segment, `canBackground`, the bundle with one icon family, every `FREF` on
-local icon 0, `'vers'` 1 saying `UNC_VERSION`, and a 6,912 B ceiling. Then the sixteen of
+local icon 0, `'open'` 128 listing no types, `'vers'` 1 saying `UNC_VERSION`, and a 6,912 B ceiling. Then the sixteen of
 `companion/helpers.tsv`, each read the same way for its own creator and
 types; `dist/MacExtract-Helpers.zip` byte for byte the zip this tree
 writes (it is reproducible; one changed byte fails, shown 2026-11-04);
@@ -2702,7 +2702,7 @@ and their `Desktop` files listing MacExtract and every helper in that
 folder (a disk without one fails, shown 2026-11-04), when hfsutils is
 there.
 `--file X` checks a helper already stamped. Shown able to fail on each property (DECISIONS.md 2026-11-03,
-*the gate a helper commit has*). **It cannot see** whether a Finder
+*the gate a helper commit has*; the `'open'` absent or listing a type, 2026-11-13). **It cannot see** whether a Finder
 accepts the bundle or draws the icon, or whether a hand-off to MacExtract
 arrives: those are emulator runs (`tools/vmac/README.md`).
 

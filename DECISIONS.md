@@ -604,6 +604,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-13 (one registration per format) — a format is its files and its lines in `src/unc_formats.h`: every per-format table, the Macintosh's included, is expanded from four lists, the image lists from the build's rules, and every build size from `tools/budgets.txt`, which `tools/retake_budgets.py` re-takes; the application byte-identical
 - 2026-11-13 (the memo on the relocator) — the shell's 1,600 B folder memo leaves bss for Retro68's relocator, whose 1,656 B of code are dead once the application has launched: A5 −1,600, CODE 0, 1,600 B onto every budget, measured on all three tiers
 - 2026-11-13 (the hooks that went to the sniffer) — the join hooks and the two segment readers only bundle-keeping sets call move to `ovl_sniff`, beside the parsers they share with the probes: CODE −3,128, A5 −72, +3,200 B onto every budget that keeps neither, +1,908 B onto one that keeps the bundle or the sniffer
+- 2026-11-13 (the helper that is not offered) — every helper carries an `'open'` 128 listing no types, and System 7.5.5's Macintosh Easy Open no longer offers it beside MacExtract for an orphaned document; icons and the double-click hand-off unchanged; +32 B of each helper's resource fork, 0 B of MacExtract and of both floppies
 ---
 
 ## M0
@@ -25660,3 +25661,59 @@ DiskDoubler Pro) byte-exact, both forks; `sit-fat` (part 1's `'endD'`)
 byte-exact with the fork and wrong without; `cpt-middle`, whose match did
 not move, 1/1. `segcheck.py` takes `--emu` for its `run.py` cases since
 this entry.
+
+## 2026-11-13 (the helper that is not offered) — every helper carries an `'open'` 128 listing no types, and System 7.5.5's Macintosh Easy Open no longer offers it beside MacExtract for an orphaned document; icons and the double-click hand-off unchanged; +32 B of each helper's resource fork, 0 B of MacExtract and of both floppies
+
+**Claim (measured, System 7.5.5 only).** Easy Open lists, for a document
+whose creator no application has, every application whose bundle claims
+its type, the helpers included; an `'open'` resource in the application's
+own fork replaces that list, and **a count of 0 is honoured**: the
+application drops out instead of falling back to its `FREF`s.
+
+**Evidence.** Mini vMac Mac II at 256 colours (`colouricon.py --emu
+mv-II256`) on the installed System 7.5.5 volume (`tools/vmac/README.md`,
+*A colour Finder*), whose Macintosh Easy Open control panel is on as
+installed; its `Desktop DB` deleted, MacExtract (`dist/`) and the eighteen
+helpers copied on, and three documents: `SITD`/`Zzzz` and `TEXT`/`Zzzz`
+(no application has `Zzzz`) and `SITD`/`SIT!`. Frames kept in
+`~/.cache/macextract/easyopen/`.
+
+- Helpers as shipped before this entry: the orphan `SITD` offered
+  Expander, MacExtract, StuffIt (the hypothesis OPEN_ITEMS held, read off
+  the bundles).
+- The `StuffIt` helper alone given `'open'` 128 = `SIT!`, 0, count 0: the
+  orphan `SITD` offered Expander and MacExtract; Expander, unchanged, is the
+  control. The orphan `TEXT` offered Expander, MacBin, MacExtract, Script
+  Editor, SimpleText, SimpleText with QuickTime translation and more below.
+- Every helper with it (the `dist/` built by this commit): the orphan `TEXT`
+  offered MacExtract, Script Editor, SimpleText, SimpleText with QuickTime
+  translation, Stickies; the orphan `SITD`, with one candidate left, showed
+  no list at all: Easy Open opened it in MacExtract, which extracted
+  `Resource Handler 2.1.Fkey`. The `SIT!` document went to the `StuffIt`
+  helper and on to MacExtract's *Extract into this folder* dialog, and
+  extracted; the helpers and that document still show the archive icon.
+
+**Format.** *Inside Macintosh: More Macintosh Toolbox*, 7-44, Figure 7-11:
+signature, filler 0, file type count, the types; StuffIt Expander 5.5's
+`'open'` 128 (signature `SITx`, 24 types) is laid out so.
+`companion/make_stub.py` writes `creator, 0, 0`; `tools/check_helpers.py`
+fails a helper without it or with a type in it (both shown).
+
+**Price (measured).** 8 B of resource and 24 B of map: +32 B on each
+helper's resource fork. As MacBinary one of eighteen crosses a 128 B
+block (Expander 6,912 → 7,040); the `SIT!`/`SITD` reference helper
+`check_helpers.py` stamps is at its 6,912 B ceiling, not over. The helpers
+zip 64,171 → 64,381 B. Free space on both disk images unchanged (376,320
+and 1,027,584 B). MacExtract untouched.
+
+**What this cannot see.** Mac OS 8.5–9's File Exchange, which replaced
+Easy Open, was not booted for it; nor was a document dropped on a
+helper's icon, which the same list decides (7-44: the Finder accepts a
+drop of the types the `'open'` lists, so a helper presumably refuses one —
+hypothesis; documents are dropped on MacExtract). A volume whose desktop
+registered a helper before this keeps the old list until it is rebuilt
+(7-43); no release has shipped the helpers. System 6 and 3.0 have no
+Translation Manager and do not read the resource (not run). The 64-type
+limit of the same list (`TypesBlock`, 7-37) is not reached: MacExtract's
+bundle claims 51. Left open: OPEN_ITEMS.md, *The helpers' empty `'open'`
+beyond System 7.5.5*.

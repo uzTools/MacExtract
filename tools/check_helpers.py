@@ -22,6 +22,9 @@ Checked, each from where it is decided:
     ICN# list a single pair local 0 -> 128, 'FREF' 128 for APPL and one per
     document type, every one on local icon 0 (the maintainer, 2026-11-03:
     the archive icon for the helper and its documents);
+  - 'open' 128 with no types, so Easy Open does not offer the helper for an
+    orphaned document (DECISIONS.md 2026-11-13, *the helper that is not
+    offered*);
   - 'vers' 1 carrying UNC_VERSION, MacExtract's own (a release bumps both);
   - the size, against a ceiling: a helper is on every floppy twenty times.
 
@@ -142,6 +145,14 @@ def check(path, creator=CREATOR, types=TYPES, ceiling=CEILING):
 
     if 0 not in by.get(CREATOR, {}):
         bad.append(f"no signature resource {CREATOR.decode()} 0")
+
+    # Easy Open offers an application for the types its 'open' lists, its
+    # FREFs' when it has none: this one lists none (DECISIONS.md 2026-11-13,
+    # *the helper that is not offered*). Source: Inside Macintosh: More
+    # Macintosh Toolbox, 7-44, Figure 7-11.
+    want_open = CREATOR + struct.pack(">hH", 0, 0)
+    if by.get(b"open", {}) != {128: want_open}:
+        bad.append(f"'open' {by.get(b'open')}, not 'open' 128 with no types")
 
     bndl = by.get(b"BNDL", {}).get(128)
     if bndl is None:
