@@ -573,7 +573,10 @@ static int stub_main(void)
     if (HomeFolder(&vol, me, &self)) return 0;
     creator = OwnCreator(vol, self, me);
     if (creator) Icons(vol, creator, !HasDocuments());
-    if (!FindApp('MExt', vol, self, &mvol, &dir, name)) {
+    /* No folder is excluded: MacExtract is never this stub, and beside it
+     * in one folder it was skipped (DECISIONS.md 2026-11-13, *the helper
+     * beside MacExtract*). Folder ID 0 names none. */
+    if (!FindApp('MExt', vol, 0, &mvol, &dir, name)) {
         Toolbox(tb);
         StopAlert(kNotFoundAlert, NULL);
         return 0;

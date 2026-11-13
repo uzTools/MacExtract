@@ -386,9 +386,9 @@ dist*). Left:
   (FORMATS.md, *Icons*). A colour family is about 2.3 KB of the helper
   and a black-and-white one (`ICN#`, `ics#`) about 320 B; the helpers zip
   is 64,381 B today and rides on the 400K floppy.
-- **The helpers' empty `'open'` beyond System 7.5.5.** It keeps them out
-  of Macintosh Easy Open's list there (DECISIONS.md 2026-11-13, *the helper
-  that is not offered*). Not run: Mac OS 8.5–9's File Exchange (one
-  `os9.py` boot with an orphan would close it), and a document dropped on
-  a helper's icon, which the same list governs (*Inside Macintosh: More
-  Macintosh Toolbox*, 7-44).
+- **A helper under System 6's Desktop Manager.** With AppleShare's
+  `Desktop Mgr` INIT installed, a helper on the MacExtract floppy says
+  *"MacExtract could not be found"* (measured, 6.0.8; DECISIONS.md
+  2026-11-13, *the helper beside MacExtract*). The cause is a hypothesis
+  (a database that answers but lists nothing, and no fallback to the
+  `Desktop` file); reading both would close it, at a helper's bytes.

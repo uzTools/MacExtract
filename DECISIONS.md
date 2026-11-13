@@ -606,6 +606,8 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-13 (the hooks that went to the sniffer) — the join hooks and the two segment readers only bundle-keeping sets call move to `ovl_sniff`, beside the parsers they share with the probes: CODE −3,128, A5 −72, +3,200 B onto every budget that keeps neither, +1,908 B onto one that keeps the bundle or the sniffer
 - 2026-11-13 (the helper that is not offered) — every helper carries an `'open'` 128 listing no types, and System 7.5.5's Macintosh Easy Open no longer offers it beside MacExtract for an orphaned document; icons and the double-click hand-off unchanged; +32 B of each helper's resource fork, 0 B of MacExtract and of both floppies
 - 2026-11-13 (the installer package that is a zip) — `xpi `/`NSIn`, Netscape's installer packages, claimed by MacExtract's bundle: an ordinary zip the engine already reads; no helper
+- 2026-11-13 (the helper beside MacExtract) — a helper in MacExtract's own folder said "MacExtract could not be found" on System 7.5.5 and 6.0.8, its lookup skipping every application in its own folder; fixed for 0 B. Mac OS 9.2's File Exchange honours the empty `'open'` too; the helpers still hand on and draw their icons on 6.0.8 and 3.0
+
 ---
 
 ## M0
@@ -25741,3 +25743,44 @@ DERIVED from `LZ4-`'s and `LZ4 `'s, measured at the floor on 2026-11-04 at
 12 B each. MacStamp records the claim from `dist/` once it is on main, as
 it did for `ircp`.
 
+## 2026-11-13 (the helper beside MacExtract) — a helper in MacExtract's own folder said "MacExtract could not be found" on System 7.5.5 and 6.0.8, its lookup skipping every application in its own folder; fixed for 0 B. Mac OS 9.2's File Exchange honours the empty `'open'` too; the helpers still hand on and draw their icons on 6.0.8 and 3.0
+
+**The lookup (measured, then fixed).** `FindApp('MExt', …)` passed the
+stub's own folder to `IsApp`, which refuses any application there: meant
+for the stub itself, it also refused MacExtract beside it. A `SIT!`
+helper at a volume's root beside MacExtract, a `SITD`/`SIT!` archive
+double-clicked: *"MacExtract could not be found"* on System 7.5.5 (Mini
+vMac Mac II) and on 6.0.8 (a root `Desktop` file listing both); the same
+helper in `MacExtract Helpers` handed on. `companion/stub/stub.c` now
+passes folder ID 0, which names none: both handed on, the 7.5.5 archive
+extracted. CODE 1 2,962 B before and after; every helper's bytes the same
+size. Frames: `~/.cache/macextract/easyopen/` (`shot-i`, `shot-j`,
+`s6/beside-*`).
+
+**Mac OS 9.2's File Exchange (measured, QEMU, the master booted
+`snapshot=on`, a transfer volume holding MacExtract, the eighteen helpers
+and the orphans).** The orphan `SITD` offered MacExtract and StuffIt
+Expander (the boot volume's); the orphan `TEXT`, applications from AirPort
+to Script Editor and no helper. Control, the helpers before the `'open'`:
+MacExtract, StuffIt (the helper), StuffIt Expander (`easyopen/os9/`).
+
+**A drop on a helper (measured, 7.5.5).** With the empty `'open'` the
+helper's icon does not highlight under a dragged `SITD`, and the drop
+moves the document into the helper's folder; MacExtract's own icon takes
+the same drop and puts up its destination dialog. Before the `'open'` the
+helper highlighted and launched (and, beside MacExtract, hit the lookup
+above).
+
+**System 6.0.8 and 3.0 (measured, Mini vMac Plus, the shipped 1440K disk
+with the new helpers and a `SITD`/`SIT!` archive at its root).** The
+archive draws the archive icon and hands on to MacExtract's destination
+dialog; on 6.0.8 (MultiFinder) it extracted. **Only with the `Desktop Mgr`
+INIT removed from `System6.hfv`:** with it (AppleShare's, 1988, in that
+image's System Folder) the helper said *"MacExtract could not be found"*,
+the helpers before this entry and after alike, and the floppy gained a
+`Desktop DB` and `Desktop DF`. Removing the one INIT is the whole
+difference measured. Why (hypothesis): `PBDTGetPath` then answers for the
+floppy, `FindApp` reads only that database, which lists no MacExtract, and
+never falls back to the `Desktop` file. The 2026-11-03 System 6 rows ran on
+this image, so which route they took is not known. Left open:
+OPEN_ITEMS.md, *A helper under System 6's Desktop Manager*.
