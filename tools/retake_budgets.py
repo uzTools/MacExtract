@@ -186,6 +186,26 @@ def rewrite_formats(dry):
 
     text = re.sub(r"<!-- gain: ([a-z ]+) -->(\**)([+−-])([\d,]+) B",
                   gain_sub, text)
+
+    def grant_sub(m):
+        tier, names, bold, num = m.groups()
+        ids = [] if names.split() == ["bundle"] else \
+            ["OVL_ID_" + n.upper() for n in names.split()]
+        gone = [i for i in ids if i not in run_tiers.IMAGES]
+        if gone or tier not in run_tiers.TIERS:
+            die("FORMATS.md grants a figure at %s for {%s}, which this build "
+                "cannot price: correct that sentence (nothing was written)"
+                % (tier, names))
+        new = run_tiers.TIERS[tier][0] + run_tiers.gain(ids)
+        old = int(num.replace(",", ""))
+        if new != old:
+            moved.append("grant at %s {%s}: %d -> %d" % (tier, names, old,
+                                                         new))
+        return "<!-- grant: %s %s -->%s%s B" % (tier, names, bold,
+                                                "{:,}".format(new))
+
+    text = re.sub(r"<!-- grant: ([A-Za-z0-9-]+) ([a-z ]+) -->(\**)([\d,]+) B",
+                  grant_sub, text)
     fig = "{:,}".format
     for pat, val in (
             (r"(the )([\d,]+)( B of `CODE` and A5 the shipped build does not "
@@ -260,7 +280,8 @@ def main():
     if not lines and not moved:
         print("retake_budgets: every figure agrees with the builds")
         return 0
-    print("retake_budgets: tools/budgets.txt")
+    if lines:
+        print("retake_budgets: tools/budgets.txt")
     for line in lines:
         print("  " + line)
     if moved:

@@ -484,6 +484,9 @@ def _run_tiers_consts():
 # bundle kept). tools/retake_budgets.py rewrites them; this holds each one
 # to the function, which nothing did until 2026-11-13.
 GAIN = re.compile(r"<!-- gain: ([a-z ]+) -->(\**)([+\u2212-])([\d,]+) B")
+# And a tier's budget for a format, in prose: `TIERS[tier]` plus the same
+# gain, `<!-- grant: sys6-512K zipold codecs -->233,186 B`.
+GRANT = re.compile(r"<!-- grant: ([A-Za-z0-9-]+) ([a-z ]+) -->(\**)([\d,]+) B")
 
 
 def gain_of(names):
@@ -498,6 +501,18 @@ def check_grants(text=None):
     if text is None:
         text = (ROOT / "FORMATS.md").read_text()
     out = []
+    sys.path.insert(0, str(ROOT / "tools"))
+    import run_tiers
+    for tier, names, _b, num in GRANT.findall(text):
+        if tier not in run_tiers.TIERS:
+            out.append("FORMATS.md: a grant for tier %r, which run_tiers.py "
+                       "does not have" % tier)
+            continue
+        want = run_tiers.TIERS[tier][0] + gain_of(names)
+        if _n(num) != want:
+            out.append("FORMATS.md grants %s B at %s for {%s}; TIERS + gain() "
+                       "is %s B — run tools/retake_budgets.py"
+                       % (num, tier, names, "{:,}".format(want)))
     found = GAIN.findall(text)
     if len(found) < 20:
         return ["FORMATS.md: %d annotated grants — this check has stopped "
@@ -515,6 +530,13 @@ def check_grants(text=None):
 def selftest_grants():
     text = (ROOT / "FORMATS.md").read_text()
     m = GAIN.search(text)
+    if not m:
+        return 0
+    bent = text[:m.start(4)] + "{:,}".format(_n(m.group(4)) + 4) + \
+        text[m.end(4):]
+    if not check_grants(bent):
+        return 0
+    m = GRANT.search(text)          # and a tier's figure in the prose
     if not m:
         return 0
     bent = text[:m.start(4)] + "{:,}".format(_n(m.group(4)) + 4) + \
@@ -959,8 +981,8 @@ def main():
                 check_corpus_figures() + check_corpus_class() +
                 check_decision_dates())
     if not selftest_grants():
-        problems.append("check_docs: the grant selftest bent one figure and "
-                        "nothing was caught — it cannot fail, so it is not "
+        problems.append("check_docs: the grant selftest bent a table figure "
+                        "and a prose one and one was not caught — it cannot fail, so it is not "
                         "checking the grants")
     caught = selftest_derived()
     if caught != 2:
