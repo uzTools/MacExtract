@@ -72,19 +72,23 @@ DiskDoubler ß05 wrote states 48 and stops after +47.
 | 56 | 2 | resource fork delta distance | as +54 |
 | 82 | 2 | **CRC-16/XMODEM of bytes 0..81** | **measured 2026-10-17**: 70 headers of 70; 3.7 refuses one that disagrees (`ddmeta.py --reader`). 91 of 91 on 2026-10-23, over the fixtures and every specimen, and none stores the zero XADMaster accepts |
 | 84 | | the data fork's bytes, then the resource fork's | |
-| 84 + both | 84 | a byte-identical COPY of the header above | **63 of the corpus's 66 compressed files**, and the three without it are this project's own (below) |
+| 84 + both | 84 | a byte-identical COPY of the header above | **63 of the corpus's 66 compressed files**, the three without it this project's own; **none** of the 34 on Salient's 3.1.2 and 3.7 disks (below) |
 
 ### The header is written twice
 
-**A file DiskDoubler compressed ends with a byte-for-byte copy of its
-own 84-byte header.** True of 3.x and 4.x, and **not of the format** —
-the 1990 build writes no trailer at all (*The header size, and the 1990
-header*). 63 of the 66 compressed files here carry one, and
+**A file DiskDoubler compressed may end with a byte-for-byte copy of its
+own 84-byte header.** Not every 3.x file does, and **it is not the
+format's** — the 1990 build writes no trailer at all (*The header size,
+and the 1990 header*). 63 of the 66 compressed files here carry one, and
 the three that do not are `synth-dd-m3.dd`, `synth-dd-m4.dd` and
 `synth-dd-m5.dd` — written by `tools/vmac/ddencode.py`, in this tree,
-rather than by DiskDoubler. So every real specimen has it and no
-synthetic one does, which is the shape of a fact about the FORMAT and
-also the shape of a thing our own fixtures would never have taught us.
+rather than by DiskDoubler. Salient's own disks have none: **0 of the 24
+compressed files on the DiskDoubler 3.1.2 disk and 0 of the 10 on the 3.7
+disk; 7 of the 9 on the Norton DiskDoubler Pro floppy** (measured
+2026-11-13, last 84 bytes against the first), and 3.7 run on the emulator
+wrote none either (`subject-A.dd`, 1,878 B = 84 + 1,697 + 97). Until then
+this said every real specimen has it (BLOCKERS.md, *Withdrawn claims*).
+What decides whether one is written is not known.
 
 It matters because it is what a `DDAR` record's span is measured in:
 an entry whose file was compressed BEFORE it was archived carries the
@@ -131,14 +135,18 @@ Three things follow, and each was an open question this document asked:
   `CCOD` resource, refuses a word other than `0xABCD` and then requires
   the size at +2 to be **≥ 48** — a forward-compatible test, which is
   what a version that expected the header to grow would write.
-- **The header trailer is 3.x's, not the format's.** Nothing follows
+- **The header trailer is not the format's.** Nothing follows
   the two forks: the 1990 file has no copy of its own header. So the
-  63-of-66 count above is a fact about the generation this corpus is
-  made of.
-- **The file is stamped `ZIVM`/`LZIV`.** Not `DD01`, which is what a
-  search for the meaning of that type code would have hoped for; `DD01`
-  and `DD02` stay unexplained, and the 1990 INIT's own `BNDL` declares
-  no file types at all beyond its own `INIT`.
+  63-of-66 count above is a fact about the files this corpus is
+  made of (*The header is written twice*).
+- **The file is stamped `ZIVM`/`LZIV`.** Not `DD01`, and the 1990
+  INIT's own `BNDL` declares no file types at all beyond its own `INIT`.
+  3.x picks a compressed file's type from the ORIGINAL's type and
+  creator to choose its icon: `DD01` where its table has no row, `DDF0`–`DDF7`
+  by class, `DDf0`–`DDfs` for named programs' documents (DiskDoubler 3.7's
+  `'CUIC'` 0, 44 rows); 3.7's code tests `DD02` beside `DD01` as a
+  compressed file, and what writes `DD02` is not known (DECISIONS.md
+  2026-11-13, *the icon types only the helper claims*).
 
 And one that was not asked. **`info1` is a version byte and the XOR
 garbling is gated on it.** The 1990 file reads `0x1f` and its data fork

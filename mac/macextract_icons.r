@@ -262,28 +262,13 @@ resource 'FREF' (155) { 'SegN', 1, "" };   /* StuffIt segment */
 resource 'FREF' (156) { 'SegM', 1, "" };   /* StuffIt segment */
 resource 'FREF' (158) { 'DDSP', 1, "" };   /* DiskDoubler split part */
 resource 'FREF' (157) { 'ARC7', 1, "" };   /* ARC 6/7 (ARC+Plus), which ArcMac cannot unpack */
-/* DiskDoubler's single compressed files, creator `DDAP`: the types its own
-   expanders declare — `DD01`, `DD02` (DDExpand 2.03a), `DDF0`-`DDF5`
-   (DDExpand 3.1; DECISIONS.md, the expanders' BNDL table), `DDF6`, `DDF7`,
-   `DDFL` (DD Expand, companion/app-bundles.tsv) — and `DDf4`, found on
-   real files with `DDF0`-`DDF3`, `DD01` and `DDFL` by MacStamp's census
-   (DECISIONS.md 2026-11-01, *the floor, and the second double-click*).
-   MacExtract opens them by content already; without the types the Finder
-   refuses them dropped on it and a `DDAP` helper passes them on. Not
-   DiskDoubler's other declared types (`DDDA`, `DDTM`, `DDTD`, `DDCR`,
-   `DDCP`, `DDCT`, `ADDA`): nothing here shows they are compressed files. */
-resource 'FREF' (159) { 'DD01', 1, "" };
-resource 'FREF' (160) { 'DD02', 1, "" };
-resource 'FREF' (161) { 'DDF0', 1, "" };
-resource 'FREF' (162) { 'DDF1', 1, "" };
-resource 'FREF' (163) { 'DDF2', 1, "" };
-resource 'FREF' (164) { 'DDF3', 1, "" };
-resource 'FREF' (165) { 'DDF4', 1, "" };
-resource 'FREF' (166) { 'DDF5', 1, "" };
-resource 'FREF' (167) { 'DDF6', 1, "" };
-resource 'FREF' (168) { 'DDF7', 1, "" };
-resource 'FREF' (169) { 'DDFL', 1, "" };
-resource 'FREF' (170) { 'DDf4', 1, "" };
+/* Not DiskDoubler's single compressed files (`DD01`, `DD02`, `DDF0`-`DDF7`,
+   `DDFL`, `DDf0`-`DDfs`, creator `DDAP`): the types DiskDoubler picks by the
+   original's type to choose an icon. The `DDAP` helper claims them and hands
+   them on (companion/helpers.tsv), so Easy Open never lists two programs for
+   one; MacExtract still opens one by content, and takes one dropped on it
+   through '****'. DECISIONS.md 2026-11-13, *the icon types only the helper
+   claims*. */
 /* MAR, the types mar 0.2.0 gives the archives it writes, creator `MARc`
    (reference/mar/mar-0.2.0-src/src/mar_io.c): `MARd` a folder's `.mar`,
    `MARf` a file's `.mac`. Its LZW-compressed archive is `ZIVU`, claimed
@@ -333,10 +318,8 @@ resource 'BNDL' (128) {
                 19, 147, 20, 148, 21, 149, 22, 150, 23, 151,
                 24, 152, 25, 153, 26, 154, 27, 155, 28, 156, 29, 158,
                 30, 157,
-                31, 159, 32, 160, 33, 161, 34, 162, 35, 163, 36, 164, 37, 165,
-                38, 166, 39, 167, 40, 168, 41, 169, 42, 170,
-                43, 171, 44, 172, 45, 173, 46, 174, 47, 175, 48, 176, 49, 177, 50, 178,
-                51, 179 } }
+                31, 171, 32, 172, 33, 173, 34, 174, 35, 175, 36, 176, 37, 177, 38, 178,
+                39, 179 } }
 };
 
 /* The SIGNATURE resource: type = the creator code, ID 0. The Finder wants

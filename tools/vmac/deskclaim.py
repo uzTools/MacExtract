@@ -10,6 +10,7 @@ whether the launched application is handed the FILE, or merely started.
                               file's APPL list before the boot
         --bundle              ...and a bundle filed under SIT! (needs --claim)
         --creator C           the archive's creator (default SIT!)
+        --type T              the archive's type (default SIT!)
         --app-creator C       retag the application FILE's creator (its BNDL
                               is untouched)
         --stub-bundle         ...and its BNDL owner and signature resource
@@ -397,6 +398,9 @@ def main():
                          "(launched without it), or neither")
     ap.add_argument("--creator", default="SIT!",
                     help="the archive's creator (default SIT!)")
+    ap.add_argument("--type", default="SIT!",
+                    help="the archive's type (default SIT!): DDf3 for a "
+                         "DiskDoubler file only the DDAP helper claims")
     ap.add_argument("--bundle", action="store_true",
                     help="with --claim, also file a bundle under SIT! in "
                          "the Desktop file")
@@ -499,7 +503,7 @@ def main():
             extra = (flop,)
             fh = MB.HFS(flop)
             try:
-                fh.run("hattrib", "-t", "SIT!", "-c", args.creator,
+                fh.run("hattrib", "-t", args.type, "-c", args.creator,
                        fh.path("archive.sit"))
             finally:
                 fh.close()
@@ -547,7 +551,7 @@ def main():
                     hfs.run("hmkdir", hfs.path(*parts[:k]), check=False)
                 hfs.run("hcopy", "-m", src, hfs.path(*parts))
             if not args.floppy:
-                hfs.run("hattrib", "-t", "SIT!", "-c", args.creator,
+                hfs.run("hattrib", "-t", args.type, "-c", args.creator,
                         hfs.path("archive.sit"))
             # System 7 keeps the list in `Desktop DB`, which nothing here
             # reads or writes: no `Desktop` file to restore or patch.

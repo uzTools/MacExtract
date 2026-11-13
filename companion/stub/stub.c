@@ -10,10 +10,13 @@
  * by Expander 7.0.3's bundle), which MacExtract does not open. So the
  * documents' types, from the Finder's list, are checked against the types
  * MacExtract's own bundle claims, read out of MacExtract at run time so
- * the two cannot drift. All claimed: MacExtract. Any one not: the whole
- * list goes to the creator's own application, found as MacExtract is
- * (below) and launched the same way (DECISIONS.md 2026-10-31, *the stub
- * that sorts*).
+ * the two cannot drift, and the types this helper's own bundle claims,
+ * every one a type MacExtract opens (companion/helpers.tsv): DiskDoubler's
+ * icon types are claimed by the `DDAP` helper alone (DECISIONS.md
+ * 2026-11-13, *the icon types only the helper claims*). All claimed:
+ * MacExtract. Any one not: the whole list goes to the creator's own
+ * application, found as MacExtract is (below) and launched the same way
+ * (DECISIONS.md 2026-10-31, *the stub that sorts*).
  *
  * RECLAIM. On Mac OS 9 the Finder gives a creator's documents to the
  * application registered LAST in the volume's desktop database (Apple's
@@ -117,18 +120,20 @@ static OSType OwnCreator(short vol, long self, Str255 me)
     return c.hFileInfo.ioFlFndrInfo.fdCreator;
 }
 
-/* Whether MacExtract's bundle claims every document's type. The list is
- * AppParmHandle as MacExtract reads it (mac/macextract_mac.c, *Documents
- * handed over by the Finder*): message, count, then per document vRefNum,
- * fType at +2, versNum, the name at +8, the record padded to even. The
- * types are MacExtract's 'FREF's, the first four bytes of each, less the
- * ones that name no document format. The default directory must already
- * be MacExtract's folder. An empty list, or Print, is MacExtract's. */
+/* Whether MacExtract's bundle or this helper's claims every document's
+ * type. The list is AppParmHandle as MacExtract reads it
+ * (mac/macextract_mac.c, *Documents handed over by the Finder*): message,
+ * count, then per document vRefNum, fType at +2, versNum, the name at +8,
+ * the record padded to even. The types are the 'FREF's of this helper (the
+ * current resource file) and then of MacExtract, the first four bytes of
+ * each, less the ones that name no document format. The default directory
+ * must already be MacExtract's folder. An empty list, or Print, is
+ * MacExtract's. */
 static Boolean AllOpenable(Str255 mx)
 {
-    enum { kMaxTypes = 64 };
+    enum { kMaxTypes = 128 };
     OSType types[kMaxTypes];
-    short nt = 0, i, j, n, ref, saved = CurResFile();
+    short nt = 0, i, j, n, ref = 0, saved = CurResFile();
     Handle h = LMGetAppParmHandle(), r;
     const unsigned char *q;
     long off = 4;
@@ -138,15 +143,18 @@ static Boolean AllOpenable(Str255 mx)
     n = (short)((q[2] << 8) | q[3]);
     if (q[0] || q[1] || n <= 0) return true;
 
-    ref = OpenResFile(mx);
-    if (ref == -1) return true;          /* cannot tell: MacExtract decides */
-    for (i = 1; nt < kMaxTypes; i++) {
-        OSType t;
-        r = Get1IndResource('FREF', i);
-        if (!r) break;
-        t = *(OSType *)*r;
-        if (t != '****' && t != 'APPL' && t != 'fold' && t != 'disk')
-            types[nt++] = t;
+    for (;;) {
+        for (i = 1; nt < kMaxTypes; i++) {
+            OSType t;
+            r = Get1IndResource('FREF', i);
+            if (!r) break;
+            t = *(OSType *)*r;
+            if (t != '****' && t != 'APPL' && t != 'fold' && t != 'disk')
+                types[nt++] = t;
+        }
+        if (ref) break;
+        ref = OpenResFile(mx);
+        if (ref == -1) return true;      /* cannot tell: MacExtract decides */
     }
     CloseResFile(ref);
     UseResFile(saved);

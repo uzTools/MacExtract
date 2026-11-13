@@ -271,6 +271,9 @@ bundles (read off its resource fork in the cache), and MacStamp's census
 (`fixtures/manifests/pair-census.csv`, 143,723 files), filtered to archive
 programs' creators. **No row is established: no file's bytes were read**
 (the census keeps no paths). Claiming a type costs 12 B of resource map.
+DiskDoubler's 40 single-file types are left to the `DDAP` helper by
+decision, not missing (DECISIONS.md 2026-11-13, *the icon types only the
+helper claims*).
 
 | type | in Expander 5.5 | files in the census, by creator | note |
 |---|---|---|---|
@@ -281,7 +284,7 @@ programs' creators. **No row is established: no file's bytes were read**
 | `pBIN` | — | `pZIP` 19 (also `pGeN` 188 outside archive creators) | MacStamp's hypothesis: members UnZip wrote out, not archives |
 | `SITo` | — | `SIT!` 10 | unknown |
 | `bzy ` | — | `SIT!` 2 | unknown |
-| `DDDA`, `DDf3`, `DDTM` | — | `DDAP` 2, 1, 1 | DiskDoubler's; `DDf3` sits beside the claimed `DDf4` |
+| `DDDA`, `DDTM` | — | `DDAP` 2, 1 | DiskDoubler's |
 | `Bzp2` | both lists | — | bzip2, out of scope (Part 1) |
 | `SITX` | — | `SIT!` 1 | StuffIt X, out of scope (Part 1) |
 | `fold`, `disk` | both lists | — | Expander's for a dropped folder or disk; MacExtract takes neither |
@@ -293,7 +296,7 @@ UnZip 1.01, 1.10 and 2.0.1 (A. P. Maika), and `TEXT`/`pZIP` 26 files.
 What would settle a row: a file of that type, from MacStamp's sources or
 written to order by the program under the emulator (UnZip 2.0.1 on chosen
 zips; StuffIt or Expander for `Part` and `SITo`; DiskDoubler for its
-three), run through the CLI; a type is claimed only if it is an archive
+two), run through the CLI; a type is claimed only if it is an archive
 MacExtract reads.
 
 ## BinHex before 4.0: what is not graded
@@ -385,8 +388,8 @@ dist*). Left:
   MacExtract's) — the maintainer's choice, later.
 - **An icon per document type, drawn by the maintainer.** Every helper's
   bundle points all its types at one family, MacExtract's archive icon
-  (`companion/make_stub.py`); the eighteen helpers claim 51 types between
-  them (`DDAP` 15, `SIT!` 8, `SITx` 5, `MARc` 4, the rest 1 or 2;
+  (`companion/make_stub.py`); the eighteen helpers claim 79 types between
+  them (`DDAP` 43, `SIT!` 8, `SITx` 5, `MARc` 4, the rest 1 or 2;
   `companion/helpers.tsv`). The Finder draws a file's icon from the
   application that owns its creator, so these show on archives that keep
   their original creators, and cost MacExtract nothing: a helper's
@@ -394,7 +397,7 @@ dist*). Left:
   one archive icon, since a family there costs 72 B of its resource map
   (FORMATS.md, *Icons*). A colour family is about 2.3 KB of the helper
   and a black-and-white one (`ICN#`, `ics#`) about 320 B; the helpers zip
-  is 64,402 B today and rides on the 400K floppy.
+  is 64,636 B today and rides on the 400K floppy.
 - **A helper under System 6's Desktop Manager.** With AppleShare's
   `Desktop Mgr` INIT installed, a helper on the MacExtract floppy says
   *"MacExtract could not be found"* (measured, 6.0.8; DECISIONS.md

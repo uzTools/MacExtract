@@ -608,6 +608,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-13 (the installer package that is a zip) — `xpi `/`NSIn`, Netscape's installer packages, claimed by MacExtract's bundle: an ordinary zip the engine already reads; no helper
 - 2026-11-13 (the helper beside MacExtract) — a helper in MacExtract's own folder said "MacExtract could not be found" on System 7.5.5 and 6.0.8, its lookup skipping every application in its own folder; fixed for 0 B. Mac OS 9.2's File Exchange honours the empty `'open'` too; the helpers still hand on and draw their icons on 6.0.8 and 3.0
 - 2026-11-13 (the registration that came last) — on System 7.5.5 after a desktop rebuild, of two applications of one creator the one catalogued last opens its documents, whatever either date says; a helper opened by itself says it took its creator back and does not; on 6.0.8 and 3.0 it says "could not register itself (error -50)"
+- 2026-11-13 (the icon types only the helper claims) — DiskDoubler's 40 single-file types, `DD01`, `DD02`, `DDF0`–`DDF7`, `DDFL` and `DDf0`–`DDfs`, leave MacExtract's bundle for the `DDAP` helper's alone, which now hands on what its own bundle claims; +144 B of heap on every tier, +32 B of every helper's code
 
 ---
 
@@ -10266,16 +10267,22 @@ the same day's search (*the version that could not have written it*).
 | `info1` at +22 | `0x1f` | `0x2a` |
 | checksums at +48 | **the header has ended** | `d766` / `116a` |
 | the data fork begins | `1f 9d 90` | `45 c7 ca` |
-| after the two forks | nothing | a byte-identical copy of the header |
-| the file is stamped | `ZIVM`/`LZIV` | `DD01`/`DDAP` |
+| after the two forks | nothing | nothing |
+| the file is stamped | `ZIVM`/`LZIV` | `DDF3`/`DDAP` |
 
-- **The header trailer is 3.x's, not the format's.** 63 of the corpus's
+- **The header trailer is not the format's.** 63 of the corpus's
   66 compressed files end with a header copy (the three that do not are
   our synthetics); 1990 writes none: `48 + 1697 + 97 = 1842`, the file
-  size.
+  size. *Corrected 2026-11-13:* the 3.7 column read "a byte-identical copy
+  of the header"; its specimen, `subject-A.dd`, is 1,878 B = 84 + 1,697 +
+  97, no copy, like the 34 files on Salient's 3.1.2 and 3.7 disks
+  (docs/formats/diskdoubler-container.md, *The header is written twice*).
 - **`DD01` is not what ß05 stamps** (`ZIVM`/`LZIV`; its `BNDL` declares
   only its `INIT`), so `DD01`/`DD02` are 3.x's, where `DDExpand 2.03a`
-  and 3.1 list them.
+  and 3.1 list them. *Corrected 2026-11-13:* the 3.7 column's stamp read
+  `DD01`; 3.7 picks the type from the original's (`TEXT` → `DDF3`), and
+  `A/12-done.png` of that run shows the `DDF3` icon (*the icon types only
+  the helper claims*).
 - **`info1` is a version byte, and XOR garbling is gated on it.** ß05's
   `0x1f` leaves `compress(1)`'s `1f 9d 90` in clear where 3.7's is XORed
   with `0x5a`. `>=` is still not distinguished from `==` (0x1f fails
@@ -25825,3 +25832,98 @@ disk, a `SITD`/`SITx` archive went to the helper on the floppy and, copied
 to the hard disk, again after StuffIt Expander had been opened, run and
 quit: the state a reclaim answers was not reached there. 3.0 has no
 StuffIt Expander to run.
+
+---
+
+## 2026-11-13 (the icon types only the helper claims) — DiskDoubler's 40 single-file types, `DD01`, `DD02`, `DDF0`–`DDF7`, `DDFL` and `DDf0`–`DDfs`, leave MacExtract's bundle for the `DDAP` helper's alone, which now hands on what its own bundle claims; +144 B of heap on every tier, +32 B of every helper's code
+
+**The maintainer's ruling.** DiskDoubler 3.x types a file it compresses in
+place by the ORIGINAL's type and creator, to choose its icon. All 39 icon
+types go in the `DDAP` helper's `FREF`s, none in its `'open'` (empty since
+*the helper that is not offered*), and none in MacExtract's bundle, so Easy
+Open never lists two programs for one of these files. `DDA2`, `DDAR` and
+`DDSP`, the archive and split types, stay in both.
+
+**The table, read off the code (measured).** DiskDoubler 3.7's App and INIT
+(`vmac/diskdoubler/dd37.hfv`) each carry `'CUIC'` 0: 44 rows of original
+type, original creator, DiskDoubler type, 0. `DDf0`–`DDf9`, `DDfa`–`DDfs`
+for 29 named programs' documents (`WDBN`/`MSWD` → `DDf3`, `TEXT`/`KAHL` →
+`DDfj`, `rsrc`/`****` → `DDfc`), then `DDF0` for `INIT`, `RDEV`, `PRER`,
+`PRES`, `ZSYS`, `DFIL`/`DMOV` and `FFIL`/`DMOV`, `DDF1` `cdev`, `DDF2`
+`APPL`, `DDF3` `TEXT`, `DDF4` `PICT`, `DDF5` `TIFF`, `DDF6` `EPSF`, `DDF7`
+`PNTG` and `PX01`/`PIXR`. `DD01` is the type for an original with no row:
+the App's `CODE` 5 pushes `'DD01'` at +0x132e. `DDFL` is AutoDoubler's
+(Norton DiskDoubler Pro floppy, `AutoDoubler™`, `CCOD` -2043 +0x20e6:
+`move.l #'DDFL'` in place of the table's answer when a byte of the
+compressor's record is 9). 1 + 8 + 1 + 29 = 39. Salient's own *DD Custom
+Icons List* on the 3.1.2 disk (read here, expanded by the CLI) gives
+`DD01`, `DDf0`–`DDfq` and `DDF0`–`DDF7`, `DDfr` and `DDfs` being 3.7's
+two new rows; and every one of the 43
+compressed files on the 3.1.2, 3.7 and Pro disks carries the type its
+original predicts (re-read here; MacStamp's `.tmp/ddtypes/NOTE.md` has 57
+of 57 with the test-file archives).
+
+**`DD02` goes with them.** It is in no row, and no file here carries it;
+but 3.7's `CODE` 5 +0x66a0 tests a type as a compressed file by
+`DD01`, `DD02`, or `DD` followed by `F` or `f`, and DDExpand 2.03a and
+3.1, DD Expand and the 3.1.2 and 3.7 Apps declare it beside `DD01`
+(BLOCKERS.md's `DDAR` row; companion/app-bundles.tsv). A
+compressed single file, in the program's own test: the same class as the
+39, so the helper claims it and MacExtract's bundle does not. What wrote
+one is not known.
+
+**The hand-on (changed, then measured).** Until now a helper handed a
+document to MacExtract only if MacExtract's bundle claimed its type (*the
+stub that sorts*), so with these types gone from it a `DDf3` file would
+have gone to DiskDoubler, or to *"no application"* without one.
+`AllOpenable` in `companion/stub/stub.c` now reads the helper's own `FREF`s
+first and MacExtract's after; every helper type is one MacExtract opens
+(companion/helpers.tsv's header says so now), so no other helper's
+decision moves. Its list grew from 64 to 128 types (81 are used by the
+`DDAP` helper).
+
+**Measured, System 7.5.5** (Mini vMac Mac II, 256 colours, the installed
+volume with `Desktop DB` deleted, this commit's `dist/MacExtract.bin` at
+its root and its eighteen helpers in a folder; frames in
+`~/.cache/macextract/easyopen/ddicons/`). DiskDoubler 3.7's own `DDf3` file
+*DD IAC Doc.Word* (`WDBN`/`MSWD` inside) typed `DDf3`/`DDAP`: drawn with the
+archive icon, double-clicked, the `DiskDblr` helper launched MacExtract,
+whose *Extract into this folder* dialog came up, and it extracted
+(*"Extraction complete."*). The same file typed `DDf3`/`Zzzz` and
+`DDF3`/`Zzzz`, orphans: drawn blank, and Easy Open offers **nothing**:
+*"could not be opened, because the application program that created it
+could not be found. Could not find a translation extension with
+appropriate translators."* That is the ruling's consequence: an orphaned
+DiskDoubler file no longer reaches MacExtract by double-click; dropped on
+MacExtract's icon it still does (`'****'`, not re-run here).
+
+**Measured, System 6.0.8** (`tools/vmac/deskclaim.py --stub … --creator
+DDAP --type DDf3`, `--type` new for this; `System6.hfv` booted as the
+harness boots it, System and Finder only, so without AppleShare's `Desktop
+Mgr`; frames `s6-*` in the same folder). The same `DDf3`/`DDAP` file, the
+`DiskDblr` helper's folder opened once: MacExtract's destination dialog,
+and the file extracted onto the volume. Control, the helper built from the
+stub before this change with the same 43 types: *"MacExtract cannot open
+this document, and the application that made it could not be found."* —
+the change is what hands it on. (The harness reads that alert's frame as
+`open`; the frame is the evidence.) System 3.0 and Mac OS 9, and a
+running MacExtract (the odoc and puppet-string paths, decided by the same
+test before them), were not run.
+
+**Price.** MacExtract: 12 `FREF`s and their `BNDL` pairs gone (52 → 40,
+read back off the built application), −324 B of resource fork; `CODE`, A5
+and every image unmoved (all other resources byte-identical). 12 B of
+resource map per `FREF` is heap outside the `CODE` + A5 unit, so
+`TIERS_MACHINE` rises 144 B on each tier, DERIVED from the 12 B measured per
+`FREF` on 2026-11-04, not re-measured on the probe; the four per-tier grants
+in FORMATS.md re-taken (`retake_budgets.py`). Helpers: the stub's `CODE` 1
+2,962 → 2,994 B (+32 on all eighteen); the `DDAP` helper's resource fork
+7,075 → 7,863 B (28 more `FREF`s); the `SIT!` reference helper
+`check_helpers.py` stamps stays at its 6,912 B ceiling. The helpers zip
+64,402 → 64,636 B.
+
+**What this cannot see.** Mac OS 8.5–9's File Exchange, not booted for it.
+A drop on MacExtract's icon goes by its `'****'` claim and was not re-run.
+Two corrections came out of the same reading: DECISIONS.md 2026-09-22,
+*the magic that was a length*, and docs/formats/diskdoubler-container.md,
+*The header is written twice* (BLOCKERS.md, *Withdrawn claims*).
