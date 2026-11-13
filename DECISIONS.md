@@ -600,8 +600,8 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-11 (the head that named nothing) — an envelope whose first bytes name nothing keeps its reader, the sniffer, Compact Pro's and SuperDisk!'s readers, the ciphers and the codecs instead of the whole bundle; the maintainer's choice when Installer VISE's image put two gzip fixtures short on System 6.0.8 / 512Ke; 32 B
 - 2026-11-12 (the VISE before VISE) — MindVision's archive before Installer VISE 3.5, 1992-1996, extracts: the decompressor read out of an installer's own 'Dcmp', 99 files of eight archives, DeltaSymbol.TT and Serial Tool equal to installed copies; 0 B resident
 - 2026-11-12 (the format table that became three bitmaps) — on the Macintosh a format's resident rows are a bit in three 8-byte maps and its 2-byte `gRun` row, a segment scheme's row 2 bytes, and a set's part search found through `gRun`: CODE +16, A5 −1,152, 1,136 B onto every budget; a new format costs 2 B resident where Installer VISE cost 64, and 4 B if it is a set
-
 - 2026-11-12 (VISE parked) — every Installer VISE reader, 1992 to VISE X, taken off main on the maintainer's word and kept on the branch `parked/vise`; the format's number reserved; the control 12,928 B smaller
+- 2026-11-13 (one registration per format) — a format is its files and its lines in `src/unc_formats.h`: every per-format table, the Macintosh's included, is expanded from four lists, the image lists from the build's rules, and every build size from `tools/budgets.txt`, which `tools/retake_budgets.py` re-takes; the application byte-identical
 ---
 
 ## M0
@@ -25501,4 +25501,64 @@ format* is what would make that one row instead of eighty files.
 **On a Macintosh** (Mini vMac, the 74-archive sample, one boot an archive):
 72/74 on System 6.0.8 / 512Ke and on System 3.0 / 512Ke, the same two
 refused as before (`synth-dd-m5.dd`, `derived-Library_ISBN_Barcoder.sit`).
+
+---
+
+## 2026-11-13 (one registration per format) — a format is its files and its lines in `src/unc_formats.h`: every per-format table, the Macintosh's included, is expanded from four lists, the image lists from the build's rules, and every build size from `tools/budgets.txt`, which `tools/retake_budgets.py` re-takes; the application byte-identical
+
+**The maintainer's ask**, after Installer VISE's removal had to find its
+rows by hand: "we need a simpler system to add or remove methods". The
+removal touched 28 files besides the format's own; a third of the edits
+were per-format rows, a third hand-kept counts and budget figures with a
+paragraph of history each, and the rest tests and docs.
+
+**What a format is now** (`src/unc_formats.h`, which lists the rest):
+
+- **Four lists**, `UNC_FORMATS` (one `FORMAT` row: name, kind, extractor,
+  the Macintosh's run row, keep flags, join), `UNC_PROBES` (the sniff
+  order, its arguments moved with it), `UNC_SEGIDS` (describe order) and
+  `UNC_DECODERS`. The engine's table and bitmaps, both probe orders,
+  `seg_schemes`, `seg_ids`, `gRun`, the aliases, `gKeepSet` and the CLI's
+  two set predicates expand from them. A keep row takes its image from the
+  run row, which every format already shared. **Lists of macro calls, not
+  a file included once per table**: `unc_maps` is built inside a macro's
+  argument, where an `#include` is undefined behaviour (clang refuses it).
+- **The images** are the build's rules, asserted equal to `overlay.h`'s
+  ids by `tools/overlay/images.py`, which hands the list to the build, the
+  host lane and the loader test; seven hand-kept counts went.
+- **Every build size** is `tools/budgets.txt`'s: MEASURED (re-taken from
+  the builds by `tools/retake_budgets.py`, which also rewrites FORMATS.md's
+  grants and the sentences `check_docs` holds), MACHINE (the emulator's)
+  and one CEILING. `TIERS` is derived, `TIERS_MACHINE − TIERS_CONTROL`,
+  which is what every "DERIVED" re-take since 2026-10-09 did by hand. Each
+  grant carries its image set (`<!-- gain: ... -->`) and `check_docs` now
+  holds all 27 to `run_tiers.gain()`, which nothing checked before. The
+  dated ledgers beside the constants are gone (about 3,700 lines across
+  `build_mac.sh`, `run_tiers.py`, `check_app_size.py` and FORMATS.md):
+  each was a copy of what the commit and the entry it cited already said.
+
+**What stays by hand, and why**: the enum value (ABI, and a removed
+format's number is reserved there); the declarations in
+`src/unc_internal.h`, which `tools/overlay/mkforwards.py` reads as text
+for the host vector (generated ones broke it, measured); an image's entry
+point and `EXCLUDE` line (a probe file is in an image AND resident, so
+exclusion is not derivable from membership); a format's own harness line
+in `ci.sh`; and its docs.
+
+**Measured free**: the shipped eager build, the lazy build and every image
+are byte-identical to 57d96dc0's (two builds of one tree differ only in
+timestamps, which the comparison masks); `dist/` matches. The resident
+control is the same size with its name table in the list's order (476
+bytes moved, CODE + A5 unmoved). `run_tiers` reads every table and
+constant identically from the old and new sources; `stack_depth`'s
+derived classes equal the old literals, deepest chain 3,430 B;
+`check_ovl_rows --selftest` removes 33 run rows, 2 `RUN_MATCH` flags, 27
+aliases and 3 resident readers, each caught. A retake on this tree moves
+only `check_app_size`'s two watched sizes, stale inside their tolerance;
+figures bent by hand are reported by `check_docs` and restored exactly by
+the retake.
+
+**What it cannot see**: a figure the machine measures. `TIERS` follows the
+control by arithmetic, as before; a change that moves resident bytes
+outside the CODE + A5 unit still needs the budget probe on the emulator.
 

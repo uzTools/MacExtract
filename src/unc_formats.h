@@ -1,10 +1,10 @@
 /*
  * unc_formats.h — every format this engine reads, in one place.
  *
- * A format is its own source files and its lines here: nothing else in the
- * tree registers one. Every table that has a row per format is expanded
- * from the four lists here by the file that owns the table, which hands
- * each list the macro that makes its row:
+ * A format is its own source files and its lines here: no other file in
+ * the tree keeps a list of formats. Every table that has a row per format
+ * is expanded from the four lists here by the file that owns the table,
+ * which hands each list the macro that makes its row:
  *
  *   UNC_FORMATS(FORMAT)   FORMAT(id, name, kind, extract, run, keep, join),
  *                         one row a format
@@ -23,9 +23,7 @@
  * so.
  *
  * FORMAT's columns:
- *   id       the UncFormat value (include/macextract.h, the one other
- *            line a format has: its number is ABI, and a removed format's
- *            stays reserved there)
+ *   id       the UncFormat value (include/macextract.h)
  *   name     what unc_format_name says
  *   kind     FILE, a format read as a file; ENVELOPE, one that holds
  *            exactly one file worth looking inside (unc_format_is_envelope;
@@ -45,11 +43,35 @@
  *            Macintosh build's seg_schemes table, which is bytes in the
  *            application: keep it unless the bytes are meant to move.
  *
- * Adding a format: its enum value, its FORMAT line, its PROBE where the
- * probe order's argument puts it, a SEGID if it is a set scheme, a DECODER
- * if its extractor is new and in an image (and that image's entry point,
- * tools/overlay/). Removing one: the same lines, out. tools/check_ovl_rows.py
- * cross-checks what a compiler cannot.
+ * Adding a format is its own files and these lines; removing one, the
+ * same out. What else it has, every place a compiler or a check names
+ * when it is missing:
+ *
+ *   include/macextract.h   its UncFormat value, appended (ABI: a removed
+ *                          format's number stays reserved there)
+ *   this file              its FORMAT row; its PROBE where the probe
+ *                          order's argument puts it; a SEGID if it is a
+ *                          set scheme; a DECODER if its extractor is new
+ *                          and in an image
+ *   src/unc_internal.h     the declarations of what it defines
+ *                          (tools/overlay/mkforwards.py reads them as text)
+ *   tools/overlay/         its entry point in its image: an OVL_*_EXTRACT
+ *                          number in overlay.h and a case in ovl_<image>.c;
+ *                          its sources in that image's rule in
+ *                          mac/CMakeLists.txt, and out of the resident
+ *                          link there. A new image is an OVL_ID_* in
+ *                          overlay.h, an ovl_<image>.c and a rule; every
+ *                          list of images follows from those
+ *                          (tools/overlay/images.py)
+ *   tools/retake_budgets.py   run, in the same commit, for every figure the
+ *                          new bytes move; then tools/make_dist.sh
+ *   its tests              fixtures/SOURCES.md and manifests, and its own
+ *                          tools/run_<format>.py on a line of ci.sh
+ *   its docs               FORMATS.md, README.md and the list in
+ *                          tools/make_dist.sh, DECISIONS.md
+ *
+ * tools/check_ovl_rows.py cross-checks what a compiler cannot: that every
+ * format the Macintosh dispatches has a run row and an alias.
  *
  * SPDX-License-Identifier: 0BSD
  */
