@@ -25987,6 +25987,14 @@ image 28,834 → 28,818 B (−16), the bundle −16, every StuffIt grant +16 B;
 the eager configuration's CODE −20 and A5 +20 (layout). No heap, no stack
 added (two loads fewer); every tier's tally unchanged.
 
+**Closed the same day (the maintainer).** Version 3 is what Aladdin's tool
+for a system without Finder info writes, and it writes no Finder info: every
+Macintosh-written StuffIt 5 archive here is version 1 (377 of 377, DropStuff
+5.0.1 and Deluxe 7.0.3 among the writers), so a version 3 entry has no
+Macintosh metadata to lose. That a Macintosh writer never emits version 3 is
+an inference from those, not a measurement of every writer (DropStuff 5.5 and
+Deluxe 6.0.1 not run); OPEN_ITEMS.md's row is deleted.
+
 ---
 
 ## 2026-11-13 (the helper Easy Open offers for DiskDoubler's icons) — the DiskDblr helper's `'open'` lists its 40 icon types, the only helper's that lists any: Easy Open offers it, and only it, for an orphaned DiskDoubler file

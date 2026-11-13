@@ -172,7 +172,6 @@ or measurement before it is read.**
 | format | stored, not read | oracle |
 |---|---|---|
 | MacBinary inside MacLHA | the Get Info comment, after both forks | none; ZipIt 1.4 writes none even for a file that has one (2026-11-06); needs a second decode or a sink contract change, the maintainer's call |
-| StuffIt 5 | version 3's 32-byte block, none of which is read: Expander 5.5 restores none of it, measured on the one writer of it found, `stuff` 5.2 for Linux (type, creator, flags zero; b+16 the modification date again). No Macintosh writer here makes version 3: DropStuff 5.0.1, Deluxe 7.0.3 adding an item, and every archive on this machine (377) are version 1 (DECISIONS.md 2026-11-13, *the version 3 that Linux wrote*) | Expander 5.5 on a Macintosh-written version 3 entry |
 | LZH | OS/2's 0x7f/0xff headers; a level 0/1 name's bytes after a NUL | `lsar`; no specimen of the second |
 | AppleSingle entry 11 | ProDOS's access word | none; RFC 1740 gives its size, not its bits |
 
