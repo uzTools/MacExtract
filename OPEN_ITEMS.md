@@ -368,12 +368,13 @@ its helpers are in `dist/` and on both disk images since
 2026-11-04 (eighteen since 2026-11-10: Apple Backup's and the Installer Tome's), in no release yet (DECISIONS.md 2026-11-04, *the helpers in
 dist*). Left:
 
-- **Which of a file's two dates System 7 compares** between two applications
-  of one creator. Not separated.
-- **The stub's reclaim on System 7.x, 6 and 3.0.** On Mac OS 9 a helper
-  opened by itself takes its creator back from StuffIt Expander
-  (DECISIONS.md 2026-10-31, *the stub that sorts*); System 7.x and the
-  stub's alert on Systems without a desktop database are not run.
+- **The stub's reclaim on System 7.x.** On 7.5.5 a helper opened by
+  itself says it took its creator back and does not: the archive still
+  opens in StuffIt Expander (DECISIONS.md 2026-11-13, *the registration
+  that came last*). What the 7.5.5 Finder acts on is the rebuild's order,
+  not either date; what would make a helper win there, short of a
+  rebuild, is not found. On 6.0.8 and 3.0 the helper's alert is measured
+  (error -50), and a creator held by StuffIt Expander was not reached.
 - **An icon per document type, drawn by the maintainer.** Every helper's
   bundle points all its types at one family, MacExtract's archive icon
   (`companion/make_stub.py`); the eighteen helpers claim 51 types between
@@ -385,7 +386,7 @@ dist*). Left:
   one archive icon, since a family there costs 72 B of its resource map
   (FORMATS.md, *Icons*). A colour family is about 2.3 KB of the helper
   and a black-and-white one (`ICN#`, `ics#`) about 320 B; the helpers zip
-  is 64,381 B today and rides on the 400K floppy.
+  is 64,402 B today and rides on the 400K floppy.
 - **A helper under System 6's Desktop Manager.** With AppleShare's
   `Desktop Mgr` INIT installed, a helper on the MacExtract floppy says
   *"MacExtract could not be found"* (measured, 6.0.8; DECISIONS.md

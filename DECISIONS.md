@@ -607,6 +607,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-13 (the helper that is not offered) — every helper carries an `'open'` 128 listing no types, and System 7.5.5's Macintosh Easy Open no longer offers it beside MacExtract for an orphaned document; icons and the double-click hand-off unchanged; +32 B of each helper's resource fork, 0 B of MacExtract and of both floppies
 - 2026-11-13 (the installer package that is a zip) — `xpi `/`NSIn`, Netscape's installer packages, claimed by MacExtract's bundle: an ordinary zip the engine already reads; no helper
 - 2026-11-13 (the helper beside MacExtract) — a helper in MacExtract's own folder said "MacExtract could not be found" on System 7.5.5 and 6.0.8, its lookup skipping every application in its own folder; fixed for 0 B. Mac OS 9.2's File Exchange honours the empty `'open'` too; the helpers still hand on and draw their icons on 6.0.8 and 3.0
+- 2026-11-13 (the registration that came last) — on System 7.5.5 after a desktop rebuild, of two applications of one creator the one catalogued last opens its documents, whatever either date says; a helper opened by itself says it took its creator back and does not; on 6.0.8 and 3.0 it says "could not register itself (error -50)"
 
 ---
 
@@ -25753,8 +25754,8 @@ double-clicked: *"MacExtract could not be found"* on System 7.5.5 (Mini
 vMac Mac II) and on 6.0.8 (a root `Desktop` file listing both); the same
 helper in `MacExtract Helpers` handed on. `companion/stub/stub.c` now
 passes folder ID 0, which names none: both handed on, the 7.5.5 archive
-extracted. CODE 1 2,962 B before and after; every helper's bytes the same
-size. Frames: `~/.cache/macextract/easyopen/` (`shot-i`, `shot-j`,
+extracted. CODE 1 2,962 B before and after; every helper's resource fork the
+same size; the helpers zip +21 B (64,402 B). Frames: `~/.cache/macextract/easyopen/` (`shot-i`, `shot-j`,
 `s6/beside-*`).
 
 **Mac OS 9.2's File Exchange (measured, QEMU, the master booted
@@ -25784,3 +25785,43 @@ floppy, `FindApp` reads only that database, which lists no MacExtract, and
 never falls back to the `Desktop` file. The 2026-11-03 System 6 rows ran on
 this image, so which route they took is not known. Left open:
 OPEN_ITEMS.md, *A helper under System 6's Desktop Manager*.
+
+## 2026-11-13 (the registration that came last) — on System 7.5.5 after a desktop rebuild, of two applications of one creator the one catalogued last opens its documents, whatever either date says; a helper opened by itself says it took its creator back and does not; on 6.0.8 and 3.0 it says "could not register itself (error -50)"
+
+**Which application (measured, System 7.5.5, Mini vMac Mac II, the
+volume's `Desktop DB` deleted so the Finder rebuilds it at boot).** The
+`SITx` helper and StuffIt Expander 4.0.2 in one folder, `Apps`, their
+MacBinary creation and modification dates set before copying (read back
+with `hfscat.py`), a `SITD`/`SITx` archive at the root, double-clicked
+first thing:
+
+| case | names | StuffIt Expander created / modified | helper created / modified | opened in |
+|---|---|---|---|---|
+| A | `StuffIt Expander`, `Expander` | 2020 / 2000 | 2010 / 2020 | StuffIt Expander |
+| B | the same | 2010 / 2020 | 2020 / 2000 | StuffIt Expander |
+| C | `A Expander`, `Z Helper` | 2020 / 2000 | 2010 / 2020 | the helper, then MacExtract |
+
+A against B: neither date moves it. A against C: the names alone do. The
+catalog lists a folder's files by name, so the one listed last (and
+registered last by the rebuild: hypothesis, the order is not observed
+directly) holds the creator. The same held with the helper in its own
+folder and StuffIt Expander at the root: the helper won, and a Finder
+Duplicate of StuffIt Expander did not change it. *Inside Macintosh*'s
+"index 0 is the most recent creation date" (2026-10-31, *the stub that
+sorts*) is not what this Finder acts on here. Frames:
+`~/.cache/macextract/easyopen/dates/`, `reclaim/`.
+
+**The reclaim on 7.5.5 (measured, case A).** With StuffIt Expander
+holding `SITx`, the `Expander` helper opened by itself said *"Archives
+this helper claims open in MacExtract again."*; the archive, opened
+again, still went to StuffIt Expander. On Mac OS 9 the same removal and
+re-adding wins (2026-10-31); on 7.5.5 it is reported and does not happen.
+
+**System 6.0.8 and 3.0 (measured, Mini vMac Plus, the shipped disk with
+this tree's helpers).** A helper opened by itself puts up *"This helper
+could not register itself (error -50)."* (`paramErr`: no desktop database).
+On 6.0.8 (no `Desktop Mgr` INIT) with StuffIt Expander 4.0.1 on the hard
+disk, a `SITD`/`SITx` archive went to the helper on the floppy and, copied
+to the hard disk, again after StuffIt Expander had been opened, run and
+quit: the state a reclaim answers was not reached there. 3.0 has no
+StuffIt Expander to run.
