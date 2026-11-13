@@ -318,6 +318,12 @@ resource 'FREF' (177) { 'idcp', 1, "" };
    Opened, its resource fork is the archive. DECISIONS.md 2026-11-11, *the
    parts the Installer expands*. */
 resource 'FREF' (178) { 'ircp', 1, "" };
+/* And `xpi `/`NSIn`, Netscape's installer packages: an ordinary zip (the
+   maintainer, 2026-11-13; 12 in MacStamp's census, its pair-census.csv),
+   read by the zip reader the content already sniffs as. No helper for
+   `NSIn`: Netscape is the creator, and opening one in Netscape installs it.
+   DECISIONS.md 2026-11-13, *the installer package that is a zip*. */
+resource 'FREF' (179) { 'xpi ', 1, "" };
 
 resource 'BNDL' (128) {
     'MExt', 0,
@@ -329,7 +335,8 @@ resource 'BNDL' (128) {
                 30, 157,
                 31, 159, 32, 160, 33, 161, 34, 162, 35, 163, 36, 164, 37, 165,
                 38, 166, 39, 167, 40, 168, 41, 169, 42, 170,
-                43, 171, 44, 172, 45, 173, 46, 174, 47, 175, 48, 176, 49, 177, 50, 178 } }
+                43, 171, 44, 172, 45, 173, 46, 174, 47, 175, 48, 176, 49, 177, 50, 178,
+                51, 179 } }
 };
 
 /* The SIGNATURE resource: type = the creator code, ID 0. The Finder wants

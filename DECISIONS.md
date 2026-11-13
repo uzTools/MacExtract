@@ -605,6 +605,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-13 (the memo on the relocator) — the shell's 1,600 B folder memo leaves bss for Retro68's relocator, whose 1,656 B of code are dead once the application has launched: A5 −1,600, CODE 0, 1,600 B onto every budget, measured on all three tiers
 - 2026-11-13 (the hooks that went to the sniffer) — the join hooks and the two segment readers only bundle-keeping sets call move to `ovl_sniff`, beside the parsers they share with the probes: CODE −3,128, A5 −72, +3,200 B onto every budget that keeps neither, +1,908 B onto one that keeps the bundle or the sniffer
 - 2026-11-13 (the helper that is not offered) — every helper carries an `'open'` 128 listing no types, and System 7.5.5's Macintosh Easy Open no longer offers it beside MacExtract for an orphaned document; icons and the double-click hand-off unchanged; +32 B of each helper's resource fork, 0 B of MacExtract and of both floppies
+- 2026-11-13 (the installer package that is a zip) — `xpi `/`NSIn`, Netscape's installer packages, claimed by MacExtract's bundle: an ordinary zip the engine already reads; no helper
 ---
 
 ## M0
@@ -25717,3 +25718,26 @@ Translation Manager and do not read the resource (not run). The 64-type
 limit of the same list (`TypesBlock`, 7-37) is not reached: MacExtract's
 bundle claims 51. Left open: OPEN_ITEMS.md, *The helpers' empty `'open'`
 beyond System 7.5.5*.
+
+---
+
+## 2026-11-13 (the installer package that is a zip) — `xpi `/`NSIn`, Netscape's installer packages, claimed by MacExtract's bundle: an ordinary zip the engine already reads; no helper
+
+**The maintainer's call.** An `.xpi` is Netscape's installer package, an
+ordinary zip, typed `xpi `/`NSIn` by the Macintoshes that made them;
+MacStamp's census holds 12 (its `pair-census.csv`, which keeps no paths, so
+none was run here). The zip reader already takes one: the sniff goes by
+content, never by type. What the claim adds is the Finder's side: the
+archive icon, a double-click on an orphaned one and a drop on MacExtract
+listing it (FORMATS.md, *AppleSingle and AppleDouble in 7.0.3, by type,
+creator and name*). **No helper for `NSIn`**:
+Netscape is the creator, and a helper spoofing it would take the
+double-click away from the program that installs the package.
+
+**Cost:** one `FREF` (179) and its `BNDL` pair, no code; CODE and A5
+unmoved. A `FREF` is a resource map entry, 12 B of the application's heap
+outside the CODE + A5 unit, so `TIERS_MACHINE` falls 12 B on each tier,
+DERIVED from `LZ4-`'s and `LZ4 `'s, measured at the floor on 2026-11-04 at
+12 B each. MacStamp records the claim from `dist/` once it is on main, as
+it did for `ircp`.
+
