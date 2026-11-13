@@ -150,9 +150,10 @@ def check(path, creator=CREATOR, types=TYPES, ceiling=CEILING):
     # FREFs' when it has none: this one lists none (DECISIONS.md 2026-11-13,
     # *the helper that is not offered*). Source: Inside Macintosh: More
     # Macintosh Toolbox, 7-44, Figure 7-11.
-    want_open = CREATOR + struct.pack(">hH", 0, 0)
+    want_open = make_stub.open_resource(CREATOR, TYPES)
     if by.get(b"open", {}) != {128: want_open}:
-        bad.append(f"'open' {by.get(b'open')}, not 'open' 128 with no types")
+        bad.append(f"'open' {by.get(b'open')}, not 'open' 128 listing the "
+                   f"types MacExtract's bundle does not claim")
 
     bndl = by.get(b"BNDL", {}).get(128)
     if bndl is None:

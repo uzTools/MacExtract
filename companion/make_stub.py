@@ -14,9 +14,13 @@ the stubs can live*). So each stub carries:
     nothing in the Retro68 chain sets (tools/icon/set_bundle_bit.py);
   - a 'BNDL' owned by that creator, its signature resource, and 'FREF's:
     'APPL' for itself and one per document type, all local icon 0;
-  - an 'open' resource with no types, so that Macintosh Easy Open does not
-    offer the helper for an orphaned document (DECISIONS.md 2026-11-13,
-    *the helper that is not offered*);
+  - an 'open' resource listing the types it claims that MacExtract's own
+    bundle does not: none for every helper but DiskDoubler's, so that
+    Macintosh Easy Open does not offer a helper beside MacExtract for an
+    orphaned document (DECISIONS.md 2026-11-13, *the helper that is not
+    offered*), and DiskDoubler's 40 icon types for that one, which
+    MacExtract's bundle leaves to it, so that it is what Easy Open offers
+    for them (*the helper Easy Open offers for DiskDoubler's icons*);
   - one icon family, the archive icon, read from
     mac/macextract_archive_icons.r (tools/icon/make_archive_icon.py),
     for the helper and its documents alike: a second family, MacExtract's
@@ -98,12 +102,14 @@ def stamp(stub, creator, types, name=None, version=None):
     for k, t in enumerate(types):
         res.append((b"FREF", 129 + k, PURGEABLE, None, t + struct.pack(">h", 0) + b"\0"))
     res.append((b"BNDL", 128, PURGEABLE, None, bndl(creator, len(types))))
-    # An 'open' listing no types: Macintosh Easy Open then leaves the helper
-    # out of the applications it offers for an orphaned document, which its
-    # FREFs alone would put there (DECISIONS.md 2026-11-13, *the helper that
-    # is not offered*). Source: Inside Macintosh: More Macintosh Toolbox,
-    # 7-44, Figure 7-11: signature, filler 0, file type count, the types.
-    res.append((b"open", 128, PURGEABLE, None, creator + struct.pack(">hH", 0, 0)))
+    # The 'open' lists what Easy Open may offer this helper for: the types
+    # it claims that MacExtract's own bundle does not, so that no orphaned
+    # document gets two rows, MacExtract's and a helper's (DECISIONS.md
+    # 2026-11-13, *the helper that is not offered*, *the helper Easy Open
+    # offers for DiskDoubler's icons*). Source: Inside Macintosh: More
+    # Macintosh Toolbox, 7-44, Figure 7-11: signature, filler 0, file type
+    # count, the types.
+    res.append((b"open", 128, PURGEABLE, None, open_resource(creator, types)))
     sig = b"MacExtract helper"
     res.append((creator, 0, PURGEABLE, None, bytes([len(sig)]) + sig))
     res.append((b"vers", 1, PURGEABLE, None,
@@ -119,6 +125,26 @@ def stamp(stub, creator, types, name=None, version=None):
     flags = ((h[73] << 8) | h[101] | HAS_BUNDLE) & ~INITED
     h[73], h[101] = flags >> 8, flags & 0xFF
     return D.macbin_join(bytes(h), d, D.rsrc_write(res, fattr))
+
+
+def main_app_types(path=os.path.join(ROOT, "mac", "macextract_icons.r")):
+    """The types MacExtract's own bundle claims: its 'FREF's."""
+    import re
+    out = set()
+    for m in re.finditer(r"^resource 'FREF' \(\d+\) \{ '(.{4})'",
+                         open(path, encoding="mac_roman").read(), re.M):
+        out.add(m.group(1).encode("mac_roman"))
+    if len(out) < 20:
+        raise SystemExit("make_stub: read %d FREFs from %s" % (len(out), path))
+    return out
+
+
+def open_resource(creator, types):
+    """'open' 128 for a helper claiming `types`: the ones MacExtract's own
+    bundle does not claim, in the helper's order."""
+    main = main_app_types()
+    own = [t for t in types if t not in main]
+    return creator + struct.pack(">hH", 0, len(own)) + b"".join(own)
 
 
 def main():

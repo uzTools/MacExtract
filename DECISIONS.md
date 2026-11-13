@@ -610,6 +610,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-13 (the registration that came last) — on System 7.5.5 after a desktop rebuild, of two applications of one creator the one catalogued last opens its documents, whatever either date says; a helper opened by itself says it took its creator back and does not; on 6.0.8 and 3.0 it says "could not register itself (error -50)"
 - 2026-11-13 (the icon types only the helper claims) — DiskDoubler's 40 single-file types, `DD01`, `DD02`, `DDF0`–`DDF7`, `DDFL` and `DDf0`–`DDfs`, leave MacExtract's bundle for the `DDAP` helper's alone, which now hands on what its own bundle claims; +144 B of heap on every tier, +32 B of every helper's code
 - 2026-11-13 (the version 3 that Linux wrote) — StuffIt 5's version 3 entries exist: Aladdin's `stuff` 5.2 for Linux writes nothing else, and StuffIt Expander 5.5 restores none of their 32-byte second block, so the reader stops taking type, creator and flags from it; the ovl_stuffit image −16 B
+- 2026-11-13 (the helper Easy Open offers for DiskDoubler's icons) — the DiskDblr helper's `'open'` lists its 40 icon types, the only helper's that lists any: Easy Open offers it, and only it, for an orphaned DiskDoubler file
 
 ---
 
@@ -25985,3 +25986,41 @@ count as the engine does; `am-sit5` now holds all 10.
 image 28,834 → 28,818 B (−16), the bundle −16, every StuffIt grant +16 B;
 the eager configuration's CODE −20 and A5 +20 (layout). No heap, no stack
 added (two loads fewer); every tier's tally unchanged.
+
+---
+
+## 2026-11-13 (the helper Easy Open offers for DiskDoubler's icons) — the DiskDblr helper's `'open'` lists its 40 icon types, the only helper's that lists any: Easy Open offers it, and only it, for an orphaned DiskDoubler file
+
+**The maintainer's ruling**, after *the icon types only the helper claims*
+left an orphaned DiskDoubler file with no application in Easy Open's list
+(measured, 7.5.5): the DiskDoubler helper's `'open'` carries its type
+codes, and no other helper's does, because for those types it replaces
+MacExtract in Easy Open. **The rule written is the general one**: a helper's
+`'open'` lists the types it claims that MacExtract's own bundle does not
+(`companion/make_stub.py`, read off `mac/macextract_icons.r`'s `FREF`s). That
+is the DiskDblr helper's 40 icon types and nothing for the other seventeen;
+its three archive types, `DDA2`, `DDAR` and `DDSP`, stay out because
+MacExtract claims them, so no orphaned document gets two rows. A helper
+handed one of the 40 passes it to MacExtract (*the icon types only the
+helper claims*).
+
+**Measured**: `tools/check_helpers.py` holds every helper's `'open'` to that
+rule; the DiskDblr helper stamped with the old empty `'open'` fails it.
+Cost: 160 B of the DiskDblr helper's resource fork, nothing of MacExtract's.
+**Measured on System 7.5.5** (Mini vMac Mac II, 256 colours; the installed
+volume with `Desktop DB` deleted, this tree's `dist/MacExtract.bin` and the
+eighteen helpers `check_helpers.py` stamps; frames in
+`~/.cache/macextract/easyopen/ddopen/`). DiskDoubler 3.7's own `DDf3` file
+typed `DDf3`/`Zzzz`, then `DDF3`/`Zzzz`: Easy Open showed no list and opened
+each at once, as it does with one candidate (*the helper that is not
+offered*); MacExtract's *Extract into this folder* dialog came up and both
+extracted (`o-icon*.png`, `o-text*.png`). The one candidate is the helper:
+MacExtract's bundle claims neither type, and the same volume with the
+helper's `'open'` empty answered *"could not find a translation extension"*
+(*the icon types only the helper claims*). A Combine archive typed
+`DDAR`/`Zzzz`: no list either, MacExtract's dialog, extracted (`Nest`,
+`Raw`; `o-ddar*.png`), so no second row from the helper, whose `'open'`
+leaves `DDAR` out. The list itself was not shown: Easy Open's
+always-show-the-dialog setting was not turned on. Mac OS 8.5–9's File
+Exchange not booted for it.
+
