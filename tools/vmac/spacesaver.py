@@ -3865,7 +3865,7 @@ def layout():
 
     # The preset dictionary, written out where the suite looks for it.
     # It is Aladdin's, so it lives beside the ROM and the System image
-    # rather than in the repository (`tools/run_spacesaver.py`).
+    # rather than in the repository (`tests/harness/run_spacesaver.py`).
     pram = res["ss"].get("PrAm", {})
     for rid in sorted(pram):
         name, data = pram[rid]

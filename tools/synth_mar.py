@@ -15,12 +15,12 @@ to the next 128 — and mar 0.2.0's mar_enc.c, which writes no block for
 an empty fork. **This is this repository's reading of the format, not
 the author's writer**, so what it can grade is the engine against that
 reading; what grades the reading is the two archives hampa wrote
-(tools/run_mar.py, *What it cannot see*).
+(tests/harness/run_mar.py, *What it cannot see*).
 
 `--lzw BITS` writes what mar 0.2.0's own LZW encoder writes — its
 behaviour read in reference/mar/mar-0.2.0-src/src/lzw.c, not its code,
 which is GPL-2.0-only (NOTICE): no padding at a width change or after a
-clear, a clear the moment the table fills. tools/run_mar.py decodes it
+clear, a clear the moment the table fills. tests/harness/run_mar.py decodes it
 with gzip as well as with the engine.
 
 Deterministic: the same case gives the same bytes.
@@ -222,7 +222,7 @@ def lzw(data, bits, pad_after_clear=False):
     compress(1) pads to a group of eight codes.
 
     `pad_after_clear` is a CONTROL only: a zero byte after the first clear,
-    which that encoder never writes (tools/run_mar.py)."""
+    which that encoder never writes (tests/harness/run_mar.py)."""
     w = _Bits([0x1F, 0x9D, 0x80 | bits])
     if not data:
         return bytes(w.out)

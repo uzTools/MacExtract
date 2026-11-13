@@ -4,7 +4,7 @@
 # Discmaster's first-16-bytes index, and `extension=.pkg&family=unknown`
 # reaches the version-0 ones (DECISIONS.md 2026-10-06). Four of the eight
 # are not named `.pkg` at all.
-# tools/derive_sqp.py grades the reading; tools/run_sqp.py the engine.
+# tools/derive_sqp.py grades the reading; tests/harness/run_sqp.py the engine.
 # name	role	size	sha256	url
 ALink.PKG	pkg	6900	3ed39490ac70f19843034bdc30361f0a771c22f836c2430a711c3563d23c6bb7	https://discmaster.textfiles.com/file/32706/Dev.CD%20Feb%2094.toast/Tool%20Chest/Networking%20%26%20Communications/AppleLink/AppleLink%206.1/ALink.PKG
 Read First.PKG	pkg	1373	1a4a93fce714b53a4bd505a9c07e57e5a0adf5a9ee2c3c7a1b264d341c76d8ba	https://discmaster.textfiles.com/file/32706/Dev.CD%20Feb%2094.toast/Tool%20Chest/Networking%20%26%20Communications/AppleLink/AppleLink%206.1/Read%20First.PKG

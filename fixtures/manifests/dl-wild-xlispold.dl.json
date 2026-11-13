@@ -12,7 +12,7 @@
  ],
  "fixture": "dl-wild-xlispold.dl",
  "format": "SUMacC dl",
- "oracle": "macutils' hexbin (tools/run_hecx.py), its sum verifying",
+ "oracle": "macutils' hexbin (tests/harness/run_hecx.py), its sum verifying",
  "sha256": "25f11681885e6e89888c97998950669bbb39607abfe38c9e2bd87c9d21b51070",
  "size": 75641
 }

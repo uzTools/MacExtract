@@ -145,6 +145,7 @@ def method_seeds(tmp):
     """Archives for methods the corpus has no specimen of."""
     try:
         sys.path.insert(0, os.path.join(ROOT, "tools"))
+        sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "tests", "harness"))
         import run_lzh
     except Exception as e:                      # pragma: no cover
         print("fuzz: cannot import the -lh3- encoder: %s" % e,
@@ -232,7 +233,7 @@ def now_repair(data, rng, mn):
 #
 # Written here rather than committed, for the reason the -lh3- seeds
 # are: pure Python, so the coverage is the same wherever this runs.
-# They are also three of the archives `tools/run_now.py` grades three
+# They are also three of the archives `tests/harness/run_now.py` grades three
 # ways — input bytes, `unar`, this CLI — on every ci.sh run, so a seed
 # here is a graded file and not merely one that parses.
 DELTA_SEEDS = ("synth-now-delta", "synth-now-delta-small",
@@ -307,7 +308,7 @@ def now_seeds(tmp):
 # has to be large to decode to that — 458 B of matches do it. It is a
 # separate seed rather than a fifth case in the fixture because a 256 KB
 # window is a peak-RAM figure and a Macintosh tier (DECISIONS.md
-# 2026-10-06), and `tools/run_sit14wrap.py` is what grades it.
+# 2026-10-06), and `tests/harness/run_sit14wrap.py` is what grades it.
 #
 # The third is zip method 6, and it is here for a reason the method-14
 # rows only half share: its generator is the only thing on this machine

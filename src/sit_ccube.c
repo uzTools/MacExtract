@@ -19,13 +19,13 @@
  *
  * The prototype this is transcribed from is `tools/ccube/decode.py`,
  * which reproduces StuffIt Deluxe 2.0.1's own restored file byte for
- * byte; nothing here is guessed, and `tools/run_sitopt.py` grades this
+ * byte; nothing here is guessed, and `tests/harness/run_sitopt.py` grades this
  * engine against the same specimen.
  *
  * WHAT THE FORMAT IS, in the order this file uses it. Measured on 36
  * payloads StuffIt Deluxe 2.0.1 wrote, every one decoded here to its own
  * restored file byte for byte (FORMATS.md, *What an Optimizer did to
- * the fork*; tools/run_sitcombo.py):
+ * the fork*; tests/harness/run_sitcombo.py):
  *
  *   * 80 bytes of module header: the module's colour code at +0 (1
  *     RGB, 2 HSB, 3 HSL, 4 CMYK, 5 channels coded one by one), the

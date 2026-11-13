@@ -98,7 +98,15 @@ What this CANNOT see:
   committed — they are an emulator's output, like `sitcrypt.py`'s — so
   this skips cleanly and says nothing when they are absent.
 
-    tools/run_sitopt.py --macextract build/macextract
+    tests/harness/run_sitopt.py --macextract build/macextract
+
+In ci.sh (tests/harness/, run by its one loop since 2026-11-13). What ci.sh said of it there:
+
+The optimized StuffIt archives, graded by the program that WROTE them:
+StuffIt Deluxe 2.0.1 under Mini vMac stuffed a text file with `Text 1`
+enabled and unstuffed it again, and what it hands back is the only
+definition of correct there is for an Optimizer that undoes nothing.
+Skips cleanly with no specimens (TESTING.md).
 """
 import argparse
 import hashlib
@@ -109,7 +117,7 @@ import sys
 import tempfile
 import shutil
 
-HERE = os.path.dirname(os.path.abspath(__file__))
+HERE = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "tools")
 REPO = os.path.dirname(HERE)
 sys.path.insert(0, os.path.join(HERE, "vmac"))
 import run as R                                          # noqa: E402

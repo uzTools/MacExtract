@@ -46,6 +46,8 @@
  * in this engine may recurse (CLAUDE.md, 68000 discipline). The walk is
  * linear in the file either way: a part's end is the next boundary line.
  *
+ * Harness: tests/harness/run_mime.py
+ *
  * SPDX-License-Identifier: 0BSD
  */
 #include "unc_internal.h"

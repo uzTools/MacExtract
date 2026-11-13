@@ -2,7 +2,7 @@
 # Discmaster's identifier knows a ZipIt self-extractor on sight, so
 # format=zipIt names them where no search by name could — ZipIt's
 # output is a plain .zip (DECISIONS.md 2026-10-04).
-# tools/run_zipit.py grades them; FORMATS.md has the figures.
+# tests/harness/run_zipit.py grades them; FORMATS.md has the figures.
 # name	role	size	sha256	url
 zipit-MrTs_Paint_and_more	sea	247424	b2071d60ce7edb4d460854be0857787da70d845d6f0c29033d24926be85f361f	https://discmaster.textfiles.com/file/43251/EVN.zip/EVN/Cheats/Mr.Ts_Paint_and_more.sea
 zipit-MrTs_Paint	sea	110001	27108bb21d90e60dbcfbb0441559fff40ec5b7562591fc45c2549f3ccf2e6f51	https://discmaster.textfiles.com/file/43251/EVN.zip/EVN/Plugins/Mr.Ts_Paint.sea/Mr.T%27s%20Paint.sea

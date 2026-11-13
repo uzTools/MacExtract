@@ -1473,7 +1473,7 @@ static int sink_end(void *ctx, int status)
              * fork. Until 2026-10-11 this said the engine "does not
              * implement" the cipher, which was true of nothing it could
              * fire on; a forkless DES archive is what showed it
-             * (tools/run_sitcombo.py). An id with no name is a third
+             * (tests/harness/run_sitcombo.py). An id with no name is a third
              * party's module and gets the generic refusal below. */
             fprintf(stderr, "macextract: %s: encrypted with StuffIt's "
                             "\"%s\", whose key is in the archive's "

@@ -72,6 +72,9 @@
  * Get Info pane reads*, has why it is a reading and not an
  * observation.
  *
+ * Harness: tests/harness/run_sitopt.py
+ * Harness: tests/harness/run_sitcombo.py
+ *
  * SPDX-License-Identifier: 0BSD
  */
 #include "unc_internal.h"
@@ -109,7 +112,7 @@
 /* What an Optimizer's id means for decoding. Every one of these is the
  * module's own 'DCMP' resource, disassembled, and every one that is
  * undone here is graded against an archive StuffIt Deluxe 2.0.1 wrote
- * (tools/run_sitopt.py; FORMATS.md, *What an Optimizer did to the
+ * (tests/harness/run_sitopt.py; FORMATS.md, *What an Optimizer did to the
  * fork*). An id that is not listed is REFUSED by name — this engine
  * undoes what it has read and nothing it has guessed at. */
 #define SIT_OPT_SOUND1       1   /* byte-wise delta over the fork       */

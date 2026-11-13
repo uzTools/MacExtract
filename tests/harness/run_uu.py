@@ -27,6 +27,8 @@ is an error rather than a short file.
 The two WILD specimens are not generated and not here: `tools/run_diff.py`
 grades `uu-wild-dictcol.uu` and `uu-wild-terrainman.uu` when they are in
 `fixtures/`, and `tools/derive_mu.py --grade` replays both.
+
+In ci.sh (tests/harness/, run by its one loop since 2026-11-13).
 """
 import binascii
 import os
@@ -35,8 +37,8 @@ import subprocess
 import sys
 import tempfile
 
-ROOT = os.path.join(os.path.dirname(__file__), "..")
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+ROOT = os.path.join(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "tools"), "..")
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "tools"))
 import synth_uu                                     # noqa: E402
 from synth_wrapped import macbinary                 # noqa: E402
 

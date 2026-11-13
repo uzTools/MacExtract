@@ -37,7 +37,7 @@ generator does the same thing in the general run; this one is here so
 that the Implode paths are hammered on every `ci.sh` run rather than
 when the draw happens to pick them.
 
-    tools/run_implode.py --macextract build/san/macextract
+    tests/harness/run_implode.py --macextract build/san/macextract
 
 A THIRD lane, since 2026-10-08: **the two streams PKZIP 1.01 and 1.02
 would have written**, in an archive of their own. Those two versions
@@ -68,10 +68,21 @@ byte and only that count, and this is the only lane that sees them.
 
 **What it cannot see.** No Finder metadata and no fork split: a
 MacBinary payload under an Implode entry is the ZipIt specimen's shape,
-and `tools/run_zipit.py` is what grades that.
+and `tests/harness/run_zipit.py` is what grades that.
 
 Skips cleanly — printing what it skipped, returning 0 — when `unar` or
 deark is missing, so a fresh clone stays green.
+
+In ci.sh (tests/harness/, run by its one loop since 2026-11-13). What ci.sh said of it there:
+
+Zip method 6 (Implode), in scope since 2026-10-07. Nothing on this
+machine WRITES the method, so `tools/synth_implode.py` is an encoder:
+the suite generates all four combinations the format's flag word can
+state and holds each against the writer's own plaintext, `unar`, deark
+and the stored CRC-32 — two outside readers, because an encoder of
+ours agreeing with a decoder of ours proves nothing. Plus 240 bent
+streams, every edit inside the bytes the writer declares compressed.
+Skips politely without unar or deark.
 """
 import argparse
 import json
@@ -82,7 +93,7 @@ import subprocess
 import sys
 import tempfile
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+ROOT = os.path.dirname(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "tools"))
 DEARK = os.path.join(ROOT, "build", "deark", "deark")
 SYNTH = os.path.join(ROOT, "tools", "synth_implode.py")
 

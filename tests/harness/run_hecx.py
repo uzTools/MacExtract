@@ -61,6 +61,8 @@ SUMacC's tohex is compiled on this machine, not run as it ran on a VAX,
 and the one wild file is all the output of theirs there is. BinHex 1.0
 and the BASIC BinHexes before it wrote `.hex` too (reference/notes/
 BinHex.md), and none of their output has been found to grade against.
+
+In ci.sh (tests/harness/, run by its one loop since 2026-11-13).
 """
 import json
 import hashlib
@@ -71,7 +73,7 @@ import subprocess
 import sys
 import tempfile
 
-ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
+ROOT = os.path.join(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "tools"), "..")
 FIXDIR = os.path.join(ROOT, "fixtures")
 SUBJECT = os.path.expanduser(os.path.join(
     os.environ.get("UNC_VMAC_HOME", "~/.cache/macextract/vmac"),
@@ -473,13 +475,13 @@ def manifests(cli):
             e["type"] = hb[3].decode("mac-roman")
         if hb[4].strip(b"\0"):
             e["creator"] = hb[4].decode("mac-roman")
-        oracle = "macutils' hexbin on both forks (tools/run_hecx.py)"
+        oracle = "macutils' hexbin on both forks (tests/harness/run_hecx.py)"
         if not blob.startswith(b"(This file"):
             oracle += ", handed a copy with the banner it requires"
         if name.startswith("derived-bh2-"):
             oracle += "; written by BinHex 2.0 itself (tools/vmac/binhex2.py)"
         if name.endswith(".dl"):
-            oracle = "macutils' hexbin (tools/run_hecx.py), its sum verifying"
+            oracle = "macutils' hexbin (tests/harness/run_hecx.py), its sum verifying"
         man = {"entries": [e], "fixture": name,
                "format": "SUMacC dl" if name.endswith(".dl")
                else "BinHex hex/hcx",

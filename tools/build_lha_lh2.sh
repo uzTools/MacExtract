@@ -8,13 +8,13 @@
 # else, cannot write either, which is what kept -lh2- out of scope.
 #
 # So this fetches that fork's source into reference/ (pristine, sha-pinned,
-# never modified in place) and tools/run_lzh.py builds it on demand with
+# never modified in place) and tests/harness/run_lzh.py builds it on demand with
 # tools/lha-lh2/lh2-encoder.patch applied — the mirror of its own
 # decode_p_dyn, plus the schedule the position tree grows on. Archives it
 # writes are verified by ITS OWN decoder before this engine reads one.
 #
 #   sh tools/build_lha_lh2.sh     # fetch the source, once
-#   python3 tools/run_lzh.py ...  # builds it and grades -lh2-
+#   python3 tests/harness/run_lzh.py ...  # builds it and grades -lh2-
 #
 # The source lives in reference/ and the build in build/, deliberately:
 # ci.sh's `make clean` empties build/, and an encoder that vanished there
@@ -44,4 +44,4 @@ echo "$SHA  $TAR.part" | sha256sum -c - >/dev/null || {
     echo "lha-lh2: SHA-256 mismatch — verify it by hand before trusting it" >&2
     rm -f "$TAR.part"; exit 1; }
 mv "$TAR.part" "$TAR"
-echo "lha-lh2: have $TAR — tools/run_lzh.py builds the encoder from it"
+echo "lha-lh2: have $TAR — tests/harness/run_lzh.py builds the encoder from it"

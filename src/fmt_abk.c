@@ -70,6 +70,8 @@
  * before it ends as a missing part, and what continues after it is
  * reported once and passed over. The rest of the set still comes out.
  *
+ * Harness: tests/harness/run_abk.py
+ *
  * SPDX-License-Identifier: 0BSD
  */
 #include "fmt_abk_priv.h"

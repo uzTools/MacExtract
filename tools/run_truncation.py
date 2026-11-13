@@ -29,10 +29,10 @@ disagreement check rather than a "truncation must be an error" rule:
     whole archive too, so its
     failure is not evidence about the cut one. Those rows can only ever
     agree by accident of our own exit code. For AppleLink the engine's
-    own answer is nonetheless asserted, in `tools/run_sqp.py`'s lane 4:
+    own answer is nonetheless asserted, in `tests/harness/run_sqp.py`'s lane 4:
     the SNIFFER must refuse a cut package — its directory no longer tiles
     the file — and the walk, reached with `-f`, must report the entry
-    truncated. For MAR, `tools/run_mar.py` cuts at every record and
+    truncated. For MAR, `tests/harness/run_mar.py` cuts at every record and
     inside every block, and none may exit 0.
   - WHERE the archive was cut. Three fractions are sampled per fixture;
     a hole that only opens at one particular offset will not be found

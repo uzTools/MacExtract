@@ -45,7 +45,7 @@ IMPLEMENTED = {
     # `unar` cannot read uuencode at all, so a manifest for one is not
     # built from the oracle: its ground truth is the bytes
     # tools/synth_uu.py encoded, with macutils' hexbin agreeing on the
-    # same content in tools/run_uu.py. The manifest says so in its
+    # same content in tests/harness/run_uu.py. The manifest says so in its
     # "oracle" field (TESTING.md, "ARC and uuencode").
     "uuencode": "uuencode",                # M13
     "LZH": "LZH",                          # M28
@@ -53,23 +53,23 @@ IMPLEMENTED = {
     # `unar`, deark and macunpack have never heard of the format — so
     # these manifests are the bytes tools/synth_sqp.py compressed, with
     # gzip reading every LZW fork through a .Z header in
-    # tools/run_sqp.py. The manifest says so in its "oracle" field
+    # tests/harness/run_sqp.py. The manifest says so in its "oracle" field
     # (TESTING.md, *AppleLink packages: SqueezePlay*).
     "SqueezePlay": "AppleLink package",    # M56
     # Nor `.hex` and `.hcx`, BinHex before 4.0: these manifests are
     # hexbin's reading, and four of them were written by BinHex 2.0 from
-    # a subject whose bytes are known (tools/run_hecx.py).
+    # a subject whose bytes are known (tests/harness/run_hecx.py).
     "BinHex hex/hcx": "BinHex hex/hcx",
     # Nor SUMacC's `.dl`: hexbin's reading, its sum verifying.
     "SUMacC dl": "SUMacC dl",
     # Nor MAR: every block's CRC-32 as its author's writer stored it, and
-    # hampa's StuffIt twins of the same folders (tools/run_mar.py).
+    # hampa's StuffIt twins of the same folders (tests/harness/run_mar.py).
     "MAR": "MAR",
-    # Nor an LZ4 frame: the bytes liblz4 encoded (tools/run_lz4.py).
+    # Nor an LZ4 frame: the bytes liblz4 encoded (tests/harness/run_lz4.py).
     "LZ4": "LZ4",
     # Nor an Apple Installer Tome: deark's Tome module where it decodes,
     # Apple's Installer's own output on the System 7.5.5 disk where it has
-    # no codec (tools/run_tome.py).
+    # no codec (tests/harness/run_tome.py).
     "Installer Tome": "Installer Tome",
 }
 

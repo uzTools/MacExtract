@@ -7,6 +7,8 @@
  * PC-relative references span (DECISIONS.md 2026-10-17, *dates in the
  * Macintosh's own zone*; FORMATS.md, *Implode*).
  *
+ * Harness: tests/harness/run_implode.py
+ *
  * SPDX-License-Identifier: 0BSD
  */
 #include "unc_internal.h"

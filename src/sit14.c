@@ -55,6 +55,8 @@
  * MEMORY PER FORK: the window — min(0x40000, the fork rounded up to a
  * power of two) — plus 4.7 KB of trees and ladders.
  *
+ * Harness: tests/harness/run_sit14wrap.py
+ *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 #include "unc_internal.h"

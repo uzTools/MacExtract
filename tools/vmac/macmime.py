@@ -2,7 +2,7 @@
 """macmime.py — a MIME message written BY a Macintosh, with mpack's own code.
 
 Every message `src/fmt_mime.c` is graded against was built on Linux by
-`tools/run_mime.py` or read on Linux by munpack (TESTING.md, *base64 and
+`tests/harness/run_mime.py` or read on Linux by munpack (TESTING.md, *base64 and
 MIME*). The half neither can settle is how a real Macintosh laid out the
 `application/applefile` part of a `multipart/appledouble` and what it put in
 the Finder-info entry — filed in OPEN_ITEMS.md as waiting on a specimen from

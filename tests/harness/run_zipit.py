@@ -11,7 +11,7 @@ set from 1994, a MacTech source drop from 2007, an Atari emulator a Mac
 user re-zipped, and a zip living in somebody's resource fork.
 
     tools/fetch_specimens.py --only zipit        get them
-    tools/run_zipit.py --macextract build/macextract
+    tests/harness/run_zipit.py --macextract build/macextract
 
 How they were found is the point: ZipIt's output is a plain `.zip`, so
 no search by NAME can see one. Five are self-extracting and Discmaster's
@@ -78,6 +78,17 @@ not a defect this suite can see.
 
 Nothing here fails when the specimens are absent — it prints what it
 skipped and returns 0, so a fresh clone stays green.
+
+In ci.sh (tests/harness/, run by its one loop since 2026-11-13). What ci.sh said of it there:
+
+Nine archives ZipIt itself wrote: the subjects for its three Macintosh
+extra fields, which until 2026-10-04 were all generated here. Five are
+self-extracting and are passed `-f Zip`; the other four are sniffed
+unaided, which the suite asserts. Specimens rather than fixtures
+because a ZipIt SEA is not recognised (OPEN_ITEMS.md); the two plain
+ones that are fixtures, `MrTs_Paint_Folder.zip` and
+`NPWritersKit.zip`, run_diff.py grades with no oracle. Skips cleanly
+with no specimens (TESTING.md).
 """
 import argparse
 import contextlib
@@ -93,7 +104,7 @@ import sys
 import tempfile
 import zlib
 
-REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+REPO = os.path.dirname(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "tools"))
 HOME = os.environ.get("UNC_VMAC_HOME",
                       os.path.expanduser("~/.cache/macextract/vmac"))
 SPECIMENS = os.path.join(HOME, "specimens", "zipit")

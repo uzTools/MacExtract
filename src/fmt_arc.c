@@ -63,6 +63,10 @@
  *     0x0a as Crushed, which is what PAK wrote; a Trimmed member is
  *     caught by its CRC rather than by its header (OPEN_ITEMS.md).
  *
+ * Harness: tests/harness/run_arc.py
+ * Harness: tests/harness/run_pak.py
+ * Harness: tests/harness/run_arcplus.py
+ *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 #include "unc_internal.h"

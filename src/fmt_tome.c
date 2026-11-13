@@ -74,6 +74,8 @@
  * reads*). Then one input buffer, and two decoding tables of 1 KB, one
  * per codec, and one of 32 B.
  *
+ * Harness: tests/harness/run_tome.py
+ *
  * SPDX-License-Identifier: 0BSD
  */
 #include "fmt_tome_priv.h"

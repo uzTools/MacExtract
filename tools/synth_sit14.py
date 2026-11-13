@@ -23,7 +23,7 @@ matcher happened to find.
 shape that reaches sit14_flush's window wrap — and is NOT the committed
 fixture, because 294,528 B of peak heap is a tier (DECISIONS.md
 2026-10-06, *the fork that was cheaper than the file*). It is graded by
-tools/run_sit14wrap.py and fuzzed as fuzz.py's `sit14-wrap` shape.
+tests/harness/run_sit14wrap.py and fuzzed as fuzz.py's `sit14-wrap` shape.
 
 Deterministic: same bytes every run (check_docs.py compares the sha256 in
 fixtures/SOURCES.md, which is the DEFAULT output — `--wrap` adds to it

@@ -106,8 +106,8 @@ def main():
         print("shortread: FAIL %s" % b)
 
     env = dict(os.environ, UNC_SHORT_READ=str(a.cap))
-    for suite in ("run_crypt.py", "run_privatefile.py"):
-        r = subprocess.run([sys.executable, os.path.join(REPO, "tools", suite),
+    for suite in ("tools/run_crypt.py", "tests/harness/run_privatefile.py"):
+        r = subprocess.run([sys.executable, os.path.join(REPO, suite),
                             "--macextract", mx], capture_output=True, env=env)
         if r.returncode != 0:
             print("shortread: FAIL %s under the cap:\n%s" % (

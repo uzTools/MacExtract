@@ -9,7 +9,7 @@
 hfsutils reads HFS and stops at an HFS Plus volume's wrapper, and 7-Zip
 reads an HFS Plus volume's data forks but not its resource forks. The
 Installer Tomes' resource forks are graded against the files Mac OS 9
-installed (tools/run_tome.py), so this reads both.
+installed (tests/harness/run_tome.py), so this reads both.
 
 Source: reference/notes/tn1150_hfsplus.txt (Apple's TN1150, fetched by
 tools/fetch_references.sh) for every structure: HFSPlusVolumeHeader at

@@ -27,7 +27,7 @@ FAIL rather than silently confirm today's reading.
 Not in `ci.sh`: it needs the two packages (`tools/fetch_specimens.py
 --only applelink`) and, for `--witness`, the translator resource, which is
 copyrighted and not committed. It skips cleanly without either. What IS
-in `ci.sh` is `tools/run_sqp.py`, which grades the ENGINE — against these
+in `ci.sh` is `tests/harness/run_sqp.py`, which grades the ENGINE — against these
 packages when they are present, and against `tools/synth_sqp.py` always
 (TESTING.md, *AppleLink packages: SqueezePlay*).
 `tools/vmac/README.md` (*The AppleLink package expander*) has the one
@@ -520,7 +520,7 @@ def grade():
     print("derive_sqp: UNEXERCISED by these packages — %s"
           % (", ".join(missing) if missing else "nothing"))
     print("derive_sqp: tools/synth_sqp.py writes each of those, and "
-          "tools/run_sqp.py grades the engine on them")
+          "tests/harness/run_sqp.py grades the engine on them")
     return 0 if exact == total else 1
 
 

@@ -49,6 +49,8 @@
  * bytes of padding, and `(len - 1) & 3` says how many of its four bytes
  * are real.
  *
+ * Harness: tests/harness/run_btoa.py
+ *
  * SPDX-License-Identifier: 0BSD
  */
 #include "unc_internal.h"

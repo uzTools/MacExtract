@@ -8,7 +8,7 @@ inside), run on emulated Mac OS 8.1 on 2026-10-14, over one subject:
 "A Document", TEXT/ttxt, 292 bytes of data and 391 of resource, from
 StuffIt Deluxe 5.0's tutorial folder.
 
-    python3 tools/run_macgzip.py --macextract build/macextract
+    python3 tests/harness/run_macgzip.py --macextract build/macextract
 
 They live outside the repository with the other specimens, because the
 subject is not this project's to distribute:
@@ -40,6 +40,13 @@ the subject's type, creator and fork lengths.
 With no specimen directory it says so and returns 0, so a fresh clone
 stays green. A directory missing any of the eleven, or the subject,
 fails.
+
+In ci.sh (tests/harness/, run by its one loop since 2026-11-13). What ci.sh said of it there:
+
+Eleven files MacGzip 1.1.3 wrote on emulated Mac OS 8.1, one per mode
+and compression level, extracted through gzip and MacBinary and compared
+fork by fork with the subject they were made from. Skips cleanly with
+no specimens (TESTING.md).
 """
 import argparse
 import os

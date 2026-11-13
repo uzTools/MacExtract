@@ -56,6 +56,8 @@
  * its bytes, so the alternative would be emitting Mac files with no
  * type — an extracted application that does not launch.
  *
+ * Harness: tests/harness/run_uu.py
+ *
  * SPDX-License-Identifier: 0BSD
  */
 #include "unc_internal.h"
@@ -391,7 +393,7 @@ static int uu_section(UncCtx *c, UncBufIn *in, uint32_t base, UuLine *l,
              * load-bearing: with the character test widened to the
              * union of UUTool's two alphabets and no per-document
              * narrowing, three cases of mail in mid-stream were read as
-             * data (tools/run_uu.py, the intruder pair).
+             * data (tests/harness/run_uu.py, the intruder pair).
              *
              * What this cannot do is notice a part that never arrived.
              * uuencode carries no length and no checksum anywhere, so a

@@ -10,7 +10,7 @@ already use. There is not one yet (OPEN_ITEMS.md), so what runs today
 is the synthetic pass at the bottom of this file.
 
     tools/vmac/spacesaver.py --idlespec      make one (an emulator run)
-    tools/run_spacesaver.py --macextract build/macextract
+    tests/harness/run_spacesaver.py --macextract build/macextract
 
 Specimens live outside the repository, beside the emulator's other
 state, because they are what SpaceSaver made of a subject rather than
@@ -28,6 +28,13 @@ checks.
 
 Nothing here fails when the specimens are absent — it prints what it
 skipped and returns 0, so a fresh clone stays green.
+
+In ci.sh (tests/harness/, run by its one loop since 2026-11-13). What ci.sh said of it there:
+
+StuffIt SpaceSaver has no oracle and no committed fixture either: what
+grades it is a file SpaceSaver itself wrote under Mini vMac, which
+lives beside the emulator's other state. Skips cleanly when there is
+none, so this says nothing on a fresh clone (TESTING.md).
 """
 import argparse
 import glob
@@ -38,7 +45,7 @@ import subprocess
 import sys
 import tempfile
 
-REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+REPO = os.path.dirname(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "tools"))
 HOME = os.environ.get("UNC_VMAC_HOME",
                       os.path.expanduser("~/.cache/macextract/vmac"))
 SPECIMENS = os.path.join(HOME, "specimens", "spacesaver")
@@ -421,7 +428,7 @@ def emit(dirname):
     to show the refusal happening the same way on both machines rather
     than crashing on a 68000.
 
-        tools/run_spacesaver.py --emit /tmp/ssmac
+        tests/harness/run_spacesaver.py --emit /tmp/ssmac
         tools/vmac/run.py --expect /tmp/ssmac/*.ss
     """
     os.makedirs(dirname, exist_ok=True)

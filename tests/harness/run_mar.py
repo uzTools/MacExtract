@@ -74,6 +74,15 @@ LZW-compressed archive (Command-key encode) has not been seen; the encoder
 is a port. An LZ4-wrapped archive, which mar 0.2.0 also reads, is not
 read here (OPEN_ITEMS.md). What the Macintosh shell writes from these
 rows: tests/mac_sink_test.c and the emulator (tools/vmac/README.md).
+
+In ci.sh (tests/harness/, run by its one loop since 2026-11-13). What ci.sh said of it there:
+
+MAR. Nothing here reads it but the engine, and its author's readers are
+GPL-2.0-only and not run, so what grades it is what wrote it: every CRC
+his writer stored, walked by a second reading; his StuffIt twins of the
+same two folders, which run_diff.py holds to `unar`; and tools/synth_mar.py's
+items field for field. Then damaged, cut and LZW-wrapped variants, the
+last decoded by gzip too, each comparison with a control that must fail.
 """
 import hashlib
 import json
@@ -84,7 +93,7 @@ import subprocess
 import sys
 import tempfile
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+ROOT = os.path.dirname(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "tools"))
 sys.path.insert(0, os.path.join(ROOT, "tools"))
 import synth_mar  # noqa: E402
 
@@ -257,10 +266,10 @@ def manifests(cli):
                          "rsrc_size": len(r), "type": it["type"]})
         blob = open(path, "rb").read()
         oracle = ("every block's CRC-32 as hampa's writer stored it "
-                  "(tools/run_mar.py walk), and the forks of its StuffIt "
+                  "(tests/harness/run_mar.py walk), and the forks of its StuffIt "
                   "twin " + WILD[fx]) if fx in WILD else \
             ("tools/synth_mar.py --case " + SYNTH[fx] +
-             "'s items, every CRC checked by tools/run_mar.py walk")
+             "'s items, every CRC checked by tests/harness/run_mar.py walk")
         man = {"entries": ents, "fixture": fx, "format": "MAR",
                "oracle": oracle,
                "sha256": hashlib.sha256(blob).hexdigest(), "size": len(blob)}

@@ -1650,7 +1650,7 @@ def prompt_line(png):
 def phase_abk(args, appbin, workdir, shot):
     """An Apple Backup set read across three floppies, one at a time.
 
-    Each disk of a three-disk set (tools/run_abk.py's synth_set: one file's
+    Each disk of a three-disk set (tests/harness/run_abk.py's synth_set: one file's
     resource fork runs across all three, so disk 2 holds nothing else) is
     on a 1.44 MB floppy of its own, every one holding a file called "Apple
     Backup Data", as the program wrote them. The set is opened on floppy A
@@ -1663,6 +1663,7 @@ def phase_abk(args, appbin, workdir, shot):
     against the Linux CLI's extraction of the same set.
     """
     sys.path.insert(0, os.path.join(R.REPO, "tools"))
+    sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "tests", "harness"))
     import run_abk                                         # noqa: E402
     setdir = os.path.join(workdir, "abkset")
     run_abk.synth_set(setdir)

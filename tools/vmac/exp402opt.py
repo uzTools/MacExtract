@@ -52,7 +52,7 @@ SPEC = os.path.join(R.VMAC_HOME, "specimens", "sitopt")
 PASSWORD = "swordfish"
 
 # (label, specimen, password?) — the subject each module or cipher is graded
-# on in tools/run_sitopt.py.
+# on in tests/harness/run_sitopt.py.
 SUBJECTS = [
     ("Plain", "make2/Plain.sit.bin", False),          # the control
     ("Text1", "make2/Optimized.sit.bin", False),      # Text 1

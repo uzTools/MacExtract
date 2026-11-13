@@ -12,7 +12,7 @@ RUN, never linked into anything and never committed: it is GPL-2.0-only
     ~/.cache/macextract/vmac/specimens/mar/unix/NAME.mar|.mac
     ~/.cache/macextract/vmac/specimens/mar/unix/NAME.json   the subject
 
-and tools/run_mar.py grades the engine against each subject.
+and tests/harness/run_mar.py grades the engine against each subject.
 
 Subjects are MacBinary II files, which is how `mar -c` takes a file's two
 forks and its Finder fields (mac-utils src/mar/mar_create.c,

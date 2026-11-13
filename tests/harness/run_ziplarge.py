@@ -37,6 +37,13 @@ than 4 GB — the subject here is 2 GB of hole and a handful of real
 entries. The over-4-GB refusals are checked synthetically instead, by
 setting a high half nothing can address. The size limits themselves are
 measured separately (FORMATS.md, *Size limits*).
+
+In ci.sh (tests/harness/, run by its one loop since 2026-11-13). What ci.sh said of it there:
+
+A zip counts its entries in 16 bits, so past 65,535 the count comes
+from the Zip64 record instead. Generated: nothing in the corpus is
+that large, and the failure it guards against is silent. Also the
+per-ENTRY Zip64 escape, which arrives at 2 GB and not at 4.
 """
 import argparse
 import os

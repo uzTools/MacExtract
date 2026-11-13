@@ -49,7 +49,7 @@ fi
 # implementations, MacLHA 2.24 among them. Those specimens are what
 # moved LZH from detect-only into scope (DECISIONS.md 2026-08-23);
 # seven of them are fixtures (fixtures/SOURCES.md) and the rest are
-# swept by tools/run_lzh.py.
+# swept by tests/harness/run_lzh.py.
 if [ ! -d reference/lhasa ]; then
     mkdir -p reference/lhasa
     curl -sL -o /tmp/lhasa.tar.xz \
@@ -108,7 +108,7 @@ fi
 # `.dl`, cmd/fromhex.c its own UNIX reader, etc/fromhex.c and fromhex.p
 # its Macintosh readers, etc/download.doc the description. Its sum is
 # compared on 32 bits there, not on hexbin's 16 (DECISIONS.md 2026-10-25,
-# *the writer that was in 4.3BSD*). tools/run_hecx.py builds tohex and
+# *the writer that was in 4.3BSD*). tests/harness/run_hecx.py builds tohex and
 # fromhex from here and grades against both. 4.3BSD's contributed
 # software carries it as sumacc.tar.Z inside new.tar.gz; TUHS has the set.
 if [ ! -d reference/sumacc ]; then
@@ -438,7 +438,7 @@ open(sys.argv[2], 'w').write(s)
 
 # Apple Backup: Doug Brown's description of the format (2013), the source of
 # every offset src/fmt_abk.c reads, as text; and the two readers written from
-# it that tools/run_abk.py grades the engine against, RUN ONLY INSIDE
+# it that tests/harness/run_abk.py grades the engine against, RUN ONLY INSIDE
 # tools/sandbox.py's box, never as they stand: Sidney S.M.'s unbak.py (a gist,
 # no licence stated) and Em Adespoton's Kaitai Struct description with the
 # Python parser compiled from it (MIT), plus the Kaitai runtime it imports

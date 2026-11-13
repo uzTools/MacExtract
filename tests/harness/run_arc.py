@@ -22,6 +22,12 @@ If Debian's `arc` binary is present (tools/get_arc.sh fetches it), real
 archives from a real encoder are checked too, which is what covers
 methods 2/4/8/9 with bytes nothing here produced. Its absence is
 reported, never silent.
+
+In ci.sh (tests/harness/, run by its one loop since 2026-11-13). What ci.sh said of it there:
+
+The two formats M13 brought in scope have no corpus fixtures at all,
+so both suites generate their own and hand them to a second
+implementation to grade: `unar` for ARC, `hexbin` for the UUTool shape.
 """
 import os
 import shutil
@@ -29,8 +35,8 @@ import subprocess
 import sys
 import tempfile
 
-ROOT = os.path.join(os.path.dirname(__file__), "..")
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+ROOT = os.path.join(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "tools"), "..")
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "tools"))
 import synth_arc                                    # noqa: E402
 
 # Absolute: this is run with cwd set elsewhere, and a relative

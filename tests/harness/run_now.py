@@ -29,6 +29,15 @@ does reach are graded against a real archive by the differential suite.
 One archive is deliberately graded ONE way, because the two
 implementations disagree and the reference is wrong: an empty file
 anywhere but last (see check_empty_stream).
+
+In ci.sh (tests/harness/, run by its one loop since 2026-11-13). What ci.sh said of it there:
+
+Now Compress has exactly one REAL fixture, and it reaches two of the
+five shapes a block can have. The rest — and the offset-delta search,
+and folders, and several files in one archive — are generated the same
+way and handed to `unar`, which is the implementation fmt_now.c was
+transcribed from. One of the generated archives is committed as a
+fixture too, so the diff suite grades those paths without `unar`.
 """
 import os
 import shutil
@@ -36,8 +45,8 @@ import subprocess
 import sys
 import tempfile
 
-ROOT = os.path.join(os.path.dirname(__file__), "..")
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+ROOT = os.path.join(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "tools"), "..")
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "tools"))
 import synth_now                                     # noqa: E402
 from make_manifests import parse_appledouble         # noqa: E402
 
@@ -156,7 +165,7 @@ def check_encoder_shape(tmp, macextract, problems):
     member has several blocks. `check_now_readable` below is the one
     archive built the way the encoder builds one.
     """
-    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "tools"))
     import derive_now as D                                # noqa: E402
     for name, (tree, delta) in sorted(synth_now.archives().items()):
         if delta:

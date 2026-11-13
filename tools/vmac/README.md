@@ -198,7 +198,7 @@ back **38/69** on 2026-09-05, every "failure" a missing oracle.
 | `superdisk.py` | grade SuperDisk! with its own self-extractors |
 | `spacesaver.py` | Aladdin's **SpaceSaver**, and much of StuffIt Deluxe 3.5.1 |
 | `sdcompress.py` | the **SuperDisk! control panel**, which compresses |
-| `maclha.py` | **MacLHA 2.00** writes a `.lzh` with a real resource fork: `--setup`, `--make`, `--check`. Its Type menu (`MENU` 134, read with `hcopy`) offers `-lh5-`, `-lh1-`, `-lh0-` only; `-lh2-`/`-lh3-` are graded by `tools/run_lzh.py` (TESTING.md) |
+| `maclha.py` | **MacLHA 2.00** writes a `.lzh` with a real resource fork: `--setup`, `--make`, `--check`. Its Type menu (`MENU` 134, read with `hcopy`) offers `-lh5-`, `-lh1-`, `-lh0-` only; `-lh2-`/`-lh3-` are graded by `tests/harness/run_lzh.py` (TESTING.md) |
 | `zipmeta.py` | what StuffIt 3.5.1 does with a MacZip archive's Finder metadata |
 | `sitzip.py` | the same for StuffIt Deluxe 5.5 and 7.0.3 on Mac OS 9, placed with no installer |
 | `sitcomment.py` | StuffIt 5's archive flag byte, bit 5 |
@@ -209,7 +209,7 @@ back **38/69** on 2026-09-05, every "failure" a missing oracle.
 | `hfscat.py` | every catalog record on an HFS image, whole; `patch()` plants values before a boot |
 | `macmime.py` | **a MIME message written BY a Macintosh**, with mpack's own Mac port (`tools/macmime/`) |
 | `mkcollide.py` | an archive whose names collide on HFS, and a check of what `BumpName` did |
-| `privatefile.py` | **Aladdin Private File 2.0** writes the specimens `tools/run_privatefile.py` grades |
+| `privatefile.py` | **Aladdin Private File 2.0** writes the specimens `tests/harness/run_privatefile.py` grades |
 | `maccompress.py` | **MacCompress 3.2**: `--fetch` (Discmaster, SHA-1 checked), `--make` on System 6, `--check`. The subject `Alpha` takes the volume window's FIRST icon slot; the application the second, at (172, 105) |
 
 `tools/quickdraw-repro/` is a sibling that reuses `mkboot.py` and this
@@ -604,7 +604,7 @@ forks` (through `make_volume(macbinary=...)`, i.e. `hcopy -m`) has members
 with a resource fork — a rule once read off data-only members was withdrawn
 (BLOCKERS.md, *Withdrawn claims*). Specimens land in
 `$UNC_VMAC_HOME/specimens/now/<case>/` with the inputs beside them and a
-screenshot per step; `tools/run_now.py` picks them up if present and skips
+screenshot per step; `tests/harness/run_now.py` picks them up if present and skips
 with a message if not.
 
 **A case that varies one property of a COMPRESSED block must keep the content
@@ -1250,7 +1250,7 @@ box takes Return, and every fork it wrote is read back with `hfsutils` and
 compared with `macextract x`, resource forks with bytes 16..127 masked. 5
 forks across the 2 archives, all identical (2026-08-20; FORMATS.md ✧✧).
 Screenshots land in `$UNC_VMAC_HOME/specimens/superdisk/`;
-`tools/run_superdisk.py` replays the verdict offline.
+`tests/harness/run_superdisk.py` replays the verdict offline.
 
 - **The application is opened with Select All, not a coordinate**: the
   volume holds one item, so ⌘A then ⌘O. A measured double-click merely
@@ -2452,7 +2452,7 @@ cannot see:** a real one-drive Mac — Mini vMac puts every inserted disk in a
 new drive (MANUAL_TESTS.md §4).
 
 **`--abk` is an Apple Backup set across three 1.44 MB floppies**, run on a
-one-drive emulator (`mv-1M-1d`, `mv-512Ke-1d`): `tools/run_abk.py`'s
+one-drive emulator (`mv-1M-1d`, `mv-512Ke-1d`): `tests/harness/run_abk.py`'s
 three-disk set, one file's resource fork across all three, each disk a file
 called "Apple Backup Data" on a floppy of its own. Opened on disk 1 with the
 output on the boot disk; at "Insert the disk with Part 2", a DECOY goes in
@@ -2743,7 +2743,7 @@ directory); the image you handed it shows every archive missing.
 **`--unstuff` is the oracle.** It boots the image `--make` wrote, deletes the
 original subject, and has Magic Menu unstuff `Optimized.sit`. For `Text 1`
 that gives the OPTIMIZED bytes — 594, no resource fork — which
-`tools/run_sitopt.py` grades against.
+`tests/harness/run_sitopt.py` grades against.
 
 **`MacPaint 1` keys on type `PNTG`**, and the corpus has no paint document,
 so `--add-paint` puts **MacPaint 2.0** (a `.sea.hqx` our engine unwraps) on
@@ -2903,7 +2903,7 @@ Options menu with no script word.
 
 Each `--run` copies `sitopt-ps.hfv`, puts its subjects and a script on it, and
 has 2.0.1 stuff and then unstuff in one boot; the sets are in the docstring,
-the grading is `tools/run_sitcombo.py` (TESTING.md). 22 boots made the 121
+the grading is `tests/harness/run_sitcombo.py` (TESTING.md). 22 boots made the 121
 archives on 2026-10-11.
 
 **It is closed-loop where `sitopt.py` types blind.** The password prompts are

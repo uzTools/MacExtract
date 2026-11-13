@@ -16,6 +16,13 @@ version 4 over the decoded bytes) and nothing else would notice a
 decoder that had them the wrong way round.
 
 Skips cleanly, and says so, when `reference/btoa/` is not there.
+
+In ci.sh (tests/harness/, run by its one loop since 2026-11-13). What ci.sh said of it there:
+
+btoa/atob (M26). No corpus file and no second reader — `unar` does not
+know the format — so the ORIGINAL implementation is the encoder: the
+suite compiles reference/btoa and grades our decoder against what it
+writes, in both framings. Skips cleanly without reference/.
 """
 import os
 import shutil
@@ -23,11 +30,11 @@ import subprocess
 import sys
 import tempfile
 
-ROOT = os.path.join(os.path.dirname(__file__), "..")
+ROOT = os.path.join(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "tools"), "..")
 SRC = os.path.abspath(os.path.join(ROOT, "reference", "btoa"))
 BIN = os.path.abspath(os.path.join(ROOT, "build", "btoa", "btoa"))
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "tools"))
 from synth_wrapped import macbinary                  # noqa: E402
 
 
@@ -40,7 +47,7 @@ def build():
     reference/btoa was never fetched — a real skip — and (False, why)
     when the tree IS there and the compile failed. Those were one answer
     until 2026-09-09, and the caller reported both as a missing tree;
-    the same conflation in tools/run_mime.py hid a real breakage
+    the same conflation in tests/harness/run_mime.py hid a real breakage
     (DECISIONS.md 2026-09-09)."""
     if os.path.exists(BIN):
         return True, None

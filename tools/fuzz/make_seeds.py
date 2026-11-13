@@ -18,7 +18,7 @@ run starts from many short streams rather than a few long ones.
 
 SpaceSaver is in no fixture, so its seeds come from the files SpaceSaver
 itself wrote where tools/fetch_specimens.py has fetched them (all four
-methods), and always from what tools/run_spacesaver.py --emit writes
+methods), and always from what tests/harness/run_spacesaver.py --emit writes
 (methods 0 and 4 only).
 
 WHAT IT CANNOT SEE: a decoder reached by no fixture gets no seed (it then
@@ -195,7 +195,7 @@ SS_PRESET = os.path.join(SS_SPECIMENS, "PrAm-4048.bin")
 
 def spacesaver_inputs(cli):
     """Every SpaceSaver file this machine has: the fetched specimens (the
-    same glob and magic test tools/run_spacesaver.py grades), then what
+    same glob and magic test tests/harness/run_spacesaver.py grades), then what
     `run_spacesaver.py --emit` writes into .tmp/fuzz/ssemit."""
     out = []
     if os.path.isdir(SS_SPECIMENS):
@@ -205,7 +205,8 @@ def spacesaver_inputs(cli):
                 out.append(p)
     emit = os.path.join(REPO, ".tmp", "fuzz", "ssemit")
     shutil.rmtree(emit, ignore_errors=True)
-    subprocess.run([sys.executable, os.path.join(REPO, "tools",
+    subprocess.run([sys.executable, os.path.join(REPO, "tests",
+                                                 "harness",
                                                  "run_spacesaver.py"),
                     "--macextract", cli, "--emit", emit],
                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
@@ -258,7 +259,7 @@ def main():
     # anyway: the files SpaceSaver itself wrote, which
     # tools/fetch_specimens.py --only spacesaver puts outside the
     # repository, and the method-0 and method-4 files
-    # tools/run_spacesaver.py --emit writes from nothing.
+    # tests/harness/run_spacesaver.py --emit writes from nothing.
     for p in spacesaver_inputs(cli):
         args = [cli, "t"]
         if os.path.exists(SS_PRESET):

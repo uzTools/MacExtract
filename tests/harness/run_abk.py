@@ -40,13 +40,22 @@ What it CANNOT see: anything both other readers get wrong the same way
 — they were written from one article — and the Finder flags the
 Macintosh shell then clears or sets (on-desk, inited), which only the
 emulator run shows. A disk this machine has no copy of is not graded.
+
+In ci.sh (tests/harness/, run by its one loop since 2026-11-13). What ci.sh said of it there:
+
+Apple Backup. Nothing here reads it but the engine, so two readers others
+wrote from the same article grade it — unbak.py for every fork's bytes,
+Kaitai's parser for every item's Finder info and dates — each run ONLY
+inside tools/sandbox.py's box, whose self-test must pass first. Then a set
+made here with one file across three disks, damaged disks each alone, and
+three controls that must fail.
 """
 import argparse, filecmp, json, os, re, shutil, struct, subprocess, sys, tempfile
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "tools"))
 import sandbox                                               # noqa: E402
 
-ROOT = os.path.normpath(os.path.join(os.path.dirname(__file__), ".."))
+ROOT = os.path.normpath(os.path.join(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "tools"), ".."))
 FIX = os.path.join(ROOT, "fixtures")
 REF = os.path.join(ROOT, "reference", "applebackup")
 SETS = {"perfA": (1, 5, 6), "perfB": (1, 4, 7)}

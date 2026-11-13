@@ -79,7 +79,7 @@ below it. Per-format detail is under *Table notes*.
 | Unix compress (.Z) | extract | LZW ≤16 bit | 4 fixtures | 219 KB§ | full |
 | Tar (ustar/v7) | extract | — (links reported unsupported); bsdtar's `._name` sidecar put on the member after it, Spotlight comment included; a pax `comment` marked UTF-8; a pax `g` header's mtime and comment on every member after it | 3 fixtures (2 real 1990 v7 tars) + unit tests | 8 KB | full |
 | MAR (.mar, .mac) | extract | — (stored blocks, a CRC-32 on each and on every header); a whole archive LZW-compressed by mar 0.2.0 comes out through the `.Z` envelope | 2 real archives by its author, each with a StuffIt twin, + 2 synthetic (*MAR*, below) | 9 KB | full |
-| LZ4 frame (.lz4) | extract | — (an envelope: stored and compressed blocks, header, block and content checksums, concatenated and skippable frames; no dictionary, no legacy frame) | 2 synthetic, liblz4's own frames, + 165 in `tools/run_lz4.py` (*LZ4 frames*, below) | 68 KB | full |
+| LZ4 frame (.lz4) | extract | — (an envelope: stored and compressed blocks, header, block and content checksums, concatenated and skippable frames; no dictionary, no legacy frame) | 2 synthetic, liblz4's own frames, + 165 in `tests/harness/run_lz4.py` (*LZ4 frames*, below) | 68 KB | full |
 | Apple Backup (a set of floppies) | extract | — (stored forks; a file cut at a disk's end continues on the next under a repeat of its header; a set read with disks missing, what they held reported) | 2 complete real backups (105 disks, a restore CD) and 6 disks of 2 partial ones + 1 synthetic 3-disk set, graded by two other readers run in a sandbox (*Apple Backup*, below) | 8 KB | full |
 | Apple Installer Tome (`idcp`), and the `'part'` resources of an `ircp` file's or a Tome's resource fork | extract | stored, InstaCompOne, the text codec; the forks' checksum unidentified, so a stream must end exactly where its record says; a part's records come out at their stated ids, each `iFND` a suitcase | 4 real Tomes off the System 7.5.5 and Mac OS 8.6 media, graded by deark and by the files Apple's Installer installed, + 35 more off the same media with `run_tome.py --extra`; Installation Tome 3 with both forks, its nine font families graded by the installed suitcases (*Apple Installer Tomes*, below) | 22–79 KB | full |
 | StuffIt segment (multi-part) | extract | — (join only; the joined file is the next layer) | 7 synthetic sets, oracle-adjudicated, + 3 with each part in its own envelope (CLI only), + **11 sets StuffIt itself cut** (Deluxe 2.0.1 ×5, four of them from files with a resource fork, Lite 3.0.5 ×2, Deluxe 5.0 ×2, DropSegment 5.0, InstallerMaker 2.0), graded by their originals and the running CRCs (extracting since 2026-10-24; BLOCKERS.md, *Withdrawn claims*) | 8 KB | full |
@@ -90,12 +90,12 @@ below it. Per-format detail is under *Table notes*.
 | DiskDoubler (DD, DDAR, DDA2) | extract | **all eleven**: 0 store, 1 Unix compress, 2/5 splay Huffman, 3 RLE90, 4 StuffIt Huffman, 6/9 AD LZSS, 7 Stac LZS, 8 Compact Pro, 10 DDn✦ | 88 fixtures (6 harvested + 82 CC0 files graded against their own originals) + 19 BinHexed copies + 28 specimens (2 written by DiskDoubler 3.7 under Mini vMac, 2 off its distribution disk, 24 off Salient's 3.1.2 disk)✦ + 1 written by **MacCompress 3.2** (1989) in the 1990 header (`tools/vmac/maccompress.py`; DECISIONS.md 2026-10-23, *the probes next door*) | 8–392 KB✦ | full |
 | Now Compress | extract | stored, LZSS, Huffman, Huffman+LZSS, "new" LZSS✧ | 2 real fixtures + 14 generated archives (all five shapes, adjudicated by `unar`); `synth-now-mixed.now` also has an `unar` manifest and is in the differential suite | 137 KB with one block slot, 235 KB with four✧ | full |
 | ARC / ArcMac (.arc) | extract | 1/2 store, 3 RLE90, 4 squeeze+RLE90, 5/6/7 crunch, 8 12-bit LZW+RLE90, 9 13-bit LZW, **0x0a crushed (PAK), 0x0b distilled, 0x0a trimmed (ARC 7.x) and the ARC 7 container**, 0x7f compress; ArcMac's two-fork payload★★★; **garbled (password-XORed) members decrypted** | 10 generated archives (methods 1-9, adjudicated by `unar`) + 3 written by Debian's `arc` 5.21q; **2 real PAK specimens + 7 archives PAK 2.51 wrote under DOSBox** (`tools/pak.py`); `synth-arc-mixed.arc`, `arc2pak1.pak` and `derived-INTRECHO.pak` have manifests and are in the differential suite | 4–46.5 KB★ | full |
-| btoa (`xbtoa`/`.ascii`) | extract | — (base-85 ASCII armour; both the `xbtoa5` and the older `xbtoa Begin` framings)◆ | no corpus file and no second reader: graded against **btoa 5.2.1 itself**, which encodes the subjects `tools/run_btoa.py` decodes, **plus a stream written by Aladdin's own `btoa/atob Translator`** on an emulated Mac (`sitcrypt.py --btoa-send`)◆ | 12 KB | full |
+| btoa (`xbtoa`/`.ascii`) | extract | — (base-85 ASCII armour; both the `xbtoa5` and the older `xbtoa Begin` framings)◆ | no corpus file and no second reader: graded against **btoa 5.2.1 itself**, which encodes the subjects `tests/harness/run_btoa.py` decodes, **plus a stream written by Aladdin's own `btoa/atob Translator`** on an emulated Mac (`sitcrypt.py --btoa-send`)◆ | 12 KB | full |
 | base64 (`.b64`, `.mime`) | extract | — (bare, and the `begin-base64`/`====` framing sharutils writes; several documents in one file)◇ | no corpus file and no Macintosh specimen: graded against **deark** and, through the messages that carry it, **munpack 1.6** | 5 KB◇ | full |
 | MIME message (`.mim`, `.eml`) | extract | — (multipart to 4 levels, base64, quoted-printable and 7bit/8bit parts, a uuencoded part pasted into one, **multipart/appledouble**, which carries both forks and the Finder info, and `message/partial` across several files)◇ | no corpus file: graded against **munpack 1.6**, the implementation `src/fmt_mime.c` is transcribed from, over 65 generated cases | 8 KB◇ | full |
-| uuencode (.uu, incl. UUTool) | extract | — (plain uu, UUTool's two-fork "MU" shape, **all three of its alphabets**✦ and documents posted in several parts★★) | 8 generated shapes and 25 cases in `tools/run_uu.py`, the two-fork ones adjudicated by macutils' `hexbin`; `synth-uu-mac.uu` and **two wild specimens** are in the differential suite | 4 KB | full |
+| uuencode (.uu, incl. UUTool) | extract | — (plain uu, UUTool's two-fork "MU" shape, **all three of its alphabets**✦ and documents posted in several parts★★) | 8 generated shapes and 25 cases in `tests/harness/run_uu.py`, the two-fork ones adjudicated by macutils' `hexbin`; `synth-uu-mac.uu` and **two wild specimens** are in the differential suite | 4 KB | full |
 | Alysis SuperDisk! (.X, .x) | extract | **both containers** (record-stream archive and single file); methods 1-4 and 5-8 (a finite-context predictor over a 13- or 16-bit context, with the flag bitmap and/or the literals Huffman-coded), 9 Huffman, 10 SlowFastA and 11 SlowFastB (LZSS); 13 declined per entry, and 20 is an encoder for 11 rather than a method of its own✧✧ | 2 fixtures, 5 forks, adjudicated by the archives' OWN self-extractors on an emulated Mac, + 11 single-file specimens written by Alysis's own control panel (methods 1 and 6) and graded against their inputs, + every method 1..9 through Alysis's own Add-In Modules under qemu-m68k (`tools/sdmodule/`), + 4 record streams written here and read back by an archive's own self-extractor (paths past the cap, and a stored block) | 72–84 KB✧✧ | full |
-| StuffIt SpaceSaver (`SPSV`) | extract | **every method the format has**: 0 stored, 1 and 2 (the "Original" LZSS pair), 3 "Alg 3" (Huffman + LZ77), 4 "Alg 4" — the last two starting their window loaded with a preset dictionary that ships inside SpaceSaver✦✦ | **48 files SpaceSaver itself wrote**, off five CD-ROM series; **46 byte-exact against the uncompressed original** on an earlier pressing (`tools/fetch_specimens.py`, `tools/run_spacesaver.py`), plus 2,784 corrupted variants; **44 forks written by Aladdin's own compressors under `qemu-m68k`** read back byte-exact (`tools/ssmodule/`); a synthetic round-trip and unit tests✦✦ | 4 KB stored, 8 KB method 1, 84 KB method 2, 41 KB method 3, **36 KB** for what SpaceSaver writes (Mac Plus); 68 KB ceiling from the width byte; the 9.7 KB dictionary is static data, not heap | full |
+| StuffIt SpaceSaver (`SPSV`) | extract | **every method the format has**: 0 stored, 1 and 2 (the "Original" LZSS pair), 3 "Alg 3" (Huffman + LZ77), 4 "Alg 4" — the last two starting their window loaded with a preset dictionary that ships inside SpaceSaver✦✦ | **48 files SpaceSaver itself wrote**, off five CD-ROM series; **46 byte-exact against the uncompressed original** on an earlier pressing (`tools/fetch_specimens.py`, `tests/harness/run_spacesaver.py`), plus 2,784 corrupted variants; **44 forks written by Aladdin's own compressors under `qemu-m68k`** read back byte-exact (`tools/ssmodule/`); a synthetic round-trip and unit tests✦✦ | 4 KB stored, 8 KB method 1, 84 KB method 2, 41 KB method 3, **36 KB** for what SpaceSaver writes (Mac Plus); 68 KB ceiling from the width byte; the 9.7 KB dictionary is static data, not heap | full |
 | LZH / LHA (.lzh, .lha) | extract | -lh0- store, -lh1- (LHarc's adaptive Huffman, shared with StuffIt method 5), **-lh2- (both codes adaptive, the position tree growing with the output)**, **-lh3- (static, rebuilt per block)**, -lh4-/-lh5-/-lh6-/-lh7- (static Huffman over a 4/8/32/64 KB window), -lhd- directories, LArc's -lz4-/-lz5-/-lzs-; header levels 0, 1, 2 and 3; **MacLHA's MacBinary payload unwrapped into two forks**; every method the format has except PMarc✵ | 8 fixtures (1 real Amiga archive + 7 of lhasa's) + **182 archives from fourteen writers**, each graded against `unar` and against lhasa, + 12 sets written by LHa 1.14i itself, + 15 -lh2- and 6 -lh3- entries generated for the purpose✵ | 4–74 KB✵ | full |
 | AppleLink package (.pkg) | extract | LZW (Unix `compress` at 13 bits) and stored, both forks, versions 0 and 1, folders★★★★ | **67 forks of 8 real packages** — every path the format has — against `derive_sqp.py`'s independent reading and each record's own declared length, 4 of them against a recorded sha256, + 6 synthesised packages (22 forks) in the differential suite, + **every LZW fork decoded by `gzip` through a `.Z` header**★★★★ | 8–41 KB★★★★ | full |
 | Private File (.pf) | extract (envelope) | RC4 under the first 5 (export build) or up to 16 bytes of MD5(password); the payload is the StuffIt archive PF Encrypt makes first | no corpus file and no other reader: **3 files Private File 2.0 itself wrote**, graded byte-exact through every layer against the subjects that went in (*Private File*, below) | 5 KB | full |
@@ -461,7 +461,7 @@ refuse decompress; their modules are named by
 BinHex envelope. `tools/vmac/superdisk.py --adjudicate` runs each
 self-extracting archive under System 7 on an emulated Mac Plus: **5 forks
 across the 2 archives, every one identical** (2026-08-20; resource bytes
-16..127 masked). `tools/run_superdisk.py` replays that offline and adds
+16..127 masked). `tests/harness/run_superdisk.py` replays that offline and adds
 116 corrupted variants — the only robustness coverage, since `t` does
 not unwrap envelopes.
 
@@ -749,7 +749,7 @@ declares how many bytes it encodes, so a line whose length disagrees is
 stepped over. **uuencode cannot notice a missing MIDDLE part** — no length
 or checksum anywhere — and decodes a short file; a missing LAST part is
 caught (the terminator and `end` live there). Asserted in
-`tools/run_uu.py`; OPEN_ITEMS.md.
+`tests/harness/run_uu.py`; OPEN_ITEMS.md.
 
 ### ARC and uuencode ★
 
@@ -982,7 +982,7 @@ overrides it. The resource is byte-identical in the control panel and
 
 | file | written by | out | peak on the Mac |
 |---|---|---|---|
-| stored | `tools/run_spacesaver.py --emit` | 1,040 B data + 512 B resource | **4,112 B** |
+| stored | `tests/harness/run_spacesaver.py --emit` | 1,040 B data + 512 B resource | **4,112 B** |
 | method 4 at SpaceSaver's width | the same | 14,524 B | **36,896 B** (32 KB window + 4 KB input) |
 | method 4 reaching into the dictionary | the same | 7,000 B | **36,896 B** |
 | method 1 "Original Fast" | `tools/ssmodule/run_ssmodule.py --keep` | 76,800 B | **8,224 B** (4 KB window + input buffer) |
@@ -1036,7 +1036,7 @@ heuristic and lhasa both refuse, handing back the whole 2,304-byte
 stream. This engine accepts on arithmetic: the Mac header's name must be
 the entry's, and the two fork lengths padded to 128 plus the header must
 equal the uncompressed size. Both forks then come back byte-exact (1,760 B
-and 333 B, `tools/run_lzh.py`); all 182 archives and 8 fixtures are
+and 333 B, `tests/harness/run_lzh.py`); all 182 archives and 8 fixtures are
 unchanged.
 
 **Dates are not converted** (MS-DOS at levels 0 and 1, Unix at 2 and 3;
@@ -1062,7 +1062,7 @@ three header levels in `ci.sh`**, the run failing if fewer than three
 entries of an archive used the method (TESTING.md).
 
 **`-lh3-` since 2026-08-25**: STATIC, rebuilt per block, so
-`tools/run_lzh.py` writes the streams and LHa's decoder vets each. A block
+`tests/harness/run_lzh.py` writes the streams and LHa's decoder vets each. A block
 is a 16-bit symbol count, a literal/length tree as one 4-bit length per
 symbol, then a position tree in the same shape or the format's fixed one;
 both escapes (a single-symbol block, an explicit position tree) are
@@ -1102,7 +1102,7 @@ written for the Mac OS 9 tier with no manifest. `unar` and macutils do not
 read the format, so the grader is the original: `tools/fetch_references.sh`
 fetches btoa 5.2.1 (Paul Rutter, Joe Orost and Stefan Parmark, 1996, from
 `archive.debian.org`), `src/fmt_btoa.c` is transcribed from its `atob.c`,
-and `tools/run_btoa.py` compiles it as an ENCODER and requires our decoder
+and `tests/harness/run_btoa.py` compiles it as an ENCODER and requires our decoder
 to reproduce its output — eight subjects across both framings, a
 mail-wrapped one, a flipped character, a truncated archive and prose
 containing the word.
@@ -1134,7 +1134,7 @@ downloader meets). Three shapes:
   lines of one width between 40 and 76 characters, every character in
   the alphabet, a last line that closes the stream; the LAST probe
   `unc_sniff` runs. ◇ **A file too short for that shape is not
-  recognised**, which `tools/run_mime.py` asserts.
+  recognised**, which `tests/harness/run_mime.py` asserts.
 - **`begin-base64 <mode> <name>` … `====`** (sharutils' `base64` and
   `uuencode -m`), several documents in one file read.
 - **A MIME message**: `multipart/*` to four levels, `base64`,
@@ -1195,7 +1195,7 @@ byte-exact and munpack reads the same file.
 them).
 
 ◇ **Line endings are not settled by that specimen**: it is LF-terminated
-because Retro68's newlib does no `\n`→CR translation. `tools/run_mime.py`
+because Retro68's newlib does no `\n`→CR translation. `tests/harness/run_mime.py`
 grades CR, CRLF and LF separately.
 
 ## StuffIt 2.0's pluggable modules, and what an "Optimizer" was
@@ -1353,7 +1353,7 @@ skipped…"*). **Bit `0x20` is unexplained**: set on both `MacPaint 1` forks
 and on no other module's; nothing here depends on it. **Byte 106 means
 nothing without `0x40`**: an archive stuffed while an Optimizer was merely
 enabled carries its id with the flag clear and the fork untouched
-(measured). `tools/run_sitopt.py` grades all eight archives, the optimized
+(measured). `tests/harness/run_sitopt.py` grades all eight archives, the optimized
 ones against 2.0.1's own unstuffed bytes.
 
 **An optimized entry this engine cannot undo is refused per entry and
@@ -1467,7 +1467,7 @@ temp file (which cannot be opened while the module holds it, -49
 **All four reversible Optimizers are undone in `src/fmt_sit.c`** — three
 since 2026-09-29, `JPEG Lossy` since 2026-10-02 — each read out of its own
 `'DCMP'` and graded against archives StuffIt Deluxe 2.0.1 wrote
-(`tools/run_sitopt.py`):
+(`tests/harness/run_sitopt.py`):
 
 | module | id | what it does to the fork | undone | checked by |
 |---|---|---|---|---|
@@ -1494,7 +1494,7 @@ somebody else's corpus*): both `Text 1`'s, off Giga-ROM CDs pressed
 They grade the `0x40` bit, the 255 marker and the deleted resource fork
 on bytes nobody here wrote, and **method nibble 3 under the bit** (2.0.1
 was only asked here for 0, 2, 5, 6 and 8). `run_diff.py` grades their
-bytes against `unar` manifests; `tools/run_sitopt.py`'s lane 15 grades
+bytes against `unar` manifests; `tests/harness/run_sitopt.py`'s lane 15 grades
 the six header bytes — one byte changed (255 → 1) makes it fail twice and
 the engine refuse the archive, measured. Both outer files are
 MacBinary-wrapped self-extractors (`APPL`/`aust`, a 22,532-byte
@@ -1522,7 +1522,7 @@ archive's CRC-16 `6325` is the RESTORED bytes' (the optimized ones' is
 `f35b`), which also catches `unar` (correct method 5, *"Wrong
 checksum"*); the running sum over those bytes is byte-for-byte this
 engine's output; and clearing the bit and id (header CRC at 110 repaired)
-makes `t` fail a checksum (`tools/run_sitopt.py`).
+makes `t` fail a checksum (`tests/harness/run_sitopt.py`).
 
 **`MacPaint 1` has no oracle and is graded anyway**: `unar` fails it
 (*"Attempted to read more data than was available"*), `macunpack` skips
@@ -1656,7 +1656,7 @@ user setting.
 **`src/sit_ccube.c` is that decoder in the engine**: the data fork comes
 out **byte-identical to what 2.0.1 restored**, the RESOURCE fork identical
 to the ORIGINAL document's (2.0.1 rewrites 30 bytes of its map);
-`tools/run_sitopt.py` asserts both.
+`tests/harness/run_sitopt.py` asserts both.
 
 | | |
 |---|---|
@@ -1673,7 +1673,7 @@ grey content (chroma flat 128). `tools/vmac/sitcombo.py` asked 2.0.1 for
 Photoshop 1.0.7 (`--psnew`), 21 coloured ones in its layout (`cdocs/`).
 `src/sit_ccube.c` had been right on 2 (the two the module declined),
 silently wrong on 5 (exit 0) and refused 26; **it is byte-exact on all 39
-`JPEG Lossy` entries on this machine now** (`tools/run_sitcombo.py`;
+`JPEG Lossy` entries on this machine now** (`tests/harness/run_sitcombo.py`;
 DECISIONS.md 2026-10-11, *the constant was a square*):
 
 | what the documents were | the engine before | why |
@@ -1745,7 +1745,7 @@ anything:
 file the stored bytes are a remnant of — `MacPaint 1` declares a 501-byte
 resource fork and stores two compressed bytes. No decoder can fill that
 fork, so this engine yields none for it (`src/fmt_sit.c`).
-`tools/run_sitopt.py` asserts both halves of the table.
+`tests/harness/run_sitopt.py` asserts both halves of the table.
 
 **Encryption by the 2.x modules** — `DES` (1), `PassLock` (2), `NewDEx`
 (3), `DESex` (64) — is under *Encryption*, below (*The three ways 2.0.1
@@ -1787,7 +1787,7 @@ complete code with ascending lengths, decoded wrong from its 26th byte
 for 458 B of stream** (seventeen maximum matches), the only shape that
 reaches `sit14_flush`'s window wrap; `unar`, this engine and the encoder
 agree on all 278,896 bytes. Its 294,528 B peak would need a 512 KB tier,
-so `tools/run_sit14wrap.py` grades it in `ci.sh` instead (TESTING.md,
+so `tests/harness/run_sit14wrap.py` grades it in `ci.sh` instead (TESTING.md,
 *The fork that wraps the window*).
 
 ### What real streams actually use (instrumented build, 2026-10-03)
@@ -2153,7 +2153,7 @@ newline.
 ## AppleLink packages: SqueezePlay, read out of Aladdin's own expander
 
 **SqueezePlay, extracting since 2026-10-05** (M56). `src/fmt_sqp.c` is the
-decoder, `src/fmt_sqp_probe.c` the sniffer, `tools/run_sqp.py` the suite
+decoder, `src/fmt_sqp_probe.c` the sniffer, `tests/harness/run_sqp.py` the suite
 (TESTING.md, *AppleLink packages: SqueezePlay*). Every LZW fork is a Unix
 `compress` code stream, decoded identically by **`gzip`** (*The codec*).
 The sniffer answers
@@ -2232,7 +2232,7 @@ is `PBGetCatInfo`, @0x2354 copies it to record+36, written by
 `WrHFSDirectory` @0x5f2e). Measured: **53 records across all 8 real
 packages, shortest name 7 bytes, none of length zero**; 2 files of zeros
 and 2 packages of one empty file sit either side of the test in
-`tools/run_sqp.py`'s lane 4 (DECISIONS.md 2026-10-06, *the directory of
+`tests/harness/run_sqp.py`'s lane 4 (DECISIONS.md 2026-10-06, *the directory of
 empty records*; BLOCKERS.md, *Withdrawn claims*).
 
 **A folder's record carries no forks**: `DoItemsReverse` @0x1ecc branches
@@ -2265,7 +2265,7 @@ DECISIONS.md 2026-10-05, *the deviation that was the reference*).
 SqueezePlay fork is decoded **byte-identically by `gzip`**, on all **59**
 LZW forks of the eight real packages and all 18 synthesised ones, the
 36,000-byte two-clear stream included — in every `ci.sh` pass
-(`tools/run_sqp.py`). **The writer differs from `compress`**: no ratio
+(`tests/harness/run_sqp.py`). **The writer differs from `compress`**: no ratio
 test; `Compress` @0x288e clears only when the table FILLS, after exactly
 7,936 codes of a generation, as `tools/synth_sqp.py` implements.
 
@@ -2306,7 +2306,7 @@ to 541,179 and defining 231,818 codes.
 readers — the engine, `tools/derive_sqp.py`'s independent reading, and
 `gzip` through a `.Z` header — plus **each record's declared expanded
 length**: **67 forks of 8 packages agree on all four counts**, 59 with
-`gzip` (`tools/run_sqp.py` lane 1); the four members of the two original
+`gzip` (`tests/harness/run_sqp.py` lane 1); the four members of the two original
 packages keep a recorded sha256. A real package now stands behind every
 path `tools/synth_sqp.py` generates (one generator-and-engine error, a
 folder's type and creator being its window rectangle, DECISIONS.md
@@ -2317,7 +2317,7 @@ expander** (MANUAL_TESTS.md).
 
 `ALink.PKG` (6,900 B, 1992-02-11) and `Read First.PKG` (1,373 B,
 1992-03-08). The sha256 of each expanded data fork, recorded 2026-10-05
-from an independent reading of the translator, is `tools/run_sqp.py`'s
+from an independent reading of the translator, is `tests/harness/run_sqp.py`'s
 regression oracle:
 
 | package | member | type/creator | packed | expanded | sha256 (expanded) |
@@ -2337,7 +2337,7 @@ All four read as their names say; `Trademark Data` is a memo dated
 fork are the same output path. **The engine refuses the second entry and
 says which** (M9's per-entry refusal for an existing output file, reached
 by a real archive), and `--forks hidden` writes all six members;
-`tools/run_sqp.py` asserts both.
+`tests/harness/run_sqp.py` asserts both.
 
 **Peak heap over the eight is 8,576 to 41,344 B** (`t --stats`,
 2026-10-06): 8,576 B for `SD! Patcher > 1.8.2.PKG` (one stored fork, no
@@ -2373,7 +2373,7 @@ exception is `SD! Patcher > 1.8.2.PKG`, **8,576 B on both** (8,490 against
 all seven Mini vMac tiers and Mac OS 9.2 against its manifest; the rest
 are not, so they move no tier tally (BLOCKERS.md, the tier table). Real
 packages, having no committed manifest, are graded against this engine's
-Linux output, whose correctness is `tools/run_sqp.py`'s lane 1.
+Linux output, whose correctness is `tests/harness/run_sqp.py`'s lane 1.
 
 ### What 3.5's `PKG Expand Translator` is, and what it is not
 
@@ -2414,7 +2414,7 @@ reads the format (`unar`, deark, macunpack), so the specimens are three
 files **Aladdin Private File 2.0's `PF Encrypt™`** wrote under Mini vMac
 from fixed subjects and passwords (`tools/vmac/privatefile.py`); all three
 come out **byte-exact in both forks**, through every layer, on every
-`ci.sh` run where present (`tools/run_privatefile.py`; TESTING.md,
+`ci.sh` run where present (`tests/harness/run_privatefile.py`; TESTING.md,
 *Private File*). Read off the code first, graded on the files after
 (DECISIONS.md 2026-10-09, *the specimen was one search away*).
 
@@ -2498,7 +2498,7 @@ read: an archive inside an LZ4 frame, which mar 0.2.0 also opens
 **The twins agree except in the resource fork's reserved header**: of 77
 resource forks, all differ from the `.sit`'s only inside bytes 16..127, the
 area the Resource Manager stamps, in up to 9 bytes; every data fork is
-identical (`tools/run_mar.py`). Bytes 114..117 read 2019-05-31 in every
+identical (`tests/harness/run_mar.py`). Bytes 114..117 read 2019-05-31 in every
 `.mar` fork and 2021-09-22 in every `.sit` fork (DECISIONS.md, same entry).
 
 **The Finder info stated is what mar 0.2.0's expander writes, but for one
@@ -2518,7 +2518,7 @@ field, but for a date of 0 (DECISIONS.md 2026-11-03, same entry):
 **An LZW-compressed archive needs no codec of its own**: mar 0.2.0's
 encoder writes compress(1)'s header and never pads, and its clears fall on
 compress(1)'s 8-code group boundaries, so `gzip -dc` and the `.Z` envelope
-read it byte for byte at 9, 12 and 16 bits (`tools/run_mar.py`).
+read it byte for byte at 9, 12 and 16 bits (`tests/harness/run_mar.py`).
 
 **Cost** (measured 2026-11-03): shipped CODE +16, A5 0, and 24 B for its
 two bundle types (`MARd`, `MARf`); `ovl_zipold` 10,832 → 12,564 B,
@@ -2574,7 +2574,7 @@ abe-README.md`). On the Macintosh the part dialog asks for each disk in turn,
 "Insert the disk with Part 2 of "<drive>"", named after the drive backed up.
 
 **What grades it.** Nothing here reads the format but the engine — not
-`unar`, not macunpack — so `tools/run_abk.py` (TESTING.md, *Apple Backup*)
+`unar`, not macunpack — so `tests/harness/run_abk.py` (TESTING.md, *Apple Backup*)
 grades it against two readers others wrote from the same article, each run
 only inside `tools/sandbox.py`'s box:
 
@@ -2886,9 +2886,9 @@ extracted and the intermediate deleted (`-nr` disables; depth ≤ 8). MIME
 is deliberately not on the list (DECISIONS.md 2026-08-26 and 2026-08-27).
 Verified chains: `.sit.bin`, `.sit.hqx`, `.tar.Z` (`tools/run_unwrap.py`,
 in CI), `Subject.MBin.ascii` and a uuencoded MacBinary document
-(`tools/run_btoa.py`, `tools/run_uu.py`), and `Forked.pf.bin` →
+(`tests/harness/run_btoa.py`, `tests/harness/run_uu.py`), and `Forked.pf.bin` →
 `Forked.pf` → `Forked.sit` → `Forked`, both forks
-(`tools/run_privatefile.py`). A **StuffIt segment** is an envelope too:
+(`tests/harness/run_privatefile.py`). A **StuffIt segment** is an envelope too:
 the parts are joined and, if the file inside is an archive, the recursion
 continues into it.
 
@@ -2994,7 +2994,7 @@ In scope since 2026-08-29: RFC 2046 section 5.2.2 — each part a message
 whose body is a slice, `Content-Type: message/partial` carrying the set's
 `id`, this part's `number` and the set's `total`. `src/fmt_mimeseg.c`
 reads it; the source is `reference/mpack/decode.c` `handlePartial()`, and
-mpack writes the sets `tools/run_mime.py` grades against munpack.
+mpack writes the sets `tests/harness/run_mime.py` grades against munpack.
 
 - **Each part's header is a different length** (its own mail headers), so
   the joiner asks the part (`unc_mimeseg_head`, the `hdr` hook), which
@@ -3154,7 +3154,7 @@ joiner matches on all 26 identity bytes anyway.
   figures to read with it: **9 forks across 4 fixtures are
   oracle-unadjudicated** (2026-10-07) — both implementations decline them,
   so the engine's CRC-16 is the only byte-exact check, except the 3 newest,
-  which `tools/run_sitopt.py` grades three other ways; 8 more agree with
+  which `tests/harness/run_sitopt.py` grades three other ways; 8 more agree with
   DiskDoubler's own expander on an emulated Mac (resource header's
   OS-stamped bytes masked), reported on a line of their own — and **7
   entries use a method the ORACLE names as outside v1 scope**, graded on
@@ -3201,7 +3201,7 @@ lists it as `?`, fails it alone, and extracts the other eight.
 Zip64 end-of-central-directory record, read as `uint32` halves (no 64-bit
 arithmetic in the engine); a set high half returns `UNC_ERR_UNSUPPORTED`.
 Zip64 proper — files over 4 GB — is out of scope (OPEN_ITEMS.md, part 1).
-`tools/run_ziplarge.py` holds the boundary from both sides in `ci.sh`;
+`tests/harness/run_ziplarge.py` holds the boundary from both sides in `ci.sh`;
 DECISIONS.md 2026-08-25 has why a count is worse than a length. The corpus
 could not have caught it: **the largest zip in 937 fixtures has 29
 entries** (2026-08-25).
@@ -3492,7 +3492,7 @@ Apple's update is installed by the guest (`sitzip.py --carbonlib`).
 | `0x334d` type, creator, Finder flags | `lsar`, **22/22** on `rexnebular_1_0_0.zip` — a real MacZip archive, 29.7 MB, Zip 2.3, host 0x07, a corpus fixture since 2026-10-04, so `ci.sh` compares all three on every run |
 | `0x334d` data forks | Info-ZIP's `unzip`, 21/21 byte-identical, and the ten disk images against the MD5s the archive ships in its own `checksum.md5`; `unar`'s manifest grades the same 21 in `ci.sh` |
 | both attribute-record shapes | the deflated one on that archive; the `0x0004` stored one on a generated archive |
-| all three ZipIt fields | **nine archives ZipIt itself wrote** (*ZipIt's own archives*, below): 119 entries, type, creator, Finder flags and fork lengths agreeing with `lsar`, 113 forks byte-identical to `unar`; two are fixtures (`MrTs_Paint_Folder.zip`, `NPWritersKit.zip`) graded by `run_diff.py`, seven specimens by `tools/run_zipit.py` |
+| all three ZipIt fields | **nine archives ZipIt itself wrote** (*ZipIt's own archives*, below): 119 entries, type, creator, Finder flags and fork lengths agreeing with `lsar`, 113 forks byte-identical to `unar`; two are fixtures (`MrTs_Paint_Folder.zip`, `NPWritersKit.zip`) graded by `run_diff.py`, seven specimens by `tests/harness/run_zipit.py` |
 | `0x2605` both forks | `NPWritersKit.zip`'s entry, 150,016 B of data fork and 323 B of resource fork, byte-identical to `unar` every `ci.sh` run; and extracting the same MacBinary FIXTURE standalone — byte-identical — with `unar` agreeing on the wrapper (`cdev/altw`, 31,714 B) |
 | `0x334d`'s three dates | **nothing, and nothing here can**: the two reference implementations disagree on `CrGMTOffs`'s sign (above), so a second implementation is not an oracle for this field. Declared ungraded in the fixture's manifest and printed by `run_diff.py` every run |
 
@@ -3565,7 +3565,7 @@ whose names were made MS-DOS form, now agree with `unar`.
 | …of those, on an entry this build decodes | **0** |
 | longest FileName, and the field's end within the extra record | 29 B, 46 B — every one of the 23 is the FIRST field, so the streamed reader's 64-byte `exbuf` reaches all of them |
 
-Since 2026-10-07 `tools/run_zipit.py` asserts of all 23 fields that the
+Since 2026-10-07 `tests/harness/run_zipit.py` asserts of all 23 fields that the
 leaf this engine LISTS is the field's FileName; its negative control (a
 stub answering with the zip's own leaf) fails in 3 of 5 built cases
 (TESTING.md, *ZipIt's own archives*). **The conversion is a PREFERENCE,
@@ -3623,10 +3623,10 @@ the Macintosh's own zone*).
 | what | against |
 |---|---|
 | the 7 entries of `4acalc.zip` and `4alnch11.zip` | **`unar` for 5 and deark for 2** (the two `unar` fails, *"Attempted to read more data than was available"*), every `ci.sh` run; `"Implode"` joined `make_manifests.py`'s `DEARK_METHODS` before any decoder existed. `ORACLE_OUT_OF_SCOPE` in `run_diff.py` is empty |
-| the 3 entries of `Psycho!v1.0ß1.zip` | **`unar`**, all six forks byte-identical, in `tools/run_zipit.py` (*ZipIt's own archives*). A specimen, so not in `ci.sh`'s fixture set |
+| the 3 entries of `Psycho!v1.0ß1.zip` | **`unar`**, all six forks byte-identical, in `tests/harness/run_zipit.py` (*ZipIt's own archives*). A specimen, so not in `ci.sh`'s fixture set |
 | the 13 entries of `PKZ102.EXE` and the 15 of `PKZ110.EXE` | the stored CRC-32, through `tools/specimens/implode.tsv`. They are the NEGATIVE controls and stay specimens: 1.02 writes no bug-capable entry at all and 1.10 is where *version made by* turns from spec 1.0 into 1.1 |
 | all 10 wild entries | **the CRC-32 PKZIP and ZipIt themselves stored**, which is the check no decoder here can influence |
-| four shapes nothing wild holds | **`unar`, deark, the writer's own plaintext and the stored CRC-32**, in `tools/run_implode.py` every run. `tools/synth_implode.py` is an ENCODER (nothing here writes the method); one of its entries is the fixture `synth-exo-zip-implode.zip` |
+| four shapes nothing wild holds | **`unar`, deark, the writer's own plaintext and the stored CRC-32**, in `tests/harness/run_implode.py` every run. `tools/synth_implode.py` is an ENCODER (nothing here writes the method); one of its entries is the fixture `synth-exo-zip-implode.zip` |
 | the 13 entries of `pkz101.exe` | **`unar` for 7 and deark for 6**, every `ci.sh` run (*The fixture that carries the bug*, below) |
 | two more shapes nothing wild holds, since 2026-10-08 | **deark, the writer's own plaintext and the stored CRC-32**, with `unar` as a NEGATIVE control required to refuse both — the two combinations PKZIP 1.01/1.02's reading is observable in, written that way, one archive each (*The minimum match length PKZIP 1.01 and 1.02 used*, below) |
 | on a Macintosh | **`4alnch11.zip`**, in `tools/vmac/sample.txt` since 2026-10-10: byte-exact on all seven Mini vMac tiers at **22,740 B** of peak heap (22,730 on Linux), and on Mac OS 9.2 with all four files read back off the volume (`os9.py --launch`) |
@@ -3764,7 +3764,7 @@ writer a zip is allowed to have twice*).
 | combination | subject | graded by |
 |---|---|---|
 | **0x0004 — 4 K, three trees** | **authentic**: three entries of `pkz101.exe`, PKZIP 1.01's own distribution — `README.DOC` 873 B, `ORDER.DOC` 4,607 B, `OMBUDSMN.ASP` 595 B | the CRC-32 PKZIP stored, and deark, through the fixture's own manifest in `run_diff.py` on every run |
-| **0x0002 — 8 K, two trees** | **generator only**: the one real 8 K/2-tree entry, `PSYCHO!/Psycho!`, is ZipIt's and follows 5.3.4; searched for by the writer's fingerprint on 2026-10-09 and not found — 151,924 Implode entries in 19,278 MS-DOS/1.0 zips, 0 at 0x0002 or 0x0004 (TESTING.md, *Searching somebody else's index by content*) | `tools/synth_implode.py`'s `8k-2trees-mmlbug`, with **deark as the second reader** and `unar` required to refuse it (`tools/run_implode.py`); **and PKUNZIP 1.01 and 1.02**, by hand under DOSBox: both read it, 1.10 refuses it (`tools/pkzip_writers.py`, 2026-10-09; DECISIONS.md, *the run PKZIP never codes at distance one*) |
+| **0x0002 — 8 K, two trees** | **generator only**: the one real 8 K/2-tree entry, `PSYCHO!/Psycho!`, is ZipIt's and follows 5.3.4; searched for by the writer's fingerprint on 2026-10-09 and not found — 151,924 Implode entries in 19,278 MS-DOS/1.0 zips, 0 at 0x0002 or 0x0004 (TESTING.md, *Searching somebody else's index by content*) | `tools/synth_implode.py`'s `8k-2trees-mmlbug`, with **deark as the second reader** and `unar` required to refuse it (`tests/harness/run_implode.py`); **and PKUNZIP 1.01 and 1.02**, by hand under DOSBox: both read it, 1.10 refuses it (`tools/pkzip_writers.py`, 2026-10-09; DECISIONS.md, *the run PKZIP never codes at distance one*) |
 
 deark is not optional on that lane: it finds the rule by its own
 double-decode and must agree byte for byte; `unar` has only 5.3.4's
@@ -4145,7 +4145,7 @@ of the 1,201 entries in the 26,312-byte file holding the record.
 
 | what | against |
 |---|---|
-| all five ZipIt self-extractors | `tools/run_zipit.py`, **9 of 9 sniffed unaided** where it was 4 of 9, every fork still byte-identical to `unar`; and the **four that arrived MacBinary-wrapped extracted WHOLE**, the route a user takes, against their data fork's extraction |
+| all five ZipIt self-extractors | `tests/harness/run_zipit.py`, **9 of 9 sniffed unaided** where it was 4 of 9, every fork still byte-identical to `unar`; and the **four that arrived MacBinary-wrapped extracted WHOLE**, the route a user takes, against their data fork's extraction |
 | each of the five tests, bent one at a time | `test_zip_behind_a_stub` in `tests/unit_formats.c`, on a synthetic archive behind a `Joy!peff` stub. 5 of its checks fail on the engine of the day before |
 | a chance `PK\5\6` in something that is not an archive | the same test, four disk numbers; three of the four were claimed as a segment before |
 | a spanned set whose directory crosses a part | `tools/synth_zipsplit.py`'s `zspancd`, in `tools/run_segments.py` — graded against `unar`, against the source tree and against the same content zipped unsplit |
@@ -6555,7 +6555,7 @@ extract (*StuffIt 5's method 14*, above).
 Mini vMac); 5.5.1's and 7.0.3's own Expanders with their own Engine and
 translators on Mac OS 9.2 (`tools/vmac/compat9.py`). Every output read off
 the disk and compared with this engine's. Subjects: StuffIt Deluxe 2.0.1's
-own archives (`tools/run_sitopt.py`'s specimens, password `swordfish`),
+own archives (`tests/harness/run_sitopt.py`'s specimens, password `swordfish`),
 Compact Pro 1.51's encrypted `cptmade/Made.cpt` (`ohsecret`), and
 `MacROT13.cpt` (out of `mac-rot13.hqx`) as an mpack `message/partial` set of
 three, one unsplit mpack message, and a three-part BinHex posting in one file.

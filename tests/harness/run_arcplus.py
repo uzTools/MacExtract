@@ -21,6 +21,12 @@ one of them starts with — and reads 0x0a as Crushed regardless
 The archives come from ARC+Plus 7.12 itself under DOSBox
 (tools/arcplus.py), plus the real one its own distribution ships in.
 Skips politely when neither is present.
+
+In ci.sh (tests/harness/, run by its one loop since 2026-11-13). What ci.sh said of it there:
+
+The OTHER method 0x0a: ARC 7.x's Trimmed, which shares the number
+with PAK's Crushed. This suite also checks the discriminator, by
+holding the same input files under both dialects.
 """
 import os
 import shutil
@@ -28,8 +34,8 @@ import subprocess
 import sys
 import tempfile
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+ROOT = os.path.dirname(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "tools"))
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "tools"))
 import pak                                          # noqa: E402
 import arcplus                                      # noqa: E402
 import run_pak                                      # noqa: E402

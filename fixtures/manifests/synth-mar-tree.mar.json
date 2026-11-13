@@ -85,7 +85,7 @@
  ],
  "fixture": "synth-mar-tree.mar",
  "format": "MAR",
- "oracle": "tools/synth_mar.py --case tree's items, every CRC checked by tools/run_mar.py walk",
+ "oracle": "tools/synth_mar.py --case tree's items, every CRC checked by tests/harness/run_mar.py walk",
  "sha256": "b6778539e451046f863288ddb18b72a4c1fc738015c58ff7bd4fcef50bbc4946",
  "size": 9856
 }

@@ -46,6 +46,8 @@
  * panel under Mini vMac (`tools/vmac/sdcompress.py --specimens`), and
  * graded against the bytes that went in. DECISIONS.md 2026-08-22.
  *
+ * Harness: tests/harness/run_superdisk.py
+ *
  * SPDX-License-Identifier: 0BSD
  */
 #include "unc_internal.h"

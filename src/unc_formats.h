@@ -65,8 +65,11 @@
  *                          (tools/overlay/images.py)
  *   tools/retake_budgets.py   run, in the same commit, for every figure the
  *                          new bytes move; then tools/make_dist.sh
- *   its tests              fixtures/SOURCES.md and manifests, and its own
- *                          tools/run_<format>.py on a line of ci.sh
+ *   its tests              fixtures/SOURCES.md and manifests, and its
+ *                          harnesses: files in tests/harness/, which ci.sh
+ *                          runs every one of, each named by a `Harness:`
+ *                          line in its source's header
+ *                          (tools/check_harnesses.py)
  *   its docs               FORMATS.md, README.md and the list in
  *                          tools/make_dist.sh, DECISIONS.md
  *

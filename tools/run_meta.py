@@ -256,6 +256,7 @@ ENV_ORACLES = {
 def env_oracle(name, problems):
     """An oracle binary, built if its reference tree is here. A tree that
     is here and will not build is a failure, not a skip (run_mime.build)."""
+    sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "tests", "harness"))
     import run_mime
     script, binary, tree = ENV_ORACLES[name]
     path, why = run_mime.build(script, binary, os.path.join(REPO, tree))

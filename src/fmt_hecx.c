@@ -46,7 +46,7 @@
  *    holds half the count: hexbin reads the count before it puts the
  *    spaces back, takes the NUL after that character as data, and gets a
  *    count 2 too high — so a mailer stripping trailing spaces from a line
- *    of zeros costs it the file (tools/run_hecx.py, "trailing spaces").
+ *    of zeros costs it the file (tests/harness/run_hecx.py, "trailing spaces").
  *  - A line of 1,023 characters or more is refused as corrupt; hexbin
  *    carries the rest over as a line of its own. No writer here produces
  *    one (64 characters for `.hex`, 44 for `.hcx`).
@@ -75,6 +75,8 @@
  * all 32 (DECISIONS.md 2026-10-25, *the writer that was in 4.3BSD*). It
  * goes through the same driver below: one document, counted, then
  * written.
+ *
+ * Harness: tests/harness/run_hecx.py
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */

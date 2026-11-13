@@ -2,7 +2,7 @@
  * code that invented the format.
  *
  * WHY THIS EXISTS. Every message `src/fmt_mime.c` is graded against was
- * built by `tools/run_mime.py` on Linux or read by munpack on Linux
+ * built by `tests/harness/run_mime.py` on Linux or read by munpack on Linux
  * (TESTING.md, *base64 and MIME*). What none of them can settle is the
  * half no Unix tool has: how a real Macintosh laid out the
  * `application/applefile` part of a `multipart/appledouble`, and what it

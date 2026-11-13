@@ -9,7 +9,7 @@ once, on an emulated Mac, by the archives' own self-extractors
 (`tools/vmac/superdisk.py --adjudicate`); this replays that verdict
 offline by fork content.
 
-    tools/run_superdisk.py --macextract build/macextract
+    tests/harness/run_superdisk.py --macextract build/macextract
 
 Every hash below was produced by THIS reader and then confirmed
 fork-for-fork against what the original extractor wrote on a System 7
@@ -23,6 +23,14 @@ Re-confirm with:
 
     tools/vmac/superdisk.py --adjudicate fixtures/super-disk-utility.hqx
     tools/vmac/superdisk.py --adjudicate fixtures/alysis-disk-expander-12.hqx
+
+In ci.sh (tests/harness/, run by its one loop since 2026-11-13). What ci.sh said of it there:
+
+SuperDisk! is the one format in the corpus that neither `unar` nor
+`macunpack` can read at all, so the oracle manifests describe only the
+envelope. Its two archives were graded fork by fork by their OWN
+self-extractors on an emulated Mac (tools/vmac/superdisk.py
+--adjudicate); this replays that verdict by content.
 """
 import argparse
 import hashlib
@@ -33,7 +41,7 @@ import subprocess
 import sys
 import tempfile
 
-REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+REPO = os.path.dirname(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "tools"))
 
 # fixture -> [(path the sink writes, size, sha256)]
 EXPECTED = {

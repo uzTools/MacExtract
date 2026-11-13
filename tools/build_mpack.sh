@@ -87,7 +87,7 @@ grep -q '^typedef unsigned int UINT4;$' "$OUT/md5.h" || {
     exit 1
 }
 # Kept, and shown on failure. Both halves used to go to /dev/null, so the
-# timestamp defect above produced a silent exit 2 and tools/run_mime.py
+# timestamp defect above produced a silent exit 2 and tests/harness/run_mime.py
 # reported it as a missing reference tree — which it then SKIPPED over,
 # green (DECISIONS.md 2026-09-09).
 LOG=$OUT.log

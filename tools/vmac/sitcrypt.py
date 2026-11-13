@@ -69,7 +69,7 @@ SUBJECT_DATA = b"StuffIt Deluxe 3.5.1 encrypted this, under Mini vMac.\r" * 8
 SUBJECT_RSRC = b"RSRC" + bytes(range(64)) * 2
 
 # The subject the TRANSLATOR gets, and it is a different one: chosen for
-# what it makes a btoa ENCODER do, the same way tools/run_btoa.py chooses
+# what it makes a btoa ENCODER do, the same way tests/harness/run_btoa.py chooses
 # its own. Every byte value, so no character of the base-85 alphabet goes
 # untried; a run of zeros, which btoa writes as `z`; four spaces, which
 # version 5 writes as `y`; and a length that is not a multiple of four,
@@ -477,6 +477,7 @@ def grade_btoa(outdir, ascii_path):
     That half is not pass/fail — the whole point of the specimen is that
     it came from a different encoder, so a difference is a measurement.
     """
+    sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "tests", "harness"))
     import run_btoa as RB                                # noqa: E402
     cli = None
     for build in ("rel", "san", ""):

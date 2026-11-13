@@ -11,7 +11,7 @@ archive — had no archive to run against.
 
 So this writes them. Each archive is graded by `unar`, whose
 XADNowCompressHandle is the implementation fmt_now.c was transcribed
-from: tools/run_now.py extracts every archive here with both and
+from: tests/harness/run_now.py extracts every archive here with both and
 requires both to agree with the bytes that went in.
 
   Source: reference/XADMaster/XADNowCompressParser.m  (header, entry

@@ -14,7 +14,7 @@ module header, then the TIFF. `--show` prints the IFD.
 
 WHAT THE FORMAT IS — read out of one specimen first, then corrected
 against 36 more on 2026-10-11 (FORMATS.md, *What an Optimizer did to the
-fork*; `tools/run_sitcombo.py` grades the engine on all of them):
+fork*; `tests/harness/run_sitcombo.py` grades the engine on all of them):
 
   * 80 bytes of module header: the module's colour code at +0 (1 RGB,
     2 HSB, 3 HSL, 4 CMYK, 5 channels coded one by one), channels at +2,

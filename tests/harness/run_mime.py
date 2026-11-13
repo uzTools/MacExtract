@@ -23,6 +23,13 @@ that 932 corpus fixtures grade against `unar`. TESTING.md says this in
 the same words.
 
 Skips cleanly, and says so, when the references are not there.
+
+In ci.sh (tests/harness/, run by its one loop since 2026-11-13). What ci.sh said of it there:
+
+base64 and MIME (M36). No corpus file either — the sniff sweep claims
+none of the 940 — so the cases are generated and graded by TWO other
+implementations: munpack 1.6, which src/fmt_mime.c is transcribed
+from, and deark for the base64 half. Skips cleanly without reference/.
 """
 import base64
 import binascii
@@ -33,7 +40,7 @@ import subprocess
 import sys
 import tempfile
 
-ROOT = os.path.join(os.path.dirname(__file__), "..")
+ROOT = os.path.join(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "tools"), "..")
 
 DATA = bytes(range(256)) * 5 + b"trailing\r"
 RSRC = b"RESOURCE FORK " * 31

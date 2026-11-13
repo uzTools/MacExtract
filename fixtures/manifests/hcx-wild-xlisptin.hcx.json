@@ -12,7 +12,7 @@
  ],
  "fixture": "hcx-wild-xlisptin.hcx",
  "format": "BinHex hex/hcx",
- "oracle": "macutils' hexbin on both forks (tools/run_hecx.py), handed a copy with the banner it requires",
+ "oracle": "macutils' hexbin on both forks (tests/harness/run_hecx.py), handed a copy with the banner it requires",
  "sha256": "666eb3812f7f0d18831b534218d9f6e12850183c952e54ac0cd7f6eb2bf7bc91",
  "size": 66399
 }

@@ -47,6 +47,7 @@ def kind_mime():
 
     The shape that only a Macintosh cares about, and the reason MIME is
     in scope at all."""
+    sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "tests", "harness"))
     import run_mime
     af = run_mime.applefile(b"MacExtract MIME", RSRC)
     return run_mime.message(
@@ -70,6 +71,7 @@ def kind_rar():
 def kind_btoa():
     """btoa 5.2.1's own output. Version 5 framing (`xbtoa Begin`), which
     is the one with the `z` and `y` shorthands in it."""
+    sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "tests", "harness"))
     import run_btoa
     # build() answers (ok, why), and this tested the TUPLE, which is never
     # falsy — so the skip below could not fire and the reference's absence

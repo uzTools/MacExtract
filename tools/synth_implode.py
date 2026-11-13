@@ -45,7 +45,7 @@ What that buys, and each of the three is a different thing:
      *Implode*).
 
 **Graded by two implementations, not by this engine.** `unar` and deark
-both read method 6; `tools/run_implode.py` requires both to agree with
+both read method 6; `tests/harness/run_implode.py` requires both to agree with
 the bytes that went in, and the CRC-32 this writer stores is the same
 check PKZIP's own files are graded by.
 
@@ -576,7 +576,7 @@ DOS_TIME = 0x0000
 # This is the strongest pin available for the construction: it is the
 # specification's table rather than any implementation's output, and it
 # holds `sf_codes` — which `src/fmt_exo.c`'s `imp_build` has to agree
-# with, or `tools/run_implode.py` fails on every shape.
+# with, or `tests/harness/run_implode.py` fails on every shape.
 APPNOTE_EXAMPLE_STORED = bytes((0x02, 0x42, 0x01, 0x13))
 APPNOTE_EXAMPLE_LENGTHS = (3, 3, 3, 3, 3, 2, 4, 4)
 # value: the code 5.3.8 prints in its "Order Restored" column

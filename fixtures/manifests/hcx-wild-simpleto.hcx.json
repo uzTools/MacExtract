@@ -11,7 +11,7 @@
  ],
  "fixture": "hcx-wild-simpleto.hcx",
  "format": "BinHex hex/hcx",
- "oracle": "macutils' hexbin on both forks (tools/run_hecx.py)",
+ "oracle": "macutils' hexbin on both forks (tests/harness/run_hecx.py)",
  "sha256": "f491262d12cf554fa1fbabcc1e687117be00a2a047b75c5e6ce7754ce6b63b56",
  "size": 16069
 }

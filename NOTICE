@@ -731,7 +731,7 @@ This project's decoders are transcriptions/ports of algorithms from:
     fact. Format facts are not the developers' to license; their
     implementation is, and it is not here. `reference/btoa` is fetched
     by `tools/fetch_references.sh`, never committed, never linked into
-    anything, and used as a test-time oracle (`tools/run_btoa.py`
+    anything, and used as a test-time oracle (`tests/harness/run_btoa.py`
     compiles it and decodes what it encodes). The names are mentioned,
     here and in the source. DECISIONS.md 2026-08-23 (btoa's licence).
 
@@ -768,7 +768,7 @@ This project's decoders are transcriptions/ports of algorithms from:
     `src/fmt_abkset.c` and `src/fmt_abk_priv.h` are written from; facts,
     0BSD here. Two readers written from the same description are run as
     TEST ORACLES ONLY, and only inside `tools/sandbox.py`'s box (no network,
-    no home directory, no repository; `tools/run_abk.py`): Sidney S.M.'s
+    no home directory, no repository; `tests/harness/run_abk.py`): Sidney S.M.'s
     `unbak.py` (a GitHub gist, no licence stated) and Em Adespoton's Kaitai
     Struct description with the Python parser compiled from it (MIT), with
     the Kaitai Struct runtime it imports (kaitaistruct 0.10, MIT).
@@ -814,7 +814,7 @@ This project's decoders are transcriptions/ports of algorithms from:
     header walk left on 2026-09-22 for LHa's own `header.doc` and for
     lhasa.
     lhasa is also read for the header levels and used at test time as a
-    second decoder (`tools/run_lzh.py`); it is not committed
+    second decoder (`tests/harness/run_lzh.py`); it is not committed
     (`tools/fetch_references.sh` fetches it) and not linked into
     anything shipped. Its ~160 test archives are the specimens that put
     the format in scope; seven are fixtures, fetched by URL and never

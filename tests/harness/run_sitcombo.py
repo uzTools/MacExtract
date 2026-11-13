@@ -2,7 +2,7 @@
 """run_sitcombo.py — the combinations StuffIt Deluxe 2.0.1 had never been
 asked for, graded by the program that wrote them.
 
-`tools/run_sitopt.py`'s specimens are one subject per module at the
+`tests/harness/run_sitopt.py`'s specimens are one subject per module at the
 defaults. `tools/vmac/sitcombo.py` asked the same writer for everything
 else it will do (2026-10-11), and this replays the result:
 
@@ -42,7 +42,14 @@ What this CANNOT see:
   and left no archive to grade (DECISIONS.md 2026-10-15, *the height
   nothing needed*).
 
-    tools/run_sitcombo.py --macextract build/macextract
+    tests/harness/run_sitcombo.py --macextract build/macextract
+
+In ci.sh (tests/harness/, run by its one loop since 2026-11-13). What ci.sh said of it there:
+
+...and every combination of them 2.0.1 had not been asked for until
+2026-10-11: JPEG Lossy at every width, in every mode and in colour,
+each Optimizer under each cipher, the ciphers' edges. Same oracle,
+same skip (TESTING.md).
 """
 import argparse
 import os
@@ -51,7 +58,7 @@ import subprocess
 import sys
 import tempfile
 
-HERE = os.path.dirname(os.path.abspath(__file__))
+HERE = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "tools")
 SPEC = os.path.join(os.path.expanduser("~"), ".cache", "macextract", "vmac",
                     "specimens")
 COMBO = os.path.join(SPEC, "sitcombo")

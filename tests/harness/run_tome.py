@@ -53,6 +53,15 @@ whose source disk is not here (DECISIONS.md 2026-11-11, *the parts the
 Installer expands*, has the one-off grading); the resources' attributes,
 which a record does not carry; and whether the fonts render, which the
 emulator settled once.
+
+In ci.sh (tests/harness/, run by its one loop since 2026-11-13). What ci.sh said of it there:
+
+Apple Installer Tomes. No checksum anyone has identified, so what grades
+them is two other readings: deark's Tome module for the stored and
+InstaCompOne forks, and the files Apple's Installer put on the System
+7.5.5 disk the fixtures came from for the text codec's (skipped, loudly,
+without that disk). Then changed and cut Tomes, and the control that
+proves the exact end of a stream is checked.
 """
 import argparse
 import glob
@@ -67,7 +76,7 @@ import sys
 import tempfile
 import unicodedata
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+ROOT = os.path.dirname(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "tools"))
 FIXDIR = os.path.join(ROOT, "fixtures")
 VMAC = os.environ.get("UNC_VMAC_HOME",
                       os.path.expanduser("~/.cache/macextract/vmac"))
@@ -686,7 +695,7 @@ def write_manifest(mx, deark, t, work, vols):
                 e[fork + "_oracle"] = "Apple's Installer (%s)" % by[0].name
             elif by:
                 un[fork] = ("equal resource for resource to what Apple's "
-                            "Installer installed on %s (tools/run_tome.py); "
+                            "Installer installed on %s (tests/harness/run_tome.py); "
                             "deark: %s" % (by[0].name, why))
             else:
                 un[fork] = ("no oracle: deark: %s; no installed copy of "
@@ -700,7 +709,7 @@ def write_manifest(mx, deark, t, work, vols):
                oracle=("deark's Tome module (stored and InstaCompOne forks), "
                        "and what Apple's Installer installed, on the System "
                        "7.5.5 disk and the Mac OS 9 image, for the rest "
-                       "(tools/run_tome.py)"),
+                       "(tests/harness/run_tome.py)"),
                sha256=sha(data), size=len(data))
     out = os.path.join(FIXDIR, "manifests", base + ".json")
     with open(out, "w") as f:

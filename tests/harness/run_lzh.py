@@ -49,6 +49,14 @@ What this suite CANNOT see:
     those to the oracle.
   * File modification dates. This engine converts neither MS-DOS nor
     Unix timestamps (FORMATS.md), so there is nothing to compare.
+
+In ci.sh (tests/harness/, run by its one loop since 2026-11-13). What ci.sh said of it there:
+
+LZH/LHA (M28). The corpus has one real `.lzh` and seven of lhasa's,
+all in the diff suite above; this is the sweep over the rest of that
+collection — 160-odd archives from fourteen writers — graded against
+TWO other implementations, lhasa (independent) and LHa 1.14i (the
+original, used as the encoder). Skips cleanly without reference/.
 """
 import hashlib
 import struct
@@ -58,7 +66,7 @@ import subprocess
 import sys
 import tempfile
 
-ROOT = os.path.join(os.path.dirname(__file__), "..")
+ROOT = os.path.join(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "tools"), "..")
 LHASA_SRC = os.path.abspath(os.path.join(ROOT, "reference", "lhasa"))
 LHA_SRC = os.path.abspath(os.path.join(ROOT, "reference", "lha"))
 ARCHIVES = os.path.join(LHASA_SRC, "test", "archives")

@@ -55,7 +55,7 @@ each behind a 0x40 length byte.
     tools/derive_mu.py             all three, skipping what is absent
 
 Not in `ci.sh`: it needs fixtures, which are copyrighted and not
-committed. What IS in `ci.sh` is `tools/run_uu.py`, which generates both
+committed. What IS in `ci.sh` is `tests/harness/run_uu.py`, which generates both
 alphabets with `tools/synth_uu.py` and grades the two wild specimens
 whenever they are in `fixtures/`.
 

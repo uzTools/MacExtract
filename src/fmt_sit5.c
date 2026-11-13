@@ -44,6 +44,8 @@
  * (recursive) child count to the total. Parent chains are tracked by
  * header offset (diroffs), not by nesting order.
  *
+ * Harness: tests/harness/run_sit5dirs.py
+ *
  * SPDX-License-Identifier: 0BSD
  */
 #include "unc_internal.h"

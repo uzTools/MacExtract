@@ -5,7 +5,7 @@ It writes what src/fmt_pf.c reads, and so it can grade NOTHING about the
 format: an encoder and a decoder sharing one reading agree with each other
 whatever the truth is. What grades the reading is the specimens Private
 File 2.0 itself wrote under Mini vMac (tools/vmac/privatefile.py,
-tools/run_privatefile.py). This exists for the cases those cannot cover —
+tests/harness/run_privatefile.py). This exists for the cases those cannot cover —
 a file whose header names a method nothing writes, a flipped byte, a
 truncation — where what is checked is the REFUSAL, not a decryption.
 

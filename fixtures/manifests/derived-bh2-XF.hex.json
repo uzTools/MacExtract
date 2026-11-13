@@ -12,7 +12,7 @@
  ],
  "fixture": "derived-bh2-XF.hex",
  "format": "BinHex hex/hcx",
- "oracle": "macutils' hexbin on both forks (tools/run_hecx.py); written by BinHex 2.0 itself (tools/vmac/binhex2.py)",
+ "oracle": "macutils' hexbin on both forks (tests/harness/run_hecx.py); written by BinHex 2.0 itself (tools/vmac/binhex2.py)",
  "sha256": "ec6d579a3d1fd1fdb8313acc3cd6ebeebfdf8ab14e3789293d027e02a9f5256f",
  "size": 5237
 }

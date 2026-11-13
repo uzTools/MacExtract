@@ -38,6 +38,8 @@
  * name is the entry's. The data fork holds an 84-byte header, then one
  * compressed stream per fork; the resource fork is emptied.
  *
+ * Harness: tests/harness/run_spacesaver.py
+ *
  * SPDX-License-Identifier: 0BSD
  */
 #include "unc_internal.h"

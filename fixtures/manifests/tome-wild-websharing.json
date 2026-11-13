@@ -282,7 +282,7 @@
  ],
  "fixture": "tome-wild-websharing",
  "format": "Installer Tome",
- "oracle": "deark's Tome module (stored and InstaCompOne forks), and what Apple's Installer installed, on the System 7.5.5 disk and the Mac OS 9 image, for the rest (tools/run_tome.py)",
+ "oracle": "deark's Tome module (stored and InstaCompOne forks), and what Apple's Installer installed, on the System 7.5.5 disk and the Mac OS 9 image, for the rest (tests/harness/run_tome.py)",
  "sha256": "8bc5b0d1e727fbc1b9b0710370cda1beee456cc788a0f2334a6586c996d625d7",
  "size": 588005
 }

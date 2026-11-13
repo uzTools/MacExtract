@@ -120,6 +120,15 @@
    reached indirectly (`x = f()` then `if x:`) — only a call written
    directly in the boolean position is examined.
 
+0d. **The format harnesses** (`tests/harness/`, since 2026-11-13): `ci.sh`
+   runs every `run_*.py` there in one loop with `--macextract
+   build/san/macextract`, each one's own docstring saying what it grades.
+   `tools/check_harnesses.py --selftest` (no build, under a second) fails
+   on a harness that no `src/` header names on a `Harness:` line, and on a
+   name with no harness; its selftest proves both. **What it cannot see:**
+   whether a harness grades the format it is named by. The corpus suites
+   and the cross-cutting harnesses stay in `tools/` with lines of their own.
+
 0c. **Run rows** (`tools/check_ovl_rows.py --selftest`, in `ci.sh` since
    2026-11-12; no build, under a second): every FILE or ENVELOPE row of
    `src/unc_formats.h` must have a run row (`mac/ovl_shim.c`'s `gRun` is
@@ -451,7 +460,7 @@ whole-archive far more often than `unar`.
   the 1995 Now Compress archive, graded under emulation by the archive's
   own extractor (`nowcompress.py --adjudicate`); and 3 across the two wild
   StuffIt Optimizer fixtures, where both oracles fail and
-  `tools/run_sitopt.py` grades them three other ways. The number
+  `tests/harness/run_sitopt.py` grades them three other ways. The number
   `run_diff.py` prints is the measured one.
 
 ### What `unar` alone vouches for, per format (inventory, 2026-11-07)
@@ -792,7 +801,7 @@ anything about the suite.**
      | `zip_implode` | — | **93.8 %** |
 
      The lines left are allocation-failure returns and two corrupt-tree
-     exits. `tools/run_implode.py` bends the same streams on every
+     exits. `tests/harness/run_implode.py` bends the same streams on every
      `ci.sh` run (*Implode*, below).
    - **Zip Reduce** — `tools/synth_reduce.py`, one entry per factor;
      deark reads all four byte-exact. 3,000 cases, `--stream-only
@@ -865,7 +874,7 @@ anything about the suite.**
    fixture and runs on no Macintosh and under no qemu-m68k (peak heap
    294,528 B), so the wrap is a host-only, little-endian measurement;
    the seeds themselves are graded by `run_diff` against `unar` and by
-   `tools/run_sit14wrap.py` (*StuffIt method 14*).
+   `tests/harness/run_sit14wrap.py` (*StuffIt method 14*).
 
 ## DiskDoubler and Now Compress joined the graded set (2026-08-15)
 
@@ -938,7 +947,7 @@ skips the six `SPLT` parts — `run_segments.py` has the sets.
 
 **It can fail**: 25 mismatches against the build before the `DDA2`
 `0x1000` fix.
-## The optimized StuffIt archives (`tools/run_sitopt.py`, in `ci.sh`)
+## The optimized StuffIt archives (`tests/harness/run_sitopt.py`, in `ci.sh`)
 
 **The writer is the oracle.** StuffIt Deluxe 2.0's *Optimizers* rewrite a
 fork before compressing it, and `Text 1`'s rewrite cannot be undone, so
@@ -1032,7 +1041,7 @@ resource fork built to the module's `COMP` acceptance test). And nothing
 on a fresh clone beyond the wild lanes: the specimens are emulator output,
 not committed, and the suite skips cleanly without them.
 
-## Every combination 2.0.1 will write (`tools/run_sitcombo.py`, in `ci.sh`)
+## Every combination 2.0.1 will write (`tests/harness/run_sitcombo.py`, in `ci.sh`)
 
 **Same oracle as above, every parameter varied.** `tools/vmac/sitcombo.py`
 asked StuffIt Deluxe 2.0.1 for what one subject per module at the
@@ -1120,7 +1129,7 @@ and limits): it reaches every function and every line but a sink-write
 failure, at seeds 11, 12 and 13, and found the decoder's one real defect
 (a signed left shift, DECISIONS.md 2026-10-03).
 
-### The fork that wraps the window (`tools/run_sit14wrap.py`, in `ci.sh`)
+### The fork that wraps the window (`tests/harness/run_sit14wrap.py`, in `ci.sh`)
 
 The window is sized to the fork, so `sit14_flush`'s second half is
 reached by nothing under 0x40000 B of output. `synth_sit14.py --wrap`
@@ -1183,7 +1192,7 @@ emulator's); and the shell's use of the answer, which only the interactive
 chain runs — the autotest build takes one layer (`interactive.py --chain`,
 `tools/vmac/README.md`).
 
-## StuffIt 5's folders (`tools/run_sit5dirs.py`, in `ci.sh`)
+## StuffIt 5's folders (`tests/harness/run_sit5dirs.py`, in `ci.sh`)
 
 Two generated archives, one past each limit the folder table had until
 2026-11-03: 301 folders, and 81 folders holding about 17 KB of paths. The
@@ -1322,7 +1331,7 @@ the `LEN_MAX=4` build differ on 112.
 
 What it cannot see: one ARC fixture reaches LZW, so the re-walk through
 ARC's 64-byte buffer is graded on 46 splits in `synth-arc-mixed.arc` and
-on what `tools/run_arc.py` generates, not on a real archive with long
+on what `tests/harness/run_arc.py` generates, not on a real archive with long
 strings.
 
 ## The LZW table bound — three builds, because one proves nothing
@@ -1355,7 +1364,7 @@ was **675/769** — 94 failures — on 2026-08-03, when 94 fixtures reached
 the LZW path (4 `.Z`, the rest StuffIt classic method 2). What matters is
 that step 3 fails at all.
 
-## BinHex before 4.0 and `.dl` (`tools/run_hecx.py`, in `ci.sh`)
+## BinHex before 4.0 and `.dl` (`tests/harness/run_hecx.py`, in `ci.sh`)
 
 `unar` reads neither `.hex` nor `.hcx`, so the seven manifests are
 macutils' `hexbin`; four of the seven fixtures were written by BinHex 2.0
@@ -1383,7 +1392,7 @@ and one wild file is all its output there is. CLI only; the application's
 runs (System 6.0.8 and System 3.0, 1 MB) are `tools/vmac/run.py` and
 `sys30.py`, not `ci.sh`.
 
-## ARC and uuencode (`tools/run_arc.py`, `tools/run_uu.py`, in `ci.sh`)
+## ARC and uuencode (`tests/harness/run_arc.py`, `tests/harness/run_uu.py`, in `ci.sh`)
 
 Neither format occurred in the corpus when these were written (measured
 2026-08-15), so both suites write their own archives and hand them to a
@@ -1526,7 +1535,7 @@ the buggy decoder read them). The order is measured by
 `tools/vmac/arcmac.py`, which reads the wild archives too; not in
 `ci.sh`.
 
-## ARC's PAK methods (`tools/run_pak.py`, `tools/pak.py`, in `ci.sh`)
+## ARC's PAK methods (`tests/harness/run_pak.py`, `tools/pak.py`, in `ci.sh`)
 
 Methods **0x0a (Crushed)** and **0x0b (Distilled)** are PAK's and no Linux
 program writes them, so the archives come from **PAK 2.51 itself (NoGate
@@ -1536,7 +1545,7 @@ specimens.
     python3 tools/pak.py --setup              # DOSBox + PAK 2.51, needs network
     python3 tools/pak.py --make DIR           # write the corpus
     python3 tools/pak.py --list ARCHIVE       # methods, sizes and CRCs
-    python3 tools/run_pak.py --macextract build/rel/macextract
+    python3 tests/harness/run_pak.py --macextract build/rel/macextract
 
 `--setup` needs **no root** (`apt-get download`s DOSBox and its
 dependencies into `$UNC_PAK_HOME`, default `~/.cache/macextract/pak/`) and
@@ -1563,14 +1572,14 @@ archive may refuse, but must not exit outside 0..2 or die by signal.
 each, and every archive written by PAK 1.x. Method 0x0a's dialect is
 decided by `arc_dialect()` (next section).
 
-## ARC 7.x's Trimmed (`tools/run_arcplus.py`, `tools/arcplus.py`, in `ci.sh`)
+## ARC 7.x's Trimmed (`tests/harness/run_arcplus.py`, `tools/arcplus.py`, in `ci.sh`)
 
 **Method 0x0a is two methods**: PAK's Crushed and ARC 7.x's Trimmed.
 
     python3 tools/arcplus.py --setup            # ARC+Plus 7.12, needs network
     python3 tools/arcplus.py --make DIR
-    python3 tools/run_arcplus.py --macextract build/rel/macextract
-    python3 tools/run_arcplus.py --register     # the real fixture's manifest
+    python3 tests/harness/run_arcplus.py --macextract build/rel/macextract
+    python3 tests/harness/run_arcplus.py --register     # the real fixture's manifest
 
 `--setup` carves the archive out of the DOS self-extractor structurally
 (`--carve`) and copies the STORED `ARCDOS.ARC`; only lifting `ARC.EXE` out
@@ -1595,7 +1604,7 @@ An archive with items and no PAK trailer is read as Trimmed, so a
 hypothetical ARC 6 archive using 0x0a would fail its CRC rather than pass
 quietly.
 
-## btoa (`tools/run_btoa.py`, in `ci.sh`)
+## btoa (`tests/harness/run_btoa.py`, in `ci.sh`)
 
 No corpus file (`xbtoa` appears in none of the 903) and no second READER
 (`unar` and macutils lack it), so the original implementation is the
@@ -1624,7 +1633,7 @@ The independent specimen (`tools/vmac/sitcrypt.py --btoa-send`, Aladdin's
 `btoa/atob Translator`) decodes byte-exact (FORMATS.md, *btoa*) but is
 made on demand under an emulator; nothing in `ci.sh` replays it.
 
-## base64 and MIME (`tools/run_mime.py`, in `ci.sh`)
+## base64 and MIME (`tests/harness/run_mime.py`, in `ci.sh`)
 
 The differential suite has neither: re-measured 2026-10-11 over all 983
 corpus files, exactly one sniffs as a MIME message and none as base64,
@@ -1678,7 +1687,7 @@ feeds it the same applefile part alone to say so). base64 carries no
 length or checksum, so a truncated message decodes short and silently —
 asserted as such. It skips, loudly, without `reference/mpack`.
 
-## LZH / LHA (`tools/run_lzh.py`, in `ci.sh`)
+## LZH / LHA (`tests/harness/run_lzh.py`, in `ci.sh`)
 
 The corpus holds one `.lzh` (Amiga software); what grades the format is
 `reference/lhasa/test/archives` — **182 archives written by fourteen
@@ -1719,7 +1728,7 @@ mis-reads one OS-9/68k level 2 archive, and lhasa reads two level 0
 archives as empty (a zero-length `-lhd-` name first). A grader is excused
 on a named file, never a format.
 
-## Implode, zip method 6 (`tools/run_implode.py`, in `ci.sh`)
+## Implode, zip method 6 (`tests/harness/run_implode.py`, in `ci.sh`)
 
 **`tools/synth_implode.py` is an ENCODER**, because nothing here writes
 method 6; it is written from APPNOTE.TXT 5.3, the same section
@@ -1793,14 +1802,14 @@ WIDENED and the probe ORDER inverted are caught only by lane 5
   passes; lanes 3 and 4 catch a wrong reading on the bytes; cost is
   callgrind `Ir` and `strace` in FORMATS.md (*The minimum match length
   PKZIP 1.01 and 1.02 used*).
-- **No Finder metadata and no fork split** — `tools/run_zipit.py` grades
+- **No Finder metadata and no fork split** — `tests/harness/run_zipit.py` grades
   that shape.
 - **No mutant is graded by anything**; a bent stream must come out
   cleanly, never right.
 - **No Macintosh**: the decoder reaches it through `ovl_exo`, checked by
   `run_tiers.py --check-images` and the tier sweeps.
 
-## Large zips (`tools/run_ziplarge.py`, in `ci.sh`)
+## Large zips (`tests/harness/run_ziplarge.py`, in `ci.sh`)
 
 A zip counts its entries in 16 bits; past 65,535 the count lives in a
 Zip64 record, and a reader that trusts the 16-bit field walks 65,535
@@ -2327,7 +2336,7 @@ tar; `unar` accepts it too). A DDA2 cut that lands where a valid archive
 may end without its 0xBBBB marker (`ddtf-ddpro411dd3.dd` cut to a fifth;
 DECISIONS.md 2026-08-29, *a cut archive*). A format `unar` cannot read at
 all (SuperDisk!, Now Compress, SpaceSaver, AppleLink packages); for
-AppleLink, `tools/run_sqp.py`'s lane 4 asserts the engine's own answer.
+AppleLink, `tests/harness/run_sqp.py`'s lane 4 asserts the engine's own answer.
 And WHERE the cut falls — three fractions per fixture. A wider sweep, not
 in `ci.sh`: all 932 fixtures at the same three fractions, 2,796 cut
 archives, none silent (2026-08-29).
@@ -2527,7 +2536,7 @@ capitals).
 - The **`arc` cases skip** where `tools/get_arc.sh` has never been run
   (`tools/arc_bin.py` says where it looks). The skip is printed, and
   `ci.sh`'s last line says `WITHOUT the real-arc cases`.
-## Now Compress: the archives the corpus does not have (`tools/run_now.py`, in `ci.sh`)
+## Now Compress: the archives the corpus does not have (`tests/harness/run_now.py`, in `ci.sh`)
 
 The corpus's first real fixture reaches two block shapes; the rest had no
 archive. `tools/synth_now.py` writes them and `unar` grades them three ways
@@ -2606,7 +2615,7 @@ a 68000 with a real File Manager; adding `synth-now-mixed.now` to
 `tools/vmac/sample.txt` would need the sample's FORMATS.md counts
 re-measured.
 
-## LZH's -lh2- (`tools/run_lzh.py`, in `ci.sh`)
+## LZH's -lh2- (`tests/harness/run_lzh.py`, in `ci.sh`)
 
 No corpus archive uses `-lh2-`, `lhasa` has no decoder for it, and the LHa
 in `reference/` never selects it; the maintained LHa fork decodes it and
@@ -2812,7 +2821,7 @@ emulator tiers cover these):
   notice a decoder wrong in both configurations; that is the differential
   suite's job. This lane grades only that the mechanism is transparent.
 
-## Alysis SuperDisk! (`tools/run_superdisk.py`, in `ci.sh`)
+## Alysis SuperDisk! (`tests/harness/run_superdisk.py`, in `ci.sh`)
 
 `unar` and `macunpack` stop at the BinHex envelope, so the manifests of the
 corpus's two SuperDisk! archives describe only the payload file. Both are
@@ -2927,15 +2936,15 @@ the application wrote). The subjects are ours. And the Original
 compressors execute an F-line `0xFFFF` on the store-verbatim branch, which
 is counted rather than emulated (DECISIONS.md 2026-08-25, SpaceSaver's
 codecs).
-## AppleLink packages: SqueezePlay (`tools/run_sqp.py`, in `ci.sh`)
+## AppleLink packages: SqueezePlay (`tests/harness/run_sqp.py`, in `ci.sh`)
 
 Nothing but Aladdin's own translator reads the container (`unar`, deark and
 macunpack have zero hits for "applelink" or "squeezeplay", checked
 2026-10-05), so five lanes grade different things:
 
 ```sh
-python3 tools/run_sqp.py --macextract build/san/macextract
-python3 tools/run_sqp.py --register        # rewrite the six manifests
+python3 tests/harness/run_sqp.py --macextract build/san/macextract
+python3 tests/harness/run_sqp.py --register        # rewrite the six manifests
 python3 tools/derive_sqp.py                # grade the READING, not the engine
 python3 tools/derive_sqp.py --witness      # and grade it against the binary
 ```
@@ -3061,7 +3070,7 @@ headers deark identifies, not files an archiver wrote. On the Macintosh,
 only the Mac OS 9 tier's single RAR (`tools/vmac/README.md`,
 *Photographing the refusal alert*).
 
-## StuffIt SpaceSaver (`tools/run_spacesaver.py`, in `ci.sh`)
+## StuffIt SpaceSaver (`tests/harness/run_spacesaver.py`, in `ci.sh`)
 
 SpaceSaver has no oracle but itself (`unar` and `macunpack` do not know
 it). **48 specimens**, downloaded: files SpaceSaver compressed on the
@@ -3105,7 +3114,7 @@ between the two built-ins, an unknown table is refused.
 bit-flips), FORCED with `-f "StuffIt SpaceSaver"`, because no SpaceSaver
 file is in `fixtures/`; `fuzz.py` also carries the header's magic.
 
-**The Macintosh side is three files**: `tools/run_spacesaver.py --emit DIR`
+**The Macintosh side is three files**: `tests/harness/run_spacesaver.py --emit DIR`
 writes them and `tools/vmac/run.py --expect DIR/*.ss` replays them (stored,
 method 4 without a dictionary, method 4 with one) against this engine's
 Linux output — same bytes on a 68000, not proof either is right. 3/3 at
@@ -3277,14 +3286,14 @@ is run. Results: DECISIONS.md 2026-10-08, *the key that survives and has
 nothing to separate*, and 2026-10-09, *the run PKZIP never codes at
 distance one*.
 
-## ZipIt's own archives (`tools/run_zipit.py`, in `ci.sh`)
+## ZipIt's own archives (`tests/harness/run_zipit.py`, in `ci.sh`)
 
 **Nine archives ZipIt itself wrote** grade its three Macintosh extra fields
 (DECISIONS.md 2026-10-04, *the archive that carried its own extractor*;
 figures in FORMATS.md, *ZipIt's own archives*).
 
     tools/fetch_specimens.py --only zipit
-    python3 tools/run_zipit.py --macextract build/macextract
+    python3 tests/harness/run_zipit.py --macextract build/macextract
 
     ~/.cache/macextract/vmac/specimens/zipit/
 
@@ -3356,7 +3365,7 @@ moving the `0x2705` flag read by two bytes in `src/fmt_exo.c` gives 66.
   archive inside a `.hqx` or `.sea` is not seen. The number swept is
   printed.
 
-## Private File (`tools/run_privatefile.py`, in `ci.sh`)
+## Private File (`tests/harness/run_privatefile.py`, in `ci.sh`)
 
 Nothing else reads a Private File, so **the writer is the grader**: files
 Aladdin Private File 2.0's `PF Encrypt™` encrypted under Mini vMac from
@@ -3364,7 +3373,7 @@ subjects whose bytes and passwords are fixed in `tools/vmac/privatefile.py`
 (FORMATS.md, *Private File*).
 
     tools/vmac/privatefile.py --make NAME        an emulator run, ~6 min
-    python3 tools/run_privatefile.py --macextract build/macextract
+    python3 tests/harness/run_privatefile.py --macextract build/macextract
 
     ~/.cache/macextract/vmac/specimens/privatefile/NAME/SUBJECT.pf.bin
 
@@ -3391,14 +3400,14 @@ set fails**, and so does a specimen with no subject.
 6.0.8, answering its password dialog wrongly once, and both forks are read
 back off the volume.
 
-## MAR (`tools/run_mar.py`, in `ci.sh`)
+## MAR (`tests/harness/run_mar.py`, in `ci.sh`)
 
 Nothing here reads MAR but the engine, and its author's readers are
 GPL-2.0-only and are not run (NOTICE), so **what wrote it is the grader**
 (FORMATS.md, *MAR*):
 
-    python3 tools/run_mar.py --macextract build/macextract
-    python3 tools/run_mar.py --manifests      the four MAR manifests
+    python3 tests/harness/run_mar.py --macextract build/macextract
+    python3 tests/harness/run_mar.py --manifests      the four MAR manifests
 
 1. **The synthetic cases** against `tools/synth_mar.py`'s items, field for
    field through `l --meta` and `x`: names, both forks, the 16 bytes of
@@ -3440,13 +3449,13 @@ frame (OPEN_ITEMS.md). What
 the shell writes from these rows is `tests/run_mac_sink.sh` (two MAR
 fixtures) and the emulator tiers.
 
-## LZ4 frames (`tools/run_lz4.py`, in `ci.sh`)
+## LZ4 frames (`tests/harness/run_lz4.py`, in `ci.sh`)
 
 Every frame is the reference library's: liblz4, called through ctypes by
 `tools/synth_lz4.py`, so the grade is liblz4's output against the bytes it
 was handed (FORMATS.md, *LZ4 frames*).
 
-    python3 tools/run_lz4.py --macextract build/macextract
+    python3 tests/harness/run_lz4.py --macextract build/macextract
 
 1. **The matrix**: 165 frames — block maximum size 64K to 4M, linked and
    independent blocks, content checksum, block checksums and content size,
@@ -3471,14 +3480,14 @@ shapes was measured once, on System 6.0.8 (DECISIONS.md 2026-11-04, *the
 frame mar 0.2.0 reads*). The chain through the application is
 `tools/vmac/interactive.py --chain`, not in `ci.sh`.
 
-## Apple Backup (`tools/run_abk.py`, in `ci.sh`)
+## Apple Backup (`tests/harness/run_abk.py`, in `ci.sh`)
 
 Nothing here reads the format but the engine, so two readers others wrote
 from the same article grade it (FORMATS.md, *Apple Backup*), each run ONLY
 inside `tools/sandbox.py`'s box:
 
     python3 tools/sandbox.py --selftest
-    python3 tools/run_abk.py --macextract build/san/macextract
+    python3 tests/harness/run_abk.py --macextract build/san/macextract
 
 1. **The box first**: its self-test, from inside it, tries the network, a
    name lookup, the home directory, the repository, a write beside its
@@ -3523,16 +3532,16 @@ are a restore CD's, typed `OBDc`); the CD's sets where the cache lacks them; and
 `tools/vmac/interactive.py --abk` (tools/vmac/README.md), not in `ci.sh`.
 The box cannot stop a kernel bug reachable from an unprivileged process;
 there is no seccomp filter.
-## Apple Installer Tomes (`tools/run_tome.py`, in `ci.sh`)
+## Apple Installer Tomes (`tests/harness/run_tome.py`, in `ci.sh`)
 
 The forks carry a checksum nobody has identified, so the grade is two other
 readings of the same forks: deark's own Tome module, and the files Apple's
 Installer installed on the System 7.5.5 disk the `tome-wild-install*`
 fixtures came from (FORMATS.md, *Apple Installer Tomes*).
 
-    python3 tools/run_tome.py --macextract build/macextract
-    python3 tools/run_tome.py --extra DIR     # every Tome in DIR as well
-    python3 tools/run_tome.py --manifest FIXTURE...
+    python3 tests/harness/run_tome.py --macextract build/macextract
+    python3 tests/harness/run_tome.py --extra DIR     # every Tome in DIR as well
+    python3 tests/harness/run_tome.py --manifest FIXTURE...
 
 1. **deark**: every fork it decodes, byte for byte, with the names, lengths,
    types, creators and Finder flags read from the record table here. It has
@@ -3589,13 +3598,13 @@ early, and Apple Menu Options' `sysz` and MacTCP's `DRVR` 22 and `ctrp` 130,
 which differ from the installed copies and have not been looked at
 (DECISIONS.md 2026-11-10, *the archive the Installer reads*).
 
-## MacGzip's own output (`tools/run_macgzip.py`, in `ci.sh`)
+## MacGzip's own output (`tests/harness/run_macgzip.py`, in `ci.sh`)
 
 Eleven files **MacGzip 1.1.3 68K** wrote on emulated Mac OS 8.1 from one
 two-fork subject (TEXT/ttxt, 292 + 391 B): MacBinary mode at levels 1–9,
 Binary mode and ASCII mode (the docstring has how they were made).
 
-    python3 tools/run_macgzip.py --macextract build/macextract
+    python3 tests/harness/run_macgzip.py --macextract build/macextract
 
     ~/.cache/macextract/vmac/specimens/macgzip/{lvl1..9,binary,ascii}.gz
     ~/.cache/macextract/vmac/specimens/macgzip/source-A_Document.macbinary.bin
@@ -4070,7 +4079,7 @@ in `fixtures/manifests/`.
 | `derive_stuffit8.py` | StuffIt method 8 (Miller-Wegman) | all 4 method-8 forks in the corpus; `--grid` re-searches the parameters |
 | `derive_arc.py` | ARC's member header, RLE90, and methods 4, 8 and 9 | 6 members; `--grid` derives them from archives a real ARC 5.21q writes to order; `--garble` grades ARC's garble on 4 members (methods 2, 3, 4, 8) it garbled itself against the same members unpassworded, the password as typed and a key running across members required to FAIL |
 | `derive_cpt.py` | Compact Pro, container and both coders | 536 forks of 68 archives |
-| `derive_sqp.py` | AppleLink `.pkg` — SqueezePlay's two directories, folder levels and 13-bit LZW, out of Aladdin's own expander | **4 of 4** members of the two real packages, to their declared length and a recorded sha256, plus **29 witnesses checked at the offsets they are claimed to sit at**. It grades the READING; `tools/run_sqp.py` grades the engine. Cannot see whether Aladdin's expander reads what `tools/synth_sqp.py` writes |
+| `derive_sqp.py` | AppleLink `.pkg` — SqueezePlay's two directories, folder levels and 13-bit LZW, out of Aladdin's own expander | **4 of 4** members of the two real packages, to their declared length and a recorded sha256, plus **29 witnesses checked at the offsets they are claimed to sit at**. It grades the READING; `tests/harness/run_sqp.py` grades the engine. Cannot see whether Aladdin's expander reads what `tools/synth_sqp.py` writes |
 | `derive_sit13.py` | StuffIt's container and method 13 | 897 forks of 103 archives, all six code selectors |
 | `derive_sit6.py` | StuffIt method 6: framing, fixed code book, PackBits tail | all 11 method-6 forks in the corpus — 27 blocks, 13 Huffman and 14 stored; parses the 26 bytes out of deark's source rather than holding a copy; measures whether the stop code follows the declared length (13 of 13) |
 | `derive_dd.py` | DiskDoubler's DD (10) and AD (6, 9) coders | 39 of 39 forks, two in method 10's delta form, NAMED so the list can be held against `derive_ddc.py`'s |
@@ -4199,7 +4208,7 @@ short-circuited and subtract — the instrument sees only the total.
   swept on 2026-10-05 (BLOCKERS.md, *Withdrawn claims*).
 - **A regression**, because it asserts nothing; the claims it settled are
   pinned by `test_zip_behind_a_stub` in `tests/unit_formats.c` and
-  `tools/run_zipit.py`'s nine-of-nine sniff count.
+  `tests/harness/run_zipit.py`'s nine-of-nine sniff count.
 
 ## The 68000 call depth (`tools/stack_depth.py`, in `ci.sh`)
 

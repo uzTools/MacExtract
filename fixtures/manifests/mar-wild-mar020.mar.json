@@ -77,7 +77,7 @@
  ],
  "fixture": "mar-wild-mar020.mar",
  "format": "MAR",
- "oracle": "every block's CRC-32 as hampa's writer stored it (tools/run_mar.py walk), and the forks of its StuffIt twin mar-twin-mar020.sit",
+ "oracle": "every block's CRC-32 as hampa's writer stored it (tests/harness/run_mar.py walk), and the forks of its StuffIt twin mar-twin-mar020.sit",
  "sha256": "be3cdc10f87e1fd15acc4d8faee46d3268c669ce99d38e0d7f74a8763b63bf8e",
  "size": 192896
 }

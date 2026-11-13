@@ -41,6 +41,16 @@ WHAT IT CANNOT SEE:
   * Nothing here runs on the Macintosh. `tests/run_mac_sink.sh` carries
     the 2,149 B fixture, not this archive — a 256 KB window is more than
     the 1 MB tier has to spare (OPEN_ITEMS.md).
+
+In ci.sh (tests/harness/, run by its one loop since 2026-11-13). What ci.sh said of it there:
+
+StuffIt method 14's window wrap. The committed fixture's four shapes
+decode to 18,389 B all told and the window is sized to the fork, so
+`sit14_flush`'s second half is reached by nothing under 0x40000 B of
+output — which is 458 B of matches to write and a 256 KB window to
+decode, i.e. a peak-RAM figure and a Macintosh tier the fixture should
+not be made to move. So the archive is generated here instead and
+graded three ways, `unar` included (TESTING.md, *StuffIt method 14*).
 """
 import os
 import re
@@ -49,8 +59,8 @@ import subprocess
 import sys
 import tempfile
 
-ROOT = os.path.join(os.path.dirname(__file__), "..")
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+ROOT = os.path.join(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "tools"), "..")
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "tools"))
 import synth_sit14                                   # noqa: E402
 
 

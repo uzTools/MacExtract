@@ -380,6 +380,7 @@ def phase_engine(exe_unc, written, preset, verbose):
     declined per entry, and that is asserted rather than assumed: the
     file is still recognised and the ENTRY is what fails.
     """
+    sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "tests", "harness"))
     from run_spacesaver import container
     bad = ok = declined = 0
     tmp = tempfile.mkdtemp(prefix="ssmod-eng-")
@@ -455,6 +456,7 @@ def phase_fuzz(exe_unc, written, preset, cases, seed):
             label, data, stream = max(cases_, key=lambda c: len(c[2]))
             if not data:
                 continue
+            sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "tests", "harness"))
             from run_spacesaver import container
             base = container(stream, len(data), method=method)
             for _ in range(cases):
@@ -497,6 +499,7 @@ def phase_keep(written, preset):
     `.ss` beside it and three of these five use a method this engine
     does not implement, which would fail that suite by design.
     """
+    sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "tests", "harness"))
     from run_spacesaver import container
     out = os.path.join(SPECIMENS, "modules")
     os.makedirs(out, exist_ok=True)

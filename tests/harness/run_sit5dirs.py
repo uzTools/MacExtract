@@ -35,6 +35,13 @@ WHAT IT CANNOT SEE:
     one byte under its own high-water mark and asks only that nothing is
     put at the root and that every entry not written failed for memory;
     it does not ask which folders those were.
+
+In ci.sh (tests/harness/, run by its one loop since 2026-11-13). What ci.sh said of it there:
+
+StuffIt 5 folders past what a fixed table held (256, and 16 KB of
+paths), which nothing in the corpus approaches: generated, graded three
+ways with `unar`, and once more at one byte under its own peak
+(TESTING.md, *StuffIt 5's folders*).
 """
 import argparse
 import os
@@ -44,7 +51,7 @@ import subprocess
 import sys
 import tempfile
 
-HERE = os.path.dirname(os.path.abspath(__file__))
+HERE = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "tools")
 REPO = os.path.dirname(HERE)
 
 BANNER = (b"StuffIt (c)1997-1998 Aladdin Systems, Inc., "

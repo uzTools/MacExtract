@@ -7,7 +7,7 @@ reaches a clear code or a 13-bit width, and both are version 1 with no
 folder (FORMATS.md, *AppleLink packages*). Nothing on this machine
 writes one — the only writer is Aladdin's own translator, which needs a
 Macintosh and a package it will not let you choose (BLOCKERS.md) — so
-this does, and `tools/run_sqp.py` grades the engine against the bytes
+this does, and `tests/harness/run_sqp.py` grades the engine against the bytes
 that went in.
 
 **This is an ENCODER read out of the same binary as the decoder, and

@@ -32,6 +32,13 @@ and mar 0.2.0's acceptance of these shapes was measured once on an
 emulated Mac (DECISIONS.md 2026-11-03, *the frame mar 0.2.0 reads*). The
 legacy frame, which mar does not read either. A frame with a dictionary,
 beyond its refusal.
+
+In ci.sh (tests/harness/, run by its one loop since 2026-11-13). What ci.sh said of it there:
+
+LZ4 frames, mar 0.2.0's other compressed MAR: every frame is liblz4's own,
+written through ctypes (tools/synth_lz4.py), across every block size, both
+block modes and every checksum, then damaged and cut ones that must be
+refused. Skips, and says so, where liblz4 is absent.
 """
 import os
 import random
@@ -40,7 +47,7 @@ import subprocess
 import sys
 import tempfile
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+ROOT = os.path.dirname(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "tools"))
 sys.path.insert(0, os.path.join(ROOT, "tools"))
 import synth_lz4 as Z  # noqa: E402
 

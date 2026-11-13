@@ -11,7 +11,7 @@
  *       may not exceed the total), and the reassembly itself: the
  *       BODIES of the parts, in number order, concatenated.
  *   reference/mpack/encode.c — what `mpack -m` writes, which is what
- *       tools/run_mime.py grades this against.
+ *       tests/harness/run_mime.py grades this against.
  *   reference/mpack/decode.c ParseHeaders() — a header line, and a
  *       continuation line that begins with space or tab; the blank
  *       line that ends the header block. The PARAMETER parsing is

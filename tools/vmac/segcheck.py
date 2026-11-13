@@ -137,9 +137,10 @@ MIMESEG_RSRC = b"RESOURCE FORK " * 29
 
 def cut_mimeseg(workdir, anchor_name):
     """A multipart/appledouble message split into four message/partial
-    files, built with the same helpers tools/run_mime.py grades against
+    files, built with the same helpers tests/harness/run_mime.py grades against
     munpack — so what runs on the Mac is what the Linux suite runs."""
     sys.path.insert(0, os.path.join(REPO, "tools"))
+    sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "tests", "harness"))
     import run_mime as M                                   # noqa: E402
     af = M.applefile(MIMESEG_NAME.encode(), MIMESEG_RSRC)
     msg = M.message(

@@ -21,7 +21,7 @@
  * take a range rather than a tree.
  *
  * Nothing in the corpus uses -lh2- and no reachable tool writes one, so
- * this is graded against LHa for UNIX itself: tools/run_lzh.py builds
+ * this is graded against LHa for UNIX itself: tests/harness/run_lzh.py builds
  * archives with a locally patched copy of that program (which can encode
  * -lh2- where the stock one cannot) and requires this decoder and LHa's
  * to return the same bytes. TESTING.md, "LZH's old methods".
@@ -336,7 +336,7 @@ int unc_lzdyn_decode(UncAlloc *al, UncBitIn *bi, uint32_t outlen,
         /* The window starts full of spaces, as every reference does, so
          * that a match reaching back past the start of the output finds
          * something defined. **Unexercised**: zero-filling it instead
-         * changes nothing that `tools/run_lzh.py` can see, because LHa's
+         * changes nothing that `tests/harness/run_lzh.py` can see, because LHa's
          * encoder never emits such a match — its match search only knows
          * positions it has actually inserted. Kept because it is what
          * the reference does, not because a test would catch its loss. */

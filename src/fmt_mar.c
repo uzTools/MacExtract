@@ -44,6 +44,8 @@
  * on. Graded against both archives hampa published alongside StuffIt
  * copies of the same files (FORMATS.md, *MAR*).
  *
+ * Harness: tests/harness/run_mar.py
+ *
  * SPDX-License-Identifier: 0BSD
  */
 #include "fmt_mar_priv.h"

@@ -10,7 +10,7 @@ archive PF Encrypt makes before it encrypts), and BOTH forks are compared
 with the bytes that went in.
 
     tools/vmac/privatefile.py --make NAME        make them (an emulator run)
-    tools/run_privatefile.py --macextract build/macextract
+    tests/harness/run_privatefile.py --macextract build/macextract
 
 They live outside the repository, beside the emulator's other state:
 
@@ -32,6 +32,15 @@ With no specimens it says so and runs the refusals alone, so a fresh
 clone stays green. A PARTIAL set is a failure, and so is a specimen whose
 subject is unknown: a lane that skipped them could lose its only check
 against Private File's own output one file at a time and stay green.
+
+In ci.sh (tests/harness/, run by its one loop since 2026-11-13). What ci.sh said of it there:
+
+Aladdin Private File. Nothing else reads it, so the grader is the
+writer: files Private File 2.0 encrypted under Mini vMac from subjects
+whose bytes and passwords are fixed, extracted through every layer and
+compared fork by fork. The refusals (wrong password, flipped byte,
+truncation, an unwritten method) run without specimens; the grading
+skips cleanly with none (TESTING.md).
 """
 import argparse
 import glob
@@ -42,7 +51,7 @@ import subprocess
 import sys
 import tempfile
 
-REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+REPO = os.path.dirname(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "tools"))
 sys.path.insert(0, os.path.join(REPO, "tools"))
 import synth_pf as S                                   # noqa: E402
 

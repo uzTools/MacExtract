@@ -84,7 +84,7 @@ Nothing is detect-only since 2026-10-18: an unextractable file is
 - **One 46-byte window of a DiskDoubler DDA2 archive is ambiguous**: a cut
   there is a valid ending (DECISIONS.md 2026-08-29, *a cut archive*).
 - **A uuencoded set missing a middle part decodes short, silently**; a
-  missing last part is caught. `tools/run_uu.py` asserts this.
+  missing last part is caught. `tests/harness/run_uu.py` asserts this.
 - **An mpack AppleSingle/AppleDouble's dates land shifted by the Mac's zone
   offset**: mpack stores the wall clock in entry 8, which RFC 1740 makes GMT,
   and nothing in the file names its writer. The RFC is followed, decided
@@ -344,7 +344,7 @@ Tome's resource fork (FORMATS.md, *Apple Installer Tomes*). Left:
   Installer, decompressed whole, no CRC table, no reference to `idcp`, and
   no file atom of its script carrying any of 504 forks' values. So the
   Installer may never check it. Without it 1,308 of 3,704 single-byte
-  changes are noticed (`tools/run_tome.py`). Closes with the routine that
+  changes are noticed (`tests/harness/run_tome.py`). Closes with the routine that
   writes it: Apple's Installer SDK packer, not on this machine.
 - **No `ircp` file is a fixture**: the 6 here (`~/.cache/macextract/specimens/ircp/`, off El Mac 7's
   Spanish System 7.5 Update 2.0, from MacStamp) were graded once

@@ -10,7 +10,7 @@
  ],
  "fixture": "synth-mar020.mar.lz4",
  "format": "LZ4",
- "oracle": "the bytes liblz4 1.10.0 encoded (tools/synth_lz4.py), and mar 0.2.0 decodes the same shapes (tools/run_lz4.py)",
+ "oracle": "the bytes liblz4 1.10.0 encoded (tools/synth_lz4.py), and mar 0.2.0 decodes the same shapes (tests/harness/run_lz4.py)",
  "sha256": "33b808060c0ab5d7f5d644b65e4c8e08a121f246ffa3d209f1717ddadd5b6018",
  "size": 74922
 }

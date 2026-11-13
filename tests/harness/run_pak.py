@@ -24,6 +24,12 @@ That last point is the reason this file exists rather than a few more
 cases in run_arc.py: the obvious oracle for this format is the wrong
 one, and a suite that reached for it would have graded a correct
 decoder as broken and a broken one as correct.
+
+In ci.sh (tests/harness/, run by its one loop since 2026-11-13). What ci.sh said of it there:
+
+ARC methods 0x0a/0x0b are PAK's, and nothing on Linux writes them, so
+their archives come from PAK 2.51 under DOSBox (tools/pak.py) or from
+the two real specimens. Skips politely when neither is present.
 """
 import os
 import shutil
@@ -31,8 +37,8 @@ import subprocess
 import sys
 import tempfile
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+ROOT = os.path.dirname(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "tools"))
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "tools"))
 import pak                                          # noqa: E402
 
 CRUSHED, DISTILLED = 0x0A, 0x0B

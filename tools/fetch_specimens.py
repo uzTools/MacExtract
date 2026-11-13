@@ -14,14 +14,14 @@ beside this script record size, sha256 and URL for every one.
   spacesaver  48 files SpaceSaver itself wrote, 46 of them with the
               uncompressed ORIGINAL beside them — a second copy of the
               same file from a CD pressed before that machine had
-              SpaceSaver on it. `tools/run_spacesaver.py` grades them
+              SpaceSaver on it. `tests/harness/run_spacesaver.py` grades them
               (TESTING.md).
   applelink   eight AppleLink packages, between them reaching every path
               the format has (FORMATS.md, *What the eight real packages
-              exercise*). `tools/run_sqp.py` grades the engine on them,
+              exercise*). `tests/harness/run_sqp.py` grades the engine on them,
               `tools/derive_sqp.py` the reading.
   zipit       9 archives ZipIt itself wrote — five self-extracting, four
-              a plain `.zip`. `tools/run_zipit.py` grades them
+              a plain `.zip`. `tests/harness/run_zipit.py` grades them
               (TESTING.md).
   implode     PKZIP 1.01's, 1.02's and 1.10's own distribution
               self-extractors. `PKZ101.EXE` is the only file this

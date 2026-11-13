@@ -44,10 +44,22 @@ Five lanes, and they grade different things:
    as a package. Most do: a mutation has to land in the directory to
    break the tiling, and the directory is a tenth of the bytes.
 
-    python3 tools/run_sqp.py --macextract build/san/macextract
-    python3 tools/run_sqp.py --register        # rewrite the manifests
+    python3 tests/harness/run_sqp.py --macextract build/san/macextract
+    python3 tests/harness/run_sqp.py --register        # rewrite the manifests
 
 TESTING.md (*AppleLink packages: SqueezePlay*) is the write-up.
+
+In ci.sh (tests/harness/, run by its one loop since 2026-11-13). What ci.sh said of it there:
+
+AppleLink packages. Nothing else on earth reads the container — not
+`unar`, not deark, not macunpack — so three different oracles stand in:
+the sha256 tools/derive_sqp.py recorded from an independent reading of
+Aladdin's own translator (the two real packages, when they are in the
+specimen cache), the bytes tools/synth_sqp.py compressed, and gzip,
+which decodes a SqueezePlay fork byte-exact through a .Z header because
+the codec IS Unix compress at 13 bits. Plus ten bent packages the
+sniffer has to refuse: a probe with no magic number is only worth what
+its negative controls are.
 """
 import argparse
 import hashlib
@@ -60,7 +72,7 @@ import subprocess
 import sys
 import tempfile
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+ROOT = os.path.dirname(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "tools"))
 sys.path.insert(0, os.path.join(ROOT, "tools"))
 import synth_sqp as S                                   # noqa: E402
 

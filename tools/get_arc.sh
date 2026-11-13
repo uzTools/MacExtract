@@ -1,7 +1,7 @@
 #!/bin/sh
 # get_arc.sh — fetch a real ARC encoder, for fixtures nothing here writes.
 #
-# tools/run_arc.py grades our decoder against `unar` on archives that
+# tests/harness/run_arc.py grades our decoder against `unar` on archives that
 # tools/synth_arc.py generates. That covers methods 1-9, but every byte
 # of them came out of this repository. Debian's `arc` 5.21q is an actual
 # ARC implementation: it writes methods 2, 4, 8 and 9 (and 9 only with

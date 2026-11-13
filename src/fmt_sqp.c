@@ -62,6 +62,8 @@
  * packages; FORMATS.md (*AppleLink packages*) has the figures and what
  * is READ but UNGRADED.
  *
+ * Harness: tests/harness/run_sqp.py
+ *
  * SPDX-License-Identifier: 0BSD
  */
 #include "unc_internal.h"

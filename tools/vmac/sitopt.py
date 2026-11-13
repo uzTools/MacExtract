@@ -46,7 +46,7 @@ account of what it did.
 writes **255** into byte 106, not its module id of 5, and 2.0.1's own
 unstuffer hands back the OPTIMIZED bytes. 255 means an Optimizer nothing
 can undo, so this engine decodes those entries and refuses only the ids a
-'DCMP' could restore. `tools/run_sitopt.py` grades that.
+'DCMP' could restore. `tests/harness/run_sitopt.py` grades that.
 
 What this CANNOT see:
 

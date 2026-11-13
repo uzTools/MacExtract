@@ -538,7 +538,7 @@ class ImplodeProbe:
     narrowing query is `detection=504b0304????02000600*` and
     `...04000600*`, 4,074 and 4,869 files (measured 2026-10-07). Each
     entry is decoded both ways and graded by **the CRC-32 the archive
-    itself stored**, which is the same check `tools/run_implode.py`
+    itself stored**, which is the same check `tests/harness/run_implode.py`
     uses and is not this project's opinion about anything.
 
     The decoder is `tools/synth_implode.py`'s, which shares `sf_codes`

@@ -87,38 +87,6 @@ python3 tools/run_cli_safety.py --macextract build/san/macextract \
 python3 tools/fuzz.py -n 150 --seed 7 --macextract build/san/macextract || fail "fuzz smoke"
 python3 tools/run_segments.py --macextract build/san/macextract \
     || fail "segmented-archive tests"
-# The two formats M13 brought in scope have no corpus fixtures at all,
-# so both suites generate their own and hand them to a second
-# implementation to grade: `unar` for ARC, `hexbin` for the UUTool shape.
-python3 tools/run_arc.py --macextract build/san/macextract || fail "ARC tests"
-# ARC methods 0x0a/0x0b are PAK's, and nothing on Linux writes them, so
-# their archives come from PAK 2.51 under DOSBox (tools/pak.py) or from
-# the two real specimens. Skips politely when neither is present.
-python3 tools/run_pak.py --macextract build/san/macextract || fail "PAK method tests"
-# The OTHER method 0x0a: ARC 7.x's Trimmed, which shares the number
-# with PAK's Crushed. This suite also checks the discriminator, by
-# holding the same input files under both dialects.
-python3 tools/run_arcplus.py --macextract build/san/macextract \
-    || fail "ARC+Plus (Trimmed) tests"
-python3 tools/run_uu.py --macextract build/san/macextract || fail "uuencode tests"
-python3 tools/run_hecx.py --macextract build/san/macextract \
-    || fail "BinHex .hex/.hcx tests"
-# A zip counts its entries in 16 bits, so past 65,535 the count comes
-# from the Zip64 record instead. Generated: nothing in the corpus is
-# that large, and the failure it guards against is silent. Also the
-# per-ENTRY Zip64 escape, which arrives at 2 GB and not at 4.
-python3 tools/run_ziplarge.py --macextract build/san/macextract \
-    || fail "large-zip (Zip64 entry count) tests"
-# Zip method 6 (Implode), in scope since 2026-10-07. Nothing on this
-# machine WRITES the method, so `tools/synth_implode.py` is an encoder:
-# the suite generates all four combinations the format's flag word can
-# state and holds each against the writer's own plaintext, `unar`, deark
-# and the stored CRC-32 — two outside readers, because an encoder of
-# ours agreeing with a decoder of ours proves nothing. Plus 240 bent
-# streams, every edit inside the bytes the writer declares compressed.
-# Skips politely without unar or deark.
-python3 tools/run_implode.py --macextract build/san/macextract \
-    || fail "Implode (zip method 6) tests"
 # The other half of the same question: a member over 2 GB is refused per
 # ENTRY, a position over 4 GB ends the walk. Sparse subjects, graded by
 # GNU tar, which has neither limit.
@@ -165,15 +133,7 @@ python3 tools/run_walk.py --probe build/san/walk_probe \
 # both say so. Skips cleanly without hfsutils.
 python3 tools/vmac/walkprobe.py --check > /dev/null \
     || fail "volume-walk probe (tools/vmac/walkprobe.py --check)"
-# Now Compress has exactly one REAL fixture, and it reaches two of the
-# five shapes a block can have. The rest — and the offset-delta search,
-# and folders, and several files in one archive — are generated the same
-# way and handed to `unar`, which is the implementation fmt_now.c was
-# transcribed from. One of the generated archives is committed as a
-# fixture too, so the diff suite grades those paths without `unar`.
-python3 tools/run_now.py --macextract build/san/macextract \
-    || fail "Now Compress tests"
-# ...and the READER half of that search, graded by the container's own
+# Now Compress's offset-delta search (tests/harness/run_now.py), its READER half, graded by the container's own
 # arithmetic rather than by this engine: rebase a generated archive's
 # block table and require tools/derive_now.py to get the same blocks back
 # out of the result (TESTING.md, *Now Compress*).
@@ -183,38 +143,12 @@ python3 tools/synth_now.py -o "$NOWTMP/plain.now" \
         "$NOWTMP/rebased.now" --check > /dev/null \
     || fail "offset-delta re-read (tools/mutate_now.py --delta --check)"
 rm -rf "$NOWTMP"
-# SuperDisk! is the one format in the corpus that neither `unar` nor
-# `macunpack` can read at all, so the oracle manifests describe only the
-# envelope. Its two archives were graded fork by fork by their OWN
-# self-extractors on an emulated Mac (tools/vmac/superdisk.py
-# --adjudicate); this replays that verdict by content.
-python3 tools/run_superdisk.py --macextract build/san/macextract \
-    || fail "SuperDisk! tests"
-# ...and the same format's SECOND implementation, off the Macintosh:
+# SuperDisk!'s SECOND implementation (the first is tests/harness/run_superdisk.py), off the Macintosh:
 # Alysis's own Add-In Modules, lifted out of a corpus fixture and run under
 # qemu-m68k (tools/sdmodule/). Every method 1..9 goes through both readers.
 # Skips cleanly without qemu-m68k or the cross-compiler.
 python3 tools/sdmodule/run_sdmodule.py --macextract build/san/macextract \
     || fail "SuperDisk! module differential"
-# btoa/atob (M26). No corpus file and no second reader — `unar` does not
-# know the format — so the ORIGINAL implementation is the encoder: the
-# suite compiles reference/btoa and grades our decoder against what it
-# writes, in both framings. Skips cleanly without reference/.
-python3 tools/run_btoa.py --macextract build/san/macextract \
-    || fail "btoa tests"
-# base64 and MIME (M36). No corpus file either — the sniff sweep claims
-# none of the 940 — so the cases are generated and graded by TWO other
-# implementations: munpack 1.6, which src/fmt_mime.c is transcribed
-# from, and deark for the base64 half. Skips cleanly without reference/.
-python3 tools/run_mime.py --macextract build/san/macextract \
-    || fail "base64/MIME tests"
-# LZH/LHA (M28). The corpus has one real `.lzh` and seven of lhasa's,
-# all in the diff suite above; this is the sweep over the rest of that
-# collection — 160-odd archives from fourteen writers — graded against
-# TWO other implementations, lhasa (independent) and LHa 1.14i (the
-# original, used as the encoder). Skips cleanly without reference/.
-python3 tools/run_lzh.py --macextract build/san/macextract \
-    || fail "LZH tests"
 # The archives this engine NAMES and never extracts (RAR, 7z, xz, bzip2,
 # Cabinet, Zoo, ar, cpio, ARJ). Signatures only, so the suite writes real
 # archives with the tools that are here, grades the synthetic ones with
@@ -239,41 +173,7 @@ python3 tools/run_peek.py --macextract build/san/macextract \
 # which read the Shortcut updater's key off an emulated Mac's memory:
 # graded against the Python verifier and Aladdin's own MKeys.
 python3 tools/sit_mkey_oracle.py || fail "StuffIt MKey oracle"
-# StuffIt method 14's window wrap. The committed fixture's four shapes
-# decode to 18,389 B all told and the window is sized to the fork, so
-# `sit14_flush`'s second half is reached by nothing under 0x40000 B of
-# output — which is 458 B of matches to write and a 256 KB window to
-# decode, i.e. a peak-RAM figure and a Macintosh tier the fixture should
-# not be made to move. So the archive is generated here instead and
-# graded three ways, `unar` included (TESTING.md, *StuffIt method 14*).
-python3 tools/run_sit14wrap.py --macextract build/san/macextract \
-    || fail "StuffIt method 14 window wrap"
-# StuffIt 5 folders past what a fixed table held (256, and 16 KB of
-# paths), which nothing in the corpus approaches: generated, graded three
-# ways with `unar`, and once more at one byte under its own peak
-# (TESTING.md, *StuffIt 5's folders*).
-python3 tools/run_sit5dirs.py --macextract build/san/macextract \
-    || fail "StuffIt 5 folders"
-# The optimized StuffIt archives, graded by the program that WROTE them:
-# StuffIt Deluxe 2.0.1 under Mini vMac stuffed a text file with `Text 1`
-# enabled and unstuffed it again, and what it hands back is the only
-# definition of correct there is for an Optimizer that undoes nothing.
-# Skips cleanly with no specimens (TESTING.md).
-python3 tools/run_sitopt.py --macextract build/san/macextract \
-    || fail "StuffIt Optimizer tests"
-# ...and every combination of them 2.0.1 had not been asked for until
-# 2026-10-11: JPEG Lossy at every width, in every mode and in colour,
-# each Optimizer under each cipher, the ciphers' edges. Same oracle,
-# same skip (TESTING.md).
-python3 tools/run_sitcombo.py --macextract build/san/macextract \
-    || fail "StuffIt Optimizer combinations"
-# StuffIt SpaceSaver has no oracle and no committed fixture either: what
-# grades it is a file SpaceSaver itself wrote under Mini vMac, which
-# lives beside the emulator's other state. Skips cleanly when there is
-# none, so this says nothing on a fresh clone (TESTING.md).
-python3 tools/run_spacesaver.py --macextract build/san/macextract \
-    || fail "SpaceSaver tests"
-# ...and SpaceSaver's own codecs, off the Macintosh: each `CMod` module
+# SpaceSaver's own codecs (beside tests/harness/run_spacesaver.py), off the Macintosh: each `CMod` module
 # holds a compressor as well as an expander, and qemu-m68k runs either
 # (tools/ssmodule/). That is where a specimen of methods 1, 2 and 3 comes
 # from — nothing else here writes one — and it grades what this engine
@@ -281,78 +181,25 @@ python3 tools/run_spacesaver.py --macextract build/san/macextract \
 # panel in the emulator cache; skips cleanly without it.
 python3 tools/ssmodule/run_ssmodule.py --macextract build/san/macextract \
     || fail "SpaceSaver module differential"
-# Nine archives ZipIt itself wrote: the subjects for its three Macintosh
-# extra fields, which until 2026-10-04 were all generated here. Five are
-# self-extracting and are passed `-f Zip`; the other four are sniffed
-# unaided, which the suite asserts. Specimens rather than fixtures
-# because a ZipIt SEA is not recognised (OPEN_ITEMS.md); the two plain
-# ones that are fixtures, `MrTs_Paint_Folder.zip` and
-# `NPWritersKit.zip`, run_diff.py grades with no oracle. Skips cleanly
-# with no specimens (TESTING.md).
-python3 tools/run_zipit.py --macextract build/san/macextract \
-    || fail "ZipIt tests"
-# Eleven files MacGzip 1.1.3 wrote on emulated Mac OS 8.1, one per mode
-# and compression level, extracted through gzip and MacBinary and compared
-# fork by fork with the subject they were made from. Skips cleanly with
-# no specimens (TESTING.md).
-python3 tools/run_macgzip.py --macextract build/san/macextract \
-    || fail "MacGzip tests"
-# Aladdin Private File. Nothing else reads it, so the grader is the
-# writer: files Private File 2.0 encrypted under Mini vMac from subjects
-# whose bytes and passwords are fixed, extracted through every layer and
-# compared fork by fork. The refusals (wrong password, flipped byte,
-# truncation, an unwritten method) run without specimens; the grading
-# skips cleanly with none (TESTING.md).
-python3 tools/run_privatefile.py --macextract build/san/macextract \
-    || fail "Private File tests"
 # Short reads. `UncIO` allows them and no host here returns one, so the
 # CLI's UNC_SHORT_READ caps every read at 1 B and every fixture must
 # extract exactly as it does uncapped; the decryption and Private File
 # suites run whole under the same cap (TESTING.md, *Short reads*).
 python3 tools/run_shortread.py --macextract build/san/macextract \
     || fail "short-read tests"
-# AppleLink packages. Nothing else on earth reads the container — not
-# `unar`, not deark, not macunpack — so three different oracles stand in:
-# the sha256 tools/derive_sqp.py recorded from an independent reading of
-# Aladdin's own translator (the two real packages, when they are in the
-# specimen cache), the bytes tools/synth_sqp.py compressed, and gzip,
-# which decodes a SqueezePlay fork byte-exact through a .Z header because
-# the codec IS Unix compress at 13 bits. Plus ten bent packages the
-# sniffer has to refuse: a probe with no magic number is only worth what
-# its negative controls are.
-python3 tools/run_sqp.py --macextract build/san/macextract \
-    || fail "AppleLink package (SqueezePlay) tests"
-# MAR. Nothing here reads it but the engine, and its author's readers are
-# GPL-2.0-only and not run, so what grades it is what wrote it: every CRC
-# his writer stored, walked by a second reading; his StuffIt twins of the
-# same two folders, which run_diff.py holds to `unar`; and tools/synth_mar.py's
-# items field for field. Then damaged, cut and LZW-wrapped variants, the
-# last decoded by gzip too, each comparison with a control that must fail.
-python3 tools/run_mar.py --macextract build/san/macextract \
-    || fail "MAR tests"
-# LZ4 frames, mar 0.2.0's other compressed MAR: every frame is liblz4's own,
-# written through ctypes (tools/synth_lz4.py), across every block size, both
-# block modes and every checksum, then damaged and cut ones that must be
-# refused. Skips, and says so, where liblz4 is absent.
-python3 tools/run_lz4.py --macextract build/san/macextract \
-    || fail "LZ4 frame tests"
-# Apple Backup. Nothing here reads it but the engine, so two readers others
-# wrote from the same article grade it — unbak.py for every fork's bytes,
-# Kaitai's parser for every item's Finder info and dates — each run ONLY
-# inside tools/sandbox.py's box, whose self-test must pass first. Then a set
-# made here with one file across three disks, damaged disks each alone, and
-# three controls that must fail.
+# The box third-party readers run in (tools/sandbox.py), which several
+# harnesses below use: its self-test must pass first.
 python3 tools/sandbox.py --selftest >/dev/null || fail "sandbox self-test"
-python3 tools/run_abk.py --macextract build/san/macextract \
-    || fail "Apple Backup tests"
-# Apple Installer Tomes. No checksum anyone has identified, so what grades
-# them is two other readings: deark's Tome module for the stored and
-# InstaCompOne forks, and the files Apple's Installer put on the System
-# 7.5.5 disk the fixtures came from for the text codec's (skipped, loudly,
-# without that disk). Then changed and cut Tomes, and the control that
-# proves the exact end of a stream is checked.
-python3 tools/run_tome.py --macextract build/san/macextract \
-    || fail "Installer Tome tests"
+# Every format's own harness: each file in tests/harness/, named in the
+# header of the format source it grades ("Harnesses:"), which
+# tools/check_harnesses.py holds in both directions. What each one grades,
+# and against what, is its own docstring. Adding a format's harness is
+# adding the file; removing a format removes its harnesses with it.
+python3 tools/check_harnesses.py --selftest || fail "the harness list"
+for h in tests/harness/run_*.py; do
+    python3 "$h" --macextract build/san/macextract \
+        || fail "$h ($(python3 tools/check_harnesses.py --of "$h"))"
+done
 # The Finder metadata beyond type, creator and flags (`l --meta`): FInfo
 # and FXInfo whole, the backup date, the lock and the Get Info comment,
 # held to lsar where it reads them and to the synthesizers' own input where

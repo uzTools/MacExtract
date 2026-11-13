@@ -23,6 +23,10 @@
  * own problem and its answer says so at the line that makes it.
  * Deflate decoding uses vendored zlib (third_party/zlib).
  *
+ * Harness: tests/harness/run_ziplarge.py
+ * Harness: tests/harness/run_zipit.py
+ * Harness: tests/harness/run_macgzip.py
+ *
  * SPDX-License-Identifier: 0BSD
  */
 #include "unc_internal.h"

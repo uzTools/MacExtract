@@ -2613,7 +2613,7 @@ and requires non-zero exit.
 from the format — the first character declares the line's byte count, which
 disqualifies every measured header shape. A missing MIDDLE part decodes to a
 short file silently; a missing LAST part is caught (terminator and `end`).
-**Asserted rather than described:** `tools/run_uu.py` builds a gapped set and
+**Asserted rather than described:** `tests/harness/run_uu.py` builds a gapped set and
 requires the short, silent result.
 
 Both new assertions fail against a mutant without the line rules.
@@ -2623,7 +2623,7 @@ Both new assertions fail against a mutant without the line rules.
 **2026-08-15.** With one real fixture, three of five block shapes, the
 offset-delta search, folders, data forks and multi-file archives were
 transcribed and never run. `tools/synth_now.py` writes archives and
-`tools/run_now.py` (in `ci.sh`) grades three ways: bytes in, `unar`'s
+`tests/harness/run_now.py` (in `ci.sh`) grades three ways: bytes in, `unar`'s
 output, ours. Fourteen archives, byte-exact on Linux and qemu-m68k; thirteen
 graded three ways, one one way (the reference is wrong there, next entry).
 `synth-now-mixed.now` is committed as a fixture.
@@ -2730,7 +2730,7 @@ implementation cannot read the format.
 **Why we believe our output:** the 574-byte `TEXT` fork is coherent English
 about the product; the resource fork's first 16 bytes (data offset 0x100,
 map offset 0x11A, data length 0x1A, map length 0x32) account for exactly 332
-bytes; the entry table's sizes are met. `tools/run_now.py` asserts the
+bytes; the entry table's sizes are met. `tests/harness/run_now.py` asserts the
 structural one (swap the forks and it reports a non-resource-fork); the hashes
 are a regression anchor, not ground truth.
 
@@ -3938,7 +3938,7 @@ equivalent table is an option.
 
 - **The record's byte at +12 is honoured:** 0 is -4048, 1 is -4047 (four
   spaces), anything else refused per entry. It had been read and ignored.
-- **A committed generated file can go stale:** `tools/run_spacesaver.py`
+- **A committed generated file can go stale:** `tests/harness/run_spacesaver.py`
   compares `src/ss_dict.h` byte for byte with the resource whenever an
   installed SpaceSaver is present; it fails on a one-byte change.
 
@@ -4113,7 +4113,7 @@ my permission."* A non-commercial restriction is not the public domain
   structure carried across, each fact cited to its routine. What a format IS
   cannot be licensed.
 - **The code** stays in `reference/` (fetched, never committed) and is *used*
-  as a test-time oracle: `tools/run_btoa.py` compiles it and requires our
+  as a test-time oracle: `tests/harness/run_btoa.py` compiles it and requires our
   decoder to reproduce what it encodes.
 
 The names are mentioned (`NOTICE`, `src/fmt_btoa.c`, here). Skipping the
@@ -4160,7 +4160,7 @@ is LHa for UNIX 1.14i (archive.debian.org), which compiles here: an
 
 **Three graders:** `unar` (XADMaster, our transcription source — agreement
 shows only a faithful copy), lhasa (an independent reading), LHa 1.14i
-(archives of known plaintext); `tools/run_lzh.py` runs all three. lhasa
+(archives of known plaintext); `tests/harness/run_lzh.py` runs all three. lhasa
 earned its place in an afternoon:
 
 - **`unar` cannot read LHA for OS-9/68k's level 2 headers** (that writer
@@ -5183,7 +5183,7 @@ caught it; rebuilt, manifests re-derived from `unar` 1.10.8, `fixtures/SOURCES.m
 corrected. The 9-byte literal in `tests/unit_formats.c` stays (`NLIT`
 hard-codes its length).
 
-**It found a variable with two spellings:** `tools/run_spacesaver.py` and
+**It found a variable with two spellings:** `tests/harness/run_spacesaver.py` and
 `tools/ssmodule/run_ssmodule.py` read `UNCLASSIC_VMAC_HOME`, thirty-odd other
 sites `UNC_VMAC_HOME`; both default alike, so redirecting `UNC_VMAC_HOME`
 silently missed two harnesses. Unified on `UNC_VMAC_HOME`.
@@ -5874,7 +5874,7 @@ compared byte-swapped: plain XModem stored big-endian), verified on all nine.
 
 **The same bullet named SuperDisk!'s up-directory record as untested** — but
 `super-disk-utility.hqx` walks two folders and pops between them, adjudicated
-against its own self-extractor (`tools/run_superdisk.py`). Only DEPTH is untested
+against its own self-extractor (`tests/harness/run_superdisk.py`). Only DEPTH is untested
 (BLOCKERS.md). **An "untested" claim is about the corpus and expires with it.**
 
 
@@ -6431,7 +6431,7 @@ entry).
 **What changed.** `unc_mime_probe_multipart` — refusing anything without a
 `multipart/*` WITH a boundary — runs before those three. A `.hqx` or `.uu`
 posting still belongs to its format; asserted both ways in
-`tools/run_mime.py`.
+`tests/harness/run_mime.py`.
 
 **Not losing a capability.** mpack drops a `text/*` part with no filename as
 the sender's note (`handleMessage`), so the walk now applies `handleUuencode()`'s
@@ -6477,7 +6477,7 @@ so a set opened elsewhere asks for its count as Compact Pro asks for its
 index segment — the Mac shell's `SegFindLast` answers both.
 
 **What the oracle cost**: munpack's directory and `CT` quirks (previous
-entry), in `tools/run_mime.py` and TESTING.md; an exit-status-only harness
+entry), in `tests/harness/run_mime.py` and TESTING.md; an exit-status-only harness
 would have read them as our defects.
 
 **It joined on a Mac Plus the same day**, at 4 MB and the 1 MB floor, as a
@@ -7759,7 +7759,7 @@ at most 32 KB, so one byte copied per byte produced: 19 % of
 | `derived-Expand_Now_1.0.1.sea` | −12.7 % | **945 → 793, −16.1 %** |
 
 +32 B of 68000 code. The three Now Compress fixtures are byte-exact and
-`tools/run_now.py`'s thirteen generated archives grade the two things this
+`tests/harness/run_now.py`'s thirteen generated archives grade the two things this
 could break: a block whose history is the previous stream's last 32 KB
 (`dict`), and a back-reference into history. The decoder's reach limit is
 the block's own history, so a corrupt offset is refused where it was.
@@ -8111,7 +8111,7 @@ SPACES, XADMaster with zeros; **none of the 166 specimens in reach** can
 tell (both builds identical). The file now says spaces, as the two
 references agree — for nothing.
 
-**Graded.** `tools/run_lzh.py` green (182 archives vs `unar` and lhasa, 12
+**Graded.** `tests/harness/run_lzh.py` green (182 archives vs `unar` and lhasa, 12
 sets by LHa 1.14i, the MacLHA 2.00 specimen), `ci.sh` green, old vs new
 identical over **177 LZH specimens** and the **whole 950-fixture corpus**;
 three one-token mutations gave 6, 57 and 82 mismatches.
@@ -9893,7 +9893,7 @@ line.
 
 **Stale masthead.** The file's header comment listed `-lh2-`/`-lh3-` as
 declined, a reason already answered by patching LHa for UNIX to write
-one (`tools/run_lzh.py`, TESTING.md); the code twenty lines below decodes
+one (`tests/harness/run_lzh.py`, TESTING.md); the code twenty lines below decodes
 both. A comment contradicting its own code is the cross-file smell
 inside one file.
 
@@ -10581,7 +10581,7 @@ exercised here (closed by measurement next day: *all thirty*, below).
 **`superdisk --adjudicate` had always exited 1**, clean runs included: its
 last line printed `shots`, a local of `run_selfextractor`, raising
 `NameError` right after the verdict. `ci.sh` replays the verdict by
-CONTENT (`tools/run_superdisk.py`) and never runs the harness. **An exit
+CONTENT (`tests/harness/run_superdisk.py`) and never runs the harness. **An exit
 code nobody consumes is not a result.**
 
 **Transferable.** Two of the day's four findings came from re-running a
@@ -10938,7 +10938,7 @@ the 6,952 B tightest-tier headroom (*the ten kilobytes nothing watched*).
 
 **What buys it back is that the file is reachable.** "No corpus archive
 uses them" is not "nobody can hand you one": `tools/build_lha_lh2.sh`
-makes LHa for UNIX write `-lh2-`, `tools/run_lzh.py` writes `-lh3-`, and
+makes LHa for UNIX write `-lh2-`, `tests/harness/run_lzh.py` writes `-lh3-`, and
 `ci.sh` grades 15 and 6 entries every run. A `.lzh` on a classic Mac
 travelled from a PC, Amiga or Japanese desktop — the case an unarchiver
 exists for.
@@ -11606,7 +11606,7 @@ over a corpus with no specimen of the format is a fact about the corpus.*
 
 ### Two instruments that were not instruments
 
-`tools/run_spacesaver.py` looked for the decoded file with `.ss` removed,
+`tests/harness/run_spacesaver.py` looked for the decoded file with `.ss` removed,
 where the CLI keeps the whole basename (SpaceSaver adds no extension):
 46 of 46 failed the first time it had input. Fixed, and a specimen
 without an original must now decode rather than be skipped. **A harness
@@ -12332,7 +12332,7 @@ number, for example: A 12345)"*, plus a *"pre-registered"* build. `A 12345`
 was accepted first try.
 
 **Consequence.** Three archives written by 2.0.1 with `Text 1` enabled,
-graded by `tools/run_sitopt.py` against 2.0.1's own unstuffer.
+graded by `tests/harness/run_sitopt.py` against 2.0.1's own unstuffer.
 
 **A provenance line is a claim about a URL, and the only test is to open
 it.** The codes carried a citation to a page that does not host this file;
@@ -12362,7 +12362,7 @@ boot; stuffed with the Optimizer, bytes 106 and 108 record **4** —
 `MacPaint 1`'s resource id.
 
 **Consequence.** MANUAL_TESTS.md §8 deleted four minutes after it was
-written; `tools/run_sitopt.py` grades both branches.
+written; `tests/harness/run_sitopt.py` grades both branches.
 
 **"Nothing here IS one" and "nothing here can MAKE one" are different
 sentences.** Ask before filing anything manual: *do we have something that
@@ -12377,7 +12377,7 @@ a second format it writes.
 
 **Evidence.** `Sound 1` → 1, `Photoshop 1` → 2, `Photoshop/JPEG Lossy` →
 3, `MacPaint 1` → 4, `Text 1` → 255 (FORMATS.md, *What Aladdin's own
-output says*). `tools/run_sitopt.py` grades eight archives.
+output says*). `tests/harness/run_sitopt.py` grades eight archives.
 
 **Consequence.** The reading is closed; no `DCMP` had yet been executed
 here.
@@ -12503,7 +12503,7 @@ and `Photoshop 1` byte for byte with the archive's CRC agreeing; `MacPaint
 1` as a valid painting that is not the user's file, reported as such;
 `JPEG Lossy` still refused by name.
 
-**Evidence.** `tools/run_sitopt.py` over the eight 2.0.1 archives:
+**Evidence.** `tests/harness/run_sitopt.py` over the eight 2.0.1 archives:
 `Sound 1`'s 8,192-byte and `Photoshop 1`'s 115,320-byte subjects identical
 in both forks; `MacPaint 1`'s painting identical from 512 on, no resource
 fork. Negative controls — delta disabled, header length wrong by twelve,
@@ -13023,7 +13023,7 @@ agree 16 times. The four that differ split evenly:
   is not a path, and a version is not a preference*.)
 
 Nothing changed: **every entry this build can extract is in the agreeing
-16**. `tools/run_zipit.py`'s tolerance is "ZipIt's own field is one of the
+16**. `tests/harness/run_zipit.py`'s tolerance is "ZipIt's own field is one of the
 two names", which can fail.
 
 ### And the premise that fell with it
@@ -13044,7 +13044,7 @@ Two became corpus fixtures, plain zips the sniffer reads:
 fork), graded by `run_diff.py` against a committed manifest with **no
 oracle at run time**. The other seven are specimens because **a ZipIt SEA
 was not recognised**: the head is code, though the walker reads all five
-with `-f Zip`. `tools/run_zipit.py` forces the format for those five and
+with `-f Zip`. `tests/harness/run_zipit.py` forces the format for those five and
 asserts the other four are sniffed. (Recognised from 2026-10-05: *the scan
 that was already being paid for*.)
 
@@ -13488,7 +13488,7 @@ in all 20" was true of the field, not the path.
 
 ### The tolerance that could only fail one way
 
-Committed: `grade_name_coupling` in `tools/run_zipit.py` sweeps the nine
+Committed: `grade_name_coupling` in `tests/harness/run_zipit.py` sweeps the nine
 specimens and corpus zips and fails if a FileName divergence lands on
 method 0 or 8 — no `unar`, no engine; shown to fail on a `zipit-1.4` copy
 with one name dosified.
@@ -13604,7 +13604,7 @@ deark); `unc_internal.h` is off the row except the LZAH preload. Three
 remain, re-verified: the whole-line garbage skip (deark errors, mpack keeps
 the prefix), the second-document rescan (deark's binhex reads one document,
 banner search bounded to 8,192 bytes), and UUTool's MU layout. No behaviour
-changed; `tools/run_uu.py`'s gapped sets and the multi-part fixtures grade
+changed; `tests/harness/run_uu.py`'s gapped sets and the multi-part fixtures grade
 as before. (The last two later shed: *the alphabet nothing here had seen*
 and *the separator that was in the alphabet*, below.)
 
@@ -13646,7 +13646,7 @@ packages — nothing"**.
 
 ### Three readers and a fourth number, because a package has no checksum
 
-`tools/run_sqp.py` lane 1 holds **67 forks of 8 packages** against four
+`tests/harness/run_sqp.py` lane 1 holds **67 forks of 8 packages** against four
 things: the engine, `derive_sqp.py`, `gzip` through a `.Z` header on all 59
 LZW streams, and **each record's declared expanded length**. All four agree
 on all 67. Failed first by accident (a tuple returned where bytes were
@@ -13842,7 +13842,7 @@ table, CR, unquoted name). FORMATS.md, *uuencode*.
 
 ### The union of two alphabets is not one alphabet
 
-Widening to `0x20..0x7d` made `tools/run_uu.py`'s multi-part cases
+Widening to `0x20..0x7d` made `tests/harness/run_uu.py`'s multi-part cases
 **fail** (`posted.uu`, `split.uu.001` read their mail headers as data). So
 the alphabet narrows per DOCUMENT: `unc_uu_line_is_data` returns a mask of
 possible tables, the walk ANDs them, a line fitting neither is mail.
@@ -13945,7 +13945,7 @@ emulated tiers; a 278,896 B fork takes its peak heap from 65,152 B to
 83,552, measured; at the bases re-taken 2026-10-09 both 512 KB lanes refuse
 it, 197,864 and 293,264 B, short by 96,664 and 1,264 — FORMATS.md,
 *StuffIt 5's method 14*). **The branch is worth less than the tallies.**
-The archive is generated in `ci.sh` and graded by `tools/run_sit14wrap.py`
+The archive is generated in `ci.sh` and graded by `tests/harness/run_sit14wrap.py`
 (the `run_now.py` shape): encoder, `unar` and CLI agree on all five
 entries, 278,896 B included — the new named seed is adjudicated.
 
@@ -14135,7 +14135,7 @@ as the guard against a file of zeros — but a 96-byte file of zeros has ONE
 in its first byte. Withdrawn in BLOCKERS.md.
 
 **New smell: negative controls derived by bending a valid specimen can only
-show that each test is NECESSARY.** Lane 4 of `tools/run_sqp.py` bent all
+show that each test is NECESSARY.** Lane 4 of `tests/harness/run_sqp.py` bent all
 ten tests and passed throughout; nothing derived from a package can ask
 whether the SET is sufficient. An input never derived from one — a file of
 zeros — does. The lane carries two.
@@ -14220,7 +14220,7 @@ this build decodes** (FORMATS.md, *ZipIt's own archives*). The row stays
 parked.
 
 **But its gate had never fired**: it returns 0 by construction on every
-real run. `selftest_coupling` in `tools/run_zipit.py` now builds four
+real run. `selftest_coupling` in `tests/harness/run_zipit.py` now builds four
 one-entry zips with `tools/synth_crypt.py`'s writer and asserts what it
 discriminates on, before any specimen is read (TESTING.md, *ZipIt's own
 archives*). A hand mutation is evidence about one afternoon; a built case,
@@ -15073,7 +15073,7 @@ ENCODER**, `tools/synth_implode.py`, writing all four (nothing here
 compresses Implode); one entry is a committed fixture and the bent build
 now fails on `8k-2trees.txt`. Five bends (minimum match length, zero-filled
 window, length-63 escape, distance bias, code direction) each had to fail
-`tools/run_implode.py` first. **Graded by outside readers**: `unar`,
+`tests/harness/run_implode.py` first. **Graded by outside readers**: `unar`,
 deark, the plaintext, the stored CRC-32, and for wild entries the CRC-32
 **PKZIP itself** stored. Adding `"Implode"` to `make_manifests.py`'s
 `DEARK_METHODS` (left undone on purpose by DECISIONS.md 2026-09-22)
@@ -15081,7 +15081,7 @@ adjudicated the fixtures before any decoder existed; `ORACLE_OUT_OF_SCOPE`
 is empty for the first time.
 
 **The name gate's criterion inverted, so it was re-proved.**
-`tools/run_zipit.py` asked a gap question that returned 0 on every run;
+`tests/harness/run_zipit.py` asked a gap question that returned 0 on every run;
 it now requires the LISTED leaf of all 23 fields to BE the FileName, and
 yesterday's behaviour (a stub answering with the zip's own leaf) fails it
 in 3 of 5 built cases. 119 of 119 forks byte-identical to `unar` (was
@@ -16837,7 +16837,7 @@ sum fixes the fork order (it rotates; resource fork first); the `.hex`
 
 **Two departures from hexbin, each a file it loses**: hexbin waits for the
 "(This file" banner before the `#TYPECREA$FFFF` line, and two 1985 files
-have none (`tools/run_hecx.py` asserts hexbin fails them); and it reads a
+have none (`tests/harness/run_hecx.py` asserts hexbin fails them); and it reads a
 `.hcx` line's count BEFORE restoring mailer-stripped spaces, so a
 one-character line reads its count 2 too high — seven lines of BinHex
 2.0's own `.hcx` are such, once stripped.
@@ -19153,7 +19153,7 @@ open "@@" (the high byte of a resource fork's data offset, Inside
 Macintosh: More Macintosh Toolbox, "Resource File Format", zero under 16
 MB); and only the first line is examined (a first version took a later
 line, which hexbin never would). A `.dl` whose fork's first byte is not
-zero is no longer read here; `tools/run_hecx.py` asserts both halves.
+zero is no longer read here; `tests/harness/run_hecx.py` asserts both halves.
 
 **The sum is compared on 16 bits** (WITHDRAWN 2026-10-25: SUMacC's own
 readers compare 32, *the writer that was in 4.3BSD*), as `dl.c`'s
@@ -19199,7 +19199,7 @@ all it writes. `fromhex` has no line rule (it skips everything outside
 for a digit where hexbin and this skip it; `run_hecx.py` asserts that
 difference.
 
-**The tests can fail.** `tools/run_hecx.py` builds `tohex` and `fromhex`
+**The tests can fail.** `tests/harness/run_hecx.py` builds `tohex` and `fromhex`
 from `reference/sumacc` (`tools/fetch_references.sh`), grades every `.dl`
 case against both and hexbin, writes its forks with `tohex` and asserts its
 own generator agrees at 66 characters. The 16-bit build fails the
@@ -20197,7 +20197,7 @@ it saying they "fail cleanly". It is now one block of records,
 `[offset][length][path]`, that starts at 512 B on the first folder and
 doubles, as XADStuffIt5Parser.m keeps the same map in a dictionary.
 
-**Evidence.** `tools/run_sit5dirs.py` (TESTING.md, *StuffIt 5's folders*):
+**Evidence.** `tests/harness/run_sit5dirs.py` (TESTING.md, *StuffIt 5's folders*):
 301 folders, and 81 folders holding about 17 KB of paths. The build before
 this lost 45 files and 5; `unar` and this build lose none. Nothing in the
 corpus came near: 32 StuffIt 5 archives, 12 folders at most, 6 deep.
@@ -20526,7 +20526,7 @@ source's forks, 114-117 in all of them. 114-117 read as Macintosh dates:
 2021-09-22 in every `.sit` fork, two days before the forum post, so the
 two were made from copies two years apart. First written here as a
 hypothesis; the repository already measured it. Those bytes are vouched
-for by hampa's CRC alone; `tools/run_mar.py` counts the forks that rely on
+for by hampa's CRC alone; `tests/harness/run_mar.py` counts the forks that rely on
 it rather than hiding them.
 
 **The licence.** mac-utils and mar 0.2.0 are GPL-2.0-only, which cannot
@@ -20642,7 +20642,7 @@ and a file's type lost when the emulator was closed without the volume
 put away (Mini vMac's lazy write-back; `arcmac.Session.shutdown` clicks
 System 6's Special menu, which on System 7 is elsewhere).
 
-**Evidence.** `tools/run_mar.py` (TESTING.md, *MAR*). Four engine mutants
+**Evidence.** `tests/harness/run_mar.py` (TESTING.md, *MAR*). Four engine mutants
 fail it: CRC never checked, inited cleared on the top item, lock ignored, and
 headers not counted as progress — which the first version of the reader
 did, so 2,000 empty files never called back; found reading the code
@@ -20765,7 +20765,7 @@ before (the one pair sharing an image, BinHex over MacBinary, is two
 envelopes, which keep the whole bundle); LZ4 over MAR, both `ovl_zipold`,
 gave "Archive damaged." The copy now goes in the inner layer's slot.
 
-**Evidence.** `tools/run_lz4.py`: 165 liblz4 frames (every block size,
+**Evidence.** `tests/harness/run_lz4.py`: 165 liblz4 frames (every block size,
 linked and independent, each checksum, content size, levels 0 to 12,
 over a MAR, incompressible bytes, long runs and 4.7 MB) byte for byte;
 concatenated, skippable and empty frames; 24 damaged, cut and foreign
@@ -24515,7 +24515,7 @@ read); fetched into the specimen cache and copied off its HFS volume, its
 0 and nothing failed, 2,329 and 1,118 forks identical to `unbak.py`'s with
 no file either side has alone, 1,893 items' Finder info and dates as
 Kaitai's parser reads them, every disk opened once and in order, heap
-8,488 B — under the sanitizers too. `tools/run_abk.py` grades them when the
+8,488 B — under the sanitizers too. `tests/harness/run_abk.py` grades them when the
 cache holds them, with a control: the 38-disk set less disk 19 must not
 extract clean, and does not.
 
@@ -24799,10 +24799,10 @@ Font Association Table*, is the table's layout (Text-271, fetched by
 and `NFNT` byte for byte, the FOND's header and tables but for the
 association table, whose ids the Installer renumbered and whose entries it
 sorted (Palatino's iFND lists italic before bold, as Hoefler Text's FOND
-lists bold italic before italic), and each file's length equal (`tools/run_tome.py`, section 4,
+lists bold italic before italic), and each file's length equal (`tests/harness/run_tome.py`, section 4,
 with two controls). deark's `macrsrc` module, run in `tools/sandbox.py`,
 reads every resource of all 14 files the six specimens make (9 suitcases,
-5 files) as `tools/run_tome.py`'s own parser does: an independent reading of
+5 files) as `tests/harness/run_tome.py`'s own parser does: an independent reading of
 the map this engine writes. The four GX `ircp` files (`~/.cache/macextract/specimens/ircp/`, not restorable
 here): every `sfnt` equal to the installed one, each FOND equal but for its
 association ids. `Compressed Network Items` (records against the 7.5.0 disk
@@ -25544,8 +25544,14 @@ listed function is declared from the lists, and
 `tools/overlay/mkforwards.py`, which reads declarations as text for the
 host vector, synthesises the listed ones the same way); an image's entry
 point and `EXCLUDE` line (a probe file is in an image AND resident, so
-exclusion is not derivable from membership); a format's own harness line
-in `ci.sh`; and its docs.
+exclusion is not derivable from membership); and its docs. **Its
+harnesses** are files in `tests/harness/`, which `ci.sh` runs in one
+loop, each named by a `Harness:` line in the header of the source it
+grades, which `tools/check_harnesses.py` holds in both directions (the
+maintainer's two suggestions, the same day): removing a format's files
+shows which tests go with them, and a harness left behind fails. The
+format list itself could not name them, because harnesses and formats are
+not one to one (StuffIt has four, half the formats none).
 
 **Measured free**: the shipped eager build, the lazy build and every image
 are byte-identical to 57d96dc0's (two builds of one tree differ only in

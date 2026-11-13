@@ -250,7 +250,7 @@ def adjudicate(fixture, keep=False):
     # line raised NameError on every CLEAN run — after the verdict had been
     # printed, so the comparison was right and the exit code was 1 anyway.
     # Nothing caught it because `ci.sh` replays this verdict by content
-    # (`tools/run_superdisk.py`) and never runs the harness. Found
+    # (`tests/harness/run_superdisk.py`) and never runs the harness. Found
     # 2026-09-22 by re-running it for the `-a` change.
     print("superdisk: screenshots in %s" % os.path.join(SHOTS, tag))
     return bad or not seen
@@ -479,7 +479,7 @@ def on_mac(mem="4M", system="System6.hfv"):
     run is graded with `run.py --expect`: the aggregate on screen
     against this engine's own Linux output, whose SuperDisk! side is
     adjudicated fork by fork by the archives' own self-extractors
-    (`--adjudicate`, replayed offline by `tools/run_superdisk.py`).
+    (`--adjudicate`, replayed offline by `tests/harness/run_superdisk.py`).
     """
     work = tempfile.mkdtemp(prefix="sdmac-")
     bad = ran = 0

@@ -17,7 +17,7 @@
  * token, literals, a 2-byte little-endian offset and a match length of 4
  * or more. reference/notes/xxhash_spec.md for xxHash-32, every checksum
  * the frame carries. Written from those three documents; graded against
- * the reference library's own frames (tools/run_lz4.py).
+ * the reference library's own frames (tests/harness/run_lz4.py).
  *
  * Not read: the legacy frame (0x184C2102), which mar 0.2.0 does not read
  * either, and a frame that names a dictionary — there is none to give it
@@ -32,6 +32,8 @@
  * flat 64 KB (DECISIONS.md 2026-11-07, *the ring that grows with the
  * output*; OPEN_ITEMS.md). It grows only at a flush boundary, where it has
  * not wrapped and a straight copy moves the window.
+ *
+ * Harness: tests/harness/run_lz4.py
  *
  * SPDX-License-Identifier: 0BSD
  */

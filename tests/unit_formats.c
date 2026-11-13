@@ -1347,7 +1347,7 @@ static void test_sit(void)
          * decodes. The ids above are the refused case, and it is not a
          * guess either — `MacPaint 1` carries a 'DCMP' and writes its
          * real id of 4, which Aladdin's own Engine refuses to unstuff.
-         * tools/run_sitopt.py grades both against five archives 2.0.1
+         * tests/harness/run_sitopt.py grades both against five archives 2.0.1
          * wrote. */
 
         for (i = 0; i < (int)(sizeof cases / sizeof cases[0]); i++) {
@@ -1742,7 +1742,7 @@ static void test_zip_comment(void)
 /* A zip BEHIND something else — a self-extracting archive, whose first
  * bytes are executable code. Nothing in the corpus is one and nothing
  * here can be: the five specimens ZipIt wrote are not committable
- * (fixtures/SOURCES.md), and `tools/run_zipit.py` grades those. What is
+ * (fixtures/SOURCES.md), and `tests/harness/run_zipit.py` grades those. What is
  * pinned here is the probe's reasoning, which no whole archive isolates:
  * the claim rests on the end-of-central-directory record alone, and each
  * of the five things that record has to agree with is bent in turn.
@@ -2092,7 +2092,7 @@ static void test_zip_reduce_rules(void)
 }
 
 /* LZH/LHA, in scope since 2026-08-23. The corpus and lhasa's collection
- * cover the decoders (tools/run_lzh.py, fixtures/manifests); what a
+ * cover the decoders (tests/harness/run_lzh.py, fixtures/manifests); what a
  * whole archive cannot isolate is covered here: every method byte the
  * probe must accept and reject, the three header levels a hand-built
  * archive can carry, the per-entry CRC failure, and MacLHA's MacBinary
@@ -4843,7 +4843,7 @@ static void test_cptseg_probe(void)
 /* whose resource fork runs from disk 1 into disk 2, one more on each   */
 /* of disks 2 and 3. Then the set with a disk missing, with a damaged   */
 /* item, and with a fork out of order. The real disks are graded by    */
-/* tools/run_abk.py; these pin what each verdict is.                   */
+/* tests/harness/run_abk.py; these pin what each verdict is.                   */
 /* ------------------------------------------------------------------ */
 #define ABKT_DISK 0x1000u
 static void abkt_disk(uint8_t *d, int n, int tot, uint32_t stamp,
@@ -5255,7 +5255,7 @@ static void test_applelink(void)
 /* AppleLink packages: SqueezePlay (src/fmt_sqp.c), M56               */
 /*                                                                    */
 /* The codec and the container are graded on real and synthesised      */
-/* packages by tools/run_sqp.py and the diff suite; what is here is    */
+/* packages by tests/harness/run_sqp.py and the diff suite; what is here is    */
 /* the version-1 container at its smallest, so that every test the     */
 /* SNIFFER makes can be bent one at a time in a few bytes. The record  */
 /* below is a STORED fork, because the probe does not decode and this  */
@@ -6234,7 +6234,7 @@ static void test_winzip_aes_pieces(void)
 }
 
 /* btoa: both framings, on streams the reference encoder produced for
- * "Mac\n" (tools/run_btoa.py grades the real thing against the real
+ * "Mac\n" (tests/harness/run_btoa.py grades the real thing against the real
  * encoder; these two are here so `ci.sh` covers the format on a clone
  * with no reference/ directory). The version 4 and version 5 lines
  * differ in more than the header: v5 carries a per-line checksum
@@ -6464,7 +6464,7 @@ static void test_mar_comment_listing(void)
  * fork the format fills with zeros, a copy reaching back into the block
  * before — then each way a stream or a header must be refused. The tokens
  * are written by hand from the tables in fmt_tome.c's header comment;
- * tools/run_tome.py grades the real thing against deark and Apple's
+ * tests/harness/run_tome.py grades the real thing against deark and Apple's
  * Installer. */
 #include "fmt_tome_priv.h"
 
@@ -6990,7 +6990,7 @@ static void test_btoa(void)
     }
 }
 
-/* base64 and MIME. tools/run_mime.py grades both against munpack and
+/* base64 and MIME. tests/harness/run_mime.py grades both against munpack and
  * deark; these are here so `ci.sh` covers them on a clone with no
  * reference/ directory, and they are hand-built rather than generated:
  * "Mac\n" is `TWFjCg==`, which anyone can check by eye. */
