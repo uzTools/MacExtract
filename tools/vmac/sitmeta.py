@@ -144,8 +144,10 @@ def parse_sit5(blob):
         if isdir:
             nfiles = struct.unpack(">H", blob[hp:hp + 2])[0]
             hp += 2
-            if dlen == 0xFFFFFFFF:                 # the marker entry
-                i += 1
+            # The marker entry; like src/fmt_sit5.c, it does not count
+            # against the total (until 2026-11-13 it did, and the last
+            # entry of an archive holding a folder went unwalked).
+            if dlen == 0xFFFFFFFF:
                 pos += hsize
                 continue
         else:
@@ -841,6 +843,12 @@ def shutil_copy(a, b):
 # StuffIt 5's second block, read by StuffIt Expander 5.5 (Mac OS 9)
 # ------------------------------------------------------------------
 
+# The type, creator and Finder flags planted in a version 3 file's block:
+# b+4 'TYP3', b+8 'CRE3', b+12 0x004C (isShared and colour 6 — no bit the
+# Finder acts on by itself).
+V3_INFO = b"TYP3CRE3\x00\x4c"
+
+
 def sit5_sentinel(blob, last=36, files_only=False):
     """A copy of a StuffIt 5 archive whose second blocks carry sentinels:
     for a file, bytes +14..35 (after type, creator and flags); for a
@@ -850,14 +858,24 @@ def sit5_sentinel(blob, last=36, files_only=False):
     it carries, are untouched."""
     out = bytearray(blob)
     for e in parse_sit5(blob):
-        if e["ver"] != 1:
-            raise SystemExit("sitmeta: a version %d entry; only 1 is "
-                             "measured" % e["ver"])
+        if e["ver"] not in (1, 3):
+            raise SystemExit("sitmeta: a version %d entry; only 1 and 3 "
+                             "are known" % e["ver"])
         if files_only and e["kind"] == "dir":
             continue
         at = e["off"] + e["b2"]
         page, first = (0x02, 4) if e["kind"] == "dir" else (0x01, 14)
-        for k in range(first, last):
+        # A version 3 block is 32 bytes (XADStuffIt5Parser.m skips 18, not
+        # 22, after the Finder flags), and the one writer here that makes
+        # it, StuffIt 5.2 for Linux, leaves type, creator and flags zero —
+        # so they are planted too, as values a Finder field cannot
+        # otherwise hold, and the pattern runs to the block's end.
+        end_k = last
+        if e["ver"] == 3:
+            end_k = min(last, 32)
+            if e["kind"] == "file":
+                out[at + 4:at + 14] = V3_INFO
+        for k in range(first, end_k):
             out[at + k] = k if k % 2 else page
         # b+2 is a CRC-16/ARC of the whole second block, to the start of
         # the data, with b+2..3 zeroed — measured 2026-10-17 on all 272
@@ -915,10 +933,12 @@ def sit5_run(archive, outdir, plain=False, last=36, files_only=False):
                     "b+%d" % (o - b2) if o >= b2 else "@%d" % o
                     for o in src[:2])))
         f = hfscat.fields(hit[0])
-        print("  %-4s %s\n       info  %s\n       xinfo %s\n       "
-              "lock %d bkdat %08x" % (
-                  e["kind"], name, " ".join(out[:8]), " ".join(out[8:]),
-                  rec[2] & 1 if want == hfscat.FILE else 0, f["bkdat"]))
+        print("  %-4s v%d %s\n       info  %s\n       xinfo %s\n       "
+              "lock %d crdat %08x mddat %08x bkdat %08x" % (
+                  e["kind"], e["ver"], name, " ".join(out[:8]),
+                  " ".join(out[8:]),
+                  rec[2] & 1 if want == hfscat.FILE else 0, f["crdat"],
+                  f["mddat"], f["bkdat"]))
     return 0
 
 

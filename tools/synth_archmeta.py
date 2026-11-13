@@ -332,6 +332,24 @@ def sit5_meta(path, break_crc=False):
     return bytes(blob), want
 
 
+def sit5v3_meta(path):
+    """The sentinel copy of the version 3 archive (`stuff` 5.2 for Linux)
+    Expander 5.5 was run on, 2026-11-13: TYP3/CRE3/0x004C at b+4..13 and
+    the page pattern to b+31. Expander restored none of it — every file
+    TEXT/ttxt, its own default — so the engine states no type, creator,
+    flags, FInfo or FXInfo for any entry (DECISIONS.md 2026-11-13, *the
+    version 3 that Linux wrote*)."""
+    import sitmeta
+    blob = sitmeta.sit5_sentinel(open(path, "rb").read())
+    want = {}
+    for e in sitmeta.parse_sit5(blob):
+        assert e["ver"] == 3
+        name = "/".join(x.decode("mac-roman") for x in e["path"])
+        want[name] = dict(finder="00000000/00000000 0000", finfo="-",
+                          fxinfo="-")
+    return blob, want
+
+
 # ------------------------------------------------------------------
 # Now Compress: +38..53, +62, +66..81 of every record
 # ------------------------------------------------------------------

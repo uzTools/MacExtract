@@ -6,8 +6,8 @@ and where the detail lives. Numbers are in FORMATS.md, reasoning in
 DECISIONS.md, how a suite runs in TESTING.md, what is still missing in
 OPEN_ITEMS.md. A row is one sentence and a citation.
 
-**The suite is 993 fixtures**, byte-exact against `unar` and, where `unar`
-fails, `macunpack`; 9,930 robustness variants clean. The Macintosh tiers and
+**The suite is 994 fixtures**, byte-exact against `unar` and, where `unar`
+fails, `macunpack`; 9,940 robustness variants clean. The Macintosh tiers and
 their tallies are BLOCKERS.md's (*Status*); per-tier tables are FORMATS.md's.
 
 | Milestone | Delivered | Detail |

@@ -7,7 +7,7 @@
    withdrawn claim to BLOCKERS.md, numbers to FORMATS.md).
 
 Nothing here stops the engine or the CLI, which are byte-exact against the
-oracle across 993 fixtures in `./ci.sh`.
+oracle across 994 fixtures in `./ci.sh`.
 
 **Filing something here is a decision to stop looking, so ask first.** Each
 of these questions has emptied a row at least once (BLOCKERS.md, *Withdrawn
@@ -103,7 +103,7 @@ not move the licence; only the second does.
 
 ### What grades a fork
 
-`unar` 1.10.8 grades most of the 993 fixtures' manifests; `macunpack` and
+`unar` 1.10.8 grades most of the 994 fixtures' manifests; `macunpack` and
 deark grade the forks it fails (TESTING.md, *The oracle*). The writers' own
 readers already grade StuffIt Deluxe 2.0.1's output, SuperDisk!'s modules,
 DiskDoubler's methods 3–5, Now Compress, Private File, AppleLink packages
@@ -172,7 +172,7 @@ or measurement before it is read.**
 | format | stored, not read | oracle |
 |---|---|---|
 | MacBinary inside MacLHA | the Get Info comment, after both forks | none; ZipIt 1.4 writes none even for a file that has one (2026-11-06); needs a second decode or a sink contract change, the maintainer's call |
-| StuffIt 5 | a version-3 entry's Finder info; no version-3 entry here | Expander 5.5 on one |
+| StuffIt 5 | version 3's 32-byte block, none of which is read: Expander 5.5 restores none of it, measured on the one writer of it found, `stuff` 5.2 for Linux (type, creator, flags zero; b+16 the modification date again). No Macintosh writer here makes version 3: DropStuff 5.0.1, Deluxe 7.0.3 adding an item, and every archive on this machine (377) are version 1 (DECISIONS.md 2026-11-13, *the version 3 that Linux wrote*) | Expander 5.5 on a Macintosh-written version 3 entry |
 | LZH | OS/2's 0x7f/0xff headers; a level 0/1 name's bytes after a NUL | `lsar`; no specimen of the second |
 | AppleSingle entry 11 | ProDOS's access word | none; RFC 1740 gives its size, not its bits |
 

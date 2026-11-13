@@ -33,6 +33,16 @@ manifest either and is graded by `tools/run_meta.py` alone (DECISIONS.md
 2026-10-18, *the comment Spotlight kept*); no real archive carrying such
 a comment was found.
 
+**One fixture was made here and is kept in the cache.**
+`sit5v3-stuff520.sit` is the only StuffIt 5 archive whose entries are
+version 3: Aladdin's own `stuff` 5.2.0.603 for Linux (2001,
+`stuffit-520.603-linux.tar.gz`, sha256 `58993a17…c0730d78e`, Discmaster
+file 30804, APC March 2002 CD 1), run in `tools/sandbox.py` on 2026-11-13
+as `stuff --name=sit5v3-stuff520.sit "Top file" Folder "Bigger file"`. It
+stamps the time it ran, so the bytes cannot be made again; a
+`derived:cache:` URL takes them from `~/.cache/macextract/` (DECISIONS.md
+2026-11-13, *the version 3 that Linux wrote*).
+
 | name | sha256 | size | url |
 |---|---|---|---|
 | 12x24fkey.bin | c90c11f10b1724b679b4db0495f2a8740f7f57c6d7abae3e8dd87dcb1c25c836 | 562 | http://www.nic.funet.fi/pub/mac/fkey/12x24fkey.bin |
@@ -1050,3 +1060,4 @@ a comment was found.
 | tomeparts-wild-install3.bin | 2e01fa92a37b4e94696428ffd5a3ad731b0bfcc25bef4c54cf6de357b6d1785d | 1381760 | derived:hfsvol:macosinstall755.dsk:m:files:Install:Install Disk 3:Installation Tome 3 |
 | tome-wild-modemscripts | 7c02eb63130268505a79f3922b079b15f410c2aebed296379b63a35ff76cc4df | 230867 | derived:hfsvol:../macos86/MacOS8.6.iso:r:Full Install Pieces:Software Installers:ARA Client Only:ARA Client Install 2:Modem Scripts Archive |
 | tome-wild-websharing | 8bc5b0d1e727fbc1b9b0710370cda1beee456cc788a0f2334a6586c996d625d7 | 588005 | derived:hfsvol:../macos86/MacOS8.6.iso:r:Full Install Pieces:Software Installers:Personal Web Sharing:WebSharing.Tome |
+| sit5v3-stuff520.sit | 806ad14fb16324e9891d05e31207bef24968722437e3ada90a41b64f6304ff8c | 2218 | derived:cache:specimens/sit5v3/sit5v3-stuff520.sit |

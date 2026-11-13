@@ -609,6 +609,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-13 (the helper beside MacExtract) — a helper in MacExtract's own folder said "MacExtract could not be found" on System 7.5.5 and 6.0.8, its lookup skipping every application in its own folder; fixed for 0 B. Mac OS 9.2's File Exchange honours the empty `'open'` too; the helpers still hand on and draw their icons on 6.0.8 and 3.0
 - 2026-11-13 (the registration that came last) — on System 7.5.5 after a desktop rebuild, of two applications of one creator the one catalogued last opens its documents, whatever either date says; a helper opened by itself says it took its creator back and does not; on 6.0.8 and 3.0 it says "could not register itself (error -50)"
 - 2026-11-13 (the icon types only the helper claims) — DiskDoubler's 40 single-file types, `DD01`, `DD02`, `DDF0`–`DDF7`, `DDFL` and `DDf0`–`DDfs`, leave MacExtract's bundle for the `DDAP` helper's alone, which now hands on what its own bundle claims; +144 B of heap on every tier, +32 B of every helper's code
+- 2026-11-13 (the version 3 that Linux wrote) — StuffIt 5's version 3 entries exist: Aladdin's `stuff` 5.2 for Linux writes nothing else, and StuffIt Expander 5.5 restores none of their 32-byte second block, so the reader stops taking type, creator and flags from it; the ovl_stuffit image −16 B
 
 ---
 
@@ -25927,3 +25928,60 @@ A drop on MacExtract's icon goes by its `'****'` claim and was not re-run.
 Two corrections came out of the same reading: DECISIONS.md 2026-09-22,
 *the magic that was a length*, and docs/formats/diskdoubler-container.md,
 *The header is written twice* (BLOCKERS.md, *Withdrawn claims*).
+
+## 2026-11-13 (the version 3 that Linux wrote) — StuffIt 5's version 3 entries exist: Aladdin's `stuff` 5.2 for Linux writes nothing else, and StuffIt Expander 5.5 restores none of their 32-byte second block, so the reader stops taking type, creator and flags from it; the ovl_stuffit image −16 B
+
+**Where version 3 came from (measured).** Every StuffIt 5 entry on this
+machine was version 1: 377 archives in the cache, the corpus and the share
+(a header scan, 2026-11-13), among them the Macintosh writers already run
+here — DropStuff 5.0.1 on Mac OS 9.2 (three encrypted archives,
+2026-08-26) and StuffIt Deluxe 7.0.3 adding an item by Apple event
+(`sitcomment/spec703b`, `spec703c`, 2026-10-06). No new Macintosh writer
+was booted. **Aladdin's own `stuff` 5.2.0.603 for Linux** (2001, statically
+linked i386; Discmaster, APC March 2002 CD 1), run in `tools/sandbox.py`,
+writes **every** entry version 3 — plain files, a symlink (followed), a
+read-only file, a 67-character name, folders two deep, encrypted with
+`--password`. It reads no Finder metadata (no option for one, MacBinary
+input stored as data) and mangles a non-ASCII name (each UTF-8 byte
+becomes a two-byte character).
+
+**The layout, as written.** The block is 32 bytes, as XADStuffIt5Parser.m
+skips (18 after the flags, not 22) and The Unarchiver's notes say
+(`reference/notes/sit5_specs_theunarchiver.md`: b+32 *"not included in
+version 3"*, b+16 *"a date value in version 3?"*). Here: b+2..3 the same
+CRC-16/ARC as version 1 (6 of 6; a folder's block all zero, its CRC 0),
+b+4..15 zero, **b+16 the entry's modification date again** (the first
+block's @14), b+20..31 zero. deark's `stuffit.c` skips 22 whatever the
+version, which would misread the resource fork fields of a version 3 file
+that had one; `stuff` writes none, so that is not exercised.
+
+**What Expander 5.5 does with it (measured, Mac OS 9.2, `sitmeta.py
+--sit5`, one boot).** A sentinel copy of `sit5v3-stuff520.sit`: `TYP3`,
+`CRE3`, 0x004C at b+4..13 and the page pattern to b+31, every block's CRC
+recomputed. All six entries extracted, no alert; **every file came back
+`TEXT`/`ttxt`** (Expander's own default), flags clear but the Finder's
+hasBeenInited, no location, `FXInfo` zero; no folder took its planted
+`DInfo` either; both dates
+from the first block, not b+16. Frames and log:
+`~/.cache/macextract/specimens/sit5v3/expander55-sentinel/`.
+
+**Consequence.** `src/fmt_sit5.c` takes type, creator and flags from the
+block at version 1 only; at version 3 it states nothing, as before for the
+rest of the block. Not measured: whether Expander would read a version 3
+block whose `flags2` set some bit `stuff` never sets (hypothesis only; no
+writer of one is known). `tools/run_meta.py`'s `am-sit5v3` holds it through
+`l --finder`, and fails six ways on the previous engine (`TYP3/CRE3 004c`
+on each file, the planted DInfo words on each folder). `sit5v3-stuff520.sit`
+is the corpus's first version 3 fixture, kept in the cache because its
+writer stamps the time it ran (`derived:cache:`, fixtures/SOURCES.md).
+
+**The walker it exposed.** `sitmeta.parse_sit5` counted the marker entry
+after each folder against the archive's total, so it stopped one entry
+short per folder: the 2026-10-17 sentinel copy of `derived-FloatingNotes.sit`
+planted 9 of its 10 entries (FORMATS.md corrected in place). Fixed to
+count as the engine does; `am-sit5` now holds all 10.
+
+**Cost (retake_budgets.py, run_tiers.py --check).** The `ovl_stuffit`
+image 28,834 → 28,818 B (−16), the bundle −16, every StuffIt grant +16 B;
+the eager configuration's CODE −20 and A5 +20 (layout). No heap, no stack
+added (two loads fewer); every tier's tally unchanged.

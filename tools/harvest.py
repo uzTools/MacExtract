@@ -321,6 +321,23 @@ def restore():
         # System images: fetched by tools/vmac/setup.sh, never
         # committed. Absent, the fixture simply cannot be restored,
         # which is the position every fixture is in on a fresh clone.
+        # `derived:cache:<path>` is an archive this project MADE, with a
+        # writer that stamps the time it ran, so it cannot be made again
+        # byte for byte: the bytes are kept in the specimen cache
+        # (~/.cache/macextract, never bulk-cleared) and SOURCES.md says
+        # how they were made. Absent, the fixture cannot be restored.
+        if url.startswith("derived:cache:"):
+            src = os.path.join(os.path.expanduser("~/.cache/macextract"),
+                               url.split(":", 2)[2])
+            path = os.path.join(FIXDIR, name)
+            if os.path.exists(src) and \
+                    sha256_bytes(open(src, "rb").read()) == sha:
+                shutil.copyfile(src, path)
+                ok += 1
+            else:
+                print(f"  no cached specimen for {name}: {src}")
+                bad += 1
+            continue
         if url.startswith("derived:hfsvol:"):
             _, _, image, mode, hfspath = url.split(":", 4)
             mode = "-" + (mode or "m")

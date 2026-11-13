@@ -2157,7 +2157,7 @@ decoder, `src/fmt_sqp_probe.c` the sniffer, `tests/harness/run_sqp.py` the suite
 (TESTING.md, *AppleLink packages: SqueezePlay*). Every LZW fork is a Unix
 `compress` code stream, decoded identically by **`gzip`** (*The codec*).
 The sniffer answers
-*AppleLink package* for **exactly the 7 of 1,015 corpus files that are
+*AppleLink package* for **exactly the 7 of 1,016 corpus files that are
 packages and for nothing else** (re-measured 2026-11-10 with Apple Backup's
 probe in the sniffer; no file's answer changed but the six Apple Backup
 disks'), a sweep
@@ -2631,7 +2631,7 @@ every stream ends with its output complete and no bit left; 1,030 forks
 equal deark's, 3 differ where deark's distance widens one position early,
 168 deark cannot decode; 161 installed files equal resource for resource,
 6 installed from another release, 2 differ in `sysz` and MacTCP's `DRVR` 22
-and `ctrp` 130 (not looked at). No other of the 1,015 corpus files sniffs
+and `ctrp` 130 (not looked at). No other of the 1,016 corpus files sniffs
 differently, nor any of 6,009 other files (`reference/`, this tree, the
 specimen cache); none of 5,639 non-archives is a Tome.
 
@@ -2809,10 +2809,11 @@ location, view and script byte are QuickFiler's own.
 
 ### StuffIt 5, read by StuffIt Expander 5.5 (Mac OS 9.2)
 
-`sitmeta.py --sit5`, on `derived-FloatingNotes.sit` (9 entries): a
-sentinel copy and the control. Offsets from an entry's second block
-(`src/fmt_sit5.c`); every corpus entry is version 1, so the version-3
-block is not measured.
+`sitmeta.py --sit5`, on `derived-FloatingNotes.sit`: a sentinel copy and
+the control. It holds 10 entries; the 2026-10-17 copy planted 9, its walker
+counting the marker after each folder (corrected 2026-11-13). Offsets from
+an entry's second block (`src/fmt_sit5.c`). Every entry written on a
+Macintosh here is version 1; version 3 is below the table.
 
 | block | file | folder |
 |---|---|---|
@@ -2824,6 +2825,15 @@ In both runs the two files below the first folder level lost
 hasBeenInited and got a location held in no header, while the four
 directly in the top folder kept theirs; that depth is the rule is a
 hypothesis, on two files.
+
+**Version 3** (2026-11-13, a sentinel copy of `sit5v3-stuff520.sit`, 6
+entries, written by `stuff` 5.2 for Linux): the block is **32 bytes**, its
+b+2..3 the same CRC (6 of 6 as written). Planted `TYP3`/`CRE3`/0x004C at
+b+4..13 and the pattern to b+31: **Expander 5.5 restored none of it** —
+every file `TEXT`/`ttxt`, no flag, location or `FXInfo` of the block's,
+dates from the first block. As written, b+4..15 are zero and b+16 is the
+modification date again. The engine reads nothing of it
+(DECISIONS.md 2026-11-13, *the version 3 that Linux wrote*).
 
 ### The envelopes: what each standard holds, and what reads it here
 
@@ -2868,7 +2878,7 @@ Archives written and read back by libNeoAppleArchive; StuffIt X, the three
 RAR signatures, Cabinet, Zoo, ARJ and lzip headers identified by deark;
 Zstandard and lrzip on their published magics; and `synth-os9-rar.rar`.
 **No fixture changes format in
-1,015 corpus files**: each manifest's fixture sniffs as its oracle names it,
+1,016 corpus files**: each manifest's fixture sniffs as its oracle names it,
 and the only one that went to `unknown` is that RAR. The CLI before the
 change fails 52 of the 97 checks (TESTING.md, *Archives this engine does
 not have*).
@@ -3147,7 +3157,7 @@ joiner matches on all 26 identity bytes anyway.
 
 ## Hardening
 
-- Differential: 993 fixtures byte-exact against `unar` manifests (both
+- Differential: 994 fixtures byte-exact against `unar` manifests (both
   forks + type/creator + Finder flags), `./ci.sh`; the DiskDoubler corpus's
   manifests are built from the files it was made from rather than from a
   decoder (TESTING.md). `run_diff.py` prints the number it ran, plus two
@@ -4279,7 +4289,7 @@ between the shipped pair against 116,720 B between the probe pair**, both
 the probe pair has not been re-measured, so the 320 B is that
 day's difference, not today's.
 
-The bundle is **211,092 B** — the nineteen images sum to 210,844 B, so its
+The bundle is **211,076 B** — the nineteen images sum to 210,828 B, so its
 index costs **248 B** (`tools/budgets.txt` `BUNDLE`, `IMAGE_*`): a
 4-byte header, 12 bytes of directory per image and padding of each image to
 a multiple of 4 — the padding is why the index is not a constant. The
@@ -4387,11 +4397,11 @@ since 2026-10-09 with `run_tiers.py --check` moving no tally.
 | MAR | zipold, codecs | <!-- gain: zipold codecs -->+152,886 B (arithmetic: no MAR fixture is in the Mac sample) |
 | Apple Backup | zipold, codecs | <!-- gain: zipold codecs -->+152,886 B (arithmetic: no Apple Backup set is in the Mac sample) |
 | Installer Tome | zipold, codecs | <!-- gain: zipold codecs -->+152,886 B (arithmetic: no Tome is in the Mac sample) |
-| StuffIt, StuffIt 5 | stuffit, ciphers, codecs | <!-- gain: stuffit crypt codecs -->**+140,850 B** (measured), and <!-- gain: stuffit codecs -->**+150,122 B** for a StuffIt 5 archive whose header carries no password hash (measured, 2026-11-03) |
+| StuffIt, StuffIt 5 | stuffit, ciphers, codecs | <!-- gain: stuffit crypt codecs -->**+140,866 B** (measured), and <!-- gain: stuffit codecs -->**+150,138 B** for a StuffIt 5 archive whose header carries no password hash (measured, 2026-11-03) |
 | Zip, spanned zip | exo, zipold, ciphers, codecs | <!-- gain: exo zipold crypt codecs -->+113,318 B (arithmetic), <!-- gain: exo zipold codecs -->**+122,590 B** unencrypted (measured) |
-| an envelope whose payload's first bytes name its format (`unc_envelope_peek`), since 2026-11-03 | its own reader, the sniffer, and what that format keeps | <!-- gain: exo sniff zipold codecs -->**+103,870 B** for a `.tar.Z` or `.tar.gz`, and an LZW-compressed MAR, which keeps the same (arithmetic), <!-- gain: zipold sniff codecs -->**+134,166 B** for a `.mar.lz4` (arithmetic), <!-- gain: binhex sniff stuffit crypt codecs -->**+114,486 B** for a StuffIt archive in BinHex or MacBinary (measured) |
+| an envelope whose payload's first bytes name its format (`unc_envelope_peek`), since 2026-11-03 | its own reader, the sniffer, and what that format keeps | <!-- gain: exo sniff zipold codecs -->**+103,870 B** for a `.tar.Z` or `.tar.gz`, and an LZW-compressed MAR, which keeps the same (arithmetic), <!-- gain: zipold sniff codecs -->**+134,166 B** for a `.mar.lz4` (arithmetic), <!-- gain: binhex sniff stuffit crypt codecs -->**+114,502 B** for a StuffIt archive in BinHex or MacBinary (measured) |
 | an envelope whose payload's first bytes name nothing, since 2026-11-12 (DECISIONS.md 2026-11-11, *the head that named nothing*) | its own reader, the sniffer, cptdd and superdisk (the two formats only an end names), the ciphers, codecs | <!-- gain: exo sniff cptdd superdisk crypt codecs -->**+98,786 B** for a `.gz` or `.Z`, <!-- gain: zipold sniff cptdd superdisk crypt codecs -->+102,998 B for an `.lz4`, <!-- gain: binhex sniff cptdd superdisk crypt codecs -->+121,438 B for BinHex or MacBinary, <!-- gain: text sniff cptdd superdisk crypt codecs -->+117,630 B for uuencode or base64, <!-- gain: btoa sniff cptdd superdisk crypt codecs -->+126,574 B for btoa (arithmetic) |
-| any other envelope, and every segment scheme that joins to a file | the whole bundle, kept | <!-- gain: bundle -->**−26,094 B** (−29,118 B measured, before 2026-11-07) |
+| any other envelope, and every segment scheme that joins to a file | the whole bundle, kept | <!-- gain: bundle -->**−26,078 B** (−29,118 B measured, before 2026-11-07) |
 
 A change to resident code moves every row by the control's growth less the
 shipped build's; a change to an image moves only the rows that keep it — so a
@@ -4402,12 +4412,12 @@ left*).
 
 **The last row is the one no tally had shown**: a wrapper that keeps the
 bundle runs with **less** memory than a resident build would give it —
-211,092 B held against 185,408 B saved. Until 2026-11-12 that was every
+211,076 B held against 185,408 B saved. Until 2026-11-12 that was every
 envelope whose payload the peek could not name (the row above it since;
 DECISIONS.md 2026-11-11, *the head that named nothing*), and until
 2026-11-03 every envelope, and it refused `a2ps.V4.3.tar.Z` and
 `popper-1.7.tar.Z` at System 6.0.8 / 512 KB; the peek names Tar from the first
-512 bytes and the `.Z` layer is granted <!-- grant: sys6-512K exo sniff zipold codecs -->189,102 B there instead of <!-- grant: sys6-512K bundle -->59,138 B
+512 bytes and the `.Z` layer is granted <!-- grant: sys6-512K exo sniff zipold codecs -->189,102 B there instead of <!-- grant: sys6-512K bundle -->59,154 B
 (DECISIONS.md 2026-11-03, *the envelope that said what it held*). The
 heaviest envelope decode in the Mac sample is `popper-1.7.tar.Z`'s LZW at
 147,764 B.
@@ -5863,7 +5873,7 @@ compressor chose, not the format: the sample's other five StuffIt 5 fixtures
 pass, `derived-Troi-ClipSave-Plug-in1.1.sit` needing 144,690 B.
 
 **The whole corpus at both 512 KB tiers** (`run_tiers.py --shipped --list`
-over all 993 fixtures; `main` at a6668bd, 2026-11-04, re-taken the same day
+over all 994 fixtures; `main` at a6668bd, 2026-11-04, re-taken the same day
 with Arsenic's 2.5-byte table and the launch that purges nothing — grants
 298 B lower, needs up to 16 B higher,
 no tally moved — and again with MacBinary I read without padding, which
@@ -6428,7 +6438,7 @@ StuffIt Engine to work with this archive."*
 | System 7 conveniences | drag-and-drop of files, folders and whole disks; watch folders; background expansion; Apple events | an archive dropped on the application's icon opens it, whatever its type (System 7 and later, measured: DECISIONS.md 2026-08-31, *the drop the Finder does not make*); otherwise Standard File, one archive at a time; no watch folders, background expansion or Apple events |
 | Self-mounting disk images (`.img`, `.smi`) | **no, read from its own files 2026-10-11**: the `open` 128 resource lists the 21 types it accepts (`SIT!`, `SITD`, `PACT`, `HBSF`, `TEXT`, five segment types, `SPSV`, `mArc`, `m@rc`, `ZIVU`, `ZIVM`, `Gzip`, `pZIP`, `ZIP `, `fold`, `disk`, `****`) and none is a disk image; no disk-image string occurs in the application or its documents. Not run on a `.img` | no — disk images are out of scope (OPEN_ITEMS.md, Part 1) |
 | StuffIt Deluxe 2.0's Optimizers and ciphers | **measured 2026-10-11**: `Text 1` extracts, byte-identical to this engine's; the other four Optimizers and all five ciphers are refused with *"Unable to decompress some items due to use of optimizers."* | all ten (*StuffIt 2.0's pluggable modules*, above) |
-| Verification | none published | 993 fixtures byte-exact against `unar`/`macunpack` — bar the three uuencode fixtures, which `unar` cannot read at all: one is its generator's input with `hexbin` agreeing, and the two wild ones are graded by `hexbin` and by the CRCs of the archive one of them decodes to |
+| Verification | none published | 994 fixtures byte-exact against `unar`/`macunpack` — bar the three uuencode fixtures, which `unar` cannot read at all: one is its generator's input with `hexbin` agreeing, and the two wild ones are graded by `hexbin` and by the CRCs of the archive one of them decodes to |
 | Licence | free, closed | free, 0BSD; the files NOTICE lists LGPL-2.1-or-later |
 | Memory partition | **512 KB preferred, 384 KB minimum** (`SIZE` (-1), measured 2026-08-29; BLOCKERS.md) | 2,048 KB preferred, 400 KB minimum (`SIZE` (-1) of `dist/MacExtract.bin`, re-read 2026-10-25); engine peak heap per format in the matrix above |
 

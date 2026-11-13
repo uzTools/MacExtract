@@ -33,7 +33,9 @@
  *   name[namelen], then if header space remains: u16 commentlen,
  *   skip2, comment. Then a second block: u16 flags2 (bit 0 = has
  *   rsrc), skip2, u32 type, u32 creator, u16 finderflags, then skip
- *   22 (entry version 1) or 18 bytes, and when flags2 & 1:
+ *   22 (entry version 1) or 18 bytes (version 3, whose type, creator
+ *   and flags are not read: Expander 5.5 restores none), and when
+ *   flags2 & 1:
  *   u32 rsrclen, u32 rsrccomplen, u16 rsrccrc, skip2, u8 rsrcmethod,
  *   u8 passlen, key[passlen].
  * Fork data follows the header: rsrc fork first, then data fork.
@@ -401,9 +403,21 @@ int unc_sit5_extract(UncCtx *c)
          * way. The engine converts nothing — it says which it is and
          * the host decides (macextract.h, name_utf8). */
         e.name_utf8    = 1;
-        e.type         = unc_get_u32be(hdr + 4);
-        e.creator      = unc_get_u32be(hdr + 8);
-        e.finder_flags = unc_get_u16be(hdr + 12);
+        /* Type, creator and flags at b+4..13 at entry version 1 only.
+         * A version 3 block is 32 bytes (Source:
+         * reference/notes/sit5_specs_theunarchiver.md, *Second file
+         * header*: b+32 "not included in version 3") and StuffIt
+         * Expander 5.5 restores NONE of it: on a sentinel copy of an
+         * archive Aladdin's `stuff` 5.2 for Linux wrote, every file came
+         * back TEXT/ttxt with no flag, location or FXInfo of the block's
+         * — MEASURED 2026-11-13 under Mac OS 9.2 (DECISIONS.md, *the
+         * version 3 that Linux wrote*). That writer leaves b+4..15 zero
+         * and puts the modification date at b+16. */
+        if (entryver == 1) {
+            e.type         = unc_get_u32be(hdr + 4);
+            e.creator      = unc_get_u32be(hdr + 8);
+            e.finder_flags = unc_get_u16be(hdr + 12);
+        }
         hpos += blen;
         if (cmtlen) {
             e.comment = cmt;
@@ -439,8 +453,8 @@ int unc_sit5_extract(UncCtx *c)
          * 2026-10-17 on a sentinel copy of derived-FloatingNotes.sit
          * under Mac OS 9.2 (FORMATS.md, *Finder info in the archive*,
          * StuffIt 5; DECISIONS.md 2026-10-17, *the window StuffIt kept
-         * in the name*). Version 1 only: no entry anywhere here is
-         * version 3, whose block is four bytes shorter and not measured.
+         * in the name*). Version 1 only: at version 3 Expander 5.5
+         * restores nothing of the block, above.
          *
          * Stated only where the block's own CRC holds. b+2 is CRC-16/ARC
          * of the whole second block, its own two bytes taken as zero —

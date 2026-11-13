@@ -1,0 +1,63 @@
+{
+ "entries": [
+  {
+   "data_sha256": "eab95ba065371d546844578b7d922a57389c49cfef01cca2d4c30ce3bc37b4d6",
+   "data_size": 3000,
+   "finder_flags": 0,
+   "name": "Bigger file",
+   "oracle_methods": [
+    "Arsenic"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "finder_flags": 0,
+   "is_dir": true,
+   "name": "Folder"
+  },
+  {
+   "data_sha256": "0597af9086452ac39f01dd453030db070400b16d6f51427600bba04258e3b3e1",
+   "data_size": 20,
+   "finder_flags": 0,
+   "name": "Folder/Inner file",
+   "oracle_methods": [
+    "Arsenic"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "finder_flags": 0,
+   "is_dir": true,
+   "name": "Folder/Nested"
+  },
+  {
+   "data_sha256": "0c2acc3573211e93c5a88b62b60d9bc6e2da4be5530980fa540fd29627dc13bb",
+   "data_size": 25,
+   "finder_flags": 0,
+   "name": "Folder/Nested/Deep file",
+   "oracle_methods": [
+    "Arsenic"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "6972fee3153f4b371a6073adede4c890a601a514131fa7f1a95a586c2dcf563f",
+   "data_size": 34,
+   "finder_flags": 0,
+   "name": "Top file",
+   "oracle_methods": [
+    "Arsenic"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  }
+ ],
+ "fixture": "sit5v3-stuff520.sit",
+ "format": "StuffIt 5",
+ "oracle": "unar -nr -D -f -q -k hidden -e utf-8 (v1.10.8)",
+ "sha256": "806ad14fb16324e9891d05e31207bef24968722437e3ada90a41b64f6304ff8c",
+ "size": 2218
+}

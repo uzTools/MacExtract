@@ -573,6 +573,15 @@ def archive_rows(cli, path, extra=()):
         elif line.startswith("t "):
             f = line.split(" ", 3)
             out.setdefault(f[3], {}).update(ctime=f[1], mtime=f[2])
+    # Type, creator and flags, which `l --meta` leaves to `l --finder`:
+    # held where a lane wants `finder` (a StuffIt 5 version 3 entry,
+    # whose block Expander 5.5 does not read, DECISIONS.md 2026-11-13).
+    r = subprocess.run([cli, "l", "--finder"] + list(extra) + [path],
+                       capture_output=True)
+    for line in r.stdout.decode("utf-8", "surrogateescape").split("\n"):
+        f = line.split(None, 5)
+        if len(f) == 6 and f[0] in ("f", "d") and "/" in f[3]:
+            out.setdefault(f[5], {})["finder"] = f[3] + " " + f[4]
     return out, fmt
 
 
@@ -717,6 +726,11 @@ def archive_expectations(cli, work, problems):
         gen("am-dda2", S.dd_folder_meta(dd), ".sea")
     gen("am-sit5", S.sit5_meta(s5), ".sit")
     gen("am-sit5-badcrc", S.sit5_meta(s5, break_crc=True), ".sit")
+    v3 = os.path.join(fx, "sit5v3-stuff520.sit")
+    if os.path.exists(v3):
+        gen("am-sit5v3", S.sit5v3_meta(v3), ".sit")
+    else:
+        problems.append("sit5v3-stuff520.sit is missing (fixtures/SOURCES.md)")
     # A real MacZip archive: its 0x334d records decoded here as
     # Info-ZIP's own Macintosh UnZip decodes them (DecodeMac3ExtraField),
     # and the lock as its mapattr takes it, the MS-DOS read-only bit.
