@@ -53,8 +53,8 @@
  *                          order's argument puts it; a SEGID if it is a
  *                          set scheme; a DECODER if its extractor is new
  *                          and in an image
- *   src/unc_internal.h     the declarations of what it defines
- *                          (tools/overlay/mkforwards.py reads them as text)
+ *   src/unc_internal.h     a set's match, if it has one; every other
+ *                          function listed here is declared from the lists
  *   tools/overlay/         its entry point in its image: an OVL_*_EXTRACT
  *                          number in overlay.h and a case in ovl_<image>.c;
  *                          its sources in that image's rule in

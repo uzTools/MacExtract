@@ -25538,9 +25538,11 @@ paragraph of history each, and the rest tests and docs.
   each was a copy of what the commit and the entry it cited already said.
 
 **What stays by hand, and why**: the enum value (ABI, and a removed
-format's number is reserved there); the declarations in
-`src/unc_internal.h`, which `tools/overlay/mkforwards.py` reads as text
-for the host vector (generated ones broke it, measured); an image's entry
+format's number is reserved there); a set's match's declaration (it can
+be absent from its list, so there is no name to declare — every other
+listed function is declared from the lists, and
+`tools/overlay/mkforwards.py`, which reads declarations as text for the
+host vector, synthesises the listed ones the same way); an image's entry
 point and `EXCLUDE` line (a probe file is in an image AND resident, so
 exclusion is not derivable from membership); a format's own harness line
 in `ci.sh`; and its docs.

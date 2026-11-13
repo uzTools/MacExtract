@@ -147,6 +147,24 @@ def declarations(root):
     for h in HEADERS:
         with open(os.path.join(root, h)) as f:
             text += f.read() + "\n"
+    # The extractors, probes and set descriptions src/unc_formats.h lists
+    # are declared from those lists (src/unc_internal.h, UNC_DECL_*), not
+    # written out, so their prototypes are the lists' too: the same text
+    # the expansion makes, after the headers so that a written-out one still
+    # wins.
+    sys.path.insert(0, os.path.join(root, "tools"))
+    import unc_formats
+    for f in unc_formats.formats(open(os.path.join(root, "src",
+                                                   "unc_formats.h")).read()):
+        if f.kind != "PART":
+            text += "int %s(UncCtx *c);\n" % f.extract
+    for fn, _answers in unc_formats.probes():
+        text += ("UncFormat %s(const uint8_t *head, int32_t len, UncIO *io);\n"
+                 % fn)
+    for fn in unc_formats.decoders():
+        text += "int %s(UncCtx *c);\n" % fn
+    for _i, describe, _m in unc_formats.segids():
+        text += "int %s(UncIO *io, UncSegmentDesc *desc);\n" % describe
     text = re.sub(r"/\*.*?\*/", " ", text, flags=re.S)      # comments out
     out = {}
     for chunk in text.split(";"):

@@ -1247,9 +1247,28 @@ int unc_cpt_lzh_fork(CptRle *rle, UncBufIn *in, CptLzh *hz,
 int unc_cpt_rle_fork(CptRle *rle, UncBufIn *in, uint32_t complen);
 int unc_cpt_rle_flush(CptRle *r);
 
+/* Every format's extractor, probe and set description, declared from
+ * src/unc_formats.h's lists, so that a format added there is declared here
+ * with nothing more to write (tools/overlay/mkforwards.py reads the same
+ * lists for the ones the host vector carries). A set's match can be absent,
+ * 0 in its list, so those are declared by hand beside their format, and a
+ * declaration kept under a comment that describes it is a harmless
+ * duplicate. */
+#define UNC_DECL_X_FILE(x)       int x(UncCtx *c);
+#define UNC_DECL_X_ENVELOPE(x)   int x(UncCtx *c);
+#define UNC_DECL_X_PART(x)
+#define UNC_DECL_FORMAT(f, n, k, x, run, keep, join) UNC_DECL_X_##k(x)
+UNC_FORMATS(UNC_DECL_FORMAT)
+#define UNC_DECL_DECODER(fn) int fn(UncCtx *c);
+UNC_DECODERS(UNC_DECL_DECODER)
+#define UNC_DECL_PROBE(fn, answers) \
+    UncFormat fn(const uint8_t *head, int32_t len, UncIO *io);
+UNC_PROBES(UNC_DECL_PROBE)
+#define UNC_DECL_SEGID(f, describe, match) \
+    int describe(UncIO *io, UncSegmentDesc *desc);
+UNC_SEGIDS(UNC_DECL_SEGID)
 
-UncFormat unc_macbinary_probe(const uint8_t *head, int32_t len, UncIO *io);
-int unc_macbinary_extract(UncCtx *c);
+
 int unc_macbinary_meta(UncEntryInfo *e, const uint8_t *b);
 
 /* Where a MacBinary header puts its forks in a stream of `total` bytes:
@@ -1271,9 +1290,6 @@ static inline int unc_macbinary_layout(const uint8_t *mb, uint32_t total,
     return 1;
 }
 
-UncFormat unc_applesingle_probe(const uint8_t *head, int32_t len,
-                                UncIO *io);
-int unc_appledouble_extract(UncCtx *c);
 void unc_as_record(UncEntryInfo *e, uint32_t id, const uint8_t *p,
                    uint32_t n);
 
@@ -1324,25 +1340,11 @@ UncSideZip *unc_side_zip_open(UncAlloc *al, const uint8_t *cd,
  * file's partner is its sidecar; a sidecar's (*isside set) its file.
  * Called for every record in order: it keeps the walk's last file. */
 uint32_t unc_side_zip_pair(UncSideZip *z, uint32_t rel, int *isside);
-UncFormat unc_binhex_probe(const uint8_t *head, int32_t len, UncIO *io);
-int unc_binhex_extract(UncCtx *c);
 int unc_hecx_extract(UncCtx *c);
 int unc_hecx_is_header(const uint8_t *l, int32_t n);
-UncFormat unc_packit_probe(const uint8_t *head, int32_t len, UncIO *io);
-int unc_packit_extract(UncCtx *c);
 
-UncFormat unc_sqp_probe(const uint8_t *head, int32_t len, UncIO *io);
-int unc_sqp_extract(UncCtx *c);
-UncFormat unc_pf_probe(const uint8_t *head, int32_t len, UncIO *io);
-int unc_pf_extract(UncCtx *c);
-UncFormat unc_cpt_probe(const uint8_t *head, int32_t len, UncIO *io);
-int unc_cpt_extract(UncCtx *c);
-UncFormat unc_cptseg_probe(const uint8_t *head, int32_t len, UncIO *io);
-int unc_cptseg_describe(UncIO *io, UncSegmentDesc *desc);
 int unc_cptseg_match(const UncSegmentDesc *desc, const uint8_t *head,
                      int32_t len);
-UncFormat unc_sit_probe(const uint8_t *head, int32_t len, UncIO *io);       /* classic */
-int unc_sit_extract(UncCtx *c);
 
 /* One part of a StuffIt segmented set (fmt_sitseg.c). unc_sitseg_emit
  * writes the single joined entry, reading its forks from `base`:
@@ -1356,7 +1358,6 @@ UncFormat unc_sitseg_probe(const uint8_t *head, int32_t len, UncIO *io);
 int unc_sitseg_extract(UncCtx *c);
 int unc_sitseg_emit(UncCtx *c, const UncSegmentDesc *desc, uint32_t base,
                     int data_first, const int *ioerr);
-int unc_sitseg_describe(UncIO *io, UncSegmentDesc *desc);
 int unc_sitseg_match(const UncSegmentDesc *desc,
                      const uint8_t *head, int32_t len);
 /* The two running CRC-16/ARCs a part stores: at 96 over the resource
@@ -1551,32 +1552,11 @@ int unc_inflate_raw(UncBufIn *in, UncAlloc *al,
                     uint32_t maxout, uint32_t *produced, uint32_t *crc,
                     int (*emit)(void *ctx, const uint8_t *p, int32_t n),
                     void *ectx);
-UncFormat unc_sit5_probe(const uint8_t *head, int32_t len, UncIO *io);
-int unc_sit5_extract(UncCtx *c);
-UncFormat unc_zip_probe(const uint8_t *head, int32_t len, UncIO *io);
-int unc_zip_extract(UncCtx *c);
-UncFormat unc_gzip_probe(const uint8_t *head, int32_t len, UncIO *io);
-int unc_gzip_extract(UncCtx *c);
-UncFormat unc_compressz_probe(const uint8_t *head, int32_t len, UncIO *io);
-int unc_compressz_extract(UncCtx *c);
-UncFormat unc_tar_probe(const uint8_t *head, int32_t len, UncIO *io);
-int unc_tar_extract(UncCtx *c);
-UncFormat unc_mar_probe(const uint8_t *head, int32_t len, UncIO *io);
-int unc_mar_extract(UncCtx *c);
-UncFormat unc_tome_probe(const uint8_t *head, int32_t len, UncIO *io);
-int unc_tome_extract(UncCtx *c);
-UncFormat unc_lz4_probe(const uint8_t *head, int32_t len, UncIO *io);
-int unc_lz4_extract(UncCtx *c);
 /* Apple Backup (fmt_abk.c): a set of disks, read in addressed mode. */
 UncFormat unc_abk_probe(const uint8_t *head, int32_t len, UncIO *io);
 int unc_abk_describe(UncIO *io, UncSegmentDesc *desc);
 int unc_abk_match(const UncSegmentDesc *desc, const uint8_t *head,
                   int32_t len);
-int unc_abk_extract(UncCtx *c);
-int unc_dd_extract(UncCtx *c);
-int unc_now_extract(UncCtx *c);
-int unc_superdisk_extract(UncCtx *c);
-int unc_spacesaver_extract(UncCtx *c);
 
 /* uuencode, including UUTool's two-fork shape (fmt_uu.c). The probe
  * needs no io: a uu file identifies itself in its first lines. */
@@ -1624,8 +1604,6 @@ int  unc_b64_feed(UncB64 *b, int ch, uint8_t out[3]);
 /* The tail of a group left over at end of stream (0..2 bytes). */
 int  unc_b64_flush(UncB64 *b, uint8_t out[3]);
 
-UncFormat unc_b64_probe(const uint8_t *head, int32_t len, UncIO *io);
-int unc_b64_extract(UncCtx *c);
 
 /* MIME messages (fmt_mime.c). The probe scans past the mail headers,
  * which are longer than the sniff window, so it takes io. */
@@ -1637,7 +1615,6 @@ void unc_mime_ctype_of(const uint8_t *h, int32_t hlen, uint8_t *out,
                        uint32_t cap);
 int unc_mime_is_header(const uint8_t *s, int32_t len);
 
-UncFormat unc_mime_probe(const uint8_t *head, int32_t len, UncIO *io);
 /* The same probe, restricted to a message that declares a multipart
  * with a boundary — parts the walk can ENUMERATE. unc_sniff runs this
  * one before uuencode, btoa and BinHex, whose scans would otherwise
@@ -1660,8 +1637,6 @@ int unc_mimeseg_describe(UncIO *io, UncSegmentDesc *desc);
 int unc_mimeseg_head(const UncSegmentDesc *d, UncIO *io, int part,
                      uint32_t size, uint32_t *out);
 
-UncFormat unc_arc_probe(const uint8_t *head, int32_t len, UncIO *io);
-int unc_arc_extract(UncCtx *c);
 
 /* LZH / LHA (fmt_lzh.c). */
 UncFormat unc_lzh_probe(const uint8_t *head, int32_t len, UncIO *io);
@@ -1675,6 +1650,5 @@ UncFormat unc_nowcompress_probe(const uint8_t *head, int32_t len, UncIO *io);
 UncFormat unc_superdisk_probe(const uint8_t *head, int32_t len, UncIO *io);
 UncFormat unc_spacesaver_probe(const uint8_t *head, int32_t len, UncIO *io);
 uint32_t unc_superdisk_single_body(const uint8_t *head, int32_t len);
-UncFormat unc_diskdoubler_probe(const uint8_t *head, int32_t len, UncIO *io);
 
 #endif /* UNC_INTERNAL_H */
