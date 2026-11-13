@@ -8,7 +8,7 @@ one for one, and a tier's budget is FreeMem() minus it
 (tools/run_tiers.py).
 
 "Every byte of this application is resident" was true until 2026-09-25
-and is not any more: the decoders ship as seventeen 'OVLY' images, read at
+and is not any more: the decoders ship as 'OVLY' images, read at
 launch as one bundle and mostly released as soon as the sniff says what
 the archive is (mac/ovl_load_eager.c). The bundle is EXPECT_BUNDLE below
 and none of it is resident while an archive is being extracted — which
@@ -33,302 +33,35 @@ that has to say so.
 
     tools/check_app_size.py build/mac/MacExtract.code.bin
 
-Raising EXPECT is the acknowledgement. Re-run tools/run_tiers.py when
-you do: what matters is not the number here but whether a tier's tally
-moved with it.
+Re-taking the figure (tools/retake_budgets.py) is the acknowledgement.
+Re-run tools/run_tiers.py when you do: what matters is not the number here
+but whether a tier's tally moved with it.
 """
 import os
 import sys
 
-# The linked CODE resource of the SHIPPED build — overlays, eager — in
-# bytes. Bump DELIBERATELY, in the commit that grows it, and say what was
-# bought. It was 65,792 B earlier on 2026-09-25 and fell 896 B when DART
-# left the engine; 185,472 B was the figure for the resident build until
-# overlays became the default the same day; the same build still exists as the
-# control (UNC_OVL_RESIDENT=1) and has its own ceiling in
-# tools/build_mac.sh, which is where a per-configuration limit belongs.
-# LOWERED 2026-09-27 from 64,896 to 64,384, at the size on the day: the
-# AppleLink `.pkg` probe left with the routine it was transcribed from
-# (DECISIONS.md 2026-09-27, *the recogniser that was a command line*).
-# RE-TAKEN 2026-09-28 from 64,384 to 64,512: the StuffIt add-on module
-# fields (FORMATS.md, *Where an archive names the module*), which cost 112 B
-# of resident code + A5 and put 208 B into the StuffIt 'OVLY' image. Re-taken
-# rather than absorbed into the tolerance, on the same terms as
-# tools/build_mac.sh's six ratchets, which moved in the same commit; and
-# `run_tiers.py --check` moves no tally in either lane.
-# RE-TAKEN 2026-10-05 from 64,512 to 65,536: AppleLink packages, and
-# this is the first format since the overlays landed whose resident cost
-# is not nothing. 666 B of the 1,024 is `src/fmt_sqp_probe.c`, which is
-# resident because the sniffer calls it for every file it is handed; the
-# rest is the release switch's new case, `mac/ovl_shim.c`'s dispatch and
-# the engine's table row. (This read 65,536 for an hour on the day,
-# estimated from the resident `CODE` figure instead of read off the
-# file; the tolerance reported the 128 B rather than failing, which is
-# what it is for, and the number here is `stat` on build/mac now.) The decoder is 1,474 B and is in the new
-# `ovl_sqp` image. What was bought is a `.pkg` recognised by its
-# CONTENT, which Aladdin's own reader never did (FORMATS.md, *AppleLink
-# packages: SqueezePlay*). `run_tiers.py --check` moves no tally in
-# either lane.
-# RE-TAKEN 2026-10-05 again, 65,664 -> 66,048, for the zip behind a
-# stub: `zs_cd_is_there` in src/fmt_zipseg.c, which corroborates the
-# end-of-central-directory record the probe was already scanning for and
-# claims the archive behind a self-extractor's code. Resident `CODE`
-# moved +316 and A5 +4 in all three configurations — none of it in an
-# 'OVLY' image, because the sniffer calls that probe for every file it is
-# handed. Re-taken rather than absorbed into the tolerance, on the same
-# terms as tools/build_mac.sh's six ratchets, which moved in the same
-# commit. `run_tiers.py --check` moves no tally in either lane.
-# RE-TAKEN 2026-10-07, 66,048 -> 66,176 for the folder-depth rule and then
-# -> 65,920 the same day when the depth LIMIT went: popping a path
-# component re-scans for the separator now instead of reading a stored
-# length, which is what let `UncPath`'s two fixed arrays go and with them
-# UNC_PATH_MAXDEPTH, a limit of 24 against a destination that takes 250
-# (FORMATS.md, *What the DESTINATION actually allows*). It is SMALLER
-# than before any of this: -68 B of CODE against +4 of A5, because the
-# walker stopped keeping the path twice (tools/build_mac.sh's eager pair
-# has the whole arithmetic, including the +376 it read for an hour). Re-taken rather than
-# absorbed into the tolerance, on the same terms as the entry above and
-# as tools/build_mac.sh's six ratchets. `run_tiers.py --check` moves no tally in either lane.
-# RE-TAKEN 2026-10-09, 65,920 -> 66,432, for Aladdin Private File
-# (`.pf`). Resident `CODE` +368 and A5 +32 in the shipped build: the probe
-# (186 B — the sniffer calls it for every file), the shim that keys the
-# cipher in the crypt image (80 B), the one that dispatches the reader
-# (46 B), and the engine's table row and name. The reader itself is in
-# `ovl_stuffit`, beside the StuffIt archive a Private File always
-# decrypts to. Re-taken rather than absorbed into the tolerance, on the
-# same terms as tools/build_mac.sh's six ratchets, which moved in the
-# same commit. `run_tiers.py --check` moves no tally in either lane.
-# RE-TAKEN 2026-10-14, 66,432 -> 67,584, for `.hex` and `.hcx`, BinHex
-# before 4.0: resident `CODE` +400 and A5 +16 in the shipped build, the
-# probe, its header test, the shim and the table row (tools/build_mac.sh's
-# eager pair has them by symbol), which moved this file 67,072 -> 67,584;
-# the other 640 of the 1,152 is what the 2026-10-12 to -14 shell changes
-# left inside the tolerance. `run_tiers.py --check` moves no tally in
-# either lane. -> 67,456 the same day, -128: the shim went (CODE -68,
-# A5 +4), both encodings entering through one overlay call.
-# RE-TAKEN 2026-10-18, 67,456 -> 66,944, for the formats it only named,
-# gone: resident `CODE` -1,328 and A5 -704 in all three configurations
-# (tools/build_mac.sh's eager pair has them by symbol), which moved this
-# file 69,120 -> 66,944; the other 1,664 is what M70 left inside the
-# tolerance. `run_tiers.py --check` moves no tally in either lane
-# (DECISIONS.md 2026-10-18, *the formats it only named*).
-# RE-TAKEN 2026-10-20, 66,944 -> 68,096: every probe in its reader's
-# `_probe.c` and StuffIt classic's probe comparing bytes, resident `CODE`
-# -32 in all three configurations; the other 1,184 is what 2026-10-19's
-# four changes left inside the tolerance (tools/build_mac.sh's eager pair
-# has them by entry). `run_tiers.py --check` moves no tally in either lane
-# (DECISIONS.md 2026-10-20, *one place for every probe*).
-# RE-TAKEN 2026-10-21, 68,096 -> 57,984: the sniffer and every probe in an
-# 'OVLY' image of their own, resident CODE -9,284 and A5 -364 in the
-# shipped build (tools/build_mac.sh's eager pair). `run_tiers.py --check`
-# moves no tally in either lane (DECISIONS.md 2026-10-21, *the probes that
-# left with the bundle*).
-# RE-TAKEN 2026-10-22, 57,984 -> 53,632: the MacsBug names stripped from
-# the CODE resources, 4,414 B of resident text (DECISIONS.md 2026-10-22,
-# *the names in the code*).
-# RE-TAKEN 2026-10-22, 53,632 -> 48,896: Elf2Mac's --mac-single — one CODE
-# resource holding code, data and relocations, no CODE 0 jump table, no
-# DATA, no RELA — and mac/mac_start.c in place of Retro68's _start
-# (DECISIONS.md 2026-10-22, *the runtime the application did not need*).
-# RE-TAKEN 2026-10-25, 48,896 -> 46,336: the encryption check and the
-# MacBinary and AppleDouble readers left the resident link for the
-# sniffer's and BinHex's images (DECISIONS.md 2026-10-25, *the envelopes that left*).
-# RE-TAKEN 2026-11-02, 46,336 -> 46,976: v0.45.0, the dialogs — the part
-# dialog, the background wait, the coloured bar, the cheaper part scans
-# (DECISIONS.md 2026-11-02, *the dialogs that became the application*).
-# RE-TAKEN 2026-11-03, 46,976 -> 47,616: the day's commits, and the queueing
-# File > Open... (DECISIONS.md 2026-11-01, *the Open item MultiFinder looks
-# for*).
-# RE-TAKEN 2026-11-11, 47,616 -> 45,312: the month's resident savings, the
-# last of them the decoder names as one dispatch and the release's plan in
-# the set's setup image (DECISIONS.md 2026-11-11, *the release decided in the
-# bundle*), which took it past the tolerance.
-EXPECT = 45312
-TOLERANCE = 2048
-TAKEN = "2026-11-11"
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import budgets  # noqa: E402
 
-# And the BUNDLE, watched from 2026-09-26 for one reason: FORMATS.md quotes it
-# in three places and nothing measured it, so it was wrong by 544 B — the
-# figure in the docs was the bundle's Rez'd RESOURCE FORK
-# (`ovl_bundle.r.rsrc.bin`) rather than the bundle, and that error also
-# produced a 512 B residue in the launch-read arithmetic which the docs
-# recorded as unexplained (DECISIONS.md 2026-09-26, *the fork that was
-# mistaken for its contents*). It is NOT resident, so its growth costs the
-# download and the launch read rather than the engine's budget — but a figure
-# nothing measures is a figure nobody can correct.
-# RE-TAKEN 2026-10-02 from 145,652 to 150,244: `src/sit_ccube.c`, the
-# C-Cube JPEG decoder that undoes the `JPEG Lossy` Optimizer (FORMATS.md,
-# *What an Optimizer did to the fork*). All 4,592 B of it are in
-# `ovl_stuffit.bin`, 18,582 -> 23,174 B, so the SHIPPED build's resident
-# `CODE` and A5 did not move at all and EXPECT above is untouched — what
-# was bought is the fifth and last Optimizer, byte-exact against StuffIt
-# Deluxe 2.0.1's own restored file, for 4,592 B of download and launch
-# read and nothing off any extraction's budget. `run_tiers.py --check`
-# moves no tally in either lane.
-# RE-TAKEN 2026-10-02 again, 150,244 -> 151,080: StuffIt 2.x's five
-# ciphers. 856 B of it is the crypt image (9,284 -> 10,140), the rest
-# the StuffIt one, and the SHIPPED build's resident code moved by eight
-# bytes — the shim passing which cipher an entry wants. What was bought
-# is `DES`, `DESex`, `NewDE`, `NewDEx` and `PassLock`, all five graded
-# against a known plaintext (FORMATS.md, *The three ways 2.0.1
-# encrypts*). `run_tiers.py --check` moves no tally in either lane.
-# RE-TAKEN 2026-10-03, 151,080 -> 153,688: StuffIt 5's method 14
-# (`src/sit14.c`). All 2,608 B of it are in `ovl_stuffit.bin`,
-# 23,670 -> 26,278 B, so the SHIPPED build's resident `CODE` and A5 did
-# not move at all and EXPECT above is untouched. What was bought is the
-# last StuffIt method this engine could not read: 258 of 258 entries in
-# StuffIt Deluxe 7.0.3's own installer where 80 refused, and 184 of 184
-# in 5.5's (FORMATS.md, *StuffIt 5's method 14*). `run_tiers.py --check`
-# moves no tally in either lane.
-# RE-TAKEN 2026-10-05, 153,688 -> 155,672: the fifteenth image,
-# `ovl_sqp.bin` at 1,972 B, plus the 12 bytes of bundle directory one
-# more image costs. The bundle is not resident, so that part is download
-# and launch read; what the AppleLink format costs the engine's budget is
-# in EXPECT above.
-# RE-TAKEN 2026-10-06, 155,672 -> 155,920: `ovl_text` 11,450 -> 11,502
-# for the two alphabets UUTool actually writes with and `ovl_binhex`
-# 2,392 -> 2,590 for the part separator DeHQX documents, plus 2 B of
-# bundle index because one more image is now 2 mod 4. The SHIPPED
-# build's resident `CODE` moved +8 and its A5 −8, so EXPECT above is
-# untouched and nothing comes off an extraction's budget. What was
-# bought is every file UUTool writes by default — which this engine
-# refused outright — and a posting cut at the separator Peter Lewis's
-# own decoder resumes at (FORMATS.md, *uuencode: three alphabets*).
-# `run_tiers.py --check` moves no tally in either lane.
-# RE-TAKEN 2026-10-06, 155,920 -> 155,916: `ovl_stuffit` 26,278 ->
-# 26,274, the method-14 sort fix of the same day. Resident `CODE` and A5
-# did not move (FORMATS.md, *StuffIt 5's method 14*; TESTING.md, *The
-# sort that dropped what it could not hold*). `run_tiers.py --check`
-# moves no tally in either lane.
-# RE-TAKEN 2026-10-07, 155,916 -> 156,136 for the folder-depth rule and
-# then -> 156,068 when the depth limit went: four of the five images are
-# smaller than that morning, the per-entry refusal each carried having
-# gone with the limit, and Now Compress's is bigger because its per-level
-# counts must survive a level the path string could not hold. The cost of removing it is resident
-# and in the walker (tools/build_mac.sh's eager pair). `run_tiers.py --check` moves no
-# tally in either lane.
-# RE-TAKEN 2026-10-08, 156,068 -> 158,600, and it is TWO changes rather
-# than one because the first was MISSED: `ovl_exo` 29,252 -> 31,176 for
-# zip method 6 on 2026-10-07 raised the bundle 1,924 B and this constant
-# was left where it was, while FORMATS.md's *Overlays* and its launch-read
-# sum were both corrected the same day. So this check spent a day
-# reporting a growth it should have been holding — it WARNS on the bundle
-# rather than failing, 1,924 B being inside TOLERANCE_BUNDLE, which is
-# exactly the shape of "a test that passes may not be testing anything".
-# The second 608 B is `ovl_exo` 31,176 -> 31,784 for PKZIP 1.01/1.02's
-# minimum match length (FORMATS.md, *Implode*). Resident `CODE` and A5
-# do not move for either, in either shipped configuration, and
-# `run_tiers.py --check` moves no tally in either lane.
-# RE-TAKEN 2026-10-08 again, 158,752 -> 159,968, for zip method 1
-# (Shrink): `ovl_codecs` 6,404 -> 7,520 and `ovl_exo` 31,936 -> 32,036.
-# The decoder is in the codecs image because `ovl_exo` would not link
-# past 32 KB (FORMATS.md, *Shrink*). Resident `CODE` and A5 do not move
-# in either shipped configuration, and `run_tiers.py --check` moves no
-# tally in either lane.
-# RE-TAKEN 2026-10-09, 159,968 -> 161,752, for Private File: `ovl_stuffit`
-# 26,274 -> 27,950 (the reader, and its probe again for the reader's own
-# check) and `ovl_crypt` 10,140 -> 10,248 (`unc_crypt_pf`, MD5 then RC4).
-# What it costs the engine's budget is in EXPECT above. -> 161,736 the
-# same day: `ovl_stuffit` -12 (the reader keeps its record once) and
-# `ovl_crypt` -4 (RC4's indices in registers). -> 161,712 the same day:
-# `ovl_stuffit` -24, the Private File footer read through unc_read_full.
-# -> 161,840 the same day: `ovl_codecs` +108 and `ovl_exo` +20, a tick per
-# Shrink partial clear and a Cancel the zip peek returns. -> 161,868:
-# `ovl_exo` +28, zip's dry passes putting the progress count back.
-# -> 162,040: `ovl_cptdd` +144, `ovl_lzh` +18, `ovl_text` +8, the
-# progress count put right in DiskDoubler, MacLHA and uuencode.
-# -> 162,064: `ovl_stuffit` +24, a method-13 fork's encryptor id unread.
-# -> 163,596 2026-10-11: zip Reduce, `ovl_exo` +76 and a sixteenth image,
-# `ovl_zipold` (2,666 B), with Shrink gone from `ovl_codecs` (-1,224).
-# -> 163,588 the same evening: `ovl_zipold` -8, both decoders faster.
-# -> 164,264 the same day: `ovl_stuffit` +676 for `JPEG Lossy` at every
-# width and mode (DECISIONS.md 2026-10-11, *the constant was a square*).
-# -> 167,212 2026-10-14: `ovl_binhex` 2,590 -> 4,986 for BinHex before
-# 4.0 (DECISIONS.md 2026-10-14, *the BinHex before 4.0*); the 552 B before
-# it is `ovl_stuffit` +312 and `ovl_text` +240 (2026-10-12/13), which sat
-# inside the tolerance. -> 167,220 the same day, `ovl_binhex` +8 for the
-# dispatch that replaced the shim. -> 167,208 2026-10-15: `ovl_stuffit` -12,
-# `JPEG Lossy` capped in width only (DECISIONS.md 2026-10-15, *the height
-# nothing needed*).
-# -> 172,564 2026-10-17: the archives' Finder info and the envelopes' before
-# it (+356, inside the tolerance) — `ovl_zipold` +2,580 with tar's reader,
-# `ovl_lzh` +1,626, `ovl_stuffit` +584, `ovl_arc` +366, `ovl_now` +86,
-# `ovl_superdisk` +84, `ovl_packit` +12, `ovl_exo` -388 (DECISIONS.md
-# 2026-10-17, *the archives' own Finder info*).
-# -> 176,908 the same day: Mac OS X's sidecars, `ovl_zipold` +3,374 and
-# `ovl_exo` +972 (DECISIONS.md 2026-10-17, *the sidecars Mac OS X left
-# beside the file*).
-# -> 178,924 2026-10-18: the Spotlight comment, `ovl_zipold` +1,324, and
-# the dates in the Macintosh's own zone before it (+692, inside the
-# tolerance) (DECISIONS.md 2026-10-18, *the comment Spotlight kept*).
-# -> 178,892 2026-10-20: `ovl_stuffit` -32, StuffIt classic's probe
-# compares bytes (DECISIONS.md 2026-10-20, *one place for every probe*).
-# -> 192,288 2026-10-21: a seventeenth image, `ovl_sniff`, 13,384 B and its
-# directory entry — the sniffer and every probe, no longer resident
-# (DECISIONS.md 2026-10-21, *the probes that left with the bundle*).
-# RE-TAKEN 2026-10-22, 192,288 -> 179,496: the MacsBug names discarded
-# from every image (DECISIONS.md 2026-10-22, *the names in the code*).
-# -> 183,804 2026-10-25: +1,580 inside the tolerance over 2026-10-23..25
-# (the segment probe and CRCs, a fat installer's 'endD', SUMacC's .dl, the
-# MIME depth report), then the MacBinary and AppleDouble readers into
-# `ovl_binhex` (+2,076) and the encryption check into `ovl_sniff` (+652)
-# (DECISIONS.md 2026-10-25, *the envelopes that left*).
-# -> 188,404 2026-11-02: v0.45.0 — the destination dialog (`ovl_destdlg`,
-# 1,682 B) and a set's setup (`ovl_segsetup`, 2,364 B) as images, and the
-# envelope-only sniff in `ovl_sniff` (+172), with two directory entries
-# (DECISIONS.md 2026-11-02, *the dialogs that became the application*).
-# -> 191,328 2026-11-03: +832 inside the tolerance (DiskDoubler method 10
-# and MacBinary's layout +16, StuffIt 5's folder table +4, its cipher answer
-# +52, the envelope peek +760), then MAR — its reader in `ovl_zipold`
-# (+1,732) and its probe and CRC in `ovl_sniff` (+360) (DECISIONS.md
-# 2026-11-03, *the archive that carries its own CRCs*).
-# -> 194,020 2026-11-03: the LZ4 frame, its reader in `ovl_zipold`
-# (+2,580) and its probe in `ovl_sniff` (+112) (DECISIONS.md 2026-11-03,
-# *the frame mar 0.2.0 reads*).
-# -> 194,280 2026-11-04: Arsenic's 2.5-byte table in `ovl_stuffit` (+256),
-# over the destination dialog's 64K-ROM check (+4)
-# (DECISIONS.md 2026-11-04, *the rung between the table and the index*).
-# -> 194,292 the same day: DiskDoubler method 10's empty block in
-# `ovl_cptdd` (+12) (DECISIONS.md 2026-11-04, *the offsets from nothing*).
-# -> 196,536 2026-11-09: +1,084 inside the tolerance since 2026-11-04
-# (each change in `run_tiers.py`'s `BUNDLE` comments), then `unc_bitin_bit` and
-# `unc_bitin_fill` forced inline, +1,160 across seven images (DECISIONS.md
-# 2026-11-09, *the inline the compiler declined*).
-# -> 198,172 the same day: which set a file belongs to in `ovl_sniff`
-# (+1,460) and Compact Pro's match in `ovl_cptdd` (+176) (DECISIONS.md
-# 2026-11-09, *the set's identity that left*).
-# -> 198,216 the same day: methods 13 and 14's match copied through cursors
-# in `ovl_stuffit` (+44) (DECISIONS.md 2026-11-09, *the match that was
-# masked twice a byte*).
-# -> 198,244 the same day: `-lh1-`'s match copied through cursors in
-# `ovl_codecs` (+28) (the same entry).
-# -> 198,164 2026-11-10: the canonical decoder's table hit in `ovl_codecs`
-# (-80) (DECISIONS.md 2026-11-10, *the forward every symbol took*).
-# -> 198,280 on 2026-11-10: Arsenic's two divisions inline in `ovl_stuffit` (+116) (DECISIONS.md
-# 2026-11-10, *the division libgcc was asked to do*).
-# -> 198,308 on 2026-11-10: Arsenic's renormalisation in registers, reading its own bits in `ovl_stuffit` (+28) (DECISIONS.md
-# 2026-11-10, *the count the bit buffer did not need*).
-# -> 197,876 2026-11-10: re-taken from the bundle after method 13's
-# canonical table moved to bit-reversed indices (`ovl_codecs` -148,
-# `ovl_stuffit` +36, `ovl_lzh` +8; DECISIONS.md 2026-11-10, *the peek that was turned round*).
-# -> 201,136 2026-11-10: Apple Backup, its reader and its set's match in
-# `ovl_zipold` (+2,548), its probe and its set's identity in `ovl_sniff`
-# (+712) (DECISIONS.md 2026-11-10, *the backup on floppies*).
-# -> 204,520 the same day: the Installer Tome, its reader in `ovl_zipold`
-# (+3,214) and its probe in `ovl_sniff` (+168) (DECISIONS.md 2026-11-10,
-# *the archive the Installer reads*).
-# -> 209,404 2026-11-11: an Installer Tome's 'part' resources, their reader
-# in `ovl_zipold` (+4,100) and the probe's resource-fork case in
-# `ovl_sniff` (+400), with the stored spans' +296 and PackIt's +100 of the same day
-# (DECISIONS.md 2026-11-11, *the parts the Installer expands*).
-# -> 209,324 the same day: `high_handle` gone from `ovl_segsetup` (-78), the
-# release keeping its images in the bundle's own block (DECISIONS.md
-# 2026-11-11, *the copies that moved down*).
-# -> 209,732 the same day: the release's plan in `ovl_segsetup` (+408)
-# (DECISIONS.md 2026-11-11, *the release decided in the bundle*).
-EXPECT_BUNDLE = 209732
+# The linked CODE resource of the SHIPPED build (overlays, eager), and the
+# bundle beside it, in bytes: tools/budgets.txt's APP_CODE_FILE and
+# APP_BUNDLE_FILE, which tools/retake_budgets.py re-takes. Their history is
+# that file's git log and DECISIONS.md; it was kept here until 2026-11-13.
+# The control has its own ceiling in tools/build_mac.sh, which is where a
+# per-configuration limit belongs.
+EXPECT = budgets.get("APP_CODE_FILE")
+TOLERANCE = 2048
+
+# The BUNDLE is watched for one reason: FORMATS.md quotes it and nothing
+# measured it, so it was wrong by 544 B — the figure in the docs was the
+# bundle's Rez'd RESOURCE FORK (`ovl_bundle.r.rsrc.bin`) rather than the
+# bundle (DECISIONS.md 2026-09-26, *the fork that was mistaken for its
+# contents*). It is NOT resident, so its growth costs the download and the
+# launch read rather than the engine's budget — but a figure nothing
+# measures is a figure nobody can correct.
+EXPECT_BUNDLE = budgets.get("APP_BUNDLE_FILE")
 TOLERANCE_BUNDLE = 2048
-TAKEN_BUNDLE = "2026-11-11"
+TAKEN = TAKEN_BUNDLE = "tools/budgets.txt"
 
 
 def main():
@@ -346,17 +79,17 @@ def main():
         bsize = os.path.getsize(bundle)
         bdelta = bsize - EXPECT_BUNDLE
         if abs(bdelta) <= TOLERANCE_BUNDLE:
-            print("bundle:   %d B, %+d from %s's %d (within %d)"
+            print("bundle:   %d B, %+d from %s' %d (within %d)"
                   % (bsize, bdelta, TAKEN_BUNDLE, EXPECT_BUNDLE,
                      TOLERANCE_BUNDLE))
         else:
             print("check_app_size: the 'OVLY' bundle %s by %d B (%d, was %d "
-                  "on %s).\n"
+                  "in %s).\n"
                   "  It is not resident, so this is the DOWNLOAD and the launch\n"
                   "  read rather than the engine's budget — FORMATS.md,\n"
                   "  *Overlays*, quotes all three and they move together. If it\n"
-                  "  is deliberate: correct that section and raise\n"
-                  "  EXPECT_BUNDLE here in the SAME commit."
+                  "  is deliberate: correct that section and run\n"
+                  "  tools/retake_budgets.py in the SAME commit."
                   % ("GREW" if bdelta > 0 else "SHRANK", abs(bdelta), bsize,
                      EXPECT_BUNDLE, TAKEN_BUNDLE), file=sys.stderr)
             return 1
@@ -364,17 +97,17 @@ def main():
     size = os.path.getsize(path)
     delta = size - EXPECT
     if abs(delta) <= TOLERANCE:
-        print("app size: %d B, %+d from %s's %d (within %d)"
+        print("app size: %d B, %+d from %s' %d (within %d)"
               % (size, delta, TAKEN, EXPECT, TOLERANCE))
         return 0
 
     what = "GREW" if delta > 0 else "SHRANK"
-    print("check_app_size: the application %s by %d B (%d, was %d on %s).\n"
+    print("check_app_size: the application %s by %d B (%d, was %d in %s).\n"
           "  This code is resident for the whole run, so it is heap a\n"
           "  Macintosh no longer has (the 'OVLY' images are not, and are\n"
           "  not counted here). If it is deliberate: re-run\n"
           "  tools/run_tiers.py --check,\n"
-          "  then raise EXPECT in this file in the SAME commit and say what\n"
+          "  then tools/retake_budgets.py in the SAME commit and say what\n"
           "  the bytes bought. At the sys6-512K tier the narrowest passing\n"
           "  fixture had 12,460 B of headroom on 2026-09-27."
           % (what, abs(delta), size, EXPECT, TAKEN), file=sys.stderr)

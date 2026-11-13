@@ -1,0 +1,57 @@
+# tools/budgets.txt — every size this tree asserts about its own builds, in
+# one place. tools/build_mac.sh sources it; Python reads it through
+# tools/budgets.py. What each figure is, and why it is asserted, is said where
+# it is used; why one moved is the commit that moved it (git log -p on this
+# file) and DECISIONS.md.
+#
+# The MEASURED figures are rewritten from the builds by tools/retake_budgets.py,
+# which is the acknowledgement that they moved: run it, read what it prints,
+# and say in the commit what the bytes bought. Do not edit them by hand. The
+# MACHINE figures are the emulator's (tools/vmac/README.md) and the CEILINGS
+# are decisions; retake_budgets.py moves neither.
+
+# ---- MEASURED: resident CODE and A5 (data + bss) per configuration, the
+# ratchets tools/build_mac.sh holds each build to
+UNC_MAC_CODE_DEFAULT=198460   # the resident control (UNC_OVL_RESIDENT)
+UNC_MAC_A5_DEFAULT=36740
+UNC_MAC_CODE_EAGER=37296      # the shipped build
+UNC_MAC_A5_EAGER=15696
+UNC_MAC_CODE_LAZY=36444       # the lazy lifetime (UNC_OVL_LAZY)
+
+# ---- MEASURED: what tools/run_tiers.py computes every budget from
+TIERS_CONTROL=235200          # the control's CODE + A5
+OVL_SAVED=182208              # the control's CODE + A5 less the shipped build's
+BUNDLE=209800                 # ovl_bundle.bin
+# Each image, ovl_<name>.bin
+IMAGE_ARC=7924
+IMAGE_BINHEX=7630
+IMAGE_BTOA=2496
+IMAGE_CODECS=6012
+IMAGE_CPTDD=15244
+IMAGE_CRYPT=9260
+IMAGE_EXO=30284
+IMAGE_LZH=10602
+IMAGE_NOW=4948
+IMAGE_PACKIT=2278
+IMAGE_SPACESAVER=16236
+IMAGE_STUFFIT=28834
+IMAGE_SQP=1736
+IMAGE_SUPERDISK=6628
+IMAGE_TEXT=11438
+IMAGE_ZIPOLD=26070
+IMAGE_SNIFF=17416
+IMAGE_DESTDLG=1688
+IMAGE_SEGSETUP=2830
+
+# ---- MEASURED: what tools/check_app_size.py watches, within its tolerance
+APP_CODE_FILE=44160           # MacExtract.code.bin
+APP_BUNDLE_FILE=209800        # ovl_bundle.bin
+
+# ---- MACHINE: measured on the emulator, not from a build
+TIERS_MACHINE_SYS3_512K=414104   # System 3.0, Macintosh 512Ke
+TIERS_MACHINE_SYS6_512K=318700   # System 6.0.8, Macintosh 512Ke
+TIERS_MACHINE_FLOOR_1M=842988    # System 6.0.8, 1 MB Mac Plus
+OVL_RESIDUE=-402                 # the shipped probes' budgets less the model's
+
+# ---- CEILINGS: decisions, with headroom
+UNC_MAC_A5_LAZY=19200

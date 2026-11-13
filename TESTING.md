@@ -1947,17 +1947,18 @@ different refusals:
 - resident, from `EXPECT`: **74/74** at the 1 MB floor target, **70/74**
   at System 3.0 / 512 KB, **62/74** at System 6.0.8 / 512 KB. The resident
   build last ran on all three machines on 2026-10-09 (72/72, 68/72 and
-  63/72); every change since is DERIVED and recorded in `run_tiers.py`
-  beside the name.
+  63/72); every change since is DERIVED and recorded in `run_tiers.py`'s
+  `EXPECT` beside the name.
 - shipped: **74/74, 72/74 and 72/74**. The System 6.0.8 tier is the one
   this lane PREDICTED before any machine ran it (FORMATS.md, *512 KB
   machines*).
 
-The budgets are `TIERS` (607,644, 178,760 and 83,356 B, re-taken on the
-machine 2026-11-11 and derived since); `TIERS_MACHINE`
-holds each plus the control it was read against. The keep set is parsed
-from `mac/release_plan.inc.c`, format names and envelope flags from the
-engine's table, image sizes checked against `build/mac/`
+The budgets are `TIERS`, each `TIERS_MACHINE` (re-taken on the machine
+2026-11-11) less `TIERS_CONTROL`, the control it was read against; both
+and every other figure the model uses are `tools/budgets.txt`'s, which
+`tools/retake_budgets.py` re-takes from the builds. The keep set, format
+names and envelope flags are `src/unc_formats.h`'s (through
+`tools/unc_formats.py`), image sizes checked against `build/mac/`
 (`--check-images`), and `OVL_SAVED` against `build/mac` and
 `build/mac-resident` (`--check-saved`; FORMATS.md, *What each format is
 granted*). A tally that moves is a memory regression or a memory win;
@@ -1970,8 +1971,7 @@ either way the names are changed deliberately.
   (FORMATS.md, *Budget*), so it moves when the application's size does;
   stale budgets have twice cost a wrong prediction (BLOCKERS.md,
   *Withdrawn claims*). `--check-saved` fails when the control build's
-  `CODE` + A5 leaves `TIERS_CONTROL`, and when `TIERS` + `TIERS_CONTROL`
-  leaves `TIERS_MACHINE`; asked for by name, it fails rather than skips
+  `CODE` + A5 leaves `TIERS_CONTROL`; asked for by name, it fails rather than skips
   when the builds are missing. It cannot see a change the size does not
   show — a different System, emulator or ROM, growth that lands in slack,
   or resident bytes outside the `CODE` + A5 unit (the autotest harness;

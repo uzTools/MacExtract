@@ -4280,7 +4280,7 @@ the probe pair has not been re-measured, so the 320 B is that
 day's difference, not today's.
 
 The bundle is **209,800 B** — the nineteen images sum to 209,554 B, so its
-index costs **246 B** (`tools/run_tiers.py` `BUNDLE`, `IMAGES`): a
+index costs **246 B** (`tools/budgets.txt` `BUNDLE`, `IMAGE_*`): a
 4-byte header, 12 bytes of directory per image and padding of each image to
 a multiple of 4 — the padding is why the index is not a constant. The
 bundle is not `ovl_bundle.r.rsrc.bin`, the Rez'd resource fork around it
@@ -4363,71 +4363,35 @@ WITHDRAWN 2026-10-09**: the bases were the CONTROL build's, 16,888 B stale, and
 a fixture was refused (*Budget*; DECISIONS.md 2026-10-09, *the base nobody
 re-took*).
 
-The table equals `run_tiers.gain()` to the byte (checked 2026-11-03). Rows
-marked *(measured)* are formats whose TALLY the machine confirmed at that
-budget (a fixture is in the Mac sample); the rest are the same sum with no
-fixture. Every row has since moved by arithmetic only — each application or
-image change since 2026-10-09 shifts `OVL_SAVED`, the images and `TIERS` by
-amounts recorded in its DECISIONS.md entry and in `tools/run_tiers.py`'s
-comments, last on 2026-11-10 (*the backup on floppies*: −64 B less what the
-row's images grew — Tar, MAR, Apple Backup and zip −2,612, the envelope rows
-that keep the sniffer and `ovl_zipold` and the whole bundle's −3,324, a BinHex
-StuffIt −776, every other row −64; the control 2,992 B larger, so +2,928 B
-against it; then +32 on every row, the joiner's options zeroed; then *the
-archive the Installer reads*: −32 B less the row's images' growth — the
-rows that keep `ovl_zipold` −3,246, the envelope rows −3,414 or −200, the
-whole bundle −3,416, every other row −32; the control 3,408 B larger, so
-+3,376 B against it); then 2026-11-11 (*the stored bytes read one at a time*: +288 B
-less what the row's images grew — DiskDoubler and Compact Pro +138, StuffIt
-+232, the `ovl_zipold` rows +252, zip +196, the envelope rows +196, +252 or
-+232, the whole bundle −8, every other row +288; the control 288 B larger;
-then *the glue the shell expands*: −96 B on every row and −84 on the
-bundle's, `OVL_SAVED` −16 and the residue −80, while `TIERS`, re-taken on
-the machine, rose 1,534 to 1,556 B; then PackIt's stored copy: +128 B on
-every row, +30 on PackIt's, +28 on the whole bundle's; then *the parts the
-Installer expands*: −288 B less the row's images' growth — the
-`ovl_zipold` rows −4,388, the envelope rows −4,788 or −688, the whole
-bundle −4,788, every other row −288; the control 4,800 B larger, so
-+4,512 B against it; then *the copies that moved down*: +52 B less 4 B an
-image kept and its alignment — +34 to +44, the whole bundle's +144; then
-*the release decided in the bundle*: +784 B on every row, +376 on the whole
-bundle's, which carries the release's plan); then 2026-11-12, *the
-installer that was an archive* and *the head that named nothing*: +9,184 B
-against the control on every row but the sniffer's (+8,216) and the whole
-bundle's (−724), the control 9,280 B larger, so −96 B on the machine; then
-*the VISE before VISE*: +3,648 B against the control on every row but
-VISE's (+308), the envelope rows' (+3,320) and the whole bundle's (−20), the
-control 3,648 B larger, so nothing on the machine but those images; then
-*the format table that became three bitmaps*: +992 B against the control on
-every row, the whole bundle's included, the control 144 B smaller, so
-+1,136 B on the machine; then *VISE parked*: −12,928 B against the control
-on every row but the envelope rows' (−11,632) and the whole bundle's (+580),
-the VISE row gone, the control 12,928 B smaller, so +1,296 and +13,508 on
-the machine for those two and nothing for the rest), with
-`run_tiers.py --check` moving no tally.
-**Re-taken from `gain()` on 2026-11-11**, and every row agreed with it before the
-change.
+Every figure is `run_tiers.gain()` of the images it keeps, which each one
+carries beside it in the source (`<!-- gain: ... -->`): `tools/check_docs.py`
+holds every one to the function, and `tools/retake_budgets.py` rewrites them
+when a build moves (since 2026-11-13; until then the table was moved by hand
+and its history kept here). Rows marked *(measured)* are formats whose TALLY
+the machine confirmed at that budget (a fixture is in the Mac sample); the
+rest are the same sum with no fixture, and every row has moved by arithmetic
+since 2026-10-09 with `run_tiers.py --check` moving no tally.
 
 | sniffed format | images kept | granted, against the control |
 |---|---|---|
-| **AppleLink package** | **sqp, codecs** | **+174,022 B** (arithmetic: no `.pkg` is in the Mac sample) — the largest grant, because `ovl_sqp` is the smallest decoder image at 1,736 B |
-| Now Compress | now, codecs | **+170,810 B** (measured) |
-| SuperDisk! | superdisk, codecs | +169,130 B (arithmetic: no SuperDisk! fixture is in the Mac sample) |
-| LZH | lzh, codecs | **+165,154 B** (measured) |
-| PackIt | packit, ciphers, codecs | **+164,206 B** (measured) |
-| DiskDoubler | cptdd, codecs | **+160,514 B** (measured) |
-| StuffIt SpaceSaver | spacesaver, codecs | +159,522 B (arithmetic: no SpaceSaver fixture is in the Mac sample) |
-| ARC | arc, ciphers, codecs | **+158,562 B** (measured) |
-| Compact Pro, Compact Pro segment | cptdd, ciphers, codecs | +151,242 B (arithmetic), and **+160,514 B** where the directory says no entry is encrypted (measured) |
-| Tar | zipold, codecs | **+149,686 B** (measured) |
-| MAR | zipold, codecs | +149,686 B (arithmetic: no MAR fixture is in the Mac sample) |
-| Apple Backup | zipold, codecs | +149,686 B (arithmetic: no Apple Backup set is in the Mac sample) |
-| Installer Tome | zipold, codecs | +149,686 B (arithmetic: no Tome is in the Mac sample) |
-| StuffIt, StuffIt 5 | stuffit, ciphers, codecs | **+137,650 B** (measured), and **+146,922 B** for a StuffIt 5 archive whose header carries no password hash (measured, 2026-11-03) |
-| Zip, spanned zip | exo, zipold, ciphers, codecs | +110,118 B (arithmetic), **+119,390 B** unencrypted (measured) |
-| an envelope whose payload's first bytes name its format (`unc_envelope_peek`), since 2026-11-03 | its own reader, the sniffer, and what that format keeps | **+101,962 B** for a `.tar.Z` or `.tar.gz`, and an LZW-compressed MAR, which keeps the same (arithmetic), **+132,258 B** for a `.mar.lz4` (arithmetic), **+112,578 B** for a StuffIt archive in BinHex or MacBinary (measured) |
-| an envelope whose payload's first bytes name nothing, since 2026-11-12 (DECISIONS.md 2026-11-11, *the head that named nothing*) | its own reader, the sniffer, cptdd and superdisk (the two formats only an end names), the ciphers, codecs | **+96,878 B** for a `.gz` or `.Z`, +101,090 B for an `.lz4`, +119,530 B for BinHex or MacBinary, +115,722 B for uuencode or base64, +124,666 B for btoa (arithmetic) |
-| any other envelope, and every segment scheme that joins to a file | the whole bundle, kept | **−28,002 B** (−29,118 B measured, before 2026-11-07) |
+| **AppleLink package** | **sqp, codecs** | <!-- gain: sqp codecs -->**+174,022 B** (arithmetic: no `.pkg` is in the Mac sample) — the largest grant, because `ovl_sqp` is the smallest decoder image at 1,736 B |
+| Now Compress | now, codecs | <!-- gain: now codecs -->**+170,810 B** (measured) |
+| SuperDisk! | superdisk, codecs | <!-- gain: superdisk codecs -->+169,130 B (arithmetic: no SuperDisk! fixture is in the Mac sample) |
+| LZH | lzh, codecs | <!-- gain: lzh codecs -->**+165,154 B** (measured) |
+| PackIt | packit, ciphers, codecs | <!-- gain: packit crypt codecs -->**+164,206 B** (measured) |
+| DiskDoubler | cptdd, codecs | <!-- gain: cptdd codecs -->**+160,514 B** (measured) |
+| StuffIt SpaceSaver | spacesaver, codecs | <!-- gain: spacesaver codecs -->+159,522 B (arithmetic: no SpaceSaver fixture is in the Mac sample) |
+| ARC | arc, ciphers, codecs | <!-- gain: arc crypt codecs -->**+158,562 B** (measured) |
+| Compact Pro, Compact Pro segment | cptdd, ciphers, codecs | <!-- gain: cptdd crypt codecs -->+151,242 B (arithmetic), and <!-- gain: cptdd codecs -->**+160,514 B** where the directory says no entry is encrypted (measured) |
+| Tar | zipold, codecs | <!-- gain: zipold codecs -->**+149,686 B** (measured) |
+| MAR | zipold, codecs | <!-- gain: zipold codecs -->+149,686 B (arithmetic: no MAR fixture is in the Mac sample) |
+| Apple Backup | zipold, codecs | <!-- gain: zipold codecs -->+149,686 B (arithmetic: no Apple Backup set is in the Mac sample) |
+| Installer Tome | zipold, codecs | <!-- gain: zipold codecs -->+149,686 B (arithmetic: no Tome is in the Mac sample) |
+| StuffIt, StuffIt 5 | stuffit, ciphers, codecs | <!-- gain: stuffit crypt codecs -->**+137,650 B** (measured), and <!-- gain: stuffit codecs -->**+146,922 B** for a StuffIt 5 archive whose header carries no password hash (measured, 2026-11-03) |
+| Zip, spanned zip | exo, zipold, ciphers, codecs | <!-- gain: exo zipold crypt codecs -->+110,118 B (arithmetic), <!-- gain: exo zipold codecs -->**+119,390 B** unencrypted (measured) |
+| an envelope whose payload's first bytes name its format (`unc_envelope_peek`), since 2026-11-03 | its own reader, the sniffer, and what that format keeps | <!-- gain: exo sniff zipold codecs -->**+101,962 B** for a `.tar.Z` or `.tar.gz`, and an LZW-compressed MAR, which keeps the same (arithmetic), <!-- gain: zipold sniff codecs -->**+132,258 B** for a `.mar.lz4` (arithmetic), <!-- gain: binhex sniff stuffit crypt codecs -->**+112,578 B** for a StuffIt archive in BinHex or MacBinary (measured) |
+| an envelope whose payload's first bytes name nothing, since 2026-11-12 (DECISIONS.md 2026-11-11, *the head that named nothing*) | its own reader, the sniffer, cptdd and superdisk (the two formats only an end names), the ciphers, codecs | <!-- gain: exo sniff cptdd superdisk crypt codecs -->**+96,878 B** for a `.gz` or `.Z`, <!-- gain: zipold sniff cptdd superdisk crypt codecs -->+101,090 B for an `.lz4`, <!-- gain: binhex sniff cptdd superdisk crypt codecs -->+119,530 B for BinHex or MacBinary, <!-- gain: text sniff cptdd superdisk crypt codecs -->+115,722 B for uuencode or base64, <!-- gain: btoa sniff cptdd superdisk crypt codecs -->+124,666 B for btoa (arithmetic) |
+| any other envelope, and every segment scheme that joins to a file | the whole bundle, kept | <!-- gain: bundle -->**−28,002 B** (−29,118 B measured, before 2026-11-07) |
 
 A change to resident code moves every row by the control's growth less the
 shipped build's; a change to an image moves only the rows that keep it — so a

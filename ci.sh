@@ -585,7 +585,7 @@ UNC_AT_OVERLAY=1 sh tools/build_mac.sh || fail "overlay build (eager)"
 # until the build above: `make clean` runs first and the tier check runs in
 # variant 1, so this is the only point in the run where they can be graded.
 python3 tools/run_tiers.py --check-images \
-    || fail "the overlay images moved — re-take run_tiers.py's IMAGES"
+    || fail "the overlay images moved — run tools/retake_budgets.py"
 
 # CLAUDE.md's call-depth rule, which nothing checked until 2026-11-09: the
 # figure on file was a month older than its frames (DECISIONS.md 2026-11-09,
@@ -627,7 +627,7 @@ UNC_AT_OVERLAY=1 UNC_OVL_RESIDENT=1 UNC_MAC_BUILD_DIR=build/mac-resident \
 # figures*). It is the difference of the two builds above, so it can be
 # graded, and this is the first point in the run where both exist.
 python3 tools/run_tiers.py --check-saved \
-    || fail "OVL_SAVED or TIERS_CONTROL no longer matches build/mac and build/mac-resident"
+    || fail "OVL_SAVED or TIERS_CONTROL no longer matches build/mac and build/mac-resident — run tools/retake_budgets.py"
 
 # variant 4e, added 2026-11-02: the AUTOTEST application, which every
 # emulator tier runs (tools/vmac/run.py, sys30.py). v0.45.0's merge passed

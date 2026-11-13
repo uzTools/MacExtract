@@ -469,13 +469,57 @@ DERIVED = [
 
 
 def _run_tiers_consts():
-    text = (ROOT / "tools" / "run_tiers.py").read_text()
+    path = ROOT / "tools" / "budgets.txt"
     out = {}
     for name in ("OVL_SAVED", "BUNDLE"):
-        m = re.search(r"^%s = (-?\d+)" % name, text, re.M)
+        m = re.search(r"^%s=(-?\d+)" % name, path.read_text(), re.M)
         if m:
             out[name] = int(m.group(1))
     return out
+
+
+# Every figure in *What each format is granted* is `run_tiers.gain()` of a
+# set of images, and each one carries that set beside it, invisible on
+# GitHub: `<!-- gain: sqp codecs -->**+174,022 B**` (`bundle` for the whole
+# bundle kept). tools/retake_budgets.py rewrites them; this holds each one
+# to the function, which nothing did until 2026-11-13.
+GAIN = re.compile(r"<!-- gain: ([a-z ]+) -->(\**)([+\u2212-])([\d,]+) B")
+
+
+def gain_of(names):
+    sys.path.insert(0, str(ROOT / "tools"))
+    import run_tiers
+    if names.split() == ["bundle"]:
+        return run_tiers.gain([])
+    return run_tiers.gain(["OVL_ID_" + n.upper() for n in names.split()])
+
+
+def check_grants(text=None):
+    if text is None:
+        text = (ROOT / "FORMATS.md").read_text()
+    out = []
+    found = GAIN.findall(text)
+    if len(found) < 20:
+        return ["FORMATS.md: %d annotated grants — this check has stopped "
+                "checking *What each format is granted*" % len(found)]
+    for names, _b, sign, num in found:
+        got = _n(num) * (-1 if sign != "+" else 1)
+        want = gain_of(names)
+        if got != want:
+            out.append("FORMATS.md grants %s B for {%s}; run_tiers.gain() is "
+                       "%s B — run tools/retake_budgets.py"
+                       % ("{:+,}".format(got), names, "{:+,}".format(want)))
+    return out
+
+
+def selftest_grants():
+    text = (ROOT / "FORMATS.md").read_text()
+    m = GAIN.search(text)
+    if not m:
+        return 0
+    bent = text[:m.start(4)] + "{:,}".format(_n(m.group(4)) + 4) + \
+        text[m.end(4):]
+    return 1 if check_grants(bent) else 0
 
 
 def _n(s):
@@ -486,7 +530,7 @@ def check_derived_figures(text=None):
     consts = _run_tiers_consts()
     missing = [k for k in ("OVL_SAVED", "BUNDLE") if k not in consts]
     if missing:
-        return ["tools/run_tiers.py: no %s — check_docs has stopped "
+        return ["tools/budgets.txt: no %s — check_docs has stopped "
                 "checking the figures derived from it" % ", ".join(missing)]
     if text is None:
         text = (ROOT / "FORMATS.md").read_text()
@@ -499,11 +543,11 @@ def check_derived_figures(text=None):
             continue
         for got, key in zip(m.groups(), keys.split(",")):
             if _n(got) != consts[key]:
-                out.append("FORMATS.md says %s for %s; tools/run_tiers.py "
-                           "computes with %s = %s. Every per-format budget "
+                out.append("FORMATS.md says %s for %s; tools/budgets.txt "
+                           "has %s = %s. Every per-format budget "
                            "in *What each format is granted* is derived from "
                            "it, so correct the table in the same commit "
-                           "(from run_tiers.gain(), not by hand)."
+                           "(tools/retake_budgets.py)."
                            % (got, shown, key, "{:,}".format(consts[key])))
 
     # And the bundle's own three terms, which must close: the index is the
@@ -518,7 +562,7 @@ def check_derived_figures(text=None):
         bundle, images, index = (_n(g) for g in m.groups())
         if bundle != consts["BUNDLE"]:
             out.append("FORMATS.md says the bundle is %s B; "
-                       "tools/run_tiers.py computes with BUNDLE = %s"
+                       "tools/budgets.txt has BUNDLE = %s"
                        % ("{:,}".format(bundle),
                           "{:,}".format(consts["BUNDLE"])))
         if images + index != bundle:
@@ -911,8 +955,13 @@ def main():
                 check_synthetic() + check_target_struct() +
                 check_placeholders() + check_dist_readme() +
                 check_doc_sizes() + check_smell_count() +
-                check_derived_figures() + check_corpus_figures() +
-                check_corpus_class() + check_decision_dates())
+                check_derived_figures() + check_grants() +
+                check_corpus_figures() + check_corpus_class() +
+                check_decision_dates())
+    if not selftest_grants():
+        problems.append("check_docs: the grant selftest bent one figure and "
+                        "nothing was caught — it cannot fail, so it is not "
+                        "checking the grants")
     caught = selftest_derived()
     if caught != 2:
         problems.append("check_docs: the derived-figure selftest bent two "
