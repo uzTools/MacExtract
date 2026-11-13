@@ -147,6 +147,43 @@ int unc_segment_describe_as(UncIO *io, UncFormat scheme,
                        (uint32_t)scheme);
 }
 
+/* In the same image: the join hooks and the emit only schemes that keep the
+ * whole bundle call (StuffIt's, SPLT, message/partial, .NNN), so the
+ * sniffer is there whenever they run. */
+static int32_t seg_hook(int32_t which, OvlArgs *g)
+{
+    OverlayEntry e = ovl_image(OVL_ID_SNIFF);
+    if (!e) return UNC_ERR_MEM;
+    return e(&gOvlHost, which, g, NULL);
+}
+
+int unc_sitseg_emit(UncCtx *c, const UncSegmentDesc *desc, uint32_t base,
+                    int data_first, const int *ioerr)
+{
+    OvlArgs g;
+    g.obj = c; g.in = desc; g.len = base; g.pos = (uint32_t)data_first;
+    g.out = (void *)ioerr;
+    return (int)seg_hook(OVL_SITSEG_EMIT, &g);
+}
+
+int unc_ddseg_payload(const UncSegmentDesc *desc, const uint8_t *head,
+                      int32_t len, int part, uint32_t size, uint32_t *payload)
+{
+    OvlArgs g;
+    g.obj = (void *)desc; g.in = head; g.len = (uint32_t)len;
+    g.pos = (uint32_t)part; g.extra = size; g.off_out = payload;
+    return (int)seg_hook(OVL_DDSEG_PAYLOAD, &g);
+}
+
+int unc_mimeseg_head(const UncSegmentDesc *d, UncIO *io, int part,
+                     uint32_t size, uint32_t *out)
+{
+    OvlArgs g;
+    g.obj = (void *)d; g.in = io; g.pos = (uint32_t)part; g.extra = size;
+    g.off_out = out;
+    return (int)seg_hook(OVL_MIMESEG_HEAD, &g);
+}
+
 int unc_segment_describe(UncIO *io, UncSegmentDesc *desc)
 {
     return (int)seg_id(OVL_ID_SNIFF, OVL_SEG_DESCRIBE, desc, io,
@@ -363,17 +400,15 @@ static int ovl_run(UncCtx *c)
 
 /* The engine's two dispatches (src/unc_internal.h). A set's reader is
  * gRun's row for the scheme; a format read as a file is gRun's row for the
- * format, but for the three readers of one part of a set that are
- * resident, beside the joiner that shares their code: a zip part's row is
- * the set's, zip's reader, and one part on its own is what
- * unc_zipseg_extract refuses. tools/check_ovl_rows.py reads these three
- * comparisons as rows. */
+ * format, but for one: a zip part's row is the set's, zip's reader, and
+ * one part on its own is what the resident unc_zipseg_extract refuses. A
+ * lone StuffIt part and a lone `SPLT` are read in the sniffer's image since
+ * 2026-11-13 (DECISIONS.md, *the hooks that went to the sniffer*).
+ * tools/check_ovl_rows.py reads the comparison as a row. */
 int unc_run(UncCtx *c) __attribute__((alias("ovl_run")));
 
 int unc_run_file(UncCtx *c)
 {
-    if (c->fmt == UNC_FORMAT_SITSEG) return unc_sitseg_extract(c);
-    if (c->fmt == UNC_FORMAT_DDSEG)  return unc_ddseg_extract(c);
     if (c->fmt == UNC_FORMAT_ZIPSEG) return unc_zipseg_extract(c);
     return ovl_run(c);
 }

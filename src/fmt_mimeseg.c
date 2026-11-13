@@ -62,6 +62,7 @@ int unc_mimeseg_describe(UncIO *io, UncSegmentDesc *desc)
  * joiner asked for: the number and the id are in every part, so a set
  * assembled out of the wrong files is caught here rather than in the
  * joined stream. */
+#ifndef UNC_AT_OVERLAY   /* ovl_sniff's on the Macintosh (fmt_sitseg.c) */
 int unc_mimeseg_head(const UncSegmentDesc *d, UncIO *io, int part,
                      uint32_t size, uint32_t *out)
 {
@@ -77,3 +78,5 @@ int unc_mimeseg_head(const UncSegmentDesc *d, UncIO *io, int part,
     *out = mi.body;
     return UNC_OK;
 }
+
+#endif

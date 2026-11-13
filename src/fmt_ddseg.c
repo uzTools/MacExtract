@@ -95,6 +95,7 @@ int unc_ddseg_match(const UncSegmentDesc *desc, const uint8_t *head,
     return (int)cand.part;
 }
 
+#ifndef UNC_AT_OVERLAY   /* ovl_sniff's on the Macintosh (fmt_sitseg.c) */
 /* What the joiner takes from a part it has just opened: the payload
  * length the part declares, checked against the file it arrived in and
  * against the set it claims to belong to. `size` is the whole part.
@@ -154,3 +155,5 @@ int unc_ddseg_extract(UncCtx *c)
     }
     return unc_sitseg_emit(c, &desc, UNC_DDSEG_HEAD, 1, NULL);
 }
+
+#endif

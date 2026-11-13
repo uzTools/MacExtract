@@ -130,6 +130,7 @@ GLUE_SRC = ["mac/ovl_shim.c", "mac/ovl_reloc.c", "mac/ovl_load_eager.c"]
 _MATCH = {i: m for i, _d, m in unc_formats.segids() if m}
 SHARED_SHIMS = {
     "ovl_run": {},
+    "seg_hook": {},
     "seg_id": {"unc_segment_match": [("sniff", "unc_segment_match")] + [
         (f.run[0][len("OVL_ID_"):].lower(), _MATCH[f.id])
         for f in unc_formats.formats()

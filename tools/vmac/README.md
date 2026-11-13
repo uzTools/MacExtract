@@ -3254,6 +3254,7 @@ DES schedule.
     tools/vmac/segcheck.py                 # all ten, 4 MB
     tools/vmac/segcheck.py --mem 1M        # the floor target
     tools/vmac/segcheck.py --case cpt-middle
+    tools/vmac/segcheck.py --emu mv-512Ke  # the run.py cases on the 512Ke
 
 The segmented-archive checks written down as commands; its first full run
 caught two stale expectations and one real defect (DECISIONS.md).

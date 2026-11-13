@@ -135,7 +135,8 @@
      * writes; what that file is is unknown until it is joined, so it keeps \
      * the whole bundle. */ \
     FORMAT(UNC_FORMAT_SITSEG, "StuffIt segment", FILE, unc_sitseg_extract, \
-           NORUN, NOKEEP, JOIN_EMIT(SEG_HOOK_SIT)) \
+           RUN(OVL_ID_SNIFF, OVL_SITSEG_EXTRACT, 0), NOKEEP, \
+           JOIN_EMIT(SEG_HOOK_SIT)) \
     FORMAT(UNC_FORMAT_SPACESAVER, "StuffIt SpaceSaver", FILE, unc_spacesaver_extract, \
            RUN(OVL_ID_SPACESAVER, OVL_SPACESAVER_EXTRACT, RUN_CODECS), \
            KEEP(0), NOJOIN) \
@@ -161,7 +162,8 @@
     FORMAT(UNC_FORMAT_DISKDOUBLER, "DiskDoubler", FILE, unc_dd_extract, \
            RUN(OVL_ID_CPTDD, OVL_DD_EXTRACT, RUN_CODECS), KEEP(0), NOJOIN) \
     FORMAT(UNC_FORMAT_DDSEG, "DiskDoubler split", FILE, unc_ddseg_extract, \
-           NORUN, NOKEEP, JOIN_EMIT(SEG_HOOK_DD)) \
+           RUN(OVL_ID_SNIFF, OVL_DDSEG_EXTRACT, 0), NOKEEP, \
+           JOIN_EMIT(SEG_HOOK_DD)) \
     \
     /* Zip, and a spanned zip, read by zip's reader over the joined parts. \
      * KEEP_ZIPOLD is zip's Shrink, Reduce and Implode, which nothing else \
@@ -427,6 +429,8 @@
 
 #define UNC_DECODERS(DECODER) \
     DECODER(unc_spacesaver_extract) \
+    DECODER(unc_sitseg_extract) \
+    DECODER(unc_ddseg_extract) \
     DECODER(unc_cpt_extract) \
     DECODER(unc_dd_extract) \
     DECODER(unc_lzh_extract) \

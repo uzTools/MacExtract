@@ -147,6 +147,9 @@ uint16_t unc_sitseg_stored_crc(const uint8_t *head, int fork)
 /* the archive usually inside it is the next layer's problem.          */
 /* ------------------------------------------------------------------ */
 
+/* On the Macintosh these are ovl_sniff's, reached through mac/ovl_shim.c:
+ * only a set that keeps the whole bundle calls them. */
+#ifndef UNC_AT_OVERLAY
 /* Emit the single entry described by `desc`, reading its forks from
  * `base` onwards. `base` is UNC_SEG_HEAD for a lone part read
  * directly, and 0 for the joined stream the joiner presents.
@@ -253,3 +256,5 @@ int unc_sitseg_extract(UncCtx *c)
 
     return unc_sitseg_emit(c, &desc, UNC_SEG_HEAD, 0, NULL);
 }
+
+#endif

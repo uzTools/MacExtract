@@ -79,6 +79,11 @@ CASES = {
 }
 
 
+# run.py's --emu for the cases run.py runs (`--emu mv-512Ke`): the machine
+# overrides --mem there. The interactive cases keep their own.
+EMU_ARGS = []
+
+
 def sh(*argv, **kw):
     return subprocess.run(argv, cwd=REPO, **kw)
 
@@ -173,7 +178,7 @@ def run_mimeseg(case, mem, workdir):
     os.makedirs(d)
     anchor, extras = cut_mimeseg(d, "archive-part-one")
     argv = [sys.executable, os.path.join(HERE, "run.py"), anchor,
-            "--mem", mem, "--expect", "--keep-disks"]
+            "--mem", mem, *EMU_ARGS, "--expect", "--keep-disks"]
     for e in extras:
         # Named nothing alike: a part is placed by the `id` every part
         # of the set repeats, never by its filename.
@@ -282,7 +287,7 @@ def run_ddseg_real(case, mem, workdir):
     from make_manifests import parse_appledouble           # noqa: E402
     anchor = os.path.join(FIX, parts[0])
     argv = [sys.executable, os.path.join(HERE, "run.py"), anchor,
-            "--mem", mem, "--expect", "--keep-disks"]
+            "--mem", mem, *EMU_ARGS, "--expect", "--keep-disks"]
     for i, e in enumerate(parts[1:]):
         # Named nothing like part 1: a `SPLT` part is matched by the 26
         # identity bytes in its header, never by its filename.
@@ -350,7 +355,7 @@ def run_sit_fat(case, mem, workdir):
     got = {}
     for fork in (True, False):
         argv = [sys.executable, os.path.join(HERE, "run.py"), p1,
-                "--mem", mem, "--keep-disks", "--in-kb", "4096",
+                "--mem", mem, *EMU_ARGS, "--keep-disks", "--in-kb", "4096",
                 "--out-kb", "4096", "--extra-file", f"{p2}:zzz-piece2"]
         if fork:
             argv += ["--rsrc", p1 + ".rsrc"]
@@ -392,7 +397,7 @@ def run_scheme(case, mem, workdir):
     else:
         anchor, extras = cut_cpt(src, d, fixture,
                                  drop_last=(case == "cpt-truncated"))
-    argv = [sys.executable, os.path.join(HERE, "run.py"), anchor, "--mem", mem]
+    argv = [sys.executable, os.path.join(HERE, "run.py"), anchor, "--mem", mem, *EMU_ARGS]
     for e in extras:
         argv += ["--extra-file", f"{e}:{os.path.basename(e)}"]
     # A StuffIt set yields the JOINED ARCHIVE — one file — where the
@@ -451,7 +456,11 @@ def main():
     ap.add_argument("--case", action="append")
     ap.add_argument("--mem", default="4M", choices=("4M", "1M"))
     ap.add_argument("--list", action="store_true")
+    ap.add_argument("--emu", help="run.py's emulator build for the run.py "
+                    "cases, e.g. mv-512Ke")
     args = ap.parse_args()
+    if args.emu:
+        EMU_ARGS[:] = ["--emu", args.emu]
 
     if args.list:
         for k, (why, how) in CASES.items():
@@ -476,7 +485,8 @@ def main():
         shutil.rmtree(workroot, ignore_errors=True)
 
     bad = [c for c, ok in results if not ok]
-    print(f"segcheck: {len(results) - len(bad)}/{len(results)} at {args.mem}"
+    print(f"segcheck: {len(results) - len(bad)}/{len(results)} at "
+          f"{args.emu or args.mem}"
           + (f" — FAILED: {', '.join(bad)}" if bad else ""))
     return 1 if bad else 0
 

@@ -603,6 +603,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-12 (VISE parked) — every Installer VISE reader, 1992 to VISE X, taken off main on the maintainer's word and kept in `parked/vise/` (a branch until 2026-11-13); the format's number reserved; the control 12,928 B smaller
 - 2026-11-13 (one registration per format) — a format is its files and its lines in `src/unc_formats.h`: every per-format table, the Macintosh's included, is expanded from four lists, the image lists from the build's rules, and every build size from `tools/budgets.txt`, which `tools/retake_budgets.py` re-takes; the application byte-identical
 - 2026-11-13 (the memo on the relocator) — the shell's 1,600 B folder memo leaves bss for Retro68's relocator, whose 1,656 B of code are dead once the application has launched: A5 −1,600, CODE 0, 1,600 B onto every budget, measured on all three tiers
+- 2026-11-13 (the hooks that went to the sniffer) — the join hooks and the two segment readers only bundle-keeping sets call move to `ovl_sniff`, beside the parsers they share with the probes: CODE −3,128, A5 −72, +3,200 B onto every budget that keeps neither, +1,908 B onto one that keeps the bundle or the sniffer
 ---
 
 ## M0
@@ -25615,3 +25616,47 @@ either function. Nothing in the application calls them; a Retro68 whose
 which was true of its code and not of its bytes: code that is dead after
 launch is memory, and a table nothing reads before it writes can live on
 it.
+
+## 2026-11-13 (the hooks that went to the sniffer) — the join hooks and the two segment readers only bundle-keeping sets call move to `ovl_sniff`, beside the parsers they share with the probes: CODE −3,128, A5 −72, +3,200 B onto every budget that keeps neither, +1,908 B onto one that keeps the bundle or the sniffer
+
+**What moved.** `unc_sitseg_emit` (StuffIt's and `.NNN`'s joined file),
+`unc_ddseg_payload` (`SPLT`), `unc_mimeseg_head` (message/partial), and the
+readers of a lone StuffIt part and a lone `SPLT`, `unc_sitseg_extract` and
+`unc_ddseg_extract`, which now have run rows in `ovl_sniff`
+(`src/unc_formats.h`). Every scheme that calls them keeps the whole bundle
+(`mac/release_plan.inc.c`), so the sniffer is there whenever they run, as
+it already was for `unc_segment_first_end`. Resident: three shims through
+one helper (`mac/ovl_shim.c`, `seg_hook`), 214 B; the two stored-CRC reads
+(44 B) stay, being smaller than a shim. In the image the three calls go
+through out-of-line helpers, +48 B, because inline they raised
+`ovl_main`'s frame by 12 B and with it the shell's deepest chain.
+
+**Price (measured, build against build at e6deebcc).** Shipped CODE
+−3,128, A5 −72 (the hooks' row in the joiner's table); lazy CODE −3,128;
+the control byte-identical. `ovl_sniff` +1,290, the bundle +1,292,
+`OVL_SAVED` +3,200. By `run_tiers.gain()`: +3,200 B on every format that
+keeps neither image, +1,908 B on one that keeps the sniffer (a peeked or
+unnamed envelope) or the whole bundle (StuffIt's, `SPLT`, message/partial
+and `.NNN` sets, MIME, Private File). The engine's deepest chain 3,430 B
+and the shell's 6,228 B, both unmoved. `run_tiers.py --check` moves no
+tally on either lane.
+
+**The estimate it corrects.** 2026-11-09 (*the set's identity that left*)
+and OPEN_ITEMS priced this as 120–160 B OFF a bundle-keeping layer: shims
+and dispatch added, nothing taken away. But a bundle keeper pays the
+resident bytes and the bundle's alike, so what it pays is what the BUNDLE
+grows by, less what resident CODE loses; and the hooks' callees, the MIME
+header walk (`mseg_scan`, `mime_param` and the rest, 1,730 B resident) and
+`ddseg_parse` (356 B), were already in `ovl_sniff` with the probes that
+share them. Resident shrank by those and the hooks; the image grew by the
+hooks' bodies alone. The rule the 2026-11-09 entry wrote down — put moved
+code where its callees already are — was the answer to its own estimate.
+
+**On the machine (measured).** `segcheck.py --emu mv-512Ke` (System
+6.0.8), the change's build: `sit-scattered` (a StuffIt set found by
+header) joined byte-exact; `mimeseg` (four message/partial files, both
+forks) byte-exact and the grid agrees; `ddseg-real` (a `SPLT` set cut by
+DiskDoubler Pro) byte-exact, both forks; `sit-fat` (part 1's `'endD'`)
+byte-exact with the fork and wrong without; `cpt-middle`, whose match did
+not move, 1/1. `segcheck.py` takes `--emu` for its `run.py` cases since
+this entry.

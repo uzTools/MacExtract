@@ -18,6 +18,27 @@
 
 const OverlayHostFns *g_ovl_fns = (const OverlayHostFns *)-1;
 
+/* Out of line, so that ovl_main's frame keeps the pushes of
+ * its widest call as they were (tools/stack_depth.py). */
+static __attribute__((noinline)) int32_t h_emit(const OvlArgs *g)
+{
+    return (int32_t)unc_sitseg_emit((UncCtx *)g->obj,
+                                    (const UncSegmentDesc *)g->in, g->len,
+                                    (int)g->pos, (const int *)g->out);
+}
+static __attribute__((noinline)) int32_t h_payload(const OvlArgs *g)
+{
+    return (int32_t)unc_ddseg_payload((const UncSegmentDesc *)g->obj,
+                                      (const uint8_t *)g->in, (int32_t)g->len,
+                                      (int)g->pos, g->extra, g->off_out);
+}
+static __attribute__((noinline)) int32_t h_head(const OvlArgs *g)
+{
+    return (int32_t)unc_mimeseg_head((const UncSegmentDesc *)g->obj,
+                                     (UncIO *)g->in, (int)g->pos, g->extra,
+                                     g->off_out);
+}
+
 int32_t ovl_main(const OverlayHost *host, int32_t which, void *a, void *b);
 int32_t ovl_main(const OverlayHost *host, int32_t which, void *a, void *b)
 {
@@ -55,6 +76,16 @@ int32_t ovl_main(const OverlayHost *host, int32_t which, void *a, void *b)
                                           (const uint8_t *)g->in,
                                           (int32_t)g->len);
     }
+    case OVL_SITSEG_EXTRACT:
+        return (int32_t)unc_sitseg_extract((UncCtx *)a);
+    case OVL_DDSEG_EXTRACT:
+        return (int32_t)unc_ddseg_extract((UncCtx *)a);
+    case OVL_SITSEG_EMIT:
+        return h_emit((const OvlArgs *)a);
+    case OVL_DDSEG_PAYLOAD:
+        return h_payload((const OvlArgs *)a);
+    case OVL_MIMESEG_HEAD:
+        return h_head((const OvlArgs *)a);
     default:
         return -1;
     }

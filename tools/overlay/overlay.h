@@ -182,6 +182,11 @@ typedef int32_t (*OverlayEntry)(const OverlayHost *host, int32_t which,
                                     * setup image: a = OvlArgs* (obj the sniffer's
                                     * entry, in io, len the format), b = the plan
                                     * (mac/release_plan.inc.c); returns its length */
+#define OVL_SITSEG_EXTRACT     70
+#define OVL_DDSEG_EXTRACT      71
+#define OVL_SITSEG_EMIT        72  /* a = OvlArgs* (obj c, in desc, len base, pos data_first, out ioerr) */
+#define OVL_DDSEG_PAYLOAD      73  /* a = OvlArgs* (obj desc, in head, len, pos part, extra size, off_out) */
+#define OVL_MIMESEG_HEAD       74  /* a = OvlArgs* (obj desc, in io, pos part, extra size, off_out) */
 /* The release plan's out[0] for an envelope whose payload's first bytes name
  * nothing (mac/release_plan.inc.c): no format's number. */
 #define OVL_PEEK_UNNAMED       0xFF

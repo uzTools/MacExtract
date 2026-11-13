@@ -4,7 +4,7 @@
 On the Macintosh build with images every reader is found by UncCtx.fmt
 (DECISIONS.md 2026-11-11, *the release decided in the bundle*, and
 2026-11-12, *the format table that became three bitmaps*): mac/ovl_shim.c's
-gRun names the image and entry point, unc_run_file sends three formats to
+gRun names the image and entry point, unc_run_file sends one format to
 resident readers instead, and unc_segment_match asks the image gRun names
 for a scheme flagged RUN_MATCH. A format with no row reads zero: the
 ciphers' image at entry 0, its self-test, which returns 0x4F4B — an error
@@ -82,7 +82,7 @@ def problems(shim_text, hdr_text):
         out.append("mac/ovl_shim.c no longer expands gRun and the aliases "
                    "from src/unc_formats.h — this check has stopped "
                    "checking")
-    if len(here) < 3:
+    if len(here) < 1:
         out.append("parsed %d resident readers in unc_run_file — this check "
                    "has stopped checking" % len(here))
 
@@ -176,7 +176,7 @@ def main():
         here = re.findall(r"^\s*if \(c->fmt == UNC_FORMAT_\w+\).*\n", shim,
                           flags=re.M)
         if len(hcuts) < 25 or len(flags) < 2 or len(decs) < 20 or \
-                len(here) < 3:
+                len(here) < 1:
             print("check_ovl_rows: selftest found %d run rows, %d RUN_MATCH "
                   "flags, %d aliases, %d resident readers"
                   % (len(hcuts), len(flags), len(decs), len(here)))
