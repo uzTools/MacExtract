@@ -1,0 +1,33 @@
+{
+ "entries": [
+  {
+   "creator": "MOSS",
+   "data_oracle": "the record's CRC-32 over both forks, and installer-vise",
+   "data_sha256": "fd4f8e936e96b01cc408b6621bd73d0ca2be74eb18a6344daf558905b8dd42f4",
+   "data_size": 1211060,
+   "finder_flags": 0,
+   "name": "Shockwave Flash NP-PPC",
+   "rsrc_oracle": "the record's CRC-32 over both forks, and installer-vise",
+   "rsrc_sha256": "cacec25ab96ef742513f7f995283fe7fc567b0a60f1f9057d98e40a01c9e8ed7",
+   "rsrc_size": 42984,
+   "type": "NSPL"
+  },
+  {
+   "creator": "????",
+   "data_oracle": "the record's CRC-32 over both forks, and installer-vise",
+   "data_sha256": "946c2d7808b0f256e5f6b62655246dc9c247833fb2f578519e4354f91deb6e1b",
+   "data_size": 856,
+   "finder_flags": 0,
+   "name": "flashplayer.xpt",
+   "rsrc_oracle": "the record's CRC-32 over both forks, and installer-vise",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "????"
+  }
+ ],
+ "fixture": "vise-wild-flash7",
+ "format": "Installer VISE",
+ "oracle": "each file's own CRC-32, data then resource fork, as the installer stores it, with the catalogue read independently of the engine; installer-vise for the compressed catalogues (tests/harness/run_vise.py)",
+ "sha256": "b050e3491184a984f069736e8bc626ae999b0043677c7337430cd76c7f33ed73",
+ "size": 553756
+}

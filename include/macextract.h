@@ -132,7 +132,7 @@ typedef enum UncFormat {
     /* Brought in scope 2026-11-10; appended for the same ABI reason. */
     UNC_FORMAT_TOME,          /* Apple Installer Tome ('idcp')        */
     /* RESERVED: Installer VISE, in scope 2026-11-11 and parked 2026-11-12
-     * on the branch `parked/vise` (DECISIONS.md 2026-11-12, *VISE
+     * in `parked/vise/` (DECISIONS.md 2026-11-12, *VISE
      * parked*). Kept so that no later number moves; nothing returns it. */
     UNC_FORMAT_VISE,
 

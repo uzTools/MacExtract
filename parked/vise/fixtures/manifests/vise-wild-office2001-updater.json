@@ -1,0 +1,33 @@
+{
+ "entries": [
+  {
+   "creator": "MOM™",
+   "data_oracle": "the record's CRC-32 over both forks, and installer-vise",
+   "data_sha256": "55f44c743ef3ee8e718beeb22256a9f82d596bb6d139bcc55d4d1535a1ab6943",
+   "data_size": 48637,
+   "finder_flags": 8448,
+   "name": "Microsoft Office Manager/Office Manager Extension",
+   "rsrc_oracle": "the record's CRC-32 over both forks, and installer-vise",
+   "rsrc_sha256": "63f69ff0efa101083d1ea5c1bad2e132f97d0ef415f495b47c44721c14220dd8",
+   "rsrc_size": 122055,
+   "type": "INIT"
+  },
+  {
+   "creator": "MSOM",
+   "data_oracle": "the record's CRC-32 over both forks, and installer-vise",
+   "data_sha256": "2e592b9d377026a9fa0989741aedbb6b72c1c2944c4fb2aea4eaa77a8e90dcde",
+   "data_size": 100454,
+   "finder_flags": 8448,
+   "name": "Microsoft Office Manager/Microsoft Office Manager",
+   "rsrc_oracle": "the record's CRC-32 over both forks, and installer-vise",
+   "rsrc_sha256": "4a06ca3ee4c1cd987802f69c83274119936acdb2deb8b5a190fe9621236055cd",
+   "rsrc_size": 66979,
+   "type": "APPC"
+  }
+ ],
+ "fixture": "vise-wild-office2001-updater",
+ "format": "Installer VISE",
+ "oracle": "each file's own CRC-32, data then resource fork, as the installer stores it, with the catalogue read independently of the engine; installer-vise for the compressed catalogues (tests/harness/run_vise.py)",
+ "sha256": "2ef3e41af40c016d788e65a637f43b26b40587a74aa5c2ae1b5dde992548ac16",
+ "size": 157864
+}

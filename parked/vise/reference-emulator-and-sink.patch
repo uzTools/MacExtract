@@ -1,0 +1,230 @@
+commit 57d96dc0f39f6dd0e773b062d453912488b7a288
+Author: unclassic-bot <3386225+jarreboum@users.noreply.github.com>
+Date:   Thu Nov 12 23:04:50 2026 +0000
+
+    Installer VISE parked on the branch parked/vise: both readers off main, the format's number reserved
+    
+    The maintainer's decision. Off main: the 3.5-to-X reader (700fb893) and
+    the pre-3.5 'VISE' archive (1b6042e7), their image, probe and set
+    identity, run_vise.py and run_viseold.py, the 25 manifests and their
+    sources, the docs. A VISE installer now reads "format not recognized".
+    The code is on parked/vise (87782bf1, with the queued clang cast); the 29
+    fixtures and the installed copies are in the specimen cache.
+    
+    Kept: UNC_FORMAT_VISE as a reserved number, so no later number moves; the
+    release plan's rule for an envelope whose head names nothing, which holds
+    no VISE code; run_diff.py's Icon\r fix. check_ovl_rows.py's and
+    stack_depth.py's parse floors are set to the counts without VISE (4 set
+    readers, 2 RUN_MATCH rows); each selftest still catches every removal.
+    
+    Shipped CODE and A5 unmoved (37,296 / 15,696). ovl_sniff -1,296, the
+    bundle 209,800 (-13,508). The control's CODE is -12,404 and A5 -524, so
+    OVL_SAVED -12,928 (182,208), TIERS_CONTROL 235,200 and TIERS +12,928 each;
+    the grant table is re-taken and agrees with gain(). run_tiers.py --check:
+    the shipped lane holds at 74/74, 72/74 and 72/74; the control lane at
+    System 6.0.8 / 512Ke is back to 62/74. Mini vMac, the sample: 72/74 on
+    System 6.0.8 / 512Ke and System 3.0 / 512Ke, the same two refused.
+    dist/ rebuilt. DECISIONS.md 2026-11-12, *VISE parked*.
+    
+    Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+
+diff --git a/tests/run_mac_sink.sh b/tests/run_mac_sink.sh
+index 6a424586..4f1c5a0b 100755
+--- a/tests/run_mac_sink.sh
++++ b/tests/run_mac_sink.sh
+@@ -29,14 +29,7 @@ FIXTURES="derived-ASCbeep.sit derived-apple.art.sit alpha401.cpt \
+           derived-MUSFMT10.ZIP ddtf-dd377ad.dd derived-800saywhat301j.sit \
+           synth-sit14.sit synth-sqp-forks.pkg \
+           synth-exo-zip-implode.zip mar-wild-mar020.mar \
+-          synth-mar-single.mac tome-wild-install7 \
+-          vise-wild-ic-module"
+-
+-# `vise-wild-ic-module` was added 2026-11-12 with Installer VISE: an
+-# undocumented version (0x80010303), a shared block and nine files, each
+-# held to its own CRC-32, through `ovl_vise` by the shell's own writer,
+-# big-endian. Not the compressed-catalogue `vise-wild-retrospect-client`:
+-# its folder `TCP/IP Client` cannot be made on the host this lane writes to.
++          synth-mar-single.mac tome-wild-install7"
+ 
+ # `tome-wild-install7` was added 2026-11-10 with the Installer Tome: 13
+ # of Apple's files in 45 InstaCompOne blocks, the window growing from 4 KB
+diff --git a/tools/vmac/README.md b/tools/vmac/README.md
+index aabefacc..5b5ae5a3 100644
+--- a/tools/vmac/README.md
++++ b/tools/vmac/README.md
+@@ -186,7 +186,6 @@ back **38/69** on 2026-09-05, every "failure" a missing oracle.
+ | `os9.py` | Mac OS 9 on emulated PowerPC, both forks checked off the disk |
+ | `os9probe.py` | diagnostic: which input primitives reach the Mac OS 9 guest. Not part of any suite |
+ | `os9sample.txt` | the fixtures replayed on Mac OS 9, one per format |
+-| `vise-sample.txt` | every Installer VISE fixture, the eight `vise-old-*` archives before 3.5 among them, one installer per boot (`--out-kb 8192`: two write more than a floppy). `vise-wild-java-api-docs` writes 249 files, past the 128 the autotest build reads back (`AT_MAXREC`), so it is graded through `--keep-disks` instead; `vise-x-flash9` wants `--extra-file fixtures/vise-x-flash9.data:Installer.data --in-kb 4096`; `vise-wild-netscape-stub` has no manifest to grade against |
+ | `mountcheck.py` | boot a system image with disks attached and photograph the desktop |
+ | `mkapmdisk.py` | build an Apple-partitioned transfer disk Mac OS on PowerPC will mount |
+ | `checkdisk.py` | verify a run by READING its Out volume: both forks, and names |
+diff --git a/tools/vmac/interactive.py b/tools/vmac/interactive.py
+index 3a5f0ec8..a8544515 100755
+--- a/tools/vmac/interactive.py
++++ b/tools/vmac/interactive.py
+@@ -1792,137 +1792,6 @@ def phase_abk(args, appbin, workdir, shot):
+     return ok and bool(still_asking)
+ 
+ 
+-def phase_vise(args, appbin, workdir, shot):
+-    """An Installer VISE set read across three floppies, one at a time.
+-
+-    The Epson Stylus Photo 700 driver as it was published: the installer on
+-    Disk 1, `Segment.2` and `Segment.3` on Disks 2 and 3, each disk a floppy
+-    of its own, two of its files running across a disk's end (FORMATS.md,
+-    *Installer VISE*). Opened on Disk 1 with the output on the boot disk; at
+-    the first "Insert the disk", a DECOY goes in — a file called `Segment.2`
+-    of another installer (`vise-x-flash9.data`: segment 1 of no count, another
+-    stamp) — and the alert must still be up after it; then Disks 2 and 3,
+-    nothing clicked after either. Every file is read back off the boot disk,
+-    both forks, type and creator, against the Linux CLI's extraction of the
+-    same set. What it cannot see: a real one-drive Mac (Mini vMac puts each
+-    disk in a drive of its own), and what the installer itself would write.
+-    """
+-    fx = [os.path.join(R.REPO, "fixtures", "vise-set-epson-sp700" + s)
+-          for s in ("", ".2", ".3")]
+-    for f in fx:
+-        if not os.path.exists(f):
+-            raise SystemExit("interactive: no %s" % f)
+-    joined = os.path.join(workdir, "viseset")
+-    os.makedirs(joined, exist_ok=True)
+-    for f, n in zip(fx, ("Installer", "Segment.2", "Segment.3")):
+-        shutil.copy(f, os.path.join(joined, n))
+-    ref = os.path.join(workdir, "vise-ref")
+-    cli = os.path.join(R.REPO, "build", "rel", "macextract")
+-    subprocess.run([cli, "x", "-o", ref, os.path.join(joined, "Installer")],
+-                   check=True, capture_output=True)
+-    lst = subprocess.run([cli, "l", os.path.join(joined, "Installer")],
+-                         capture_output=True, check=True).stdout.decode(
+-                             "mac_roman")
+-    want = {}
+-    for line in lst.splitlines():
+-        f = line.split(None, 4)
+-        if len(f) == 5 and f[0] == "f":
+-            tc = f[3].encode("mac_roman")
+-            rel = f[4]
+-            d = open(os.path.join(ref, rel), "rb").read()
+-            rp = os.path.join(ref, rel + ".rsrc")
+-            r = open(rp, "rb").read() if os.path.exists(rp) else b""
+-            want[tuple(rel.split("/"))] = (d, r, tc[:4], tc[5:9])
+-    decoy_src = os.path.join(R.REPO, "fixtures", "vise-x-flash9.data")
+-
+-    bootimg = os.path.join(workdir, "boot-vise.hfv")
+-    R.sh(sys.executable, os.path.join(HERE, "mkboot.py"),
+-         os.path.join(R.VMAC_HOME, args.system), appbin, bootimg)
+-    flops = []
+-    for i, (f, n) in enumerate(zip(fx, ("Installer", "Segment.2",
+-                                        "Segment.3")), 1):
+-        fp = os.path.join(workdir, f"vise-{i}.dsk")
+-        # 1,441,792 B of Segment.2 do not fit hfsutils' 1440 KB volume
+-        # beside its catalogue; the emulator takes a larger disk alike.
+-        R.make_floppy(fp, f"Disk {i}", extras=[(f, n)], size_kb=1600)
+-        flops.append(fp)
+-    decoy = os.path.join(workdir, "decoy.dsk")
+-    R.make_floppy(decoy, "Other Disk", extras=[(decoy_src, "Segment.2")],
+-                  size_kb=1600)
+-
+-    scratch = os.path.join(args.outdir, ".settle.png")
+-    elapsed, still_asking, decoy_out = None, None, None
+-    mac = Mac(bootimg, args.emu, workdir, extra=(flops[0],))
+-    try:
+-        if mac.settle(scratch, interval=5.0, timeout=args.boot_timeout) is None:
+-            raise SystemExit("interactive: the machine never settled")
+-        shot(mac, "vise-1-launched.png")           # Disk 1's listing
+-        mac.click(*SF_FIRST_ROW)                   # "Installer"
+-        mac.key("Return")
+-        time.sleep(3.0)
+-        mac.click(*SFPUT_DRIVE)                    # to the boot disk
+-        time.sleep(2.0)
+-        shot(mac, "vise-2-destination.png")
+-        accept_destination(mac, pause=0.5)
+-        wait_for_alert(mac, scratch, timeout=args.complete_timeout)
+-        time.sleep(3.0)
+-        shot(mac, "vise-3-insert-2.png")           # "Insert the disk with Part 2"
+-        asking_png = os.path.join(workdir, "asking.png")
+-        shutil.copy(scratch, asking_png)
+-
+-        drop_disk(mac, decoy)
+-        time.sleep(20.0)
+-        mac.shot(scratch)
+-        still_asking = (prompt_line(scratch) == prompt_line(asking_png)
+-                        and bool(prompt_line(asking_png).strip(b"\xff")))
+-        decoy_out = not image_open(mac, decoy)
+-        shot(mac, "vise-4-after-decoy.png")
+-
+-        drop_disk(mac, flops[1])                   # nothing clicked from here
+-        wait_for_alert(mac, scratch, timeout=args.complete_timeout)
+-        time.sleep(3.0)
+-        shot(mac, "vise-5-insert-3.png")
+-        drop_disk(mac, flops[2])
+-        elapsed = mac.settle(scratch, interval=5.0, quiet=EXTRACT_QUIET,
+-                             timeout=args.complete_timeout)
+-        shot(mac, "vise-6-complete.png")
+-    finally:
+-        mac.close()
+-        if os.path.exists(scratch):
+-            os.remove(scratch)
+-
+-    got = mac_forks(os.path.join(workdir, "boot.hfv"), workdir)
+-    sys.path.insert(0, os.path.join(R.REPO, "tools"))
+-    from vmac_check import mask_reserved                   # noqa: E402
+-    want = {k: (w[0], mask_reserved(w[1]), w[2], w[3])
+-            for k, w in want.items()}
+-    got = {k: (g[0], mask_reserved(g[1]), g[2], g[3])
+-           for k, g in got.items()}
+-    ok = True
+-    for comps, w in sorted(want.items()):
+-        # An HFS name is 31 characters: compare the folders and the leaf
+-        # as the Mac cut them would be a reading of its own; the leaf alone
+-        # within its parent is what is held here.
+-        hits = [g for c, g in got.items() if c[-len(comps):] == comps]
+-        if len(hits) != 1:
+-            print(f"interactive: {'/'.join(comps)}: {len(hits)} on the disk")
+-            ok = False
+-        elif hits[0] != w:
+-            g = hits[0]
+-            print(f"interactive: {'/'.join(comps)}: data {len(g[0])}/"
+-                  f"{len(w[0])} rsrc {len(g[1])}/{len(w[1])} "
+-                  f"type {g[2]!r}/{w[2]!r} creator {g[3]!r}/{w[3]!r}")
+-            ok = False
+-    print("interactive: the decoy "
+-          + ("left the alert up" if still_asking else "DISMISSED THE ALERT")
+-          + (", and was ejected" if decoy_out else ", and is STILL IN"))
+-    print(f"interactive: {len(want)} files, both forks, type and creator "
+-          + ("BYTE-EXACT" if ok else "WRONG"))
+-    if elapsed is not None:
+-        print(f"interactive: settled ~{elapsed:.0f}s after disk 3 went in")
+-    return ok and bool(still_asking)
+-
+-
+ def read_joined(image, name, workdir):
+     """The joined archive off an HFS image, or None. MacRoman throughout:
+     the volume holds names like `StuffIt Expander™`, and a `text=True`
+@@ -3288,10 +3157,6 @@ def main():
+                     help="an Apple Backup set across three 1.44 MB floppies, "
+                          "a decoy disk of another backup first; run it on a "
+                          "one-drive emulator (mv-1M-1d, mv-512Ke-1d)")
+-    ap.add_argument("--vise", action="store_true",
+-                    help="an Installer VISE set across three floppies, a "
+-                         "decoy Segment.2 of another installer first; run "
+-                         "it on a one-drive emulator (mv-1M-1d, mv-512Ke-1d)")
+     ap.add_argument("--diskswap", action="store_true",
+                     help="the disk-swap phase: hold the fixture's parts on "
+                          "a floppy that is NOT in the machine, let the "
+@@ -3509,14 +3374,6 @@ def main():
+         print(f"interactive: screenshots in {args.outdir} — LOOK AT THEM.")
+         return 0 if ok else 1
+ 
+-    if args.vise:
+-        try:
+-            ok = phase_vise(args, appbin, workdir, shot)
+-        finally:
+-            shutil.rmtree(workdir, ignore_errors=True)
+-        print(f"interactive: screenshots in {args.outdir} — LOOK AT THEM.")
+-        return 0 if ok else 1
+-
+     if args.diskswap:
+         try:
+             ok = phase_diskswap(args, appbin, workdir, shot)

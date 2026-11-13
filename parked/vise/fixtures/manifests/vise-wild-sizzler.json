@@ -1,0 +1,57 @@
+{
+ "entries": [
+  {
+   "creator": "ttxt",
+   "data_oracle": "the record's CRC-32 over both forks",
+   "data_sha256": "a81496ef937a691521dabebf70f997a5a72462190adc88ea5978b7ed4209c6c5",
+   "data_size": 3843,
+   "finder_flags": 256,
+   "name": "Sizzler Plug-in/License Agreement",
+   "rsrc_oracle": "the record's CRC-32 over both forks",
+   "rsrc_sha256": "3cc782083eedb575153c3466712f1b64f229bbdde126fb67917046a5975f7757",
+   "rsrc_size": 6940,
+   "type": "ttro"
+  },
+  {
+   "creator": "ttxt",
+   "data_oracle": "the record's CRC-32 over both forks",
+   "data_sha256": "b3ce63b97e18fcb252dcdcbabbdf26663cb909bef4d58a5a77105e72515a96d6",
+   "data_size": 1655,
+   "finder_flags": 256,
+   "name": "Sizzler Plug-in/Readme - Plug In Installation",
+   "rsrc_oracle": "the record's CRC-32 over both forks",
+   "rsrc_sha256": "1b2dd9f03da2d3af49b843c71fc7b0560f04125c546f1a8400c90de8e3fd5727",
+   "rsrc_size": 492,
+   "type": "TEXT"
+  },
+  {
+   "creator": "ttxt",
+   "data_oracle": "the record's CRC-32 over both forks",
+   "data_sha256": "05bc72c855b08fcaafe220827d3ad8a613d4dea67f85b49fb07e616b1b9e2df3",
+   "data_size": 649,
+   "finder_flags": 256,
+   "name": "Sizzler Plug-in/Response Form",
+   "rsrc_oracle": "the record's CRC-32 over both forks",
+   "rsrc_sha256": "1ffcce32b0f68e315683fe92dc9964b2ee25d58ebf830d2c02a21ce27fc9864c",
+   "rsrc_size": 352,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MOSS",
+   "data_oracle": "the record's CRC-32 over both forks",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 256,
+   "name": "Sizzler Plug-in/Sizzler Plug-in",
+   "rsrc_oracle": "the record's CRC-32 over both forks",
+   "rsrc_sha256": "a1da4d3b69ba1879ddddd5d1629c117d8f5882c5c3d47bec03624f337018eaea",
+   "rsrc_size": 73951,
+   "type": "NSPL"
+  }
+ ],
+ "fixture": "vise-wild-sizzler",
+ "format": "Installer VISE",
+ "oracle": "each file's own CRC-32, data then resource fork, as the installer stores it, with the catalogue read independently of the engine; installer-vise for the compressed catalogues (tests/harness/run_vise.py)",
+ "sha256": "2130522bdfdb5dc5cd40f4bf73af5251f89e06f9a82280c68d44b43ff5a24204",
+ "size": 39841
+}

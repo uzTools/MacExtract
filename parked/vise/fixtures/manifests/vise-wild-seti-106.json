@@ -1,0 +1,57 @@
+{
+ "entries": [
+  {
+   "creator": "Seti",
+   "data_oracle": "the record's CRC-32 over both forks",
+   "data_sha256": "9bc36836856624860d4281c3020a678b415ac59593e907619a12fd86b9e849bd",
+   "data_size": 218736,
+   "finder_flags": 8448,
+   "name": "SETI@home",
+   "rsrc_oracle": "the record's CRC-32 over both forks",
+   "rsrc_sha256": "89c0a9248fc6c74c04c5e42603488c916a2fcb02cd4e3152b28e003e29c7efa5",
+   "rsrc_size": 115607,
+   "type": "cdev"
+  },
+  {
+   "creator": "ttxt",
+   "data_oracle": "the record's CRC-32 over both forks",
+   "data_sha256": "6d36c565538943b93be925b7ec713bc9406db00a997e3eef5a8a88885a1a43e2",
+   "data_size": 7444,
+   "finder_flags": 256,
+   "name": "SETI@home Documentation/mac_release_notes.txt",
+   "rsrc_oracle": "the record's CRC-32 over both forks",
+   "rsrc_sha256": "c01785dadb129c8abd1a8bbbfa6acb272cdf9624e2e2be32f56abbed63eb32fe",
+   "rsrc_size": 576,
+   "type": "ttro"
+  },
+  {
+   "creator": "ttxt",
+   "data_oracle": "the record's CRC-32 over both forks",
+   "data_sha256": "27d4783304577964ab65f56f35a9d9de0c6920d7d05b33560409bfb390b8ba9c",
+   "data_size": 14850,
+   "finder_flags": 256,
+   "name": "SETI@home Documentation/SETI@home ReadMe",
+   "rsrc_oracle": "the record's CRC-32 over both forks",
+   "rsrc_sha256": "f2a47ce8003fe2d0913f5d7680e005cfb17ffa86c7d003034ffed1582413e155",
+   "rsrc_size": 1296,
+   "type": "ttro"
+  },
+  {
+   "creator": "ttxt",
+   "data_oracle": "the record's CRC-32 over both forks",
+   "data_sha256": "27d4783304577964ab65f56f35a9d9de0c6920d7d05b33560409bfb390b8ba9c",
+   "data_size": 14850,
+   "finder_flags": 256,
+   "name": "SETI@home Data/SETI@home ReadMe",
+   "rsrc_oracle": "the record's CRC-32 over both forks",
+   "rsrc_sha256": "03b538e07475ece18290b7ea91dab75aa17b366dca7ea096c0c072cdf3496ce7",
+   "rsrc_size": 1296,
+   "type": "ttro"
+  }
+ ],
+ "fixture": "vise-wild-seti-106",
+ "format": "Installer VISE",
+ "oracle": "each file's own CRC-32, data then resource fork, as the installer stores it, with the catalogue read independently of the engine; installer-vise for the compressed catalogues (tests/harness/run_vise.py)",
+ "sha256": "9750e7e02268eab330ebebaabee3d90c7a6d1e2066ef0da5719237f645f0dea5",
+ "size": 146466
+}

@@ -1,0 +1,33 @@
+{
+ "entries": [
+  {
+   "creator": "VSU1",
+   "data_oracle": "the record's CRC-32 over both forks",
+   "data_sha256": "5bc35056a1f5f0df5f9665d399e652da0b0be027bef32655f2a33ddc63513512",
+   "data_size": 197403,
+   "finder_flags": 256,
+   "name": "Speed Doubler 8 cdev Updater",
+   "rsrc_oracle": "the record's CRC-32 over both forks",
+   "rsrc_sha256": "80f0fac794742d3d89b250f614c55252f88af75dc2ebd961b36f8522bcdb25f4",
+   "rsrc_size": 1060,
+   "type": "VSUP"
+  },
+  {
+   "creator": "VSU1",
+   "data_oracle": "the record's CRC-32 over both forks",
+   "data_sha256": "e5d348233e86e62e51b795814ee02e8f47a85dca806513e5fcae9f1b4dbfe3c9",
+   "data_size": 43197,
+   "finder_flags": 256,
+   "name": "Speed Doubler 8 scri Updater",
+   "rsrc_oracle": "the record's CRC-32 over both forks",
+   "rsrc_sha256": "c45e3ced637571a41559924f14ac6ef6e389afdb8bb66ba304889a1cac89653b",
+   "rsrc_size": 1080,
+   "type": "VSUP"
+  }
+ ],
+ "fixture": "vise-wild-speed-doubler-81",
+ "format": "Installer VISE",
+ "oracle": "each file's own CRC-32, data then resource fork, as the installer stores it, with the catalogue read independently of the engine; installer-vise for the compressed catalogues (tests/harness/run_vise.py)",
+ "sha256": "fd46f1503f2eff11514a1b48c59488dfc7ff46b8eaaf0877f68ef740cc23c9f1",
+ "size": 227511
+}

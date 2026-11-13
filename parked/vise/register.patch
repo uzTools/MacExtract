@@ -1,0 +1,858 @@
+diff --git a/include/macextract.h b/include/macextract.h
+index 5f931453..1232eeee 100644
+--- a/include/macextract.h
++++ b/include/macextract.h
+@@ -131,10 +131,9 @@ typedef enum UncFormat {
+     UNC_FORMAT_ABK,           /* one disk of an Apple Backup set      */
+     /* Brought in scope 2026-11-10; appended for the same ABI reason. */
+     UNC_FORMAT_TOME,          /* Apple Installer Tome ('idcp')        */
+-    /* RESERVED: Installer VISE, in scope 2026-11-11 and parked 2026-11-12
+-     * in `parked/vise/` (DECISIONS.md 2026-11-12, *VISE
+-     * parked*). Kept so that no later number moves; nothing returns it. */
+-    UNC_FORMAT_VISE,
++    /* Brought in scope 2026-11-11; appended for the same ABI reason.
++     * Read only as a set, a set of one included, as UNC_FORMAT_ABK. */
++    UNC_FORMAT_VISE,          /* an Installer VISE 3.x installer      */
+ 
+     UNC_FORMAT__COUNT
+ } UncFormat;
+diff --git a/mac/CMakeLists.txt b/mac/CMakeLists.txt
+index 8a5ac3f2..25ba8790 100644
+--- a/mac/CMakeLists.txt
++++ b/mac/CMakeLists.txt
+@@ -142,6 +142,8 @@ else()
+     list(FILTER ENGINE_SRC EXCLUDE REGEX "fmt_lz4\\.c$")
+     list(FILTER ENGINE_SRC EXCLUDE REGEX "fmt_abk\\.c$")
+     list(FILTER ENGINE_SRC EXCLUDE REGEX "fmt_tome\\.c$")
++    list(FILTER ENGINE_SRC EXCLUDE REGEX "fmt_vise\\.c$")
++    list(FILTER ENGINE_SRC EXCLUDE REGEX "fmt_viseold\\.c$")
+     list(FILTER ENGINE_SRC EXCLUDE REGEX "unc_sniff\\.c$")
+     # Which set a file belongs to goes with the sniffer, whose image holds
+     # every parser it calls; mac/ovl_shim.c is what the shell links against
+@@ -887,6 +889,7 @@ add_custom_command(
+             ${ENGINE_DIR}/src/fmt_abk_probe.c
+             ${ENGINE_DIR}/src/fmt_lz4_probe.c
+             ${ENGINE_DIR}/src/fmt_tome_probe.c
++            ${ENGINE_DIR}/src/fmt_vise_probe.c
+             ${ENGINE_DIR}/src/fmt_mime_probe.c
+             ${ENGINE_DIR}/src/fmt_mimeseg_probe.c
+             ${ENGINE_DIR}/src/fmt_now_probe.c
+@@ -910,6 +913,7 @@ add_custom_command(
+             ${ENGINE_DIR}/src/fmt_mimeseg.c
+             ${ENGINE_DIR}/src/fmt_sitseg.c
+             ${ENGINE_DIR}/src/fmt_abkset.c
++            ${ENGINE_DIR}/src/fmt_viseset.c
+     DEPENDS ${ENGINE_DIR}/tools/overlay/ovl_sniff.c
+             ${CMAKE_CURRENT_BINARY_DIR}/ovl_forwards_sniff_gen.c
+             ${CMAKE_CURRENT_BINARY_DIR}/ovl_host_gen.h
+@@ -930,6 +934,7 @@ add_custom_command(
+             ${ENGINE_DIR}/src/fmt_abk_probe.c
+             ${ENGINE_DIR}/src/fmt_lz4_probe.c
+             ${ENGINE_DIR}/src/fmt_tome_probe.c
++            ${ENGINE_DIR}/src/fmt_vise_probe.c
+             ${ENGINE_DIR}/src/fmt_mime_probe.c
+             ${ENGINE_DIR}/src/fmt_mimeseg_probe.c
+             ${ENGINE_DIR}/src/fmt_now_probe.c
+@@ -953,6 +958,29 @@ add_custom_command(
+             ${ENGINE_DIR}/src/fmt_mimeseg.c
+             ${ENGINE_DIR}/src/fmt_sitseg.c
+             ${ENGINE_DIR}/src/fmt_abkset.c
++            ${ENGINE_DIR}/src/fmt_viseset.c
++            ${OVL_DEPS})
++# Installer VISE: its reader, its inflater and its set's match, which a set
++# still asks while it is read. The probe is the sniffer's; the bit reader and
++# the canonical decoder are the codecs image's.
++add_custom_command(
++    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/ovl_vise.r
++    COMMAND ${CMAKE_COMMAND} -E env OVL_ID=OVL_ID_VISE
++            OVL_INC=${CMAKE_CURRENT_BINARY_DIR}
++            sh ${ENGINE_DIR}/tools/overlay/mkoverlay.sh
++            ${CMAKE_CURRENT_BINARY_DIR}/ovl_vise.r
++            ${ENGINE_DIR}/tools/overlay/ovl_vise.c
++            ${CMAKE_CURRENT_BINARY_DIR}/ovl_forwards_gen.c
++            ${ENGINE_DIR}/src/fmt_vise.c
++            ${ENGINE_DIR}/src/fmt_viseold.c
++            ${ENGINE_DIR}/src/fmt_viseset.c
++    DEPENDS ${ENGINE_DIR}/tools/overlay/ovl_vise.c
++            ${CMAKE_CURRENT_BINARY_DIR}/ovl_forwards_gen.c
++            ${CMAKE_CURRENT_BINARY_DIR}/ovl_host_gen.h
++            ${ENGINE_DIR}/src/fmt_vise.c
++            ${ENGINE_DIR}/src/fmt_viseold.c
++            ${ENGINE_DIR}/src/fmt_viseset.c
++            ${ENGINE_DIR}/src/fmt_vise_priv.h
+             ${OVL_DEPS})
+ # The destination dialog and a set's setup: shell code in images of their
+ # own, bundled so that they are read at launch and given back with the bundle
+diff --git a/src/unc_formats.h b/src/unc_formats.h
+index 79306ef4..98d62159 100644
+--- a/src/unc_formats.h
++++ b/src/unc_formats.h
+@@ -206,6 +206,15 @@
+     FORMAT(UNC_FORMAT_ABK, "Apple Backup", PART, 0, \
+            RUN(OVL_ID_ZIPOLD, OVL_ABK_EXTRACT, RUN_MATCH), KEEP(0), \
+            JOIN_READ(SEG_ADDRESSED, unc_abk_extract)) \
++    /* Installer VISE, an installer and its Segment.N files: one set, read \
++     * as one, an installer of one segment a set of one; extracted \
++     * directly, it is that segment alone. Addressed, its records stating \
++     * segment and offset; matched in its own image, which the set keeps. \
++     * VISE has a password option, unused on every installer here and not \
++     * read: no ciphers kept (fmt_vise.c). */ \
++    FORMAT(UNC_FORMAT_VISE, "Installer VISE", FILE, unc_vise_extract, \
++           RUN(OVL_ID_VISE, OVL_VISE_EXTRACT, RUN_CODECS | RUN_MATCH), \
++           KEEP(0), JOIN_READ(SEG_ADDRESSED, unc_vise_extract)) \
+     \
+     /* MIME. A message keeps the whole bundle: its parts can be anything. A \
+      * message/partial part is half a message; the parts join into a MESSAGE, \
+@@ -271,6 +280,9 @@
+      * (fmt_tome_probe.c). Byte 0 is 'k', which MacBinary below wants \
+      * zero. */ \
+     PROBE(unc_tome_probe, ARCHIVE) \
++    /* 'SVCT', a version, segment 1 of a count and 'CVCT' where the \
++     * header puts the catalogue (fmt_vise_probe.c). Byte 0 is 'S'. */ \
++    PROBE(unc_vise_probe, ARCHIVE) \
+     /* MacBinary has no magic number, only a header CRC and structural \
+      * constraints, which is why it used to sit LAST — the weakest test \
+      * claims a file only when nothing stronger has. It is here instead \
+@@ -405,6 +417,8 @@
+      * all a Compact Pro segment has to show. 'CMWL' at +2 is what an Apple \
+      * Backup disk has, and every disk states the count. */ \
+     SEGID(UNC_FORMAT_ABK,     unc_abk_describe,     unc_abk_match) \
++    /* Installer VISE: 'SVCT' at 0, and only segment 1 describes. */ \
++    SEGID(UNC_FORMAT_VISE,    unc_vise_describe,    unc_vise_match) \
+     /* Compact Pro next: like StuffIt it decides on a header at offset 0. \
+      * Unlike StuffIt, a part that is not the LAST one answers with \
+      * nparts == 0 - it knows the set it belongs to but not how big the set \
+@@ -452,6 +466,7 @@
+     DECODER(unc_mar_extract) \
+     DECODER(unc_lz4_extract) \
+     DECODER(unc_abk_extract) \
+-    DECODER(unc_tome_extract)
++    DECODER(unc_tome_extract) \
++    DECODER(unc_vise_extract)
+ 
+ #endif /* UNC_FORMATS_H */
+diff --git a/src/unc_internal.h b/src/unc_internal.h
+index e088ade8..d3943657 100644
+--- a/src/unc_internal.h
++++ b/src/unc_internal.h
+@@ -1557,6 +1557,9 @@ UncFormat unc_abk_probe(const uint8_t *head, int32_t len, UncIO *io);
+ int unc_abk_describe(UncIO *io, UncSegmentDesc *desc);
+ int unc_abk_match(const UncSegmentDesc *desc, const uint8_t *head,
+                   int32_t len);
++/* Installer VISE (fmt_vise.c): an installer and its segments, addressed. */
++int unc_vise_match(const UncSegmentDesc *desc, const uint8_t *head,
++                   int32_t len);
+ 
+ /* uuencode, including UUTool's two-fork shape (fmt_uu.c). The probe
+  * needs no io: a uu file identifies itself in its first lines. */
+diff --git a/tests/unit_formats.c b/tests/unit_formats.c
+index 9fa2c8c0..8db8fcf8 100644
+--- a/tests/unit_formats.c
++++ b/tests/unit_formats.c
+@@ -7368,6 +7368,577 @@ static void test_malformed_regressions(void)
+     }
+ }
+ 
++/* ------------------------------------------------------------------ */
++/* Installer VISE (src/fmt_vise.c): installers built here, by hand,    */
++/* from the layout in fmt_vise.c's header comment. The streams are     */
++/* STORED blocks, written in VISE's own framing — 16-bit aligned, an    */
++/* odd length padded, every pair of bytes swapped and every byte        */
++/* substituted — so that what a Huffman block would hide is in plain    */
++/* view; tests/harness/run_vise.py grades the dynamic blocks on real            */
++/* installers, against their own CRC-32s.                               */
++/* ------------------------------------------------------------------ */
++
++#include "fmt_vise_priv.h"
++
++/* The substitution as the reader undoes it (ScummVM's table, a second
++ * copy: a typo in the engine's is then a failure here). */
++static const uint8_t vt_subst[256] = {
++    0x6a,0xb7,0x36,0xec,0x15,0xd9,0xc8,0x73,0xe8,0x38,0x9a,0xdf,0x21,0x25,0xd0,0xcc,
++    0xfd,0xdc,0x16,0xd7,0xe3,0x43,0x05,0xc5,0x8f,0x48,0xda,0xf2,0x3f,0x10,0x23,0x6c,
++    0x77,0x7c,0xf9,0xa0,0xa3,0xe9,0xed,0x46,0x8b,0xd8,0xac,0x54,0xce,0x2d,0x19,0x5e,
++    0x6d,0x7d,0x87,0x5d,0xfa,0x5b,0x9b,0xe0,0xc7,0xee,0x9f,0x52,0xa9,0xb9,0x0a,0xd1,
++    0xfe,0x78,0x76,0x4a,0x3d,0x44,0x5a,0x96,0x90,0x1f,0x26,0x9d,0x58,0x1b,0x8e,0x57,
++    0x59,0xc3,0x0b,0x6b,0xfc,0x1d,0xe6,0xa2,0x7f,0x92,0x4f,0x40,0xb4,0x06,0x72,0x4d,
++    0xf4,0x34,0xaa,0xd2,0x49,0xad,0xef,0x22,0x1a,0xb5,0xba,0xbf,0x29,0x68,0x89,0x93,
++    0x3e,0x32,0x04,0xf5,0xde,0xe1,0x6f,0xfb,0x67,0xe4,0x7e,0x08,0xaf,0xf0,0xab,0x41,
++    0x82,0xea,0x50,0x0f,0x2a,0xc6,0x35,0xb3,0xa8,0xca,0xe5,0x4c,0x45,0x8a,0x97,0xae,
++    0xd6,0x66,0x27,0x53,0xc9,0x1c,0x3c,0x03,0x99,0xc1,0x09,0x2e,0x69,0x37,0x8d,0x2f,
++    0x60,0xc2,0xa6,0x18,0x4e,0x7a,0xb8,0xcf,0xa7,0x3a,0x17,0xd5,0x9e,0xf1,0x84,0x51,
++    0x0d,0xa4,0x64,0xc4,0x1e,0xb1,0x30,0x98,0xbb,0x79,0x01,0xf6,0x62,0x0e,0xb2,0x63,
++    0x91,0xcb,0xff,0x80,0x71,0xe7,0xd4,0x00,0xdb,0x75,0x2c,0xbd,0x39,0x33,0x94,0xbc,
++    0x8c,0x3b,0xb6,0x20,0x85,0x24,0x88,0x2b,0x70,0x83,0x6e,0x7b,0x9c,0xbe,0x14,0x47,
++    0x65,0x4b,0x56,0x81,0xf8,0x12,0x11,0x28,0xeb,0x55,0x74,0xa1,0x31,0xf7,0xb0,0x13,
++    0x86,0xdd,0x5f,0x42,0xd3,0x02,0x61,0x95,0x0c,0x5c,0xa5,0xcd,0xc0,0x07,0xe2,0xf3,
++};
++
++#define VT_CAP 8192u
++static uint8_t vt_a[VT_CAP], vt_b[VT_CAP];
++
++/* A pattern a test can recognise: byte i of stream `seed`. */
++static uint8_t vt_byte(uint32_t seed, uint32_t i)
++{
++    return (uint8_t)(seed * 37u + i * 11u + (i >> 3));
++}
++
++/* `n` bytes of pattern `seed` as one VISE stream at a[at...], in stored
++ * blocks of at most `blk` bytes; substituted unless `plain`. Returns the
++ * stream's length (even: a stream ends on a word). */
++static uint32_t vt_stream(uint8_t *a, uint32_t at, uint32_t seed, uint32_t n,
++                          uint32_t blk, int plain)
++{
++    uint8_t s[2048];
++    uint32_t k = 0, done = 0, i, inv[256];
++    do {
++        uint32_t m = n - done < blk ? n - done : blk;
++        s[k++] = (uint8_t)(done + m == n ? 1 : 0);   /* BFINAL, BTYPE 0 */
++        s[k++] = 0;                                    /* to the word     */
++        s[k++] = (uint8_t)m;  s[k++] = (uint8_t)(m >> 8);
++        s[k++] = (uint8_t)~m; s[k++] = (uint8_t)(~m >> 8);
++        for (i = 0; i < m; i++) s[k++] = vt_byte(seed, done + i);
++        if (m & 1u) s[k++] = 0;                        /* the pad byte    */
++        done += m;
++    } while (done < n);
++    for (i = 0; i < 256; i++) inv[vt_subst[i]] = i;
++    for (i = 0; i < k; i++) {
++        uint8_t b = s[i ^ 1u];                         /* the pair swap   */
++        a[at + i] = plain ? b : (uint8_t)inv[b];
++    }
++    return k;
++}
++
++/* The CRC-32 of pattern `sd` (n bytes) then pattern `sr` (m bytes). */
++static uint32_t vt_crc(uint32_t sd, uint32_t n, uint32_t sr, uint32_t m)
++{
++    uint32_t c = UNC_CRC32_INIT, i;
++    uint8_t b;
++    for (i = 0; i < n; i++) { b = vt_byte(sd, i); c = unc_crc32(c, &b, 1); }
++    for (i = 0; i < m; i++) { b = vt_byte(sr, i); c = unc_crc32(c, &b, 1); }
++    return ~c;
++}
++
++static uint32_t vt_dir(uint8_t *a, uint32_t at, const char *name,
++                       uint32_t depth)
++{
++    uint32_t nl = (uint32_t)strlen(name);
++    memcpy(a + at, "DVCT", 4);
++    memset(a + at + 4, 0, 78);
++    unc_put_u32be(a + at + 4 + 16, 0xA1000001u);
++    put16be(a + at + 4 + 68, depth);
++    a[at + 4 + 76] = (uint8_t)nl;
++    memcpy(a + at + 4 + 78, name, nl);
++    return at + 4 + 78 + nl;
++}
++
++static uint32_t vt_file(uint8_t *a, uint32_t at, const char *name,
++                        uint32_t depth, uint32_t seg, uint32_t pos,
++                        uint32_t dc, uint32_t dl, uint32_t rc, uint32_t rl,
++                        uint32_t crc, int shared, uint32_t s0, uint32_t s1)
++{
++    uint8_t *r = a + at + 4;
++    uint32_t nl = (uint32_t)strlen(name);
++    memcpy(a + at, "FVCT", 4);
++    memset(r, 0, 120);
++    r[8] = shared ? 0x10 : 0;
++    memcpy(r + 40, "TEXTttxt", 8);
++    put16be(r + 48, 0x0100);
++    unc_put_u32be(r + 56, 0xA2000002u);
++    unc_put_u32be(r + 60, 0xA3000003u);
++    unc_put_u32be(r + 64, dc); unc_put_u32be(r + 68, dl);
++    unc_put_u32be(r + 72, rc); unc_put_u32be(r + 76, rl);
++    unc_put_u32be(r + 80, crc);
++    put16be(r + 92, depth); put16be(r + 94, seg);
++    unc_put_u32be(r + 96, pos);
++    unc_put_u32be(r + 100, s0); unc_put_u32be(r + 104, s1);
++    r[118] = (uint8_t)nl;
++    memcpy(r + 120, name, nl);
++    return at + 4 + 120 + nl;
++}
++
++static void vt_head(uint8_t *a, uint32_t part, uint32_t count, uint32_t cat)
++{
++    memset(a, 0, VISE_HDR);
++    memcpy(a, "SVCT", 4);
++    unc_put_u32be(a + 4, part);
++    unc_put_u32be(a + 12, 0x5EED5EEDu);
++    unc_put_u32be(a + 16, 0x80010202u);
++    unc_put_u32be(a + 20, part == 1 ? count : 0);
++    unc_put_u32be(a + 36, part == 1 ? cat : 0);
++}
++
++/* The test installer: folder F with a two-fork file, two files sharing a
++ * block (catalogued in the reverse of their bytes), F/G/e at depth 2, a
++ * folder E that holds only a record of segment 0, and d at the root. */
++static uint32_t vt_build(uint8_t *a)
++{
++    uint32_t at = VISE_HDR, p_a, da, ra, p_b, blk, p_e, de, p_d, dd, cat, c,
++             body, n = 0;
++    p_a = at; da = vt_stream(a, at, 1, 301, 121, 0); at += da;
++    ra = vt_stream(a, at, 2, 40, 512, 0); at += ra;
++    /* The shared block: b's data (30), b's rsrc (7), c's data (21). */
++    p_b = at;
++    {
++        uint8_t s[64];
++        uint32_t i, inv[256], k = 0;
++        s[k++] = 1; s[k++] = 0; s[k++] = 58; s[k++] = 0;
++        s[k++] = (uint8_t)~58u; s[k++] = 0xFF;
++        for (i = 0; i < 30; i++) s[k++] = vt_byte(3, i);
++        for (i = 0; i < 7; i++) s[k++] = vt_byte(4, i);
++        for (i = 0; i < 21; i++) s[k++] = vt_byte(5, i);
++        for (i = 0; i < 256; i++) inv[vt_subst[i]] = i;
++        for (i = 0; i < k; i++) a[at + i] = (uint8_t)inv[s[i ^ 1u]];
++        blk = k;
++        at += k;
++    }
++    p_e = at; de = vt_stream(a, at, 6, 9, 512, 0); at += de;
++    p_d = at; dd = vt_stream(a, at, 7, 1, 512, 0); at += dd;
++    cat = at;
++    memcpy(a + cat, "CVCT", 4);
++    memset(a + cat + 4, 0, 16);
++    c = body = cat + VISE_CAT_HDR;
++    c = vt_dir(a, c, "F", 0); n++;
++    c = vt_file(a, c, "a", 1, 1, p_a, da, 301, ra, 40,
++                vt_crc(1, 301, 2, 40), 0, 0, 0); n++;
++    c = vt_file(a, c, "c", 1, 1, p_b, blk, 21, 58, 0,
++                vt_crc(5, 21, 0, 0), 1, 37, 0); n++;
++    c = vt_file(a, c, "b", 1, 1, p_b, blk, 30, 58, 7,
++                vt_crc(3, 30, 4, 7), 1, 0, 30); n++;
++    c = vt_dir(a, c, "G", 1); n++;
++    c = vt_file(a, c, "e", 2, 1, p_e, de, 9, 0, 0,
++                vt_crc(6, 9, 0, 0), 0, 0, 0); n++;
++    c = vt_dir(a, c, "E", 0); n++;
++    c = vt_file(a, c, "not here", 1, 0, 0x7FFF, 4, 4, 0, 0, 0, 0, 0, 0);
++    n++;
++    memcpy(a + c, "A trailing alert's text, no record", 34); c += 34;
++    c = vt_file(a, c, "d", 0, 1, p_d, dd, 1, 0, 0,
++                vt_crc(7, 1, 0, 0), 0, 0, 0); n++;
++    unc_put_u32be(a + cat + 4, c - body);
++    put16be(a + cat + 16, n);
++    vt_head(a, 1, 1, cat);
++    return c;
++}
++
++static int vt_pattern(const uint8_t *p, uint32_t n, uint32_t seed)
++{
++    uint32_t i;
++    for (i = 0; i < n; i++) if (p[i] != vt_byte(seed, i)) return 0;
++    return 1;
++}
++
++static int vt_run(const uint8_t *p1, uint32_t l1, const uint8_t *p2,
++                  uint32_t l2, int nparts, int missing, CapSink *cap)
++{
++    UncSegmentDesc desc;
++    UncVolumeSource vs;
++    SegParts sp;
++    UncSink sk;
++    UncAlloc al;
++    MemIO m;
++    UncIO io;
++    void *scratch;
++    int r;
++
++    test_make_memio(&io, &m, p1, l1);
++    if (unc_segment_describe(&io, &desc) != UNC_OK) return 99;
++    memset(&sp, 0, sizeof sp);
++    sp.part[0] = p1; sp.len[0] = l1;
++    sp.part[1] = p2; sp.len[1] = l2;
++    sp.nparts = nparts;
++    sp.missing = missing;
++    memset(&vs, 0, sizeof vs);
++    vs.ctx = &sp; vs.need = segsrc_need;
++    scratch = malloc(unc_segment_scratch_size());
++    test_make_alloc(&al);
++    cap_make(&sk, cap);
++    r = unc_extract_segments(&desc, &vs, scratch, &sk, &al, NULL, NULL);
++    free(scratch);
++    return r;
++}
++
++static int vt_named(const CapSink *cap, int i, const char *name)
++{
++    size_t n = strlen(name);
++    return cap->info[i].name_len == n && memcmp(cap->info[i].name, name, n) == 0;
++}
++
++static void test_vise(void)
++{
++    UncSegmentDesc desc;
++    CapSink cap;
++    MemIO m;
++    UncIO io;
++    uint8_t head[VISE_HDR];
++    uint32_t len = vt_build(vt_a), cat = unc_get_u32be(vt_a + 36);
++
++    /* --- the probe, the sniff, the set's identity ------------------- */
++    test_make_memio(&io, &m, vt_a, len);
++    CHECK(unc_vise_probe(vt_a, VISE_HDR, &io) == UNC_FORMAT_VISE);
++    test_make_memio(&io, &m, vt_a, len);
++    CHECK(unc_sniff(&io) == UNC_FORMAT_VISE);
++    test_make_memio(&io, &m, vt_a, len);
++    CHECK(unc_segment_describe(&io, &desc) == UNC_OK);
++    CHECK(desc.scheme == UNC_FORMAT_VISE && desc.part == 1 &&
++          desc.nparts == 1 && desc.head_len == VISE_HDR);
++    CHECK(unc_segment_match(&desc, vt_a, VISE_HDR) == 1);
++    memcpy(head, vt_a, VISE_HDR);
++    head[15] ^= 1;                                      /* another stamp */
++    CHECK(unc_segment_match(&desc, head, VISE_HDR) == 0);
++    /* Refused: each fact in turn. */
++    memcpy(head, vt_a, VISE_HDR); head[0] = 'X';
++    CHECK(unc_vise_probe(head, VISE_HDR, &io) == UNC_FORMAT_UNKNOWN);
++    memcpy(head, vt_a, VISE_HDR); unc_put_u32be(head + 16, 0x80010306u);
++    CHECK(unc_vise_probe(head, VISE_HDR, &io) == UNC_FORMAT_UNKNOWN);
++    memcpy(head, vt_a, VISE_HDR); unc_put_u32be(head + 4, 2);
++    CHECK(unc_vise_probe(head, VISE_HDR, &io) == UNC_FORMAT_UNKNOWN);
++    memcpy(head, vt_a, VISE_HDR); unc_put_u32be(head + 20, 0);
++    CHECK(unc_vise_probe(head, VISE_HDR, &io) == UNC_FORMAT_UNKNOWN);
++    memcpy(vt_b, vt_a, len); vt_b[cat] = 'X';           /* no 'CVCT' */
++    test_make_memio(&io, &m, vt_b, len);
++    CHECK(unc_vise_probe(vt_b, VISE_HDR, &io) == UNC_FORMAT_UNKNOWN);
++
++    /* --- the installer: folders that hold a stored file first, then the
++     * files in the order of their bytes; E and "not here" not at all -- */
++    CHECK(vt_run(vt_a, len, NULL, 0, 1, 0, &cap) == UNC_OK);
++    CHECK(cap.count == 7);
++    CHECK(cap.info[0].is_dir && vt_named(&cap, 0, "F"));
++    CHECK(cap.info[0].create_date == 0xA1000001u);
++    CHECK(cap.info[1].is_dir && vt_named(&cap, 1, "F/G"));
++    CHECK(vt_named(&cap, 2, "F/a") && cap.status[2] == UNC_OK);
++    CHECK(cap.dlen[2] == 301 && vt_pattern(cap.data[2], 301, 1));
++    CHECK(cap.rlen[2] == 40 && vt_pattern(cap.rsrc[2], 40, 2));
++    CHECK(cap.info[2].type == 0x54455854u && cap.info[2].creator == 0x74747874u);
++    CHECK(cap.info[2].finder_flags == 0x0100 &&
++          cap.info[2].create_date == 0xA2000002u &&
++          cap.info[2].mod_date == 0xA3000003u);
++    /* The shared block, b before c however the catalogue lists them. */
++    CHECK(vt_named(&cap, 3, "F/b") && cap.status[3] == UNC_OK);
++    CHECK(cap.dlen[3] == 30 && vt_pattern(cap.data[3], 30, 3));
++    CHECK(cap.rlen[3] == 7 && vt_pattern(cap.rsrc[3], 7, 4));
++    CHECK(vt_named(&cap, 4, "F/c") && cap.status[4] == UNC_OK);
++    CHECK(cap.dlen[4] == 21 && vt_pattern(cap.data[4], 21, 5));
++    CHECK(vt_named(&cap, 5, "F/G/e") && cap.status[5] == UNC_OK &&
++          vt_pattern(cap.data[5], 9, 6));
++    /* The depth after a deeper folder: back at the root. */
++    CHECK(vt_named(&cap, 6, "d") && cap.status[6] == UNC_OK &&
++          cap.dlen[6] == 1 && vt_pattern(cap.data[6], 1, 7));
++
++    /* --- a wrong CRC is that entry's, and the walk goes on ---------- */
++    memcpy(vt_b, vt_a, len);
++    {
++        uint32_t at = 0;
++        /* "a"'s record: the first FVCT after the catalogue's start. */
++        for (at = cat; memcmp(vt_b + at, "FVCT", 4) != 0; at++) {}
++        vt_b[at + 4 + 83] ^= 1;
++    }
++    CHECK(vt_run(vt_b, len, NULL, 0, 1, 0, &cap) == UNC_OK);
++    CHECK(cap.count == 7 && cap.status[2] == UNC_ERR_CRC &&
++          cap.status[3] == UNC_OK);
++    /* A stored block whose NLEN is not its LEN's complement. */
++    memcpy(vt_b, vt_a, len);
++    vt_b[VISE_HDR + 4] ^= 0x40;
++    CHECK(vt_run(vt_b, len, NULL, 0, 1, 0, &cap) == UNC_OK);
++    CHECK(cap.status[2] == UNC_ERR_CORRUPT && cap.status[6] == UNC_OK);
++    /* A slice past its block's end. */
++    memcpy(vt_b, vt_a, len);
++    {
++        uint32_t at;
++        for (at = cat; memcmp(vt_b + at, "FVCT", 4) != 0 ||
++                       vt_b[at + 4 + 120] != 'c'; at++) {}
++        unc_put_u32be(vt_b + at + 4 + 100, 40);
++    }
++    CHECK(vt_run(vt_b, len, NULL, 0, 1, 0, &cap) == UNC_OK);
++    CHECK(cap.status[4] == UNC_ERR_CORRUPT && cap.status[3] == UNC_OK);
++    /* A depth past the folders open: the catalogue cannot be placed. */
++    memcpy(vt_b, vt_a, len);
++    {
++        uint32_t at;
++        for (at = cat; memcmp(vt_b + at, "FVCT", 4) != 0 ||
++                       vt_b[at + 4 + 120] != 'e'; at++) {}
++        put16be(vt_b + at + 4 + 92, 4);
++    }
++    CHECK(vt_run(vt_b, len, NULL, 0, 1, 0, &cap) == UNC_ERR_CORRUPT);
++    CHECK(cap.count == 0);
++    /* Cut inside the catalogue, and inside a stream. */
++    CHECK(vt_run(vt_a, cat + 40, NULL, 0, 1, 0, &cap) != UNC_OK);
++    CHECK(vt_run(vt_a, VISE_HDR + 100, NULL, 0, 1, 0, &cap) != UNC_OK);
++
++    /* --- an installer that stores nothing it installs ------------- */
++    {
++        uint32_t c, body, at = VISE_HDR;
++        vt_head(vt_b, 1, 1, at);
++        memcpy(vt_b + at, "CVCT", 4);
++        memset(vt_b + at + 4, 0, 16);
++        c = body = at + VISE_CAT_HDR;
++        c = vt_dir(vt_b, c, "F", 0);
++        c = vt_file(vt_b, c, "fetched", 1, 0, 0, 9, 9, 0, 0, 0, 0, 0, 0);
++        unc_put_u32be(vt_b + at + 4, c - body);
++        put16be(vt_b + at + 16, 2);
++        CHECK(vt_run(vt_b, c, NULL, 0, 1, 0, &cap) == UNC_ERR_UNSUPPORTED);
++        CHECK(cap.count == 0);
++    }
++
++    /* --- two segments: a stream that runs from the end of segment 1's
++     * payload, which is where its catalogue starts, on at +44 of
++     * segment 2; and segment 2 not to be had --------------------- */
++    {
++        uint32_t s1len, s2len, at = VISE_HDR, st, c, body, cat1, cut;
++        st = vt_stream(vt_a, at, 9, 200, 512, 0);   /* scratch copy */
++        cut = 80;                                     /* bytes in seg 1 */
++        memcpy(vt_b + at, vt_a + at, cut);
++        cat1 = at + cut;
++        memcpy(vt_b + cat1, "CVCT", 4);
++        memset(vt_b + cat1 + 4, 0, 16);
++        c = body = cat1 + VISE_CAT_HDR;
++        c = vt_file(vt_b, c, "across", 0, 1, at, st, 200, 0, 0,
++                    vt_crc(9, 200, 0, 0), 0, 0, 0);
++        c = vt_file(vt_b, c, "second", 0, 2, VISE_HDR + st - cut, 
++                    vt_stream(vt_a + 4096, 0, 10, 5, 512, 0), 5, 0, 0,
++                    vt_crc(10, 5, 0, 0), 0, 0, 0);
++        unc_put_u32be(vt_b + cat1 + 4, c - body);
++        put16be(vt_b + cat1 + 16, 2);
++        vt_head(vt_b, 1, 2, cat1);
++        s1len = c;
++        /* Segment 2: its header, the rest of "across", then "second". */
++        {
++            static uint8_t s2[1024];
++            uint32_t k = VISE_HDR, t = vt_stream(s2 + 512, 0, 10, 5, 512, 0);
++            vt_head(s2, 2, 0, 0);
++            memcpy(s2 + k, vt_a + at + cut, st - cut); k += st - cut;
++            memcpy(s2 + k, s2 + 512, t); k += t;
++            s2len = k;
++            CHECK(vt_run(vt_b, s1len, s2, s2len, 2, 0, &cap) == UNC_OK);
++            CHECK(cap.count == 2);
++            CHECK(vt_named(&cap, 0, "across") && cap.status[0] == UNC_OK &&
++                  cap.dlen[0] == 200 && vt_pattern(cap.data[0], 200, 9));
++            CHECK(vt_named(&cap, 1, "second") && cap.status[1] == UNC_OK &&
++                  vt_pattern(cap.data[1], 5, 10));
++            CHECK(unc_segment_match(&desc, s2, VISE_HDR) == 0);
++            test_make_memio(&io, &m, vt_b, s1len);
++            CHECK(unc_segment_describe(&io, &desc) == UNC_OK &&
++                  desc.nparts == 2);
++            CHECK(unc_segment_match(&desc, s2, VISE_HDR) == 2);
++            CHECK(vt_run(vt_b, s1len, s2, s2len, 2, 2, &cap) ==
++                  UNC_ERR_SEGMENTED);
++            CHECK(cap.count == 2 && cap.status[0] == UNC_ERR_SEGMENTED &&
++                  cap.status[1] == UNC_ERR_SEGMENTED);
++        }
++    }
++}
++
++/* The VISE before 3.5 (fmt_viseold.c). Every tree here has one symbol of
++ * length 1, whose code is 0 whatever order the quicksort leaves: the order
++ * itself is graded by tests/harness/run_viseold.py on real archives. */
++static uint8_t vo_a[4096], vo_b[4096];
++
++static void vo_u16(uint8_t *p, uint32_t v)
++{
++    p[0] = (uint8_t)(v >> 8);
++    p[1] = (uint8_t)v;
++}
++
++typedef struct VoBits { uint8_t *p; uint32_t bit; } VoBits;
++static void vo_put(VoBits *w, uint32_t v, int n)
++{
++    int k;
++    for (k = 0; k < n; k++, w->bit++)
++        if ((v >> k) & 1u) w->p[w->bit >> 3] |= (uint8_t)(1u << (w->bit & 7));
++}
++
++/* A tree whose only symbol is `sym`: zeros before it eight at a time. */
++static uint32_t vo_tree(uint8_t *a, uint32_t at, int sym)
++{
++    uint32_t n0 = (uint32_t)sym, at0 = at++;
++    uint8_t cnt = 0;
++    while (n0 >= 8) { a[at++] = 7u << 5; n0 -= 8; cnt++; }
++    if (n0) { a[at++] = (uint8_t)((n0 - 1) << 5); cnt++; }
++    a[at++] = 1;
++    a[at0] = (uint8_t)(cnt + 1);
++    return at;
++}
++
++static uint32_t vo_rec(uint8_t *a, uint32_t at, uint8_t kind,
++                       const char *name, uint32_t rl, uint32_t dl)
++{
++    memset(a + at, 0, VISEO_REC);
++    a[at] = kind;
++    a[at + 1] = kind == VISEO_FILE ? 0 : 0x10;
++    if (kind == VISEO_FILE) {
++        memcpy(a + at + 2, "TEXTttxt", 8);
++        unc_put_u32be(a + at + 26, rl);
++        unc_put_u32be(a + at + 34, dl);
++    }
++    vo_u16(a + at + 10, 0x0100);
++    unc_put_u32be(a + at + 18, 0xA1000001u);
++    unc_put_u32be(a + at + 22, 0xA2000002u);
++    a[at + 48] = (uint8_t)strlen(name);
++    memcpy(a + at + 49, name, strlen(name));
++    return at + VISEO_REC;
++}
++
++/* F/ (a: 3 resource, 5 data), then b: 300 data; 308 bytes of 'X', the
++ * first three literals and the rest matches of three, three back. */
++static uint32_t vo_build(uint8_t *a, uint32_t pad)
++{
++    VoBits w;
++    uint32_t at, clen, cat, i;
++    memset(a, 0, 4096);
++    memcpy(a, "VISE", 4);
++    unc_put_u32be(a + 4, 0xA9EFCE34u);
++    unc_put_u32be(a + 8, 0x04000004u);
++    unc_put_u32be(a + 24, 308);
++    a[28] = 0x0C;                          /* window bits 13 + 3 = 16 */
++    at = vo_tree(a, 29, 'X');
++    at = vo_tree(a, at, 0);                /* lengths: 0 + 3          */
++    at = vo_tree(a, at, 0);                /* distances' high byte: 0 */
++    w.p = a + at;
++    w.bit = 0;
++    for (i = 0; i < 3; i++) { vo_put(&w, 1, 1); vo_put(&w, 0, 1); }
++    for (i = 0; i < 305 / 3 + 1; i++) {
++        vo_put(&w, 0, 1);                  /* a match              */
++        vo_put(&w, 0, 8);                  /* low 8 bits: 0        */
++        vo_put(&w, 0, 1);                  /* high byte 0          */
++        vo_put(&w, 0, 1);                  /* length 3             */
++    }
++    at += (w.bit + 7) / 8 + pad;
++    clen = at - VISEO_HDR;
++    cat = at;
++    unc_put_u32be(a + 12, clen);
++    unc_put_u32be(a + 20, cat);
++    vo_u16(a + at, 4);
++    vo_u16(a + at + 2, 0);
++    at += 4;
++    at = vo_rec(a, at, VISEO_DIR, "F", 0, 0);
++    at = vo_rec(a, at, VISEO_FILE, "a", 3, 5);
++    at = vo_rec(a, at, VISEO_END, "a", 0, 0);
++    at = vo_rec(a, at, VISEO_FILE, "b", 0, 300);
++    return at;
++}
++
++static int vo_all(const uint8_t *p, uint32_t n)
++{
++    uint32_t i;
++    for (i = 0; i < n; i++) if (p[i] != 'X') return 0;
++    return 1;
++}
++
++static void test_viseold(void)
++{
++    UncSegmentDesc desc;
++    CapSink cap;
++    MemIO m;
++    UncIO io;
++    uint8_t head[VISE_HDR];
++    uint32_t len = vo_build(vo_a, 0), cat = unc_get_u32be(vo_a + 20);
++
++    /* --- the probe, the sniff, a set of one ------------------------- */
++    test_make_memio(&io, &m, vo_a, len);
++    CHECK(unc_vise_probe(vo_a, VISEO_HDR, &io) == UNC_FORMAT_VISE);
++    test_make_memio(&io, &m, vo_a, len);
++    CHECK(unc_sniff(&io) == UNC_FORMAT_VISE);
++    test_make_memio(&io, &m, vo_a, len);
++    CHECK(unc_segment_describe(&io, &desc) == UNC_OK);
++    CHECK(desc.scheme == UNC_FORMAT_VISE && desc.part == 1 &&
++          desc.nparts == 1);
++    CHECK(unc_segment_match(&desc, vo_a, VISE_HDR) == 0);
++    memcpy(head, vo_a, VISE_HDR); unc_put_u32be(head + 8, 0x04000005u);
++    CHECK(unc_vise_probe(head, VISEO_HDR, &io) == UNC_FORMAT_UNKNOWN);
++    memcpy(head, vo_a, VISE_HDR); head[23] ^= 1;   /* +20 is not +12 + 24 */
++    CHECK(unc_vise_probe(head, VISEO_HDR, &io) == UNC_FORMAT_UNKNOWN);
++    memcpy(vo_b, vo_a, len); vo_u16(vo_b + cat + 2, 1);
++    test_make_memio(&io, &m, vo_b, len);
++    CHECK(unc_vise_probe(vo_b, VISEO_HDR, &io) == UNC_FORMAT_UNKNOWN);
++    test_make_memio(&io, &m, vo_a, len - 1);          /* a record cut   */
++    CHECK(unc_vise_probe(vo_a, VISEO_HDR, &io) == UNC_FORMAT_UNKNOWN);
++
++    /* --- the archive: the folder, a in it, b after it --------------- */
++    CHECK(vt_run(vo_a, len, NULL, 0, 1, 0, &cap) == UNC_OK);
++    CHECK(cap.count == 3);
++    CHECK(cap.info[0].is_dir && vt_named(&cap, 0, "F"));
++    CHECK(vt_named(&cap, 1, "F/a") && cap.status[1] == UNC_OK);
++    CHECK(cap.rlen[1] == 3 && cap.dlen[1] == 5 &&
++          vo_all(cap.rsrc[1], 3) && vo_all(cap.data[1], 5));
++    CHECK(cap.info[1].type == 0x54455854u &&
++          cap.info[1].creator == 0x74747874u &&
++          cap.info[1].finder_flags == 0x0100 &&
++          cap.info[1].create_date == 0xA1000001u &&
++          cap.info[1].mod_date == 0xA2000002u);
++    /* b starts inside a match a's data fork left half done. */
++    CHECK(vt_named(&cap, 2, "b") && cap.status[2] == UNC_OK &&
++          cap.dlen[2] == 300 && cap.rlen[2] == 0 && vo_all(cap.data[2], 300));
++
++    /* --- refusals ---------------------------------------------------- */
++    /* A stream that does not end at the catalogue: the last file's. */
++    len = vo_build(vo_b, 1);
++    CHECK(vt_run(vo_b, len, NULL, 0, 1, 0, &cap) == UNC_OK);
++    CHECK(cap.status[1] == UNC_OK && cap.status[2] == UNC_ERR_CORRUPT);
++    /* A stream that expands to other than the records' sum: every file. */
++    len = vo_build(vo_b, 0);
++    unc_put_u32be(vo_b + 24, 309);
++    CHECK(vt_run(vo_b, len, NULL, 0, 1, 0, &cap) == UNC_OK);
++    CHECK(cap.count == 3 && cap.status[1] == UNC_ERR_CORRUPT &&
++          cap.status[2] == UNC_ERR_CORRUPT);
++    /* A match from before the start. */
++    len = vo_build(vo_b, 0);
++    {
++        uint32_t at = 29;
++        int t;
++        for (t = 0; t < 3; t++) at += 1u + vo_b[at];
++        vo_b[at] = 0;                      /* the first bit: a match */
++    }
++    CHECK(vt_run(vo_b, len, NULL, 0, 1, 0, &cap) == UNC_OK);
++    CHECK(cap.status[1] == UNC_ERR_CORRUPT &&
++          cap.status[2] == UNC_ERR_CORRUPT);
++    /* A folder closed that was never opened; a kind not known. */
++    len = vo_build(vo_b, 0);
++    vo_b[cat + 4] = VISEO_END;
++    CHECK(vt_run(vo_b, len, NULL, 0, 1, 0, &cap) == UNC_ERR_CORRUPT);
++    len = vo_build(vo_b, 0);
++    vo_b[cat + 4 + VISEO_REC] = 0x34;
++    CHECK(vt_run(vo_b, len, NULL, 0, 1, 0, &cap) == UNC_ERR_CORRUPT);
++    /* The catalogue cut. */
++    len = vo_build(vo_b, 0);
++    CHECK(vt_run(vo_b, len - 1, NULL, 0, 1, 0, &cap) == UNC_ERR_TRUNCATED);
++    /* Files that are all empty: nothing to decode, and nothing wrong. */
++    len = vo_build(vo_b, 0);
++    unc_put_u32be(vo_b + cat + 4 + VISEO_REC + 26, 0);
++    unc_put_u32be(vo_b + cat + 4 + VISEO_REC + 34, 0);
++    unc_put_u32be(vo_b + cat + 4 + 3 * VISEO_REC + 34, 0);
++    unc_put_u32be(vo_b + 24, 0);
++    CHECK(vt_run(vo_b, len, NULL, 0, 1, 0, &cap) == UNC_OK);
++    CHECK(cap.count == 3 && cap.status[1] == UNC_OK &&
++          cap.status[2] == UNC_OK && cap.dlen[2] == 0);
++}
++
++
+ void run_format_tests(void)
+ {
+     test_malformed_regressions();
+@@ -7426,6 +7997,8 @@ void run_format_tests(void)
+     test_mar();
+     test_tome();
+     test_tome_parts();
++    test_vise();
++    test_viseold();
+     test_lz4_block_bound();
+     test_mar_comment_listing();
+     test_base64_mime();
+diff --git a/tools/fetch_references.sh b/tools/fetch_references.sh
+index 0bf1ca4b..1e219b62 100755
+--- a/tools/fetch_references.sh
++++ b/tools/fetch_references.sh
+@@ -680,3 +680,26 @@ done
+ [ -f reference/notes/splay_jones_minunsplay.c ] || \
+     curl -sL -o reference/notes/splay_jones_minunsplay.c \
+         "https://homepage.cs.uiowa.edu/~dwjones/compress/minunsplay.c"
++
++# Installer VISE (src/fmt_vise.c, since 2026-11-11). mrmidi/installer-vise
++# (MIT) is read for the stream's framing, the shared blocks, the CRC-32 and
++# the 'PACK' prefix, and RUN, in tools/sandbox.py, as the second reader of
++# the compressed catalogues (tests/harness/run_vise.py). ScummVM's vise.cpp
++# (GPL-3.0-or-later) is read for the header's two fields, the record
++# offsets, the substitution table and the pair swap, and is neither
++# transcribed nor run. systemless's vise.rs (no licence stated), read for
++# the record suffixes and the parent as a depth, is cited by commit and not
++# kept: https://github.com/benletchford/systemless/blob/
++# 5b5df152e00ac016c71bab323682340e2a7824e7/src/systems/macintosh/game/vise.rs
++if [ ! -d reference/installer-vise ]; then
++    git clone -q https://github.com/mrmidi/installer-vise reference/installer-vise
++    git -C reference/installer-vise checkout -q \
++        8b1525ab98f9cca88ff6428b64af6c91bf6033db
++fi
++if [ ! -f reference/notes/scummvm_vise.cpp ]; then
++    curl -sSfL -o /tmp/scummvm_vise.cpp \
++        "https://raw.githubusercontent.com/scummvm/scummvm/209976fdaa3d3081ed22d82bfbae606177f21534/common/compression/vise.cpp"
++    echo "c6541eb3407668fe24a723a1987cf3493ad7f250d669e83b399ca827f5e27029  /tmp/scummvm_vise.cpp" \
++        | sha256sum -c --quiet \
++        && mv /tmp/scummvm_vise.cpp reference/notes/scummvm_vise.cpp
++fi
+diff --git a/tools/harvest.py b/tools/harvest.py
+index 82c2d5e4..b6b6070d 100755
+--- a/tools/harvest.py
++++ b/tools/harvest.py
+@@ -53,6 +53,16 @@ def fetch(url, timeout=120):
+         where, _, hfspath = url[8:].partition("#")
+         return dc42_file(fetch(where, timeout),
+                          urllib.parse.unquote(hfspath))
++    # `macbin-data+<url>`: the file is served as MacBinary and the fixture
++    # is its data fork (an application whose data fork is the archive, an
++    # Installer VISE installer). The lengths are MacBinary's own header's:
++    # the data fork's at 83, after the 128-byte header.
++    if url.startswith("macbin-data+"):
++        blob = fetch(url[12:], timeout)
++        dlen = struct.unpack(">I", blob[83:87])[0]
++        if blob[0] != 0 or len(blob) < 128 + dlen:
++            raise ValueError("not a MacBinary file")
++        return blob[128:128 + dlen]
+     req = urllib.request.Request(url, headers={"User-Agent": "macextract-harvest/1.0"})
+     with urllib.request.urlopen(req, timeout=timeout) as r:
+         return r.read()
+diff --git a/tools/overlay/overlay.h b/tools/overlay/overlay.h
+index 67a0ea67..3e3b1876 100644
+--- a/tools/overlay/overlay.h
++++ b/tools/overlay/overlay.h
+@@ -132,6 +132,11 @@ typedef int32_t (*OverlayEntry)(const OverlayHost *host, int32_t which,
+                                     * before the release, in no keep set */
+ #define OVL_ID_SEGSETUP      146   /* a segmented set's
+                                    * setup, before the join (seg_setup.inc.c). */
++#define OVL_ID_VISE          147   /* Installer VISE: its catalogue, its
++                                    * inflater and its set's match. It
++                                    * calls into the codecs image for the
++                                    * bit reader and the canonical decoder,
++                                    * and nothing calls into it         */
+ #define OVL_IMAGE_MAX         20
+ 
+ #define OVL_SPACESAVER_EXTRACT 30
+@@ -182,6 +187,7 @@ typedef int32_t (*OverlayEntry)(const OverlayHost *host, int32_t which,
+                                     * setup image: a = OvlArgs* (obj the sniffer's
+                                     * entry, in io, len the format), b = the plan
+                                     * (mac/release_plan.inc.c); returns its length */
++#define OVL_VISE_EXTRACT       70
+ /* The release plan's out[0] for an envelope whose payload's first bytes name
+  * nothing (mac/release_plan.inc.c): no format's number. */
+ #define OVL_PEEK_UNNAMED       0xFF
+diff --git a/tools/run_diff.py b/tools/run_diff.py
+index 86f46dba..bd72849d 100755
+--- a/tools/run_diff.py
++++ b/tools/run_diff.py
+@@ -71,6 +71,11 @@ IMPLEMENTED = {
+     # Apple's Installer's own output on the System 7.5.5 disk where it has
+     # no codec (tests/harness/run_tome.py).
+     "Installer Tome": "Installer Tome",
++    # Nor an Installer VISE installer: every file's own CRC-32 as the
++    # installer stores it, over a catalogue read independently of the
++    # engine, and installer-vise for the compressed catalogues
++    # (tests/harness/run_vise.py).
++    "Installer VISE": "Installer VISE",
+ }
+ 
+ # A fixture whose oracle names a format this engine does not have. Until
+diff --git a/tools/run_foreign.py b/tools/run_foreign.py
+index 2847bc58..25f0d89a 100644
+--- a/tools/run_foreign.py
++++ b/tools/run_foreign.py
+@@ -60,6 +60,12 @@ NOT_RECOGNIZED = "format not recognized"
+ # Fixtures that are not archives on purpose, and must stay that way.
+ NOT_ARCHIVES = ("synth-os9-rar.rar",)
+ 
++# Installer VISE's probe claims a set's first segment only (src/fmt_vise_probe.c):
++# a later Segment.N, or VISE X's Installer.data, is joined from the first and
++# sniffs as unknown alone. These must STAY unknown, not merely be excused.
++LATER_PARTS = ("vise-set-epson-sp700.2", "vise-set-epson-sp700.3",
++               "vise-x-flash9.data")
++
+ 
+ def build(script, binary):
+     path = os.path.abspath(os.path.join(ROOT, binary))
+@@ -296,6 +302,10 @@ def main():
+                 continue
+             seen += 1
+             got = sniff(macextract, p)
++            if name in LATER_PARTS:
++                check("the later part %s sniffs as unknown" % name,
++                      got == "unknown", "sniffed as %s" % got)
++                continue
+             if name in want:
+                 ours = run_diff.IMPLEMENTED.get(want[name])
+                 if got != ours:

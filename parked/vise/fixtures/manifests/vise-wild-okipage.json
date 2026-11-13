@@ -1,0 +1,57 @@
+{
+ "entries": [
+  {
+   "creator": "RSED",
+   "data_oracle": "the record's CRC-32 over both forks",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 256,
+   "name": "AdobePSOEM.vct.rsrc",
+   "rsrc_oracle": "the record's CRC-32 over both forks",
+   "rsrc_sha256": "60a82cde4c54454109264f6dd2dddc3cbe6ce93de6968f6149e5a03ea4e4f8d7",
+   "rsrc_size": 6552,
+   "type": "rsrc"
+  },
+  {
+   "creator": "MLPm",
+   "data_oracle": "the record's CRC-32 over both forks",
+   "data_sha256": "c87abbf7805add4eb6668baaec9d9177dbc1468159b9d16fb6d729d5910a258d",
+   "data_size": 2132,
+   "finder_flags": 256,
+   "name": "MacUSBPlug252",
+   "rsrc_oracle": "the record's CRC-32 over both forks",
+   "rsrc_sha256": "1e7cd3cbe2e6813ef8e268f00547da2ce524966015f08912187f5b5ee826acb9",
+   "rsrc_size": 1569,
+   "type": "bird"
+  },
+  {
+   "creator": "????",
+   "data_oracle": "the record's CRC-32 over both forks",
+   "data_sha256": "1a3ad07fb8ddb511cfaf50f94b028470f593d7fe6fa5894c78e05433c0b04bbd",
+   "data_size": 41516,
+   "finder_flags": 0,
+   "name": "Printer Descriptions/OKIPAGE 14i PS",
+   "rsrc_oracle": "the record's CRC-32 over both forks",
+   "rsrc_sha256": "eddf8bd8445492048f3419d703f58b3c6e02e763024d3588858b059fc45149d4",
+   "rsrc_size": 453,
+   "type": "TEXT"
+  },
+  {
+   "creator": "cbDG",
+   "data_oracle": "the record's CRC-32 over both forks",
+   "data_sha256": "ae0fb56edcac4b54d88dd45f3a912d8d23c5af8dca958a08c4a0a453df70aba8",
+   "data_size": 18934,
+   "finder_flags": 8448,
+   "name": "Printer Descriptions/CustomPage",
+   "rsrc_oracle": "the record's CRC-32 over both forks",
+   "rsrc_sha256": "92172cbe466222fc5a08735fa37470a3b4edb00cbadc4f526dfaf6b0562fbe95",
+   "rsrc_size": 12289,
+   "type": "DXTN"
+  }
+ ],
+ "fixture": "vise-wild-okipage",
+ "format": "Installer VISE",
+ "oracle": "each file's own CRC-32, data then resource fork, as the installer stores it, with the catalogue read independently of the engine; installer-vise for the compressed catalogues (tests/harness/run_vise.py)",
+ "sha256": "ef7471c387c5468f0d7c7bea80135d7d276c2d8ac2439ac3e64f0b0669091029",
+ "size": 23962
+}
