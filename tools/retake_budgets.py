@@ -170,6 +170,13 @@ def rewrite_formats(dry):
         old = int(num.replace(",", "")) * (1 if sign == "+" else -1)
         ids = [] if names.split() == ["bundle"] else \
             ["OVL_ID_" + n.upper() for n in names.split()]
+        gone = [i for i in ids if i not in run_tiers.IMAGES]
+        if gone:
+            die("FORMATS.md grants a figure for {%s}, and the build has no %s: "
+                "remove or correct that row of *What each format is granted* "
+                "(nothing was written)"
+                % (names, ", ".join("ovl_%s" % i[len("OVL_ID_"):].lower()
+                                    for i in gone)))
         new = run_tiers.gain(ids)
         if new != old:
             moved.append("grant {%s}: %+d -> %+d" % (names, old, new))
@@ -228,6 +235,7 @@ def main():
             print("retake_budgets: building %s" % name)
             build(name)
     old = budgets.load()
+    old_text = open(budgets.PATH, encoding="utf-8").read()
     new, lazy_a5 = measure()
     rewrite_budgets(new, lazy_a5, old, a.dry_run)
     lines = []
@@ -242,7 +250,13 @@ def main():
             print("  " + line)
         print("retake_budgets: --dry-run, nothing written")
         return 0
-    moved = rewrite_formats(False)
+    try:
+        moved = rewrite_formats(False)
+    except SystemExit:
+        # FORMATS.md is written last and only whole; put budgets.txt back so
+        # that a failed retake leaves both files as they were.
+        open(budgets.PATH, "w", encoding="utf-8").write(old_text)
+        raise
     if not lines and not moved:
         print("retake_budgets: every figure agrees with the builds")
         return 0
