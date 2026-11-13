@@ -1164,11 +1164,11 @@ int unc_lzh_extract(UncCtx *c)
                 info.data_size = dlen;
                 info.rsrc_size = rlen;
                 /* Finder info, lock and dates: the header's, read the
-                 * way fmt_macbinary.c reads its own. The comment, which
-                 * MacBinary puts after the resource fork, is not: it is
-                 * at the end of the compressed stream, and the entry is
-                 * offered to the sink before that is decoded (DECISIONS.md
-                 * 2026-10-17, *the envelopes' own Finder info*). */
+                 * way fmt_macbinary.c reads its own. No comment: MacLHA
+                 * 2.00 and 2.24 write MacBinary I, which has no field for
+                 * one, and nothing after the resource fork, measured on a
+                 * file that had one (DECISIONS.md 2026-11-13, *the
+                 * comment MacLHA never wrote*). */
                 {
                     /* A header that leaves a date 0 (MacLHA 2.00 writes both so)
                      * leaves this container's own one standing. */

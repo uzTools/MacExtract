@@ -611,6 +611,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-13 (the icon types only the helper claims) — DiskDoubler's 40 single-file types, `DD01`, `DD02`, `DDF0`–`DDF7`, `DDFL` and `DDf0`–`DDfs`, leave MacExtract's bundle for the `DDAP` helper's alone, which now hands on what its own bundle claims; +144 B of heap on every tier, +32 B of every helper's code
 - 2026-11-13 (the version 3 that Linux wrote) — StuffIt 5's version 3 entries exist: Aladdin's `stuff` 5.2 for Linux writes nothing else, and StuffIt Expander 5.5 restores none of their 32-byte second block, so the reader stops taking type, creator and flags from it; the ovl_stuffit image −16 B
 - 2026-11-13 (the helper Easy Open offers for DiskDoubler's icons) — the DiskDblr helper's `'open'` lists its 40 icon types, the only helper's that lists any: Easy Open offers it, and only it, for an orphaned DiskDoubler file
+- 2026-11-13 (the comment MacLHA never wrote) — MacLHA 2.00 and 2.24, run under System 7.0.1 on a file with a Get Info comment, store a MacBinary I header with no comment length and nothing after the resource fork; there is no comment for the LZH reader to read, and nothing changes
 
 ---
 
@@ -17491,8 +17492,10 @@ in the reader (FORMATS.md, *The envelopes: what each standard holds*):
 **Not done.** The comment of a MacBinary payload inside ZipIt or MacLHA
 (it follows both forks in a compressed stream; needs a second decode or a
 comment arriving by `end_entry`); none of 14 readable ZipIt payloads has
-one. OPEN_ITEMS.md's. AppleSingle entry 11 (ProDOS access): no reference
-states its bits.
+one. *Corrected 2026-11-13:* neither writer stores one — ZipIt (2026-11-06,
+*what ZipIt does with a Macintosh file*) and MacLHA (2026-11-13, *the
+comment MacLHA never wrote*). AppleSingle entry 11 (ProDOS access): no
+reference states its bits.
 
 **Evidence** (TESTING.md, *The Finder metadata*): `tools/run_meta.py` holds
 generated cases (`tools/synth_envelopes.py`) to deark, macunpack, hexbin,
@@ -26032,3 +26035,50 @@ leaves `DDAR` out. The list itself was not shown: Easy Open's
 always-show-the-dialog setting was not turned on. Mac OS 8.5–9's File
 Exchange not booted for it.
 
+---
+
+## 2026-11-13 (the comment MacLHA never wrote) — MacLHA 2.00 and 2.24, run under System 7.0.1 on a file with a Get Info comment, store a MacBinary I header with no comment length and nothing after the resource fork; there is no comment for the LZH reader to read, and nothing changes
+
+**Claim withdrawn.** OPEN_ITEMS.md listed the Get Info comment of MacLHA's
+MacBinary payload as "stored, not read", after both forks, and priced
+reading it as a second decode or a sink-contract change (2026-10-17, *the
+envelopes' own Finder info*). Nobody had looked at a MacLHA archive of a file
+that had a comment. Withdrawn in BLOCKERS.md.
+
+**Measured (Mini vMac, Mac Plus 4 MB, System 7.0.1, one boot per writer).**
+An 8 MB HFS volume (System 7's Desktop Manager needs more than a floppy)
+held `Commented`, `TEXT`/`ttxt`, a 3,480-byte data fork and a 341-byte
+resource fork. The Finder's Get Info set its comment, *"Get Info comment
+for MacLHA, typed 2026-11-13."*; it read back after the window was closed
+and again after a reboot. MacLHa 2.00 (October 1991, the corpus's
+`derived-MacLHa_2.00.sit`) and MacLHA 2.24 (2000, the last; Macintosh
+Garden's `maclha_2.24.sea.hqx`) each archived it with their defaults —
+Options ▸ MacBinary checked, level 1, `-lh5-`. Both listed it as 4,096
+bytes before saving: 128 + 3,584 + 384, the header and the two padded
+forks, no room for a comment. Decoded (`unar`, which hands back the whole
+stream): bytes 99–100, the MacBinary II comment length
+(`reference/notes/macbinary_ii.txt`), are 0; 122–125 (II's version bytes
+and CRC) are 0, so the header is MacBinary I, which has no comment field;
+the stream ends where the resource fork's padding does; the text appears
+nowhere in it; the LZH header has no extended header at all. The two
+archives differ only in the header's MS-DOS time and checksum.
+**Corroborating, not the evidence:** MacLHa 2.00 contains no `FCMT` and no
+"Desktop"; 2.24's PowerPC import table (876 strings) names no `PBDT` call,
+the only route to a System 7 comment.
+
+**Consequence.** Nothing to read: `src/fmt_lzh.c` is unchanged but for its
+comment (the compiled object byte-identical, 68000 and host, so `dist/` is
+untouched), and the OPEN_ITEMS.md row is deleted. Our CLI extracts both
+archives to the original forks byte for byte and the catalog's own FInfo
+(`54455854 74747874 0100 0000 0000 0000`, `hfscat.py`); the comment is lost
+by the writer, and MacLHA's own extraction cannot restore what its stream
+does not hold. The design question (a second decode, or the comment by
+`end_entry`) waits for a writer that puts MacBinary II inside LZH; none is
+known. **Not run:** MacLHA 2.13 and 2.21 (both on Macintosh Garden's page),
+and any version under System 6, where comments are the Finder's `FCMT`
+resources and MacLHa 2.00 has no code that names them.
+
+**Where it is.** `~/.cache/macextract/specimens/maclha-comment/`: the two
+archives (`maclha200-sys701-commented.lzh` sha256 `86dd7ba8…`,
+`maclha224-sys701-commented.lzh` `01850a96…`), the volumes, the input forks,
+and each boot's `tools/vmac/drive.py` command file, log and frames.
