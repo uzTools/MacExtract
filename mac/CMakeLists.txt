@@ -59,6 +59,22 @@ if(DEFINED ENV{UNC_AT_OVERLAY})
     message(STATUS "overlay: UNC_AT_OVERLAY is the default since 2026-09-25 "
                    "— switch ignored")
 endif()
+# The decoders' images, in id order, read off the rules below and checked
+# against tools/overlay/overlay.h's ids by images.py, so that no list of them
+# is kept here.
+execute_process(
+    COMMAND python3 ${ENGINE_DIR}/tools/overlay/images.py --names
+    OUTPUT_VARIABLE OVL_FORMAT_IMAGES
+    RESULT_VARIABLE OVL_IMAGES_OK
+    OUTPUT_STRIP_TRAILING_WHITESPACE)
+if(NOT OVL_IMAGES_OK EQUAL 0)
+    message(FATAL_ERROR "overlay: tools/overlay/images.py --names failed")
+endif()
+separate_arguments(OVL_FORMAT_IMAGES)
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
+             ${ENGINE_DIR}/tools/overlay/overlay.h
+             ${ENGINE_DIR}/tools/overlay/images.py)
+list(LENGTH OVL_FORMAT_IMAGES OVL_N)
 set(OVL_COMPILE_DEFS "")
 if(DEFINED ENV{UNC_OVL_RESIDENT})
     message(STATUS "overlay: RESIDENT control build — no images, "
@@ -72,7 +88,7 @@ else()
     endif()
     # Printed because the two differ by a disk access per format and by
     # nothing a build output would otherwise show.
-    message(STATUS "overlay: seventeen images, ${OVL_LIFETIME}")
+    message(STATUS "overlay: ${OVL_N} images, ${OVL_LIFETIME}")
     # The dispatch, the relocation trailer and the cache flush are shared; the
     # loader is the lifetime.
     set(OVERLAY_SHIM ovl_shim.c ovl_reloc.c)
@@ -83,8 +99,7 @@ else()
         set(OVERLAY_R ${CMAKE_CURRENT_BINARY_DIR}/ovl_bundle.r)
     else()
         list(APPEND OVERLAY_SHIM ovl_load_lazy.c)
-        foreach(img crypt spacesaver cptdd lzh arc now superdisk packit text
-                    stuffit exo codecs binhex btoa sqp zipold sniff)
+        foreach(img ${OVL_FORMAT_IMAGES})
             list(APPEND OVERLAY_R ${CMAKE_CURRENT_BINARY_DIR}/ovl_${img}.r)
         endforeach()
     endif()
@@ -968,48 +983,24 @@ endforeach()
 # off the Macintosh and checks every relocation at the address the image ends
 # up at. The Rez source is what the application links; the raw copy is read by
 # nothing else.
+set(OVL_BUNDLE_ARGS "")
+set(OVL_BUNDLE_DEPS "")
+foreach(img ${OVL_FORMAT_IMAGES})
+    string(TOUPPER ${img} IMG)
+    list(APPEND OVL_BUNDLE_ARGS
+         OVL_ID_${IMG}:${CMAKE_CURRENT_BINARY_DIR}/ovl_${img}.bin)
+    list(APPEND OVL_BUNDLE_DEPS ${CMAKE_CURRENT_BINARY_DIR}/ovl_${img}.r)
+endforeach()
 add_custom_command(
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/ovl_bundle.r
     COMMAND python3 ${ENGINE_DIR}/tools/overlay/mkbundle.py
             ${CMAKE_CURRENT_BINARY_DIR}/ovl_bundle.r
             --bin ${CMAKE_CURRENT_BINARY_DIR}/ovl_bundle.bin
-            OVL_ID_CRYPT:${CMAKE_CURRENT_BINARY_DIR}/ovl_crypt.bin
-            OVL_ID_SPACESAVER:${CMAKE_CURRENT_BINARY_DIR}/ovl_spacesaver.bin
-            OVL_ID_CPTDD:${CMAKE_CURRENT_BINARY_DIR}/ovl_cptdd.bin
-            OVL_ID_LZH:${CMAKE_CURRENT_BINARY_DIR}/ovl_lzh.bin
-            OVL_ID_ARC:${CMAKE_CURRENT_BINARY_DIR}/ovl_arc.bin
-            OVL_ID_NOW:${CMAKE_CURRENT_BINARY_DIR}/ovl_now.bin
-            OVL_ID_SUPERDISK:${CMAKE_CURRENT_BINARY_DIR}/ovl_superdisk.bin
-            OVL_ID_PACKIT:${CMAKE_CURRENT_BINARY_DIR}/ovl_packit.bin
-            OVL_ID_TEXT:${CMAKE_CURRENT_BINARY_DIR}/ovl_text.bin
-            OVL_ID_STUFFIT:${CMAKE_CURRENT_BINARY_DIR}/ovl_stuffit.bin
-            OVL_ID_EXO:${CMAKE_CURRENT_BINARY_DIR}/ovl_exo.bin
-            OVL_ID_CODECS:${CMAKE_CURRENT_BINARY_DIR}/ovl_codecs.bin
-            OVL_ID_BINHEX:${CMAKE_CURRENT_BINARY_DIR}/ovl_binhex.bin
-            OVL_ID_BTOA:${CMAKE_CURRENT_BINARY_DIR}/ovl_btoa.bin
-            OVL_ID_SQP:${CMAKE_CURRENT_BINARY_DIR}/ovl_sqp.bin
-            OVL_ID_ZIPOLD:${CMAKE_CURRENT_BINARY_DIR}/ovl_zipold.bin
-            OVL_ID_SNIFF:${CMAKE_CURRENT_BINARY_DIR}/ovl_sniff.bin
+            ${OVL_BUNDLE_ARGS}
             OVL_ID_DESTDLG:${CMAKE_CURRENT_BINARY_DIR}/ovl_destdlg.bin
             OVL_ID_SEGSETUP:${CMAKE_CURRENT_BINARY_DIR}/ovl_segsetup.bin
     DEPENDS
-            ${CMAKE_CURRENT_BINARY_DIR}/ovl_crypt.r
-            ${CMAKE_CURRENT_BINARY_DIR}/ovl_spacesaver.r
-            ${CMAKE_CURRENT_BINARY_DIR}/ovl_cptdd.r
-            ${CMAKE_CURRENT_BINARY_DIR}/ovl_lzh.r
-            ${CMAKE_CURRENT_BINARY_DIR}/ovl_arc.r
-            ${CMAKE_CURRENT_BINARY_DIR}/ovl_now.r
-            ${CMAKE_CURRENT_BINARY_DIR}/ovl_superdisk.r
-            ${CMAKE_CURRENT_BINARY_DIR}/ovl_packit.r
-            ${CMAKE_CURRENT_BINARY_DIR}/ovl_text.r
-            ${CMAKE_CURRENT_BINARY_DIR}/ovl_stuffit.r
-            ${CMAKE_CURRENT_BINARY_DIR}/ovl_exo.r
-            ${CMAKE_CURRENT_BINARY_DIR}/ovl_codecs.r
-            ${CMAKE_CURRENT_BINARY_DIR}/ovl_binhex.r
-            ${CMAKE_CURRENT_BINARY_DIR}/ovl_btoa.r
-            ${CMAKE_CURRENT_BINARY_DIR}/ovl_sqp.r
-            ${CMAKE_CURRENT_BINARY_DIR}/ovl_zipold.r
-            ${CMAKE_CURRENT_BINARY_DIR}/ovl_sniff.r
+            ${OVL_BUNDLE_DEPS}
             ${CMAKE_CURRENT_BINARY_DIR}/ovl_destdlg.r
             ${CMAKE_CURRENT_BINARY_DIR}/ovl_segsetup.r
             ${ENGINE_DIR}/tools/overlay/mkbundle.py

@@ -69,12 +69,10 @@ static int gFails;
     do { if (!(cond)) { printf("  FAIL: "); printf(__VA_ARGS__);           \
                         printf("\n"); gFails++; } } while (0)
 
-static const short kIds[] = {
-    OVL_ID_CRYPT, OVL_ID_SPACESAVER, OVL_ID_CPTDD, OVL_ID_LZH, OVL_ID_ARC,
-    OVL_ID_NOW, OVL_ID_SUPERDISK, OVL_ID_PACKIT, OVL_ID_TEXT, OVL_ID_STUFFIT,
-    OVL_ID_EXO, OVL_ID_CODECS, OVL_ID_BINHEX, OVL_ID_BTOA, OVL_ID_SQP,
-    OVL_ID_ZIPOLD, OVL_ID_SNIFF
-};
+/* Every decoder image, from the build's own inventory
+ * (tools/overlay/images.py --c-ids, written by tests/run_overlay_host.sh). */
+#include "ovl_test_ids.h"
+static const short kIds[] = { OVL_TEST_IDS };
 #define NIDS ((int)(sizeof kIds / sizeof kIds[0]))
 
 /* The raw image as the build wrote it, for the expectations: its trailer says

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """images.py — which sources make up each overlay image, read from the BUILD.
 
-`mac/CMakeLists.txt` is where the seventeen images are defined, one
+`mac/CMakeLists.txt` is where the decoders' images are defined, one
 `add_custom_command` each, and it is the only place that list may live: a
 second copy is a host-side test grading images that are not the ones the
 Macintosh runs. So this parses it rather than restating it, and fails loudly
@@ -9,6 +9,9 @@ if the shape it expects is gone.
 
     tools/overlay/images.py            # one line per image: ID source...
     tools/overlay/images.py --check    # just assert the parse
+    tools/overlay/images.py --names    # their names, in id order (the build's)
+    tools/overlay/images.py --count    # how many; --shell-count, the shell's
+    tools/overlay/images.py --c-ids    # their ids as a C list (the loader test)
     tools/overlay/images.py --resident # the sources the images TAKE OUT of
                                        # the resident link, one per line
 
@@ -25,10 +28,33 @@ if not os.path.isdir(os.path.join(ROOT, "mac")):
     ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CMAKE = os.path.join(ROOT, "mac", "CMakeLists.txt")
 
-# The count is asserted, not derived: an image added to the build and not to
-# the host lane is exactly the drift this file exists to prevent, and a parse
-# that silently finds thirteen would hide it.
-EXPECTED = 17
+HEADER = os.path.join(ROOT, "tools", "overlay", "overlay.h")
+
+# The list is asserted against overlay.h's ids, not against a count kept
+# here: an image added to the build and not to the host lane is exactly the
+# drift this file exists to prevent, and a parse that silently finds
+# thirteen would hide it. Every OVL_ID_* but the bundle's and the shell's
+# own images (the build's `foreach(img ...)` rule, Toolbox code) must be
+# one rule below, and every rule one id.
+
+
+def header_ids(path=HEADER):
+    """overlay.h's image ids, as {OVL_ID_*: number}, the bundle's left out."""
+    text = open(path, encoding="utf-8").read()
+    return {m.group(1): int(m.group(2)) for m in
+            re.finditer(r"^#define\s+(OVL_ID_\w+)\s+(\d+)", text, re.M)
+            if m.group(1) != "OVL_ID_BUNDLE"}
+
+
+def shell_images(path=CMAKE):
+    """The shell's own images: the names the build's one `foreach(img ...)`
+    rule for them makes."""
+    text = open(path, encoding="utf-8").read()
+    m = re.search(r"foreach\(img ([a-z ]+)\)\s*\n\s*string\(TOUPPER", text)
+    if not m:
+        raise SystemExit("images.py: mac/CMakeLists.txt has no rule for the "
+                         "shell's images")
+    return m.group(1).split()
 
 
 def images(path=CMAKE):
@@ -74,13 +100,29 @@ def main():
             print(name + ".c")
         return 0
     imgs = images()
-    if len(imgs) != EXPECTED:
-        print("images.py: parsed %d images from mac/CMakeLists.txt, expected %d"
-              % (len(imgs), EXPECTED), file=sys.stderr)
-        print("images.py: the build's shape changed — fix this parse, and the "
-              "count above, before trusting any host-side overlay result",
+    ids = header_ids()
+    want = set(ids) - {"OVL_ID_" + n.upper() for n in shell_images()}
+    got = set(i for i, _ in imgs)
+    if got != want or len(imgs) < 10:
+        print("images.py: mac/CMakeLists.txt builds %s; overlay.h has ids %s"
+              % (sorted(got), sorted(want)), file=sys.stderr)
+        print("images.py: an image in one and not the other, or a parse that "
+              "broke — fix it before trusting any host-side overlay result",
               file=sys.stderr)
         return 1
+    imgs.sort(key=lambda r: ids[r[0]])
+    if "--names" in sys.argv:          # the build's lazy list, in id order
+        print(" ".join(i[len("OVL_ID_"):].lower() for i, _ in imgs))
+        return 0
+    if "--count" in sys.argv:
+        print(len(imgs))
+        return 0
+    if "--shell-count" in sys.argv:
+        print(len(shell_images()))
+        return 0
+    if "--c-ids" in sys.argv:          # tests/ovlbox/ovl_load_test.c's kIds
+        print("#define OVL_TEST_IDS " + ", ".join(i for i, _ in imgs))
+        return 0
     seen = set()
     for ident, srcs in imgs:
         if ident in seen:
