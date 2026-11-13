@@ -134,21 +134,19 @@ typedef struct SegScheme {
 #define SEG_EMITS
 #endif
 
+/* A row for every FORMAT of src/unc_formats.h whose join column is not
+ * NOJOIN, in that list's order. */
+#define SEG_JOIN_NOJOIN              SEG_JOIN_NONE_, 0
+#define SEG_JOIN_JOIN_READ(fl, fn)   SEG_JOIN_ROW, fl SEG_READ(fn)
+#define SEG_JOIN_JOIN_EMIT(fl)       SEG_JOIN_ROW, fl SEG_EMITS
+#define SEG_JOIN_ROW(f, ...)         { f, __VA_ARGS__ },
+#define SEG_JOIN_NONE_(f, ...)
+#define SEG_JOIN_CALL(f, j)          SEG_JOIN_CALL2(f, SEG_JOIN_##j)
+#define SEG_JOIN_CALL2(f, ...)       SEG_JOIN_CALL3(f, __VA_ARGS__)
+#define SEG_JOIN_CALL3(f, m, ...)    m(f, __VA_ARGS__)
+#define SEG_SCHEME_ROW(f, n, k, x, run, keep, join) SEG_JOIN_CALL(f, join)
 static const SegScheme seg_schemes[] = {
-    { UNC_FORMAT_SITSEG,  SEG_HOOK_SIT SEG_EMITS },
-    { UNC_FORMAT_CPTSEG,  SEG_ADDRESSED SEG_READ(unc_cpt_extract) },
-    { UNC_FORMAT_DDSEG,   SEG_HOOK_DD SEG_EMITS },
-    { UNC_FORMAT_ZIPSEG,  SEG_ADDRESSED SEG_READ(unc_zip_extract) },
-    /* Apple Backup: addressed, its reader asking for each disk in turn
-     * and never reading past one's used length (fmt_abk.c). */
-    { UNC_FORMAT_ABK,     SEG_ADDRESSED SEG_READ(unc_abk_extract) },
-    /* message/partial. The parts join into a MESSAGE, so the reader
-     * for the joined stream is the MIME walk — no file is emitted in
-     * between. */
-    { UNC_FORMAT_MIMESEG, SEG_HOOK_MIME SEG_READ(unc_mime_extract) },
-    /* SPLIT: a part of a plain NAME.001 split is an anonymous slice of
-     * bytes, and the host's names and sizes are the whole map. */
-    { UNC_FORMAT_SPLIT,   SEG_ANONYMOUS SEG_EMITS }
+    UNC_FORMATS(SEG_SCHEME_ROW)
 };
 
 static const SegScheme *seg_scheme(UncFormat f)

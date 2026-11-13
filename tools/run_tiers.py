@@ -118,6 +118,9 @@ import subprocess
 import sys
 import tempfile
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import unc_formats  # noqa: E402
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(HERE)
 
@@ -1788,58 +1791,42 @@ EXPECT_SHIPPED = {
 CCOMMENT = re.compile(r"/\*.*?\*/", re.S)
 
 
-def formats(path=os.path.join(REPO, "src", "unc_engine.c")):
+def formats():
     """Every format's printed name and whether it is an envelope layer.
 
-    Parsed from the engine's own table, because `sniff` prints those names
-    and the shell unwraps exactly the rows flagged envelope: a copy here
-    would be a model of a different program.
+    Read from the engine's own list (src/unc_formats.h, through
+    tools/unc_formats.py), because `sniff` prints those names and the shell
+    unwraps exactly the ENVELOPE rows: a copy here would be a model of a
+    different program.
     """
-    text = CCOMMENT.sub(" ", open(path, encoding="utf-8").read())
-    body = text.split("#define UNC_FORMAT_ROWS(F, S)", 1)
-    if len(body) != 2:
-        raise SystemExit("run_tiers: cannot find UNC_FORMAT_ROWS in %s"
-                         % path)
-    out = {}
-    # F(fmt, name, envelope, extract) and S(fmt, name) since 2026-11-12,
-    # one list the table and the Macintosh's bitmaps are both made of.
-    body = body[1].split("\n\n", 1)[0]
-    for m in re.finditer(r"\bF\(\s*(UNC_FORMAT_\w+),\s*\"([^\"]*)\",\s*(\d)\s*,",
-                         body):
-        out[m.group(1)] = (m.group(2), m.group(3) == "1")
-    for m in re.finditer(r"\bS\(\s*(UNC_FORMAT_\w+),\s*\"([^\"]*)\"\s*\)", body):
-        out[m.group(1)] = (m.group(2), False)
-    if len(out) < 30:
-        raise SystemExit("run_tiers: parsed %d formats, expected 30+ — the "
-                         "engine's table changed shape" % len(out))
-    return out
+    return {f.id: (f.name, f.kind == "ENVELOPE")
+            for f in unc_formats.formats()}
 
 
 PLAN = os.path.join(REPO, "mac", "release_plan.inc.c")
 
 
 def plan_rows(text):
-    """The release table's rows, `[UNC_FORMAT_X] = KEEP(OVL_ID_Y, flags),`,
-    as (format, image, set of flags). Since 2026-11-11 the table is indexed
-    by format and lives with the decision in the set's setup image
-    (DECISIONS.md 2026-11-11, *the release decided in the bundle*)."""
-    body = text.split("gKeepSet[UNC_FORMAT__COUNT] = {", 1)
-    if len(body) != 2:
-        raise SystemExit("run_tiers: cannot find the release table in %s"
-                         % PLAN)
-    body = body[1].split("};", 1)[0]
-    rows = re.findall(r"\[\s*(UNC_FORMAT_\w+)\s*\]\s*=\s*KEEP\(\s*"
-                      r"(OVL_ID_\w+)\s*,\s*([A-Z_|\s0]+?)\s*\)\s*,", body)
-    if body.count("KEEP(") != len(rows):
-        raise SystemExit("run_tiers: a release-table row this model cannot "
-                         "read")
+    """The release table's rows as (format, image, set of flags): every
+    FORMAT of src/unc_formats.h with a KEEP column, the image its run row
+    names. `text` is the plan's own source, which must still build gKeepSet
+    from that list (DECISIONS.md 2026-11-11, *the release decided in the
+    bundle*)."""
+    if "UNC_FORMATS(KEEP_SET_ROW)" not in text:
+        raise SystemExit("run_tiers: %s no longer builds gKeepSet from "
+                         "src/unc_formats.h" % PLAN)
     out = []
-    for fmt, image, flags in rows:
-        fl = set(f.strip() for f in flags.split("|")) - {"0"}
+    for f in unc_formats.formats():
+        if f.keep is None:
+            continue
+        if f.run is None:
+            raise SystemExit("run_tiers: %s keeps its run row's image and "
+                             "has no run row" % f.id)
+        fl = set(x.strip() for x in f.keep.split("|")) - {"0"}
         if fl - {"KEEP_CRYPT", "KEEP_PEEK", "KEEP_ZIPOLD"}:
             raise SystemExit("run_tiers: a release flag this model does not "
-                             "know: %s" % flags)
-        out.append((fmt, image, fl))
+                             "know: %s" % f.keep)
+        out.append((f.id, f.run[0], fl))
     return out
 
 

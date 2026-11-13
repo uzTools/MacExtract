@@ -42,48 +42,26 @@
  * ciphers', and which always decrypts to a StuffIt archive unwrapped next;
  * and any format nobody has added here yet, which is the answer that cannot
  * be wrong. */
+#include "unc_formats.h"
+
 #define KEEP_CRYPT  0x80
 #define KEEP_PEEK   0x40
 #define KEEP_ZIPOLD 0x20
 #define KEEP(id, flags) ((unsigned char)(((id) - OVL_ID_CRYPT + 1) | (flags)))
+/* A row for every FORMAT of src/unc_formats.h, from its keep column, with
+ * the image its run column names; NOKEEP is 0, the whole bundle. */
+#define KEEP_IMAGE_RUN(id, which, flags) id
+#define KEEP_IMAGE_NORUN                 OVL_ID_CRYPT
+#define KEEP_COL_KEEP(flags)             KEEP_HAS, flags
+#define KEEP_COL_NOKEEP                  KEEP_NONE, 0
+#define KEEP_HAS(id, flags)              KEEP(id, flags)
+#define KEEP_NONE(id, flags)             0
+#define KEEP_CALL(id, ...)               KEEP_CALL2(id, __VA_ARGS__)
+#define KEEP_CALL2(id, m, flags)         m(id, flags)
+#define KEEP_SET_ROW(f, n, k, x, run, keep, join) \
+    [f] = KEEP_CALL(KEEP_IMAGE_##run, KEEP_COL_##keep),
 static const unsigned char gKeepSet[UNC_FORMAT__COUNT] = {
-    [UNC_FORMAT_SPACESAVER]  = KEEP(OVL_ID_SPACESAVER, 0),
-    [UNC_FORMAT_COMPACTPRO]  = KEEP(OVL_ID_CPTDD,      KEEP_CRYPT),
-    [UNC_FORMAT_DISKDOUBLER] = KEEP(OVL_ID_CPTDD,      0),
-    [UNC_FORMAT_LZH]         = KEEP(OVL_ID_LZH,        0),
-    [UNC_FORMAT_ARC]         = KEEP(OVL_ID_ARC,        KEEP_CRYPT),
-    [UNC_FORMAT_NOWCOMPRESS] = KEEP(OVL_ID_NOW,        0),
-    [UNC_FORMAT_SUPERDISK]   = KEEP(OVL_ID_SUPERDISK,  0),
-    [UNC_FORMAT_PACKIT]      = KEEP(OVL_ID_PACKIT,     KEEP_CRYPT),
-    /* An AppleLink package cannot be encrypted: the format has no password
-     * anywhere in it, and its own expander never asks for one. */
-    [UNC_FORMAT_SQP]         = KEEP(OVL_ID_SQP,        0),
-    [UNC_FORMAT_SIT]         = KEEP(OVL_ID_STUFFIT,    KEEP_CRYPT),
-    [UNC_FORMAT_SIT5]        = KEEP(OVL_ID_STUFFIT,    KEEP_CRYPT),
-    [UNC_FORMAT_ZIP]         = KEEP(OVL_ID_EXO,        KEEP_CRYPT | KEEP_ZIPOLD),
-    [UNC_FORMAT_TAR]         = KEEP(OVL_ID_ZIPOLD,     0),
-    /* No password anywhere in the format. */
-    [UNC_FORMAT_MAR]         = KEEP(OVL_ID_ZIPOLD,     0),
-    [UNC_FORMAT_TOME]        = KEEP(OVL_ID_ZIPOLD,     0),
-    /* Segment SCHEMES, from the other release site: a Compact Pro or spanned
-     * zip set is read by that format's own reader over the joined parts. */
-    [UNC_FORMAT_CPTSEG]      = KEEP(OVL_ID_CPTDD,      KEEP_CRYPT),
-    [UNC_FORMAT_ZIPSEG]      = KEEP(OVL_ID_EXO,        KEEP_CRYPT | KEEP_ZIPOLD),
-    /* An Apple Backup set: its reader and its match, no password. */
-    [UNC_FORMAT_ABK]         = KEEP(OVL_ID_ZIPOLD,     0),
-    /* Envelopes, by the image their reader is in. */
-    [UNC_FORMAT_BINHEX]      = KEEP(OVL_ID_BINHEX,     KEEP_PEEK),
-    [UNC_FORMAT_BINHEX_OLD]  = KEEP(OVL_ID_BINHEX,     KEEP_PEEK),
-    [UNC_FORMAT_DL]          = KEEP(OVL_ID_BINHEX,     KEEP_PEEK),
-    [UNC_FORMAT_MACBINARY]   = KEEP(OVL_ID_BINHEX,     KEEP_PEEK),
-    [UNC_FORMAT_APPLESINGLE] = KEEP(OVL_ID_BINHEX,     KEEP_PEEK),
-    [UNC_FORMAT_APPLEDOUBLE] = KEEP(OVL_ID_BINHEX,     KEEP_PEEK),
-    [UNC_FORMAT_GZIP]        = KEEP(OVL_ID_EXO,        KEEP_PEEK),
-    [UNC_FORMAT_COMPRESS_Z]  = KEEP(OVL_ID_EXO,        KEEP_PEEK),
-    [UNC_FORMAT_LZ4]         = KEEP(OVL_ID_ZIPOLD,     KEEP_PEEK),
-    [UNC_FORMAT_UU]          = KEEP(OVL_ID_TEXT,       KEEP_PEEK),
-    [UNC_FORMAT_BASE64]      = KEEP(OVL_ID_TEXT,       KEEP_PEEK),
-    [UNC_FORMAT_BTOA]        = KEEP(OVL_ID_BTOA,       KEEP_PEEK),
+    UNC_FORMATS(KEEP_SET_ROW)
 };
 
 /* What an envelope whose payload's first bytes name nothing keeps beside its

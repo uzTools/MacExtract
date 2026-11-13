@@ -120,23 +120,22 @@
    reached indirectly (`x = f()` then `if x:`) — only a call written
    directly in the boolean position is examined.
 
-0c. **gRun rows** (`tools/check_ovl_rows.py --selftest`, in `ci.sh` since
-   2026-11-12; no build, under a second): every format `src/unc_engine.c`'s
-   `UNC_FORMAT_ROWS` reads as a file (an `F()` row) must have a row in
-   `mac/ovl_shim.c`'s `gRun` or be one of `unc_run_file`'s three resident
-   readers, and every set `src/unc_segment.c`'s `seg_schemes` reads with
-   `SEG_READ()` a `gRun` row; a missing one fails on the Macintosh only, as
-   an error of no name. A scheme with a match (`src/unc_segid.c`) whose set
-   the release plan reduces to a keep row needs `RUN_MATCH` on its `gRun`
-   row, naming an image that compiles the match and answers
-   `OVL_SEG_MATCH` (since 2026-11-12, DECISIONS.md, *the format table that
-   became three bitmaps*). It also fails on a decoder called by name inside
-   `src/`. `--selftest` removes each of the 34 rows, the 3 `RUN_MATCH`
-   flags and the 3 resident readers in turn and requires each removal to
-   fail. **What it cannot see:** whether a row names the right image and
-   entry point (the emulator tiers and the overlay host lane do), and a
-   table in a shape its regexes do not parse, which fails as "stopped
-   checking" rather than passing.
+0c. **Run rows** (`tools/check_ovl_rows.py --selftest`, in `ci.sh` since
+   2026-11-12; no build, under a second): every FILE or ENVELOPE row of
+   `src/unc_formats.h` must have a run row (`mac/ovl_shim.c`'s `gRun` is
+   expanded from it) or be one of `unc_run_file`'s three resident readers,
+   and every JOIN_READ set a run row; a missing one fails on the Macintosh
+   only, as an error of no name. Each such extractor and set reader must be
+   a `DECODER`, and each `DECODER` some row's. A scheme with a match
+   (UNC_SEGIDS) whose set the release plan reduces to a keep row needs
+   `RUN_MATCH`, naming an image that compiles the match and answers
+   `OVL_SEG_MATCH` (DECISIONS.md 2026-11-12, *the format table that became
+   three bitmaps*). It also fails on a decoder called by name inside
+   `src/`. `--selftest` removes each of the 33 run rows, the 2 `RUN_MATCH`
+   flags, the 27 aliases and the 3 resident readers in turn and requires
+   each removal to fail. **What it cannot see:** whether a row names the
+   right image and entry point (the emulator tiers and the overlay host
+   lane do); a list `tools/unc_formats.py` cannot parse fails there.
 
 ## The oracle
 

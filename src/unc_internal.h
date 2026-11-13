@@ -6,6 +6,7 @@
 #define UNC_INTERNAL_H
 
 #include "macextract.h"
+#include "unc_formats.h"
 
 /* ------------------------------------------------------------------ */
 /* Byte-wise big-endian readers.                                      */

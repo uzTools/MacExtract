@@ -98,6 +98,8 @@ from concurrent.futures import ThreadPoolExecutor
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, "tools", "overlay"))
 import mkforwards  # noqa: E402  (CODECS / ZIPOLD: who the vector points at)
+sys.path.insert(0, os.path.join(ROOT, "tools"))
+import unc_formats  # noqa: E402
 
 TOOL = os.path.join(os.environ.get("RETRO68", "/opt/Retro68-build/toolchain"),
                     "bin", "m68k-apple-macos-")
@@ -123,11 +125,15 @@ GLUE_SRC = ["mac/ovl_shim.c", "mac/ovl_reloc.c", "mac/ovl_load_eager.c"]
 # mac/ovl_shim.c's helpers that call an image for several shims. Each maps
 # a shim to the (image, function) pairs it reaches; a shim not named
 # reaches the one image defining its own name.
+# unc_segment_match reaches the sniffer's own, and every RUN_MATCH scheme's
+# match in the image its run row names (src/unc_formats.h).
+_MATCH = {i: m for i, _d, m in unc_formats.segids() if m}
 SHARED_SHIMS = {
     "ovl_run": {},
-    "seg_id": {"unc_segment_match": [("sniff", "unc_segment_match"),
-                                     ("cptdd", "unc_cptseg_match"),
-                                     ("zipold", "unc_abk_match")]},
+    "seg_id": {"unc_segment_match": [("sniff", "unc_segment_match")] + [
+        (f.run[0][len("OVL_ID_"):].lower(), _MATCH[f.id])
+        for f in unc_formats.formats()
+        if f.run and "RUN_MATCH" in f.run[2] and f.id in _MATCH]},
 }
 
 # Library routines the resident link takes from Retro68 (an image links
@@ -186,12 +192,9 @@ CLASSES = {
     "seek_part": ["unc_segment.c:seg_seek_part"],
     "skip": ["unc_segment.c:seg_skip_fwd"],
     "part_size": ["unc_segment.c:seg_part_size"],
-    # unc_segid.c's table, then unc_segment.c's
-    "describe": ["unc_sitseg_describe", "unc_cptseg_describe",
-                 "unc_ddseg_describe", "unc_zipseg_describe",
-                 "unc_mimeseg_describe", "unc_abk_describe"],
-    "match": ["unc_sitseg_match", "unc_cptseg_match", "unc_ddseg_match",
-              "unc_abk_match"],
+    # unc_segid.c's table (src/unc_formats.h, UNC_SEGIDS)
+    "describe": [d for _i, d, _m in unc_formats.segids()],
+    "match": [m for _i, _d, m in unc_formats.segids() if m],
     "payload": ["unc_ddseg_payload"],
     "stored_crc": ["unc_sitseg_stored_crc", "unc_ddseg_stored_crc"],
     "crc_fold": ["unc_crc16_arc", "unc_crc16_xmodem"],
@@ -236,8 +239,8 @@ WRAPPED = ("read", "seek", "tell", "size", "tick", "seek_part", "skip",
 # only in a format that sets a cipher up: the files that call one of
 # unc_crypt_zip/sit/cpt/packit_*/rc4/xor/pf/winzip_aes. check_rules()
 # fails if either list stops matching the source.
-ENVELOPES = ["gzip", "compressz", "lz4", "pf", "macbinary", "appledouble",
-             "btoa", "uu", "binhex", "b64"]
+ENVELOPES = sorted({f.extract[len("unc_"):-len("_extract")]
+                    for f in unc_formats.formats() if f.kind == "ENVELOPE"})
 CIPHER_FILES = {"fmt_arc.c": "arc", "fmt_cpt.c": "cpt", "fmt_exo.c": "zip",
                 "fmt_sit5.c": "sit5", "fmt_packit.c": "packit",
                 "fmt_pf.c": "pf", "fmt_sit.c": "sit"}
@@ -335,14 +338,14 @@ def run(cmd, **kw):
 
 # ---------------------------------------------------------------- the build
 def check_rules():
-    """ENVELOPES and CIPHER_FILES are facts about the source; re-read them."""
-    t = open(os.path.join(ROOT, "src", "unc_sniff.c")).read()
-    m = re.search(r"unc_sniff_envelope_order\[\] = \{(.*?)\};", t, re.S)
-    got = [p.replace("applesingle", "appledouble") for p in
-           re.findall(r"unc_(\w+)_probe", m.group(1))]
+    """ENVELOPES and CIPHER_FILES are facts about the source; re-read them.
+    ENVELOPES is the ENVELOPE rows' extractors, and the probes flagged
+    ENVELOPE must name the same formats."""
+    got = [p[len("unc_"):-len("_probe")].replace("applesingle", "appledouble")
+           for p, answers in unc_formats.probes() if answers == "ENVELOPE"]
     if sorted(got) != sorted(ENVELOPES):
-        die("unc_sniff.c's envelope probes are %s; ENVELOPES says %s"
-            % (sorted(got), sorted(ENVELOPES)))
+        die("src/unc_formats.h's ENVELOPE probes are %s; its ENVELOPE rows' "
+            "extractors are %s" % (sorted(got), sorted(ENVELOPES)))
     setup = re.compile(r"\bunc_crypt_(zip|sit|cpt|packit_des|packit_xor|rc4|"
                        r"xor|pf|winzip_aes)\s*\(")
     files = sorted(f for f in os.listdir(os.path.join(ROOT, "src"))
@@ -579,17 +582,14 @@ def read_unit(u):
 
 
 def source_readers():
-    """The extractors src/unc_engine.c's F() rows name, and the readers
-    src/unc_segment.c's seg_schemes rows name with SEG_READ()."""
-    eng = open(os.path.join(ROOT, "src", "unc_engine.c")).read()
-    seg = open(os.path.join(ROOT, "src", "unc_segment.c")).read()
-    files = re.findall(r"\bF\(\s*UNC_FORMAT_\w+\s*,\s*\"[^\"]*\"\s*,\s*\d\s*,"
-                       r"\s*(\w+)\s*\)", eng)
-    sets = re.findall(r"\{\s*UNC_FORMAT_\w+\s*,[^{}\n]*SEG_READ\(\s*(\w+)\s*\)",
-                      seg)
+    """The extractors src/unc_formats.h's FILE and ENVELOPE rows name, and
+    the readers its JOIN_READ columns name."""
+    fmts = unc_formats.formats()
+    files = [f.extract for f in fmts if f.kind != "PART"]
+    sets = [f.join[2] for f in fmts if f.join and f.join[0] == "READ"]
     if len(files) < 30 or len(sets) < 4:
-        die("source_readers: parsed %d extractors and %d set readers — the "
-            "tables changed shape" % (len(files), len(sets)))
+        die("source_readers: %d extractors and %d set readers — the list "
+            "changed shape" % (len(files), len(sets)))
     return files, sets
 
 
