@@ -32,6 +32,20 @@
 #define _POSIX_C_SOURCE 200809L
 
 #include "macextract.h"
+/* The engine's list of formats (macros only): which formats are set
+ * schemes, and which of those join their parts into one file, are its
+ * join column's, so that a format added there needs nothing here. */
+#include "../src/unc_formats.h"
+#define CLI_CASE(f)                  case f:
+#define CLI_SKIP(f)
+#define CLI_JOINS_NOJOIN             CLI_SKIP
+#define CLI_JOINS_JOIN_READ(fl, fn)  CLI_CASE
+#define CLI_JOINS_JOIN_EMIT(fl)      CLI_CASE
+#define CLI_EMITS_NOJOIN             CLI_SKIP
+#define CLI_EMITS_JOIN_READ(fl, fn)  CLI_SKIP
+#define CLI_EMITS_JOIN_EMIT(fl)      CLI_CASE
+#define CLI_JOINS_ROW(f, n, k, x, run, keep, join) CLI_JOINS_##join(f)
+#define CLI_EMITS_ROW(f, n, k, x, run, keep, join) CLI_EMITS_##join(f)
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -2509,8 +2523,13 @@ static UncFormat format_by_name(const char *s)
  * ask this question, and they must not answer it differently. */
 static int layer_unwraps(UncFormat f)
 {
-    return unc_format_is_envelope(f) || f == UNC_FORMAT_SITSEG ||
-           f == UNC_FORMAT_SPLIT || f == UNC_FORMAT_DDSEG;
+    if (unc_format_is_envelope(f)) return 1;
+    switch (f) {
+    UNC_FORMATS(CLI_EMITS_ROW)      /* the JOIN_EMIT rows */
+        return 1;
+    default:
+        return 0;
+    }
 }
 
 /* --budget: decimal digits, then optionally K, M or G (powers of 1024),
@@ -3113,12 +3132,16 @@ static int layer_preset(const CliArgs *a, Layer *L)
     return 0;
 }
 
+/* A set scheme: every format whose src/unc_formats.h row has a join
+ * column. */
 static int is_segmented(UncFormat f)
 {
-    return f == UNC_FORMAT_SITSEG || f == UNC_FORMAT_ZIPSEG ||
-           f == UNC_FORMAT_SPLIT || f == UNC_FORMAT_CPTSEG ||
-           f == UNC_FORMAT_DDSEG || f == UNC_FORMAT_MIMESEG ||
-           f == UNC_FORMAT_ABK;
+    switch (f) {
+    UNC_FORMATS(CLI_JOINS_ROW)
+        return 1;
+    default:
+        return 0;
+    }
 }
 
 /* ---- a set of parts: one setup per scheme, each returning 0 or the
