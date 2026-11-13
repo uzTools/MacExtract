@@ -200,6 +200,8 @@ SHORT = re.compile(r"at least (\d+) bytes more memory")
 # 64 -> 63 at sys6-512K on 2026-11-02, DERIVED: `derived-PuzzleGetter_0.8.sit`
 # (below). 63 -> 64 on 2026-11-03, DERIVED: it left again.
 # 64 -> 62 at sys6-512K on 2026-11-11, DERIVED: the 'part' resources (below).
+# 62 -> 63 on 2026-11-13, DERIVED: `derived-PuzzleGetter_0.8.sit` left again
+# with the folder memo's 1,600 B of A5 (below).
 EXPECT = {
     "floor-1M": (),
     "sys3-512K": ("derived-Cool_Tools__.sit",
@@ -232,7 +234,11 @@ EXPECT = {
                   # every reader resident in it. The shipped lane does
                   # not move (DECISIONS.md 2026-11-11, *the parts the
                   # Installer expands*).
-                  "a2ps.V4.3.tar.Z", "derived-PuzzleGetter_0.8.sit"),
+                  # PuzzleGetter, the second, left 2026-11-13: the folder
+                  # memo's 1,600 B went from A5 onto the relocator's dead
+                  # code (DECISIONS.md 2026-11-13, *the memo on the
+                  # relocator*).
+                  "a2ps.V4.3.tar.Z"),
                   # Five more were refused from 2026-11-12 while Installer
                   # VISE was resident in the control, and left with it the
                   # same day (DECISIONS.md 2026-11-12, *VISE parked*).

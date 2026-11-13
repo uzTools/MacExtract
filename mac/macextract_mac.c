@@ -1296,7 +1296,20 @@ static long  gRepMore;              /* lines there was no room for */
  * 2026-09-03, which is the direction a failure has to fall. */
 #define kDirMemo 200
 
-static struct { long dir; uint32_t hash; } gDirMemo[kDirMemo];
+typedef struct { long dir; uint32_t hash; } DirMemoRow;
+#ifdef UNC_SINK_TEST
+static DirMemoRow gDirMemo[kDirMemo];
+#else
+/* tools/build_mac.sh counts kDirMemo rows of 8 B. */
+typedef char DirMemoRowIs8[sizeof(DirMemoRow) == 8 ? 1 : -1];
+/* Not in bss: the link puts it on Retro68ApplyRelocations, whose bytes and
+ * Retro68Relocate's are dead once mac/mac_start.c has run them, before
+ * main (mac/CMakeLists.txt, the --defsym; tools/build_mac.sh fails a link
+ * where the two no longer hold kDirMemo rows). Nothing reads a row before
+ * RepDirMemo writes it (gDirMemoN), so the code it lands on needs no
+ * clearing (DECISIONS.md 2026-11-13, *the memo on the relocator*). */
+extern DirMemoRow gDirMemo[kDirMemo];
+#endif
 static short gDirMemoN;
 
 /* Set when a TOP-LEVEL folder this run made found gDirMemo full. A folder

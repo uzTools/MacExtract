@@ -606,9 +606,13 @@ target_compile_options(MacExtract PRIVATE -mcpu=68000 -Os -Wno-multichar
 # DATA and a RELA resource per segment — served an application with ONE
 # real segment (DECISIONS.md 2026-10-22, *the runtime the application did
 # not need*). -e names mac/mac_start.c's entry, which skips newlib's exit
-# chain and gives the relocations back once they are applied.
+# chain and gives the relocations back once they are applied. The
+# --defsym puts the shell's folder memo on the relocator's code, which is
+# dead once it has run (mac/macextract_mac.c, gDirMemo; tools/build_mac.sh
+# checks it fits).
 target_link_options(MacExtract PRIVATE -Wl,-gc-sections -Wl,--mac-strip-macsbug
-                    -Wl,--mac-single -Wl,-e,unc_mac_start)
+                    -Wl,--mac-single -Wl,-e,unc_mac_start
+                    -Wl,--defsym=gDirMemo=Retro68ApplyRelocations)
 
 # The Finder ignores a 'BNDL' unless the file's hasBundle flag is set, and
 # nothing in the Retro68 chain sets it — Rez takes -t and -c and has no

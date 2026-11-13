@@ -235,17 +235,15 @@ HYPOTHESES.
 
 ## Resident bytes that could leave before extraction
 
-**Not started; each is its own change.** Sizes MEASURED 2026-10-22 at
-17a025b, the first row's 2026-11-09 (`nm -S` of
-`build/mac/MacExtract.code.bin.gdb`); every saving is a
-HYPOTHESIS until read off the budget probe (FORMATS.md, *What the application
-costs the engine*).
+Sizes MEASURED 2026-11-13 at efc4e1a6 (`nm -S` of
+`build/mac/MacExtract.code.bin.gdb`, one row per address); every saving is a
+HYPOTHESIS until read off the builds and `tools/run_tiers.py` (FORMATS.md,
+*What the application costs the engine*).
 
 | what | resident | what would close it |
 |---|---|---|
-| segment joining: the joiner (`unc_segment.c`), the schemes' join hooks and readers, their parsers, the shims to `src/unc_segid.c` | 6,788 B of code on 2026-11-09, after describe and match left for `ovl_sniff` and `ovl_cptdd` (−1,584 B; DECISIONS.md 2026-11-09, *the set's identity that left*); its scheme table 272 → 96 B of A5 and its code −16 on 2026-11-12, a scheme's row 2 B (DECISIONS.md 2026-11-12, *the format table that became three bitmaps*) | the joiner is read while a Compact Pro, spanned-zip or Apple Backup set is, which keep only their readers' images, so it stays. The hooks only bundle-keeping schemes call (MIME's header walk 1,840 B, `SPLT`'s 772 B, StuffIt's emit 578 B) could go to `ovl_sniff`: ~3,190 B onto every released layer, and an estimated 120–160 B of shims and dispatch cases off every layer that keeps the whole bundle, those sets among them (hypothesis, not built; the same entry) — not free, so the maintainer's call |
-| the shell's set code (`SegAskUser`, `SegPartOf`, the part dialog's scans) | 3,166 B of code on 2026-10-22, not re-measured since the setup half (`SegScanWrapped` and the rest of `mac/seg_setup.inc.c`) left as `ovl_segsetup` in v0.45.0 | the same table of function pointers the setup image is given (DECISIONS.md 2026-11-02, *the dialogs that became the application*); not priced |
-| the relocator, `Retro68Relocate` and `Retro68ApplyRelocations` | 1,656 B of code | Elf2Mac places it at the start of `.text`; needs a layout Elf2Mac does not offer |
+| segment joining: the joiner (`unc_segment.c`), the schemes' join hooks and readers, their parsers, the shims to `src/unc_segid.c` | 6,552 B of code: the joiner 2,714, MIME's header walk 1,840, StuffIt's segment reader and emit 708, `SPLT`'s 772, the zip end-record scan 234, the shims 284 | the joiner is read while a Compact Pro, spanned-zip or Apple Backup set is, which keep only their readers' images, so it stays. **The hooks and the two segment readers only bundle-keeping schemes call, moved to `ovl_sniff`, were built and measured** (2026-11-13, not landed: the maintainer's call): shipped CODE −3,128, A5 −72, `ovl_sniff` +1,290; +3,200 B on every layer that keeps neither, **+1,908 B on one that keeps the bundle or the sniffer**; deepest chain 3,430 B and the shell's 6,228 B unmoved; no tally moves. The parsers they call were already in the image, which is why the earlier estimate (120–160 B off a bundle-keeping layer) was wrong |
+| the shell's set code (`seg_need` with `SegAskUser`, `SegPartOf`, the part dialog's scans, `SegCopyIn`) | 4,514 B of code | every one of its functions is also called while a set is read, after the release (the part dialog, a disk put in), so `ovl_segsetup` cannot take any of it unless every set keeps that image: at least −2,844 B on a Compact Pro, spanned-zip or Apple Backup set's grant, `ovl_segsetup`'s 2,830 B aligned and a directory entry (DERIVED from `run_tiers.gain()`, not built). An image of its own, kept by every set, costs a set its shims and entry (hypothesis, not built) |
 
 ## Formats classic Mac programs wrote that nothing here opens — leads, not findings
 

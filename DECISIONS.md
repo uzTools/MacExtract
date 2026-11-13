@@ -602,6 +602,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-12 (the format table that became three bitmaps) — on the Macintosh a format's resident rows are a bit in three 8-byte maps and its 2-byte `gRun` row, a segment scheme's row 2 bytes, and a set's part search found through `gRun`: CODE +16, A5 −1,152, 1,136 B onto every budget; a new format costs 2 B resident where Installer VISE cost 64, and 4 B if it is a set
 - 2026-11-12 (VISE parked) — every Installer VISE reader, 1992 to VISE X, taken off main on the maintainer's word and kept in `parked/vise/` (a branch until 2026-11-13); the format's number reserved; the control 12,928 B smaller
 - 2026-11-13 (one registration per format) — a format is its files and its lines in `src/unc_formats.h`: every per-format table, the Macintosh's included, is expanded from four lists, the image lists from the build's rules, and every build size from `tools/budgets.txt`, which `tools/retake_budgets.py` re-takes; the application byte-identical
+- 2026-11-13 (the memo on the relocator) — the shell's 1,600 B folder memo leaves bss for Retro68's relocator, whose 1,656 B of code are dead once the application has launched: A5 −1,600, CODE 0, 1,600 B onto every budget, measured on all three tiers
 ---
 
 ## M0
@@ -25573,3 +25574,44 @@ the retake.
 control by arithmetic, as before; a change that moves resident bytes
 outside the CODE + A5 unit still needs the budget probe on the emulator.
 
+## 2026-11-13 (the memo on the relocator) — the shell's 1,600 B folder memo leaves bss for Retro68's relocator, whose 1,656 B of code are dead once the application has launched: A5 −1,600, CODE 0, 1,600 B onto every budget, measured on all three tiers
+
+**Claim (measured).** `gDirMemo` (`mac/macextract_mac.c`), 200 rows of 8 B,
+is no longer bss: the link defines it at `Retro68ApplyRelocations`
+(`-Wl,--defsym`, `mac/CMakeLists.txt`), and it runs on into
+`Retro68Relocate`. The two are one span, 0x18–0x690 of `.text`, 1,656 B,
+run once by `mac/mac_start.c` before `main` and never again; nothing reads a
+memo row before `RepDirMemo` writes it, so the code under it needs no
+clearing. Elf2Mac relocates the references by the symbol's section, `.text`,
+so each `lea` is the same six bytes with another address: CODE unchanged in
+all three builds, bss −1,600 in all three.
+
+**Price, every axis.** Shipped CODE 0, A5 −1,600; the control the same, so
+`OVL_SAVED` is unmoved and every grant rises 1,600 B with `TIERS`. The
+budget probe (`-D UNC_AT_BUDGET`, `derived-PCCTS.tar`), base and change back
+to back: 757,694 → 759,294 at 1 MB, 233,406 → 235,006 on System 6.0.8 /
+512Ke, 328,806 → 330,406 on System 3.0 / 512Ke, +1,600 on each. Stack 0
+(3,430 B). Shipped tallies unmoved (74, 72, 72 of 74); the control's
+sys6-512K 62 → 63, `derived-PuzzleGetter_0.8.sit` back in (DERIVED,
+`tools/run_tiers.py`).
+
+**Run on the machines (measured).** `derived-CursorAnimator.sit` (21
+folders), `derived-Orbit3d_1.0..sit` (folders six deep),
+`derived-PCCTS.tar` and `derived-Firefly01_Folder.sit` byte-exact on the
+1 MB Plus under 6.0.8 and on the 512Ke under 3.0 and 6.0.8, the 512Ke
+refusing Orbit3d's one large entry, as the base build does on 6.0.8;
+CursorAnimator's 86 files byte-exact on Mac OS 9.2 (`os9.py --autotest`),
+where the 68LC040 emulator ran the relocator first.
+
+**What holds it.** `tools/build_mac.sh` fails a link where `gDirMemo` is not
+on `Retro68ApplyRelocations`, where any other symbol starts inside the span,
+or where the span is shorter than `kDirMemo` rows; both failures were made
+to happen (kDirMemo 210: "needs 1680 B, the span is 1656"; the symbol put
+on `Retro68Relocate`: "unplaced"). **What it cannot see**: a later call into
+either function. Nothing in the application calls them; a Retro68 whose
+`_start` the application used again would.
+
+**Transferable.** A row in OPEN_ITEMS said the relocator could not leave,
+which was true of its code and not of its bytes: code that is dead after
+launch is memory, and a table nothing reads before it writes can live on
+it.

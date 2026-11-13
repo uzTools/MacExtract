@@ -2547,7 +2547,7 @@ that grows with the output*): the ring starts at 4 KB and doubles to the
 ~8,392 B (was 69,816), a 9.9 KB payload 28,872 B, and a 191 KB one 102,600 B
 (both buffers live across the last grow). A `.mar.lz4` is named by the
 envelope peek and its layer keeps only `ovl_zipold`, the sniffer and the
-codecs (*What each format is granted*), granted <!-- grant: sys6-512K zipold sniff codecs -->215,758 B at System 6.0.8 /
+codecs (*What each format is granted*), granted <!-- grant: sys6-512K zipold sniff codecs -->217,358 B at System 6.0.8 /
 512 KB — room to spare; an LZ4 frame the peek cannot name keeps the whole
 bundle, leaving 65,712 B there, which now fits any payload under ~32 KB and
 refuses a larger one per entry (it was a flat 69,816 B, refused for all).
@@ -2645,7 +2645,7 @@ the engine table's row and name and the keep set's two bytes; the `idcp`
 type in the bundle is a map entry outside that unit, 12 B by LZ4's
 measurement, not re-measured on the probe. `ovl_zipold` 18,720 → 21,934 B,
 `ovl_sniff` +168, the bundle 204,520 B. A Tome keeps `ovl_zipold` and the
-codecs (*What each format is granted*): <!-- grant: sys6-512K zipold codecs -->233,186 B at System 6.0.8 / 512 KB,
+codecs (*What each format is granted*): <!-- grant: sys6-512K zipold codecs -->234,786 B at System 6.0.8 / 512 KB,
 three times its peak. Deepest chain 944 B (`tools/stack_depth.py`).
 
 **'part' resources** (since 2026-11-11; DECISIONS.md 2026-11-11, *the
@@ -3373,7 +3373,7 @@ too*). A comment that could not be written is listed and counted (since
 | text | 6,144 B packed end to end, 1 KB of it likewise reserved. **Names go in whole**: eighteen photographs whose names differ at character 34 are one line repeated eighteen times if the name is cut to a row, and the list exists to say which file became which |
 | rows a line takes | as many as the box needs, wrapped at a measured width and **broken after the name** where it has to wrap, so one row is what the archive called it and the next is what became of it |
 | rows visible at once | 20, Geneva 9 on 11-point rows, in a 460×300 box at (30,26) — the whole of it on a 512×342 Mac Plus screen. A list longer than that scrolls under the last two, which hold a blank line and the outcome |
-| static cost | 6,144 B of lines + 1,600 B of folder memo (200 folders, id and name hash), against the ~64 KB the 1 MB floor target had spare on 2026-08-25 (*the PAK methods*) |
+| static cost | 6,144 B of lines, against the ~64 KB the 1 MB floor target had spare on 2026-08-25 (*the PAK methods*); the folder memo's 1,600 B (200 folders, id and name hash) are Retro68's relocator's code, dead after launch, since 2026-11-13 (DECISIONS.md, *the memo on the relocator*) |
 | the application, 2026-08-29 | 184,576 B of MacBinary, from 178,944 B before it |
 
 The outcome — *"Extraction complete."* or any other — is the list's LAST
@@ -4407,7 +4407,7 @@ envelope whose payload the peek could not name (the row above it since;
 DECISIONS.md 2026-11-11, *the head that named nothing*), and until
 2026-11-03 every envelope, and it refused `a2ps.V4.3.tar.Z` and
 `popper-1.7.tar.Z` at System 6.0.8 / 512 KB; the peek names Tar from the first
-512 bytes and the `.Z` layer is granted <!-- grant: sys6-512K exo sniff zipold codecs -->185,462 B there instead of <!-- grant: sys6-512K bundle -->55,498 B
+512 bytes and the `.Z` layer is granted <!-- grant: sys6-512K exo sniff zipold codecs -->187,062 B there instead of <!-- grant: sys6-512K bundle -->57,098 B
 (DECISIONS.md 2026-11-03, *the envelope that said what it held*). The
 heaviest envelope decode in the Mac sample is `popper-1.7.tar.Z`'s LZW at
 147,764 B.

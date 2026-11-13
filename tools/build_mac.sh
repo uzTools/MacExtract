@@ -168,6 +168,38 @@ if [ -x "$SIZE" ] && [ -f "$GDB" ]; then
             exit 1
         fi
         echo "mac: File Manager glue linked: none of the seven mac/fm_inline.h expands"
+        # gDirMemo is placed on Retro68ApplyRelocations by the link
+        # (mac/CMakeLists.txt) and spans into Retro68Relocate: both are run
+        # once by mac/mac_start.c before main and never again. Fail a link
+        # where anything else starts inside the span, or the span is shorter
+        # than the memo's kDirMemo rows of 8 B.
+        rows=$(sed -n 's/^#define kDirMemo \([0-9][0-9]*\).*/\1/p' mac/macextract_mac.c)
+        memo=$("$NM" -S -n "$GDB" | awk -v need=$((rows * 8)) '
+            function h(x,   i, v) {
+                v = 0
+                for (i = 1; i <= length(x); i++)
+                    v = v * 16 + index("0123456789abcdef", substr(tolower(x), i, 1)) - 1
+                return v
+            }
+            NF == 4 && $4 == "Retro68ApplyRelocations" { a = h($1) }
+            NF == 4 && $4 == "Retro68Relocate" { r = h($1); e = h($1) + h($2) }
+            NF >= 3 && $NF == "gDirMemo" { m = h($1) }
+            { if (NF >= 3) { addr[NR] = h($1); name[NR] = $NF } }
+            END {
+                if (!a || !r || m != a || r < a || need <= 0) { print "unplaced"; exit }
+                for (i in addr)
+                    if (addr[i] > a && addr[i] < e && name[i] != "Retro68Relocate" &&
+                        name[i] != "gDirMemo" && name[i] != "Retro68ApplyRelocations") {
+                        print "shares its span with " name[i]; exit }
+                if (e - a < need) { print "needs " need " B, the span is " e - a; exit }
+                print "ok " e - a " " need
+            }')
+        case "$memo" in
+            ok*) echo "mac: gDirMemo on the relocator: ${memo#ok } B (span, need)" ;;
+            *)   echo "mac: FAIL — gDirMemo on the relocator: $memo" >&2
+                 echo "mac: mac/macextract_mac.c says what it rests on." >&2
+                 exit 1 ;;
+        esac
     else
         echo "mac: no m68k nm — the constructor guard NOT checked"
     fi
