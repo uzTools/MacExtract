@@ -375,6 +375,14 @@ dist*). Left:
   not either date; what would make a helper win there, short of a
   rebuild, is not found. On 6.0.8 and 3.0 the helper's alert is measured
   (error -50), and a creator held by StuffIt Expander was not reached.
+  Untried, one 7.5.5 session for all of them (hypotheses, none run): the
+  reclaim followed by a restart (the Finder may keep the creator's owner
+  in memory); removing StuffIt Expander's entry as well as re-adding the
+  helper's, then whether a desktop rebuild or Expander's next launch
+  takes it back; deleting the Helpers folder and unzipping it again.
+  Whichever works goes in the stub, or in one reclaimer app that walks
+  all eighteen creators in a launch (in the helpers zip, no byte of
+  MacExtract's) — the maintainer's choice, later.
 - **An icon per document type, drawn by the maintainer.** Every helper's
   bundle points all its types at one family, MacExtract's archive icon
   (`companion/make_stub.py`); the eighteen helpers claim 51 types between
