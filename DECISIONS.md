@@ -618,6 +618,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-14 (the file DiskDoubler keeps for itself) — `DDDA`/`DDAP` is DiskDoubler's own resource file, not an archive: left unclaimed, and its row leaves OPEN_ITEMS.md
 - 2026-11-14 (the type of a file still being expanded) — `Part` is what StuffIt Expander types a file between creating it and giving it its own type; any member, not an archive: left unclaimed, and its row leaves OPEN_ITEMS.md
 - 2026-11-14 (the type UnZip gave what it could not name) — `pBIN` is a binary zip member written out as stored, by UnZip 1.x as `pBIN`/`pZIP` and by 2.0.1 as `pBIN`/`????`; not an archive: left unclaimed, and its row leaves OPEN_ITEMS.md
+- 2026-11-14 (the types nobody needed claimed) — OPEN_ITEMS' unclaimed types closed: `DDTM` claimed; `bzy `, `SITo`, `DDDA`, `Part` and `pBIN` read off real files and not archives; `PCFA`, `m@rc` and `pZIP` as a type have no file anywhere
 
 ---
 
@@ -26381,3 +26382,33 @@ opens already by `'****'`. The type stays out of the bundle, and its row
 moves to OPEN_ITEMS' "left out as not archives". The census's `pBIN`/`????`
 4 are not on these discs; that UnZip 2.0.1 wrote them is a hypothesis. No
 emulator was run: the source and the 19 files agree.
+
+---
+
+## 2026-11-14 (the types nobody needed claimed) — OPEN_ITEMS' unclaimed types closed: `DDTM` claimed; `bzy `, `SITo`, `DDDA`, `Part` and `pBIN` read off real files and not archives; `PCFA`, `m@rc` and `pZIP` as a type have no file anywhere
+
+OPEN_ITEMS.md's *Types MacExtract's bundle does not claim* (2026-11-12)
+listed the types StuffIt Expander 5.5 claims and MacStamp's census holds
+under archive programs' creators that MacExtract's bundle did not claim,
+none established because the census keeps no paths. Every row is settled,
+and the item closes:
+
+| type | what it is | outcome |
+|---|---|---|
+| `DDTM`/`DDAP` | DiskDoubler's working file; a finished `DDAR` archive can keep it | claimed (*the DiskDoubler working file that is an archive*) |
+| `bzy `/`SIT!` | two Installer VISE installers with zeroed data forks (MacStamp read them) | not an archive |
+| `SITo`/`SIT!` | a StuffIt translator module (`derived-PKG_Translator.sit`) | not an archive |
+| `DDDA`/`DDAP` | DiskDoubler's own resource file | not an archive (*the file DiskDoubler keeps for itself*) |
+| `Part`/`SIT!`, `Part`/`SITx` | StuffIt Expander's type for a file still being written; the bytes can be anything | not an archive type (*the type of a file still being expanded*) |
+| `pBIN`/`pZIP` | UnZip's type for a member it could not identify | not an archive type (*the type UnZip gave what it could not name*) |
+| `PCFA` (`crsX`), `m@rc` (ArcMac 1.3c) | in Expander 5.5's lists only; no file of either in the census, on the share, on Info-Mac II/IV or on Discmaster's searches made here | no file known |
+| `pZIP` as a type | UnZip's creator; no file carries it as a type | no file known |
+| `Bzp2`, `SITX`, `fold`, `disk` | out of scope (Part 1), or a dropped folder or disk | — |
+
+A file of a type here that does hold an archive still opens by a drop on
+MacExtract (its bundle claims `****`) and through File > Open. A type is
+claimed only where a real file shows it is an archive MacExtract reads; a
+new one found is a `FREF` through CLAUDE.md's short gate. MacStamp was sent
+the same findings (2026-11-14). The comment on `Part` in
+`mac/macextract_icons.r` is corrected to nine files.
+

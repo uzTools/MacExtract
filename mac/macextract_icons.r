@@ -226,9 +226,10 @@ resource 'FREF' (129) { '****', 1, "" };
    creator (`AlYS` or `alyS`), with `SDar`/`MExt` offered beside it. No
    file in MacStamp's 104,437-file census, TCDB or Apple's Internet Config
    tables carries the type `SDar`. NOT `Part`, though StuffIt Expander
-   claims it: TCDB's "Translation in Process", and all eight such files
+   claims it: TCDB's "Translation in Process", and all nine such files
    on Info-Mac IV are finished programs with empty data forks, an
-   expansion that stopped before retyping them — claimed 2026-10-24 and
+   expansion that stopped before retyping them (nine, not eight: recounted
+   2026-11-14, DECISIONS.md, *the type of a file still being expanded*) — claimed 2026-10-24 and
    dropped the same day, and MacStamp's tables dropped it too. Re-read at
    MacStamp's 6896433 on 2026-10-25: the same 29 types. Each maps to icon
    local ID 1, the archive icon, for the reason above. The resource fork grows by about 12 bytes a type

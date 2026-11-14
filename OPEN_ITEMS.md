@@ -261,48 +261,6 @@ a program's name and description; none has been held against a file.**
 Closing a row: a specimen written by the program, then a second reader to
 grade against.
 
-## Types MacExtract's bundle does not claim: Expander's, and real files'
-
-Two sources, compared on 2026-11-12 with MacExtract's 51 `FREF`s (read off
-`dist/MacExtract.bin`): StuffIt Expander 5.5's `'open'` 128 and its three
-bundles (read off its resource fork in the cache), and MacStamp's census
-(`fixtures/manifests/pair-census.csv`, 143,723 files), filtered to archive
-programs' creators. **No row is established: no file's bytes were read**
-(the census keeps no paths). Claiming a type costs 12 B of resource map.
-DiskDoubler's 40 single-file types are left to the `DDAP` helper by
-decision, not missing (DECISIONS.md 2026-11-13, *the icon types only the
-helper claims*).
-
-| type | in Expander 5.5 | files in the census, by creator | note |
-|---|---|---|---|
-| `PCFA` | `FREF`, its `crsX` bundle | none | unidentified |
-| `pZIP` | `'open'` | none as a type; `pZIP` is UnZip's creator | claimed by UnZip 2.0.1, ZipIt 1.0–1.3.5, MacGzip (MacStamp's `apps.tsv`) |
-| `m@rc` | `'open'` | none | claimed only by ArcMac 1.3c |
-| `Bzp2` | both lists | — | bzip2, out of scope (Part 1) |
-| `SITX` | — | `SIT!` 1 | StuffIt X, out of scope (Part 1) |
-| `fold`, `disk` | both lists | — | Expander's for a dropped folder or disk; MacExtract takes neither |
-
-Also in the census under those creators and left out as not archives:
-`adrp`/`SITx` 2, `pref`/`SITx` 1, `Pref`/`SIT!` 1; and, read by MacStamp
-2026-11-14, `bzy `/`SIT!` (two Installer VISE installers on the share
-whose data forks are all zeros) and `SITo`/`SIT!` (a StuffIt translator
-module, in the fixture `derived-PKG_Translator.sit`); and `DDDA`/`DDAP`,
-DiskDoubler's own resource file — `DiskDoublerData(3.7)` on the 3.7 disk,
-About pictures and self-extractor code and no data fork, and `DiskDoubler
-4.1 Prefs` in 4.1 (DECISIONS.md 2026-11-14, *the file DiskDoubler keeps
-for itself*). And, read off the discs 2026-11-14: `Part`/`SIT!` and
-`Part`/`SITx`, the type StuffIt Expander gives a file while it is being
-expanded (Info-Mac IV's nine are programs left so), and `pBIN`/`pZIP`, a
-binary zip member as UnZip 1.x wrote it (Info-Mac II's 19 are DOS object
-files) (DECISIONS.md 2026-11-14, *the type of a file still being expanded*
-and *the type UnZip gave what it could not name*). Creator `pZIP` is UnZip
-1.01, 1.10 and 2.0.1 (A. P. Maika); `TEXT`/`pZIP` 26 files are the text
-members beside those 19.
-
-What would settle a row: a file of that type, from MacStamp's sources or
-written to order by the program under the emulator, run through the CLI; a
-type is claimed only if it is an archive MacExtract reads.
-
 ## BinHex before 4.0: what is not graded
 
 - **No `.hex` from any writer but BinHex 2.0.** BinHex 1.0 and the BASIC
