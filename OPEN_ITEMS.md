@@ -280,15 +280,19 @@ helper claims*).
 | `pZIP` | `'open'` | none as a type; `pZIP` is UnZip's creator | claimed by UnZip 2.0.1, ZipIt 1.0–1.3.5, MacGzip (MacStamp's `apps.tsv`) |
 | `m@rc` | `'open'` | none | claimed only by ArcMac 1.3c |
 | `pBIN` | — | `pZIP` 19 (also `pGeN` 188 outside archive creators) | MacStamp's hypothesis: members UnZip wrote out, not archives |
-| `SITo` | — | `SIT!` 10 | unknown |
-| `bzy ` | — | `SIT!` 2 | unknown |
-| `DDDA`, `DDTM` | — | `DDAP` 2, 1 | DiskDoubler's |
+| `DDDA` | — | `DDAP` 2 | DiskDoubler's; not in its 40 icon types |
+| `DDTM` | — | `DDAP` 1 | **an archive**: `DDAR` at offset 0, a member of the fixture `ddtf-dd377ads.dd.hqx` (MacStamp, 2026-11-14); not yet claimed |
 | `Bzp2` | both lists | — | bzip2, out of scope (Part 1) |
 | `SITX` | — | `SIT!` 1 | StuffIt X, out of scope (Part 1) |
 | `fold`, `disk` | both lists | — | Expander's for a dropped folder or disk; MacExtract takes neither |
 
 Also in the census under those creators and left out as not archives:
-`adrp`/`SITx` 2, `pref`/`SITx` 1, `Pref`/`SIT!` 1. Creator `pZIP` is
+`adrp`/`SITx` 2, `pref`/`SITx` 1, `Pref`/`SIT!` 1; and, read by MacStamp
+2026-11-14, `bzy `/`SIT!` (two Installer VISE installers on the share
+whose data forks are all zeros) and `SITo`/`SIT!` (a StuffIt translator
+module, in the fixture `derived-PKG_Translator.sit`). `pBIN`, `Part` and
+`DDDA` come from sources the census swept without keeping paths: settling
+them means sweeping those again with paths kept. Creator `pZIP` is
 UnZip 1.01, 1.10 and 2.0.1 (A. P. Maika), and `TEXT`/`pZIP` 26 files.
 
 What would settle a row: a file of that type, from MacStamp's sources or
