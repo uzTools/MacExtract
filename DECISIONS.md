@@ -613,6 +613,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-13 (the helper Easy Open offers for DiskDoubler's icons) — the DiskDblr helper's `'open'` lists its 40 icon types, the only helper's that lists any: Easy Open offers it, and only it, for an orphaned DiskDoubler file
 - 2026-11-13 (the comment MacLHA never wrote) — MacLHA 2.00 and 2.24, run under System 7.0.1 on a file with a Get Info comment, store a MacBinary I header with no comment length and nothing after the resource fork; there is no comment for the LZH reader to read, and nothing changes
 - 2026-11-13 (the database that lists nothing) — under AppleShare's `Desktop Mgr` INIT on System 6.0.8, `PBDTGetPath` creates an empty desktop database on any volume while the Finder keeps the `Desktop` file, so a helper found no MacExtract; it now reads the `Desktop` file after the database on every volume, 0 B. MacExtract's Get Info comments under that INIT go to the same database, and Get Info shows none
+- 2026-11-14 (the comment the Finder keeps in its Desktop file) — priced: a write into the `Desktop` file costs 368 to 528 B of every budget resident, or 256 B plus 404 B for the formats that carry comments as an image, and buys System 3.0 and System 6 under the Finder alone; under MultiFinder and on a System 7 floppy the Finder holds the file open and nothing can be written
 
 ---
 
@@ -26147,3 +26148,99 @@ words with no effect on 7.5.5).
 System Folder, and `--expect helper` names a helper's own alert, which the
 grader read as MacExtract's Open dialog (they share their top border;
 the bottom one tells them apart, regraded on the frames of both).
+
+## 2026-11-14 (the comment the Finder keeps in its Desktop file) — priced: a write into the `Desktop` file costs 368 to 528 B of every budget resident, or 256 B plus 404 B for the formats that carry comments as an image, and buys System 3.0 and System 6 under the Finder alone; under MultiFinder and on a System 7 floppy the Finder holds the file open and nothing can be written
+
+**Why.** The maintainer asked for the price of Get Info comments before
+System 7, to decide again on 2026-10-17's "a second write path on some
+Systems only". Measured, not landed: the prototypes are local branches
+`measure/fcmt` (resident) and `measure/fcmt-ovly` (an image), in the
+worktree `.tmp/fcmt-wt`; scripts and frames in `~/.cache/macextract/fcmt/`.
+
+**How the Finder keeps a comment (read out of its code, then on the
+emulator).** Finder 6.1 (`System6.hfv`, `CODE` 1 at 0x27fc–0x28ce and
+0x2984–0x29b0) and Finder 5.1 (`Sys30.img`, `CODE` 3 at 0x5b18–0x5bbc):
+- On an HFS volume the `FCMT` id is the file's or folder's fdComment
+  (FXInfo/DXInfo +10). A file with none gets `UniqueID('FCMT')` with the
+  `Desktop` file current, written to fdComment; clearing the text removes
+  the resource and zeroes fdComment (5.1). Only an MFS volume takes the id
+  from a hash of the name (6.1's 0x3db6), always negative.
+- The resource is a Pascal string, no name, `AddResource` then
+  `SetResAttrs(GetResAttrs | resPurgeable)` (6.1's 0x3968): attributes 0x20,
+  as all ten on System 3.0's own disk.
+- A copy to another volume takes a new `UniqueID` there (5.1 `CODE` 1,
+  0x12f6), so an id means nothing off its own volume — which is why the
+  shell clears fdComment (*the metadata, carried to the disk*).
+- Typed in Get Info on the emulator and read back (`hfscat.py`, the
+  `Desktop` file's map): 6.0.8, "typed by hand", `FCMT` 3061 = Alpha's
+  fdComment; 3.0, "three hand", 3231. Same shape as above.
+- A Get Info lookup is by id alone: an id with no resource shows an empty
+  box (measured after a rebuild, below). Two records naming one id would
+  share one comment — *hypothesis, read from the code, not run*; neither
+  Finder ever writes one.
+
+**The prototype.** In `StampCat`, before `PBSetCatInfo`: the real volume
+(`PBGetWDInfo`); `PBHGetVolParms`' bHasDesktopMgr (bit 12) set → the
+Desktop Manager path as today; otherwise `OpenRFPerm("Desktop", vol,
+fsRdWrPerm)`, `Unique1ID('FCMT')`, the Finder's `AddResource` and
+attributes, `CloseResFile`, the id into fdComment. The test is *Inside
+Macintosh*'s, not `PBDTGetPath`'s, because under AppleShare's INIT that
+answers on System 6 and the Finder reads none of it (*the database that
+lists nothing*); `PBHGetVolParms` is −50 there. The same 199-byte cut.
+
+**Run on the emulator** (`synth-macosx-spot.zip` extracted into a folder,
+`Arch`, on a 1440K floppy; frames `~/.cache/macextract/fcmt/<run>/`):
+
+| System, Finder | result | frames |
+|---|---|---|
+| 6.0.8, Finder alone (stripped) | **shown**: `Ascii`, `Accents`, the folder `Spot`; 10 `FCMT`s, ids = fdComments | `s6a` |
+| 3.0, Finder 5.1 | **shown**: `Ascii`, `HugeU` (127 é); 10 `FCMT`s beside the Finder's own | `s30` |
+| 6.0.8, MultiFinder, no INIT | **nothing**: `OpenRFPerm` −1, `ResError` −49 (opWrErr) | `s6m`, `s6n` |
+| 6.0.8, stock System Folder (MultiFinder, Desktop Mgr INIT) | **nothing**, −49; no `Desktop DB` either | `s6k`, `s6kd` |
+| 7.5.5, 1440K floppy | **nothing**, −49 | `s7`, `s7n` |
+| 7.5.5, hard disk | shown, through `PBDTSetComment`, as before | `s7` |
+| Mac OS 9.2, HFS | **not obtained**: two `os9.py --autotest` runs misfired on a loaded host, keys sent before the Finder had mounted `In` (once at OpenBIOS); the comment takes the 7.5.5 hard disk's code | `os9-try1`, `os9` |
+
+**The Finder holds the `Desktop` file open for writing under MultiFinder and
+on System 7**, so the Resource Manager refuses a second path (−49) by
+itself: a File Manager open beforehand added nothing and can go (measured
+by a build without it on both). Writing through the Finder's own path would
+race its in-memory map; nothing safe is left there. The stock System 6.0.8
+image boots MultiFinder, so the case the bytes buy is a System 6 Mac set
+to the Finder alone, and System 3.0.
+
+**A desktop rebuild** (6.0.8, Command-Option on the Finder's restart, the
+floppy's only): every `FCMT` gone, ours and the Finder's alike; fdComments
+left dangling, Get Info empty (`s6r`).
+
+**The price** (control `a3628d7f`; `tools/retake_budgets.py` and
+`tools/run_tiers.py --check` on each branch, its keep model patched by hand for the image; stack `tools/stack_depth.py
+--shell`):
+
+| placement | shipped CODE / A5 | every budget | formats with comments | tallies (floor-1M, sys3-512K, sys6-512K) |
+|---|---|---|---|---|
+| resident, as run | +508 / +20 | −528 B | the same | 74/74, 72/74, 72/74: none lost |
+| resident, no File Manager open | +352 / +16 | −368 B | the same | not re-run (160 B under the row above); on the emulator its refusals were run, its writes were not |
+| `'OVLY'` image (389 B), kept by zip, gzip, tar, LZH, MAR, StuffIt 5 and the envelopes | +256 / 0 | −256 B | −660 B (the image, its index entry) | 74/74, 72/74, 72/74: none lost |
+
+- `Unique1ID` gave one id under 128 (78, `HugeU` on 6.0.8), which the
+  Finder's `UniqueID` can also give; that Get Info was not looked at.
+- The image's resident 256 B is `StampCat`'s restructuring and the call; the
+  bundle grows 468 B (the image, its directory, the plan's 64 B), which a
+  format keeping the whole bundle pays (−724 B).
+- **Stack**: `StampCat` 328 → 520 B resident (344 + the image's 258 B
+  frame); the chains through the sink +274 B (`unc_binhex_extract` 2,466 →
+  2,740); the deepest, the engine's 6,228 B and the shell's 7,842 B,
+  unchanged. Trap-internal stack is not counted.
+- **Heap**: the `Desktop` file's resource map, while it is open, out of the
+  20 KB reserve: 738 B on System 3.0's own disk, 1,478 B on the 24 MB
+  System 6 disk, about 14 B a resource. *Hypothesis, not run*: a desktop of
+  ~1,400 resources cannot open in the reserve, and the comment is not
+  written.
+- **Time**: one open, map read and close per commented entry; not measured.
+- **Not built**: keeping the image only when the destination has no Desktop
+  Manager (the release runs after the destination dialog), which would take
+  the −404 B off System 7 and Mac OS 9 too; a write after the run.
+
+**Consequence.** OPEN_ITEMS.md's row carries the price; the decision is the
+maintainer's.
