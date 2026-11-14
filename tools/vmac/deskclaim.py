@@ -20,6 +20,8 @@ whether the launched application is handed the FILE, or merely started.
         --stub FILE           a real stub in a helpers folder, MacExtract
                               untouched at the root
         --multifinder         System 6 under MultiFinder
+        --keep-inits          System 6: the stock System Folder, every INIT
+                              in, AppleShare's `Desktop Mgr` among them
         --extra FILE:PATH     another application on the volume (StuffIt)
         --open X,Y            open this folder first (repeatable, in order)
         --app-folder NAME     put the application in a folder never opened
@@ -28,7 +30,7 @@ whether the launched application is handed the FILE, or merely started.
         --no-desktop          no Desktop file (System 7: no Desktop DB/DF):
                               the Finder rebuilds it at boot
         --floppy              the archive on a second floppy
-        --expect handed|open|refused|nothing
+        --expect handed|open|refused|helper|nothing
 
 **What a run is graded on is the dialog, not the volume.** MacExtract
 handed a document goes straight to its destination dialog; started without
@@ -39,7 +41,8 @@ handed over. The dialogs are told apart by the first solid border row below
 the menu bar in `claim-3-launched.png`: the application opens the
 destination dialog 30 points below the Open one (`mac/macextract_mac.c`,
 `dwhere`), Mac y 82 against 112. `refused` is the Finder's own alert,
-positively identified; `nothing` is none of the three.
+positively identified; `helper` is a helper's own alert ("MacExtract could
+not be found" and the rest); `nothing` is none of these.
 
 The `APPL` resource layout is MEASURED, not quoted from a spec: read off
 System 6.0.8's own Desktop file on `System6.hfv` (2026-10-10). One resource,
@@ -266,7 +269,13 @@ def desktop_claim(macbin, creator, dirid, name, front=True, bundle=False):
 # MacExtract's two dialogs by all three rows of their frame (82/85/86 and
 # 112/115/116): a single row matched StuffIt Deluxe 3.5.1's archive window,
 # whose border is at 80 and 82, and read it as the Open dialog (2026-10-12).
-DIALOG_ROWS = (("open", (82, 85, 86)), ("handed", (112, 115, 116)),
+# A helper's own alert (companion/stub/stub.r: all five on one rectangle,
+# 90-200) shares the Open dialog's top three rows: told apart by its
+# bottom border, 203/204/207, with 205 and 206 clear between them, which
+# a highlighted line of the Open dialog's list would fill (measured on
+# "MacExtract could not be found", 2026-11-13).
+DIALOG_ROWS = (("helper", (82, 85, 86, 203, 204, 207), (205, 206)),
+               ("open", (82, 85, 86)), ("handed", (112, 115, 116)),
                ("refused", (72,)),
                # System 7.0.1's "could not be opened, because the
                # application program that created it could not be found":
@@ -292,8 +301,8 @@ def solid_rows(png, minrun=75):
 
 def which_dialog(png):
     rows = solid_rows(png)
-    for name, ys in DIALOG_ROWS:
-        if all(y in rows for y in ys):
+    for name, ys, *clear in DIALOG_ROWS:
+        if all(y in rows for y in ys) and not rows & set(*clear or [()]):
             return name
     return "nothing"
 
@@ -392,7 +401,8 @@ def main():
                     help="add a SIT! -> MacExtract entry to the Desktop "
                          "file's APPL list (pointing into --app-folder)")
     ap.add_argument("--expect", required=True,
-                    choices=("handed", "open", "refused", "nothing"),
+                    choices=("handed", "open", "refused", "helper",
+                             "nothing"),
                     help="which dialog claim-3 must show: the destination "
                          "one (document handed over), the Open one "
                          "(launched without it), or neither")
@@ -431,6 +441,13 @@ def main():
                          "Backgrounder and Finder Startup back in the System "
                          "Folder (look for the menu bar's application icon "
                          "in claim-1 to know MultiFinder ran)")
+    ap.add_argument("--keep-inits", action="store_true",
+                    help="System 6: boot the stock System Folder as it is "
+                         "(mkboot.py --keep-inits), MultiFinder and "
+                         "AppleShare's Desktop Mgr INIT among it, which "
+                         "gives every volume a desktop database the Finder "
+                         "does not read (DECISIONS.md 2026-11-13, *the "
+                         "database that lists nothing*)")
     ap.add_argument("--extra", action="append", default=[], metavar="FILE:PATH",
                     help="another MacBinary application onto the boot volume "
                          "at PATH (folders created) — StuffIt beside the stub")
@@ -493,6 +510,8 @@ def main():
         extra = ()
         cmd = [sys.executable, os.path.join(HERE, "mkboot.py"), stock, app,
                boot, "--finder", "--app-name", APP_NAME]
+        if args.keep_inits:
+            cmd.append("--keep-inits")
         if not args.floppy:
             cmd += ["--data", f"{args.fixture}:archive.sit"]
         R.sh(*cmd)

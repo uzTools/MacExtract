@@ -2577,6 +2577,8 @@ Fifteen frames, ending on the first launch's names on the volume (DECISIONS.md
     deskclaim.py ... --system Sys7.img --stub ... --extra "Deluxe.bin:StuffIt Deluxe Folder:StuffIt Deluxe™" \
                      --open "StuffIt Deluxe Folder" --open "MacExtract Helpers" \
                      --archive-at archive.sit --expect handed
+    deskclaim.py ... --stub StuffIt.bin --keep-inits --open 109,172 \
+                     --archive-at 237,105 --expect handed   # Desktop Mgr INIT in
 
 Double-clicks a `SIT!` archive in the Finder, after optionally: adding a
 `SIT!` → MacExtract entry to the volume's `Desktop` file (`--claim`, plus a
@@ -2586,7 +2588,9 @@ folder the run never opens; giving it a bundle under its new creator
 `Desktop` file so the Finder rebuilds it (`--no-desktop`; on System 7 `Desktop
 DB` and `Desktop DF`); or putting the archive on a second floppy. `--stub FILE`
 boots a REAL stub (`companion/make_stub.py`) in `MacExtract Helpers` beside an
-untouched MacExtract; `--multifinder` puts System 6's MultiFinder back.
+untouched MacExtract; `--multifinder` puts System 6's MultiFinder back, and
+`--keep-inits` boots the stock System Folder whole, AppleShare's `Desktop
+Mgr` INIT in (it moves the icons: the positions above are measured there).
 `--extra FILE:PATH` puts another application on the volume, and `--open`
 opens folders before the archive, in order, because the Finder registers what
 it sees: by position, or on System 7 by NAME, type-selected (`--archive-at`
@@ -2595,7 +2599,8 @@ takes a name too).
 **It grades the DIALOG in `claim-3-launched.png`, not the volume**: a launch
 that was not handed the file shows the Open dialog, the run's Return opens the
 archive from it, and the entries land anyway. The Finder's refusal alert is
-identified positively (System 6's and 7's); MacExtract's dialogs by all three
+identified positively (System 6's and 7's), a helper's own alert (`helper`)
+by its bottom border; MacExtract's dialogs by all three
 rows of their frame (one row matched StuffIt Deluxe's archive window). A frame
 with none of these is `nothing` — look at it. **`--app-folder` moves the
 archive's icon**: read its position off `claim-2-volume.png` and pass
@@ -2603,7 +2608,8 @@ archive's icon**: read its position off `claim-2-volume.png` and pass
 CLI and can share the machine with `./ci.sh`. Results: DECISIONS.md
 2026-10-10, *the double-click that goes by the application's creator*;
 2026-10-11, *where the stubs can live* and *the stub that hands it on*;
-2026-10-12, *the stub beside StuffIt*. **What it cannot see:** System 7's
+2026-10-12, *the stub beside StuffIt*; 2026-11-13, *the database that lists
+nothing*. **What it cannot see:** System 7's
 `Desktop DB`, which it neither reads nor writes (which application registered
 is read off the icons); and whether StuffIt OPENED an archive beyond the frame
 showing its window.

@@ -33,7 +33,7 @@ refusal — the brief has grown before, on request.
 | what | status | why it stays out |
 |---|---|---|
 | Compression | not implemented | this is an extractor |
-| Get Info comments on a disk without a Desktop Manager — System 6 and 3.0 volumes (unless AppleShare's Desktop Mgr INIT is installed, DECISIONS.md 2026-10-21), floppies under System 7 | **not written; nothing says so** | the maintainer, 2026-10-17: a second write path on some Systems only (DECISIONS.md 2026-10-17, *the metadata, carried to the disk*) |
+| Get Info comments on a disk without a Desktop Manager — System 6 and 3.0 volumes, floppies under System 7 | **not written; nothing says so**. Under AppleShare's Desktop Mgr INIT on 6.0.8, written into a database that Finder's Get Info does not show (measured, DECISIONS.md 2026-11-13, *the database that lists nothing*) | the maintainer, 2026-10-17: a second write path on some Systems only (DECISIONS.md 2026-10-17, *the metadata, carried to the disk*) |
 | Extracting onto an MFS disk | **out of scope, decided 2026-10-15; what happens is not documented** | a second write path (DECISIONS.md 2026-10-15, *the File Manager a 64K ROM has*) |
 | Invisible folders in the Open dialogs (`Move&Rename`, `TheVolumeSettingsFolder`) | **listed; invisible files are not** since v0.45.0 | Standard File's Open does not pass folders to the file filter (measured on Mac OS 9.2); only System 7's CustomGetFile does, and one dialog serves every System (DECISIONS.md 2026-11-02, *the dialogs that became the application*) |
 | A split or spanned-zip part renamed on a floppy | **ejected with the wrong disks** since v0.45.0 | the maintainer's call, one drive in mind: found once copied off the floppy (DECISIONS.md 2026-10-31, *the disk Standard File took first*) |
@@ -395,10 +395,4 @@ dist*). Left:
   one archive icon, since a family there costs 72 B of its resource map
   (FORMATS.md, *Icons*). A colour family is about 2.3 KB of the helper
   and a black-and-white one (`ICN#`, `ics#`) about 320 B; the helpers zip
-  is 64,636 B today and rides on the 400K floppy.
-- **A helper under System 6's Desktop Manager.** With AppleShare's
-  `Desktop Mgr` INIT installed, a helper on the MacExtract floppy says
-  *"MacExtract could not be found"* (measured, 6.0.8; DECISIONS.md
-  2026-11-13, *the helper beside MacExtract*). The cause is a hypothesis
-  (a database that answers but lists nothing, and no fallback to the
-  `Desktop` file); reading both would close it, at a helper's bytes.
+  is 64,657 B today and rides on the 400K floppy.

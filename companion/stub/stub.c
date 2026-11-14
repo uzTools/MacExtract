@@ -33,7 +33,7 @@
  *
  * Where MacExtract is: wherever the Finder has seen it, on any mounted
  * volume — the application of creator MExt in the volume's desktop
- * database, or in its Desktop file where it has none (FindApp, below). No
+ * database, or in its Desktop file where that lists none (FindApp, below). No
  * folder is assumed (the maintainer, 2026-11-03; DECISIONS.md 2026-11-03,
  * *the helper that asks the desktop*).
  *
@@ -225,8 +225,8 @@ static Boolean IsApp(OSType creator, short vol, long dir, Str255 name,
     return !PBGetCatInfoSync(&c) && c.hFileInfo.ioFlFndrInfo.fdCreator == creator;
 }
 
-/* A volume with no desktop database (System 6 and older, and a 7.0.1
- * floppy): the 'APPL' resource 0 of its Desktop file, the Finder's list of
+/* Where the Finder keeps no desktop database (System 6 and older, and a
+ * 7.0.1 floppy): the 'APPL' resource 0 of its Desktop file, the Finder's list of
  * the applications it has seen, opened read-only (OpenRFPerm, Inside
  * Macintosh IV, The Resource Manager) so a Finder holding it open is not
  * disturbed. The resource's layout is MEASURED, not documented: entries
@@ -315,11 +315,17 @@ static void Icons(short vol, OSType creator, Boolean force)
 
 /* The first application of `creator` the Finder has seen, on any mounted
  * volume, that is not this stub: by PBDTGetAPPL from the volume's desktop
- * database (Source: Inside Macintosh: Files, Desktop Manager — PBDTGetPath,
- * then PBDTGetAPPL by creator and index, which answers the name and the
- * parent folder, ioAPPLParID), or from its Desktop file where PBDTGetPath
- * refuses (measured on System 3.0, 6.0.8 and a 7.0.1 floppy:
- * mac/macextract_mac.c, PBDTGetPath's comment). */
+ * database (Source: Inside Macintosh: More Macintosh Toolbox, Desktop
+ * Manager — PBDTGetPath, then PBDTGetAPPL by creator and index, which
+ * answers the name and the parent folder, ioAPPLParID), then from its
+ * Desktop file. Both, on every volume: PBDTGetPath refuses on System 3.0,
+ * 6.0.8 and a 7.0.1 floppy (mac/macextract_mac.c, PBDTGetPath's comment),
+ * but a database that answers need not be the Finder's. PBDTGetPath opens
+ * one, "If the desktop database is not open" (the same chapter), and under
+ * AppleShare's `Desktop Mgr` INIT on System 6.0.8 it creates one on every
+ * volume, empty, while that Finder keeps the Desktop file: PBDTGetAPPL
+ * then answers -5012 and only the Desktop file lists MacExtract (measured;
+ * DECISIONS.md 2026-11-13, *the database that lists nothing*). */
 static Boolean FindApp(OSType creator, short selfVol, long selfDir,
                        short *vol, long *dir, Str255 name)
 {
@@ -337,20 +343,18 @@ static Boolean FindApp(OSType creator, short selfVol, long selfDir,
         dt.ioCompletion = NULL;
         dt.ioNamePtr = NULL;
         dt.ioVRefNum = *vol;
-        if (PBDTGetPath(&dt)) {
-            if (DesktopFile(creator, *vol, dir, name, selfVol, selfDir))
-                return true;
-            continue;
-        }
-        for (k = 1; k < 32; k++) {
-            dt.ioNamePtr = name;
-            dt.ioIndex = k;
-            dt.ioFileCreator = creator;
-            if (PBDTGetAPPLSync(&dt)) break;
-            *dir = dt.ioAPPLParID;
-            if (IsApp(creator, *vol, *dir, name, selfVol, selfDir))
-                return true;
-        }
+        if (!PBDTGetPath(&dt))
+            for (k = 1; k < 32; k++) {
+                dt.ioNamePtr = name;
+                dt.ioIndex = k;
+                dt.ioFileCreator = creator;
+                if (PBDTGetAPPLSync(&dt)) break;
+                *dir = dt.ioAPPLParID;
+                if (IsApp(creator, *vol, *dir, name, selfVol, selfDir))
+                    return true;
+            }
+        if (DesktopFile(creator, *vol, dir, name, selfVol, selfDir))
+            return true;
     }
 }
 

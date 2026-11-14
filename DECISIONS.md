@@ -612,6 +612,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-13 (the version 3 that Linux wrote) — StuffIt 5's version 3 entries exist: Aladdin's `stuff` 5.2 for Linux writes nothing else, and StuffIt Expander 5.5 restores none of their 32-byte second block, so the reader stops taking type, creator and flags from it; the ovl_stuffit image −16 B
 - 2026-11-13 (the helper Easy Open offers for DiskDoubler's icons) — the DiskDblr helper's `'open'` lists its 40 icon types, the only helper's that lists any: Easy Open offers it, and only it, for an orphaned DiskDoubler file
 - 2026-11-13 (the comment MacLHA never wrote) — MacLHA 2.00 and 2.24, run under System 7.0.1 on a file with a Get Info comment, store a MacBinary I header with no comment length and nothing after the resource fork; there is no comment for the LZH reader to read, and nothing changes
+- 2026-11-13 (the database that lists nothing) — under AppleShare's `Desktop Mgr` INIT on System 6.0.8, `PBDTGetPath` creates an empty desktop database on any volume while the Finder keeps the `Desktop` file, so a helper found no MacExtract; it now reads the `Desktop` file after the database on every volume, 0 B. MacExtract's Get Info comments under that INIT go to the same database, and Get Info shows none
 
 ---
 
@@ -25792,11 +25793,8 @@ INIT removed from `System6.hfv`:** with it (AppleShare's, 1988, in that
 image's System Folder) the helper said *"MacExtract could not be found"*,
 the helpers before this entry and after alike, and the floppy gained a
 `Desktop DB` and `Desktop DF`. Removing the one INIT is the whole
-difference measured. Why (hypothesis): `PBDTGetPath` then answers for the
-floppy, `FindApp` reads only that database, which lists no MacExtract, and
-never falls back to the `Desktop` file. The 2026-11-03 System 6 rows ran on
-this image, so which route they took is not known. Left open:
-OPEN_ITEMS.md, *A helper under System 6's Desktop Manager*.
+difference measured. Why: measured, and fixed, the same day (*the
+database that lists nothing*).
 
 ## 2026-11-13 (the registration that came last) — on System 7.5.5 after a desktop rebuild, of two applications of one creator the one catalogued last opens its documents, whatever either date says; a helper opened by itself says it took its creator back and does not; on 6.0.8 and 3.0 it says "could not register itself (error -50)"
 
@@ -26082,3 +26080,70 @@ resources and MacLHa 2.00 has no code that names them.
 archives (`maclha200-sys701-commented.lzh` sha256 `86dd7ba8…`,
 `maclha224-sys701-commented.lzh` `01850a96…`), the volumes, the input forks,
 and each boot's `tools/vmac/drive.py` command file, log and frames.
+
+## 2026-11-13 (the database that lists nothing) — under AppleShare's `Desktop Mgr` INIT on System 6.0.8, `PBDTGetPath` creates an empty desktop database on any volume while the Finder keeps the `Desktop` file, so a helper found no MacExtract; it now reads the `Desktop` file after the database on every volume, 0 B. MacExtract's Get Info comments under that INIT go to the same database, and Get Info shows none
+
+**The cause (measured, Mini vMac Plus 4 MB, `System6.hfv` as shipped, its
+`Desktop Mgr` INIT in; the shipped 1440K floppy with a debug `SIT!` helper
+that, before anything else, asks each volume and puts the answers in an
+alert).** For the 24 MB hard disk and the floppy alike: no `Desktop DB` at
+the root (-43) after the Finder had run 90 s with both open;
+`PBHGetVolParms` -50; `PBDTGetPath` 0; `PBDTGetAPPL` for `MExt`, index 1
+and 0, -5012 (`afpItemNotFound`); the floppy's `Desktop` file lists
+MacExtract. Then *"MacExtract could not be found"*; twice, the same codes.
+After the run and an eject, the floppy carries `Desktop DB` (16 KB) and
+`Desktop DF` (20 KB, the icons `Icons` added), and its `Desktop` file grew
+647 → 15,650 B: the Finder went on keeping that file, and the database is
+the stub's own. *Inside Macintosh: More Macintosh Toolbox*, Desktop
+Manager: "If the desktop database is not open, PBDTGetPath opens it", and
+"the Finder keeps the information for ejectable volumes with a capacity
+smaller than 2 MB in a resource file" — what System 7's Desktop Manager
+does (a 7.0.1 floppy refuses, -123); the 1988 INIT serves a database on
+any volume, the System 6 Finder reading none of it. Frames:
+`~/.cache/macextract/easyopen/s6dm/` (`probe-floppy-DM`, `old-*`).
+
+**The fix.** `FindApp` (`companion/stub/stub.c`) reads the `Desktop` file
+after the database on every volume, not only where `PBDTGetPath` refuses.
+Elsewhere it changes nothing measured: System 7 and Mac OS 9 find
+MacExtract in the database first, and an entry in a stale `Desktop` file is
+checked against the catalog as before. CODE 1 2,994 B before and after,
+every helper the same size (`SIT!` 6,912 B, at its ceiling); the helpers
+zip −62 B. Not taken: a helper that asks no database on System 6 —
+`PBHGetVolParms`' `bHasDesktopMgr`, *Inside Macintosh*'s test, is -50
+there, and an AppleShare volume's database is not a file at its root.
+
+**Measured with the new helpers** (frames in the same folder):
+
+| System | layout | archive double-clicked | result |
+|---|---|---|---|
+| 6.0.8, INIT in | `dist/MacExtract-1440K.img` + `SITD`/`SIT!` at its root | through the `StuffIt` helper | destination dialog; extracted |
+| the same | the same, `SITD`/`MExt` | MacExtract directly | extracted |
+| the same | hard disk: helper in `MacExtract Helpers`, MacExtract at the root (`deskclaim.py --keep-inits`) | through the helper | `handed`, entries on the volume; **control, the stub before: `helper`**, *"could not be found"*, nothing extracted |
+| 6.0.8, the INIT removed | the floppy | through the helper | extracted; no `Desktop DB` written |
+| 3.0, Mac Plus 1 MB | the floppy | through the helper | extracted |
+| 7.5.5, Mac II | the installed volume, its database rebuilt | through the helper | extracted |
+| Mac OS 9.2 (QEMU) | a transfer volume, MacExtract, the 18 helpers, the archive | through the helper | extracted |
+
+**The 2026-11-03 System 6 rows** (*the helper that asks the desktop*) ran
+on this image through `mkboot.py`, which strips every INIT: they took the
+`Desktop` file's route (read off `deskclaim.py`, which had no
+`--keep-inits` until now).
+
+**MacExtract itself.** It looks nothing up in a desktop database; it
+writes one, `DTBundle` and the Get Info comment, wherever `PBDTGetPath`
+answers. Under the INIT (`synth-macosx-spot.zip`, `ZIP `/`MExt`, onto the
+floppy): the report lists four *"comment shortened"*, the floppy gains a
+`Desktop DB`, and the 6.0.8 Finder's Get Info of `Spot/Ascii` shows no
+comment (`comment-DM-getinfo.png`). So on System 6 the comment is lost
+with the INIT or without it; a write into the `Desktop` file is the second
+path the maintainer declined (2026-10-17). OPEN_ITEMS.md's row says so now.
+
+**Also seen, not changed.** A helper opened by itself under the INIT says
+*"Archives this helper claims open in MacExtract again."*: its reclaim
+went into that database (*the registration that came last* has the same
+words with no effect on 7.5.5).
+
+**The harness.** `tools/vmac/deskclaim.py --keep-inits` boots the stock
+System Folder, and `--expect helper` names a helper's own alert, which the
+grader read as MacExtract's Open dialog (they share their top border;
+the bottom one tells them apart, regraded on the frames of both).
