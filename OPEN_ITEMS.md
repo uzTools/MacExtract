@@ -275,11 +275,9 @@ helper claims*).
 
 | type | in Expander 5.5 | files in the census, by creator | note |
 |---|---|---|---|
-| `Part` | `FREF`, its `SIT!` bundle | `SIT!` 8, `SITx` 2 | unknown; beside its StuffIt archive and segment types |
 | `PCFA` | `FREF`, its `crsX` bundle | none | unidentified |
 | `pZIP` | `'open'` | none as a type; `pZIP` is UnZip's creator | claimed by UnZip 2.0.1, ZipIt 1.0–1.3.5, MacGzip (MacStamp's `apps.tsv`) |
 | `m@rc` | `'open'` | none | claimed only by ArcMac 1.3c |
-| `pBIN` | — | `pZIP` 19 (also `pGeN` 188 outside archive creators) | MacStamp's hypothesis: members UnZip wrote out, not archives |
 | `Bzp2` | both lists | — | bzip2, out of scope (Part 1) |
 | `SITX` | — | `SIT!` 1 | StuffIt X, out of scope (Part 1) |
 | `fold`, `disk` | both lists | — | Expander's for a dropped folder or disk; MacExtract takes neither |
@@ -292,13 +290,17 @@ module, in the fixture `derived-PKG_Translator.sit`); and `DDDA`/`DDAP`,
 DiskDoubler's own resource file — `DiskDoublerData(3.7)` on the 3.7 disk,
 About pictures and self-extractor code and no data fork, and `DiskDoubler
 4.1 Prefs` in 4.1 (DECISIONS.md 2026-11-14, *the file DiskDoubler keeps
-for itself*). `pBIN` and `Part` come from sources the census swept without
-keeping paths: settling them means sweeping those again with paths kept.
-Creator `pZIP` is UnZip 1.01, 1.10 and 2.0.1 (A. P. Maika), and `TEXT`/`pZIP` 26 files.
+for itself*). And, read off the discs 2026-11-14: `Part`/`SIT!` and
+`Part`/`SITx`, the type StuffIt Expander gives a file while it is being
+expanded (Info-Mac IV's nine are programs left so), and `pBIN`/`pZIP`, a
+binary zip member as UnZip 1.x wrote it (Info-Mac II's 19 are DOS object
+files) (DECISIONS.md 2026-11-14, *the type of a file still being expanded*
+and *the type UnZip gave what it could not name*). Creator `pZIP` is UnZip
+1.01, 1.10 and 2.0.1 (A. P. Maika); `TEXT`/`pZIP` 26 files are the text
+members beside those 19.
 
 What would settle a row: a file of that type, from MacStamp's sources or
-written to order by the program under the emulator (UnZip 2.0.1 on chosen
-zips; StuffIt or Expander for `Part` and `SITo`), run through the CLI; a
+written to order by the program under the emulator, run through the CLI; a
 type is claimed only if it is an archive MacExtract reads.
 
 ## BinHex before 4.0: what is not graded

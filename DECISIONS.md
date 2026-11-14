@@ -616,6 +616,8 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-14 (the comment the Finder keeps in its Desktop file) — priced: a write into the `Desktop` file costs 368 to 528 B of every budget resident, or 256 B plus 404 B for the formats that carry comments as an image, and buys System 3.0 and System 6 under the Finder alone; under MultiFinder and on a System 7 floppy the Finder holds the file open and nothing can be written
 - 2026-11-14 (the DiskDoubler working file that is an archive) — `DDTM`/`DDAP` claimed by MacExtract's bundle, as `DDAR` is, and by the DiskDblr helper for its icon; and a type change gated without `ci.sh`
 - 2026-11-14 (the file DiskDoubler keeps for itself) — `DDDA`/`DDAP` is DiskDoubler's own resource file, not an archive: left unclaimed, and its row leaves OPEN_ITEMS.md
+- 2026-11-14 (the type of a file still being expanded) — `Part` is what StuffIt Expander types a file between creating it and giving it its own type; any member, not an archive: left unclaimed, and its row leaves OPEN_ITEMS.md
+- 2026-11-14 (the type UnZip gave what it could not name) — `pBIN` is a binary zip member written out as stored, by UnZip 1.x as `pBIN`/`pZIP` and by 2.0.1 as `pBIN`/`????`; not an archive: left unclaimed, and its row leaves OPEN_ITEMS.md
 
 ---
 
@@ -26309,3 +26311,73 @@ of MacExtract's bundle and the DiskDblr helper's, and its row of OPEN_ITEMS'
 as not archives". MacStamp's 2 census files are not read; that they are
 these is a hypothesis. No emulator was run: the code and the 3.7 file
 agree.
+
+## 2026-11-14 (the type of a file still being expanded) — `Part` is what StuffIt Expander types a file between creating it and giving it its own type; any member, not an archive: left unclaimed, and its row leaves OPEN_ITEMS.md
+
+**What `Part` is (measured, code).** Expander 5.5's 68K engine, `SEng` 101
+(its resource fork, at fork offset 0x3e24a): at 0x7c5a–0x7c66 it pushes
+`SIT!` and `Part` and calls 0x1daca, which is `_HCreate` (A208), then
+`_HGetFileInfo`/`_HSetFileInfo` (A20C/A20D) writing that pair; the
+resource fork is opened at 0x7cc6 (`_HOpenRF`, A20A) and the data fork at
+0x7df8 (`PBHOpenDF`, A260 selector 26), each checked against its CRC; only
+then, at 0x7f92–0x80c0, `PBGetCatInfo`, the entry's own 16-byte Finder info
+copied in from entry+302, and `PBSetCatInfo` (A260 selector 10). An error
+with the engine's abort flag set deletes the file instead (0x7f4a → 0xaac:
+`_HRstFLock` A242, `_HDelete` A209). The PowerPC code does the same: its
+data fork at 0xc408–0xc424 builds `SIT!` and `Part` with `lis`/`addi` for
+the same call. Expander 4.0.2 likewise: `Eng ` 1 at 0x1c10 and 0x1c62
+creates its files `Part`/`SITx`, `SEng` 1 at 0x39a8 sets `Part`/`SIT!`
+after `_HCreate`. No `'open'` lists `Part`; the `FREF` (151 in 5.5) is for
+an icon. So a file keeps `Part` only if Expander stopped between the
+create and the last call.
+
+**Real ones (measured).** Info-Mac IV holds nine (`hdir -R` of
+MacStamp's `im4.iso`, mounted read-only): seven `Part`/`SIT!` and two
+`Part`/`SITx`, all programs or INITs with a resource fork and no data fork
+(HyperMacro, Snap Mail, MacTCP Netswitch, AppleScript™ …), whose resource
+maps parse; the 2026-10-24 entry (*the magic StuffIt never wrote*) counted
+eight. Discmaster's `detection=Part/SIT!` lists 81 more on its first page;
+six were read (`~/.cache/macextract/specimens/part/`): a Fractal Designer
+document and two HyperCard stacks, which the CLI calls not an archive;
+KeyQuencer, whose 128,235-byte resource fork is no resource map; and
+*Aladdin DropStuff™ 5.5 Install*, both forks present, a StuffIt
+InstallerMaker installer whose data fork the CLI lists (23 entries) and
+tests clean. Why that many whole files kept the type is not established.
+
+**Consequence.** `Part` names a state, not a format: the bytes are any
+member's. Claiming it would offer MacExtract for every file an expansion
+left behind, which it cannot open; one that does hold an archive opens
+already by `'****'`. The type stays out of the bundle, as on 2026-10-24,
+and its row moves to OPEN_ITEMS' "left out as not archives". That the
+census's 8 + 2 are among these is a hypothesis (its `SITx` 2 matches the
+disc). No emulator was run: the code settles the type's meaning.
+
+## 2026-11-14 (the type UnZip gave what it could not name) — `pBIN` is a binary zip member written out as stored, by UnZip 1.x as `pBIN`/`pZIP` and by 2.0.1 as `pBIN`/`????`; not an archive: left unclaimed, and its row leaves OPEN_ITEMS.md
+
+**What `pBIN` is (measured, code).** UnZip 1.01's own source (in the
+fixture `derived-Unzip101.sit`, `Source/unzip.c`), `create_output_file()`:
+creator `pZIP`, type `TEXT`, and `pBIN` where the central directory's
+internal attribute does not mark the member as text and its name does not
+end `.GIF` (`process_central_file_header()` returns the offset negated for
+a text member). The bytes are the member's, written as decompressed: no
+MacBinary or other decoding exists in the source. UnZip 2.0.1 (Info-Mac
+II, `:Utility:Unzip 2.0.1:`), `CODE` 4 at 0x37b0–0x37e6: `TEXT` with the
+preferences' creator for a text member, else `pBIN`/`????`, then the
+three-letter extension looked up in its mapping list (`STR#` 1028: `COM`,
+`DOC`, `EXE`, `FLI`, `GIF`, `TXT`, `ZIP`); its help text (`TEXT` 1029)
+says the same, and that it never types a file `pZIP`.
+
+**Real ones (measured).** Info-Mac II holds exactly the census's 19
+`pBIN`/`pZIP` and 26 `TEXT`/`pZIP` (`hdir -R` of MacStamp's `im2.iso`,
+mounted read-only), all in `:Applications:Ultra:ultra 1.01 folder:IBM ULTRA
+folder:`: the `.OBJ` files are Microsoft OMF objects (0x80 `THEADR`, "Turbo
+Assembler Version 2.0"), the `.TPU` files Turbo Pascal units (`TPU9`), data
+forks only. Three read; the CLI calls each unknown.
+
+**Consequence.** `pBIN` marks a member nobody identified, whatever its
+bytes: not an archive type. Claiming it would offer MacExtract for DOS
+object files; a `pBIN` that does hold an archive (a zipped `.bin` or `.sit`)
+opens already by `'****'`. The type stays out of the bundle, and its row
+moves to OPEN_ITEMS' "left out as not archives". The census's `pBIN`/`????`
+4 are not on these discs; that UnZip 2.0.1 wrote them is a hypothesis. No
+emulator was run: the source and the 19 files agree.
