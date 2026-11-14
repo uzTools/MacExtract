@@ -513,6 +513,10 @@ target_compile_options(MacExtract PRIVATE -mcpu=68000 -Os -Wno-multichar
                        # (DECISIONS.md 2026-10-18, *the icon Expander
                        # registers*).
                        $<$<BOOL:$ENV{UNC_AT_NODTREG}>:-DUNC_AT_NODTREG>
+                       # UNC_AT_FCMTDBG (branch measure/fcmt only): each
+                       # commented entry reports FcmtAdd's stage and error
+                       $<$<BOOL:$ENV{UNC_AT_FCMTDBG}>:-DUNC_AT_FCMTDBG>
+                       $<$<BOOL:$ENV{UNC_AT_FCMTNOPRE}>:-DUNC_AT_FCMTNOPRE>
                        # UNC_AT_SEPARATE_BLOCKS: force the two-separate-NewPtr
                        # staging path (re-tests the old "3 blocks bomb" claim).
                        $<$<BOOL:$ENV{UNC_AT_SEPARATE_BLOCKS}>:-DUNC_AT_SEPARATE_BLOCKS>

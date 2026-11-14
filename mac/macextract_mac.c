@@ -2820,6 +2820,91 @@ static void RepEntry(MacSink *s, const char *what)
 /* The longest comment the Desktop Manager keeps (StampCat). */
 #define DT_COMMENT_MAX 199
 
+/* MEASUREMENT PROTOTYPE (branch measure/fcmt, 2026-11-14): a Get Info
+ * comment where the Finder keeps them in its own `Desktop` file — every
+ * volume whose PBHGetVolParms does not set bHasDesktopMgr (bit 12;
+ * measured 0x10E0 against 0xE0, DECISIONS.md 2026-10-17): System 3.0 and
+ * 6.0.8 (-50), AppleShare's Desktop Mgr INIT included, and a floppy under
+ * System 7. What the Finder does, read out of Finder 6.1's CODE 1 and
+ * Finder 5.1's CODE 3 (System6.hfv, Sys30.img): on an HFS volume the id
+ * is the file's fdComment; a file with none gets UniqueID('FCMT') with
+ * the Desktop file current; the resource is a Pascal string, no name,
+ * AddResource and then SetResAttrs(GetResAttrs | resPurgeable). Returns
+ * the id written, 0 for nothing written, -1 for a volume with a Desktop
+ * Manager (the caller's PBDTSetComment). A Desktop file somebody else
+ * holds open for writing (opWrErr: the Finder under MultiFinder, or under
+ * System 7) is not touched. */
+#ifdef UNC_AT_FCMTDBG
+static char gFcmtDbg[24];
+static short FcmtDbg(char stage, long err)
+{
+    char *p = gFcmtDbg;
+    unsigned long v;
+    char t[12];
+    int k = 0;
+    *p++ = 'f'; *p++ = 'c'; *p++ = 'm'; *p++ = 't'; *p++ = ' ';
+    *p++ = stage; *p++ = ' ';
+    if (err < 0) { *p++ = '-'; v = (unsigned long)-err; } else v = err;
+    do { t[k++] = (char)('0' + v % 10); v /= 10; } while (v);
+    while (k) *p++ = t[--k];
+    *p = 0;
+    return 0;
+}
+#define FDBG(st, e) FcmtDbg(st, e)
+#else
+#define FDBG(st, e) 0
+#endif
+static short FcmtAdd(short vol, const unsigned char *text, unsigned short n)
+{
+    union { HParamBlockRec h; WDPBRec w; } p;
+    GetVolParmsInfoBuffer b;
+    short cur, rf, id = 0, ref;
+    long z;
+    Handle h;
+    for (z = 0; z < (long)sizeof p; z++) ((char *)&p)[z] = 0;
+    p.w.ioVRefNum = vol;
+    if ((z = PBGetWDInfoSync(&p.w)) != noErr) return FDBG('w', z);
+    vol = p.w.ioWDVRefNum;
+    for (z = 0; z < (long)sizeof p; z++) ((char *)&p)[z] = 0;
+    p.h.ioParam.ioVRefNum = vol;
+    p.h.ioParam.ioBuffer = (Ptr)&b;
+    p.h.ioParam.ioReqCount = sizeof b;
+    if ((z = PBHGetVolParmsSync(&p.h)) == noErr &&
+        (b.vMAttrib & (1L << bHasDesktopMgr)))
+        return FDBG('d', b.vMAttrib), -1;
+    FDBG('v', z);
+#ifndef UNC_AT_FCMTNOPRE
+    if ((z = MyOpenFork(vol, 2, "\pDesktop", fsRdWrPerm, 1, &ref))
+        != noErr)
+        return FDBG('o', z);
+    FSClose(ref);
+#else
+    (void)ref;
+#endif
+    cur = CurResFile();
+    rf = OpenRFPerm("\pDesktop", vol, fsRdWrPerm);
+    if (rf == -1) return FDBG('r', ResError());
+#ifdef UNC_AT_FCMTNOPRE
+    if (ResError() != noErr) { FDBG('R', ResError()); }
+#endif
+    UseResFile(rf);
+    h = NewHandle((Size)n + 1);
+    if (h) {
+        **h = (char)n;
+        BlockMoveData(text, *h + 1, n);
+        id = Unique1ID('FCMT');
+        AddResource(h, 'FCMT', id, "\p");
+        if (ResError() != noErr) { FDBG('a', ResError()); DisposeHandle(h); id = 0; }
+        else {
+            FDBG('i', id);
+            SetResAttrs(h, GetResAttrs(h) | resPurgeable);
+        }
+    }
+    CloseResFile(rf);
+    UseResFile(cur);
+    return id;
+}
+
 static void StampCat(MacSink *s)
 {
     /* One block for the three calls, which run one after another: three
@@ -2831,6 +2916,20 @@ static void StampCat(MacSink *s)
     Str63 name;
     long z, par = s->curDirID;
     OSType bndl = 0, self = 0;
+    short fid = -1;     /* FcmtAdd's answer; -1: the Desktop Manager's */
+    Boolean cut = false;
+    /* The Desktop Manager keeps the first 199 bytes of a longer comment:
+     * measured on System 6.0.8 with AppleShare's INIT, 7.0.1 and Mac OS
+     * 9.2 (DECISIONS.md 2026-11-07, *the comment the Desktop Manager
+     * cut*). The cut is made here, where it can be reported, and with the
+     * engine's own: MacRoman is a byte a character. The same cut for the
+     * Desktop file (the prototype's choice, not measured there). */
+    if (s->cur.comment_len > DT_COMMENT_MAX ||
+        (s->cur.meta & UNC_META_CMT_CUT)) {
+        if (s->cur.comment_len > DT_COMMENT_MAX)
+            s->cur.comment_len = DT_COMMENT_MAX;
+        cut = true;
+    }
     BlockMoveData(s->curName, name, s->curName[0] + 1);
     pb.hFileInfo.ioNamePtr = name;
     pb.hFileInfo.ioVRefNum = s->vRefNum;
@@ -2919,6 +3018,19 @@ static void StampCat(MacSink *s)
                 s->iconDir = pb.hFileInfo.ioDirID;
             }
         }
+        /* The comment into the Desktop file, where that is where the
+         * Finder reads it, and its id into this record (FcmtAdd). */
+        if (s->cur.comment_len) {
+            fid = FcmtAdd(s->vRefNum, (const unsigned char *)s->cur.comment,
+                          s->cur.comment_len);
+#ifdef UNC_AT_FCMTDBG
+            RepEntry(s, gFcmtDbg);
+#endif
+            if (fid > 0) {
+                pb.hFileInfo.ioFlXFndrInfo.fdComment = fid;
+                if (cut) RepEntry(s, S_REP_CMT_CUT);
+            }
+        }
         if (s->cur.create_date) pb.hFileInfo.ioFlCrDat = s->cur.create_date;
         if (s->cur.mod_date)    pb.hFileInfo.ioFlMdDat = s->cur.mod_date;
         /* A folder's own entry, for the folder whose date is held — in a
@@ -2947,7 +3059,7 @@ static void StampCat(MacSink *s)
 #ifdef UNC_AT_NODTREG
     bndl = 0;
 #endif
-    if (bndl || s->cur.comment_len) {
+    if (bndl || (s->cur.comment_len && fid < 0)) {
         for (z = 0; z < (long)sizeof u; z++) ((char *)&u)[z] = 0;
         u.d.ioVRefNum = s->vRefNum;
         if (PBDTGetPath(&u.d) == noErr) {
@@ -2960,19 +3072,8 @@ static void StampCat(MacSink *s)
              * root kept*). */
             u.d.ioDirID = par;
             if (bndl) DTBundle(&u.d, bndl, self, s->curDirID);
-            if (s->cur.comment_len) {
-                /* The Desktop Manager keeps the first 199 bytes of a
-                 * longer comment: measured on System 6.0.8 with
-                 * AppleShare's INIT, 7.0.1 and Mac OS 9.2 (DECISIONS.md
-                 * 2026-11-07, *the comment the Desktop Manager cut*). The
-                 * cut is made here, where it can be reported, and with
-                 * the engine's own: MacRoman is a byte a character. */
-                if (s->cur.comment_len > DT_COMMENT_MAX ||
-                    (s->cur.meta & UNC_META_CMT_CUT)) {
-                    if (s->cur.comment_len > DT_COMMENT_MAX)
-                        s->cur.comment_len = DT_COMMENT_MAX;
-                    RepEntry(s, S_REP_CMT_CUT);
-                }
+            if (s->cur.comment_len && fid < 0) {
+                if (cut) RepEntry(s, S_REP_CMT_CUT);
                 u.d.ioDTBuffer = (Ptr)s->cur.comment;
                 u.d.ioDTReqCount = s->cur.comment_len;
                 PBDTSetCommentSync(&u.d);
