@@ -348,6 +348,15 @@ dist*). Left:
   Whichever works goes in the stub, or in one reclaimer app that walks
   all eighteen creators in a launch (in the helpers zip, no byte of
   MacExtract's) — the maintainer's choice, later.
+- **A helper launches under a bare program name.** On System 6 the
+  Finder's launch screen shows the launching file's name alone in the
+  menu bar, and a helper's file name is its row's short name
+  (`companion/helpers.tsv`): double-clicking a `SegM`/`SIT!` archive
+  shows "StuffIt", as if StuffIt itself were starting (measured: the
+  maintainer's Mac Plus, 6.0.8, v0.46.0 staged, 2026-11-14). The
+  maintainer wants a name that says it is MacExtract's helper. Not
+  checked: what else reads a helper's file name (the stub's own lookup,
+  `check_helpers.py`, MacStamp's records) and the 31-character limit.
 - **An icon per document type, drawn by the maintainer.** Every helper's
   bundle points all its types at one family, MacExtract's archive icon
   (`companion/make_stub.py`); the eighteen helpers claim 79 types between
