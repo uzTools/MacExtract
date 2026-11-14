@@ -376,13 +376,13 @@ data 'MExt' (0, "MacExtract") {
    the fifth. */
 
 resource 'vers' (1, "MacExtract") {
-    0x00, 0x45, release, 0x00, verUS,
-    "0.45.0",
-    "0.45.0"
+    0x00, 0x46, release, 0x00, verUS,
+    "0.46.0",
+    "0.46.0"
 };
 
 resource 'vers' (2, "MacExtract") {
-    0x00, 0x45, release, 0x00, verUS,
-    "0.45.0",
-    "0.45.0"
+    0x00, 0x46, release, 0x00, verUS,
+    "0.46.0",
+    "0.46.0"
 };

@@ -148,11 +148,11 @@ usual practice for a bug that can expose memory contents.
 
 ## 8. A release
 
-`v0.45.0` (2026-11-02) is the newest tag and is `main`'s `dist/`, released
-after the maintainer's run on the LC 475; the API lists its three assets,
-and the published `MacExtract.bin` is byte for byte `dist/`'s. Whether to
-cut the next is the maintainer's call (CLAUDE.md, *Cutting a release*).
-Nothing is left in this section.
+`v0.45.0` (2026-11-02) is the newest tag. `main`'s `dist/` is **v0.46.0,
+staged and not tagged** (2026-11-14): its files are on the maintainer's
+share for his own run on the LC, the iMac, the Plus and the SE/30, and the
+release floppies with them. Tagging waits for his go on README.md and
+`dist/README.txt` (CLAUDE.md, *Cutting a release*).
 
 ## 9. The 1.44 MB image, written with a USB floppy drive
 

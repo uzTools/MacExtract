@@ -167,7 +167,40 @@ are the same story for the same reason: that method looks back over as much as
 and the rest of the archive still comes out. Every other format fits in
 512 KB, and with 1 MB the question does not arise.
 
-v$VERSION changes how MacExtract asks you things. Where the files go is
+v$VERSION opens four more kinds of file: Hampa Hug's MAR archives (.mar,
+.mac, and .mar.lz4); the floppies of Apple Backup, a Performa's backup,
+read as one set even with disks missing; the Tomes on Apple's install
+disks, System 7.5 to Mac OS 9; and the fonts and network software Apple's
+Installer keeps compressed in a file's resource fork. Netscape's .xpi
+installer packages, which are zips, now carry MacExtract's archive icon.
+
+It is the first release with the double-click helpers described above.
+Macintosh Easy Open and Mac OS 9's File Exchange list MacExtract, not the
+helpers, for an archive whose program is missing. A file DiskDoubler
+compressed in place opens through the "DiskDblr" helper, which also gives
+it the archive icon.
+
+MacExtract itself takes about 7 KB less memory, which every archive gets
+instead, and on a Mac Plus StuffIt's method 5, zip's Implode and the LZH
+methods decode between a fifth and a third faster, a zip stored without
+compression about three times faster. In 512 KB under System 6.0.8, 72 of
+the 74 test archives come out, against 68 before. On a Macintosh 512K,
+v0.45.0 bombed at launch; it starts again.
+
+Fixed: after a password was asked for, the progress bar was drawn at the
+top left of the screen. A 64th character typed in the password dialog
+went past its end. A disk that fills up now says "Disk full." under the
+file it could not write, and a disk that cannot be read is no longer
+reported as an incomplete archive. A file and a folder of the same name
+no longer make everything in the folder fail: the folder is numbered. A
+Get Info comment longer than the Finder keeps is cut, and the report says
+so. Cancel answers sooner in the slow formats, and its button flashes. A
+BinHex file with lines longer than 256 characters lost a character from
+each. Six MacBinary files written without the usual padding, and tar
+archives that set their dates once for every file, open as they should.
+The icons are new.
+
+v0.45.0 changes how MacExtract asks you things. Where the files go is
 asked in a window with a New Folder button, on every System. A missing
 part of a split archive is asked for in one window, the Open dialog with
 the question under it: put the disk in and it is picked up, a disk that
@@ -663,6 +696,20 @@ for img in dist/MacExtract-800K.img "$IMG"; do
     python3 companion/make_helpers.py --desktop "$HFS_TMP/Desktop.bin" --dirid "$DIRID"
     HOME=$HFS_TMP hcopy -m "$HFS_TMP/Desktop.bin" ":Desktop"
     HOME=$HFS_TMP humount >/dev/null
+    # The Helpers folder on a row of its own: placed by the Finder, it sat
+    # beside MacExtract and their names overlapped on System 6.0.8. Only
+    # the folder is placed (inited, 0x0100, and a location): an inited
+    # application's bundle is not registered, so MacExtract and the Read Me
+    # are left to the Finder. Seen on System 6.0.8, 2026-11-14.
+    python3 - "$img" <<'PY'
+import struct, sys
+sys.path.insert(0, "tools/vmac")
+import hfscat
+path = (b"MacExtract", b"MacExtract Helpers")
+# DInfo at +22 of a cdrDirRec: frFlags +8, frLocation (v, h) +10 (hfscat.py)
+hfscat.patch(sys.argv[1], path, 22 + 8, struct.pack(">H", 0x0100))
+hfscat.patch(sys.argv[1], path, 22 + 10, struct.pack(">hh", 66, 104))
+PY
 done
 
 # A 400K MFS floppy for a Macintosh 512K with a Hard Disk 20: a 64K ROM reads

@@ -7,6 +7,9 @@ the Mac it was made for. MacExtract is one application that runs on
 everything from a 1986 Mac Plus to Mac OS 9: no extensions, no installer.
 A Linux command-line version is built from the same engine.
 
+Many thanks to [slomacuser](https://68kmla.org/bb/members/slomacuser.270/)
+over at 68kmla.org for their redesigned icons!
+
 <table>
 <tr>
 <td width="50%"><img src="docs/screens/0-icon.png" width="400" alt="MacExtract's icon on a floppy"></td>
@@ -21,7 +24,7 @@ A Linux command-line version is built from the same engine.
 ## Download
 
 **[Latest release](https://github.com/uzTools/MacExtract/releases/latest)**,
-currently **v0.45.0**, or from the tree:
+currently **v0.46.0**, or from the tree:
 
 | | |
 |---|---|

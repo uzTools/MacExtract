@@ -619,6 +619,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-14 (the type of a file still being expanded) — `Part` is what StuffIt Expander types a file between creating it and giving it its own type; any member, not an archive: left unclaimed, and its row leaves OPEN_ITEMS.md
 - 2026-11-14 (the type UnZip gave what it could not name) — `pBIN` is a binary zip member written out as stored, by UnZip 1.x as `pBIN`/`pZIP` and by 2.0.1 as `pBIN`/`????`; not an archive: left unclaimed, and its row leaves OPEN_ITEMS.md
 - 2026-11-14 (the types nobody needed claimed) — OPEN_ITEMS' unclaimed types closed: `DDTM` claimed; `bzy `, `SITo`, `DDDA`, `Part` and `pBIN` read off real files and not archives; `PCFA`, `m@rc` and `pZIP` as a type have no file anywhere
+- 2026-11-14 (the floppy's Helpers on a row of their own) — v0.46.0 staged: on the release floppies the Helpers folder is placed on a second row, because the Finder put it beside MacExtract and their names overlapped on System 6.0.8
 
 ---
 
@@ -26411,4 +26412,23 @@ claimed only where a real file shows it is an archive MacExtract reads; a
 new one found is a `FREF` through CLAUDE.md's short gate. MacStamp was sent
 the same findings (2026-11-14). The comment on `Part` in
 `mac/macextract_icons.r` is corrected to nine files.
+
+---
+
+## 2026-11-14 (the floppy's Helpers on a row of their own) — v0.46.0 staged: on the release floppies the Helpers folder is placed on a second row, because the Finder put it beside MacExtract and their names overlapped on System 6.0.8
+
+**Seen, staging v0.46.0** (`tools/vmac/mountcheck.py --open` on
+`dist/MacExtract-800K.img`, System 6.0.8): with no position stored, the
+Finder put Read Me, MacExtract and MacExtract Helpers on one row, and
+"MacExtract Helpers", wider than its slot, ran into "MacExtract". v0.45.0's
+floppy held MacExtract alone, so this is the first release it would show.
+
+**Fix.** `tools/make_dist.sh` gives the folder a location (v 66, h 104,
+the second row) and the inited flag, through `tools/vmac/hfscat.py`'s
+`patch`, on the 800K and 1.44 MB floppies. Only the folder: the Finder
+registers the bundle of an application it has not inited, so MacExtract
+and Read Me keep no position and are laid out by the Finder (seen: their
+row, the new icon drawn). The frame is README.md's first screenshot. **Not
+run** on System 7 or Mac OS 9, where the Finder lays out differently; the
+400K MFS floppy has no folders.
 

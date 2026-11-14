@@ -27,7 +27,7 @@
 #define S_MENU_OPEN         "Open\0xC9"
 #define S_MENU_QUIT         "Quit"
 
-#define S_ABOUT             "MacExtract 0.45.0"
+#define S_ABOUT             "MacExtract 0.46.0"
 
 #define S_BTN_OK            "OK"
 #define S_BTN_CANCEL        "Cancel"
