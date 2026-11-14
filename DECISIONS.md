@@ -615,6 +615,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-13 (the database that lists nothing) — under AppleShare's `Desktop Mgr` INIT on System 6.0.8, `PBDTGetPath` creates an empty desktop database on any volume while the Finder keeps the `Desktop` file, so a helper found no MacExtract; it now reads the `Desktop` file after the database on every volume, 0 B. MacExtract's Get Info comments under that INIT go to the same database, and Get Info shows none
 - 2026-11-14 (the comment the Finder keeps in its Desktop file) — priced: a write into the `Desktop` file costs 368 to 528 B of every budget resident, or 256 B plus 404 B for the formats that carry comments as an image, and buys System 3.0 and System 6 under the Finder alone; under MultiFinder and on a System 7 floppy the Finder holds the file open and nothing can be written
 - 2026-11-14 (the DiskDoubler working file that is an archive) — `DDTM`/`DDAP` claimed by MacExtract's bundle, as `DDAR` is, and by the DiskDblr helper for its icon; and a type change gated without `ci.sh`
+- 2026-11-14 (the file DiskDoubler keeps for itself) — `DDDA`/`DDAP` is DiskDoubler's own resource file, not an archive: left unclaimed, and its row leaves OPEN_ITEMS.md
 
 ---
 
@@ -26277,3 +26278,34 @@ tools/make_dist.sh`, `tools/check_helpers.py` and `tools/check_docs.py`
 −12 B on each tier, DERIVED from the 12 B a `FREF` measured on 2026-11-04;
 the DiskDblr helper +1 type.
 
+## 2026-11-14 (the file DiskDoubler keeps for itself) — `DDDA`/`DDAP` is DiskDoubler's own resource file, not an archive: left unclaimed, and its row leaves OPEN_ITEMS.md
+
+**What `DDDA` is (measured).** The application's data file, created by the
+application itself when missing. DiskDoubler 3.7's App, `CODE` 5 at
+0x6448–0x64b6 (MacBinary byte 42,242): on `fnfErr` from opening it, a
+`HCreateResFile` (jump table +258), its Finder info read (+2234), type and
+creator set to `DDDA`/`DDAP`, written back (+226). The name is
+`DiskDoublerData(3.7)` (its `DATA` 0 at 0xb7); its `STR#` 0 says "Unable to
+show About DD dialog. “DiskDoublerData” may not be installed". DiskDoubler
+4.1.1 (Norton DiskDoubler Pro 1.1), `CODE` 5 0x35fe–0x374e (MacBinary byte
+505,692): the Preferences folder (`FindFolder` `'pref'`, create, 0x35ac),
+the resource file opened, else created, typed `DDDA`/`DDAP` at 0x36dc and
+reopened read-write; the one name of that kind in the application is
+`DiskDoubler 4.1 Prefs` (`DATA` 0 at 0x9b7). The Finder Menu's `CCOD` -2045
+runs the same routine (0xaa2, byte 3,110). DD Expand 4.0's copy was not
+opened.
+
+**A real one (measured).** `Installer Items:DiskDoublerData(3.7)` on the
+3.7 disk (`dd37.hfv` in the cache): `DDDA`/`DDAP`, data fork 0 bytes,
+resource fork 133,419 bytes: `PICT` 1 and 5 (the About box), `SEM3`,
+`SEMA`, `SEMG`, `SEMS`, `SESA`, `SESG`, `SESS` (self-extractor code, carrying
+"DiskDoubler Self Extractor" and `APPL`/`DSEA`), and `vers` 1 and 2 (3.7).
+`build/rel/macextract` sniffs it as MacBinary and lists one file, itself;
+the bare resource fork sniffs as unknown.
+
+**Consequence.** Neither file holds anything to extract: the type stays out
+of MacExtract's bundle and the DiskDblr helper's, and its row of OPEN_ITEMS'
+*Types MacExtract's bundle does not claim* moves to that section's "left out
+as not archives". MacStamp's 2 census files are not read; that they are
+these is a hypothesis. No emulator was run: the code and the 3.7 file
+agree.
