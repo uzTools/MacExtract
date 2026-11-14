@@ -614,6 +614,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-13 (the comment MacLHA never wrote) — MacLHA 2.00 and 2.24, run under System 7.0.1 on a file with a Get Info comment, store a MacBinary I header with no comment length and nothing after the resource fork; there is no comment for the LZH reader to read, and nothing changes
 - 2026-11-13 (the database that lists nothing) — under AppleShare's `Desktop Mgr` INIT on System 6.0.8, `PBDTGetPath` creates an empty desktop database on any volume while the Finder keeps the `Desktop` file, so a helper found no MacExtract; it now reads the `Desktop` file after the database on every volume, 0 B. MacExtract's Get Info comments under that INIT go to the same database, and Get Info shows none
 - 2026-11-14 (the comment the Finder keeps in its Desktop file) — priced: a write into the `Desktop` file costs 368 to 528 B of every budget resident, or 256 B plus 404 B for the formats that carry comments as an image, and buys System 3.0 and System 6 under the Finder alone; under MultiFinder and on a System 7 floppy the Finder holds the file open and nothing can be written
+- 2026-11-14 (the DiskDoubler working file that is an archive) — `DDTM`/`DDAP` claimed by MacExtract's bundle, as `DDAR` is, and by the DiskDblr helper for its icon; and a type change gated without `ci.sh`
 
 ---
 
@@ -26244,3 +26245,35 @@ left dangling, Get Info empty (`s6r`).
 
 **Consequence.** OPEN_ITEMS.md's row carries the price; the decision is the
 maintainer's.
+
+---
+
+## 2026-11-14 (the DiskDoubler working file that is an archive) — `DDTM`/`DDAP` claimed by MacExtract's bundle, as `DDAR` is, and by the DiskDblr helper for its icon; and a type change gated without `ci.sh`
+
+**What `DDTM` is.** DiskDoubler's working file: DiskTester carries
+"DDAppExpandTempFile" beside `DDTM`/`DDAP`, and AutoDoubler and DiskDoubler
+4.0 create files of that type. A finished archive can keep it: MacStamp read
+the one file of the census (2026-11-14), `sources.dd377.ads.dd`, the
+corpus's `ddtf-dd377ads.dd` (DiskDoubler 3.7.7), a whole `DDAR` archive the
+engine already reads. DDExpand 2.03a and 3.1 both declare it.
+
+**Where (the maintainer's question, answered by his ruling of 2026-11-13):**
+an archive type, so MacExtract's bundle claims it, as `DDA2`, `DDAR` and
+`DDSP`; the DiskDblr helper claims it too, for its icon, and its `'open'`
+leaves it out because MacExtract claims it (*the helper Easy Open offers for
+DiskDoubler's icons*). A working file left unfinished opens in MacExtract as
+a damaged archive, reported as any other.
+
+**The gate (the maintainer, 2026-11-14): no `ci.sh` for a type added or
+removed.** The change is a `FREF` and its `BNDL` pair, and a row of
+`companion/helpers.tsv`: no code, so nothing the engine suites see. What
+can break is checked instead: the three Macintosh builds through
+`tools/retake_budgets.py` (CODE and A5 must not move; it re-takes the
+derived grants), the bundle read back off the built application, `sh
+tools/make_dist.sh`, `tools/check_helpers.py` and `tools/check_docs.py`
+(CLAUDE.md, Rules).
+
+**Cost:** 41 `FREF`s; CODE, A5 and every image unmoved; `TIERS_MACHINE`
+−12 B on each tier, DERIVED from the 12 B a `FREF` measured on 2026-11-04;
+the DiskDblr helper +1 type.
+

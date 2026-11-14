@@ -281,7 +281,6 @@ helper claims*).
 | `m@rc` | `'open'` | none | claimed only by ArcMac 1.3c |
 | `pBIN` | — | `pZIP` 19 (also `pGeN` 188 outside archive creators) | MacStamp's hypothesis: members UnZip wrote out, not archives |
 | `DDDA` | — | `DDAP` 2 | DiskDoubler's; not in its 40 icon types |
-| `DDTM` | — | `DDAP` 1 | **an archive**: `DDAR` at offset 0, a member of the fixture `ddtf-dd377ads.dd.hqx` (MacStamp, 2026-11-14); not yet claimed |
 | `Bzp2` | both lists | — | bzip2, out of scope (Part 1) |
 | `SITX` | — | `SIT!` 1 | StuffIt X, out of scope (Part 1) |
 | `fold`, `disk` | both lists | — | Expander's for a dropped folder or disk; MacExtract takes neither |

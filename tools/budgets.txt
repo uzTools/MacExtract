@@ -48,9 +48,9 @@ APP_CODE_FILE=40960           # MacExtract.code.bin
 APP_BUNDLE_FILE=211076        # ovl_bundle.bin
 
 # ---- MACHINE: measured on the emulator, not from a build
-TIERS_MACHINE_SYS3_512K=414236   # System 3.0, Macintosh 512Ke
-TIERS_MACHINE_SYS6_512K=318832   # System 6.0.8, Macintosh 512Ke
-TIERS_MACHINE_FLOOR_1M=843120    # System 6.0.8, 1 MB Mac Plus
+TIERS_MACHINE_SYS3_512K=414224   # System 3.0, Macintosh 512Ke
+TIERS_MACHINE_SYS6_512K=318820   # System 6.0.8, Macintosh 512Ke
+TIERS_MACHINE_FLOOR_1M=843108    # System 6.0.8, 1 MB Mac Plus
 OVL_RESIDUE=-402                 # the shipped probes' budgets less the model's
 
 # ---- CEILINGS: decisions, with headroom

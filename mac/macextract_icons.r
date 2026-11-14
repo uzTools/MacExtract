@@ -309,6 +309,14 @@ resource 'FREF' (178) { 'ircp', 1, "" };
    `NSIn`: Netscape is the creator, and opening one in Netscape installs it.
    DECISIONS.md 2026-11-13, *the installer package that is a zip*. */
 resource 'FREF' (179) { 'xpi ', 1, "" };
+/* And `DDTM`/`DDAP`, DiskDoubler's working file ("DDAppExpandTempFile" in
+   DiskTester; AutoDoubler and DiskDoubler 4.0 create it), which a finished
+   archive can keep: `ddtf-dd377ads.dd`, DiskDoubler 3.7.7's, is a whole
+   `DDAR` archive under it (MacStamp, 2026-11-14), and DDExpand 2.03a and 3.1
+   both declare it. An archive type, so MacExtract's, as `DDAR` is.
+   DECISIONS.md 2026-11-14, *the DiskDoubler working file that is an
+   archive*. */
+resource 'FREF' (180) { 'DDTM', 1, "" };
 
 resource 'BNDL' (128) {
     'MExt', 0,
@@ -319,7 +327,7 @@ resource 'BNDL' (128) {
                 24, 152, 25, 153, 26, 154, 27, 155, 28, 156, 29, 158,
                 30, 157,
                 31, 171, 32, 172, 33, 173, 34, 174, 35, 175, 36, 176, 37, 177, 38, 178,
-                39, 179 } }
+                39, 179, 40, 180 } }
 };
 
 /* The SIGNATURE resource: type = the creator code, ID 0. The Finder wants
