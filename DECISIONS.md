@@ -620,6 +620,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-14 (the type UnZip gave what it could not name) — `pBIN` is a binary zip member written out as stored, by UnZip 1.x as `pBIN`/`pZIP` and by 2.0.1 as `pBIN`/`????`; not an archive: left unclaimed, and its row leaves OPEN_ITEMS.md
 - 2026-11-14 (the types nobody needed claimed) — OPEN_ITEMS' unclaimed types closed: `DDTM` claimed; `bzy `, `SITo`, `DDDA`, `Part` and `pBIN` read off real files and not archives; `PCFA`, `m@rc` and `pZIP` as a type have no file anywhere
 - 2026-11-14 (the floppy's Helpers on a row of their own) — v0.46.0 staged: on the release floppies the Helpers folder is placed on a second row, because the Finder put it beside MacExtract and their names overlapped on System 6.0.8
+- 2026-11-14 (the gray at an odd address) — v0.45.0's destination dialog bombed a Mac Plus with an address error: its gray `Pattern` lay at an odd offset in the dialog's image, and the ROM's `_PenPat` copies it by longs; aligned, for 0 B. Mini vMac raises no address error, so no tier could see it; `tools/vmac/oddaccess.py` builds one that logs them
 
 ---
 
@@ -26432,3 +26433,62 @@ row, the new icon drawn). The frame is README.md's first screenshot. **Not
 run** on System 7 or Mac OS 9, where the Finder lays out differently; the
 400K MFS floppy has no folders.
 
+
+---
+
+## 2026-11-14 (the gray at an odd address) — v0.45.0's destination dialog bombed a Mac Plus with an address error: its gray `Pattern` lay at an odd offset in the dialog's image, and the ROM's `_PenPat` copies it by longs; aligned, for 0 B. Mini vMac raises no address error, so no tier could see it; `tools/vmac/oddaccess.py` builds one that logs them
+
+**Seen** by the maintainer on a Mac Plus, 1 MB, one floppy drive, System
+6.0.8 booted from a floppy, no hard disk, staged v0.46.0 off the locked
+800K floppy: `Education.cpt.#1` and `Empire.sit.1` from his *Sets 1*
+floppy, each double-clicked, the helper's hand-off and the swaps (Empire:
+MacExtract, System, MacExtract, System, MacExtract, System, Sets 1,
+System), then *"Sorry, a system error occurred. address error"* (ID 02) as
+the destination dialog appeared, nothing clicked.
+
+**Reproduced** on `mv-1M-1d1` (one drive, 1 MB) with the boot disk in that
+drive: the same requests after the Finder's own, and the dialog drawn,
+**without a bomb** — Mini vMac's 68000 has no vector-3 path; `get_word_ext`
+and `put_word_ext` (`src/MINEM68K.c`) do an odd access as two byte accesses.
+`tools/vmac/oddaccess.py` patches those two and the jump paths to log each
+odd access instead; the same run then logs four word reads at `0x065BDF`
+(through the master pointer's `A0` flags byte) to `0x065BE5`, from PC
+`0x409826` and `0x409828`: the Plus ROM's `_PenPat`, `move.l (a1)+,(a0)+`
+twice into `thePort->pnPat` (disassembled from `vMac.ROM`). A1 was `&kGray`
+in `tools/overlay/ovl_destdlg.c`: a `Pattern` is eight bytes, `readelf`
+gives `.rodata.kGray` an alignment of 1, and the linked image puts it at
+`0x63B` (`0x635` in v0.45.0's, rebuilt at the tag and found byte for byte in
+its `dist/`). The bundle aligns images to 4, so the address is odd on every
+Macintosh and System; a 68020 or later does the access, which is why the
+LC 475, Mac OS 9 and every Mini vMac tier passed.
+
+**Fix.** `__attribute__((aligned(2)))` on `kGray`: at `0x63C`, the image
+still 1,688 B, no figure in `tools/budgets.txt` moved (`retake_budgets.py
+--dry-run`). **Swept** for the same shape: every non-string data section of
+alignment 1 in the resident objects and in the three images that call the
+Toolbox (`ovl_destdlg`, `ovl_segsetup`, the helper stub) — the engine
+probes' byte tables, `gKeepSet`, an empty Pascal string; all read byte by
+byte, none handed to a trap that reads words. What the sweep cannot see is
+an odd pointer made at run time; the emulator runs below are what can.
+
+**Verified** under the logging emulator, staged v0.46.0's `dist/` against
+this commit's, every run drawing the destination dialog (frames looked at):
+the one-drive walk above on 6.0.8 at 1 MB, 4 odd reads → none, the dialog
+drawn and answered; `interactive.py --dest` on 6.0.8 at 1 MB, 8 → none,
+frames pixel-identical; `--e2e` on System 3.0 at 1 MB, 4 → none, the
+extracted application launched; the default phase on System 7.0.1 at 4 MB,
+16 → none, output complete. Every logged read was `_PenPat`'s. Beyond the
+dialog, `run.py --mem 1M` over the 74-fixture sample (the autotest build,
+every format's extraction path on those archives): 74/74, no odd access. Not run:
+`Empire.sit.1` on the one-drive walk, and the Plus itself.
+
+**Why no tier saw it.** BLOCKERS.md's tiers are all Mini vMac, so the
+68000-discipline claim's emulator half was never a check of alignment
+(*Withdrawn claims*). `oddaccess.py` makes it one for the paths a run takes;
+the patched core still completes the access, so a run's grading is
+unchanged and the log is the only verdict.
+
+**Found on the way, not fixed:** the same walk with this fix ends
+`Education.cpt.#1` on *"Parts missing."* without asking for the segment on
+*Sets 3* (OPEN_ITEMS.md, *A Compact Pro set opened without its last segment
+on a mounted disk*).

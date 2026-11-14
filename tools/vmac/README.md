@@ -2073,6 +2073,27 @@ released off-screen — Shut Down never ran and the image was torn.
 window opens behind the folder's; how the Finder places what it relocates,
 beyond the catalog and the frame; System 7's `Desktop DB` beyond a byte count.
 
+## What a 68000 bombs on — `oddaccess.py`
+
+**Mini vMac never raises an address error.** Its core does an odd word or
+long access as two byte accesses and carries on, so every tier above passes
+code that bombs a Mac Plus with ID 02 (DECISIONS.md 2026-11-14, *the gray
+at an odd address*). `oddaccess.py` builds `<emu>-ae`, which logs each such
+access, with the instruction's PC and the registers, to `$MV_ODDLOG`:
+
+    tools/vmac/oddaccess.py mv-1M          # $V/mv-1M-ae; also mv-4M, mv-1M-1d1
+    MV_ODDLOG=$PWD/.tmp/odd.log tools/vmac/interactive.py fixtures/derived-Downer.sit \
+        --dest --emu mv-1M-ae --app dist/MacExtract.bin
+
+Any harness takes the `-ae` build, and **no log file is the pass**. A PC
+in the ROM (0x400000 up) means a trap was handed an odd pointer. The
+control is v0.45.0's `dist/MacExtract.bin` through the destination dialog:
+four word reads at PC 0x409826/0x409828, `_PenPat`. **What it cannot
+see:** a path the run does not take.
+`mv-1M-1d1` is the one-drive 1 MB machine (`NumDrives 1`, built by hand
+like `mv-1M-1d`): the boot disk is the only drive, so every other disk goes
+in through `xdnd_insert` after an eject, as on a floppy-only Mac Plus.
+
 ## On-demand probes — the `-D` switches and the one-off harnesses
 
 Every switch below rebuilds the autotest application and answers one question

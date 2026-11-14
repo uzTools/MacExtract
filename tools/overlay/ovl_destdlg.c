@@ -38,8 +38,13 @@ static struct {
     unsigned char name[32];
 } S = { 1 };
 
-/* QuickDraw's gray, which an image cannot reach as qd.gray. */
-static const Pattern kGray = { { 0xAA, 0x55, 0xAA, 0x55, 0xAA, 0x55, 0xAA, 0x55 } };
+/* QuickDraw's gray, which an image cannot reach as qd.gray. Aligned: a
+ * Pattern is eight bytes, so GCC may place it at an odd offset, and the
+ * 68000 ROM's PenPat copies it with `move.l (a1)+` — an address error on
+ * a Mac Plus as this dialog first draws (DECISIONS.md 2026-11-14, *the gray
+ * at an odd address*). */
+static const Pattern kGray __attribute__((aligned(2))) =
+    { { 0xAA, 0x55, 0xAA, 0x55, 0xAA, 0x55, 0xAA, 0x55 } };
 
 /* Gestalt, guarded: there is no Gestalt trap on a 64K ROM or before System
  * 6.0.4. The inline puts the selector in D0 and the response in A0, stored

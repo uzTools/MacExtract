@@ -109,7 +109,9 @@ instead, and on a Mac Plus StuffIt's method 5, zip's Implode and the LZH
 methods decode between a fifth and a third faster, a zip stored without
 compression about three times faster. In 512 KB under System 6.0.8, 72 of
 the 74 test archives come out, against 68 before. On a Macintosh 512K,
-v0.45.0 bombed at launch; it starts again.
+v0.45.0 bombed at launch; it starts again. On a Mac Plus, an SE, a Classic
+or any other Macintosh with a 68000, v0.45.0 bombed with an "address
+error" as it asked where the files go; it no longer does.
 
 Fixed: after a password was asked for, the progress bar was drawn at the
 top left of the screen. A 64th character typed in the password dialog

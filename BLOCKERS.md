@@ -2,11 +2,13 @@
 
 ## Status
 
-**No open blocker** at v0.45.0. The last one — the application bombing on
-Mac OS 9.2 on every DiskDoubler archive and on SuperDisk! — was an
-`UncOptions` field the shell never assigned (DECISIONS.md 2026-09-04, *the
-field nobody assigned*). The engine and CLI were never affected by anything
-in this file.
+**No open blocker on `main`.** **v0.45.0 bombs every 68000 Macintosh** as
+its destination dialog appears (a Mac Plus, 2026-11-14); fixed on `main`
+for 0 B (DECISIONS.md 2026-11-14, *the gray at an odd address*). The one
+before — the application bombing on Mac OS 9.2 on every DiskDoubler archive
+and on SuperDisk! — was an `UncOptions` field the shell never assigned
+(DECISIONS.md 2026-09-04, *the field nobody assigned*). The engine and CLI
+were never affected by anything in this file.
 
 The sample is **74 fixtures** (`tools/vmac/sample.txt`). Each tier's latest
 whole sweep is below; the 2026-10-10 sweeps were each paired with a
@@ -21,7 +23,7 @@ in a different tier, passed when re-run alone.
 
 | tier | result |
 |---|---|
-| System 3.0 / Finder 5.1, 4 MB Mac Plus (Mini vMac, a true 68000) | **74/74**, re-measured whole on 2026-11-02 (`sys30.py`; `export-hc.hqx` NOGRID in the sweep, PASS alone) |
+| System 3.0 / Finder 5.1, 4 MB Mac Plus (Mini vMac: a 68000 that raises no address error, *Withdrawn claims*) | **74/74**, re-measured whole on 2026-11-02 (`sys30.py`; `export-hc.hqx` NOGRID in the sweep, PASS alone) |
 | System 3.0 / Finder 5.1, **1 MB** — the oldest system, at the RAM floor | **74/74**, re-measured whole on 2026-11-02 (`sys30.py --mem 1M`; `synth-packit-2.pit` NOGRID in the sweep, PASS alone) |
 | System 3.0, **512 KB** Macintosh 512Ke | **72/74**, re-measured whole on 2026-11-12 on d7fed5b7 (`sys30.py --emu mv-512Ke`; `derived-BootTime.cpt` NOGRID in the sweep, PASS alone; DECISIONS.md 2026-11-11, *the release decided in the bundle*), as on 2026-11-11, 2026-11-09, 2026-11-02, 2026-10-23, 2026-10-22, 2026-10-21 and 2026-10-18: two per-entry memory refusals, by name the two `run_tiers.py --shipped` names. With every decoder resident it is 68/72 (2026-10-09); the overlays recovered the other two (FORMATS.md, *Overlays*) |
 | System 6.0.8, 4 MB Mac Plus | **74/74**, re-measured whole on 2026-11-09 on 049d687 with the inline File Manager calls (`run.py`; four EMUDIED in the sweep, each PASS alone on the 2026-11-11 tree; DECISIONS.md 2026-11-11, *the glue the shell expands*) |
@@ -30,6 +32,7 @@ in a different tier, passed when re-run alone.
 | System 6.0.8, **512 KB** Macintosh 512Ke | **72/74 on 2026-11-12** on d7fed5b7 and on 2026-11-11, the release keeping its images packed in the bundle's own block (`run.py --emu mv-512Ke --system System6.hfv`, one pass each): `synth-dd-m5.dd` and Library_ISBN (33 of 34) refused per entry, as `run_tiers.py --check` predicts. **The four tar envelopes' whole chains are byte-exact through the real application** (`interactive.py --chain`, every data fork; again on 2026-11-12 on `dist/` at d7fed5b7); from before 9593ad80 to ea48a1a8 the layer under them did not come off here, the codecs and then the sniffer not kept, and the codecs' loss read "Archive damaged." (DECISIONS.md 2026-11-11, *the copies that moved down*). **68/74 from 5dfe571a to 4171b4e6**: the four tar envelopes lost the codecs copy at the keep (DECISIONS.md 2026-11-11, *the kilobyte under each copy*). 72/74 on 2026-11-09 twice, once with the inline File Manager calls on 049d687, as on 2026-11-03: `synth-dd-m5.dd` and Library_ISBN (33 of 34) refused per entry, as `run_tiers.py --check` predicts. 68/74 on 2026-11-02; Cool Tools and a2basic came back with the StuffIt 5 cipher release, a2ps and popper with the envelope peek (DECISIONS.md 2026-11-03, *the ciphers a header can refuse*, *the envelope that said what it held*), and five chains through the real application on this machine match the CLI. **The model once said 67/72** on budgets 16,888 B stale (*Withdrawn claims*). With every decoder resident, 63/72 (2026-10-09), ten since 2026-10-11 and eleven since 2026-10-17, DERIVED; eleven of 74 since 2026-11-02 and ten since 2026-11-03, DERIVED |
 | Macintosh 512K, **64 KB ROM**, System 3.0 with the `Hard Disk 20` file less its `.Sony` patch (`tools/vmac/hd20boot.py`, `mv-512K`) | **72/74**, re-measured whole on 2026-11-12 on d7fed5b7 in one pass (`sys30.py --rom64`), as on 2026-11-11, 2026-11-09 and 2026-11-07: `synth-dd-m5.dd` and Library_ISBN refused per entry over budget, as on the 512Ke. 70/74 the same day before `high_handle`, Cool Tools and a2basic refused on a split heap (DECISIONS.md 2026-11-07, *the decoders a 64K ROM kept low*). The helpers zip, 16 of 16, by hand on 2026-11-06. Not the `.Sony` a real HD20 loads (FORMATS.md, *A true Macintosh 512K*; MANUAL_TESTS.md §6) |
 | System 7.0.1, 4 MB | **74/74**, re-measured whole on 2026-11-09 on 049d687 with the inline File Manager calls (`run.py --system Sys7.img`, first pass), as on 2026-11-02 and 2026-10-22 — the only tier with a code-cache flush route: `_HWPriv` called on all 72 of the `UNC_AT_BUDGET` sweep, once per kept image plus the bundle fixup |
+| **Macintosh Plus, real** (1 MB, one floppy drive, System 6.0.8 on a floppy; 2026-11-14, staged v0.46.0) | **Address error (ID 02) as the destination dialog appeared**, on a Compact Pro and a StuffIt set; reproduced and fixed (DECISIONS.md 2026-11-14, *the gray at an odd address*). Not yet re-run on the Plus |
 | **Macintosh LC 475, real, round 3** (2026-10-13, `main` at f4e87ac, MANUAL_TESTS.md §4–§5) | By eye: Standard File across volumes; the destination dialog; a two-floppy split set in one drive, the first ejected and dimmed, unmounted since (DECISIONS.md 2026-10-14); Cancel; Cmd-. on U.S. and AZERTY layouts; output two folders deep; MacExtract and the archive on two floppies, no swap after Save. `/` in names reached the disk as `/`; a second run gave `fold~1`, `fold~2`, `README~1`, nothing overwritten. Two dropped archives: eleven swaps before the first dialog, the System's and the Finder's (DECISIONS.md 2026-10-14). While a window is held the extraction pauses, as every background process does under cooperative multitasking |
 | **Macintosh LC 475, real, round 2** (2026-10-12, `main` at 238feef) | **24/24 archives, 188 files byte-exact in both forks**, graded from Linux over AppleShare: every decoder image on a CPU with a cache, no bomb (MANUAL_TESTS.md §4). A full floppy stopped with *"The disk is full"*, the entry in flight deleted. Without the cache flush: 6 archives, 28 files byte-exact (DECISIONS.md 2026-10-12, *the flush the LC 475 did not need*) |
 | **Macintosh LC 475, real** (68LC040, System 7.6.1, 12 MB) — the first silicon | **9/11 on `dist/` v0.39.0**, 2026-10-11, by eye, not bytes. The two zips were a shell defect every tier was blind to, fixed and re-run under emulation only (DECISIONS.md 2026-10-11, *the zip that was a set of one*). **At the declared 400 KB minimum partition**, a StuffIt 5 archive refused one entry *"at least 136K"* short and the rest came out, no bomb; one archive only |
@@ -121,7 +124,7 @@ Private File, read since 2026-10-09 (*the engine list as a checklist*).
 
 **Kept deliberately, and this is the part of the file to read first.** Twice a
 live claim has been re-tested *because* it sat beside an already-withdrawn one,
-and one of those was worth 39/44 → 40/44 at the floor target. **Fifty-one**
+and one of those was worth 39/44 → 40/44 at the floor target. **Fifty-two**
 mechanisms keep finding the next one (recounted 2026-10-11); the first two and
 *inputs from outside the corpus* need no insight at all:
 
@@ -293,11 +296,16 @@ mechanisms keep finding the next one (recounted 2026-10-11); the first two and
 - **a harness that gives every input the same name.** 2026-10-11: every tier
   opened `archive.sit`, so every plain `.zip` failed on the first real
   machine. Ask what the harness holds constant.
+- **a check handed to an emulator that does not model the fault.**
+  2026-11-14: "defended by a sanitizer and an emulator" — Mini vMac has no
+  address-error path at all, and a Mac Plus bombed on v0.45.0. Ask the
+  emulator's source what it raises.
 
 Each entry is what was claimed, what disproved it, and what it COST.
 
 | claim | disproved by | withdrawn |
 |---|---|---|
+| **"Mini vMac, a true 68000"** — this file's Status, and MANUAL_TESTS.md: the 68000-discipline claim *"defended today by a sanitizer and an emulator"* | **Mini vMac raises no address error**: `get_word_ext`/`put_word_ext` in its `MINEM68K.c` do an odd access as two byte accesses, and there is no vector-3 path. The maintainer's Mac Plus bombed (ID 02) on the destination dialog, a `Pattern` at an odd address handed to `_PenPat` (DECISIONS.md 2026-11-14, *the gray at an odd address*). **Cost: v0.45.0 bombs every 68000 Macintosh at the destination dialog, from its release on 2026-11-02, with every 68000 tier green** (two archives measured; every archive opened shows that dialog, read off the code); `tools/vmac/oddaccess.py` now logs what would fault | 2026-11-14 |
 | **"A line that overflows [the 256-byte buffer] is handed over in pieces, which is harmless: every piece is judged by the same rule and the character order is unchanged"** — `src/fmt_binhex.c`, since 2026-08-15 | **The character that did not fit was read and dropped**: `naff.hqx` rewrapped at 257, 300, 512 and 1,000 characters failed here and passed `lsar -t` (DECISIONS.md 2026-11-09, *the character past the buffer*) | 2026-11-09; every `.hqx` with data lines of 257 characters or more, for 86 days; no fixture has one |
 | **"Decoding four characters to three bytes changes what a stream truncated mid-group does"** — FORMATS.md, *What is still hot* and the 68000 suggestions, since 2026-09-20 | **The line decoder still makes a byte when its second character is read**: 13,052 robustness and truncation variants and 216,353 cut and mutated `.hqx` inputs, old binary against new, identical in exit code, messages and output (DECISIONS.md 2026-11-09, *the group every line break cut*) | 2026-11-09; nothing known — the rewrite was graded as it would have been anyway |
 | **"What is still XADDiskDoublerParser.m's is the `DDAR` `0x20` raw-fork shape"** — NOTICE, its inventory and its DiskDoubler paragraph, and OPEN_ITEMS.md's `fmt_dd.c` row, since 2026-09-22 | **`src/fmt_dd.c` says "Method 7 is transcribed"** from `XADStacLZSHandle.m`, and cites `XADDiskDoublerMethod2Handle.m` for method 2's tree and splay step, with `XADDiskDoublerParser.m`'s rules for methods 1, 2, 5, 7 and 8 — all live `Source:` lines; found reading each carrier to sort code from facts. **Cost: the file stayed LGPL and in `CARRIES`, so nothing was mislicensed; the record said one route closed the row when two codecs also had to be rewritten** | 2026-11-08 |

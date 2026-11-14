@@ -175,8 +175,10 @@ reads it back byte-exact (`make_dist.sh`); no Macintosh has mounted it
 
 - A smaller real 1 MB budget moves every floor-target figure in FORMATS.md.
 - A genuine I/O failure would exercise the shell's oldest untested branch.
-- An address error on silicon would break the 68000-discipline claim,
-  defended today by a sanitizer and an emulator.
+- An address error on silicon breaks the 68000-discipline claim. One did
+  (a Mac Plus, 2026-11-14): Mini vMac raises none, and since then
+  `tools/vmac/oddaccess.py` logs them, on the paths a run takes
+  (DECISIONS.md 2026-11-14, *the gray at an odd address*).
 
 Send anything surprising to `BLOCKERS.md` with a reproduction, and numbers
 to `FORMATS.md`. **A result from silicon outranks every emulated figure.**
