@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Documentation invariants that would otherwise go stale silently.
 
-Eleven of them, all cheap enough to run first in ci.sh:
+Twelve of them, all cheap enough to run first in ci.sh:
 
 1. DECISIONS.md's and FORMATS.md's Contents indexes list every `## ` entry,
    in order. An index nobody regenerates is worse than no index, because it
@@ -67,6 +67,11 @@ Eleven of them, all cheap enough to run first in ci.sh:
 11. DECISIONS.md's entry dates are non-decreasing and none is in the
    future. The date is half of every citation this repository makes, and
    22 references across ten files were written a day ahead once.
+12. Every row of FORMATS.md's format table is named in the list of what
+   it opens in docs/floppy-read-me.txt, the floppies' Read Me, by the
+   word READ_ME_FORMATS gives it; a row with no word there fails too.
+   That list is written for the user and nothing else would notice a
+   format missing from it.
 """
 
 import datetime
@@ -971,6 +976,58 @@ def selftest_dates():
     return caught
 
 
+# 12. The floppy Read Me's list of what MacExtract opens, against FORMATS.md's
+# table: each row's format, by a word the list must hold. A row this table
+# does not know fails too, so a format added to FORMATS.md is added here and
+# to docs/floppy-read-me.txt in the same commit.
+READ_ME_FORMATS = (
+    ("MacBinary", "MacBinary"), ("AppleSingle", "AppleSingle"),
+    ("BinHex 4", "BinHex"), ("SUMacC", "SUMacC .dl"),
+    ("BinHex before 4.0", ".hcx"), ("PackIt", "PackIt"),
+    ("Compact Pro (", "Compact Pro (.cpt)"), ("StuffIt classic", "StuffIt (.sit)"),
+    ("StuffIt 5", "5.x"), ("Zip |", "Zip (.zip)"), ("Gzip", "gzip"),
+    ("Unix compress", "Unix compress"), ("Tar", "tar (.tar)"),
+    ("MAR", "MAR (.mar"), ("LZ4", "LZ4"), ("Apple Backup", "Apple Backup"),
+    ("Apple Installer Tome", "Tomes"),
+    ("StuffIt segment", "split into parts by StuffIt"),
+    ("Zip segment", "spanned zips"), ("Compact Pro segment", "Compact Pro or DiskDoubler"),
+    ("DiskDoubler split", "or DiskDoubler, spanned"), ("Split file", ".001"),
+    ("DiskDoubler (", "DiskDoubler and MacCompress"), ("Now Compress", "Now Compress"),
+    ("ARC", "ARC (.arc)"), ("btoa", "btoa"), ("base64", "base64"),
+    ("MIME message", "MIME"), ("uuencode", "uuencode"), ("Alysis SuperDisk", "SuperDisk"),
+    ("StuffIt SpaceSaver", "SpaceSaver"), ("LZH / LHA", "LZH/LHA"),
+    ("AppleLink package", "AppleLink"), ("Private File", "Private File"))
+
+
+def check_read_me_formats(formats=None, read_me=None):
+    formats = formats if formats is not None else (ROOT / "FORMATS.md").read_text()
+    read_me = read_me if read_me is not None else (ROOT / "docs" / "floppy-read-me.txt").read_text()
+    lst = read_me.split("WHAT IT OPENS", 1)[-1]
+    lst = " ".join(lst.split())
+    rows = formats.split("| Format | Status |", 1)[1].split("\n\n", 1)[0].split("\n")[2:]
+    bad = []
+    for row in rows:
+        name = row.split("|")[1].strip()
+        hit = [w for k, w in READ_ME_FORMATS if (name + " |").startswith(k)]
+        if not hit:
+            bad.append(f"FORMATS.md's row {name!r} is not in check_docs' READ_ME_FORMATS: "
+                       f"name it in docs/floppy-read-me.txt's list and there")
+        elif hit[0] not in lst:
+            bad.append(f"docs/floppy-read-me.txt's list does not name {hit[0]!r} "
+                       f"(FORMATS.md's {name!r})")
+    return bad
+
+
+def selftest_read_me_formats():
+    """Drops one format from the list and adds a row to the table: both
+    must be reported."""
+    f = (ROOT / "FORMATS.md").read_text()
+    r = (ROOT / "docs" / "floppy-read-me.txt").read_text()
+    f2 = f.replace("| Format | Status | Methods | Oracle coverage | Peak RAM | 400 KB budget |\n|---|---|---|---|---|---|\n",
+                   "| Format | Status | Methods | Oracle coverage | Peak RAM | 400 KB budget |\n|---|---|---|---|---|---|\n| Zoo | extract |\n", 1)
+    return len(check_read_me_formats(f2, r.replace("PackIt", "Pack"))) - len(check_read_me_formats(f, r))
+
+
 def main():
     fix = "--fix" in sys.argv[1:]
     problems = (check_index(fix) + check_citations() + check_version() +
@@ -979,7 +1036,7 @@ def main():
                 check_doc_sizes() + check_smell_count() +
                 check_derived_figures() + check_grants() +
                 check_corpus_figures() + check_corpus_class() +
-                check_decision_dates())
+                check_decision_dates() + check_read_me_formats())
     if not selftest_grants():
         problems.append("check_docs: the grant selftest bent a table figure "
                         "and a prose one and one was not caught — it cannot fail, so it is not "
@@ -1004,6 +1061,11 @@ def main():
         problems.append("check_docs: the entry-date selftest bent two dates "
                         "and %d were caught — it cannot fail, so it is not "
                         "checking them" % caught)
+    caught = selftest_read_me_formats()
+    if caught != 2:
+        problems.append("check_docs: the Read Me formats selftest dropped one "
+                        "format and added one row and %d were caught — it "
+                        "cannot fail, so it is not checking them" % caught)
     for p in problems:
         print(p, file=sys.stderr)
     if problems:

@@ -244,13 +244,55 @@ def check_dist(stub):
             if cp.returncode or not dirid:
                 bad.append(f"dist/{img}: no Desktop file, or no helpers folder")
             else:
-                ent = D.desktop_appl(open(got_d, "rb").read())
-                want_e = D.desktop_appl(M.desktop(dirid[0]))
-                if ent != want_e:
-                    bad.append(f"dist/{img}: the Desktop file's APPL list is {ent}, not {want_e}")
+                # Whole: the APPL list and every bundle copy, which is
+                # what a Finder reads off a locked floppy (DECISIONS.md
+                # 2026-11-14, *the floppy that works locked*).
+                have = open(got_d, "rb").read()
+                want_d = M.desktop(M.volume_apps(
+                    open(os.path.join(ROOT, "dist", "MacExtract.bin"), "rb").read(),
+                    built, dirid[0]))
+                if D.macbin_split(have)[2] != D.macbin_split(want_d)[2]:
+                    bad.append(f"dist/{img}: the Desktop file is not the one make_helpers.py "
+                               f"builds (APPL {D.desktop_appl(have)}) — run tools/make_dist.sh")
             got = sorted(ls.stdout.split("\n")[:-1]) if not ls.returncode else None
             if got != names:
                 bad.append(f"dist/{img}: MacExtract Helpers holds {got}, not {names}")
+            bad += [f"dist/{img}: {x}" for x in check_layout(os.path.join(ROOT, "dist", img))]
+    mfs = os.path.join(ROOT, "dist", "MacExtract-400K.img")
+    got_d = os.path.join(ROOT, ".tmp", "check-DesktopMFS.bin")
+    r = subprocess.run([sys.executable, os.path.join(ROOT, "tools", "vmac", "mkmfs.py"),
+                        mfs, "--extract", "Desktop", got_d], capture_output=True)
+    want_d = M.desktop([(open(os.path.join(ROOT, "dist", "MacExtract.bin"), "rb").read(), 2)],
+                       appl=False)
+    if r.returncode or D.macbin_split(open(got_d, "rb").read())[2] != D.macbin_split(want_d)[2]:
+        bad.append("dist/MacExtract-400K.img: no Desktop file, or not the one make_helpers.py "
+                   "--mfs builds — run tools/make_dist.sh")
+    return bad
+
+
+def check_layout(img):
+    """Every file and folder on an HFS floppy inited and placed (fdFlags
+    0x0100, a location), and every folder's window rectangle set: a placed
+    folder with none bombed System 3.0's Finder, ID = 04, and the helpers
+    left to the Finder were stacked in one column (DECISIONS.md 2026-11-14,
+    *the floppy that works locked*). The Desktop file, invisible, and the
+    root, whose rectangle every Finder measured ignores, are not checked."""
+    sys.path.insert(0, os.path.join(ROOT, "tools", "vmac"))
+    import hfscat
+    bad = []
+    for r in hfscat.records(open(img, "rb").read()):
+        p = ":".join(x.decode("mac_roman") for x in r["path"])
+        if len(r["path"]) < 2 or r["path"][-1] == b"Desktop":
+            continue
+        rec = r["rec"]
+        if r.get("type") is not None:                   # a file: FInfo at +4
+            fl, v, h = struct.unpack(">Hhh", rec[12:18])
+        else:                                           # a folder: DInfo at +22
+            top, left, bottom, right, fl, v, h = struct.unpack(">hhhhHhh", rec[22:36])
+            if bottom <= top or right <= left:
+                bad.append(f"{p}: no window rectangle")
+        if not fl & 0x0100 or (v, h) == (0, 0):
+            bad.append(f"{p}: not placed (flags 0x{fl:04X}, at {v},{h})")
     return bad
 
 

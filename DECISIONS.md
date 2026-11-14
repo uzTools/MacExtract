@@ -621,6 +621,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-14 (the types nobody needed claimed) — OPEN_ITEMS' unclaimed types closed: `DDTM` claimed; `bzy `, `SITo`, `DDDA`, `Part` and `pBIN` read off real files and not archives; `PCFA`, `m@rc` and `pZIP` as a type have no file anywhere
 - 2026-11-14 (the floppy's Helpers on a row of their own) — v0.46.0 staged: on the release floppies the Helpers folder is placed on a second row, because the Finder put it beside MacExtract and their names overlapped on System 6.0.8
 - 2026-11-14 (the gray at an odd address) — v0.45.0's destination dialog bombed a Mac Plus with an address error: its gray `Pattern` lay at an odd offset in the dialog's image, and the ROM's `_PenPat` copies it by longs; aligned, for 0 B. Mini vMac raises no address error, so no tier could see it; `tools/vmac/oddaccess.py` builds one that logs them
+- 2026-11-14 (the floppy that works locked) — the release floppies write-protected: a Desktop file carrying every bundle as System 6.0.8's Finder files them, every icon placed, the helpers' window set, and a Read Me short enough for TeachText
 
 ---
 
@@ -20893,7 +20894,12 @@ unlocked, and the Finder no longer asks for the floppy back after
 Command-E; 6.0.8, the destination dialog opened on the locked MacExtract
 floppy with Extract dimmed, and Drive then Extract (or Eject and a
 writable floppy) finished it, onto the hard disk; since the same day it
-opens on the archive's floppy (*the layouts the release did not hold*). **Why 6.0.8's dialog is
+opens on the archive's floppy (*the layouts the release did not hold*).
+(CORRECTED 2026-11-14: these runs went through the dialog and looked at
+nothing else. Locked, the shipped floppies bombed System 3.0's Finder
+opening the helpers' folder, showed the helpers as a list of generic
+icons on 6.0.8, and the 400K was refused on 3.0 and 6.0.8 and listed
+nothing on 7.0.1 — *the floppy that works locked*.) **Why 6.0.8's dialog is
 there:** not where MacExtract points it. On a hard disk the dialog opens
 beside a double-clicked archive on 6.0.8 and 7.0.1 alike, with the
 shipped build (`Archives:M.sit` stamped `MExt`; measured 2026-11-04), so
@@ -26426,10 +26432,13 @@ floppy held MacExtract alone, so this is the first release it would show.
 
 **Fix.** `tools/make_dist.sh` gives the folder a location (v 66, h 104,
 the second row) and the inited flag, through `tools/vmac/hfscat.py`'s
-`patch`, on the 800K and 1.44 MB floppies. Only the folder: the Finder
-registers the bundle of an application it has not inited, so MacExtract
-and Read Me keep no position and are laid out by the Finder (seen: their
-row, the new icon drawn). The frame is README.md's first screenshot. **Not
+`patch`, on the 800K and 1.44 MB floppies. Only the folder, because "the
+Finder registers the bundle of an application it has not inited" — true
+of 7.0.1 alone; 3.0's and 6.0.8's Finders copy an inited application's
+bundle too (CORRECTED 2026-11-14). The folder placed with no window
+rectangle bombed System 3.0's Finder, ID = 04, on opening; every item is
+placed since (*the floppy that works locked*). The frame is README.md's
+first screenshot. **Not
 run** on System 7 or Mac OS 9, where the Finder lays out differently; the
 400K MFS floppy has no folders.
 
@@ -26492,3 +26501,100 @@ unchanged and the log is the only verdict.
 `Education.cpt.#1` on *"Parts missing."* without asking for the segment on
 *Sets 3* (OPEN_ITEMS.md, *A Compact Pro set opened without its last segment
 on a mounted disk*).
+
+## 2026-11-14 (the floppy that works locked) — the release floppies write-protected: a Desktop file carrying every bundle as System 6.0.8's Finder files them, every icon placed, the helpers' window set, and a Read Me short enough for TeachText
+
+**Asked by the maintainer**, after writing the staged v0.46.0 floppies with
+Disk Copy and locking them (a Mac Plus on 6.0.8): TeachText called the Read
+Me too large, the icons sat far apart, and the 18 helpers opened in one
+column. **Measured** on the staged images, locked
+(`tools/vmac/lockedfloppy.py`; 3.0 and 6.0.8 at 1 MB, the 400K on 3.0 at
+512Ke, 7.0.1 at 4 MB; TeachText 1.2 and SimpleText on the boot disks):
+
+| System | 800K and 1.44 MB | 400K (MFS) |
+|---|---|---|
+| 3.0 | opening the helpers' folder bombs, ID = 04 | refused: *"Please unlock the disk and try again. The desktop file couldn't be created."* |
+| 6.0.8 | the helpers as a name list of generic icons; Read Me: *"This document is too large to be opened by TeachText."* | refused, the same alert |
+| 7.0.1 | icons right; Read Me: *"…too large to be opened by SimpleText."* | the window lists 0 items |
+
+**The bomb is the folder's window rectangle**: placed and inited with
+`frRect` zero (*the floppy's Helpers on a row of their own*). The same
+image with only a rectangle set opens it.
+
+**What each Finder writes**, on a writable copy (the volume and the
+helpers' folder opened, the windows closed, the disk ejected):
+
+| Finder | 800K HFS | 400K MFS |
+|---|---|---|
+| 3.0 | `DeskTop`: `'STR '` 0, `'APPL'` 0, and each bundle with the application's own local IDs, one `ICN#` per distinct icon (MacExtract: 2 for 41 `FREF`s) | the same bundle form and an `'FOBJ'` 0 named for the volume; no `'APPL'` |
+| 6.0.8 | `Desktop`: `'STR '` 0, `'APPL'` 0 (attribute $04), each bundle renumbered 1…n in `FREF` order with one `ICN#` per `FREF`, the signature resource stamped `77231199` + the `BNDL`'s ID; TeachText's bundle too, for the Read Me | the same and an `'FOBJ'` 0; no `'APPL'` |
+| 7.0.1 | no `Desktop DB`: the same old-style `Desktop`, with `ics#`, `icl4`, `icl8`, `ics4` and `ics8` copies besides (331 KB) — for uninited files only; with every file inited, `'STR '` 0 alone | an empty resource file |
+
+3.0 and 6.0.8 copy an inited application's bundle; 7.0.1 does not. No
+Finder moved a placed file or folder on a writable copy; each rewrote only
+the root's own window record.
+
+**Design: one file, 6.0.8's form, for every System.**
+`companion/make_helpers.py --desktop` (`bundle_copy`) writes `'STR '` 0,
+`'APPL'` 0 and the 19 bundles; with the resource IDs normalised (the
+Finder's are random), it equals the file 6.0.8 wrote on the same floppy,
+bundle for bundle — all but TeachText's, which is not ours to copy. On the
+400K it is MacExtract's bundle alone, no `'APPL'` and no `'FOBJ'` (`--mfs`):
+3.0 and 6.0.8 mount and list it without one. **Read across Systems**
+(the 800K written by one Finder, then locked under the others): 3.0 and
+7.0.1 left our file byte for byte; 6.0.8 added TeachText's bundle and
+nothing else; each disk so written showed every icon and the helpers'
+grid under the other two — the one difference a Finder made, 7.0.1's root
+record (inited, view 0), opens the volume window on 6.0.8 as a name list.
+**One file serves 3.0, 6.0.8 and 7.0.1.**
+
+**Layout.** Every item inited and placed (`tools/make_dist.sh`): in the
+volume window MacExtract, Read Me and the helpers' folder on one row
+(h 20, 95, 175); the folder's window (110, 30)–(320, 428), icon view
+($0100, as Apple's 6.0.8 *System Tools* disk), the 18 alphabetical, six
+across from h 20, 62 by 56 apart. From h 10, 7.0.1 kept its horizontal
+scroll bar live, the thumb at the right, wider windows or not (440 and
+460 tried); from h 30 the thumb went to the left; from h 20 it is off. The
+400K: the same row through `mkmfs.py --place`. The volume window's own
+rectangle is ignored by all three Finders on these disks (set, it opened
+at the default size, which shows the row), so it is left alone.
+
+**The Read Me** is its own text, `docs/floppy-read-me.txt` (2,956 B as Mac
+text; 2,848 on the 400K), `'ttro'`/`'ttxt'` as on Apple's disks, without
+the 344-byte resource fork Apple's carries (a `'vers'` 2, the System's
+version). Largest document opened, one boot per size:
+
+| reader | opens | refuses |
+|---|---|---|
+| TeachText 1.2, 6.0.8, 1 MB | 32,000 B | 32,001 B |
+| SimpleText, 7.0.1, 4 MB | 31,500 B | 31,999 B |
+
+`tools/floppy_readme.py` refuses a text over 30,000 B, 1,500 under the
+lower; README.txt converted the same way (32,595 B) fails it. `dist/README.txt` is unchanged and is not on the disks.
+
+**Verified** on the rebuilt images, locked (each byte-identical after its
+run), a writable archive floppy beside them, on `tools/vmac/oddaccess.py`'s
+emulators (`mv-1M-ae`, `mv-4M-ae`; the 512Ke plain), which logged no odd
+access in any run. The helpers' column was moved 10 px after the hand-offs;
+the helpers' window was photographed again on the final images. The hand-off: `Pattern.sit` (`SIT!`/`SIT!`,
+`derived-ScrollbarPattern.sit`) double-clicked on the archive floppy, the
+StuffIt helper launched off the locked floppy, MacExtract's dialog on
+Archives, Return; on the 400K the archive carries MacExtract's creator. The
+output read back off the archive floppy equals the Linux CLI's, both forks
+(the resource header's reserved bytes masked, as `tools/vmac_check.py`):
+
+| image | System | volume window | helpers' window | Read Me | hand-off |
+|---|---|---|---|---|---|
+| 800K | 3.0, 1 MB | the row, every icon | 6 × 3, no scrolling | opens (TeachText 1.2) | extracted, equal |
+| 800K | 6.0.8, 1 MB | the row | 6 × 3, no scrolling | opens (TeachText 1.2) | extracted, equal |
+| 800K | 7.0.1, 4 MB | the row | 6 × 3, no scrolling | opens (SimpleText) | extracted, equal |
+| 1.44 MB | 6.0.8, 1 MB | the row | 6 × 3, no scrolling | — | extracted, equal |
+| 1.44 MB | 7.0.1, 4 MB | the row | 6 × 3, no scrolling | — | extracted, equal |
+| 400K | 3.0, 512Ke | the row | — | opens (TeachText 1.2) | extracted, equal |
+| 400K | 6.0.8, 1 MB | the row | — | opens (TeachText 1.2) | extracted, equal |
+| 400K | 7.0.1, 4 MB | 0 items | — | — | — |
+
+**What it cannot see.** A real drive; Mac OS 9; the 1.44 MB disk on 3.0;
+a locked 400K on 7.0.1, which lists nothing whatever its Desktop file
+(none, 7.0.1's own empty one, or ours) and lists all three unlocked — the
+400K is for a 512K.

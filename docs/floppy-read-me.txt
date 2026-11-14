@@ -1,0 +1,73 @@
+MacExtract
+
+MacExtract opens old Macintosh archives and gives back the files inside
+them as they were: both forks, type and creator, dates, and each icon in
+its place, so an extracted application simply runs. It runs on every
+Macintosh from System 3.0 to Mac OS 9, in 512K or more, with nothing else
+to install.
+
+USING IT
+
+MacExtract runs from this disk as it is. To keep it, drag it to your hard
+{HFS}disk, with the MacExtract Helpers folder.
+{MFS}disk.
+
+To open an archive, double-click it, or open MacExtract and choose Open
+from the File menu. MacExtract then asks where the files should go. That
+window opens in the archive's own folder, so Extract puts them next to
+it; Drive (Desktop on System 7) goes to another disk, and New makes a
+folder. Files can be written to a hard disk or an 800K disk, not to a
+400K one.
+
+{HFS}With no hard disk, eject this disk, put in the one with your archive and
+{HFS}double-click the archive. The Mac asks for each disk in turn.
+
+When it has finished, anything that had to change is listed: a name that
+was too long, or a file that could not be extracted. Save as Text keeps
+the list. MacExtract quits after each archive; open it again for the
+next one, or select several archives in the Finder and open them
+together.
+
+If an archive has a password, MacExtract asks for it, and asks again if
+it is wrong.
+
+For an archive in several parts, open the first part. The others are
+found in the same folder, or asked for: put in the disk that holds the
+part. Parts named .001, .002 or .z01, .z02 are found by their names, so
+keep the names they came with. Extract onto a different disk from the
+parts.
+
+THE MACEXTRACT HELPERS
+
+Each helper stands in for a program that made archives, such as StuffIt,
+Compact Pro or DiskDoubler, so that double-clicking one of its archives
+opens it in MacExtract.
+{HFS}Keep the MacExtract Helpers folder beside MacExtract. Once both are
+{HFS}on your hard disk, open the folder once so the Finder sees the helpers.
+{MFS}They are in MacExtract-Helpers.zip: open it with MacExtract and
+{MFS}extract it to your hard disk, beside MacExtract. That gives you the
+{MFS}MacExtract Helpers folder; open it once so the Finder sees the helpers.
+
+WHAT IT OPENS
+
+- StuffIt (.sit), classic and 5.x, StuffIt SpaceSaver, and self-extracting archives (.sea)
+- Compact Pro (.cpt)
+- BinHex (.hqx), and the older .hex, .hcx and SUMacC .dl
+- MacBinary (.bin), AppleSingle and AppleDouble
+- PackIt (.pit)
+- DiskDoubler and MacCompress
+- Now Compress
+- Alysis SuperDisk! (.X)
+- AppleLink packages (.pkg)
+- Private File (.pf)
+- Zip (.zip), gzip (.gz), tar (.tar) and Unix compress (.Z)
+- ARC (.arc) and LZH/LHA (.lzh, .lha)
+- uuencode (.uu), btoa, base64 and mail with attachments (MIME)
+- MAR (.mar, .mac) and LZ4 (.lz4)
+- Apple Backup disks, even with some missing
+- the Tomes on Apple's install disks, and the files Apple's Installer keeps compressed
+- archives split into parts by StuffIt, Compact Pro or DiskDoubler, spanned zips (.z01), pieces named .001, and mail sent in several messages
+
+Archives inside archives, such as .sit.hqx or .tar.Z, come out in one go.
+Anything else, StuffIt X, RAR and 7-Zip among them, is not opened:
+MacExtract says "Unknown format."

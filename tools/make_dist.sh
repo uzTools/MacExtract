@@ -11,9 +11,10 @@
 #                    has StuffIt Expander or BinHex, over a transfer that
 #                    carries only text.
 #   MacExtract-800K.img — an 800K HFS floppy image holding the application,
-#                    the helpers folder and the README as a SimpleText "Read
-#                    Me". Write it to a real 800K floppy, or mount it in Mini
-#                    vMac / Basilisk / SheepShaver.
+#                    the helpers folder and a TeachText "Read Me" written
+#                    for the floppy (docs/floppy-read-me.txt). Write it to
+#                    a real 800K floppy, or mount it in Mini vMac /
+#                    Basilisk / SheepShaver.
 #   MacExtract-1440K.img — the same volume at 1.44 MB, for a USB floppy drive,
 #                    which writes MFM only and so cannot make an 800K GCR disk;
 #                    a SuperDrive Mac mounts it (DECISIONS.md 2026-10-14,
@@ -633,17 +634,13 @@ License: 0BSD, except four decoders transcribed from XADMaster, libxad or
 macutils (LGPL-2.1-or-later) and zlib's inflate (the zlib licence), all
 listed in NOTICE. See LICENSE and NOTICE in the source tree.
 TXT
-# The README on every disk as a SimpleText document: Mac Roman, CR,
-# 'TEXT'/'ttxt' (the maintainer, 2026-11-07).
-python3 - dist/README.txt "$HFS_TMP/Read Me" <<'PY'
-import sys
-t = open(sys.argv[1], encoding='utf-8').read().replace('\n', '\r').encode('mac_roman')
-# TextEdit, which TeachText and SimpleText are built on, holds 32,767
-# characters at most (Inside Macintosh I; not measured on a Mac here).
-if len(t) > 32767:
-    sys.exit(f"make_dist: README.txt is {len(t)} B as Mac text, over TextEdit's 32,767")
-open(sys.argv[2], 'wb').write(t)
-PY
+# Every disk's "Read Me" is its own short text, docs/floppy-read-me.txt, not
+# README.txt (the maintainer, 2026-11-14: TeachText 1.2 refused README.txt
+# on a Mac Plus); tools/floppy_readme.py converts it and refuses one over
+# what TeachText opens. Typed 'ttro'/'ttxt', TeachText's read-only document,
+# as the Read Me on System 6.0.8's own disks.
+python3 tools/floppy_readme.py docs/floppy-read-me.txt --disk HFS -o "$HFS_TMP/Read Me"
+python3 tools/floppy_readme.py docs/floppy-read-me.txt --disk MFS -o "$HFS_TMP/Read Me MFS"
 
 cp "$SRC/MacExtract.bin" dist/MacExtract.bin
 cp "$SRC/MacExtract.dsk" dist/MacExtract-800K.img
@@ -686,7 +683,7 @@ python3 companion/make_helpers.py build/stub/Stub.bin -o "$HFS_TMP/helpers" \
 for img in dist/MacExtract-800K.img "$IMG"; do
     HOME=$HFS_TMP hmount "$img" >/dev/null
     HOME=$HFS_TMP hcopy -r "$HFS_TMP/Read Me" ":Read Me"
-    HOME=$HFS_TMP hattrib -t TEXT -c ttxt ":Read Me"
+    HOME=$HFS_TMP hattrib -t ttro -c ttxt ":Read Me"
     HOME=$HFS_TMP hmkdir ":MacExtract Helpers"
     for h in "$HFS_TMP"/helpers/*.bin; do
         HOME=$HFS_TMP hcopy -m "$h" ":MacExtract Helpers:$(basename "$h" .bin)"
@@ -695,22 +692,44 @@ for img in dist/MacExtract-800K.img "$IMG"; do
     # no hard disk finds them on this floppy with it ejected (DECISIONS.md
     # 2026-11-04, *the floppy that is ready*).
     DIRID=$(HOME=$HFS_TMP hls -i -a ":" | awk '$2 == "MacExtract" && $3 == "Helpers" {print $1}')
-    python3 companion/make_helpers.py --desktop "$HFS_TMP/Desktop.bin" --dirid "$DIRID"
+    python3 companion/make_helpers.py build/stub/Stub.bin --desktop "$HFS_TMP/Desktop.bin" \
+        --app dist/MacExtract.bin --dirid "$DIRID"
     HOME=$HFS_TMP hcopy -m "$HFS_TMP/Desktop.bin" ":Desktop"
     HOME=$HFS_TMP humount >/dev/null
-    # The Helpers folder on a row of its own: placed by the Finder, it sat
-    # beside MacExtract and their names overlapped on System 6.0.8. Only
-    # the folder is placed (inited, 0x0100, and a location): an inited
-    # application's bundle is not registered, so MacExtract and the Read Me
-    # are left to the Finder. Seen on System 6.0.8, 2026-11-14.
+    # Every icon placed and every window set (DECISIONS.md 2026-11-14, *the
+    # floppy that works locked*): uninited, the Finder stacked the 18
+    # helpers in one column (the maintainer's Mac Plus) and ran "MacExtract
+    # Helpers" into "MacExtract" (6.0.8); an inited folder with no window
+    # rectangle bombed System 3.0's Finder, ID = 04, on opening (measured).
+    # Inited applications are fine: their bundles are in the Desktop file.
     python3 - "$img" <<'PY'
 import struct, sys
 sys.path.insert(0, "tools/vmac")
 import hfscat
-path = (b"MacExtract", b"MacExtract Helpers")
-# DInfo at +22 of a cdrDirRec: frFlags +8, frLocation (v, h) +10 (hfscat.py)
-hfscat.patch(sys.argv[1], path, 22 + 8, struct.pack(">H", 0x0100))
-hfscat.patch(sys.argv[1], path, 22 + 10, struct.pack(">hh", 66, 104))
+img = sys.argv[1]
+V, H = b"MacExtract", b"MacExtract Helpers"
+INITED = 0x0100
+# DInfo at +22 of a cdrDirRec: frRect (top, left, bottom, right, global)
+# +0, frFlags +8, frLocation (v, h) +10, frView +14; FInfo at +4 of a
+# cdrFilRec: fdFlags +8, fdLocation +10 (hfscat.py). frView 0x0100 is
+# icon view, as on Apple's System 6.0.8 "System Tools" disk.
+def folder(path, rect, at=None):
+    hfscat.patch(img, path, 22, struct.pack(">hhhh", *rect))
+    hfscat.patch(img, path, 22 + 14, struct.pack(">H", 0x0100))
+    if at:
+        hfscat.patch(img, path, 22 + 8, struct.pack(">H", INITED))
+        hfscat.patch(img, path, 22 + 10, struct.pack(">hh", *at))
+def place(path, at):
+    rec = [r for r in hfscat.records(open(img, "rb").read()) if r["path"] == path][0]
+    hfscat.patch(img, path, 4 + 8, struct.pack(">H", rec["flags"] | INITED))
+    hfscat.patch(img, path, 4 + 10, struct.pack(">hh", *at))
+place((V, b"MacExtract"), (10, 20))
+place((V, b"Read Me"), (10, 95))
+folder((V, H), (110, 30, 320, 428), at=(10, 175))
+names = sorted((r["path"][2] for r in hfscat.records(open(img, "rb").read())
+                if len(r["path"]) == 3 and r["path"][1] == H), key=bytes.lower)
+for i, n in enumerate(names):          # six across, alphabetical
+    place((V, H, n), (10 + 56 * (i // 6), 20 + 62 * (i % 6)))
 PY
 done
 
@@ -719,9 +738,18 @@ done
 # typed 'ZIP ' with MacExtract's creator to open in it (the maintainer,
 # 2026-11-06; MANUAL_TESTS.md §6).
 MFS=dist/MacExtract-400K.img
+# Its Desktop file carries MacExtract's bundle and no 'APPL' list, as the
+# Finders write one on MFS: without one, a locked 400K is refused on 3.0
+# and 6.0.8 (DECISIONS.md 2026-11-14, *the floppy that works locked*;
+# 7.0.1 lists a locked 400K empty with or without it).
+python3 companion/make_helpers.py build/stub/Stub.bin --desktop "$HFS_TMP/DesktopMFS.bin" \
+    --app dist/MacExtract.bin --mfs
 python3 tools/vmac/mkmfs.py "$MFS" --name MacExtract dist/MacExtract.bin \
+    "$HFS_TMP/DesktopMFS.bin:Desktop" \
     --data dist/MacExtract-Helpers.zip MacExtract-Helpers.zip "ZIP MExt" \
-    --data "$HFS_TMP/Read Me" "Read Me" "TEXTttxt" >/dev/null
+    --data "$HFS_TMP/Read Me MFS" "Read Me" "ttrottxt" \
+    --place MacExtract 10 20 --place "Read Me" 10 95 \
+    --place MacExtract-Helpers.zip 10 175 >/dev/null
 
 # Each floppy again as a Disk Copy 4.2 image.
 for k in 800K 1440K 400K; do
@@ -751,7 +779,7 @@ for img in dist/MacExtract-800K.img "$IMG"; do
 import sys
 r = open(sys.argv[1], 'rb').read()
 dl = int.from_bytes(r[83:87], 'big')
-ok = r[65:73] == b'TEXTttxt' and r[128:128 + dl] == open(sys.argv[2], 'rb').read()
+ok = r[65:73] == b'ttrottxt' and r[128:128 + dl] == open(sys.argv[2], 'rb').read()
 print(f"make_dist: {sys.argv[3]} Read Me: {r[65:73].decode('mac_roman')!r}, "
       f"{dl} B, {'identical' if ok else 'DIFFERENT'}")
 sys.exit(0 if ok else 1)
@@ -775,7 +803,7 @@ done
 python3 tools/vmac/mkmfs.py "$MFS" --extract MacExtract "$HFS_TMP/roundtrip.bin" >/dev/null
 python3 tools/vmac/mkmfs.py "$MFS" --extract MacExtract-Helpers.zip "$HFS_TMP/zip.bin" >/dev/null
 python3 tools/vmac/mkmfs.py "$MFS" --extract "Read Me" "$HFS_TMP/readme.bin" >/dev/null
-python3 - "$HFS_TMP/roundtrip.bin" "$HFS_TMP/zip.bin" "$MFS" "$HFS_TMP/readme.bin" "$HFS_TMP/Read Me" <<'PY'
+python3 - "$HFS_TMP/roundtrip.bin" "$HFS_TMP/zip.bin" "$MFS" "$HFS_TMP/readme.bin" "$HFS_TMP/Read Me MFS" <<'PY'
 import sys
 a = open(sys.argv[1], 'rb').read()
 b = open('dist/MacExtract.bin', 'rb').read()
@@ -788,7 +816,7 @@ flags = (a[73] << 8) | a[101]
 zl = int.from_bytes(z[83:87], 'big')
 zsame = z[65:73] == b'ZIP MExt' and z[128:128 + zl] == want
 dl = int.from_bytes(r[83:87], 'big')
-rsame = r[65:73] == b'TEXTttxt' and r[128:128 + dl] == open(sys.argv[5], 'rb').read()
+rsame = r[65:73] == b'ttrottxt' and r[128:128 + dl] == open(sys.argv[5], 'rb').read()
 print(f"make_dist: {sys.argv[3]} round-trip: {rl} B resource fork, "
       f"{'identical' if same else 'DIFFERENT'} to the MacBinary, "
       f"Finder flags 0x{flags:04X}; helpers zip {z[65:73].decode('mac_roman')!r}, "

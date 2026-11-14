@@ -2697,14 +2697,20 @@ local icon 0, `'open'` 128 listing the types it claims that MacExtract's own bun
 `companion/helpers.tsv`, each read the same way for its own creator and
 types; `dist/MacExtract-Helpers.zip` byte for byte the zip this tree
 writes (it is reproducible; one changed byte fails, shown 2026-11-04);
-and both disk images' `MacExtract Helpers` folders holding those names,
-and their `Desktop` files listing MacExtract and every helper in that
-folder (a disk without one fails, shown 2026-11-04), when hfsutils is
-there.
+and both HFS disk images' `MacExtract Helpers` folders holding those
+names, and their `Desktop` files byte for byte the resource fork
+`make_helpers.py --desktop` writes — the `'APPL'` list and every bundle
+copy (a disk without one fails, shown 2026-11-04) — when hfsutils is
+there; the 400K's `Desktop` the same way against `--mfs`, read with
+`mkmfs.py`; and every file and folder on the HFS disks inited and placed,
+every folder with a window rectangle (the v0.46.0 staged images fail it,
+20 items unplaced and the Helpers folder without one, shown 2026-11-14;
+DECISIONS.md 2026-11-14, *the floppy that works locked*).
 `--file X` checks a helper already stamped. Shown able to fail on each property (DECISIONS.md 2026-11-03,
 *the gate a helper commit has*; the `'open'` absent or listing a type, 2026-11-13; the DiskDoubler helper stamped with an empty `'open'`, the same day). **It cannot see** whether a Finder
-accepts the bundle or draws the icon, or whether a hand-off to MacExtract
-arrives: those are emulator runs (`tools/vmac/README.md`).
+accepts the bundle or draws the icon, whether a placed icon overlaps its
+neighbour's name, or whether a hand-off to MacExtract arrives: those are
+emulator runs (`tools/vmac/README.md`, `lockedfloppy.py`).
 
 ## The three Macintosh configurations (`ci.sh` variants 4, 4b, 4c, 4d)
 

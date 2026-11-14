@@ -1167,6 +1167,17 @@ route, and an item naming the wrong obstacle.
   built and probed before it landed** (*the layouts the release did not
   hold*). A free-memory total cannot say which blocks are in the heap;
   check the block.
+- **"The Finder does not register an inited application's bundle, so the
+  floppy's MacExtract and Read Me are left unplaced"** — DECISIONS.md
+  2026-11-14, *the floppy's Helpers on a row of their own*. **Withdrawn the
+  same day**: true of 7.0.1 alone; 3.0's and 6.0.8's Finders copied the
+  bundles of a floppy whose every file was inited. **Cost: the staged
+  v0.46.0 floppies** — the 18 helpers left to the Finder, stacked in one
+  column on the maintainer's Mac Plus, and the one item placed, the
+  helpers' folder, given no window rectangle, which bombs System 3.0's
+  Finder, ID = 04, when it is opened; no run had opened it on 3.0
+  (*the floppy that works locked*). A reason measured on one System is a
+  claim about that System.
 
 ### Corrected figures and superseded write-ups
 

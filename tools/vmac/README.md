@@ -2635,6 +2635,33 @@ nothing*. **What it cannot see:** System 7's
 is read off the icons); and whether StuffIt OPENED an archive beyond the frame
 showing its window.
 
+### A floppy as a write-protected drive reads it — `lockedfloppy.py`
+
+    lockedfloppy.py dist/MacExtract-800K.img --system Sys30.img --emu mv-1M \
+        -o DIR --steps "settle:desk dclick:472,112 wait:10 shot:vol"
+    lockedfloppy.py IMG rw:ARCHIVES.img --save-all DIR/out ...   # one locked, one not
+    lockedfloppy.py IMG --writable --save DIR/after.img ...       # what the Finder writes
+
+Boots a system with the images in the drives after it, each a copy; a
+locked one is a read-only file, which Mini vMac inserts as a locked disk
+(the lock shows in the window header), and its SHA-256 after the run is
+printed beside the original's. Steps are clicks, keys and screenshots in
+Mac-screen coordinates; the frames are the result. The release floppies'
+rows are DECISIONS.md 2026-11-14, *the floppy that works locked*.
+
+- **Keep windows off the disk icon before an eject.** A window over it
+  takes the eject click, the emulator is stopped with the Desktop file
+  unflushed, and 6.0.8's came back with its resource map cut short. System
+  3.0's Finder ignores Command-W; a close box clicked 4 px from its centre
+  was missed on 3.0 and 6.0.8. Read the `ejected` frame before the dump.
+- **A test disk with no Desktop file cannot be locked**: 3.0 and 6.0.8
+  refuse it ("The desktop file couldn't be created"). Run it `--writable`.
+- **A Return into an open read-only document** raises "You cannot modify
+  this document" and swallows the next click; boot once per document.
+- **What it cannot see:** a real drive (Mini vMac reports the lock as the
+  write-protect tab does, nothing more); what the Finder keeps in memory
+  and does not draw; and a second insertion of the same disk.
+
 ### Several archives opened at once — `relaunch.py`
 
     relaunch.py --app build/mac-interactive/MacExtract.bin --expect both --folder-at 115,107

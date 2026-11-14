@@ -67,6 +67,7 @@ class MacFile:
         self.flags, self.data, self.rsrc = flags, data, rsrc
         self.crdat = crdat or mactime()
         self.mddat = mddat or self.crdat
+        self.at = None          # (v, h) from --place, else build()'s row
 
     @classmethod
     def from_macbinary(cls, path, name=None):
@@ -164,6 +165,8 @@ def build(files, volname, bootblocks=None, geom=G400):
         # icons, three across: at (0, 0) every one lands on the first, and
         # 100 apart a long name runs into its neighbour's (System 3.0).
         v, h = 20 + 70 * ((fnum - 1) // 3), 40 + 150 * ((fnum - 1) % 3)
+        if f.at:
+            v, h = f.at
         e += f.type + f.creator + struct.pack(">HhhH", f.flags, v, h, 0)
         e += struct.pack(">IHIIHII", fnum, dstart, len(f.data), dphys,
                          rstart, len(f.rsrc), rphys)
@@ -324,6 +327,11 @@ def main():
     ap.add_argument("--extract", metavar="NAME",
                     help="pull NAME out of the image as MacBinary; the "
                          "remaining positional argument is the output file")
+    ap.add_argument("--place", nargs=3, action="append", default=[],
+                    metavar=("MACNAME", "V", "H"),
+                    help="the icon position of MACNAME in the disk's window "
+                         "(fdLocation, v then h) instead of build()'s row; "
+                         "sets its inited bit")
     ap.add_argument("--list", action="store_true", help="read one back")
     a = ap.parse_args()
     if a.list:
@@ -363,6 +371,12 @@ def main():
         # note in mac/macextract_mac.c).
         files.append(MacFile(macname, tc[:4], tc[4:], 0x0100,
                              open(path, "rb").read(), b""))
+    for macname, v, h in a.place:
+        hit = [f for f in files if f.name == macname]
+        if len(hit) != 1:
+            raise SystemExit(f"mkmfs: --place {macname!r}: no such file")
+        hit[0].at = (int(v), int(h))
+        hit[0].flags |= 0x0100      # inited, or the Finder places it itself
     open(a.image, "wb").write(build(files, a.name, boot))
     print(f"mkmfs: wrote {a.image} — {len(files)} file(s), volume {a.name!r}")
     return 0
