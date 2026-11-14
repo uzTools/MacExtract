@@ -622,6 +622,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-14 (the floppy's Helpers on a row of their own) — v0.46.0 staged: on the release floppies the Helpers folder is placed on a second row, because the Finder put it beside MacExtract and their names overlapped on System 6.0.8
 - 2026-11-14 (the gray at an odd address) — v0.45.0's destination dialog bombed a Mac Plus with an address error: its gray `Pattern` lay at an odd offset in the dialog's image, and the ROM's `_PenPat` copies it by longs; aligned, for 0 B. Mini vMac raises no address error, so no tier could see it; `tools/vmac/oddaccess.py` builds one that logs them
 - 2026-11-14 (the floppy that works locked) — the release floppies write-protected: a Desktop file carrying every bundle as System 6.0.8's Finder files them, every icon placed, the helpers' window set, and a Read Me short enough for TeachText
+- 2026-11-14 (each format's own program) — MacExtract timed against the program that made or opened each format, on one Mac Plus: faster on 9 of 18 pairs, from 7.9x against MacLHa to 0.14x against UUTool; StuffIt 5, deflate and gzip not timed
 
 ---
 
@@ -26598,3 +26599,61 @@ output read back off the archive floppy equals the Linux CLI's, both forks
 a locked 400K on 7.0.1, which lists nothing whatever its Desktop file
 (none, 7.0.1's own empty one, or ours) and lists all three unlocked — the
 400K is for a 512K.
+
+## 2026-11-14 (each format's own program) — MacExtract timed against the program that made or opened each format, on one Mac Plus: faster on 9 of 18 pairs, from 7.9x against MacLHa to 0.14x against UUTool; StuffIt 5, deflate and gzip not timed
+
+**Asked for.** The maintainer: *"the speed difference for each method
+against the reference Mac software (Expander, MacZip, Compact Pro...)"*.
+README.md's table compared one program, StuffIt Expander 4.0.2, on three
+formats.
+
+**Method.** `tools/vmac/refspeed.py` extends `expander.py`'s comparison to
+any program: each is the startup application of its own copy of the stock
+System 6.0.8 volume, the archive beside it, driven to the one keystroke or
+click that starts the work, and timed by `macclock.py` on `mv-4M-1x`, as the
+2026-10-19 table was. Each drive was worked out at all-out speed with
+`drive.py`, frame by frame, and checked on the 1x run's own frames. Every
+run is graded against `macextract x` by both forks' contents, so a program
+that wrote the wrong files, or nothing, is not a time: Expander on
+`sitopt-wild-DNAnalyze.sit` (an Optimizer it refuses, 2.4 s) and UnZip
+2.0.1 (nothing written) were thrown out that way.
+
+**One fixture per method, the largest the corpus has** for the method, so
+the work dominates the dialogs; for a format whose program removes one layer
+only (UUTool), a subject with nothing inside it, so both do the same work.
+
+**Results** (FORMATS.md, *Each format's own program, on the same Mac
+Plus*), measured: ours faster against PackIt III (6.5x), MacLHa 2.00
+(7.9x), UnZip 1.01 (1.5–2.1x on Shrink, Implode and Reduce), and Expander on
+Compact Pro (2.1x), BinHex (2.0x) and StuffIt's LZW (1.07x); slower than
+Expander on StuffIt's other five methods (0.20x on fixed Huffman to 0.92x
+on MW), Compact Pro 1.51 (0.61x), DD Expand 3.7.7 (0.31x), tar 4.0b (0.81x)
+and UUTool 2.3.2 (0.14x).
+
+**What the losses point at, hypotheses, unmeasured here**: the uuencode
+decoder costs 28.7 M x86 instructions on the 200 KB subject (callgrind,
+`-nr` 27.8 M, so not the sniffer), and StuffIt method 6's engine took 862 ticks of an earlier build
+(FORMATS.md, *Inlining the shared readers*) of the 979 the shipped
+application takes here;
+where UUTool's and Expander's time goes is not known. None of this is a
+plan.
+
+**The fixtures that did not serve.** `uu-wild-terrainman.uu`, the only
+large uuencode fixture, is a cut posting (FORMATS.md, *uuencode: three
+alphabets, two of them not the standard one*): its last entry fails in ours and in Expander, and UUTool's
+decode of it differs from the engine's (not investigated); a uuencoded
+200,000 B subject made for this replaced it.
+
+**Not timed.** StuffIt 5: Expander 5.5 needs System 7.1.1, and this Plus
+tier has 6.0.8 and 7.0.1. Deflate zip: UnZip 2.0.1 on 6.0.8 raises
+*"Printing operations are not possible until you have selected a Printer"*
+on opening an archive and closes it once a volume has 3 or 12 MB free; with
+23 MB free it opens, shows the comment and writes nothing on Extract. UnZip
+5.0p1's console printed the comment and wrote nothing. MacGzip 1.1.3 needs
+System 7 and was not driven. MacTar 68k stops on 6.0.8 with "out of memory"
+(tar 4.0b was used); suntar 1.3.1's drive was explored and never run at 1x.
+Each is a session's work, not a blocker.
+
+**Cost**: about nine hours of one emulator, half of it queued behind other
+agents' runs; a stopped earlier session's runs were reused where its JSON
+graded both forks and its drive's frames showed the work (ten pairs).

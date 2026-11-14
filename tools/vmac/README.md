@@ -204,6 +204,7 @@ back **38/69** on 2026-09-05, every "failure" a missing oracle.
 | `sitcomment.py` | StuffIt 5's archive flag byte, bit 5 |
 | `expander.py` | **the yardstick**: StuffIt Expander 4.0.2 against this application, timed |
 | `macclock.py` | **the stopwatch** `expander.py` times with; `clockcal/` is its known duration |
+| `refspeed.py` | **each format's own program** against this application, timed and graded; the drives in `refspeed_progs.py` |
 | `sitmeta.py` | which header bytes become Finder info, read back with `hfscat.py`; `ddmeta.py`, `nowmeta.py`, `sdmeta.py` are its siblings |
 | `cptexp.py`, `sitexp.py` | Expander 4.0.2 over the Compact Pro / StuffIt corpus, both forks against the record (TESTING.md); one boot per archive; `sitexp.py --offset`/`--limit` keeps a run under two hours. `touch .tmp/emu-pause` holds either between archives for another agent's emulator run; `rm` resumes |
 | `hfscat.py` | every catalog record on an HFS image, whole; `patch()` plants values before a boot |
@@ -1409,6 +1410,39 @@ read one poll interval whatever happened; the `on_disk_*` lists observe.
 on producing files, never on their bytes). And anything outside the four
 families 4.0.2 opens by itself — the rest need DropStuff with Expander
 Enhancer, System 7 and not free.
+
+## Each format's own program — `refspeed.py`
+
+`expander.py`'s comparison for every format whose own Macintosh program
+runs here: Compact Pro, PackIt III, tar, MacLHa, DD Expand, UUTool and
+UnZip, and Expander 4.0.2 again. Each program is booted alone as the
+startup application of a stock volume with the archive on it, driven to
+the one keystroke or click that starts the work, and timed with
+`macclock.py` exactly as `expander.py` times. Results: FORMATS.md, *Each
+format's own program, on the same Mac Plus*.
+
+    tools/vmac/refspeed.py --list
+    tools/vmac/refspeed.py --ref cpt151 --repeat 1 --json t.json FIXTURE
+    tools/vmac/refspeed.py --ref ours --repeat 1 --json t.json FIXTURE
+    tools/vmac/refspeed.py --ref unzip101 --free 3 ...   # both of the pair
+
+- **The programs are MacBinary files in `$UNC_VMAC_HOME/speed/`** (or the
+  `specimens/` copies the other harnesses already use), taken out of the
+  corpus or downloaded; each one's origin is the comment above its drive.
+- **Every run is graded**: what it left on the volume, both forks, against
+  `macextract x` for the same archive (`-nr` for a program that removes
+  one layer only). A run that wrote the wrong files is reported, not timed.
+- **A drive is measured, not guessed**: each was worked out at all-out
+  speed with `drive.py` stepping it, then checked on the 1x
+  run's `*-selected.png`, `*-2b-started.png` and `*-3-finished.png`.
+- **UnZip skips every file "no space on volume" on the stock 23 MB-free
+  volume**; `--free 3` leaves 3 MB, and both programs of a pair run on it.
+- **The gate**: no `ci.sh`, no other emulator for 5 minutes, then beside
+  one at most; `.tmp/emu-pause` holds it.
+
+**What it cannot see**: everything `macclock.py` cannot (above), work a
+program does without drawing for longer than `--quiet`, and names — the
+grade is by fork contents.
 
 ## Finder info, read back — `sitmeta.py` and its three siblings
 

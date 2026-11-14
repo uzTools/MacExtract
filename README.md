@@ -119,16 +119,27 @@ reading the programs' code).
 \*\* Ten things StuffIt Deluxe 2.0 itself wrote: five Optimizers and five
 ciphers, each checked against an archive 2.0.1 made.
 
-**Speed**, both on the same 7 MHz Mac Plus, same archives, same disk:
+**Speed**, against each format's usual Macintosh program, on the same 7 MHz
+Mac Plus, same archive, same disk. Faster in bold:
 
-| Archive | MacExtract | Expander 4.0.2 |
+| Archive | MacExtract | Its own program |
 |---|---|---|
-| A few KB of StuffIt | 2 s | 2 s |
-| 280 KB StuffIt | **52 s** | 54 s |
-| 250 KB Compact Pro | **79 s** | 155 s |
-| 300 KB BinHex with a StuffIt archive inside | **224 s** | 424 s |
+| 270 KB StuffIt, LZW | **54 s** | 58 s, StuffIt Expander 4.0.2 |
+| 220 KB StuffIt, LZ+Huffman | 44 s | **24 s**, Expander |
+| StuffIt's four rarer methods, 14–210 KB | 6–109 s | **3–86 s**, Expander |
+| 250 KB Compact Pro | 75 s | **46 s**, Compact Pro 1.51 (Expander: 155 s) |
+| 300 KB BinHex with a StuffIt archive inside | **3½ min** | 7 min, Expander |
+| 300 KB MacBinary | 2 s | 2 s, Expander |
+| 60 KB PackIt | **4 s** | 27 s, PackIt III |
+| 170 KB LHA | **51 s** | 7 min, MacLHa 2.00 |
+| 190 KB DiskDoubler | 30 s | **10 s**, DD Expand 3.7.7 |
+| 170 KB zip (the old PKZIP 1 methods) | **56 s** | 86 s, UnZip 1.01 |
+| 290 KB tar | 9 s | **7 s**, tar 4.0b |
+| 280 KB uuencode | 66 s | **9 s**, UUTool 2.3.2 |
 
-The Deluxes do not run on a Mac Plus. Details in [FORMATS.md](FORMATS.md).
+Not timed: StuffIt 5, today's zip and gzip, whose programs need System 7
+or would not run here. The Deluxes do not run on a Mac Plus. Every figure
+in [FORMATS.md](FORMATS.md).
 
 ## What you need, and how long you will wait
 

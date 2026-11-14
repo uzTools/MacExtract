@@ -6788,6 +6788,72 @@ create, `SetEOF`, close, `FlushVol` and catalog work together, about 15
 ticks an entry; the read-back's 731 are outside the total. Which of those
 calls the 80 s is, is not measured.
 
+### Each format's own program, on the same Mac Plus (2026-11-14)
+
+Measured 2026-11-14 with `tools/vmac/refspeed.py`: MacExtract
+(`dist/MacExtract.bin` at 901552ea, v0.46.0 as staged; 983a4c76 since
+changed only the destination dialog's overlay, not re-timed) and the program that wrote or was the
+expander for each format, each booted alone on Mini vMac `mv-4M-1x` (7 MHz,
+4 MB, System 6.0.8), same archive on the same volume, timed as *Timed on the
+same Mac Plus* above (emulated ticks ÷ 60.15, from the action that starts
+the work to the last screen change). Every row is graded: both programs'
+files, both forks, equal to `macextract x` (the exceptions are under the
+table). Ratio is the program's time ÷ ours; above 1, ours is faster.
+
+| Fixture | Format, method | In | MacExtract | Program | Its time | Ratio |
+|---|---|---|---|---|---|---|
+| `derived-Mews_1.4.1.sit` | StuffIt, 2 LZW | 270 KB | **53.8 s** | StuffIt Expander 4.0.2 | 57.7 s | 1.07x |
+| `derived-Mystic_8-Ball.sit` | StuffIt, 13 LZ+Huffman | 219 KB | 44.5 s | Expander 4.0.2 | **24.1 s** | 0.54x |
+| `derived-FastEnvelope.sit` | StuffIt, 3 Huffman | 213 KB | 47.1 s | Expander 4.0.2 | **42.4 s** | 0.90x |
+| `derived-BitMap11.sit` | StuffIt, 5 LZAH | 125 KB | 109.4 s | Expander 4.0.2 | **86.5 s** | 0.79x |
+| `derived-INITLoader.sit` | StuffIt, 6 fixed Huffman | 29 KB | 16.3 s | Expander 4.0.2 | **3.3 s** | 0.20x |
+| `derived-DSKDUP.sit` | StuffIt, 8 MW | 14 KB | 6.0 s | Expander 4.0.2 | **5.5 s** | 0.92x |
+| `derived-FirstClass_Demo.cpt` | Compact Pro, LZH+RLE | 249 KB | 75.3 s | Compact Pro 1.51 | **46.3 s** | 0.61x |
+| | | | | Expander 4.0.2 | 155.2 s | 2.06x |
+| `macburger-helper.hqx` | BinHex → StuffIt (312 entries) | 307 KB | **214.7 s** | Expander 4.0.2 | 423.7 s | 1.97x |
+| `kermitut9test.bin` | MacBinary | 304 KB | **2.3 s** | Expander 4.0.2 | 2.4–2.5 s | 1.07x |
+| `derived-PackIt.pit` | PackIt, stored | 62 KB | **4.1 s** | PackIt III 1.3 | 26.6–26.7 s | 6.5x |
+| `derived-PCCTS.tar` | tar (49 files) | 287 KB | 8.7 s | tar 4.0b | **7.0 s** | 0.81x |
+| `aminet-lha_68k.lha` | LHA, -lh5- | 168 KB | **51.4 s** | MacLHa 2.00 | 405.0 s | 7.9x |
+| `im2-DD3.7.7AuxFiles.dd` | DiskDoubler `DDAR` | 187 KB | 30.4 s | DD Expand 3.7.7 | **9.6 s** | 0.31x |
+| `speed-uu-200k.uu` ✱ | uuencode | 276 KB | 66.3 s | UUTool 2.3.2 | **9.1 s** | 0.14x |
+| `shrink-wild-titanic.zip` | zip, Shrink | 173 KB | **56.2 s** | UnZip 1.01 | 86.1 s | 1.53x |
+| `4alnch11.zip` | zip, Implode | 42 KB | **18.4 s** | UnZip 1.01 | 38.1 s | 2.07x |
+| `reduce-wild-america.zip` | zip, Reduce 3 | 26 KB | **5.8 s** | UnZip 1.01 | 10.9 s | 1.87x |
+
+**Repeats.** Both programs ran twice on the StuffIt LZW, method 13 and
+Huffman rows, Compact Pro, BinHex, MacBinary, PackIt, tar and LHA, and each
+pair of runs agrees within two ticks; the other rows ran once. Host ÷ Mac
+seconds 0.997–1.003 on every run.
+
+**Faster on 9 of 18 pairs, slower on 9.** Expander beats ours on five of
+StuffIt's six methods (two of them, Huffman and MW, by under 11 %); ours
+wins on LZW. Compact Pro 1.51, DD Expand, UUTool and tar 4.0b are faster
+than ours; PackIt III, MacLHa, UnZip 1.01 on all three of its methods, and
+Expander on Compact Pro and BinHex are slower. MacBinary is a tie.
+
+**What the grade excepted**: Expander leaves `macburger-helper.hqx`'s inner
+`MacburgerHelper.sit` on the volume (one data fork more than the engine
+writes); UnZip ran on a volume with 3 MB free (`--free 3`, both programs),
+as it writes nothing with 23 MB free.
+
+✱ **A uuencoded file made for this table**: the first 200,000 B of a Linux
+binary, `uuencode` alphabet, CR line ends, sha256 `687942003df7…2757e8`
+(kept in `$UNC_VMAC_HOME/speed/subjects/`). The corpus's only large
+uuencode fixture, `uu-wild-terrainman.uu`, is a cut posting: its last entry
+fails in all three programs, and UUTool's decode of it differs from the
+engine's (not investigated).
+
+**Not measured**, and why: StuffIt 5 (Expander 5.5 needs System 7.1.1;
+this Mac Plus tier has 6.0.8 and 7.0.1); zip's deflate (UnZip 2.0.1 closes
+the archive after a *"Printing operations are not possible"* alert on
+System 6.0.8, and UnZip 5.0p1's console printed the comment and wrote
+nothing; neither driven further); gzip and `.Z` (MacGzip 1.1.3 needs
+System 7, not driven); ARC, Now Compress, SuperDisk!, SpaceSaver, AppleLink
+packages, Private File, AppleSingle, MIME/base64, btoa, MAR, LZ4, Apple
+Backup and Installer Tomes (no program for them was run here). The reasoning
+is DECISIONS.md 2026-11-14, *each format's own program*.
+
 ### Sources
 
 - The application itself, extracted as described above: `Read Me`, `What's new
