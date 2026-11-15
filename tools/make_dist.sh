@@ -725,10 +725,15 @@ def place(path, at):
     hfscat.patch(img, path, 4 + 10, struct.pack(">hh", *at))
 place((V, b"MacExtract"), (10, 20))
 place((V, b"Read Me"), (10, 95))
-folder((V, H), (110, 30, 320, 428), at=(10, 175))
 names = sorted((r["path"][2] for r in hfscat.records(open(img, "rb").read())
                 if len(r["path"]) == 3 and r["path"][1] == H), key=bytes.lower)
-for i, n in enumerate(names):          # six across, alphabetical
+# Six across, alphabetical, 56 apart down: three rows showed in
+# (110, 30)-(320, 428) with no scroll bars on 3.0, 6.0.8 and 7.0.1; each
+# row past three moves the top up 56, the bottom kept (DECISIONS.md
+# 2026-11-15, *the helpers for BinHex 4.0 and 5.0*).
+rows = (len(names) + 5) // 6
+folder((V, H), (110 - 56 * max(0, rows - 3), 30, 320, 428), at=(10, 175))
+for i, n in enumerate(names):
     place((V, H, n), (10 + 56 * (i // 6), 20 + 62 * (i % 6)))
 PY
 done

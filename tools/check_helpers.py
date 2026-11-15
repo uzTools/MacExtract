@@ -195,7 +195,7 @@ def check(path, creator=CREATOR, types=TYPES, ceiling=CEILING):
 
 
 def check_dist(stub):
-    """The eighteen helpers dist/ ships: every row of companion/helpers.tsv
+    """The twenty helpers dist/ ships: every row of companion/helpers.tsv
     stamped from this tree's stub passes check() for its own creator and
     types; dist/MacExtract-Helpers.zip is byte for byte the zip
     make_helpers.py writes from them (it is reproducible: fixed times), so a
@@ -275,11 +275,14 @@ def check_layout(img):
     0x0100, a location), and every folder's window rectangle set: a placed
     folder with none bombed System 3.0's Finder, ID = 04, and the helpers
     left to the Finder were stacked in one column (DECISIONS.md 2026-11-14,
-    *the floppy that works locked*). The Desktop file, invisible, and the
+    *the floppy that works locked*); and every icon inside its folder's
+    window with the margins that showed no scroll bars. It cannot see the
+    scroll bars themselves, only the emulator's frames do. The Desktop file, invisible, and the
     root, whose rectangle every Finder measured ignores, are not checked."""
     sys.path.insert(0, os.path.join(ROOT, "tools", "vmac"))
     import hfscat
     bad = []
+    rects, at = {}, {}
     for r in hfscat.records(open(img, "rb").read()):
         p = ":".join(x.decode("mac_roman") for x in r["path"])
         if len(r["path"]) < 2 or r["path"][-1] == b"Desktop":
@@ -291,8 +294,19 @@ def check_layout(img):
             top, left, bottom, right, fl, v, h = struct.unpack(">hhhhHhh", rec[22:36])
             if bottom <= top or right <= left:
                 bad.append(f"{p}: no window rectangle")
+            rects[tuple(r["path"])] = (bottom - top, right - left)
         if not fl & 0x0100 or (v, h) == (0, 0):
             bad.append(f"{p}: not placed (flags 0x{fl:04X}, at {v},{h})")
+        at[tuple(r["path"])] = (v, h)
+    # Every icon inside its folder's window by the margins measured to show
+    # with no scroll bars on 3.0, 6.0.8 and 7.0.1: the last row at v 122 in
+    # a window 210 high, the last column at h 330 in one 398 wide
+    # (DECISIONS.md 2026-11-14, *the floppy that works locked*).
+    for path, (v, h) in at.items():
+        size = rects.get(path[:-1])
+        if size and (v > size[0] - 88 or h > size[1] - 68):
+            bad.append(f"{':'.join(x.decode('mac_roman') for x in path)}: at {v},{h}, "
+                       f"outside its window's {size[0]} x {size[1]} without scrolling")
     return bad
 
 

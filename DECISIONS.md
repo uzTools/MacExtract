@@ -624,6 +624,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-14 (the floppy that works locked) — the release floppies write-protected: a Desktop file carrying every bundle as System 6.0.8's Finder files them, every icon placed, the helpers' window set, and a Read Me short enough for TeachText
 - 2026-11-14 (each format's own program) — MacExtract timed against the program that made or opened each format, on one Mac Plus: faster on 9 of 18 pairs, from 7.9x against MacLHa to 0.14x against UUTool; StuffIt 5, deflate and gzip not timed
 - 2026-11-15 (the last part on another disk) — a Compact Pro set opened at any segment but its last, or a spanned zip at a `.zNN`, with that last part on another disk or in another folder, ended on "Parts missing." without asking; the set's setup now asks for each next part until it turns up, for +318 B of `ovl_segsetup` and 0 B resident
+- 2026-11-15 (the helpers for BinHex 4.0 and 5.0) — `BNHQ` and `BnHq` get a helper each, `BinHex4` and `BinHex5`, claiming `TEXT`: what those creators carry is BinHex and MacBinary, not text; the floppies' Helpers window grows to four rows
 
 ---
 
@@ -26732,3 +26733,63 @@ next part, as before (the Read Me says to extract to a different disk).
 
 **Cost**: about a day of one emulator, much of it the one-drive walk's
 sixty-odd swaps per run.
+
+## 2026-11-15 (the helpers for BinHex 4.0 and 5.0) — `BNHQ` and `BnHq` get a helper each, `BinHex4` and `BinHex5`, claiming `TEXT`: what those creators carry is BinHex and MacBinary, not text; the floppies' Helpers window grows to four rows
+
+**Decided by the maintainer**, after double-clicking a `MacExtract.hqx`
+typed `TEXT`/`BnHq` on his Mac and finding no helper took it. This extends
+2026-11-03, *the creators that get a helper*, whose list came from
+MacStamp's pairs, where BinHex is `TEXT`/`SITx`.
+
+**Why a type sorts these creators' files, where it could not for `ttxt`**
+(measured): MacStamp's census (`pair-census.csv`, 142,267 files then,
+143,723 since macstamp a960b6c, the same counts) holds nothing under
+either creator but `TEXT` and the programs: 24 `TEXT`/`BNHQ`, 5
+`TEXT`/`BnHq`, 5 `APPL`/`BnHq`, 3 `APPL`/`BNHQ`. Of those `TEXT` files its
+sweep read 24 (`sweep-witnesses.tsv`): `TEXT`/`BNHQ` 18 BinHex and one
+StuffIt archive, `TEXT`/`BnHq` 5 MacBinary; five `TEXT`/`BNHQ` were not
+read. Neither bundle claims another document type (`app-bundles.tsv`:
+BinHex 4.0 and 5.0, `APPL` and `TEXT`). MacStamp asked BinHex 5.0 and
+DropStuff 4.0 and both wrote `TEXT`/`BnHq`, one MacBinary, one a
+`.sit.hqx` (macstamp DECISIONS 2026-10-14). MacExtract's bundle already
+claims `TEXT` (`mac/macextract_icons.r`, `'FREF'` 132), so it changes by
+nothing, and each helper's `'open'` lists no type.
+
+**Price.** Each helper 6,912 B of MacBinary, as every other; the helpers
+zip 64,660 → 71,731 B; the 800K's and 1.44 MB's `Desktop` 44,042 →
+45,418 B; free space 359,424 → 344,064 B (800K), 1,010,688 → 995,328 B
+(1.44 MB), 56 → 49 blocks of 1 KB (400K, the zip still fits).
+MacExtract: 0 B (`tools/retake_budgets.py`: every figure agrees).
+
+**Layout.** Twenty helpers are four rows at six across. The window keeps
+its width and bottom and its top moves up 56 a row past three,
+(110, 30)–(320, 428) → (54, 30)–(320, 428) (`tools/make_dist.sh`).
+`check_helpers.py` now fails an icon outside its folder's window by the
+margins 2026-11-14 measured, shown on the 20 placed in the old rectangle
+(Tome and Zip outside).
+
+**Measured**, dist locked on the `-ae` emulators (none logged an odd
+access; each locked image unchanged by its run), an *Archives* floppy
+writable beside it holding `Export.hqx` (`export-hc.hqx`) `TEXT`/`BNHQ`,
+`MacROT13.hqx` (`mac-rot13.hqx`) and `AlwaysFract.bin` (`alwaysfract.bin`,
+MacBinary) `TEXT`/`BnHq`, one boot per file:
+
+| | 6.0.8, 1 MB | 7.0.1, 4 MB |
+|---|---|---|
+| before (dist at c46de1b5), each of the three | "could not be opened/printed (the application is busy or missing)" | "…could not be found. Do you want to open it using SimpleText?" |
+| after, `Export.hqx` | the destination dialog, Extract: `Export` equal to the CLI's | the same, equal |
+| after, `MacROT13.hqx` | equal | equal |
+| after, `AlwaysFract.bin` | equal | equal, read after an eject (below) |
+
+Equal is both forks against `macextract x`, resource header's reserved
+bytes masked, and the type and creator. On 7.0.1 `AlwaysFract` first read
+back with its forks right and no type, creator or dates; the same run,
+ending with the floppy ejected, read back whole. That is the unflushed
+catalog entry of 2026-09-22 (*the entry a second write placed*), the
+harness stopping the emulator, not a lost write. The Helpers window: 4
+rows, no scroll bars, on the 800K under 3.0, 6.0.8 and 7.0.1 and the
+1.44 MB under 6.0.8 and 7.0.1; the archives drew the helpers' icon.
+
+**Not tested:** System 3.0 and Mac OS 9 hand-offs; a real Mac; the 400K's
+zip extracted; the five unread `TEXT`/`BNHQ` files; what a `TEXT`/`BNHQ`
+or `TEXT`/`BnHq` file that is plain text does (none was found).
