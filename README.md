@@ -35,7 +35,7 @@ currently **v0.46.0**, or from the tree:
 | [`dist/MacExtract-400K.img`](dist/MacExtract-400K.img), [`.dsk`](dist/MacExtract-400K.dsk) | a 400K MFS floppy, for a Macintosh 512K with a Hard Disk 20 |
 | [`dist/MacExtract-Helpers.zip`](dist/MacExtract-Helpers.zip) | the double-click helpers in one file, for MacExtract to open; also on every disk |
 
-Each floppy is a raw `.img` and a Disk Copy 4.2 `.dsk`, and holds the README as a SimpleText "Read Me". All but the `.hqx` open without an unarchiver. [`dist/README.txt`](dist/README.txt)
+Each floppy is a raw `.img` and a Disk Copy 4.2 `.dsk`, and holds a short "Read Me". All but the `.hqx` open without an unarchiver. [`dist/README.txt`](dist/README.txt)
 has the transfer notes.
 
 ## What it opens
@@ -54,7 +54,7 @@ and `.Z`.
   custom icons, so an extracted application simply runs.
 - **Double-click an archive** and it opens in MacExtract: the "MacExtract
   Helpers" folder on the disks stands in for StuffIt, Compact Pro,
-  DiskDoubler and fifteen other programs, on every System. Copy it to your
+  DiskDoubler, BinHex and fifteen other programs, on every System. Copy it to your
   disk with MacExtract and open both folders once.
 - **No StuffIt on the machine?** On Mac OS 9, double-clicking an archive
   whose program is missing asks which to use, and MacExtract is on the list.

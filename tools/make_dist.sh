@@ -97,8 +97,9 @@ Each floppy comes twice. The .img is the raw disk: write it with dd or a raw
 image writer, or mount it in an emulator (Mini vMac, Basilisk II,
 SheepShaver). The .dsk is the same disk as a Disk Copy 4.2 image, for
 Apple's Disk Copy to write to a floppy on a Mac; Disk Copy opens it once its
-type is dImg and its creator dCpy. Every floppy holds MacExtract and this
-text as "Read Me"; drag MacExtract onto your startup disk.
+type is dImg and its creator dCpy. Every floppy holds MacExtract and a
+short "Read Me" on using it; drag MacExtract onto your startup disk. The
+floppies work locked, on every System.
 
   MacExtract-800K.img, .dsk  An 800K HFS floppy, with the "MacExtract
                   Helpers" folder. A Mac Plus reads 400K/800K floppies only.
@@ -120,16 +121,16 @@ text as "Read Me"; drag MacExtract onto your startup disk.
                   test: start up from the Hard Disk 20, put the floppy in,
                   double-click MacExtract-Helpers.zip and choose the Hard
                   Disk 20. Then tell us what happened, at
-                  https://github.com/uzTools/MacExtract/issues -- eighteen
+                  https://github.com/uzTools/MacExtract/issues -- twenty
                   files in a "MacExtract Helpers" folder, or the ID number
                   if it bombs.
 
 Double-click helpers. The 800K and 1.44 MB disks also hold a "MacExtract
 Helpers" folder,
-and MacExtract-Helpers.zip has the same eighteen in one file: open it with
+and MacExtract-Helpers.zip has the same twenty in one file: open it with
 MacExtract. Each one stands in
-for a program that made archives -- StuffIt, Compact Pro, DiskDoubler and
-others -- so that double-clicking one of its archives opens it in
+for a program that made archives -- StuffIt, Compact Pro, DiskDoubler,
+BinHex and others -- so that double-clicking one of its archives opens it in
 MacExtract, on every System from 3.0 to Mac OS 9. Copy the folder to your
 hard disk along with MacExtract, anywhere you like, and open it and
 MacExtract's folder once so the Finder sees them. Keep only the helpers you
@@ -201,7 +202,10 @@ so. Cancel answers sooner in the slow formats, and its button flashes. A
 BinHex file with lines longer than 256 characters lost a character from
 each. Six MacBinary files written without the usual padding, and tar
 archives that set their dates once for every file, open as they should.
-The icons are new.
+A Compact Pro set or a split zip opened without its last part beside it
+said "Parts missing."; it now asks for the disk that holds the part. A
+locked MacExtract floppy showed no icons, and on System 3.0 bombed when
+its Helpers folder was opened; it now works locked. The icons are new.
 
 v0.45.0 changes how MacExtract asks you things. Where the files go is
 asked in a window with a New Folder button, on every System. A missing
