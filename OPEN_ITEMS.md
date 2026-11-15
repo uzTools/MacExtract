@@ -162,20 +162,6 @@ that keeps System 3.0's first dialog where it is with a second disk
 mounted; the two versions measured cost 32 and 80 B and failed that, or
 fixed only half. `relaunch.py --queue` and `--first-set` show it.
 
-## A Compact Pro set opened without its last segment on a mounted disk
-
-`Education.cpt.#1` from the maintainer's *Sets 1* floppy, segments #3 and
-#4 on *Sets 3*, never inserted: after the destination dialog, **"Parts
-missing."** and nothing asked (measured twice on Mini vMac, one drive,
-System 6.0.8, 1 MB, 2026-11-14). Where it stops is a hypothesis, read and
-not instrumented: `SegFindLast` (`mac/seg_setup.inc.c`) finds no segment
-carrying the index, and the set returns `UNC_ERR_SEGMENTED` before any
-part is asked for. `dist/README.txt` says any part of a Compact Pro set
-can be opened, and a part elsewhere is asked for.
-**What would close it:** asking for the last segment, whose number nothing
-on hand states, or the Read Me saying to open the last one, as Compact Pro's
-manual does.
-
 ## The metadata the archives hold and the readers drop
 
 Every reader delivers what its format holds and the shell writes all of it

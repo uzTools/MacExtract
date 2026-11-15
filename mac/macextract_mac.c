@@ -3994,10 +3994,18 @@ static const SegSetupFns gSegSetupFns = {
     SegTmpOpen, SegRemember, SegScanDir, SegScanFamily, SegPartLength,
     SegPartOf, unc_sniff_envelope, unc_format_is_envelope, unc_extract_as,
     unc_segment_describe, unc_segment_match,
-    fio_read, fio_seek, fio_tell, fio_size
+    fio_read, fio_seek, fio_tell, fio_size,
+#ifdef UNC_MAC_AUTOTEST
+    NULL
+#else
+    SegAskUser
+#endif
 };
 #else
 #define SS(f) f
+#ifdef UNC_MAC_AUTOTEST
+#define SegAskUser ((int (*)(SegHost *, int))0)
+#endif
 #include "seg_setup.inc.c"
 #endif
 
@@ -4649,6 +4657,15 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
                  * opened from part 3 asks for part 1 first; the LC 475,
                  * 2026-10-31). */
                 sh->lastDrive = SegDriveOf(origVol);
+#ifndef UNC_MAC_SLURP_ARCHIVE
+                /* Closed before the setup, which may ask for a part and
+                 * eject this file's disk: open, it stays mounted offline
+                 * and its close asks for the disk back in the System's
+                 * own alert (measured, 6.0.8). Every part is opened
+                 * again by the join. */
+                FSClose(refNum);
+                refNum = 0;
+#endif
 #ifdef UNC_SHELL_IMAGES
                 /* The setup is read from the bundle at launch and given
                  * back with it before the budget (ovl_segsetup.c). */
@@ -4661,7 +4678,9 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
                 if (r != UNC_OK) {
                     DisposePtr((Ptr)sh);
                     DisposePtr(segScratch);
+#ifdef UNC_MAC_SLURP_ARCHIVE
                     FSClose(refNum);
+#endif
                     return r;
                 }
             }
@@ -4809,10 +4828,8 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
 #ifdef UNC_MAC_SLURP_ARCHIVE
         DisposePtr(archiveBuf);
         archiveBuf = NULL;
-#else
-        FSClose(refNum);
-#endif
         refNum = 0;
+#endif                    /* otherwise closed before the setup, above */
 #ifndef UNC_MAC_AUTOTEST
         /* Only the interactive app puts a Progress behind prog->ctx; the
          * autotest's tick carries something else entirely. */

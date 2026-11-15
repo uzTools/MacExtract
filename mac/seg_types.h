@@ -106,6 +106,7 @@ typedef struct {
     int       (*fio_seek)(void *, unc_off_t);
     unc_off_t (*fio_tell)(void *);
     unc_off_t (*fio_size)(void *);
+    int  (*SegAskUser)(SegHost *, int);   /* NULL in the autotest */
 } SegSetupFns;
 #endif
 

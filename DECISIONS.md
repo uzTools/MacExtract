@@ -623,6 +623,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-14 (the gray at an odd address) — v0.45.0's destination dialog bombed a Mac Plus with an address error: its gray `Pattern` lay at an odd offset in the dialog's image, and the ROM's `_PenPat` copies it by longs; aligned, for 0 B. Mini vMac raises no address error, so no tier could see it; `tools/vmac/oddaccess.py` builds one that logs them
 - 2026-11-14 (the floppy that works locked) — the release floppies write-protected: a Desktop file carrying every bundle as System 6.0.8's Finder files them, every icon placed, the helpers' window set, and a Read Me short enough for TeachText
 - 2026-11-14 (each format's own program) — MacExtract timed against the program that made or opened each format, on one Mac Plus: faster on 9 of 18 pairs, from 7.9x against MacLHa to 0.14x against UUTool; StuffIt 5, deflate and gzip not timed
+- 2026-11-15 (the last part on another disk) — a Compact Pro set opened at any segment but its last, or a spanned zip at a `.zNN`, with that last part on another disk or in another folder, ended on "Parts missing." without asking; the set's setup now asks for each next part until it turns up, for +318 B of `ovl_segsetup` and 0 B resident
 
 ---
 
@@ -26500,8 +26501,7 @@ unchanged and the log is the only verdict.
 
 **Found on the way, not fixed:** the same walk with this fix ends
 `Education.cpt.#1` on *"Parts missing."* without asking for the segment on
-*Sets 3* (OPEN_ITEMS.md, *A Compact Pro set opened without its last segment
-on a mounted disk*).
+*Sets 3*; fixed 2026-11-15 (*the last part on another disk*).
 
 ## 2026-11-14 (the floppy that works locked) — the release floppies write-protected: a Desktop file carrying every bundle as System 6.0.8's Finder files them, every icon placed, the helpers' window set, and a Read Me short enough for TeachText
 
@@ -26657,3 +26657,78 @@ Each is a session's work, not a blocker.
 **Cost**: about nine hours of one emulator, half of it queued behind other
 agents' runs; a stopped earlier session's runs were reused where its JSON
 graded both forks and its drive's frames showed the work (ten pairs).
+
+## 2026-11-15 (the last part on another disk) — a Compact Pro set opened at any segment but its last, or a spanned zip at a `.zNN`, with that last part on another disk or in another folder, ended on "Parts missing." without asking; the set's setup now asks for each next part until it turns up, for +318 B of `ovl_segsetup` and 0 B resident
+
+**Claim (measured).** Of the six schemes the application joins, only these
+two stopped: StuffIt, `.NNN`, `SPLT` and message/partial sets opened at part
+1 with the rest on a mounted second floppy asked for Part 2 and finished,
+while `Education.cpt.#1` and `Big.z01` from the maintainer's *Sets 1/2/3*
+ended on "Parts missing.", nothing asked, nothing written (shipped v0.46.0,
+System 6.0.8, 4 MB, hard disk and two floppies). The trigger is where the
+part carrying the count is, not the machine: with `#4` beside `#1`, or
+`Big.zip` beside `Big.z01`, the same build asked; it stopped on 7.0.1 as on
+6.0.8, with the floppies mounted at boot as with them put in one by one, and
+on one drive (2026-11-14).
+
+**Cause (reduced by changing it).** `SegSetup` (`mac/seg_setup.inc.c`) needs
+the count before the join can start: Compact Pro's index is only in the last
+segment (`SegFindLast` reads the parts found in the opened part's folder),
+and a spanned zip's only in `.zip` (looked for by name in that folder). Not
+found, it returned `UNC_ERR_SEGMENTED`; the part dialog, `SegAskUser`, was
+reachable only from the join's `seg_need`. Now the setup asks, through a new
+`SegSetupFns` entry (NULL in the autotest, which still refuses: `segcheck
+cpt-truncated`), for each part above the opened one not yet found, until a
+segment with an index turns up (Compact Pro) or a `.zip` is in the asked
+part's folder (zip; a `.zip` met while asking is filed as the part asked
+for, so a disk holding only `Big.zip` closes the dialog, and is forgotten
+again if it was not that part). Cancel still ends on "Parts missing.".
+Two more changes the runs called for: the opened archive is closed before
+the setup, because a file left open on a disk the first ask ejects brought
+back the System's own "Please insert the disk: Sets 1" when it was closed
+(seen, then gone, 6.0.8); and after an ask `SegFindLast` reads only the
+parts from the asked one up, because on one drive each part below it, which
+had answered already, was a disk to put back in: 69 → 64 disk requests for
+the whole walk below.
+
+**Price (`tools/retake_budgets.py`).** `ovl_segsetup` 2,830 → 3,148 B
+(+318; +20 of it the `SegFindLast` start), the bundle +316 B. Shipped
+resident `CODE` −8, A5 +8, net 0; `OVL_SAVED` and `TIERS_CONTROL` +256 each,
+so a format that gives the bundle back is granted what it was. One that
+keeps it (a StuffIt, `SPLT`, message/partial or `.NNN` set, MIME, Private
+File) is granted 316 B less at `sys6-512K` and 40 B less by the generic
+formula. `run_tiers.py --check` moves no tally. **Stack**: the deepest
+static chain, through the join's part dialog, 7,842 → 7,990 B of the 12,220
+(`SegAskUser` no longer inlined into `seg_need`, its address being in the
+table); the setup's ask is 5,224 B (FORMATS.md, *Stack*).
+
+**Measured, the two configurations** (frames looked at; output compared
+with the Linux CLI, both forks, the resource header's reserved bytes masked
+as `vmac_check` does; no odd access logged on any `-ae` emulator):
+
+- **One drive, 1 MB, 68000** (`mv-1M-1d1-ae`, System 6.0.8 on the 24 MB
+  boot volume, the shipped configuration's `build/mac`): `Education.cpt.#1`
+  off *Sets 1*, output on the boot volume, every request answered by a
+  script matching the alert's name line: Part 2, Part 3, then Part 4 and
+  the join, 64 disk requests, **byte-exact**. The same walk on the build
+  without the `SegFindLast` start: 69, byte-exact.
+- **Hard disk and drives that take each disk put in, 4 MB**: *Sets 1* put
+  in, `Education.cpt.#1` opened, output on the hard disk, then *Sets 2, 3,
+  1, 2, 3* as asked — byte-exact on System 6.0.8 and on 7.0.1; `Big.z01`
+  the same way, `Big.zip` alone on *Sets 3*, byte-exact on 6.0.8. The old
+  build on the same walk: "Parts missing.". With the floppies mounted at
+  boot: Compact Pro opened at `#1` and at `#2` (1 MB too), the `.zip` on a
+  third volume, Cancel ("Parts missing."), and the regressions (every part
+  beside: nothing asked; `#4` opened: Part 1 asked; a StuffIt set).
+
+**Not tested:** a real Plus; a 68020 or later machine; System 3.0 and Mac
+OS 9; a zip set on one drive. The 4 MB runs drove builds without the
+`SegFindLast` start (the mounted-floppy ones without the early close as
+well); the one-drive walk is the code shipped. Cosmetic,
+left: while the setup asks, the progress window's frame shows behind the
+part dialog (`sh->hide` is set for the join only). Output on a floppy that
+holds a part still ends in a write error when that floppy is ejected for the
+next part, as before (the Read Me says to extract to a different disk).
+
+**Cost**: about a day of one emulator, much of it the one-drive walk's
+sixty-odd swaps per run.

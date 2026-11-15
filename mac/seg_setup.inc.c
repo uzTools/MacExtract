@@ -265,12 +265,12 @@ static void SegScanWrapped(SegHost *h, short vol, long dir, UncAlloc *al)
  *
  * Leaves h->desc alone if no part answers, and the caller then reports
  * the set as incomplete, which it is: without the final segment there
- * is no directory anywhere. */
-static void SegFindLast(SegHost *h)
+ * is no directory anywhere. Parts from `p` up are asked: after a part
+ * was asked for, those below it have answered already, and on one
+ * drive each is a disk to put back in (measured, 6.0.8). */
+static void SegFindLast(SegHost *h, int p)
 {
-    int p;
-
-    for (p = 1; p <= kSegMaxKnown; p++) {
+    for (; p <= kSegMaxKnown; p++) {
         UncSegmentDesc cand;
         FileIO probe;
         UncIO pio;
@@ -321,10 +321,39 @@ static int SegSetup(const SegSetupArgs *A)
                 SS(SegScanFamily)(sh, inVol, inDir, famSplit, lastName);
                 if (famZip) {
                     /* Only the ".zip" member carries the part count, so
-                     * it has to be read before anything else can be. */
-                    if (!lastName[0] ||
-                        !SegDescribeLast(sh, inVol, inDir, lastName)) {
-                        return UNC_ERR_SEGMENTED;
+                     * it has to be read before anything else can be.
+                     * Not here, it is on another disk or in another
+                     * folder, numbered past every part found: each
+                     * number after them is asked for in turn, a ".zip"
+                     * found meanwhile taken as that part (SegScanFamily
+                     * files it under desc.nparts), and the asked part's
+                     * folder searched for it. Cancel, or no user (the
+                     * autotest), and the set is short of its last part. */
+                    int want = sh->highest;
+                    short v = inVol;
+                    long d = inDir;
+                    while (!lastName[0] ||
+                           !SegDescribeLast(sh, v, d, lastName)) {
+                        do {
+                            if (++want > kSegMaxKnown)
+                                return UNC_ERR_SEGMENTED;
+                        } while (sh->loc[want].name[0]);
+                        sh->desc.scheme = UNC_FORMAT_ZIPSEG;  /* by name */
+                        sh->desc.nparts = (uint16_t)want;
+                        if (!SS(SegAskUser) || !SS(SegAskUser)(sh, want))
+                            return UNC_ERR_SEGMENTED;
+                        v = sh->loc[want].vRefNum;
+                        d = sh->loc[want].dirID;
+                        SS(SegScanFamily)(sh, v, d, 0, lastName);
+                    }
+                    /* A ".zip" taken as a part it is not: forgotten,
+                     * and the real one asked for when the join needs
+                     * it. */
+                    if (sh->desc.nparts != want) {
+                        unsigned char *n = sh->loc[want].name;
+                        for (i = 0; i <= lastName[0] && n[i] == lastName[i];
+                             i++) ;
+                        if (i > lastName[0]) n[0] = 0;
                     }
                 } else {
                     /* Nothing in a split says anything, so the whole
@@ -423,23 +452,37 @@ static int SegSetup(const SegSetupArgs *A)
              * same answer: the desc of whichever part knows. */
             if (sh->desc.nparts == 0 &&
                 sh->desc.scheme == UNC_FORMAT_MIMESEG)
-                SegFindLast(sh);
+                SegFindLast(sh, 1);
             /* A Compact Pro set opened anywhere but its last segment
              * does not yet know how many segments it has. */
             if (sh->desc.nparts == 0 &&
                 sh->desc.scheme == UNC_FORMAT_CPTSEG) {
-                SegFindLast(sh);
-                /* No index anywhere: the set is short of its last part,
-                 * and reading on would only report it as damaged. */
-                if (sh->desc.nparts == 0) {
-                    return UNC_ERR_SEGMENTED;
+                int want = (int)sh->desc.part, asked = 0;
+                SegFindLast(sh, 1);
+                /* No index here: the last segment is on another disk, or
+                 * in another folder. It is numbered above the one opened,
+                 * so each part after that one not found yet is asked for
+                 * in turn until a segment carrying the index turns up;
+                 * Cancel, or no user (the autotest), and the set is
+                 * short of its last part. */
+                while (sh->desc.nparts == 0) {
+                    do {
+                        if (++want > kSegMaxKnown) return UNC_ERR_SEGMENTED;
+                    } while (sh->loc[want].name[0]);
+                    if (!SS(SegAskUser) || !SS(SegAskUser)(sh, want))
+                        return UNC_ERR_SEGMENTED;
+                    SegFindLast(sh, want);
+                    asked = 1;
                 }
-                if (sh->desc.nparts) {
+                if (!asked) {
                     /* With a count in hand the match rule is stricter —
                      * a middle segment must not carry an index and the
                      * last one must — so everything found under the
                      * looser one is looked at again. Two bytes of
-                     * identity is not much to let a file in on. */
+                     * identity is not much to let a file in on. Not
+                     * after a part was asked for: the opened part's disk
+                     * may be out by then, and the parts found on the
+                     * others would be forgotten. */
                     long z;
                     for (z = 0; z < (long)sizeof sh->loc; z++)
                         ((char *)sh->loc)[z] = 0;
