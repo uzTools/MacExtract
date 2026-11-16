@@ -343,6 +343,12 @@ those swaps. Not a requirement; nothing is measured. Open:
 - A cheaper part of the same gain, without a System on the disk: loading the
   System resources the Toolbox fetches once at launch and keeping them in
   memory; which ones they are is not measured.
+- A long shot: a startup floppy with no Apple file on it, for the 68000
+  Macs only (later ROMs need their own System). Hypothesis, not tried: boot
+  blocks that name MacExtract as the startup application, a System file of
+  our own, and the ROM's Toolbox for the rest. Missing without Apple's
+  System: Standard File (MacExtract would need its own disk and file
+  chooser), the System's ROM fixes, and the 64K ROM's HFS.
 
 ## The double-click helpers: what is left
 
