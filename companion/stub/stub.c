@@ -28,8 +28,8 @@
  * it the last registered, and says so. A volume without a Desktop Manager
  * (System 6 and older) has nothing to reclaim; there the stub says that.
  *
- * Its icons: registered by the stub itself where the Finder would not
- * (Icons, below).
+ * Its documents' icons: registered by the stub itself where the Finder
+ * would not (Icons, below); it has no application icon of its own.
  *
  * Where MacExtract is: wherever the Finder has seen it, on any mounted
  * volume — the application of creator MExt in the volume's desktop
@@ -263,17 +263,21 @@ static Boolean DesktopFile(OSType creator, short vol, long *dir, Str255 name,
 }
 
 /* ICONS. The 7.0.1 Finder registers no bundle short of a desktop
- * rebuild, so a helper and its archives draw generic icons there until
- * one (measured; DECISIONS.md 2026-11-03, *the helper that asks the
- * desktop*). The stub registers its own, as StuffIt Expander 4.0.2 and
+ * rebuild, so a helper's archives draw generic icons there until one
+ * (measured; DECISIONS.md 2026-11-03, *the helper that asks the
+ * desktop*). The stub registers their icons itself, as StuffIt Expander 4.0.2 and
  * MacExtract do (mac/macextract_mac.c, DTBundle; DECISIONS.md 2026-10-18,
  * *the icon Expander registers*): per 'FREF', the six members of the one
  * icon family, ID 128, through PBDTAddIcon as icon types 1 to 6 (Inside
  * Macintosh: More Macintosh Toolbox, Desktop Manager). Every 'FREF' is on
  * local icon 0, which is that family (companion/make_stub.py; checked by
- * tools/check_helpers.py), so the 'BNDL' is not read. Unless `force`,
- * only when the database has no large icon for the first 'FREF' under
- * this creator yet, so a double-click does not rewrite it each time. A
+ * tools/check_helpers.py), so the 'BNDL' is not read. Never for 'APPL':
+ * the icon would be every application's of this creator, the real
+ * program's too (DECISIONS.md 2026-11-16, *the helper without an
+ * application icon*); the helpers carry no such 'FREF', and this keeps
+ * one that did out of the database. Unless `force`, only when the
+ * database has no large icon for the first document 'FREF' under this
+ * creator yet, so a double-click does not rewrite it each time. A
  * volume without a Desktop Manager is the Finder's to fill. */
 static void Icons(short vol, OSType creator, Boolean force)
 {
@@ -291,7 +295,9 @@ static void Icons(short vol, OSType creator, Boolean force)
     d.ioFileCreator = creator;
     for (i = 1; (f = Get1IndResource('FREF', i)) != NULL; i++) {
         d.ioFileType = *(OSType *)*f;
-        if (i == 1 && !force) {
+        if (d.ioFileType == 'APPL') continue;
+        if (!force) {
+            force = true;
             d.ioTagInfo = 0;
             d.ioDTBuffer = probe;
             d.ioDTReqCount = sizeof probe;

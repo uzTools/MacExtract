@@ -626,6 +626,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-15 (the last part on another disk) — a Compact Pro set opened at any segment but its last, or a spanned zip at a `.zNN`, with that last part on another disk or in another folder, ended on "Parts missing." without asking; the set's setup now asks for each next part until it turns up, for +318 B of `ovl_segsetup` and 0 B resident
 - 2026-11-15 (the helpers for BinHex 4.0 and 5.0) — `BNHQ` and `BnHq` get a helper each, `BinHex4` and `BinHex5`, claiming `TEXT`: what those creators carry is BinHex and MacBinary, not text; the floppies' Helpers window grows to four rows
 - 2026-11-16 (the helper for MacTar) — `TAR ` gets a helper, `MacTar`, claiming `TARF`, the type its programs' bundles and MacStamp's tar pair give; MacStamp's census holds no document under it; the Helpers window keeps its four rows
+- 2026-11-16 (the helper without an application icon) — the helpers carry no `'APPL'` `'FREF'`: StuffIt Classic keeps its own icon after the StuffIt helper has run, on 7.6.1 and 6.0.8, and where the Finder filed the helper's bundle first it draws the generic icon, never the helper's; −27 B a helper, the zip −380 B, +6,656 B free on each HFS floppy
 
 ---
 
@@ -26843,3 +26844,92 @@ bars, on the 800K under 3.0, 6.0.8 and 7.0.1.
 written by MacTar or tar 4.0b (neither was run; MacTar stopped on 6.0.8
 with "out of memory", 2026-11-14, *each format's own program*), so whether
 either writes `TARF` is the bundles' word, not a file's.
+
+## 2026-11-16 (the helper without an application icon) — the helpers carry no `'APPL'` `'FREF'`: StuffIt Classic keeps its own icon after the StuffIt helper has run, on 7.6.1 and 6.0.8, and where the Finder filed the helper's bundle first it draws the generic icon, never the helper's; −27 B a helper, the zip −380 B, +6,656 B free on each HFS floppy
+
+**Decided by the maintainer**: the helpers no longer carry an application
+icon; everything else about them stays. A helper's creator is a real
+program's (`SIT!` is StuffIt Classic's), the Finder keeps one icon per
+creator and type, and a helper registered its `APPL` icon: StuffIt Classic
+showed MacExtract's archive icon on the maintainer's LC under 7.6.1. The
+maintainer accepts that a helper draws its program's icon where that
+program is registered and the generic application icon where it is not.
+
+**The form (measured).** No `'FREF'` for `APPL` at all: the `'BNDL'`
+maps the document `'FREF'`s only, each still on local icon 0, the one
+family (`companion/make_stub.py`). Chosen over an `APPL` `'FREF'` on an
+unmapped local icon because it leaves nothing for any Finder to resolve
+and is the smaller; the unmapped form was not run. The stub's own
+registration (`Icons`, `companion/stub/stub.c`) skips an `APPL` `'FREF'`
+and probes the first document one (0 B: `CODE` 1 stays 2,994 B);
+`make_helpers.py --desktop` files an `APPL` `'FREF'` and icon for
+MacExtract alone; `tools/check_helpers.py` fails a stamped helper, a
+helper in the shipped zip, or a `Desktop` file bundle other than
+MacExtract's that maps one — shown on the dist at cdfbed8b: 21 zip
+helpers and 21 bundle copies in each HFS `Desktop` file, 63 failures, and
+a helper stamped by the old `make_stub.py` (`--file`).
+
+**StuffIt Classic 1.6 and the StuffIt helper, 7.6.1** (QEMU `q800`,
+cddriver's 7.6.1 boot disk through a qcow2 overlay, the two on a second
+SCSI disk; every boot ended with the Power key's Shut Down; the
+`Desktop DB`'s leaf records read off the disk between boots):
+
+| order | before (cdfbed8b) | after |
+|---|---|---|
+| Classic registered first; the helper added, opened, restart | Classic draws the archive icon as soon as the Finder has seen the helper, before it is opened, and after the restart; `APPL`/`SIT!` holds the helper's six icons | Classic keeps its own icon through all three boots; the helper draws Classic's; `APPL`/`SIT!` holds Classic's four |
+| the helper registered first; Classic added | not run | Classic draws the generic icon, the helper too; no `APPL`/`SIT!` icon is filed (the Finder did not take Classic's bundle) |
+| both new on a disk with no `Desktop DB`, the helper first in the catalog | Classic draws the archive icon | both draw the generic icon; only the helper's bundle is filed |
+| the helper alone on a disk | the archive icon | the generic application icon |
+| the helper on one disk, the old helper on another | — | the old one's archive icon: the Finder draws a volume's application with an `APPL` icon filed on another volume |
+
+So the real program keeps its own icon wherever the Finder took its
+bundle; where the Finder took the helper's instead (the helper seen
+first), it draws the generic icon, never the helper's. Which bundle this
+Finder takes for a creator is its own choice: hypothesis, from the three
+orders, the first application of the creator it meets, the helper's name
+sorting before `StuffIt Classic`; not reduced further. No bundle form a
+helper can carry changes which one it takes.
+
+**6.0.8** (Mini vMac `mv-1M-ae`, both on an 800K floppy, ejected after
+every boot): the Finder files one bundle per creator in the floppy's `Desktop`
+file, the first it meets, and never replaces it (read off the file after
+each run); the stub registers nothing there.
+
+| order | before (cdfbed8b) | after |
+|---|---|---|
+| Classic first; the helper added, opened, restart | Classic keeps its own icon, the helper draws Classic's: Classic's bundle is the one filed | the same |
+| the helper first; Classic added | Classic draws the archive icon: the helper's bundle, with its `APPL` `'FREF'`, is the one filed | Classic draws the generic icon, the helper too: the helper's bundle is filed, without one |
+
+So 6.0.8 shows the bug in the second order only, and after the change
+the real program never draws the helper's icon; where the helper was
+filed first, it draws the generic one until the `Desktop` file is
+rebuilt.
+
+**The release floppies** (the rebuilt 800K, locked; `mv-1M-ae`/`mv-4M-ae`
+logged no odd access; the image unchanged by every run; `Pattern.sit`,
+`SIT!`/`SIT!`, on a writable *Archives* floppy, double-clicked):
+
+| System | Helpers window | `Pattern.sit` | hand-off |
+|---|---|---|---|
+| 3.0, 1 MB | 21 items, 4 rows at six across, as before; every helper the generic icon | the archive icon | the StuffIt helper, then MacExtract's dialog; 2 of 2 files equal to the CLI's |
+| 6.0.8, 1 MB | the same | the archive icon | the same, equal |
+| 7.0.1, 4 MB | the same | the archive icon | the same, equal |
+| 7.5.5, Mac II 16 colours (the locked floppy on the install disk) | the same, the colour generic icon | the archive icon | the same, both forks equal; type and creator not graded (the emulator was stopped without an eject) |
+
+Equal is both forks against the CLI, the resource header's reserved bytes
+masked, and the type and creator.
+
+**Price.** Each helper's resource fork −27 B (the `'FREF'`, its reference
+and the `'BNDL'` pair); its MacBinary unchanged at 6,912 B but for
+`StuffIt` 7,168 → 7,040 and `MAR` 7,040 → 6,912 (the `SIT!` check helper
+6,912, its ceiling); the zip 75,262 → 74,882 B; the 800K's and 1.44 MB's
+`Desktop` 46,106 → 39,743 B, free space 335,872 → 342,528 B (800K) and
+987,136 → 993,792 B (1.44 MB); the 400K unchanged (the zip still 74
+blocks). MacExtract 0 B (`MacExtract.bin` identical,
+`tools/retake_budgets.py --dry-run` agrees).
+
+**Not tested:** Mac OS 9; a real Mac; the 1.44 MB and 400K images; the
+`APPL` `'FREF'` on an unmapped local icon; any helper but StuffIt's
+against its own program; 7.5.5 with StuffIt Classic; a desktop rebuild by
+Command-Option on 7.6.1 (holding the keys through QEMU raised no rebuild
+alert).

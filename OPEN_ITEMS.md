@@ -368,4 +368,4 @@ dist*). Left:
   one archive icon, since a family there costs 72 B of its resource map
   (FORMATS.md, *Icons*). A colour family is about 2.3 KB of the helper
   and a black-and-white one (`ICN#`, `ics#`) about 320 B; the helpers zip
-  is 64,657 B today and rides on the 400K floppy.
+  is 74,882 B (corrected 2026-11-16; it said 64,657) and rides on the 400K floppy.

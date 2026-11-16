@@ -2693,7 +2693,8 @@ behind its tree.)
 Builds `companion/stub`, stamps a `SIT!` helper with `companion/make_stub.py`,
 and reads off the file what the Finder needs: the flags, one `CODE`
 segment, `canBackground`, the bundle with one icon family, every `FREF` on
-local icon 0, `'open'` 128 listing the types it claims that MacExtract's own bundle does not (none but the DiskDoubler helper's 40), `'vers'` 1 saying `UNC_VERSION`, and a 6,912 B ceiling. Then the twenty-one of
+local icon 0 and none for `APPL` (DECISIONS.md 2026-11-16, *the helper
+without an application icon*), `'open'` 128 listing the types it claims that MacExtract's own bundle does not (none but the DiskDoubler helper's 40), `'vers'` 1 saying `UNC_VERSION`, and a 6,912 B ceiling. Then the twenty-one of
 `companion/helpers.tsv`, each read the same way for its own creator and
 types; `dist/MacExtract-Helpers.zip` byte for byte the zip this tree
 writes (it is reproducible; one changed byte fails, shown 2026-11-04);
@@ -2709,6 +2710,10 @@ DECISIONS.md 2026-11-14, *the floppy that works locked*), and every icon
 inside its folder's window by the margins measured to show without scroll
 bars (twenty helpers in the three-row rectangle fail it, shown 2026-11-15;
 DECISIONS.md 2026-11-15, *the helpers for BinHex 4.0 and 5.0*).
+An `APPL` `FREF` fails in a stamped helper, in a helper read out of the
+shipped zip, and in any `Desktop` file bundle but MacExtract's: the dist at
+cdfbed8b fails 63 times, and a helper stamped by its `make_stub.py` fails
+`--file` (2026-11-16).
 `--file X` checks a helper already stamped. Shown able to fail on each property (DECISIONS.md 2026-11-03,
 *the gate a helper commit has*; the `'open'` absent or listing a type, 2026-11-13; the DiskDoubler helper stamped with an empty `'open'`, the same day). **It cannot see** whether a Finder
 accepts the bundle or draws the icon, whether a placed icon overlaps its

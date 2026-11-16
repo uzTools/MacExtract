@@ -12,8 +12,13 @@ the stubs can live*). So each stub carries:
 
   - the file creator it claims, and the Finder's hasBundle flag, which
     nothing in the Retro68 chain sets (tools/icon/set_bundle_bit.py);
-  - a 'BNDL' owned by that creator, its signature resource, and 'FREF's:
-    'APPL' for itself and one per document type, all local icon 0;
+  - a 'BNDL' owned by that creator, its signature resource, and one
+    'FREF' per document type, all local icon 0, and none for 'APPL': the
+    Finder files icons by creator and type, and a helper's creator is a
+    real program's, so an application icon here became that program's
+    (the maintainer, 2026-11-16; DECISIONS.md 2026-11-16, *the helper
+    without an application icon*). A helper draws its creator's program's
+    icon where one is registered, the generic one where none is;
   - an 'open' resource listing the types it claims that MacExtract's own
     bundle does not: none for every helper but DiskDoubler's, so that
     Macintosh Easy Open does not offer a helper beside MacExtract for an
@@ -23,9 +28,7 @@ the stubs can live*). So each stub carries:
     for them (*the helper Easy Open offers for DiskDoubler's icons*);
   - one icon family, the archive icon, read from
     mac/macextract_archive_icons.r (tools/icon/make_archive_icon.py),
-    for the helper and its documents alike: a second family, MacExtract's
-    own for the helper, cost each helper file 2,304 B, and the maintainer
-    chose the space (2026-11-03).
+    for its documents.
 
 The resource-fork and MacBinary code is tools/vmac/deskclaim.py's, which
 the stand-in stubs of 2026-10-10/11 were written with.
@@ -57,7 +60,7 @@ def bndl(owner, ntypes):
     Interface, the bundle resource — owner, owner ID 0, type count - 1, then
     per type its pair count - 1 and (local ID, resource ID) pairs."""
     icn = struct.pack(">Hhh", 0, 0, ICON)
-    frefs = [(0, 128)] + [(1, 129 + k) for k in range(ntypes)]
+    frefs = [(1, 129 + k) for k in range(ntypes)]
     fref = struct.pack(">H", len(frefs) - 1) + b"".join(
         struct.pack(">hh", l, r) for l, r in frefs)
     return owner + struct.pack(">hH", 0, 1) + b"ICN#" + icn + b"FREF" + fref
@@ -98,7 +101,6 @@ def stamp(stub, creator, types, name=None, version=None):
 
     for t, data in A.resources().items():
         res.append((t, ICON, PURGEABLE, None, data))
-    res.append((b"FREF", 128, PURGEABLE, None, b"APPL" + struct.pack(">h", 0) + b"\0"))
     for k, t in enumerate(types):
         res.append((b"FREF", 129 + k, PURGEABLE, None, t + struct.pack(">h", 0) + b"\0"))
     res.append((b"BNDL", 128, PURGEABLE, None, bndl(creator, len(types))))

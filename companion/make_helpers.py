@@ -100,14 +100,18 @@ def write_zip(path, stub):
 STAMP = bytes.fromhex("77231199")
 
 
-def bundle_copy(macbin, nid):
+def bundle_copy(macbin, nid, appl=True):
     """The resources System 6.0.8's Finder files in a floppy's Desktop file
     for one application, as it wrote them (measured 2026-11-14, DECISIONS.md
     *the floppy that works locked*): the BNDL with its local IDs
     renumbered 1..n in FREF order, one FREF copy per FREF on local icon k,
     one ICN# copy per FREF (the icon its FREF named), the 6-byte signature,
     all at attributes 0x24. Resource IDs from nid(type), in order: the
-    Finder's are UniqueID's, random, so the build picks its own."""
+    Finder's are UniqueID's, random, so the build picks its own.
+    `appl=False` leaves out an 'APPL' FREF and its icon: a helper's
+    creator is a real program's, and the Finder would draw the helper's
+    icon for it (DECISIONS.md 2026-11-16, *the helper without an
+    application icon*); the helpers carry none, so this is their guard."""
     _h, _d, r = D.macbin_split(macbin)
     res, _ = D.rsrc_read(r)
     by = {(t, i): dd for t, i, _a, _n, dd in res}
@@ -122,7 +126,8 @@ def bundle_copy(macbin, nid):
     icn_of = dict(maps[b"ICN#"])
     out, icns, frefs = [], [], []
     bid = nid(b"BNDL")
-    for k, (_local, rid) in enumerate(maps[b"FREF"], 1):
+    kept = [(l, r) for l, r in maps[b"FREF"] if appl or by[(b"FREF", r)][:4] != b"APPL"]
+    for k, (_local, rid) in enumerate(kept, 1):
         fr = by[(b"FREF", rid)]
         icon = by[(b"ICN#", icn_of[struct.unpack(">h", fr[4:6])[0]])]
         iid, fid = nid(b"ICN#"), nid(b"FREF")
@@ -150,7 +155,8 @@ def desktop(apps, appl=True):
     folder, in the layout tools/vmac/deskclaim.py measured off System
     6.0.8's (appl_build); and each one's bundle as bundle_copy() files it,
     which System 6.0.8's Finder does on an unlocked floppy and nothing can
-    on a locked one. `apps` is [(MacBinary, dirid)], MacExtract first.
+    on a locked one, with an 'APPL' icon for MacExtract alone. `apps` is
+    [(MacBinary, dirid)], MacExtract first.
     `appl=False` leaves the 'APPL' list out, as on an MFS floppy, where
     neither 3.0's Finder nor 6.0.8's writes one (measured 2026-11-14).
     Type FNDR, creator ERIK, invisible, as the Finder's own."""
@@ -160,10 +166,10 @@ def desktop(apps, appl=True):
         counter[t] = counter.get(t, 999) + 1
         return counter[t]
     ents, copies = [], []
-    for mb, dirid in apps:
+    for k, (mb, dirid) in enumerate(apps):
         h = mb[:128]
         ents.append((h[69:73], dirid, h[2:2 + h[1]]))
-        copies += bundle_copy(mb, nid)
+        copies += bundle_copy(mb, nid, appl=k == 0)
     res = [(b"STR ", 0, 0x04, None, b"\nFinder 1.0")]
     if appl:
         res.append((b"APPL", 0, 0x04, None, D.appl_build(ents)))

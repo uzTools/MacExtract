@@ -19,9 +19,11 @@ Checked, each from where it is decided:
     handing an archive on: companion/stub/stub.c, Odoc);
   - the bundle: 'BNDL' 128 owned by the creator, its signature resource, one
     icon family at ID 128 and nothing else of the six types, the BNDL's
-    ICN# list a single pair local 0 -> 128, 'FREF' 128 for APPL and one per
-    document type, every one on local icon 0 (the maintainer, 2026-11-03:
-    the archive icon for the helper and its documents);
+    ICN# list a single pair local 0 -> 128, one 'FREF' per document type,
+    every one on local icon 0 (the maintainer, 2026-11-03: the archive
+    icon for its documents), and none for APPL: no application icon (the
+    maintainer, 2026-11-16), in the stamped helpers, in the shipped zip's
+    and in the floppies' Desktop files;
   - 'open' 128 with no types, so Easy Open does not offer the helper for an
     orphaned document (DECISIONS.md 2026-11-13, *the helper that is not
     offered*);
@@ -32,7 +34,7 @@ What it CANNOT see: whether the Finder of a given System accepts the bundle,
 draws the icon, or hands the helper an archive; whether the hand-off to a
 running MacExtract arrives. Those are emulator runs, recorded in DECISIONS.md.
 """
-import argparse, os, shutil, struct, subprocess, sys
+import argparse, os, shutil, struct, subprocess, sys, zipfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
@@ -186,12 +188,54 @@ def check(path, creator=CREATOR, types=TYPES, ceiling=CEILING):
             local = struct.unpack(">h", fr[4:6])[0]
             if local != 0:
                 bad.append(f"FREF {rid} ({fr[:4]!r}) on local icon {local}, not 0")
-        if sorted(kinds) != sorted((b"APPL",) + TYPES):
-            bad.append(f"FREF types {kinds}, not APPL and {list(TYPES)}")
+        if sorted(kinds) != sorted(TYPES):
+            bad.append(f"FREF types {kinds}, not {list(TYPES)}")
+    bad += [f"an 'APPL' FREF in the {o.decode('mac_roman')} bundle: {APPL_ICON}"
+            for o in appl_owners(res)]
 
     if ceiling and len(blob) > ceiling:
         bad.append(f"{len(blob)} B, over the {ceiling} B ceiling")
     return bad, len(blob)
+
+
+# The maintainer, 2026-11-16: a helper carries no application icon. The
+# Finder files icons by creator and type, so a helper's 'APPL' icon became
+# the icon of the real program of its creator once the helper had run
+# (DECISIONS.md 2026-11-16, *the helper without an application icon*).
+APPL_ICON = ("the helper's icon would be drawn for every application of its "
+             "creator (DECISIONS.md 2026-11-16, *the helper without an "
+             "application icon*)")
+
+
+def appl_owners(res, keep=()):
+    """The owners of every 'BNDL' in `res` (a resource list) that maps a
+    'FREF' for 'APPL', but those in `keep`: a helper's fork, or a Desktop
+    file's bundle copies. Source: Inside Macintosh: Macintosh Toolbox
+    Essentials, Finder Interface, the bundle resource."""
+    by = {(t, i): d for t, i, _a, _n, d in res}
+    out = []
+    for t, _i, _a, _n, b in res:
+        if t != b"BNDL" or b[:4] in keep:
+            continue
+        o = 8
+        for _ in range(struct.unpack(">H", b[6:8])[0] + 1):
+            kind, n = b[o:o + 4], struct.unpack(">H", b[o + 4:o + 6])[0] + 1
+            rids = [struct.unpack(">h", b[o + 8 + 4 * k:o + 10 + 4 * k])[0] for k in range(n)]
+            if kind == b"FREF" and any(by.get((b"FREF", r), b"")[:4] == b"APPL" for r in rids):
+                out.append(b[:4])
+            o += 6 + 4 * n
+    return out
+
+
+def sidecar_fork(ad):
+    """The resource fork, entry 2, of an AppleDouble sidecar. Source: RFC
+    1740, AppleSingle/AppleDouble: the entry count at 24, then per entry
+    its ID, offset and length."""
+    for k in range(struct.unpack(">H", ad[24:26])[0]):
+        eid, off, ln = struct.unpack(">III", ad[26 + 12 * k:38 + 12 * k])
+        if eid == 2:
+            return ad[off:off + ln]
+    return b""
 
 
 def check_dist(stub):
@@ -217,9 +261,18 @@ def check_dist(stub):
     M.write_zip(fresh, built)
     if not os.path.isfile(shipped):
         bad.append("dist/MacExtract-Helpers.zip is missing — run tools/make_dist.sh")
-    elif open(shipped, "rb").read() != open(fresh, "rb").read():
-        bad.append("dist/MacExtract-Helpers.zip is STALE: not the zip this tree "
-                   "builds — run tools/make_dist.sh")
+    else:
+        if open(shipped, "rb").read() != open(fresh, "rb").read():
+            bad.append("dist/MacExtract-Helpers.zip is STALE: not the zip this tree "
+                       "builds — run tools/make_dist.sh")
+        # The shipped helpers themselves, read out of the zip.
+        with zipfile.ZipFile(shipped) as z:
+            for n in z.namelist():
+                if "/._" in n:
+                    res, _ = D.rsrc_read(sidecar_fork(z.read(n)))
+                    if appl_owners(res):
+                        bad.append(f"dist/MacExtract-Helpers.zip: {n.split('._')[-1]}: "
+                                   f"an 'APPL' FREF: {APPL_ICON}")
     if shutil.which("hls") and shutil.which("hmount"):
         names = sorted(n for _, n, _ in want)
         for img in ("MacExtract-800K.img", "MacExtract-1440K.img"):
@@ -248,6 +301,9 @@ def check_dist(stub):
                 # what a Finder reads off a locked floppy (DECISIONS.md
                 # 2026-11-14, *the floppy that works locked*).
                 have = open(got_d, "rb").read()
+                for o in appl_owners(D.rsrc_read(D.macbin_split(have)[2])[0], keep=(b"MExt",)):
+                    bad.append(f"dist/{img}: the Desktop file's {o.decode('mac_roman')} "
+                               f"bundle maps an 'APPL' FREF: {APPL_ICON}")
                 want_d = M.desktop(M.volume_apps(
                     open(os.path.join(ROOT, "dist", "MacExtract.bin"), "rb").read(),
                     built, dirid[0]))
@@ -326,7 +382,7 @@ def main():
     if bad:
         return 1
     print(f"helpers: {os.path.basename(path)}: {size} B (ceiling {CEILING}), "
-          f"one CODE segment, one icon family, every FREF on local 0"
+          f"one CODE segment, one icon family, every FREF on local 0, none for APPL"
           + ("" if a.file else "; the helpers zip and both images current"))
     return 0
 
