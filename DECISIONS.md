@@ -627,6 +627,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-15 (the helpers for BinHex 4.0 and 5.0) — `BNHQ` and `BnHq` get a helper each, `BinHex4` and `BinHex5`, claiming `TEXT`: what those creators carry is BinHex and MacBinary, not text; the floppies' Helpers window grows to four rows
 - 2026-11-16 (the helper for MacTar) — `TAR ` gets a helper, `MacTar`, claiming `TARF`, the type its programs' bundles and MacStamp's tar pair give; MacStamp's census holds no document under it; the Helpers window keeps its four rows
 - 2026-11-16 (the helper without an application icon) — the helpers carry no `'APPL'` `'FREF'`: StuffIt Classic keeps its own icon after the StuffIt helper has run, on 7.6.1 and 6.0.8, and where the Finder filed the helper's bundle first it draws the generic icon, never the helper's; −27 B a helper, the zip −380 B, +6,656 B free on each HFS floppy
+- 2026-11-16 (the Read Me in styles) — every text meant to be read on a Mac carries a 'styl' resource: the floppies' Read Me and the share copies of README.md and README.txt, written by `tools/mac_text.py`; SimpleText draws the headings, every TeachText shows the text as before, and the size limit is unchanged
 
 ---
 
@@ -26573,7 +26574,7 @@ version). Largest document opened, one boot per size:
 | TeachText 1.2, 6.0.8, 1 MB | 32,000 B | 32,001 B |
 | SimpleText, 7.0.1, 4 MB | 31,500 B | 31,999 B |
 
-`tools/floppy_readme.py` refuses a text over 30,000 B, 1,500 under the
+`tools/floppy_readme.py` (since 2026-11-16 `tools/mac_text.py`) refuses a text over 30,000 B, 1,500 under the
 lower; README.txt converted the same way (32,595 B) fails it. `dist/README.txt` is unchanged and is not on the disks.
 
 **Verified** on the rebuilt images, locked (each byte-identical after its
@@ -26933,3 +26934,70 @@ blocks). MacExtract 0 B (`MacExtract.bin` identical,
 against its own program; 7.5.5 with StuffIt Classic; a desktop rebuild by
 Command-Option on 7.6.1 (holding the keys through QEMU raised no rebuild
 alert).
+
+## 2026-11-16 (the Read Me in styles) — every text meant to be read on a Mac carries a 'styl' resource: the floppies' Read Me and the share copies of README.md and README.txt, written by `tools/mac_text.py`; SimpleText draws the headings, every TeachText shows the text as before, and the size limit is unchanged
+
+**Decided by the maintainer**: a text to be read on a Mac carries styles, as
+a `'styl'` 128 in its resource fork — the floppies' Read Me, and the copies of
+`README.md` and `dist/README.txt` he reads off his share — with a repo tool
+for the share copies. `tools/floppy_readme.py` became `tools/mac_text.py`:
+Markdown or plain text in, a MacBinary out (Mac Roman, CR, the `'styl'`,
+`'ttro'`/`'ttxt'`), cut at paragraphs into parts under the limit with
+`--split`.
+
+**The format, from sources, not memory.** The style scrap is
+multiversal's `TextEdit.yaml` (`StScrpRec`: a count, then 20-byte
+`ScrpSTElement`s), read back off Apple's own SimpleText documents on the
+7.5.5 install disk ("About System 7.5": 95 styles in 1,902 B = 2 + 20 × 95,
+bold = face 1). Fonts: `FontMgr.yaml` (Geneva 3, Monaco 4). Height and
+ascent: each bitmap font's own `FontRec`, ascent + descent + leading, read
+off the System files of 3.0, 6.0.8, 7.0.1 and 7.5.5's Fonts folder, which
+agree (Geneva 12: 16/12, 14: 19/14, 18: 23/18; Monaco 9: 11/9); the same sum
+reproduces Apple's entries for Geneva 9, Helvetica 10/12/18 and Times 14/24,
+all but Times 12 (Apple's 13/10 against the bitmap's 12/9 — a family not
+used here). **Those bitmaps have no glyph above 0xD9** (and none at 0xE1,
+the middle dot), so the tool writes nothing above it: `·` becomes `•`, and
+README.md's ✅/🔴 become "yes"/"no".
+
+**The markup**: headings `# ` (Geneva 18 bold) and `## ` (Geneva 14 bold),
+`**bold**`, `*italic*`, `` `code` `` in Monaco 9, the body Geneva 12 — the
+font every reader below already drew the plain text in. A table is a row per
+line, cells between " | ", the header bold; a link is its text, then an
+absolute URL in parentheses. `docs/floppy-read-me.txt` keeps its capitals
+under `## `, so a reader without styles still sees headings, and its `- `
+items became `• `; its text is otherwise byte for byte what
+`floppy_readme.py` wrote (2,956 B; 2,848 on the 400K). Plain text
+(`dist/README.txt`): a `===` heading, and each two-space file item's name in
+bold.
+
+**Measured**, the control first (the shipped unstyled Read Me), one boot per
+document. Floppies locked, `tools/vmac/lockedfloppy.py` on the `-ae`
+emulators (the 400K on 3.0: `mv-512Ke`), which logged no odd access; 7.5.5
+on `colouricon.py` (`mv-II16`), 7.6.1 under QEMU's Quadra 800:
+
+| System, reader | floppy Read Me, styled | against the control | README.md, README.txt part 1, 30,000 B of 570 styles |
+|---|---|---|---|
+| 3.0, TeachText 1.2 | opens, plain (800K, 400K) | the window pixel-identical | — |
+| 6.0.8, TeachText 1.2 | opens, plain (800K, 400K) | pixel-identical | README.md plain; 32,000 B with 607 styles opens, 32,001 refused, as unstyled |
+| 7.0.1, TeachText 7.0 (7.0.1's own, put in SimpleText's place) | opens, plain | pixel-identical | README.md and 30,000 B plain |
+| 7.0.1, SimpleText 1.2 (the boot disk's) | **headings in styles** | — | all in styles; 31,500 B of 588 styles opens, as unstyled |
+| 7.5.5, SimpleText 1.3.1 | **in styles** | — | all in styles |
+| 7.6.1, SimpleText 1.3.1 | **in styles** | — | all in styles |
+
+**Nothing else moved.** Each volume window, locked, differs from the
+control's in the "in disk"/"available" figures alone (16 px; 28 on the
+400K): the Read Me's icon is the same. Written on a writable copy by 3.0,
+6.0.8 and 7.0.1's Finders, the Desktop files of control and styled floppy
+hold the same resources, 6.0.8's TeachText bundle copy differing only in the
+IDs that Finder renumbers at random. **The 400K needs nothing special**: MFS
+keeps a resource fork per file, `mkmfs.py` takes the Read Me as a MacBinary
+like the application, and 3.0 at 512Ke and 6.0.8 open it.
+
+**Cost**: the Read Me's resource fork, 472 B, one allocation block on each
+floppy; the images keep their sizes. The share copies: README.md 10,283 B of
+text and a 4,192 B fork; `dist/README.txt` 32,420 B in two parts.
+
+**Not tested**: a real Mac; Mac OS 8 and 9's SimpleText; TeachText on
+README.md under System 3.0 (the test disk there found no application for it);
+README.txt's second part on any System (one style); the 1.44 MB floppy, whose
+Read Me is the 800K's file.

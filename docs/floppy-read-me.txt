@@ -1,4 +1,4 @@
-MacExtract
+# MacExtract
 
 MacExtract opens old Macintosh archives and gives back the files inside
 them as they were: both forks, type and creator, dates, and each icon in
@@ -6,7 +6,7 @@ its place, so an extracted application simply runs. It runs on every
 Macintosh from System 3.0 to Mac OS 9, in 512K or more, with nothing else
 to install.
 
-USING IT
+## USING IT
 
 MacExtract runs from this disk as it is. To keep it, drag it to your hard
 {HFS}disk, with the MacExtract Helpers folder.
@@ -37,7 +37,7 @@ part. Parts named .001, .002 or .z01, .z02 are found by their names, so
 keep the names they came with. Extract onto a different disk from the
 parts.
 
-THE MACEXTRACT HELPERS
+## THE MACEXTRACT HELPERS
 
 Each helper stands in for a program that made archives, such as StuffIt,
 Compact Pro or DiskDoubler, so that double-clicking one of its archives
@@ -48,7 +48,7 @@ opens it in MacExtract.
 {MFS}extract it to your hard disk, beside MacExtract. That gives you the
 {MFS}MacExtract Helpers folder; open it once so the Finder sees the helpers.
 
-WHAT IT OPENS
+## WHAT IT OPENS
 
 - StuffIt (.sit), classic and 5.x, StuffIt SpaceSaver, and self-extracting archives (.sea)
 - Compact Pro (.cpt)

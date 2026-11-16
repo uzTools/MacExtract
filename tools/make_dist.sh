@@ -639,11 +639,15 @@ listed in NOTICE. See LICENSE and NOTICE in the source tree.
 TXT
 # Every disk's "Read Me" is its own short text, docs/floppy-read-me.txt, not
 # README.txt (the maintainer, 2026-11-14: TeachText 1.2 refused README.txt
-# on a Mac Plus); tools/floppy_readme.py converts it and refuses one over
-# what TeachText opens. Typed 'ttro'/'ttxt', TeachText's read-only document,
-# as the Read Me on System 6.0.8's own disks.
-python3 tools/floppy_readme.py docs/floppy-read-me.txt --disk HFS -o "$HFS_TMP/Read Me"
-python3 tools/floppy_readme.py docs/floppy-read-me.txt --disk MFS -o "$HFS_TMP/Read Me MFS"
+# on a Mac Plus); tools/mac_text.py converts it and refuses one over what
+# TeachText opens. A MacBinary typed 'ttro'/'ttxt', TeachText's read-only
+# document, as the Read Me on System 6.0.8's own disks, with a 'styl'
+# resource SimpleText draws its headings from (the maintainer, 2026-11-16;
+# DECISIONS.md 2026-11-16, *the Read Me in styles*).
+python3 tools/mac_text.py docs/floppy-read-me.txt --markdown --disk HFS --name "Read Me" \
+    -o "$HFS_TMP/readme-hfs.bin" >/dev/null
+python3 tools/mac_text.py docs/floppy-read-me.txt --markdown --disk MFS --name "Read Me" \
+    -o "$HFS_TMP/readme-mfs.bin" >/dev/null
 
 cp "$SRC/MacExtract.bin" dist/MacExtract.bin
 cp "$SRC/MacExtract.dsk" dist/MacExtract-800K.img
@@ -685,8 +689,7 @@ python3 companion/make_helpers.py build/stub/Stub.bin -o "$HFS_TMP/helpers" \
     --zip dist/MacExtract-Helpers.zip
 for img in dist/MacExtract-800K.img "$IMG"; do
     HOME=$HFS_TMP hmount "$img" >/dev/null
-    HOME=$HFS_TMP hcopy -r "$HFS_TMP/Read Me" ":Read Me"
-    HOME=$HFS_TMP hattrib -t ttro -c ttxt ":Read Me"
+    HOME=$HFS_TMP hcopy -m "$HFS_TMP/readme-hfs.bin" ":Read Me"
     HOME=$HFS_TMP hmkdir ":MacExtract Helpers"
     for h in "$HFS_TMP"/helpers/*.bin; do
         HOME=$HFS_TMP hcopy -m "$h" ":MacExtract Helpers:$(basename "$h" .bin)"
@@ -753,9 +756,8 @@ MFS=dist/MacExtract-400K.img
 python3 companion/make_helpers.py build/stub/Stub.bin --desktop "$HFS_TMP/DesktopMFS.bin" \
     --app dist/MacExtract.bin --mfs
 python3 tools/vmac/mkmfs.py "$MFS" --name MacExtract dist/MacExtract.bin \
-    "$HFS_TMP/DesktopMFS.bin:Desktop" \
+    "$HFS_TMP/DesktopMFS.bin:Desktop" "$HFS_TMP/readme-mfs.bin:Read Me" \
     --data dist/MacExtract-Helpers.zip MacExtract-Helpers.zip "ZIP MExt" \
-    --data "$HFS_TMP/Read Me MFS" "Read Me" "ttrottxt" \
     --place MacExtract 10 20 --place "Read Me" 10 95 \
     --place MacExtract-Helpers.zip 10 175 >/dev/null
 
@@ -783,15 +785,17 @@ for img in dist/MacExtract-800K.img "$IMG"; do
     HOME=$HFS_TMP hcopy -m "MacExtract:MacExtract" "$HFS_TMP/roundtrip.bin"
     HOME=$HFS_TMP hcopy -m "MacExtract:Read Me" "$HFS_TMP/readme.bin"
     HOME=$HFS_TMP humount >/dev/null
-    python3 - "$HFS_TMP/readme.bin" "$HFS_TMP/Read Me" "$img" <<'PY'
+    python3 - "$HFS_TMP/readme.bin" "$HFS_TMP/readme-hfs.bin" "$img" <<'PY'
 import sys
-r = open(sys.argv[1], 'rb').read()
-dl = int.from_bytes(r[83:87], 'big')
-ok = r[65:73] == b'ttrottxt' and r[128:128 + dl] == open(sys.argv[2], 'rb').read()
+r, w = open(sys.argv[1], 'rb').read(), open(sys.argv[2], 'rb').read()
+# Both forks, padded as the MacBinary pads them, and their lengths.
+ok = r[65:73] == b'ttrottxt' and r[83:91] == w[83:91] and r[128:] == w[128:]
 print(f"make_dist: {sys.argv[3]} Read Me: {r[65:73].decode('mac_roman')!r}, "
-      f"{dl} B, {'identical' if ok else 'DIFFERENT'}")
+      f"{int.from_bytes(r[83:87], 'big')} B and a {int.from_bytes(r[87:91], 'big')} B "
+      f"resource fork, {'identical' if ok else 'DIFFERENT'}")
 sys.exit(0 if ok else 1)
 PY
+    python3 tools/mac_text.py --verify "$HFS_TMP/readme.bin" >/dev/null
     python3 - "$HFS_TMP/roundtrip.bin" "$img" <<'PY'
 import sys
 a = open(sys.argv[1], 'rb').read()
@@ -811,7 +815,7 @@ done
 python3 tools/vmac/mkmfs.py "$MFS" --extract MacExtract "$HFS_TMP/roundtrip.bin" >/dev/null
 python3 tools/vmac/mkmfs.py "$MFS" --extract MacExtract-Helpers.zip "$HFS_TMP/zip.bin" >/dev/null
 python3 tools/vmac/mkmfs.py "$MFS" --extract "Read Me" "$HFS_TMP/readme.bin" >/dev/null
-python3 - "$HFS_TMP/roundtrip.bin" "$HFS_TMP/zip.bin" "$MFS" "$HFS_TMP/readme.bin" "$HFS_TMP/Read Me MFS" <<'PY'
+python3 - "$HFS_TMP/roundtrip.bin" "$HFS_TMP/zip.bin" "$MFS" "$HFS_TMP/readme.bin" "$HFS_TMP/readme-mfs.bin" <<'PY'
 import sys
 a = open(sys.argv[1], 'rb').read()
 b = open('dist/MacExtract.bin', 'rb').read()
@@ -823,8 +827,8 @@ same = a[128:128 + rl] == b[128:128 + rl]
 flags = (a[73] << 8) | a[101]
 zl = int.from_bytes(z[83:87], 'big')
 zsame = z[65:73] == b'ZIP MExt' and z[128:128 + zl] == want
-dl = int.from_bytes(r[83:87], 'big')
-rsame = r[65:73] == b'ttrottxt' and r[128:128 + dl] == open(sys.argv[5], 'rb').read()
+w = open(sys.argv[5], 'rb').read()
+rsame = r[65:73] == b'ttrottxt' and r[83:91] == w[83:91] and r[128:] == w[128:]
 print(f"make_dist: {sys.argv[3]} round-trip: {rl} B resource fork, "
       f"{'identical' if same else 'DIFFERENT'} to the MacBinary, "
       f"Finder flags 0x{flags:04X}; helpers zip {z[65:73].decode('mac_roman')!r}, "
@@ -832,6 +836,7 @@ print(f"make_dist: {sys.argv[3]} round-trip: {rl} B resource fork, "
       f"{r[65:73].decode('mac_roman')!r}, {'identical' if rsame else 'DIFFERENT'}")
 sys.exit(0 if same and flags & 0x2000 and zsame and rsame else 1)
 PY
+python3 tools/mac_text.py --verify "$HFS_TMP/readme.bin" >/dev/null
 # And each Disk Copy image read back: its header, its checksum, and the raw
 # disk it was made from.
 for k in 800K 1440K 400K; do

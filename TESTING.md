@@ -2720,6 +2720,21 @@ accepts the bundle or draws the icon, whether a placed icon overlaps its
 neighbour's name, or whether a hand-off to MacExtract arrives: those are
 emulator runs (`tools/vmac/README.md`, `lockedfloppy.py`).
 
+## The Read Me's styles (`tools/mac_text.py --verify`, in `make_dist.sh`, added 2026-11-16)
+
+`make_dist.sh` reads each floppy's Read Me back off the image (hfsutils;
+`mkmfs.py` for the 400K), compares both forks with the MacBinary
+`mac_text.py` wrote, and `--verify`s it: the MacBinary header's CRC, a
+`'styl'` 128 of exactly 2 + 20 × its count, the first run at 0 and each
+after the last and inside the text, every font and size in the tool's
+table with that table's height and ascent, no byte over 0xD9 and no LF, and
+the size limit. `--selftest` breaks five files (cut short, not from 0, a
+wrong height, a byte with no glyph, no `'styl'`) and fails unless all five
+are reported. **It cannot see** whether SimpleText or TeachText honours
+what it checks, nor how the text wraps or looks: that is an emulator run,
+DECISIONS.md 2026-11-16, *the Read Me in styles*. Nor can it see a heading
+the source misspelled, which comes out as body text.
+
 ## The three Macintosh configurations (`ci.sh` variants 4, 4b, 4c, 4d)
 
 The application is three builds from one tree, and `ci.sh` compiles all
