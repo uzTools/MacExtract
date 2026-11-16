@@ -121,14 +121,13 @@ floppies work locked, on every System.
                   test: start up from the Hard Disk 20, put the floppy in,
                   double-click MacExtract-Helpers.zip and choose the Hard
                   Disk 20. Then tell us what happened, at
-                  https://github.com/uzTools/MacExtract/issues -- twenty
-                  files in a "MacExtract Helpers" folder, or the ID number
-                  if it bombs.
+                  https://github.com/uzTools/MacExtract/issues --
+                  twenty-one files in a "MacExtract Helpers" folder, or
+                  the ID number if it bombs.
 
 Double-click helpers. The 800K and 1.44 MB disks also hold a "MacExtract
-Helpers" folder,
-and MacExtract-Helpers.zip has the same twenty in one file: open it with
-MacExtract. Each one stands in
+Helpers" folder, and MacExtract-Helpers.zip has the same twenty-one in
+one file: open it with MacExtract. Each one stands in
 for a program that made archives -- StuffIt, Compact Pro, DiskDoubler,
 BinHex and others -- so that double-clicking one of its archives opens it in
 MacExtract, on every System from 3.0 to Mac OS 9. Copy the folder to your

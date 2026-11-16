@@ -2693,7 +2693,7 @@ behind its tree.)
 Builds `companion/stub`, stamps a `SIT!` helper with `companion/make_stub.py`,
 and reads off the file what the Finder needs: the flags, one `CODE`
 segment, `canBackground`, the bundle with one icon family, every `FREF` on
-local icon 0, `'open'` 128 listing the types it claims that MacExtract's own bundle does not (none but the DiskDoubler helper's 40), `'vers'` 1 saying `UNC_VERSION`, and a 6,912 B ceiling. Then the twenty of
+local icon 0, `'open'` 128 listing the types it claims that MacExtract's own bundle does not (none but the DiskDoubler helper's 40), `'vers'` 1 saying `UNC_VERSION`, and a 6,912 B ceiling. Then the twenty-one of
 `companion/helpers.tsv`, each read the same way for its own creator and
 types; `dist/MacExtract-Helpers.zip` byte for byte the zip this tree
 writes (it is reproducible; one changed byte fails, shown 2026-11-04);

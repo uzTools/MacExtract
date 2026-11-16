@@ -625,6 +625,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-14 (each format's own program) — MacExtract timed against the program that made or opened each format, on one Mac Plus: faster on 9 of 18 pairs, from 7.9x against MacLHa to 0.14x against UUTool; StuffIt 5, deflate and gzip not timed
 - 2026-11-15 (the last part on another disk) — a Compact Pro set opened at any segment but its last, or a spanned zip at a `.zNN`, with that last part on another disk or in another folder, ended on "Parts missing." without asking; the set's setup now asks for each next part until it turns up, for +318 B of `ovl_segsetup` and 0 B resident
 - 2026-11-15 (the helpers for BinHex 4.0 and 5.0) — `BNHQ` and `BnHq` get a helper each, `BinHex4` and `BinHex5`, claiming `TEXT`: what those creators carry is BinHex and MacBinary, not text; the floppies' Helpers window grows to four rows
+- 2026-11-16 (the helper for MacTar) — `TAR ` gets a helper, `MacTar`, claiming `TARF`, the type its programs' bundles and MacStamp's tar pair give; MacStamp's census holds no document under it; the Helpers window keeps its four rows
 
 ---
 
@@ -26793,3 +26794,52 @@ rows, no scroll bars, on the 800K under 3.0, 6.0.8 and 7.0.1 and the
 **Not tested:** System 3.0 and Mac OS 9 hand-offs; a real Mac; the 400K's
 zip extracted; the five unread `TEXT`/`BNHQ` files; what a `TEXT`/`BNHQ`
 or `TEXT`/`BnHq` file that is plain text does (none was found).
+
+## 2026-11-16 (the helper for MacTar) — `TAR ` gets a helper, `MacTar`, claiming `TARF`, the type its programs' bundles and MacStamp's tar pair give; MacStamp's census holds no document under it; the Helpers window keeps its four rows
+
+**Decided by the maintainer**: a twenty-first helper, for creator `TAR `.
+This extends 2026-11-15, *the helpers for BinHex 4.0 and 5.0*.
+
+**The type it claims** (measured): `TARF` alone. MacStamp's tar pair is
+`TARF`/`S691` (its `data/formats.tsv`, suntar 2.2.3 asked). Two programs
+own `TAR `, and both bundles declare `APPL`, `TARF` and `PREF`: MacTar
+(`app-bundles.tsv`, which also lists `????`) and tar 4.0b, read off
+`derived-tar.sit` ("Tar v4.0"). `PREF` is the program's preferences and is
+not claimed. MacExtract's bundle already claims `TARF` (`'FREF'` 133), so
+its `'open'` lists no type. MacStamp's census (`pair-census.csv`, 143,723
+files) holds 3 `APPL`/`TAR ` and no document under the creator, and no
+`TARF` file under any creator: this helper rests on the bundles, not on
+files found.
+
+**Price.** 6,912 B of MacBinary, as every other; the helpers zip 71,731 →
+75,262 B; the 800K's and 1.44 MB's `Desktop` 45,418 → 46,106 B; free
+space 344,064 → 335,872 B (800K), 995,328 → 987,136 B (1.44 MB), 49 → 46
+blocks of 1 KB (400K, the zip still fits). MacExtract: 0 B (`MacExtract.bin`
+identical; `tools/retake_budgets.py`: every figure agrees).
+
+**Layout.** Twenty-one is still four rows at six across, so
+`tools/make_dist.sh` keeps (54, 30)–(320, 428); `MacTar` sits in row two,
+the last row holds three.
+
+**Measured**, the 800K locked on the `-ae` emulators (none logged an odd
+access; the locked image unchanged by every run), an *Archives* floppy
+writable beside it holding `popper.tar` (`derived-popper-1.7.tar`, 29
+files) and `MacOSX.tar` (`synth-macosx.tar`, a folder of four, three with
+resource forks), both `TARF`/`TAR `:
+
+| | 6.0.8, 1 MB | 7.0.1, 4 MB |
+|---|---|---|
+| before (dist at 1264cfcb), each | "could not be opened/printed (the application is busy or missing)" | "…could not be opened, because the application program that created it could not be found" |
+| after, `popper.tar` | the destination dialog, Extract: 29 of 29 equal to the CLI's | the same, equal |
+| after, `MacOSX.tar` | 4 of 4 equal | equal |
+
+Equal is both forks against `macextract x`, resource header's reserved
+bytes masked, and the type and creator. Each run ejected the *Archives*
+floppy before stopping. The Helpers window: 21 items, 4 rows, no scroll
+bars, on the 800K under 3.0, 6.0.8 and 7.0.1.
+
+**Not tested:** System 3.0 and Mac OS 9 hand-offs; a real Mac; the
+1.44 MB and 400K images under an emulator; the 400K's zip extracted; a tar
+written by MacTar or tar 4.0b (neither was run; MacTar stopped on 6.0.8
+with "out of memory", 2026-11-14, *each format's own program*), so whether
+either writes `TARF` is the bundles' word, not a file's.

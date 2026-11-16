@@ -43,3 +43,4 @@ OBBa	AppleBkp	Apple Backup	OBDa,OBDc	the maintainer (2026-11-10); OBDa read off 
 kakc	Tome	Apple's Installer (its Tomes)	idcp,ircp	the maintainer (2026-11-10); idcp read off the 39 Tomes of the System 7.5.5 and Mac OS 8.6 media, no application claims kakc; census 253 (mac/macextract_icons.r); ircp census 16, its parts read since 2026-11-11
 BNHQ	BinHex4	BinHex 4.0	TEXT	the maintainer (2026-11-15); census 24 TEXT/BNHQ; BinHex 4.0's bundle claims TEXT alone (app-bundles.tsv)
 BnHq	BinHex5	BinHex 5.0	TEXT	the maintainer (2026-11-15); census 5 TEXT/BnHq, MacBinary as BinHex 5.0 writes it (macstamp DECISIONS 2026-10-14); its bundle claims TEXT alone (app-bundles.tsv)
+TAR 	MacTar	MacTar	TARF	the maintainer (2026-11-16); MacStamp's tar pair is TARF/S691; MacTar's bundle and tar 4.0b's (derived-tar.sit) claim TARF beside APPL and PREF (app-bundles.tsv); census 3 APPL/TAR , no document

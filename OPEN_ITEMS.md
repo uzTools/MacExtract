@@ -330,7 +330,7 @@ Tome's resource fork (FORMATS.md, *Apple Installer Tomes*). Left:
 
 `companion/` works (DECISIONS.md 2026-10-11, *the stub that hands it on*);
 its helpers are in `dist/` and on both disk images since
-2026-11-04 (twenty since 2026-11-15: Apple Backup's and the Installer Tome's since 2026-11-10, BinHex 4.0's and 5.0's since 2026-11-15), in no release yet (DECISIONS.md 2026-11-04, *the helpers in
+2026-11-04 (twenty-one since 2026-11-16: Apple Backup's and the Installer Tome's since 2026-11-10, BinHex 4.0's and 5.0's since 2026-11-15, MacTar's since 2026-11-16), in no release yet (DECISIONS.md 2026-11-04, *the helpers in
 dist*). Left:
 
 - **The stub's reclaim on System 7.x.** On 7.5.5 a helper opened by
@@ -346,7 +346,7 @@ dist*). Left:
   helper's, then whether a desktop rebuild or Expander's next launch
   takes it back; deleting the Helpers folder and unzipping it again.
   Whichever works goes in the stub, or in one reclaimer app that walks
-  all twenty creators in a launch (in the helpers zip, no byte of
+  all twenty-one creators in a launch (in the helpers zip, no byte of
   MacExtract's) — the maintainer's choice, later.
 - **A helper launches under a bare program name.** On System 6 the
   Finder's launch screen shows the launching file's name alone in the
@@ -359,7 +359,7 @@ dist*). Left:
   `check_helpers.py`, MacStamp's records) and the 31-character limit.
 - **An icon per document type, drawn by the maintainer.** Every helper's
   bundle points all its types at one family, MacExtract's archive icon
-  (`companion/make_stub.py`); the twenty helpers claim 82 types between
+  (`companion/make_stub.py`); the twenty-one helpers claim 83 types between
   them (`DDAP` 44, `SIT!` 8, `SITx` 5, `MARc` 4, the rest 1 or 2;
   `companion/helpers.tsv`). The Finder draws a file's icon from the
   application that owns its creator, so these show on archives that keep
