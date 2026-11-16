@@ -1,10 +1,13 @@
 # MANUAL_TESTS.md — what only a person outside this machine can settle
 
-**Status: two machines on silicon.** The maintainer's LC 475 (68LC040,
-System 7.6.1, 12 MB), from 2026-10-11, and a Mac OS 9.2.2 PowerPC, from
-2026-10-14; their results are BLOCKERS.md's (*Status*), and nothing they
-found is open. Nothing older has run the application. Everything else here was observed under Mini vMac
-(System 3.0, 6.0.8, 7.0.1) or QEMU (Mac OS 9.2): evidence, not proof.
+**Status: three machines on silicon.** The maintainer's LC 475 (68LC040,
+System 7.6.1, 12 MB) since 2026-10-11, a Mac OS 9.2.2 PowerPC since
+2026-10-14, and a Mac Plus (1 MB, one floppy drive, System 6.0.8 from a
+floppy) since 2026-11-14; results are BLOCKERS.md's (*Status*). The Plus
+found the address-error bomb (fixed, no bomb since on that Plus) and the
+missing auto-eject on one drive (open, §1). Everything else here was
+observed under Mini vMac (System 3.0, 6.0.8, 7.0.1) or QEMU (7.6.1, Mac OS
+9.2): evidence, not proof.
 
 Each item below says what to do and what to record. Nothing below is a
 known failure; it is unverified. **Before adding an item, ask what the
@@ -25,7 +28,7 @@ twice an item here turned out to need neither hardware nor a stranger
 ## Before you start
 
 - **Get the application.** `dist/` holds `MacExtract-800K.img` (an 800K floppy
-  image), `MacExtract-1440K.img` (a 1.44 MB one, §9), each also as a Disk
+  image), `MacExtract-1440K.img` (a 1.44 MB one, §6), each also as a Disk
   Copy 4.2 `.dsk`, and a MacBinary `MacExtract.bin`.
 - **Bring archives over as MacBinary (`.bin`)**, or over AppleShare, which
   keeps both forks and lets the result be graded from Linux (how round 2
@@ -40,8 +43,17 @@ twice an item here turned out to need neither hardware nor a stranger
 ## 1. A real 68000 Mac (Plus, SE, Classic), System 3.0 or 6.0.x, 1 MB — the floor target
 
 The machine the project is designed around, and the one where an emulator
-is least trustworthy. Do these first. The LC 475 cannot stand in: a
-68020-and-up CPU performs the misaligned accesses a 68000 bombs on.
+is least trustworthy. The LC 475 cannot stand in: a 68020-and-up CPU
+performs the misaligned accesses a 68000 bombs on. The maintainer's Plus
+has one floppy drive and no hard disk.
+
+- [ ] **A split set on one drive.** Open MacExtract from its floppy, Open,
+      Eject, Sets 1, `Education.cpt.#1`, output on another floppy. Expected:
+      each parts disk comes out by itself and Sets 2 and 3 are asked for;
+      the files match. Until the eject fix lands, the parts disk stays in
+      (the Plus, 2026-11-16).
+- [ ] **The MacExtract floppy, locked**, on 6.0.8: every icon shown, the
+      Helpers window without scroll bars, the Read Me opens in TeachText.
 
 - [ ] **Free heap at launch.** Compare `FreeMem()` with the emulated 1 MB
       System 6.0.8 machine's **650,976 B** (budget 630,496 B after the
@@ -65,7 +77,8 @@ is least trustworthy. Do these first. The LC 475 cannot stand in: a
       for a wrong byte or a late crash. `UNC_STACK_BUMP_KB` rebuilds at any
       size.
 - [ ] **Address errors.** A bomb with an address-error ID is a finding;
-      record the fixture and the ID.
+      record the fixture and the ID. The one found (2026-11-14) is fixed
+      and did not recur on the Plus.
 - [ ] **The Finder afterwards.** Quit, relaunch the Finder, launch another
       application.
 - [ ] **Timing.** Time two or three extractions against FORMATS.md's 1x
@@ -75,31 +88,13 @@ is least trustworthy. Do these first. The LC 475 cannot stand in: a
       `derived-Library_ISBN_Barcoder.sit` (~12 min), on the sampled index. A per-entry refusal is
       acceptable; a crash is not.
 
-## 3. Real PowerPC hardware, Mac OS 9
-
-Done on Mac OS 9.2.2, HFS+, 2026-10-14: launch, extraction onto HFS+, the
-cut to 31 characters, 8-bit names in the Finder and Standard File, a file
-over 2 GB refused as one entry (BLOCKERS.md, *Status*). Nothing is left in
-this section.
-
-## 4. The interactive application, on any real machine
-
-Driven end to end under emulation on System 3.0 and 6.0.8
-(`tools/vmac/interactive.py --e2e`). Done on the LC 475: launch, Cancel
-in Standard File, Cancel and File ▸ Quit mid-run, the 31-character cut,
-a `.cpt` tree, `.hqx`, `.bin`, a truncated `.sit`, a non-archive, zip and
-StuffIt passwords, several archives opened at once, 24 archives byte-exact
-with types, creators and dates, the destination dialog, other volumes
-through Desktop, `/` in names, `~1` on a second run, a desk accessory over
-the progress window, Cmd-. on a U.S. layout and on AZERTY (BLOCKERS.md, *Status*).
-
-## 5. Things the Toolbox promises
+## 2. Things the Toolbox promises
 
 - [ ] **`SFReply.vRefNum`** is a working-directory reference passed with
       `dirID` 0: output lands beside the archive, not at the volume root,
       on System 6 (passed on 7.6.1 and Mac OS 9.2.2).
 
-## 6. A Macintosh 512K with a Hard Disk 20
+## 3. A Macintosh 512K with a Hard Disk 20
 
 **Not a 128K**: that machine is out on its heap total (FORMATS.md, *A
 Macintosh 128K*). Mini vMac does not emulate the HD20; an HFS image stands
@@ -121,15 +116,15 @@ ROM lacks*).
 | 64K ROM with the `Hard Disk 20` file less `.Sony`, an HFS image for the disk | **extracts** under emulation, one archive, 16 of 16 (2026-11-06) |
 | 64K ROM with the whole `Hard Disk 20` file, no drive | hangs under emulation — *hypothesis*: its `.Sony` patch against Mini vMac's own floppy driver |
 
-**The test** is the one `dist/README.txt` gives anyone who has the
-machine: write `dist/MacExtract-400K.img` (or its Disk Copy `.dsk`) to a 400K floppy, start up from
+**The test** is the one README.md (*What you need*) gives anyone who has
+the machine: write `dist/MacExtract-400K.img` (or its Disk Copy `.dsk`) to a 400K floppy, start up from
 the HD20, double-click `MacExtract-Helpers.zip` on the floppy and choose
 the HD20; a pass is twenty-one helpers in a `MacExtract Helpers` folder.
 Record whether it extracts; if it bombs, the ID and the screen; the
 output's sizes and dates. A pass would not by itself move
 the floor — BLOCKERS.md's tiers would be re-run first.
 
-## 7. A bug report, written and not posted
+## 4. A bug report, written and not posted
 
 It needs an account, not a Macintosh. **No session working in this
 repository submits it** (CLAUDE.md, *Rules*); the maintainer posts it.
@@ -146,15 +141,20 @@ leak into the extracted file (`case_d`/`case_e`, 2026-11-05); the maintainer
 may prefer reporting the leak privately to MacPaw over a public issue, the
 usual practice for a bug that can expose memory contents.
 
-## 8. A release
+## 5. A release
 
-`v0.45.0` (2026-11-02) is the newest tag. `main`'s `dist/` is **v0.46.0,
-staged and not tagged** (2026-11-14): its files are on the maintainer's
-share for his own run on the LC, the iMac, the Plus and the SE/30, and the
-release floppies with them. Tagging waits for his go on README.md and
-`dist/README.txt` (CLAUDE.md, *Cutting a release*).
+`v0.45.0` (2026-11-02) is the newest tag; it bombs every 68000 Mac at the
+destination dialog. `main`'s `dist/` is **v0.46.0, staged and not tagged**;
+the maintainer has read README.md and `dist/README.txt`, and tagging waits
+for the one-drive eject fix and his go (CLAUDE.md, *Cutting a release*).
 
-## 9. The 1.44 MB image, written with a USB floppy drive
+- [ ] **On the LC 475, the helpers' icons.** After a restart, open the
+      hard disk's Helpers folder (copied from the zip or the floppy, which
+      keep the helpers' 1984 dates): expected, each helper shows its real
+      program's icon or the generic one, and StuffIt Classic keeps its own
+      (DECISIONS.md 2026-11-16, *the helper dated 1984*).
+
+## 6. The 1.44 MB image, written with a USB floppy drive
 
 `dist/MacExtract-1440K.img` is checked here only through hfsutils, which
 reads it back byte-exact (`make_dist.sh`); no Macintosh has mounted it

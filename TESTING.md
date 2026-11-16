@@ -4376,7 +4376,7 @@ DECISIONS.md, *the character that was touched three times*).
     - `--diskeject`: part 1 on a floppy of its own, which must be ejected
       before the alert asks while the application's disk is not, and on
       System 7 no dimmed Floppy A left on the desktop. **Neither can see a
-      one-drive Mac** (MANUAL_TESTS.md §4) — except `onedrive.py`'s, on a
+      one-drive Mac** (MANUAL_TESTS.md, *A real 68000 Mac*) — except `onedrive.py`'s, on a
       one-floppy Mini vMac build, which counts the disks the System asks
       for after Save.
     - `--wd`: the archive inside a folder, Return accepts the default
