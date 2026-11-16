@@ -189,7 +189,8 @@ coffee at [ko-fi.com/khaz1](https://ko-fi.com/khaz1).
 [DECISIONS.md](DECISIONS.md) (why) ·
 [OPEN_ITEMS.md](OPEN_ITEMS.md) (what is missing) ·
 [BLOCKERS.md](BLOCKERS.md) (status) ·
-[MANUAL_TESTS.md](MANUAL_TESTS.md) (what needs a real Mac)
+[MANUAL_TESTS.md](MANUAL_TESTS.md) (what needs a real Mac) ·
+[CHANGES.md](CHANGES.md) (what each version changed)
 
 ## License
 
