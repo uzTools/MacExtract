@@ -21,6 +21,8 @@ folder. Files can be written to a hard disk or an 800K disk, not to a
 
 {HFS}With no hard disk, eject this disk, put in the one with your archive and
 {HFS}double-click the archive. The Mac asks for each disk in turn.
+{HFS}On System 7, open MacExtract first and choose the archive from its
+{HFS}Open dialog: the Finder alone asks for each disk several times.
 
 When it has finished, anything that had to change is listed: a name that
 was too long, or a file that could not be extracted. Save as Text keeps

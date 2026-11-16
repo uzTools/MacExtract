@@ -35,8 +35,14 @@ currently **v0.46.0**, or from the tree:
 | [`dist/MacExtract-400K.img`](dist/MacExtract-400K.img), [`.dsk`](dist/MacExtract-400K.dsk) | a 400K MFS floppy, for a Macintosh 512K with a Hard Disk 20 |
 | [`dist/MacExtract-Helpers.zip`](dist/MacExtract-Helpers.zip) | the double-click helpers in one file, for MacExtract to open; also on every disk |
 
-Each floppy is a raw `.img` and a Disk Copy 4.2 `.dsk`, and holds a short "Read Me". All but the `.hqx` open without an unarchiver. [`dist/README.txt`](dist/README.txt)
-has the transfer notes.
+Each floppy is a raw `.img` and a Disk Copy 4.2 `.dsk`, and holds a short "Read Me". All but the `.hqx` open without an unarchiver.
+
+- **`.img`** is the raw disk: write it with `dd` or a raw image writer, or mount it in an emulator.
+- **`.dsk`** is for Apple's Disk Copy, which opens it once its type is `dImg` and its creator `dCpy`.
+- **A USB floppy drive** writes only the 1.44 MB disk, and a Mac Plus, 512Ke or original SE reads only 400K/800K ones.
+  Write the image itself; `MacExtract.bin` copied onto a PC-formatted disk arrives still wrapped.
+- **No hard disk?** Put the MacExtract floppy in, eject it, put in the floppy with your archive and double-click the archive; the Mac asks for each disk in turn.
+  On System 7, open MacExtract first and choose the archive in its Open dialog: the Finder alone asks for each disk about four times.
 
 ## What it opens
 
@@ -147,9 +153,11 @@ in [FORMATS.md](FORMATS.md).
   its 1986 system. A true Macintosh 512K (64K ROM) starts it, but extracting
   needs HFS, which that machine has only with a Hard Disk 20. With one it
   extracts on an emulator; nobody has tried a real one yet. If you have
-  one, the 400K floppy above is the test, and
-  [`dist/README.txt`](dist/README.txt) says what to do. A Macintosh 128K is
-  too small.
+  one, the 400K floppy above is the test: start up from the Hard Disk 20,
+  put the floppy in, double-click `MacExtract-Helpers.zip` and choose the
+  Hard Disk 20, then [tell us](https://github.com/uzTools/MacExtract/issues)
+  what happened: a "MacExtract Helpers" folder, or the ID number if it
+  bombs. A Macintosh 128K is too small.
 - **For everything:** 1 MB. In 512 KB some large StuffIt 5 archives, and a
   few other big ones, skip the entries that do not fit and extract the rest.
 - **Runs on** System 6, System 7, Mac OS 8 and 9, PowerPC included.

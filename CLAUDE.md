@@ -135,8 +135,11 @@ git push origin v0.12
 - **Push `main` before tagging** — Actions reads the workflow from the pushed
   ref.
 - **`dist/` must be current**; the workflow publishes what is committed.
-- **The release notes are `dist/README.txt`, verbatim** — a download page, not
-  a changelog, and the "Read Me" on every floppy. Re-read it before tagging.
+- **The release notes are `dist/README.txt`, verbatim** — this version's
+  changes only; README.md is the download page. When a new version's notes
+  replace them, the old ones move to the top of `CHANGES.md` under their
+  version. The floppies' "Read Me" is `docs/floppy-read-me.txt`, not this.
+  Re-read it before tagging.
 - **The maintainer reads `README.md` and `dist/README.txt` before every
   release.** Hand him both as they will ship and wait for his go; a request
   to release is not that go.
