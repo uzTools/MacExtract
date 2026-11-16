@@ -326,6 +326,24 @@ Tome's resource fork (FORMATS.md, *Apple Installer Tomes*). Left:
   reported upstream, and no minimal repro is written; the maintainer posts
   upstream reports.
 
+## A floppy that starts the Mac: an open question, nice to have
+
+On a Mac with one floppy drive and no hard disk, the System disk is asked
+for again and again during an extraction (the maintainer's Mac Plus,
+2026-11-16). A MacExtract floppy that is also a startup disk would remove
+those swaps. Not a requirement; nothing is measured. Open:
+- **800K:** a minimal System 6.0.8 and Finder beside MacExtract, for the
+  Macs that ship without a hard disk (Plus, 512Ke, SE, early Mac II); the
+  space it leaves, the helpers or not, and whether it should be a separate
+  image so a System 7 Mac is never started from it by accident.
+- **400K:** a System a Macintosh 512K (64K ROM) starts, on a disk that is
+  MFS today because that ROM reads no other floppy; whether such a disk can
+  also give MacExtract the HFS it needs to extract, and whether it fits.
+- Whether shipping Apple's System files is possible at all.
+- A cheaper part of the same gain, without a System on the disk: loading the
+  System resources the Toolbox fetches once at launch and keeping them in
+  memory; which ones they are is not measured.
+
 ## The double-click helpers: what is left
 
 `companion/` works (DECISIONS.md 2026-10-11, *the stub that hands it on*);
