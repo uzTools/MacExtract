@@ -141,7 +141,7 @@ Not timed: StuffIt 5, today's zip and gzip, whose programs need System 7
 or would not run here. The Deluxes do not run on a Mac Plus. Every figure
 in [FORMATS.md](FORMATS.md).
 
-## What you need, and how long you will wait
+## What you need
 
 - **Minimum:** System 3.0, 68000, 512 KB: a Macintosh 512Ke, or a Plus with
   its 1986 system. A true Macintosh 512K (64K ROM) starts it, but extracting
@@ -157,17 +157,6 @@ in [FORMATS.md](FORMATS.md).
   not supported.
 - **Memory under System 7:** about 800 KB in Get Info is enough for every
   archive tested.
-
-On a 1 MB Mac Plus, the slowest machine supported:
-
-| Archive | Time |
-|---|---|
-| A few KB, any format | 2–16 seconds |
-| A few hundred KB, most formats | up to 2 minutes |
-| 150 KB StuffIt 5 | 4 minutes |
-| 200 KB StuffIt 5 unpacking to 640 KB, worst case measured | 11 minutes |
-
-A faster Mac is proportionally faster.
 
 ## Linux
 
