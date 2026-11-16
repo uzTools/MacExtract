@@ -357,6 +357,16 @@ its helpers are in `dist/` and on both disk images since
 2026-11-04 (twenty-one since 2026-11-16: Apple Backup's and the Installer Tome's since 2026-11-10, BinHex 4.0's and 5.0's since 2026-11-15, MacTar's since 2026-11-16), in no release yet (DECISIONS.md 2026-11-04, *the helpers in
 dist*). Left:
 
+- **Each helper carries the same code: one shared file would hold it.**
+  Twenty-one helpers of 6,912 B differ only in creator and bundle (and,
+  later, icons). Proposed: a "Helper Code" file in the MacExtract Helpers
+  folder holds the common code; each helper keeps its bundle, its icons and
+  a small loader that opens that file from its own folder and jumps to the
+  code. The helpers must then stay together in one folder, which the
+  maintainer accepts (2026-11-16; finding MacExtract stays
+  location-independent). Not measured: the code/resource split of a helper,
+  the loader's size, the saving (estimated 50-60 KB across the set).
+
 - **A program installed after its helper loses its icon on System 6 and
   3.0.** The Finder keeps the first bundle it meets for a creator, so the
   real program draws the generic application icon; on System 7.6.1 the
