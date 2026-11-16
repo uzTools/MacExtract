@@ -72,7 +72,14 @@ def sidecar(macbin):
     flags; no position) and its resource fork."""
     h, _d, r = D.macbin_split(macbin)
     flags = (h[73] << 8) | h[101]
-    return X.copyfile_sidecar(X.finfo(h[65:69], h[69:73], flags, 0, 0), r)
+    # Entry 8, the file dates (RFC 1740: seconds from 1 January 2000 GMT,
+    # signed), before the fork so the zip reader's window holds it
+    # (src/unc_sidecar.c, unc_ad_apply): a helper MacExtract extracts keeps
+    # make_stub's old creation date, not the moment it was written.
+    when = (S.DATE - 3029529600) & 0xFFFFFFFF
+    dates = struct.pack(">IIII", when, when, 0x80000000, 0x80000000)
+    return X.rfc_sidecar([(9, X.finfo(h[65:69], h[69:73], flags, 0, 0)),
+                          (8, dates), (2, r)])
 
 
 def write_zip(path, stub):

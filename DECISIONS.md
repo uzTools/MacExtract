@@ -628,6 +628,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-16 (the helper for MacTar) — `TAR ` gets a helper, `MacTar`, claiming `TARF`, the type its programs' bundles and MacStamp's tar pair give; MacStamp's census holds no document under it; the Helpers window keeps its four rows
 - 2026-11-16 (the helper without an application icon) — the helpers carry no `'APPL'` `'FREF'`: StuffIt Classic keeps its own icon after the StuffIt helper has run, on 7.6.1 and 6.0.8, and where the Finder filed the helper's bundle first it draws the generic icon, never the helper's; −27 B a helper, the zip −380 B, +6,656 B free on each HFS floppy
 - 2026-11-16 (the Read Me in styles) — every text meant to be read on a Mac carries a 'styl' resource: the floppies' Read Me and the share copies of README.md and README.txt, written by `tools/mac_text.py`; SimpleText draws the headings, every TeachText shows the text as before, and the size limit is unchanged
+- 2026-11-16 (the helper dated 1984) — every helper's dates are 1 January 1984, so a real program installed after the helpers keeps its own icon on System 7; on System 6 it still draws the generic icon; 0 B
 
 ---
 
@@ -27001,3 +27002,32 @@ text and a 4,192 B fork; `dist/README.txt` 32,420 B in two parts.
 README.md under System 3.0 (the test disk there found no application for it);
 README.txt's second part on any System (one style); the 1.44 MB floppy, whose
 Read Me is the 800K's file.
+
+## 2026-11-16 (the helper dated 1984) — every helper's dates are 1 January 1984, so a real program installed after the helpers keeps its own icon on System 7; on System 6 it still draws the generic icon; 0 B
+
+**Decided by the maintainer:** ship the helpers, with this fix and its limits
+stated. *The helper without an application icon* left one order wrong: a
+helper on the Mac first, its real program added later, and the program drew
+the generic icon.
+
+**Measured, 7.6.1** (QEMU Quadra 800; the StuffIt helper built by
+`companion/make_helpers.py`, then StuffIt Classic 1.6 added, two restarts;
+one run each, final frames): the helper dated 1984 → Classic keeps its own
+icon, and the desktop database lists both applications under `SIT!`; the
+same file re-dated 2026 → Classic draws an archive icon and the database
+lists Classic alone. Earlier helpers that still carried an application icon
+gave the same split (1985 against 2026). Hypothesis: the 7.6.1 Finder keeps
+the older application's bundle for a creator; not reduced further.
+
+**Measured, 6.0.8** (one run each): the date changes nothing. The Desktop
+file keeps the first bundle it meets for a creator and never replaces it, so
+a program added after its helper draws the generic icon. Only rewriting the
+Desktop file would change that (a separate repair program; not built).
+
+**How:** `companion/make_stub.py` stamps the MacBinary dates;
+`companion/make_helpers.py` writes them into each zip entry's AppleDouble
+(entry 8), which MacExtract applies on extraction. The floppies' helpers read
+1 January 1984. MacExtract is unchanged.
+
+**Not tested:** 7.0.1, 7.5.5, Mac OS 8 and 9; a helper other than StuffIt's;
+a real Mac; the program-first order with dated helpers (it passed undated).

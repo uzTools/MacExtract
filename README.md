@@ -41,8 +41,7 @@ Each floppy is a raw `.img` and a Disk Copy 4.2 `.dsk`, and holds a short "Read 
 - **`.dsk`** is for Apple's Disk Copy, which opens it once its type is `dImg` and its creator `dCpy`.
 - **A USB floppy drive** writes only the 1.44 MB disk, and a Mac Plus, 512Ke or original SE reads only 400K/800K ones.
   Write the image itself; `MacExtract.bin` copied onto a PC-formatted disk arrives still wrapped.
-- **No hard disk?** Put the MacExtract floppy in, eject it, put in the floppy with your archive and double-click the archive; the Mac asks for each disk in turn.
-  On System 7, open MacExtract first and choose the archive in its Open dialog: the Finder alone asks for each disk about four times.
+- **No hard disk?** Open MacExtract from its floppy, choose Open, click Eject, put in the floppy with your archive and choose it; the Mac asks for each disk in turn.
 
 ## What it opens
 

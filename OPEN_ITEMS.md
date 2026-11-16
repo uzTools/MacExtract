@@ -333,6 +333,13 @@ its helpers are in `dist/` and on both disk images since
 2026-11-04 (twenty-one since 2026-11-16: Apple Backup's and the Installer Tome's since 2026-11-10, BinHex 4.0's and 5.0's since 2026-11-15, MacTar's since 2026-11-16), in no release yet (DECISIONS.md 2026-11-04, *the helpers in
 dist*). Left:
 
+- **A program installed after its helper loses its icon on System 6 and
+  3.0.** The Finder keeps the first bundle it meets for a creator, so the
+  real program draws the generic application icon; on System 7.6.1 the
+  helpers' 1984 dates fix it (measured, DECISIONS.md 2026-11-16, *the
+  helper dated 1984*). Would close it: a program that rewrites the Desktop
+  file, not built.
+
 - **The stub's reclaim on System 7.x.** On 7.5.5 a helper opened by
   itself says it took its creator back and does not: the archive still
   opens in StuffIt Expander (DECISIONS.md 2026-11-13, *the registration

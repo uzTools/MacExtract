@@ -23,6 +23,11 @@ helpers, for an archive whose program is missing. A file DiskDoubler
 compressed in place opens through the "DiskDblr" helper, which also gives
 it the archive icon.
 
+A helper shares its creator with the program it stands in for, and never
+takes that program's icon. One limit: on System 6 and 3.0, a program
+installed after the helpers shows the generic application icon instead of
+its own; on System 7.6.1, the one tested, it keeps its own.
+
 MacExtract itself takes about 7 KB less memory, which every archive gets
 instead, and on a Mac Plus StuffIt's method 5, zip's Implode and the LZH
 methods decode between a fifth and a third faster, a zip stored without

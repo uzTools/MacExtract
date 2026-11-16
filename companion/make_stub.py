@@ -46,6 +46,11 @@ FAMILY = (b"ICN#", b"ics#", b"icl4", b"ics4", b"icl8", b"ics8")
 ICON = 128
 PURGEABLE = 0x20
 HAS_BUNDLE, INITED = 0x2000, 0x0100
+# The helper's creation and modification dates: 1 January 1984, 00:00,
+# local, in the File Manager's seconds since 1904. Older than any program
+# whose creator a helper takes, so the Finder files that program's bundle
+# whichever it meets first (PROTOTYPE: DECISIONS.md, the root cause).
+DATE = 2524608000
 
 
 def ostype(s):
@@ -124,6 +129,7 @@ def stamp(stub, creator, types, name=None, version=None):
         n = name.encode("mac_roman")[:63]
         h[1:65] = bytes([len(n)]) + n + b"\0" * (63 - len(n))
     h[69:73] = creator
+    h[91:99] = struct.pack(">II", DATE, DATE)
     flags = ((h[73] << 8) | h[101] | HAS_BUNDLE) & ~INITED
     h[73], h[101] = flags >> 8, flags & 0xFF
     return D.macbin_join(bytes(h), d, D.rsrc_write(res, fattr))
