@@ -49,7 +49,7 @@ opens it in MacExtract.
 {MFS}extract it to your hard disk, beside MacExtract. That gives you the
 {MFS}MacExtract Helpers folder; open it once so the Finder sees the helpers.
 
-## KNOWN LIMITS
+## CURRENT LIMITATIONS
 
 On System 6 and 3.0, a program installed after the helpers shows the
 generic application icon instead of its own.

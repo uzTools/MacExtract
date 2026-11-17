@@ -165,7 +165,7 @@ in [FORMATS.md](FORMATS.md).
 - **Memory under System 7:** about 800 KB in Get Info is enough for every
   archive tested.
 
-## Known limits
+## Current limitations
 
 - **Helper icons on System 6 and 3.0:** a program installed after the
   MacExtract Helpers shows the generic application icon instead of its own.
