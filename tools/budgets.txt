@@ -12,14 +12,14 @@
 
 # ---- MEASURED: resident CODE and A5 (data + bss) per configuration, the
 # ratchets tools/build_mac.sh holds each build to
-UNC_MAC_CODE_DEFAULT=199068   # the resident control (UNC_OVL_RESIDENT)
-UNC_MAC_A5_DEFAULT=35140
-UNC_MAC_CODE_EAGER=34368      # the shipped build
-UNC_MAC_A5_EAGER=14016
-UNC_MAC_CODE_LAZY=33516       # the lazy lifetime (UNC_OVL_LAZY)
+UNC_MAC_CODE_DEFAULT=199084   # the resident control (UNC_OVL_RESIDENT)
+UNC_MAC_A5_DEFAULT=35156
+UNC_MAC_CODE_EAGER=34384      # the shipped build
+UNC_MAC_A5_EAGER=14032
+UNC_MAC_CODE_LAZY=33532       # the lazy lifetime (UNC_OVL_LAZY)
 
 # ---- MEASURED: what tools/run_tiers.py computes every budget from
-TIERS_CONTROL=234208          # the control's CODE + A5
+TIERS_CONTROL=234240          # the control's CODE + A5
 OVL_SAVED=185824              # the control's CODE + A5 less the shipped build's
 BUNDLE=211392                 # ovl_bundle.bin
 # Each image, ovl_<name>.bin

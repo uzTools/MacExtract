@@ -630,6 +630,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-16 (the Read Me in styles) — every text meant to be read on a Mac carries a 'styl' resource: the floppies' Read Me and the share copies of README.md and README.txt, written by `tools/mac_text.py`; SimpleText draws the headings, every TeachText shows the text as before, and the size limit is unchanged
 - 2026-11-16 (the helper dated 1984) — every helper's dates are 1 January 1984, so a real program installed after the helpers keeps its own icon on System 7; on System 6 it still draws the generic icon; 0 B
 - 2026-11-17 (the disk in the drive) — on one floppy drive the part dialog opens on the disk actually in the drive and ejects it through Standard File's own Eject, the archive's resource fork is read before the parts are asked for, and the code images are read before the Toolbox needs the System disk; +208 B resident
+- 2026-11-17 (the rename nobody sees) — a chain's intermediate is deleted once the layer under it is out, so its report lines are dropped when the next layer starts; +16 B resident
 
 ---
 
@@ -27076,3 +27077,20 @@ files equal to the CLI; launch went from 3 disk requests to 1 at 1 MB and
 in particular whether Standard File's Eject leaves the dimmed offline icons
 the old unmount avoided on the LC 475 (2026-10-13) — zip, MIME and split
 sets on one drive, System 3.0.
+
+## 2026-11-17 (the rename nobody sees) — a chain's intermediate is deleted once the layer under it is out, so its report lines are dropped when the next layer starts; +16 B resident
+
+**Claim:** a split set of `adobenumbers.sit` (MacBinary around a StuffIt
+archive of the same name) ended on "AdobeNumbers.sit renamed to
+AdobeNumbers~1.sit", a file deleted moments later (System 6 hard disk,
+`interactive.py --segments`). The maintainer: "this report shouldn't exist".
+
+**Choice:** clear the report where the chain decides to go round again
+(`ExtractOne`), +16 B CODE and +16 B A5. Dropping only the earlier layers'
+lines once their file was deleted kept them when the inner layer fails, and
+cost +208 B. **The cost of the cheap one:** if the inner layer fails, the
+intermediate stays on the disk and its rename is not reported; whether the
+failure line names it as it is on the disk is not measured.
+
+**Measured:** the same run after the change returns to Standard File with
+nothing to report, the files extracted.

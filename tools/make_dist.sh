@@ -132,6 +132,8 @@ itself when the next part is not on it, and the MacExtract disk is asked
 for only once, at launch. A
 locked MacExtract floppy showed no icons, and on System 3.0 bombed when
 its Helpers folder was opened; it now works locked. The icons are new.
+A file renamed inside a chain such as a .sit.hqx is no longer reported,
+since it is deleted once its contents are out.
 
 Current limitations. On System 6 and 3.0, a program installed after the
 helpers shows the generic application icon instead of its own. On a Mac

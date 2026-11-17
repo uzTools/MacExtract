@@ -6715,7 +6715,12 @@ static void ExtractOne(short vRefNum, long dirID, ConstStr255Param name,
                 if (!unc_format_extractable(inner)) break;
             }
             /* Go round on what was just written, and remember it as the
-             * layer to delete once the next one succeeds. */
+             * layer to delete once the next one succeeds. Its report lines
+             * go: they are about that intermediate, a file the user never
+             * sees (the maintainer, 2026-11-17). */
+            gRepN = 0;
+            gRepUsed = 0;
+            gRepMore = 0;
             delVol = outVol;
             delDir = shape.dirID;
             BlockMoveData(shape.name, delName, shape.name[0] + 1);
