@@ -143,10 +143,8 @@ usual practice for a bug that can expose memory contents.
 
 ## 5. A release
 
-`v0.45.0` (2026-11-02) is the newest tag; it bombs every 68000 Mac at the
-destination dialog. `main`'s `dist/` is **v0.46.0, staged and not tagged**;
-the maintainer has read README.md and `dist/README.txt`, and tagging waits
-for the one-drive eject fix and his go (CLAUDE.md, *Cutting a release*).
+`v0.46.0` (2026-11-17) is the newest tag; v0.45.0 bombs every 68000 Mac
+at the destination dialog.
 
 - [ ] **On the LC 475, the helpers' icons.** After a restart, open the
       hard disk's Helpers folder (copied from the zip or the floppy, which
