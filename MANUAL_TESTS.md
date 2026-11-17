@@ -4,8 +4,8 @@
 System 7.6.1, 12 MB) since 2026-10-11, a Mac OS 9.2.2 PowerPC since
 2026-10-14, and a Mac Plus (1 MB, one floppy drive, System 6.0.8 from a
 floppy) since 2026-11-14; results are BLOCKERS.md's (*Status*). The Plus
-found the address-error bomb (fixed, no bomb since on that Plus) and the
-missing auto-eject on one drive (open, §1). Everything else here was
+found the address-error bomb and the missing auto-eject on one drive,
+both fixed in v0.46.0 and passed on that Plus. Everything else here was
 observed under Mini vMac (System 3.0, 6.0.8, 7.0.1) or QEMU (7.6.1, Mac OS
 9.2): evidence, not proof.
 
@@ -28,7 +28,7 @@ twice an item here turned out to need neither hardware nor a stranger
 ## Before you start
 
 - **Get the application.** `dist/` holds `MacExtract-800K.img` (an 800K floppy
-  image), `MacExtract-1440K.img` (a 1.44 MB one, §6), each also as a Disk
+  image), `MacExtract-1440K.img` (a 1.44 MB one, *The 1.44 MB image*), each also as a Disk
   Copy 4.2 `.dsk`, and a MacBinary `MacExtract.bin`.
 - **Bring archives over as MacBinary (`.bin`)**, or over AppleShare, which
   keeps both forks and lets the result be graded from Linux (how round 2
@@ -46,14 +46,6 @@ The machine the project is designed around, and the one where an emulator
 is least trustworthy. The LC 475 cannot stand in: a 68020-and-up CPU
 performs the misaligned accesses a 68000 bombs on. The maintainer's Plus
 has one floppy drive and no hard disk.
-
-- [ ] **A split set on one drive.** Open MacExtract from its floppy, Open,
-      Eject, Sets 1, `Education.cpt.#1`, output on another floppy. Expected:
-      each parts disk comes out by itself and Sets 2 and 3 are asked for;
-      the files match. Until the eject fix lands, the parts disk stays in
-      (the Plus, 2026-11-16).
-- [ ] **The MacExtract floppy, locked**, on 6.0.8: every icon shown, the
-      Helpers window without scroll bars, the Read Me opens in TeachText.
 
 - [ ] **Free heap at launch.** Compare `FreeMem()` with the emulated 1 MB
       System 6.0.8 machine's **650,976 B** (budget 630,496 B after the
@@ -141,18 +133,7 @@ leak into the extracted file (`case_d`/`case_e`, 2026-11-05); the maintainer
 may prefer reporting the leak privately to MacPaw over a public issue, the
 usual practice for a bug that can expose memory contents.
 
-## 5. A release
-
-`v0.46.0` (2026-11-17) is the newest tag; v0.45.0 bombs every 68000 Mac
-at the destination dialog.
-
-- [ ] **On the LC 475, the helpers' icons.** After a restart, open the
-      hard disk's Helpers folder (copied from the zip or the floppy, which
-      keep the helpers' 1984 dates): expected, each helper shows its real
-      program's icon or the generic one, and StuffIt Classic keeps its own
-      (DECISIONS.md 2026-11-16, *the helper dated 1984*).
-
-## 6. The 1.44 MB image, written with a USB floppy drive
+## 5. The 1.44 MB image, written with a USB floppy drive
 
 `dist/MacExtract-1440K.img` is checked here only through hfsutils, which
 reads it back byte-exact (`make_dist.sh`); no Macintosh has mounted it
