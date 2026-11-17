@@ -52,7 +52,6 @@ typedef struct {
     Str63   opened;      /* the file opened: the set's name where it has none */
     unsigned char askLast;   /* the part asked for may not exist (a split) */
     uint32_t plen[kSegMaxKnown + 1];  /* a part's length, kept past its disk */
-    short   lastDrive;   /* the drive the part read last came off; 0 none */
     /* The part dialog's own, here rather than in globals so that they
      * cost the heap only while a set is being joined: the folder
      * Standard File showed last, and the volumes mounted when the

@@ -221,12 +221,12 @@ resource 'DITL' (133, purgeable, preload) {
  * Help and Application menus only beside one, and without the Application
  * menu nothing can be switched to (DECISIONS.md 2026-10-12, *the
  * application nobody could leave*). */
-resource 'MENU' (129) {
+resource 'MENU' (129, preload) {
     129, textMenuProc, allEnabled, enabled, apple,
     { S_MENU_ABOUT, noIcon, noKey, noMark, plain }
 };
 
-resource 'MENU' (128) {
+resource 'MENU' (128, preload) {
     128, textMenuProc, allEnabled, enabled, S_MENU_FILE,
     { S_MENU_OPEN, noIcon, noKey, noMark, plain;
       S_MENU_QUIT, noIcon, noKey, noMark, plain }

@@ -629,6 +629,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-16 (the helper without an application icon) — the helpers carry no `'APPL'` `'FREF'`: StuffIt Classic keeps its own icon after the StuffIt helper has run, on 7.6.1 and 6.0.8, and where the Finder filed the helper's bundle first it draws the generic icon, never the helper's; −27 B a helper, the zip −380 B, +6,656 B free on each HFS floppy
 - 2026-11-16 (the Read Me in styles) — every text meant to be read on a Mac carries a 'styl' resource: the floppies' Read Me and the share copies of README.md and README.txt, written by `tools/mac_text.py`; SimpleText draws the headings, every TeachText shows the text as before, and the size limit is unchanged
 - 2026-11-16 (the helper dated 1984) — every helper's dates are 1 January 1984, so a real program installed after the helpers keeps its own icon on System 7; on System 6 it still draws the generic icon; 0 B
+- 2026-11-17 (the disk in the drive) — on one floppy drive the part dialog opens on the disk actually in the drive and ejects it through Standard File's own Eject, the archive's resource fork is read before the parts are asked for, and the code images are read before the Toolbox needs the System disk; +208 B resident
 
 ---
 
@@ -27031,3 +27032,47 @@ Desktop file would change that (a separate repair program; not built).
 
 **Not tested:** 7.0.1, 7.5.5, Mac OS 8 and 9; a helper other than StuffIt's;
 a real Mac; the program-first order with dated helpers (it passed undated).
+
+## 2026-11-17 (the disk in the drive) — on one floppy drive the part dialog opens on the disk actually in the drive and ejects it through Standard File's own Eject, the archive's resource fork is read before the parts are asked for, and the code images are read before the Toolbox needs the System disk; +208 B resident
+
+**Reported** on the maintainer's Mac Plus (1 MB, one floppy drive, System
+6.0.8 from a floppy), `Education.cpt.#1` from his Sets floppies: the part
+dialog never ejected the parts disk; before Part 4 the System asked for
+Sets 2 again; at launch the Mac swapped MacExtract, System, MacExtract,
+System.
+
+**Causes (measured on mv-1M-1d1-ae; the last one on a true one-drive set-up,
+a 6.0.8 boot floppy built by `.tmp/launch/mkbootfloppy.sh`):**
+- The eject went by a remembered drive, taken while the parts disk was
+  offline (drive 0), so nothing was ejected.
+- Ejecting before the dialog made Standard File open on the last volume it
+  showed, the MacExtract disk, and ask for it.
+- `LoadMKey` opened the archive's resource fork after the set's setup: the
+  System asked for the first part's disk again.
+- `ovl_preload()` read the 211 KB of `OVLY` after `GetMenu` had loaded
+  MDEF 0 from the System disk.
+
+**Fix:**
+- `SegLookInDrives` looks at the volume in each ejectable drive (flag byte
+  1 or 2; never the System's or the application's volume, compared as
+  volumes). If one holds the wanted part there is no dialog; otherwise
+  the dialog opens on it (`SFSaveDisk`) and its hook returns `getEject` on
+  the first null event (`Multiverse.h`: getEject 5, sfHookNullEvent 100),
+  so Standard File ejects it as for a click. The remembered drive is gone.
+- `LoadMKey` is read once before the setup.
+- `ovl_preload()` runs before `InitGraf`; MENU 128/129 are `preload`.
+
+**Price:** CODE +208 B eager and lazy (+356 default), A5 −16/−4; every
+grant −192 B at sys6-512K; shipped tallies unchanged (72/74 at 512K).
+Launch heap unchanged within 52 B (1 MB and 512Ke probes). The maintainer
+accepted the price after his run.
+
+**Measured:** the maintainer's Plus ran the combined build (2026-11-17):
+"everything is in working order". The emulator walk extracted Education's 9
+files equal to the CLI; launch went from 3 disk requests to 1 at 1 MB and
+512Ke.
+
+**Not tested:** two drives (the no-dialog branch), System 7 and Mac OS 9 —
+in particular whether Standard File's Eject leaves the dimmed offline icons
+the old unmount avoided on the LC 475 (2026-10-13) — zip, MIME and split
+sets on one drive, System 3.0.

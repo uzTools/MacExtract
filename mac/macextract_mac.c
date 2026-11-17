@@ -3618,30 +3618,26 @@ static short SegDriveOf(short vol)
 
 #ifndef UNC_MAC_AUTOTEST
 
-/* The drive holding the file `ref` is open on, or 0. */
-static short SegDriveOfFile(short ref)
+/* The volume the file `ref` is open on, or 0. */
+static short SegFileVol(short ref)
 {
     FCBPBRec fcb;
     fcb.ioNamePtr = NULL;
     fcb.ioVRefNum = 0;
     fcb.ioRefNum = ref;
     fcb.ioFCBIndx = 0;
-    if (PBGetFCBInfoSync(&fcb) != noErr) return 0;
-    return SegDriveOf(fcb.ioFCBVRefNum);
+    return PBGetFCBInfoSync(&fcb) == noErr ? fcb.ioFCBVRefNum : 0;
 }
 
-/* A part that is not beside the one before it is on another disk, and on
- * a one-drive Mac the drive holds the disk the last part came from. So
- * that disk is ejected before the alert asks, and putting the next one in
- * is the whole answer (the maintainer's design, 2026-10-13).
- *
+/* A part not found beside the one before it is on another disk, and on a
+ * one-drive Mac the drive holds a disk that is not wanted. The ask looks
+ * at the disk in each ejectable drive: one holding the part is used and
+ * nothing is asked; otherwise the first that is not the System's or this
+ * application's is shown in the dialog and ejected, and putting the next
+ * one in is the whole answer (the maintainer's design, 2026-10-13).
  * Not ejected: a disk the drive queue calls nonejectable, a volume in no
  * drive (a server), and the disk holding this application or the System
- * — the Toolbox reads both while the alert is up, so ejecting either
- * starts a swap the user did not ask for. The destination is not
- * checked: a split set is split because it does not fit one floppy, so
- * extracting it onto one of its own is the user's mistake. Returns
- * nonzero if a disk was ejected.
+ * (the Toolbox reads both while the dialog is up).
  *
  * Source for the flag byte: Inside Macintosh: Files, File Manager
  * Reference, "Drive queue" — four flag bytes precede each DrvQEl; byte 1
@@ -3649,53 +3645,62 @@ static short SegDriveOfFile(short ref)
  * disk in drive; $FC-$FF if disk was ejected within last 1.5 seconds;
  * $48 if disk in drive is nonejectable but driver wants a call". */
 static void SegCopyIn(SegHost *h, int part);
-static int SegEjectPrevious(SegHost *h, int part)
+static void SegScanHere(SegHost *h, short v, long d);
+/* Set by SegAskUser: the part dialog's hook answers Standard File's
+ * Eject on its first call, as if clicked, and clears it. */
+static Boolean gSegEjectNow;
+/* The disks in the drives are looked at, not remembered: the part may
+ * already be on one (found, no dialog), and otherwise the first one that
+ * is not the System's or this application's is the one to eject. Returns
+ * 1 if the part is found on a disk in a drive, else 0; *out is the volume
+ * to eject, or 0. */
+static int SegLookInDrives(SegHost *h, int part, short *out)
 {
+    HParamBlockRec pb;
     DrvQEl *q;
-    ParamBlockRec pb;
-    short drive;
+    short idx, v, d;
     unsigned char f;
+    long z;
+    *out = 0;
+    for (idx = 1; idx < 64; idx++) {
+        for (z = 0; z < (long)sizeof pb; z++) ((char *)&pb)[z] = 0;
+        pb.volumeParam.ioVolIndex = idx;
+        if (PBHGetVInfoSync(&pb) != noErr) break;
+        v = pb.volumeParam.ioVRefNum;
+        d = pb.volumeParam.ioVDrvInfo;
+        if (d <= 0) continue;
+        for (q = (DrvQEl *)LMGetDrvQHdr().qHead; q; q = (DrvQEl *)q->qLink)
+            if (q->dQDrive == d) break;
+        if (q == NULL) continue;
+        f = ((unsigned char *)q)[-3];
+        if (f != 1 && f != 2) continue;
+        if (v == SegFileVol(LMGetCurApRefNum()) ||
+            v == SegFileVol(LMGetSysMap())) continue;
+        SegScanHere(h, v, kSegRootDirID);
+        if (h->loc[part].name[0]) return 1;
+        if (*out == 0) *out = v;
+    }
+    return 0;
+}
 
-    /* The disk the part read LAST came off, whatever its number: a Compact
-     * Pro or spanned zip set reads its last part first, for the directory,
-     * and then asks for part 1 (the LC 475, 2026-10-29). A part copied to
-     * the output volume (SegCopyIn) still came off that floppy. */
-    (void)part;
-    drive = h->lastDrive;
-    if (drive <= 0 || drive == SegDriveOfFile(LMGetCurApRefNum()) ||
-        drive == SegDriveOfFile(LMGetSysMap())) return 0;
-    for (q = (DrvQEl *)LMGetDrvQHdr().qHead; q; q = (DrvQEl *)q->qLink)
-        if (q->dQDrive == drive) break;
-    if (q == NULL) return 0;
-    f = ((unsigned char *)q)[-3];
-    if (f != 1 && f != 2) return 0;
-    /* Unmounted as well as ejected: Eject alone leaves the volume mounted
-     * offline, and the Finder keeps a dimmed icon for it — one per disk of
-     * a long set (the LC 475, 2026-10-13). UnmountVol "does not eject the
-     * volume" and fails with fBsyErr while a file on it is open (Inside
-     * Macintosh: Files, UnmountVol), which is the destination-on-this-
-     * floppy case; that disk is still ejected, and stays offline as
-     * before. Parts remembered on it are forgotten first, because their
-     * refNums die with the volume and a part needed again must be asked
-     * for again. Both calls take a drive number. */
-    { int p;
-      for (p = 1; p <= kSegMaxKnown; p++)
-          if (h->loc[p].name[0] && SegDriveOf(h->loc[p].vRefNum) == drive) {
-              /* A MIME part on it is copied off first, as when it is
-               * needed: the part opened, say 3, is needed last, and the
-               * disk would go in twice (the LC 475, 2026-10-31). */
-              if (h->desc.scheme == UNC_FORMAT_MIMESEG) {
-                  SegCopyIn(h, p);
-                  if (SegDriveOf(h->loc[p].vRefNum) != drive) continue;
-              }
-              h->loc[p].name[0] = 0;
-          }
-      pb.volumeParam.ioNamePtr = NULL;
-      pb.volumeParam.ioVRefNum = drive;
-      (void)PBUnmountVol(&pb); }
-    pb.volumeParam.ioNamePtr = NULL;
-    pb.volumeParam.ioVRefNum = drive;
-    return PBEject(&pb) == noErr;
+/* Unmounted as well as ejected: Eject alone leaves the volume mounted
+ * offline, and the Finder keeps a dimmed icon for it, one per disk of a
+ * long set (the LC 475, 2026-10-13). Parts remembered on the disk are
+ * forgotten, because their refNums die with the volume; a MIME part on it
+ * is copied off first (the LC 475, 2026-10-31). The eject itself is
+ * Standard File's own, answered by the dialog's hook (SegPartHook). */
+static void SegForgetDisk(SegHost *h, short vol)
+{
+    int p;
+    short drive = SegDriveOf(vol);
+    for (p = 1; p <= kSegMaxKnown; p++)
+        if (h->loc[p].name[0] && SegDriveOf(h->loc[p].vRefNum) == drive) {
+            if (h->desc.scheme == UNC_FORMAT_MIMESEG) {
+                SegCopyIn(h, p);
+                if (SegDriveOf(h->loc[p].vRefNum) != drive) continue;
+            }
+            h->loc[p].name[0] = 0;
+        }
 }
 
 /* Find… opens in the folder of the lowest-numbered part located so far,
@@ -3750,14 +3755,14 @@ static Boolean gSegFound;
 
 /* A disk put in that holds no part this dialog wants goes straight back
  * out, so that on a one-drive Mac the next one can go in. Never the disk
- * of this application or of the System (SegEjectPrevious says why). The
+ * of this application or of the System (SegLookInDrives says why). The
  * parts it did hold are forgotten with it: asked for again when needed. */
 static void SegEjectInserted(SegHost *h, short drive)
 {
     ParamBlockRec pb;
     int p;
-    if (drive <= 0 || drive == SegDriveOfFile(LMGetCurApRefNum()) ||
-        drive == SegDriveOfFile(LMGetSysMap())) return;
+    if (drive <= 0 || drive == SegDriveOf(SegFileVol(LMGetCurApRefNum())) ||
+        drive == SegDriveOf(SegFileVol(LMGetSysMap()))) return;
     for (p = 1; p <= kSegMaxKnown; p++)
         if (h->loc[p].name[0] && SegDriveOf(h->loc[p].vRefNum) == drive)
             h->loc[p].name[0] = 0;
@@ -3854,6 +3859,21 @@ static Boolean SegTakeNewDisks(SegHost *h)
     return out;
 }
 
+/* Source: Inside Macintosh, Standard File Package: the dialog hook gets each
+ * item hit and, between them, sfHookNullEvent (100); the item it returns is
+ * acted on as if clicked, getEject (5) being Eject. A getEject returned on
+ * sfHookFirstCall (-1) was ignored (Mac Plus, 2026-11-16), so it waits for
+ * the first null event. */
+static pascal short SegPartHook(short item, DialogPtr dlg)
+{
+    (void)dlg;
+    if (item == sfHookNullEvent && gSegEjectNow) {
+        gSegEjectNow = 0;
+        return getEject;
+    }
+    return item;
+}
+
 static pascal Boolean SegPartFilter(DialogPtr dlg, EventRecord *evt,
                                     short *itemHit)
 {
@@ -3908,7 +3928,14 @@ static int SegAskUser(SegHost *h, int part)
     SFReply reply;
     Point where;
     short savedMask;
-    short dlg = SegEjectPrevious(h, part) ? kPartEjectDLOG : kPartDLOG;
+    short dlg = kPartDLOG, ejVol;
+
+    if (SegLookInDrives(h, part, &ejVol)) return 1;   /* already in a drive */
+    if (ejVol) {
+        SegForgetDisk(h, ejVol);
+        gSegEjectNow = 1;
+        dlg = kPartEjectDLOG;
+    }
 
     WaitForFront();
 
@@ -3947,8 +3974,12 @@ static int SegAskUser(SegHost *h, int part)
         SetPt(&where, 90, 90);
         reply.good = false;
         SegStartIn(h);
+        if (gSegEjectNow) {         /* Standard File's Eject takes this disk */
+            LMSetSFSaveDisk(-ejVol);   /* 2 = fsRtDirID */
+            LMSetCurDirStore(2);
+        }
         SFPGetFile(where, "\p", NewFileFilterUPP(HideInvisible), -1, NULL,
-                   NULL, &reply, dlg, NewModalFilterUPP(SegPartFilter));
+                   NewDlgHookUPP(SegPartHook), &reply, dlg, NewModalFilterUPP(SegPartFilter));
         LMSetSysEvtMask(savedMask);
         gSegAsking = NULL;
         h->asked = 1;
@@ -4134,7 +4165,6 @@ static int seg_need(void *ctx, const UncSegmentDesc *desc, int part, UncIO *io)
     /* What this part contributes to the whole, for the "still to read"
      * line in the alert. Every part carries the same header, which is
      * not payload. */
-    h->lastDrive = h->loc[part].drive;
     h->psize[part] = h->fio.size > h->desc.head_len
                    ? h->fio.size - h->desc.head_len : 0;
     return UNC_OK;
@@ -4508,6 +4538,7 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
     UncPasswordSource passSrc;
     PassHost passHost;
     uint8_t mkeyBuf[8];
+    int haveMKey = 0;
 #endif
 
     *entries = *errors = 0;
@@ -4623,6 +4654,10 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
             ProgOpen((Progress *)prog->ctx, name);
         }
         gAskDest = false;
+        /* Read before a set's setup, which may eject this file's disk: the
+         * resource fork opened after it asked for that disk back in the
+         * System's own alert (the walk, 2026-11-17). */
+        haveMKey = LoadMKey(inVol, inDir, name, mkeyBuf);
 #endif
         if (famSplit || famZip || segOK) {
             sh = (SegHost *)NewPtr((Size)sizeof(SegHost));
@@ -4652,11 +4687,6 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
                 sa.origDir = origDir;
                 sa.outVol = outVol;
                 sa.outDir = outDir;
-                /* The file opened came off this disk: it is the one ejected
-                 * at the first ask, before any part is read (a MIME set
-                 * opened from part 3 asks for part 1 first; the LC 475,
-                 * 2026-10-31). */
-                sh->lastDrive = SegDriveOf(origVol);
 #ifndef UNC_MAC_SLURP_ARCHIVE
                 /* Closed before the setup, which may ask for a part and
                  * eject this file's disk: open, it stays mounted offline
@@ -4798,7 +4828,7 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
         passSrc.ctx = &passHost;
         passSrc.ask = MacAskPassword;
         opt.ask = &passSrc;
-        if (LoadMKey(inVol, inDir, name, mkeyBuf)) opt.mkey = mkeyBuf;
+        if (haveMKey) opt.mkey = mkeyBuf;
     }
 #endif
     /* Fallback name for formats that store none (gzip, .Z). The contract in
@@ -7228,20 +7258,11 @@ int main(void)
     }
     StackPaint();
 
-    InitGraf(&qd.thePort);
-    InitFonts();
-    InitWindows();
-    InitMenus();
-    TEInit();
-    InitDialogs(NULL);
-    InitCursor();
-    InsertMenu(GetMenu(kAppleMENU), 0);     /* resources of our own, */
-    InsertMenu(GetMenu(kFileMENU), 0);      /* read into a fresh heap */
-    DrawMenuBar();
-
 #ifdef UNC_AT_OVERLAY
-    /* The overlay bundle, read ONCE, here, while the boot disk is certainly
-     * still in — which is this branch's entire argument.
+    /* The overlay bundle, read ONCE, here, BEFORE the Toolbox is initialised, while the
+     * application's own disk is certainly in (a one-drive Mac asks for the
+     * System disk during InitFonts..DrawMenuBar and never gets this disk
+     * back without a prompt; GetResource needs nothing of the Toolbox) — which is this branch's entire argument.
      *
      * It was called from the AUTOTEST main() and not from this one until
      * 2026-09-02, so the build a user runs never preloaded at all: the shim
@@ -7254,6 +7275,18 @@ int main(void)
      * worth asking of every launch-time call. */
     { extern void ovl_preload(void); ovl_preload(); }
 #endif
+
+    InitGraf(&qd.thePort);
+    InitFonts();
+    InitWindows();
+    InitMenus();
+    TEInit();
+    InitDialogs(NULL);
+    InitCursor();
+    InsertMenu(GetMenu(kAppleMENU), 0);     /* resources of our own, */
+    InsertMenu(GetMenu(kFileMENU), 0);      /* read into a fresh heap */
+    DrawMenuBar();
+
 #ifdef UNC_SHELL_IMAGES
     DestIconLoad();             /* the Finder file is on the startup disk */
 #endif

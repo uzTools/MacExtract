@@ -126,7 +126,10 @@ BinHex file with lines longer than 256 characters lost a character from
 each. Six MacBinary files written without the usual padding, and tar
 archives that set their dates once for every file, open as they should.
 A Compact Pro set or a split zip opened without its last part beside it
-said "Parts missing."; it now asks for the disk that holds the part. A
+said "Parts missing."; it now asks for the disk that holds the part. On
+a Mac with one floppy drive, the disk in the drive now comes out by
+itself when the next part is not on it, and the MacExtract disk is asked
+for only once, at launch. A
 locked MacExtract floppy showed no icons, and on System 3.0 bombed when
 its Helpers folder was opened; it now works locked. The icons are new.
 TXT
