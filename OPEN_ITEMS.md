@@ -343,6 +343,34 @@ those swaps. Not a requirement; nothing is measured. Open:
 - A cheaper part of the same gain, without a System on the disk: loading the
   System resources the Toolbox fetches once at launch and keeping them in
   memory; which ones they are is not measured.
+
+## Floppy to floppy on one drive: a swap for every few KB
+
+Extracting from one floppy onto another in a single drive swaps the two
+disks constantly (the maintainer's Mac Plus, 2026-11-17). Every read
+(`fio_read`) and write (8 KB at most) goes straight to the File Manager,
+so each switch between reading and writing is a swap; nothing is measured.
+Open:
+- **A pool:** hold the output in free heap and write it when memory runs
+  low or the entry ends, so the reads and the writes each come as one
+  run. Written once, in the engine's fork writer (`UncForkOut`) or the
+  shell, with no decoder change if every chunk is copied into it.
+- **Copy or hand over.** A copy holds each chunk twice for a moment. For a
+  small-window decoder (StuffIt 1.5's LZW and LZH, Compact Pro, deflate,
+  stored) that is at most its window, 3–32 KB: negligible. For a decoder
+  whose output chunk is large, near half the free heap, a copy leaves no
+  room for a second one and the pool saves nothing; there the decoder must
+  hand its buffer over, take a fresh one from the pool, and the shell frees
+  it once written (a few lines per such decoder). An LZ decoder can hand a
+  chunk over only once its window has moved past it.
+- **Which decoders have large output chunks**, a read of the decoders'
+  output paths, not done. Not Arsenic (StuffIt 5): its block buffer
+  holds the transformed data, and it already reads a whole block before
+  writing any of it, so it swaps about once per block (`src/sit_arsenic.c`).
+- **The limit is the heap left at the decoder's peak** either way, per
+  format at 1 MB, not measured; and the resident bytes, not priced.
+- An entry's resource fork and Finder info still cost a swap per entry,
+  and a write error surfaces later than the bytes that caused it.
 - A long shot: a startup floppy with no Apple file on it, for the 68000
   Macs only (later ROMs need their own System). Hypothesis, not tried: boot
   blocks that name MacExtract as the startup application, a System file of
