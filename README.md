@@ -165,6 +165,16 @@ in [FORMATS.md](FORMATS.md).
 - **Memory under System 7:** about 800 KB in Get Info is enough for every
   archive tested.
 
+## Known limits
+
+- **Helper icons on System 6 and 3.0:** a program installed after the
+  MacExtract Helpers shows the generic application icon instead of its own.
+  System 7.6.1 keeps its own.
+- **One floppy drive:** extracting from one floppy onto another swaps the
+  two disks every few KB. Extract onto a hard disk if you have one. Opening
+  MacExtract and choosing Open asks for fewer disks than double-clicking an
+  archive.
+
 ## Linux
 
 ```sh

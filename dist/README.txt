@@ -55,3 +55,10 @@ itself when the next part is not on it, and the MacExtract disk is asked
 for only once, at launch. A
 locked MacExtract floppy showed no icons, and on System 3.0 bombed when
 its Helpers folder was opened; it now works locked. The icons are new.
+
+Known limits. On System 6 and 3.0, a program installed after the
+helpers shows the generic application icon instead of its own. On a Mac
+with one floppy drive, extracting from one floppy onto another swaps the
+two disks every few KB; extract onto a hard disk where there is one.
+With one drive, opening MacExtract and choosing Open asks for fewer
+disks than double-clicking an archive.
