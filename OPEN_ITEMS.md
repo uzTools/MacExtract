@@ -382,7 +382,7 @@ Open:
 
 `companion/` works (DECISIONS.md 2026-10-11, *the stub that hands it on*);
 its helpers are in `dist/` and on both disk images since
-2026-11-04 (twenty-one since 2026-11-16: Apple Backup's and the Installer Tome's since 2026-11-10, BinHex 4.0's and 5.0's since 2026-11-15, MacTar's since 2026-11-16), in no release yet (DECISIONS.md 2026-11-04, *the helpers in
+2026-11-04 (twenty-one since 2026-11-16: Apple Backup's and the Installer Tome's since 2026-11-10, BinHex 4.0's and 5.0's since 2026-11-15, MacTar's since 2026-11-16), released in v0.46.0 (DECISIONS.md 2026-11-04, *the helpers in
 dist*). Left:
 
 - **Each helper carries the same code: one shared file would hold it.**
