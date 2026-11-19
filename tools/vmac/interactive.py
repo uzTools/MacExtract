@@ -1381,10 +1381,12 @@ def phase_diskswap(args, appbin, workdir, shot):
     this set, and the alert must still be there afterwards; that is the
     negative control, and without it the phase could not tell "the
     application reacted to the right disk" from "the alert went away".
+    Since v0.45.0 the question is Standard File's prompt line, compared
+    alone (PART_PROMPT).
     The second holds parts 2 and 3, and nothing is clicked after it goes
-    in. The phase ends on the joined file read back off the boot volume,
-    byte for byte against the fixture, because "Extraction complete." is
-    not evidence about bytes.
+    in. The phase ends on the joined archive's contents read back off the
+    boot volume by name (`expected_names`), because "Extraction
+    complete." is not evidence; names, not bytes, as phase_segments.
     """
     original, name, parts = cut_into_parts(args.fixture, workdir)
 
@@ -1411,14 +1413,20 @@ def phase_diskswap(args, appbin, workdir, shot):
         accept_destination(mac)                # onto the boot volume
         wait_for_alert(mac, scratch)
         shot(mac, "swap-2-locate.png")         # "Part 2 has not been found"
-        asking = open(scratch, "rb").read()
+        # The prompt line, not the whole screen: since v0.45.0 the part is
+        # asked for in Standard File, which shows any disk put in, so the
+        # frame changes while the question stays (2026-11-17).
+        asking = region_bytes(scratch, PART_PROMPT)
+        if frame_mean(scratch, PART_PROMPT) > 0.97:
+            raise SystemExit("interactive: no prompt where the part dialog "
+                             "puts it; see swap-2-locate.png")
 
         # The decoy: a disk of this set's part 1, which is not what was
         # asked for. The alert must survive it.
         drop_disk(mac, decoy)
         time.sleep(8.0)
         mac.shot(scratch)
-        still_asking = open(scratch, "rb").read() == asking
+        still_asking = region_bytes(scratch, PART_PROMPT) == asking
         shot(mac, "swap-3-after-decoy.png")
 
         # The real one. Nothing is clicked from here on.
@@ -1431,14 +1439,18 @@ def phase_diskswap(args, appbin, workdir, shot):
         if os.path.exists(scratch):
             os.remove(scratch)
 
-    got = read_joined(os.path.join(workdir, "boot.hfv"), name, workdir)
-    ok = got == original
+    # The joined archive's CONTENTS, as phase_segments reads them: the
+    # application unwraps the joined file and deletes it, so looking for
+    # it failed every run while the Mac was right (2026-11-17).
+    want = expected_names(args.fixture, workdir)
+    on_boot = volume_names(os.path.join(workdir, "boot.hfv"))
+    missing = sorted(n for n in want if n not in on_boot)
+    ok = bool(want) and not missing
     print(f"interactive: the decoy disk "
-          + ("left the alert up" if still_asking else "DISMISSED THE ALERT"))
-    print(f"interactive: joined file off the boot volume: "
-          + ("BYTE-EXACT" if ok else
-             f"WRONG ({len(got) if got is not None else 'not found'} B, "
-             f"{len(original)} B expected)"))
+          + ("left the question up" if still_asking else "DISMISSED THE QUESTION"))
+    print("interactive: the joined archive's contents on the boot volume: "
+          + ("COMPLETE" if ok else
+             "MISSING " + ", ".join(CD.mac_path(n) for n in missing)))
     if elapsed is not None:
         print(f"interactive: settled ~{elapsed:.0f}s after the disk went in")
     ok = ok and bool(still_asking)
@@ -2929,6 +2941,20 @@ CANCEL_INSIDE = (295, 134, 52, 14)
 PROGRESS_MARKS = ((295, 131, 52, 1), (291, 135, 1, 12), (90, 135, 1, 11))
 # The desktop below the progress window, outside every window.
 OFF_CANCEL = (256, 300)
+
+
+# The part dialog's prompt line, "Part N of ... has not been found", as
+# (x, y, w, h), measured off swap-2-locate.png (2026-11-17).
+PART_PROMPT = (100, 283, 320, 30)
+
+
+def region_bytes(path, box):
+    """The 8-bit grey pixels of `box` in a screenshot, for comparing."""
+    x, y, w, h = box
+    shave = ["-shave", "4x4", "+repage"] if path.endswith(".xwd") else []
+    return subprocess.run(["convert", path, *shave, "-crop",
+                           f"{w}x{h}+{x}+{y}", "+repage", "-depth", "8",
+                           "gray:-"], check=True, capture_output=True).stdout
 
 
 def frame_mean(path, box):
