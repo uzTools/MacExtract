@@ -343,40 +343,36 @@ those swaps. Not a requirement; nothing is measured. Open:
 - A cheaper part of the same gain, without a System on the disk: loading the
   System resources the Toolbox fetches once at launch and keeping them in
   memory; which ones they are is not measured.
-
-## Floppy to floppy on one drive: a swap for every few KB
-
-Extracting from one floppy onto another in a single drive swaps the two
-disks constantly (the maintainer's Mac Plus, 2026-11-17). Every read
-(`fio_read`) and write (8 KB at most) goes straight to the File Manager,
-so each switch between reading and writing is a swap; nothing is measured.
-Open:
-- **A pool:** hold the output in free heap and write it when memory runs
-  low or the entry ends, so the reads and the writes each come as one
-  run. Written once, in the engine's fork writer (`UncForkOut`) or the
-  shell, with no decoder change if every chunk is copied into it.
-- **Copy or hand over.** A copy holds each chunk twice for a moment. For a
-  small-window decoder (StuffIt 1.5's LZW and LZH, Compact Pro, deflate,
-  stored) that is at most its window, 3–32 KB: negligible. For a decoder
-  whose output chunk is large, near half the free heap, a copy leaves no
-  room for a second one and the pool saves nothing; there the decoder must
-  hand its buffer over, take a fresh one from the pool, and the shell frees
-  it once written (a few lines per such decoder). An LZ decoder can hand a
-  chunk over only once its window has moved past it.
-- **Which decoders have large output chunks**, a read of the decoders'
-  output paths, not done. Not Arsenic (StuffIt 5): its block buffer
-  holds the transformed data, and it already reads a whole block before
-  writing any of it, so it swaps about once per block (`src/sit_arsenic.c`).
-- **The limit is the heap left at the decoder's peak** either way, per
-  format at 1 MB, not measured; and the resident bytes, not priced.
-- An entry's resource fork and Finder info still cost a swap per entry,
-  and a write error surfaces later than the bytes that caused it.
 - A long shot: a startup floppy with no Apple file on it, for the 68000
   Macs only (later ROMs need their own System). Hypothesis, not tried: boot
   blocks that name MacExtract as the startup application, a System file of
   our own, and the ROM's Toolbox for the rest. Missing without Apple's
   System: Standard File (MacExtract would need its own disk and file
   chooser), the System's ROM fixes, and the 64K ROM's HFS.
+
+## Floppy to floppy on one drive: a swap for every few KB
+
+Extracting from one floppy onto another in a single drive swaps the two
+disks constantly (the maintainer's Mac Plus, 2026-11-17). Every read
+(`fio_read`) and write goes straight to the File Manager, so each switch
+between reading and writing is a swap; nothing is measured. Open:
+- **A pool:** hold the output in free heap and write it when memory runs
+  low or the entry ends, so the reads and the writes each come as one
+  run. Written once, in the engine's fork writer (`UncForkOut`) or the
+  shell's sink, every chunk copied into it; no decoder changes.
+- **No decoder needs to hand its buffer over** (read 2026-11-19): every
+  one gives the sink chunks of at most 32 KB. ARC, LZH and SuperDisk
+  512 B (`UNC_STAGE`); StuffIt (Arsenic included), Compact Pro,
+  DiskDoubler, PackIt, Private File, btoa and SpaceSaver 4 KB
+  (`UNC_IOBUF`); the Tomes and LZ4 a 64 KB ring flushed every 4 KB; zip
+  and gzip 8 KB (`EXO_BUF`), a stored copy 8 KB (`UNC_COPY_BUF`); Now
+  Compress one block, at most 32 KB, out of its history; BinHex, the
+  other text encodings, tar, MAR and Apple Backup 8 KB or less. A copy
+  holds at most that twice.
+- **The limit is the heap left at the decoder's peak**, per format at
+  1 MB, not measured; and the resident bytes, not priced.
+- An entry's resource fork and Finder info still cost a swap per entry,
+  and a write error surfaces later than the bytes that caused it.
 
 ## The double-click helpers: what is left
 
