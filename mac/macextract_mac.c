@@ -786,6 +786,11 @@ static void mal_take_budget(MacAlloc *a)
 #endif
 }
 
+/* The write pool (PoolTake, below): a decoder's request it stands in the
+ * way of writes it out and frees it first. */
+static Ptr gPool;
+static void PoolDrop(void);
+
 static void *mal_alloc(void *ctx, uint32_t size)
 {
     StackSample();
@@ -826,6 +831,10 @@ static void *mal_alloc(void *ctx, uint32_t size)
     }
 #else
     p = NewPtr((long)size + 16);
+    if (p == NULL && gPool) {
+        PoolDrop();
+        p = NewPtr((long)size + 16);
+    }
 #endif
     if (p == NULL) {
         gShortPiece = 1;
@@ -2397,16 +2406,85 @@ static void ByteCopy(const uint8_t *src, uint8_t *dst, uint32_t n)
 
 #ifndef UNC_MAC_STAGE_WRITES
 
+static OSErr gLastWriteErr;          /* defined below, with its note */
+
+/* Write `n` bytes at the open fork's mark, 8 KB per FSWrite: the count is
+ * bounded so the File Manager does a bounded amount per call in this deep,
+ * cooperative context. Keeps the run's FIRST OSErr. */
+static int RawWrite(MacSink *s, const char *p, uint32_t n)
+{
+    while (n > 0) {
+        long count = (long)(n < 8192u ? n : 8192u);
+        long want = count;
+        OSErr werr;
+        {
+            TK_T0;
+            werr = FSWrite(s->openRef, &count, (Ptr)p);
+            TK_ADD(gTkWrite);
+        }
+        if (werr != noErr || count != want) {
+            s->wrErr = 1;
+            /* The grid and the alert could not tell dskFulErr from a media
+             * error before, so a full disk read as a hundred unexplained
+             * entry failures. */
+            if (s->wrOSErr == noErr) s->wrOSErr = (werr != noErr ? werr : ioErr);
+            gLastWriteErr = s->wrOSErr;
+            return -1;
+        }
+        p += want;
+        n -= (uint32_t)want;
+    }
+    return 0;
+}
+
+/* The write pool. A fork's output is held in free memory and written when
+ * the pool fills or the fork closes, so that on one floppy drive the
+ * reads and the writes come in runs rather than a disk swap every few KB
+ * (the maintainer's Mac Plus, 2026-11-17; OPEN_ITEMS.md, *Floppy to
+ * floppy on one drive*). One fork's at a time: StreamClose empties it.
+ * It takes what is free less kPoolKeep, and no more than the fork still
+ * needs; a decoder's allocation it is in the way of drops it (mal_alloc). */
+#define kPoolKeep (kMemReserveMax + 16L * 1024)
+static long gPoolCap, gPoolLen;
+static MacSink *gPoolSink;
+
+static int PoolFlush(void)
+{
+    long n = gPoolLen;
+    gPoolLen = 0;
+    return n ? RawWrite(gPoolSink, gPool, (uint32_t)n) : 0;
+}
+
+static void PoolDrop(void)
+{
+    if (!gPool) return;
+    (void)PoolFlush();              /* an error is in the sink's wrErr */
+    DisposePtr(gPool);
+    gPool = NULL;
+}
+
+static void PoolTake(MacSink *s, uint32_t left)
+{
+    long n = MaxBlock() - kPoolKeep;
+    if (n > (long)left) n = (long)left;
+    if (n < 1024) return;           /* not worth a block: write through */
+    gPool = NewPtr(n);
+    gPoolCap = n;
+    gPoolLen = 0;
+    gPoolSink = s;
+}
+
 /* Close the fork currently open, if any, and commit it. */
 static OSErr StreamClose(MacSink *s)
 {
     OSErr err = noErr;
+    PoolDrop();
     if (s->openRef) {
         err = FSClose(s->openRef);
         s->openRef = 0;
         FlushVol(NULL, s->vRefNum);   /* commit before anything else opens */
     }
-    return err;
+    return s->wrErr ? s->wrOSErr : err;
 }
 
 /* Make <fork> the open one, positioned where its last write left off.
@@ -2534,31 +2612,25 @@ static int sink_write(void *ctx, UncFork fork, const void *buf, int32_t len)
             return -1;
         }
     }
-    /* Write in bounded pieces: FSWrite takes a byte count, and keeping it
-     * small bounds how much the File Manager does per call in this deep,
-     * cooperative context. */
+    if (!gPool) {
+        uint32_t size = fork == UNC_FORK_DATA ? s->cur.data_size
+                                              : s->cur.rsrc_size;
+        PoolTake(s, size != UNC_SIZE_UNKNOWN && size > *pos
+                    ? size - *pos : 0x7FFFFFFFUL);
+    }
+    *pos += todo;
+    if (!gPool) return RawWrite(s, (const char *)buf, todo);
     while (todo > 0) {
-        long count = (long)(todo < 8192u ? todo : 8192u);
-        long want = count;
-        OSErr werr;
-        {
-            TK_T0;
-            werr = FSWrite(s->openRef, &count,
-                           (Ptr)((const char *)buf + off));
-            TK_ADD(gTkWrite);
+        uint32_t k = (uint32_t)(gPoolCap - gPoolLen);
+        if (k == 0) {
+            if (PoolFlush()) return -1;
+            k = (uint32_t)gPoolCap;
         }
-        if (werr != noErr || count != want) {
-            s->wrErr = 1;
-            /* Keep the FIRST OSErr. The grid and the alert could not tell
-             * dskFulErr from a media error before, so a full disk read as a
-             * hundred unexplained entry failures. */
-            if (s->wrOSErr == noErr) s->wrOSErr = (werr != noErr ? werr : ioErr);
-            gLastWriteErr = s->wrOSErr;
-            return -1;
-        }
-        off += (uint32_t)want;
-        todo -= (uint32_t)want;
-        *pos += (uint32_t)want;
+        if (k > todo) k = todo;
+        BlockMoveData((const char *)buf + off, gPool + gPoolLen, (long)k);
+        gPoolLen += (long)k;
+        off += k;
+        todo -= k;
     }
     return 0;
 #else

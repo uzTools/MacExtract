@@ -630,6 +630,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-16 (the Read Me in styles) — every text meant to be read on a Mac carries a 'styl' resource: the floppies' Read Me and the share copies of README.md and README.txt, written by `tools/mac_text.py`; SimpleText draws the headings, every TeachText shows the text as before, and the size limit is unchanged
 - 2026-11-16 (the helper dated 1984) — every helper's dates are 1 January 1984, so a real program installed after the helpers keeps its own icon on System 7; on System 6 it still draws the generic icon; 0 B
 - 2026-11-17 (the disk in the drive) — on one floppy drive the part dialog opens on the disk actually in the drive and ejects it through Standard File's own Eject, the archive's resource fork is read before the parts are asked for, and the code images are read before the Toolbox needs the System disk; +208 B resident
+- 2026-11-19 (the pool the writes wait in) — a fork's output is held in free memory and written when the pool fills or the fork closes; read/write switches at 1 MB 220 → 8 (zip), 136 → 6 (StuffIt), 164 → 90 (Compact Pro, 31 files); +356 B resident
 
 ---
 
@@ -27076,3 +27077,34 @@ files equal to the CLI; launch went from 3 disk requests to 1 at 1 MB and
 in particular whether Standard File's Eject leaves the dimmed offline icons
 the old unmount avoided on the LC 475 (2026-10-13) — zip, MIME and split
 sets on one drive, System 3.0.
+
+## 2026-11-19 (the pool the writes wait in) — a fork's output is held in free memory and written when the pool fills or the fork closes; read/write switches at 1 MB 220 → 8 (zip), 136 → 6 (StuffIt), 164 → 90 (Compact Pro, 31 files); +356 B resident
+
+**Claim:** extracting floppy to floppy on one drive swapped the disks
+constantly (the maintainer's Mac Plus, 2026-11-17). Every `fio_read` and
+every `FSWrite` went to the File Manager as the engine asked, so reads and
+writes alternated about every 4 KB, and on one drive each switch is a swap.
+
+**Choice:** a pool in the shell's sink (`PoolTake`, `PoolFlush`,
+`PoolDrop`), not in the decoders: no decoder hands the sink more than
+32 KB (OPEN_ITEMS read, 2026-11-19), so a copy costs at most that twice.
+It takes `MaxBlock()` less `kPoolKeep` (the 20 KB reserve and 16 KB more,
+for the part dialog and alerts mid-run), no more than the fork still
+needs; one fork at a time, emptied by `StreamClose`. A decoder allocation
+it stands in the way of writes it out and frees it (`mal_alloc`), so it
+never refuses an entry.
+
+**Measured** (`run.py --mem 1M -D UNC_AT_TIMING`, a scratch probe counting
+switches between `fio_read` and `FSWrite`; Install.exe, 26 KB of deflate,
+went from 8 interleaved reads to 8 reads then 6 writes): zip `ie111sep.zip`
+220 → 8, StuffIt `derived-EmpireBuilderDemo.sit` 136 → 6, Compact Pro
+`derived-alpha4.01.cpt` 164 → 90. What is left is two or three a file:
+create, close, `FlushVol`, the next header. The first probe run read the
+same with and without: `run.py -D` only reaches CMake for names
+`mac/CMakeLists.txt` lists, so `UNC_NOPOOL` was dropped silently.
+
+**Price:** CODE +356 B eager and lazy (+352 default), A5 +44 eager. A write
+error now surfaces when the pool is written, up to a fork later than the
+bytes; the entry still fails and is reported.
+
+**Not tested:** the swaps on the maintainer's Plus; System 7 and Mac OS 9.
