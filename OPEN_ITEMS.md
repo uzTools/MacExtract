@@ -229,7 +229,7 @@ HYPOTHESES.
 | what | evidence | what would close it |
 |---|---|---|
 | **`ovl_keep`'s `high_handle` on a 128K ROM: 9.6 s** | `MoveHHi` put back on today's tree: 223.6 → 213.8 s, twice (DECISIONS.md 2026-11-10, *the 12.8 seconds that were three commits*). The call runs a few times a run, so where it leaves the block is the hypothesis, about 30 ms an entry. Not measured: other archives, the 1 MB tier, the 64K ROM | an archive of few large entries and one of many small ones timed both ways, to say whether it scales per entry; a heap dump after `ovl_keep` both ways. Then either `high_handle` places the block where `MoveHHi` would (0 resident B), or the ROM test comes back (32 B off every budget) |
-| **create, `SetEOF`, close, `FlushVol` and catalog: 80 s** | 4,785 of 11,772 ticks, about 15 an entry, against the engine's 6,745 (FORMATS.md, *Where `macburger-helper.hqx`'s StuffIt layer goes*). Expander does no `FlushVol` (FORMATS.md, *Our figures include a `FlushVol`*) | the tick probe splitting the five calls, then whether the `FlushVol` after every fork is what costs |
+| **create, `SetEOF`, close, `FlushVol` and catalog: 80 s** | split with the tick probe on `MacburgerHelper.sit` (the archive inside, 312 files, `mv-4M-1x`, 2026-11-20): `EnsureDir`'s folder lookups 2,289 ticks (38 s), `DirHold`'s folder dates 1,134 (19 s), the creates 622, close and `FlushVol` 477 (the per-fork `FlushVol` alone 145: removed, 223.1 → 217.6 s), open and `SetEOF` 240, `StampCat` 241 | the folder lookups: a component the previous entry already resolved, looked up again (hypothesis: most of the 38 s); the folder dates: set and read again at every folder switch |
 
 ## Resident bytes that could leave before extraction
 
