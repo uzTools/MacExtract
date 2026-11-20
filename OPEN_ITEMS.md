@@ -350,14 +350,6 @@ those swaps. Not a requirement; nothing is measured. Open:
   System: Standard File (MacExtract would need its own disk and file
   chooser), the System's ROM fixes, and the 64K ROM's HFS.
 
-## Floppy to floppy on one drive: the swaps each file still costs
-
-The write pool removed the swaps inside a file (DECISIONS.md 2026-11-19,
-*the pool the writes wait in*); two or three a file are left — create,
-close, `FlushVol`, the next header — 90 for Compact Pro's 31 files at 1 MB.
-Would close it: deferring a file's create and its catalog work until the
-pool is written, not priced; and a count on the maintainer's Plus.
-
 ## The double-click helpers: what is left
 
 `companion/` works (DECISIONS.md 2026-10-11, *the stub that hands it on*);

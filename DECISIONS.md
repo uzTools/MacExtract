@@ -630,7 +630,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-16 (the Read Me in styles) — every text meant to be read on a Mac carries a 'styl' resource: the floppies' Read Me and the share copies of README.md and README.txt, written by `tools/mac_text.py`; SimpleText draws the headings, every TeachText shows the text as before, and the size limit is unchanged
 - 2026-11-16 (the helper dated 1984) — every helper's dates are 1 January 1984, so a real program installed after the helpers keeps its own icon on System 7; on System 6 it still draws the generic icon; 0 B
 - 2026-11-17 (the disk in the drive) — on one floppy drive the part dialog opens on the disk actually in the drive and ejects it through Standard File's own Eject, the archive's resource fork is read before the parts are asked for, and the code images are read before the Toolbox needs the System disk; +208 B resident
-- 2026-11-19 (the pool the writes wait in) — a fork's output is held in free memory and written when the pool fills or the fork closes; read/write switches at 1 MB 220 → 8 (zip), 136 → 6 (StuffIt), 164 → 90 (Compact Pro, 31 files); +356 B resident
+- 2026-11-19 (the archive read ahead) — once the first entry begins, the archive is read in blocks of the free memory, so one floppy drive swaps when a block runs out, not every 4 KB and every file; switches at 1 MB 166 → 4 for Compact Pro's 31 files
 
 ---
 
@@ -27078,33 +27078,46 @@ in particular whether Standard File's Eject leaves the dimmed offline icons
 the old unmount avoided on the LC 475 (2026-10-13) — zip, MIME and split
 sets on one drive, System 3.0.
 
-## 2026-11-19 (the pool the writes wait in) — a fork's output is held in free memory and written when the pool fills or the fork closes; read/write switches at 1 MB 220 → 8 (zip), 136 → 6 (StuffIt), 164 → 90 (Compact Pro, 31 files); +356 B resident
+## 2026-11-19 (the archive read ahead) — once the first entry begins, the archive is read in blocks of the free memory, so one floppy drive swaps when a block runs out, not every 4 KB and every file; switches at 1 MB 166 → 4 for Compact Pro's 31 files
 
 **Claim:** extracting floppy to floppy on one drive swapped the disks
-constantly (the maintainer's Mac Plus, 2026-11-17). Every `fio_read` and
-every `FSWrite` went to the File Manager as the engine asked, so reads and
-writes alternated about every 4 KB, and on one drive each switch is a swap.
+constantly (the maintainer's Mac Plus, 2026-11-17). `fio_read` read the
+archive 4 KB at a time as the decoder asked, and a file's create, writes
+and close all touch the destination, so reads and destination work
+alternated every 4 KB and every file; on one drive each switch is a swap.
 
-**Choice:** a pool in the shell's sink (`PoolTake`, `PoolFlush`,
-`PoolDrop`), not in the decoders: no decoder hands the sink more than
-32 KB (OPEN_ITEMS read, 2026-11-19), so a copy costs at most that twice.
-It takes `MaxBlock()` less `kPoolKeep` (the 20 KB reserve and 16 KB more,
-for the part dialog and alerts mid-run), no more than the fork still
-needs; one fork at a time, emptied by `StreamClose`. A decoder allocation
-it stands in the way of writes it out and frees it (`mal_alloc`), so it
-never refuses an entry.
+**Choice:** cache the archive, not the output (`fio_read`, `gCache`). From
+the first entry's begin — the decoder has its buffers by then, and the
+directory and first header were read as before (the maintainer's idea) —
+the archive is read in blocks of `MaxBlock()` less `kCacheKeep` (the 20 KB
+reserve and 16 KB more, for the part dialog and alerts mid-run). A decoder
+allocation it stands in the way of discards it (`mal_alloc`), so it never
+refuses an entry; it is taken again, smaller, at the next read. Only the
+archive's own reads are cached, not a set's parts. Nothing is written
+late, so a write error is still reported on its file.
+
+**What the 512 KB tier caught** (69/74 on the first sweep, 72 before):
+two `.sea` archives took the engine's budget after their first entry had
+begun, from a heap the cache held — the budget is measured once, at the
+first allocation — so `mal_take_budget` discards the cache first. Then
+`derived-Cool_Tools__.sit` was refused by the Memory Manager with the
+cache gone (`-D UNC_AT_BUDGET`: largest block 206,204 B): a fixed cache
+mid-heap had let a decoder block land above it, and its going left two
+pieces. The cache is a handle moved to the top (`MoveHHi`). **A 64K ROM gets no
+cache:** it lacks `MoveHHi`, so the cache could split its heap the same
+way, and that machine extracts only onto a Hard Disk 20 (FORMATS.md, *A
+true Macintosh 512K*), where no disk is swapped.
+
+**Rejected: an output pool** (built 2026-11-19, +356 B, trimmed to +292):
+a fork's output held in free memory. It removed the swaps inside a file
+but left two or three a file (create, close, flush): 90 for Compact Pro's
+31 files. Swapping only per filled buffer that way means queueing every
+create, rename and close until the pool is written, with the report's
+renames and errors decided late.
 
 **Measured** (`run.py --mem 1M -D UNC_AT_TIMING`, a scratch probe counting
-switches between `fio_read` and `FSWrite`; Install.exe, 26 KB of deflate,
-went from 8 interleaved reads to 8 reads then 6 writes): zip `ie111sep.zip`
-220 → 8, StuffIt `derived-EmpireBuilderDemo.sit` 136 → 6, Compact Pro
-`derived-alpha4.01.cpt` 164 → 90. What is left is two or three a file:
-create, close, `FlushVol`, the next header. The first probe run read the
-same with and without: `run.py -D` only reaches CMake for names
-`mac/CMakeLists.txt` lists, so `UNC_NOPOOL` was dropped silently.
-
-**Price:** CODE +356 B eager and lazy (+352 default), A5 +44 eager. A write
-error now surfaces when the pool is written, up to a fork later than the
-bytes; the entry still fails and is reported.
-
-**Not tested:** the swaps on the maintainer's Plus; System 7 and Mac OS 9.
+switches between the archive's FSReads and the destination's creates,
+writes and closes): zip `ie111sep.zip` 222 → 6, StuffIt
+`derived-EmpireBuilderDemo.sit` 142 → 4, Compact Pro `derived-alpha4.01.cpt`
+166 → 4, `macburger-helper.hqx` 128 → 4. `run.py -D` reaches CMake only for
+names `mac/CMakeLists.txt` lists: a probe's switch has to be in the source.

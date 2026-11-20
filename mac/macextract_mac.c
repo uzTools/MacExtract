@@ -379,6 +379,27 @@ static unc_off_t xio_size(void *ctx) { return ((MemIO *)ctx)->size; }
 
 #include "seg_types.h"     /* FileIO, SegHost, EnvSink: shared with ovl_segsetup */
 
+/* The archive cache. On one floppy drive every switch between reading
+ * the archive and touching the destination is a disk swap, and a file's
+ * create, writes and close all touch the destination: read in 4 KB pieces,
+ * the archive cost a swap every 4 KB and two or three a file (the
+ * maintainer's Mac Plus, 2026-11-17; DECISIONS.md 2026-11-19, *the archive
+ * read ahead*). So once the first entry begins — the decoder has its
+ * buffers by then — the archive is read in blocks of whatever is free
+ * less kCacheKeep, and a swap is needed only when a block runs out. A
+ * decoder allocation it stands in the way of discards it (mal_alloc). */
+#define kCacheKeep (kMemReserveMax + 16L * 1024)
+/* A handle, so that it can sit at the top of the heap (fio_read): a fixed
+ * block in the middle left the heap in two pieces once it went, and a
+ * decoder block too large for either was refused (derived-Cool_Tools__.sit
+ * at 512 KB, 2026-11-20). Nothing allocates between its dereference and
+ * its use, so it is never locked. */
+static Handle gCache;
+static long gCacheCap, gCacheLen;
+static uint32_t gCacheBase;
+static FileIO *gCacheIO;            /* the archive's; parts are not cached */
+static Boolean gCacheOn;            /* set by the first entry's begin */
+
 static int32_t fio_read(void *ctx, void *buf, int32_t len)
 {
     FileIO *f = (FileIO *)ctx;
@@ -389,6 +410,35 @@ static int32_t fio_read(void *ctx, void *buf, int32_t len)
     OSErr err;
 
     if (n == 0) return 0;
+    if (f == gCacheIO && gCacheOn) {
+        /* At the top of the heap, so that a decoder block taken while it
+         * is there lands below it, and its going leaves one piece. A 64K
+         * ROM has no MoveHHi, and gets no cache (ROM85). */
+        if (!gCache && *(const short *)0x028EL > 0) {
+            cnt = MaxBlock() - kCacheKeep;
+            if (cnt > 0 && (gCache = NewHandle(cnt)) != NULL) {
+                MoveHHi(gCache);
+                gCacheCap = cnt;
+                gCacheLen = 0;
+            }
+        }
+        if (gCache && (long)n <= gCacheCap) {
+            if (f->pos < gCacheBase ||
+                f->pos + n > gCacheBase + (uint32_t)gCacheLen) {
+                cnt = gCacheCap < (long)avail ? gCacheCap : (long)avail;
+                gCacheLen = 0;
+                gCacheBase = f->pos;
+                if (SetFPos(f->refNum, fsFromStart, (long)f->pos) == noErr &&
+                    FSRead(f->refNum, &cnt, *gCache) == noErr)
+                    gCacheLen = cnt;
+            }
+            if (f->pos + n <= gCacheBase + (uint32_t)gCacheLen) {
+                BlockMoveData(*gCache + (f->pos - gCacheBase), buf, (long)n);
+                f->pos += n;
+                return (int32_t)n;
+            }
+        }
+    }
     {
     TK_T0;
     cnt = 0;
@@ -762,6 +812,8 @@ static void mal_take_budget(MacAlloc *a)
     long total, contig;
     long freenow;
     long reserve;
+    /* The archive cache is no part of what the engine may have. */
+    if (gCache) { DisposeHandle(gCache); gCache = NULL; }
     /* PurgeSpace is not in the 64K ROM (measured 2026-11-06 with the
      * Hard Disk 20 file's HFS loaded, tools/vmac/traptest): there the
      * budget is FreeMem alone, the floor. */
@@ -785,11 +837,6 @@ static void mal_take_budget(MacAlloc *a)
     gBudget = a->initial;
 #endif
 }
-
-/* The write pool (PoolTake, below): a decoder's request it stands in the
- * way of writes it out and frees it first. */
-static Ptr gPool;
-static void PoolDrop(void);
 
 static void *mal_alloc(void *ctx, uint32_t size)
 {
@@ -831,8 +878,9 @@ static void *mal_alloc(void *ctx, uint32_t size)
     }
 #else
     p = NewPtr((long)size + 16);
-    if (p == NULL && gPool) {
-        PoolDrop();
+    if (p == NULL && gCache) {      /* the decoder's need comes first */
+        DisposeHandle(gCache);
+        gCache = NULL;
         p = NewPtr((long)size + 16);
     }
 #endif
@@ -2172,6 +2220,7 @@ static void ZoneShift(UncEntryInfo *e)
 static int SINK_BEGIN(void *ctx, const UncEntryInfo *info)
 {
     MacSink *s = (MacSink *)ctx;
+    gCacheOn = 1;                   /* the decoder is set up: read ahead */
     long dir = s->rootDirID;
     int start = 0, i, attempt;
     int leafStart = 0, leafLen = 0, leafChanged = 0, leafLost = 0;
@@ -2406,85 +2455,16 @@ static void ByteCopy(const uint8_t *src, uint8_t *dst, uint32_t n)
 
 #ifndef UNC_MAC_STAGE_WRITES
 
-static OSErr gLastWriteErr;          /* defined below, with its note */
-
-/* Write `n` bytes at the open fork's mark, 8 KB per FSWrite: the count is
- * bounded so the File Manager does a bounded amount per call in this deep,
- * cooperative context. Keeps the run's FIRST OSErr. */
-static int RawWrite(MacSink *s, const char *p, uint32_t n)
-{
-    while (n > 0) {
-        long count = (long)(n < 8192u ? n : 8192u);
-        long want = count;
-        OSErr werr;
-        {
-            TK_T0;
-            werr = FSWrite(s->openRef, &count, (Ptr)p);
-            TK_ADD(gTkWrite);
-        }
-        if (werr != noErr || count != want) {
-            s->wrErr = 1;
-            /* The grid and the alert could not tell dskFulErr from a media
-             * error before, so a full disk read as a hundred unexplained
-             * entry failures. */
-            if (s->wrOSErr == noErr) s->wrOSErr = (werr != noErr ? werr : ioErr);
-            gLastWriteErr = s->wrOSErr;
-            return -1;
-        }
-        p += want;
-        n -= (uint32_t)want;
-    }
-    return 0;
-}
-
-/* The write pool. A fork's output is held in free memory and written when
- * the pool fills or the fork closes, so that on one floppy drive the
- * reads and the writes come in runs rather than a disk swap every few KB
- * (the maintainer's Mac Plus, 2026-11-17; OPEN_ITEMS.md, *Floppy to
- * floppy on one drive*). One fork's at a time: StreamClose empties it.
- * It takes what is free less kPoolKeep, and no more than the fork still
- * needs; a decoder's allocation it is in the way of drops it (mal_alloc). */
-#define kPoolKeep (kMemReserveMax + 16L * 1024)
-static long gPoolCap, gPoolLen;
-static MacSink *gPoolSink;
-
-static int PoolFlush(void)
-{
-    long n = gPoolLen;
-    gPoolLen = 0;
-    return n ? RawWrite(gPoolSink, gPool, (uint32_t)n) : 0;
-}
-
-static void PoolDrop(void)
-{
-    if (!gPool) return;
-    (void)PoolFlush();              /* an error is in the sink's wrErr */
-    DisposePtr(gPool);
-    gPool = NULL;
-}
-
-static void PoolTake(MacSink *s, uint32_t left)
-{
-    long n = MaxBlock() - kPoolKeep;
-    if (n > (long)left) n = (long)left;
-    if (n < 1024) return;           /* not worth a block: write through */
-    gPool = NewPtr(n);
-    gPoolCap = n;
-    gPoolLen = 0;
-    gPoolSink = s;
-}
-
 /* Close the fork currently open, if any, and commit it. */
 static OSErr StreamClose(MacSink *s)
 {
     OSErr err = noErr;
-    PoolDrop();
     if (s->openRef) {
         err = FSClose(s->openRef);
         s->openRef = 0;
         FlushVol(NULL, s->vRefNum);   /* commit before anything else opens */
     }
-    return s->wrErr ? s->wrOSErr : err;
+    return err;
 }
 
 /* Make <fork> the open one, positioned where its last write left off.
@@ -2612,25 +2592,31 @@ static int sink_write(void *ctx, UncFork fork, const void *buf, int32_t len)
             return -1;
         }
     }
-    if (!gPool) {
-        uint32_t size = fork == UNC_FORK_DATA ? s->cur.data_size
-                                              : s->cur.rsrc_size;
-        PoolTake(s, size != UNC_SIZE_UNKNOWN && size > *pos
-                    ? size - *pos : 0x7FFFFFFFUL);
-    }
-    *pos += todo;
-    if (!gPool) return RawWrite(s, (const char *)buf, todo);
+    /* Write in bounded pieces: FSWrite takes a byte count, and keeping it
+     * small bounds how much the File Manager does per call in this deep,
+     * cooperative context. */
     while (todo > 0) {
-        uint32_t k = (uint32_t)(gPoolCap - gPoolLen);
-        if (k == 0) {
-            if (PoolFlush()) return -1;
-            k = (uint32_t)gPoolCap;
+        long count = (long)(todo < 8192u ? todo : 8192u);
+        long want = count;
+        OSErr werr;
+        {
+            TK_T0;
+            werr = FSWrite(s->openRef, &count,
+                           (Ptr)((const char *)buf + off));
+            TK_ADD(gTkWrite);
         }
-        if (k > todo) k = todo;
-        BlockMoveData((const char *)buf + off, gPool + gPoolLen, (long)k);
-        gPoolLen += (long)k;
-        off += k;
-        todo -= k;
+        if (werr != noErr || count != want) {
+            s->wrErr = 1;
+            /* Keep the FIRST OSErr. The grid and the alert could not tell
+             * dskFulErr from a media error before, so a full disk read as a
+             * hundred unexplained entry failures. */
+            if (s->wrOSErr == noErr) s->wrOSErr = (werr != noErr ? werr : ioErr);
+            gLastWriteErr = s->wrOSErr;
+            return -1;
+        }
+        off += (uint32_t)want;
+        todo -= (uint32_t)want;
+        *pos += (uint32_t)want;
     }
     return 0;
 #else
@@ -4826,6 +4812,8 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
     io.seek = fio_seek;
     io.tell = fio_tell;
     io.size = fio_size;
+    gCacheIO = &fio;
+    gCacheOn = 0;
 #endif
 
     /* Budget the engine against the free heap — DEFERRED to the first
@@ -5001,6 +4989,9 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
         ret = unc_extract_as(extractedAs, &io, &sk, &al, prog, &opt);
     }
     gPeakUsage = ma.initial - ma.lowmark;   /* engine heap high-water mark */
+    if (gCache) DisposeHandle(gCache);
+    gCache = NULL;
+    gCacheIO = NULL;
     DirFlush(&sink);           /* the held folder's date, before anything else */
     IconFlush(&sink);          /* the top folder's custom-icon bit, last */
 

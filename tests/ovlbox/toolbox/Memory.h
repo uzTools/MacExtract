@@ -16,6 +16,7 @@
 #include "mac_mocks.h"
 
 Handle NewHandle(Size n);
+long MaxBlock(void);
 void   DisposeHandle(Handle h);
 Size   GetHandleSize(Handle h);
 void   SetHandleSize(Handle h, Size n);

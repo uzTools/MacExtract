@@ -57,7 +57,11 @@ has one floppy drive and no hard disk.
       (FORMATS.md, *What the reserve is for*). Repeat with a Chooser
       extension loaded, extracting onto a **floppy** and onto an
       **AppleShare volume**. Record the lowest free heap seen.
-- [ ] **Floppy to floppy.** Extract from a real 800K floppy onto another.
+- [ ] **Floppy to floppy.** Extract from a real 800K floppy onto another,
+      in the one drive, an archive of many files (`derived-alpha4.01.cpt`).
+      Expected: a swap only when a block of the archive runs out, not one
+      a file (DECISIONS.md 2026-11-19, *the archive read ahead*); record
+      the number of swaps.
 - [ ] **A media error during a write.** A marginal disk. Expected: that
       entry fails with an alert, the partial file is removed, extraction
       continues. Only injected errors have reached this path. (A full disk

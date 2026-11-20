@@ -86,10 +86,19 @@ Ptr NewPtr(Size n)      { return (Ptr)malloc((size_t)n); }
 Ptr NewPtrClear(Size n) { return (Ptr)calloc(1, (size_t)n); }
 void DisposePtr(Ptr p)  { free(p); }
 long FreeMem(void)       { return 3800L * 1024; }   /* pretend 3.8 MB */
-/* The write pool takes MaxBlock() less 36 KB (kPoolKeep): this leaves it
- * 5,000 B, so every fork longer than that goes through the pool's
- * full-and-flush path, and a fork's bytes still have to come out whole. */
+#ifndef UNC_AT_OVERLAY   /* tests/ovlbox/ovlbox.c has its own */
+/* The archive cache takes MaxBlock() less 36 KB (kCacheKeep): this leaves
+ * it 5,000 B, so an archive longer than that is read through refills. */
 long MaxBlock(void)      { return 20L * 1024 + 16L * 1024 + 5000; }
+Handle NewHandle(Size n)
+{
+    Handle h = malloc(sizeof(Ptr));
+    if (h && !(*h = malloc((size_t)n))) { free(h); h = NULL; }
+    return h;
+}
+void DisposeHandle(Handle h) { if (h) { free(*h); free(h); } }
+void MoveHHi(Handle h)       { (void)h; }
+#endif
 /* Nothing purgeable in the mock heap, so PurgeSpace agrees with FreeMem —
  * which is what it does on a single-segment build anyway. */
 void PurgeSpace(Size *total, Size *contig)

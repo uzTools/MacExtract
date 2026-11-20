@@ -185,6 +185,10 @@ Handle NewHandle(Size n)
 
 void DisposeHandle(Handle h) { blk_free(blk_of(h)); }
 
+/* Nothing free to lend: the shell's archive cache (fio_read) never forms
+ * here, and the overlay lanes see the reads they always did. */
+long MaxBlock(void) { return 0; }
+
 Size GetHandleSize(Handle h)
 {
     Blk *b = blk_of(h);
