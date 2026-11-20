@@ -120,6 +120,28 @@ static int uu_readline(UncBufIn *in, uint32_t base, UuLine *l)
     if (!l->locked) l->over_len = 0;
     l->start = uu_abs(base, in);
     for (;;) {
+        /* The line straight out of the buffer while it fits: a call and
+         * a cursor store per byte were 39 % of a 200 KB file's decode
+         * (tools/m68kprof.py, 2026-11-20). The byte path below is left
+         * for a refill, the end of the stream and an overlong line. */
+        {
+            const uint8_t *p, *q, *e;
+            uint8_t *d = l->buf + l->len;
+            uint32_t n = unc_bufin_span(in, &p);
+            int32_t room = UU_LINE_MAX - l->len;
+            if ((int32_t)n > room) n = (uint32_t)room;
+            for (q = p, e = p + n; q < e; ) {
+                uint8_t ch = *q++;
+                if (ch == '\n' || ch == '\r') {
+                    l->len = (int32_t)(d - l->buf);
+                    unc_bufin_drop(in, (uint32_t)(q - p));
+                    goto line_done;
+                }
+                *d++ = ch;
+            }
+            l->len = (int32_t)(d - l->buf);
+            unc_bufin_drop(in, n);
+        }
         c = unc_bufin_next(in);
         if (c < 0) {
             if (in->err != UNC_ERR_TRUNCATED) return in->err;
@@ -151,6 +173,7 @@ static int uu_readline(UncBufIn *in, uint32_t base, UuLine *l)
             }
         }
     }
+line_done:
     l->buf[l->len] = 0;
     if (l->eof && l->len == 0) return UNC_ERR_TRUNCATED;   /* nothing left */
     return UNC_OK;
@@ -197,6 +220,56 @@ int32_t unc_uu_decode_line(const uint8_t *buf, int32_t len, uint8_t *out)
         out[n + 2] = (uint8_t)(UU_SIXB(ib[i + 2]) << 6 | UU_SIXB(ib[i + 3]));
         i += 4;
         n += 3;
+    }
+    return outcount;
+}
+
+/* What a character rules out, for uu_data_line: bit 0 the "PC" table
+ * (above UU_PC_MAX), bit 1 the "UNIX" one (below UU_UNIX_MIN), both a
+ * character neither table has (outside UU_CH_MIN..UU_CH_MAX). Built from
+ * those four bounds (fmt_uu_priv.h); one lookup a character instead of
+ * unc_uu_line_is_data's three compares. */
+static const uint8_t uu_rules_out[256] = {
+    3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,
+    2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,0,0,0,0,0,
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+    0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,3,3,
+    3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,
+    3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,
+    3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,
+    3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,
+};
+
+/* A data line in one pass: its payload into `out` (as unc_uu_decode_line)
+ * and, in `*mask`, what unc_uu_line_is_data would say of it. Returns the
+ * count, 0 for the terminator, -1 for a line that cannot be one; with
+ * `out` NULL only the count and the mask (the measuring pass). Pads a
+ * short line in place, in `buf` itself (UU_LINE_MAX + 1 bytes). The
+ * line's decode, its copy into a padded buffer and its separate
+ * character check were 58 % of a 200 KB file's instructions
+ * (tools/m68kprof.py, 2026-11-20). */
+static int32_t uu_data_line(uint8_t *buf, int32_t len, uint8_t *out, int *mask)
+{
+    int32_t outcount, incount, i, n;
+    uint8_t acc = 0;
+
+    *mask = 0;
+    if (len < 1) return -1;
+    outcount = UU_SIXB(buf[0]);
+    if (outcount > 45) return -1;
+    if (outcount == 0) return 0;
+    incount = ((outcount / 3) + 1) * 4;
+    if (len > incount + 1) return outcount;      /* too long: not data */
+    for (i = 0; i < len; i++) acc |= uu_rules_out[buf[i]];
+    *mask = UU_TBL_ANY & ~acc;
+    if (*mask == 0 || out == NULL) return outcount;  /* NULL: measuring */
+    for (i = len; i <= incount; i++) buf[i] = ' ';   /* see unc_uu_decode_line */
+    for (n = 0, i = 1; n <= outcount; n += 3, i += 4) {
+        uint8_t a = (uint8_t)UU_SIXB(buf[i]),     b = (uint8_t)UU_SIXB(buf[i + 1]);
+        uint8_t c = (uint8_t)UU_SIXB(buf[i + 2]), d = (uint8_t)UU_SIXB(buf[i + 3]);
+        out[n]     = (uint8_t)(a << 2 | b >> 4);
+        out[n + 1] = (uint8_t)(b << 4 | c >> 2);
+        out[n + 2] = (uint8_t)(c << 6 | d);
     }
     return outcount;
 }
@@ -350,12 +423,18 @@ typedef struct UuDoc {
  * `*table` is the DOCUMENT's alphabet, narrowed as its lines are read
  * and carried from one section to the next because UUTool writes every
  * section of a document with one table (fmt_uu_priv.h). */
+/* Written through UncForkOut's `obuf` (UNC_IOBUF bytes), not a line at a
+ * time: a sink write per 45-byte line was 4,400 FSWrites for a 200 KB
+ * file, and on a Mac Plus 66 s against UUTool's 9 (FORMATS.md, *Each
+ * format's own program*). `obuf` may be NULL when `write` is 0. */
 static int uu_section(UncCtx *c, UncBufIn *in, uint32_t base, UuLine *l,
-                      UncFork fork, int write, uint32_t *bytes, int *table)
+                      UncFork fork, int write, uint32_t *bytes, int *table,
+                      uint8_t *obuf)
 {
-    uint8_t dec[UU_DEC_MAX];
+    UncForkOut o;
     int err;
 
+    if (write) unc_fork_out(&o, c, fork, 1, UNC_CK_NONE, obuf, UNC_IOBUF);
     *bytes = 0;
     for (;;) {
         err = uu_readline(in, base, l);
@@ -364,10 +443,20 @@ static int uu_section(UncCtx *c, UncBufIn *in, uint32_t base, UuLine *l,
             if (l->eof) return UNC_ERR_TRUNCATED;
             continue;                     /* mailers leave blank lines */
         }
-        if (uu_is_end(l)) return UNC_OK;
+        if (uu_is_end(l)) return write ? unc_fork_flush(&o) : UNC_OK;
         {
-            int32_t n = uu_decode_line(l, dec);
             int m;
+            int32_t n;
+            uint8_t *dst = NULL;           /* measuring: the count is enough */
+            /* Straight into the fork's buffer when writing: a copy a byte
+             * at a time through unc_fork_write was 13 % of the decode. */
+            if (write) {
+                if (o.cap - o.len < UU_DEC_MAX &&
+                    (err = unc_fork_flush(&o)) != UNC_OK)
+                    return err;
+                dst = o.buf + o.len;
+            }
+            n = uu_data_line(l->buf, l->len, dst, &m);
             if (n == 0) {
                 /* Terminator; the "end" line follows it. */
                 err = uu_readline(in, base, l);
@@ -377,7 +466,7 @@ static int uu_section(UncCtx *c, UncBufIn *in, uint32_t base, UuLine *l,
                     if (err != UNC_OK) return err;
                 }
                 if (!uu_is_end(l)) return UNC_ERR_CORRUPT;
-                return UNC_OK;
+                return write ? unc_fork_flush(&o) : UNC_OK;
             }
             /* A line that cannot be a data line is MAIL, not data: a
              * file posted in several parts arrives as several messages,
@@ -400,14 +489,10 @@ static int uu_section(UncCtx *c, UncBufIn *in, uint32_t base, UuLine *l,
              * set missing its MIDDLE part decodes to a short file with
              * nothing to object to. A missing LAST part is still caught:
              * the terminator and "end" live there. OPEN_ITEMS.md. */
-            m = unc_uu_line_is_data(l->buf, l->len);
             if (n < 0 || !(m & *table)) continue;
             *table &= m;
             *bytes += (uint32_t)n;
-            if (write) {
-                if (c->sink->write(c->sink->ctx, fork, dec, n) != 0)
-                    return UNC_ERR_SINK;
-            }
+            if (write) o.len += (uint32_t)n;
         }
         if (l->eof) return UNC_ERR_TRUNCATED;
     }
@@ -471,7 +556,7 @@ static int uu_scan_doc(UncCtx *c, UncBufIn *in, uint32_t base, UuLine *l,
     }
 
     err = uu_section(c, in, base, l, UNC_FORK_DATA, 0, &d->data.bytes,
-                     &table);
+                     &table, NULL);
     if (err != UNC_OK) return err;
     d->data.present = 1;
     d->end = uu_abs(base, in);
@@ -487,7 +572,7 @@ static int uu_scan_doc(UncCtx *c, UncBufIn *in, uint32_t base, UuLine *l,
 
         if (uu_tag_is(l, " .rsrc")) {
             err = uu_section(c, in, base, l, UNC_FORK_RSRC, 0, &d->rsrc.bytes,
-                             &table);
+                             &table, NULL);
             if (err != UNC_OK) return err;
             d->rsrc.present = 1;
             d->end = uu_abs(base, in);
@@ -539,7 +624,7 @@ int unc_uu_extract(UncCtx *c)
     l.over_len = 0;
     l.locked = 0;
 
-    iobuf = (uint8_t *)unc_alloc(c->al, iocap);
+    iobuf = (uint8_t *)unc_alloc(c->al, iocap + UNC_IOBUF);  /* + output */
     if (!iobuf) return UNC_ERR_MEM;
 
     for (;;) {
@@ -622,7 +707,8 @@ int unc_uu_extract(UncCtx *c)
                     if (est == UNC_OK && !uu_is_begin(&l)) est = UNC_ERR_CORRUPT;
                     if (est == UNC_OK)
                         est = uu_section(c, &in, d.start, &l, UNC_FORK_DATA,
-                                         !c->opt.test_only, &n, &table);
+                                         !c->opt.test_only, &n, &table,
+                                         iobuf + iocap);
                     if (est == UNC_OK && d.rsrc.present) {
                         /* Skip to the .rsrc section's own begin line. */
                         for (;;) {
@@ -633,7 +719,7 @@ int unc_uu_extract(UncCtx *c)
                                 est = uu_section(c, &in, d.start, &l,
                                                  UNC_FORK_RSRC,
                                                  !c->opt.test_only, &n,
-                                                 &table);
+                                                 &table, iobuf + iocap);
                                 break;
                             }
                             if (uu_is_begin(&l)) { est = UNC_ERR_CORRUPT; break; }
