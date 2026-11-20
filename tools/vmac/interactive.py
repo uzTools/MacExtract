@@ -84,6 +84,7 @@ def build_interactive_app(defines=()):
     and UNC_AT_* so that a stray export cannot silently change what is being
     driven; each combination gets its own build directory, because CMake reads
     these at CONFIGURE time and reusing one would keep the first for ever."""
+    R.check_defines(defines)
     tag = "-".join(["interactive"] + sorted(d.lower() for d in defines))
     bdir = os.path.join(R.REPO, "build", "mac-" + tag)
     toolchain = os.environ.get("RETRO68", "/opt/Retro68-build/toolchain")

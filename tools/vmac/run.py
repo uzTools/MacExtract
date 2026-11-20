@@ -22,7 +22,7 @@ as the host allows, so --timeout bounds host seconds and says nothing about how
 long a real 7 MHz 68000 would take. Correctness results are speed-independent;
 timing claims must not be drawn from this harness.
 """
-import argparse, json, os, select, shutil, signal, subprocess, sys, tempfile
+import argparse, json, os, re, select, shutil, signal, subprocess, sys, tempfile
 import time
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -160,6 +160,22 @@ def _macbinary(name, data, rsrc):
     return bytes(h) + pad(data) + pad(rsrc)
 
 
+def check_defines(defines):
+    """Refuse a `-D` name mac/CMakeLists.txt never reads. A define reaches the
+    compiler only as an environment variable the CMake file turns into a -D,
+    so any other name was dropped in silence: on 2026-11-19 a probe's
+    `-D UNC_NOPOOL` built the very code it was meant to switch off, and two
+    runs read as "no difference" (DECISIONS.md 2026-11-19, *the archive read
+    ahead*)."""
+    known = set(re.findall(r"ENV\{(UNC_\w+)\}",
+                           open(os.path.join(REPO, "mac", "CMakeLists.txt")).read()))
+    bad = sorted(d for d in defines if d not in known)
+    if bad:
+        raise SystemExit("run: mac/CMakeLists.txt does not read "
+                         + ", ".join(bad) + " — the build would ignore it; "
+                         "add it there, or put the switch in the source")
+
+
 def build_autotest_app(defines=()):
     """Build the UNC_MAC_AUTOTEST application, returning its MacBinary path.
 
@@ -167,6 +183,7 @@ def build_autotest_app(defines=()):
     into a -D). Each combination gets its own build directory, because CMake
     reads these from the environment at CONFIGURE time — reusing one directory
     would silently keep the first combination for ever."""
+    check_defines(defines)
     tag = "-".join(["autotest"] + sorted(d.lower() for d in defines))
     bdir = os.path.join(REPO, "build", "mac-" + tag)
     env = dict(os.environ, UNC_MAC_AUTOTEST="1")
