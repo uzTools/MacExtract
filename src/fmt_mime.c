@@ -480,13 +480,13 @@ static int mime_uu_next(MimeDec *d)
 
     while (!d->udone) {
         int32_t llen = 0, n;
-        int eof = 0;
+        int eof = 0, m;
 
         if (unc_readline(&d->in, d->m->line, UNC_UU_LINE_MAX + 1,
                          &llen, &eof) != UNC_OK) break;
         if (mime_uu_is_end(d->m->line, llen)) break;
-        n = unc_uu_decode_line(d->m->line, llen, d->ub);
-        if (n > 0 && unc_uu_line_is_data(d->m->line, llen)) {
+        n = unc_uu_data_line(d->m->line, llen, d->ub, &m);
+        if (n > 0 && m) {
             d->unout = (int)n;
             d->uiout = 1;
             return d->ub[0];

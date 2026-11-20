@@ -1575,7 +1575,7 @@ int unc_uu_extract(UncCtx *c);
 #define UNC_UU_DEC_MAX    48    /* ((45/3)+1)*3, mu_convert's obuf bound */
 
 /* Decoded bytes (0..45), or -1 for a line that cannot be one. */
-int32_t unc_uu_decode_line(const uint8_t *buf, int32_t len, uint8_t *out);
+int32_t unc_uu_data_line(uint8_t *buf, int32_t len, uint8_t *out, int *mask);
 /* Can this line be uu data at all? Its first character declares how
  * many bytes it encodes, so the length has to agree. */
 int unc_uu_line_is_data(const uint8_t *p, int32_t len);

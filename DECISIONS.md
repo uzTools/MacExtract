@@ -631,7 +631,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-16 (the helper dated 1984) — every helper's dates are 1 January 1984, so a real program installed after the helpers keeps its own icon on System 7; on System 6 it still draws the generic icon; 0 B
 - 2026-11-17 (the disk in the drive) — on one floppy drive the part dialog opens on the disk actually in the drive and ejects it through Standard File's own Eject, the archive's resource fork is read before the parts are asked for, and the code images are read before the Toolbox needs the System disk; +208 B resident
 - 2026-11-19 (the archive read ahead) — once the first entry begins, the archive is read in blocks of the free memory, so one floppy drive swaps when a block runs out, not every 4 KB and every file; switches at 1 MB 166 → 4 for Compact Pro's 31 files
-- 2026-11-20 (the character uuencode touched five times) — a 276 KB uuencoded file took 66 s on a Mac Plus against UUTool's 9; reading, copying, checking and decoding each character separately, twice, was most of it: 34.4 → 13.6 million 68000 instructions, 69.9 → 27.7 s
+- 2026-11-20 (the character uuencode touched five times) — a 276 KB uuencoded file took 66 s on a Mac Plus against UUTool's 9; reading, copying, checking and decoding each character separately, twice, was most of it: 34.4 → 15.7 million 68000 instructions, 69.9 → 31.7 s
 
 ---
 
@@ -27130,7 +27130,7 @@ writes and closes): zip `ie111sep.zip` 222 → 6, StuffIt
 166 → 4, `macburger-helper.hqx` 128 → 4. `run.py -D` reaches CMake only for
 names `mac/CMakeLists.txt` lists: a probe's switch has to be in the source.
 
-## 2026-11-20 (the character uuencode touched five times) — a 276 KB uuencoded file took 66 s on a Mac Plus against UUTool's 9; reading, copying, checking and decoding each character separately, twice, was most of it: 34.4 → 13.6 million 68000 instructions, 69.9 → 27.7 s
+## 2026-11-20 (the character uuencode touched five times) — a 276 KB uuencoded file took 66 s on a Mac Plus against UUTool's 9; reading, copying, checking and decoding each character separately, twice, was most of it: 34.4 → 15.7 million 68000 instructions, 69.9 → 31.7 s
 
 **Claim:** UUTool 2.3.2 decodes `speed-uu-200k.uu` in 9.1 s on a 7 MHz
 Mac Plus, MacExtract in 66 s (FORMATS.md, *Each format's own program*).
@@ -27145,16 +27145,24 @@ a byte at a time (7 %), and all of it twice, once to measure each file.
 
 **Choice, measured a step at a time** (instructions, millions): the line
 read straight out of the input buffer (`unc_bufin_span`) 34.4 → 26.4; the
-check and the decode in one function, `uu_data_line`, one lookup in a
-256-byte table a character, padding in place, 26.4 → 18.3; the line
-decoded into the fork's own buffer, 15.9; the measuring pass counting
-without decoding, 13.6. Output goes through `UncForkOut` in 4 KB, not a
-sink write per 45-byte line (that alone: 69.9 → 63.8 s). The lines
-accepted and the bytes written are the old ones: `tests/harness/run_uu.py`
-28 of 28, and 21 of them fail with the final flush removed.
+decode in one function, `unc_uu_data_line`, padding in place, no copy,
+which MIME's uuencoded parts and the `.finfo` section use too, so the old
+`unc_uu_decode_line` is gone; the line decoded into the fork's own
+buffer; the measuring pass counting without decoding; the alphabet check
+(`unc_uu_line_is_data`, the probe's as well) answered by the line's
+lowest and highest character, two compares a character: 15.7. Output goes
+through `UncForkOut` in 4 KB, not a sink write per 45-byte line (that
+alone: 69.9 → 63.8 s). The lines accepted and the bytes written are the
+old ones: `tests/harness/run_uu.py` 28 of 28, and 21 of them fail with
+the final flush removed; `run_mime.py` 70 of 70.
 
-**Measured:** 69.9 → 27.7 s at 1x (`refspeed.py --ref ours`), the
-instruction count's 60 %. The uuencode image +672 B; nothing resident.
+**Rejected for now: a 256-byte table** classing a character in one
+lookup (13.6 million, 27.7 s) — 4.0 s on this file for 416 B; the
+maintainer kept it as an option for when it can come cheaper
+(OPEN_ITEMS.md, *uuencode: what is left of the gap*).
+
+**Measured:** 69.9 → 31.7 s at 1x (`refspeed.py --ref ours`). The
+uuencode image +256 B; nothing resident.
 
 **Left:** the measuring pass (a third: one read and check of every
 line), the line copy, and 1.3 million instructions of format detection

@@ -201,8 +201,7 @@ SHORT = re.compile(r"at least (\d+) bytes more memory")
 # (below). 63 -> 64 on 2026-11-03, DERIVED: it left again.
 # 64 -> 62 at sys6-512K on 2026-11-11, DERIVED: the 'part' resources (below).
 # 62 -> 63 on 2026-11-13, DERIVED: `derived-PuzzleGetter_0.8.sit` left again
-# with the folder memo's 1,600 B of A5 (below). 63 -> 62 on 2026-11-20,
-# DERIVED: it joined again, with uuencode's decode (below).
+# with the folder memo's 1,600 B of A5 (below).
 EXPECT = {
     "floor-1M": (),
     "sys3-512K": ("derived-Cool_Tools__.sit",
@@ -239,14 +238,7 @@ EXPECT = {
                   # memo's 1,600 B went from A5 onto the relocator's dead
                   # code (DECISIONS.md 2026-11-13, *the memo on the
                   # relocator*).
-                  "a2ps.V4.3.tar.Z",
-                  # PuzzleGetter back 2026-11-20, DERIVED: it needs
-                  # 83,654 B and the control gives 83,540 since
-                  # uuencode's one-pass decode, its 256-byte table
-                  # included, grew it 672 B. The shipped lane does not
-                  # move (DECISIONS.md 2026-11-20, *the character
-                  # uuencode touched five times*).
-                  "derived-PuzzleGetter_0.8.sit"),
+                  "a2ps.V4.3.tar.Z"),
                   # Five more were refused from 2026-11-12 while Installer
                   # VISE was resident in the control, and left with it the
                   # same day (DECISIONS.md 2026-11-12, *VISE parked*).

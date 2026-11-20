@@ -64,18 +64,24 @@ int unc_uu_line_is_data(const uint8_t *p, int32_t len)
     /* Trailing spaces may have been stripped; the line may be short,
      * never long. */
     if (len > incount + 1) return 0;
-    /* One unsigned subtraction decides all three questions: the two
-     * alphabets are contiguous ranges inside 0x20..0x7d, so a
-     * character is out of range, above "PC"'s top, or below "UNIX"'s
-     * bottom, and the last two are disjoint. The count character is
-     * judged with the rest — it comes from the same table, and below
-     * 27 the two tables spell it differently. */
-    for (i = 0; i < len; i++) {
-        uint8_t c = (uint8_t)(p[i] - UU_CH_MIN);
-        if (c > (uint8_t)(UU_CH_MAX - UU_CH_MIN)) return 0;
-        if (c > (uint8_t)(UU_PC_MAX - UU_CH_MIN)) mask &= ~UU_TBL_PC;
-        else if (c < (uint8_t)(UU_UNIX_MIN - UU_CH_MIN))
-            mask &= ~UU_TBL_UNIX;
+    /* The two alphabets are contiguous ranges inside 0x20..0x7d, so all
+     * three questions — out of range, above "PC"'s top, below "UNIX"'s
+     * bottom — are answered by the line's lowest and highest character:
+     * two compares a character, where three tests and their branches
+     * were 40 % of a uuencoded file's decode (tools/m68kprof.py,
+     * 2026-11-20). The count character is judged with the rest — it
+     * comes from the same table, and below 27 the two tables spell it
+     * differently. */
+    {
+        uint8_t lo = p[0], hi = p[0];
+        for (i = 1; i < len; i++) {
+            uint8_t c = p[i];
+            if (c < lo) lo = c;
+            if (c > hi) hi = c;
+        }
+        if (lo < UU_CH_MIN || hi > UU_CH_MAX) return 0;
+        if (hi > UU_PC_MAX) mask &= ~UU_TBL_PC;
+        if (lo < UU_UNIX_MIN) mask &= ~UU_TBL_UNIX;
     }
     return mask;
 }

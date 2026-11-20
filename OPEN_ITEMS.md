@@ -191,6 +191,23 @@ a specimen:
   writes that order. A pax header between the two is stepped over, no
   specimen (hypothesis: bsdtar writes one for a non-ASCII name).
 
+## uuencode: what is left of the gap
+
+31.7 s on a 7 MHz Mac Plus for `speed-uu-200k.uu` against UUTool 2.3.2's
+9.1 s; 15.7 million 68000 instructions (DECISIONS.md 2026-11-20, *the
+character uuencode touched five times*). Each an ESTIMATE from the
+profile, not built:
+- **A 256-byte table** classing a character in one lookup: built and
+  measured, 27.7 s for +416 B in the text image; kept out by the
+  maintainer until it comes cheaper (a table the image already needs,
+  or bytes saved beside it).
+- **One pass instead of two**, ~4 million: a damaged document's error
+  would then come after its file was created.
+- **No line copy**, decoding in place in the input buffer: ~2.5 million.
+- **Format detection on a text file**, ~1.3 million: the zip probes'
+  backwards search runs before the text probes (`src/unc_formats.h`).
+- Parity beyond that is the assembly pass below.
+
 ## Hand-written 68000 assembly: candidates, held for one VM pass
 
 **Not started, by decision (2026-10-09)**: collect the candidates, then

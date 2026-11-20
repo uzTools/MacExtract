@@ -187,19 +187,28 @@ line_done:
 /* ------------------------------------------------------------------ */
 
 
-/* Decode one data line into out (>= UU_DEC_MAX bytes). Returns the
- * payload length (0..45), or -1 if the line cannot be one. */
-int32_t unc_uu_decode_line(const uint8_t *buf, int32_t len, uint8_t *out)
+/* One line: its payload into `out` (>= UU_DEC_MAX bytes) and, in `*mask`,
+ * what unc_uu_line_is_data says of it — which alphabets it could be from,
+ * 0 if it cannot be a data line. Returns the count (0..45), 0 for the
+ * terminator, -1 for a line whose count cannot be one. With `out` NULL
+ * only the count and the mask: uuencode's measuring pass. The line is
+ * decoded whatever the mask (the .finfo section reads it so); it is
+ * padded in place, in `buf` itself, which must hold UU_LINE_MAX + 1.
+ * One pass where a copy into a padded buffer, a decode and a separate
+ * check were 58 % of a 200 KB file's instructions (tools/m68kprof.py,
+ * 2026-11-20). */
+int32_t unc_uu_data_line(uint8_t *buf, int32_t len, uint8_t *out, int *mask)
 {
-    uint8_t ib[UU_LINE_MAX + 4];
-    int32_t outcount, incount, n, i;
+    int32_t outcount, incount, i, n;
 
+    *mask = 0;
     if (len < 1) return -1;
     outcount = UU_SIXB(buf[0]);
     if (outcount > 45) return -1;
+    if (outcount == 0) return 0;
+    *mask = unc_uu_line_is_data(buf, len);
+    if (out == NULL) return outcount;
     incount = ((outcount / 3) + 1) * 4;
-    if (incount > UU_LINE_MAX) return -1;
-
     /* Mailers strip trailing whitespace, so a short line is padded
      * back out to the length its count implies. A space is what the
      * padding has to be because the "PC" table spells the value ZERO
@@ -209,61 +218,7 @@ int32_t unc_uu_decode_line(const uint8_t *buf, int32_t len, uint8_t *out)
      * *UUcode preferences*). Under either of the UNIX tables the value
      * zero is 0x60 instead, and UU_SIXB reads a space as zero there
      * too, so one pad character serves all three. */
-    for (i = 0; i < len && i <= incount; i++) ib[i] = buf[i];
-    for (; i <= incount; i++) ib[i] = ' ';
-
-    n = 0;
-    i = 1;
-    while (n <= outcount) {
-        out[n]     = (uint8_t)(UU_SIXB(ib[i])     << 2 | UU_SIXB(ib[i + 1]) >> 4);
-        out[n + 1] = (uint8_t)(UU_SIXB(ib[i + 1]) << 4 | UU_SIXB(ib[i + 2]) >> 2);
-        out[n + 2] = (uint8_t)(UU_SIXB(ib[i + 2]) << 6 | UU_SIXB(ib[i + 3]));
-        i += 4;
-        n += 3;
-    }
-    return outcount;
-}
-
-/* What a character rules out, for uu_data_line: bit 0 the "PC" table
- * (above UU_PC_MAX), bit 1 the "UNIX" one (below UU_UNIX_MIN), both a
- * character neither table has (outside UU_CH_MIN..UU_CH_MAX). Built from
- * those four bounds (fmt_uu_priv.h); one lookup a character instead of
- * unc_uu_line_is_data's three compares. */
-static const uint8_t uu_rules_out[256] = {
-    3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,
-    2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,0,0,0,0,0,
-    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-    0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,3,3,
-    3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,
-    3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,
-    3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,
-    3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,
-};
-
-/* A data line in one pass: its payload into `out` (as unc_uu_decode_line)
- * and, in `*mask`, what unc_uu_line_is_data would say of it. Returns the
- * count, 0 for the terminator, -1 for a line that cannot be one; with
- * `out` NULL only the count and the mask (the measuring pass). Pads a
- * short line in place, in `buf` itself (UU_LINE_MAX + 1 bytes). The
- * line's decode, its copy into a padded buffer and its separate
- * character check were 58 % of a 200 KB file's instructions
- * (tools/m68kprof.py, 2026-11-20). */
-static int32_t uu_data_line(uint8_t *buf, int32_t len, uint8_t *out, int *mask)
-{
-    int32_t outcount, incount, i, n;
-    uint8_t acc = 0;
-
-    *mask = 0;
-    if (len < 1) return -1;
-    outcount = UU_SIXB(buf[0]);
-    if (outcount > 45) return -1;
-    if (outcount == 0) return 0;
-    incount = ((outcount / 3) + 1) * 4;
-    if (len > incount + 1) return outcount;      /* too long: not data */
-    for (i = 0; i < len; i++) acc |= uu_rules_out[buf[i]];
-    *mask = UU_TBL_ANY & ~acc;
-    if (*mask == 0 || out == NULL) return outcount;  /* NULL: measuring */
-    for (i = len; i <= incount; i++) buf[i] = ' ';   /* see unc_uu_decode_line */
+    for (i = len; i <= incount; i++) buf[i] = ' ';
     for (n = 0, i = 1; n <= outcount; n += 3, i += 4) {
         uint8_t a = (uint8_t)UU_SIXB(buf[i]),     b = (uint8_t)UU_SIXB(buf[i + 1]);
         uint8_t c = (uint8_t)UU_SIXB(buf[i + 2]), d = (uint8_t)UU_SIXB(buf[i + 3]);
@@ -272,11 +227,6 @@ static int32_t uu_data_line(uint8_t *buf, int32_t len, uint8_t *out, int *mask)
         out[n + 2] = (uint8_t)(c << 6 | d);
     }
     return outcount;
-}
-
-static int32_t uu_decode_line(const UuLine *l, uint8_t *out)
-{
-    return unc_uu_decode_line(l->buf, l->len, out);
 }
 
 
@@ -456,7 +406,7 @@ static int uu_section(UncCtx *c, UncBufIn *in, uint32_t base, UuLine *l,
                     return err;
                 dst = o.buf + o.len;
             }
-            n = uu_data_line(l->buf, l->len, dst, &m);
+            n = unc_uu_data_line(l->buf, l->len, dst, &m);
             if (n == 0) {
                 /* Terminator; the "end" line follows it. */
                 err = uu_readline(in, base, l);
@@ -587,7 +537,8 @@ static int uu_scan_doc(UncCtx *c, UncBufIn *in, uint32_t base, UuLine *l,
                 if (l->len == 0) { if (l->eof) return UNC_ERR_TRUNCATED; continue; }
                 if (uu_is_end(l)) break;
                 {
-                    int32_t n = uu_decode_line(l, dec);
+                    int m;
+                    int32_t n = unc_uu_data_line(l->buf, l->len, dec, &m);
                     int32_t k;
                     if (n < 0) return UNC_ERR_CORRUPT;
                     if (n == 0) continue;
