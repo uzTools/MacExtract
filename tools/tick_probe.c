@@ -83,7 +83,7 @@ int main(int argc, char **argv)
     for (i = 1; i < argc; i++) {
         ProbeIO pio;
         UncIO io;
-        UncSink sink;
+        UncSink sink = {0};
         UncAlloc al;
         UncProgress prog;
         long len;

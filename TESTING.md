@@ -2123,6 +2123,12 @@ Three walks exist — `list_only`, an ordinary extraction, and one that SKIPS
 every second entry — and all three must offer `begin_entry` the same
 entries, with the same name, `is_dir`, type, creator and both fork sizes,
 in the same order. The probe measures; `run_walk.py` applies the rule.
+Type and creator are what the walk DELIVERED, `set_info` included, and a
+fork size the extraction offers as unknown is not compared — uuencode
+streams since 2026-11-20 and hands `.finfo` over late; a size it does
+offer must agree (DECISIONS.md 2026-11-20, *the character uuencode
+touched five times*). Removing that `set_info` call fails
+`uu-wild-dictcol.uu`.
 
 **Envelopes are peeled on the way in** (by result: a layer yielding exactly
 one recognised archive is an envelope). 943 fixtures become **1,360

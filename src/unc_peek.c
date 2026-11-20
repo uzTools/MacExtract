@@ -115,7 +115,7 @@ UncFormat unc_envelope_peek(UncIO *io, UncAlloc *al, int *enc)
     PeekWin w;
     PeekHead h;
     UncIO wio, hio;
-    UncSink sk;
+    UncSink sk = {0};
     UncFormat env, inner;
     uint32_t size;
 

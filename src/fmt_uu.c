@@ -74,6 +74,11 @@
 
 typedef struct UuLine {
     uint8_t  buf[UU_LINE_MAX + 1];
+    /* The line: `buf`, or where it already lies whole in the input
+     * buffer, valid until the next uu_readline. A line padded to its
+     * count is never one in the input buffer (uu_readline). */
+    uint8_t *p;
+    uint8_t  lo, hi;   /* the line's lowest and highest byte (uu_mask) */
     uint8_t  cut;            /* the line was longer than the buffer */
     uint32_t dropped;        /* by this many bytes, all off the end */
     /* Where a line too long for `buf` is kept whole: the host's
@@ -119,29 +124,34 @@ static int uu_readline(UncBufIn *in, uint32_t base, UuLine *l)
     l->dropped = 0;
     if (!l->locked) l->over_len = 0;
     l->start = uu_abs(base, in);
-    for (;;) {
-        /* The line straight out of the buffer while it fits: a call and
-         * a cursor store per byte were 39 % of a 200 KB file's decode
-         * (tools/m68kprof.py, 2026-11-20). The byte path below is left
-         * for a refill, the end of the stream and an overlong line. */
-        {
-            const uint8_t *p, *q, *e;
-            uint8_t *d = l->buf + l->len;
-            uint32_t n = unc_bufin_span(in, &p);
-            int32_t room = UU_LINE_MAX - l->len;
-            if ((int32_t)n > room) n = (uint32_t)room;
-            for (q = p, e = p + n; q < e; ) {
-                uint8_t ch = *q++;
-                if (ch == '\n' || ch == '\r') {
-                    l->len = (int32_t)(d - l->buf);
-                    unc_bufin_drop(in, (uint32_t)(q - p));
-                    goto line_done;
-                }
-                *d++ = ch;
+    l->p = l->buf;
+    /* Where it lies whole in the input buffer, it is read there: no copy
+     * (tools/m68kprof.py, 2026-11-20). */
+    {
+        const uint8_t *q;
+        uint32_t n = unc_bufin_span(in, &q), k;
+        uint8_t lo = 0xFF, hi = 0;
+        if (n > UU_LINE_MAX) n = UU_LINE_MAX;
+        for (k = 0; k < n; k++) {
+            uint8_t ch = q[k];
+            if (ch == '\n' || ch == '\r') {
+                /* A line shorter than its count says is padded where it
+                 * lies (uu_decode), which in the input buffer would be
+                 * over the next line: such a line is copied, below. */
+                int32_t oc = UU_SIXB(q[0]);
+                if (k < (uint32_t)((oc + 2) / 3) * 4 + 1) break;
+                l->p = (uint8_t *)q;
+                l->len = (int32_t)k;
+                l->lo = lo;
+                l->hi = hi;
+                unc_bufin_drop(in, k + 1);
+                return UNC_OK;
             }
-            l->len = (int32_t)(d - l->buf);
-            unc_bufin_drop(in, n);
+            if (ch < lo) lo = ch;
+            if (ch > hi) hi = ch;
         }
+    }
+    for (;;) {
         c = unc_bufin_next(in);
         if (c < 0) {
             if (in->err != UNC_ERR_TRUNCATED) return in->err;
@@ -173,8 +183,17 @@ static int uu_readline(UncBufIn *in, uint32_t base, UuLine *l)
             }
         }
     }
-line_done:
+
     l->buf[l->len] = 0;
+    {
+        int32_t k;
+        l->lo = 0xFF;
+        l->hi = 0;
+        for (k = 0; k < l->len; k++) {
+            if (l->buf[k] < l->lo) l->lo = l->buf[k];
+            if (l->buf[k] > l->hi) l->hi = l->buf[k];
+        }
+    }
     if (l->eof && l->len == 0) return UNC_ERR_TRUNCATED;   /* nothing left */
     return UNC_OK;
 }
@@ -186,6 +205,46 @@ line_done:
 /* table for the padding below (tools/derive_mu.py --tables).         */
 /* ------------------------------------------------------------------ */
 
+
+/* The `outcount` bytes a line declares, into `out`: the groups that hold
+ * them, ceil(outcount / 3), and no more — reading the one after them made
+ * every full line "short", so padded, so copied (2026-11-20).
+ * Mailers strip trailing whitespace, so a short line is padded
+ * back out to the length its count implies. A space is what the
+ * padding has to be because the "PC" table spells the value ZERO
+ * as one, which is also why UUTool's other table exists at all:
+ * "I suggest not using original coding when using UNIX machines,
+ * since some electronic mailors reformat white space" (its manual,
+ * *UUcode preferences*). Under either of the UNIX tables the value
+ * zero is 0x60 instead, and UU_SIXB reads a space as zero there
+ * too, so one pad character serves all three. */
+static void uu_decode(uint8_t *buf, int32_t len, uint8_t *out, int32_t outcount)
+{
+    int32_t i, n, last = ((outcount + 2) / 3) * 4;   /* the last char read */
+
+    for (i = len; i <= last; i++) buf[i] = ' ';
+    for (n = 0, i = 1; n < outcount; n += 3, i += 4) {
+        uint8_t a = (uint8_t)UU_SIXB(buf[i]),     b = (uint8_t)UU_SIXB(buf[i + 1]);
+        uint8_t c = (uint8_t)UU_SIXB(buf[i + 2]), d = (uint8_t)UU_SIXB(buf[i + 3]);
+        out[n]     = (uint8_t)(a << 2 | b >> 4);
+        out[n + 1] = (uint8_t)(b << 4 | c >> 2);
+        out[n + 2] = (uint8_t)(c << 6 | d);
+    }
+}
+
+/* What unc_uu_line_is_data says of a line, from the lowest and highest
+ * byte uu_readline kept while it looked for the line's end: one loop
+ * over the characters instead of two. Same answer, every case. */
+static int uu_mask(const UuLine *l, int32_t outcount)
+{
+    int mask = UU_TBL_ANY;
+    if (outcount == 0 || outcount > 45) return 0;
+    if (l->len > ((outcount / 3) + 1) * 4 + 1) return 0;
+    if (l->lo < UU_CH_MIN || l->hi > UU_CH_MAX) return 0;
+    if (l->hi > UU_PC_MAX) mask &= ~UU_TBL_PC;
+    if (l->lo < UU_UNIX_MIN) mask &= ~UU_TBL_UNIX;
+    return mask;
+}
 
 /* One line: its payload into `out` (>= UU_DEC_MAX bytes) and, in `*mask`,
  * what unc_uu_line_is_data says of it — which alphabets it could be from,
@@ -199,7 +258,7 @@ line_done:
  * 2026-11-20). */
 int32_t unc_uu_data_line(uint8_t *buf, int32_t len, uint8_t *out, int *mask)
 {
-    int32_t outcount, incount, i, n;
+    int32_t outcount;
 
     *mask = 0;
     if (len < 1) return -1;
@@ -207,41 +266,22 @@ int32_t unc_uu_data_line(uint8_t *buf, int32_t len, uint8_t *out, int *mask)
     if (outcount > 45) return -1;
     if (outcount == 0) return 0;
     *mask = unc_uu_line_is_data(buf, len);
-    if (out == NULL) return outcount;
-    incount = ((outcount / 3) + 1) * 4;
-    /* Mailers strip trailing whitespace, so a short line is padded
-     * back out to the length its count implies. A space is what the
-     * padding has to be because the "PC" table spells the value ZERO
-     * as one, which is also why UUTool's other table exists at all:
-     * "I suggest not using original coding when using UNIX machines,
-     * since some electronic mailors reformat white space" (its manual,
-     * *UUcode preferences*). Under either of the UNIX tables the value
-     * zero is 0x60 instead, and UU_SIXB reads a space as zero there
-     * too, so one pad character serves all three. */
-    for (i = len; i <= incount; i++) buf[i] = ' ';
-    for (n = 0, i = 1; n <= outcount; n += 3, i += 4) {
-        uint8_t a = (uint8_t)UU_SIXB(buf[i]),     b = (uint8_t)UU_SIXB(buf[i + 1]);
-        uint8_t c = (uint8_t)UU_SIXB(buf[i + 2]), d = (uint8_t)UU_SIXB(buf[i + 3]);
-        out[n]     = (uint8_t)(a << 2 | b >> 4);
-        out[n + 1] = (uint8_t)(b << 4 | c >> 2);
-        out[n + 2] = (uint8_t)(c << 6 | d);
-    }
+    if (out != NULL) uu_decode(buf, len, out, outcount);
     return outcount;
 }
 
 
-/* Does this line open a section? */
 static int uu_is_begin(const UuLine *l)
 {
-    return l->len >= 6 && l->buf[0] == 'b' && l->buf[1] == 'e' &&
-           l->buf[2] == 'g' && l->buf[3] == 'i' && l->buf[4] == 'n' &&
-           l->buf[5] == ' ';
+    return l->len >= 6 && l->p[0] == 'b' && l->p[1] == 'e' &&
+           l->p[2] == 'g' && l->p[3] == 'i' && l->p[4] == 'n' &&
+           l->p[5] == ' ';
 }
 
 static int uu_is_end(const UuLine *l)
 {
-    return l->len >= 3 && l->buf[0] == 'e' && l->buf[1] == 'n' &&
-           l->buf[2] == 'd';
+    return l->len >= 3 && l->p[0] == 'e' && l->p[1] == 'n' &&
+           l->p[2] == 'd';
 }
 
 /* The section tag of a UUTool continuation line, at the offset the
@@ -257,7 +297,7 @@ static int uu_tag_is(const UuLine *l, const char *tag)
     int32_t i;
     if (l->len < 10) return 0;
     for (i = 0; tag[i]; i++)
-        if (l->buf[10 + i] != (uint8_t)tag[i] || 10 + i >= l->len) return 0;
+        if (10 + i >= l->len || l->p[10 + i] != (uint8_t)tag[i]) return 0;
     return 1;
 }
 
@@ -326,8 +366,8 @@ static void uu_name_from_begin(const UuLine *l, const uint8_t **name,
                                uint32_t *len)
 {
     int32_t s, e;
-    unc_uu_name_span(l->buf, l->len, &s, &e);
-    *name = l->buf + s;
+    unc_uu_name_span(l->p, l->len, &s, &e);
+    *name = l->p + s;
     *len  = (uint32_t)(e - s);
 }
 
@@ -406,7 +446,11 @@ static int uu_section(UncCtx *c, UncBufIn *in, uint32_t base, UuLine *l,
                     return err;
                 dst = o.buf + o.len;
             }
-            n = unc_uu_data_line(l->buf, l->len, dst, &m);
+            n = l->len < 1 ? -1 : UU_SIXB(l->p[0]);
+            if (n > 45) n = -1;
+            m = n > 0 ? uu_mask(l, n) : 0;
+            if (n > 0 && dst != NULL && (m & *table))
+                uu_decode(l->p, l->len, dst, n);
             if (n == 0) {
                 /* Terminator; the "end" line follows it. */
                 err = uu_readline(in, base, l);
@@ -450,13 +494,11 @@ static int uu_section(UncCtx *c, UncBufIn *in, uint32_t base, UuLine *l,
 
 /* Measure one document: sizes, name and Finder info. `in` must be
  * positioned at its begin line. */
-static int uu_scan_doc(UncCtx *c, UncBufIn *in, uint32_t base, UuLine *l,
-                       UuDoc *d)
+/* A document's begin line: its name, and the mode's lock. */
+static void uu_doc_head(UuLine *l, UuDoc *d)
 {
     const uint8_t *nm;
     uint32_t nlen;
-    int err;
-    int table = UU_TBL_ANY;      /* which alphabet this document uses */
 
     d->data.present = d->rsrc.present = d->finfo.present = 0;
     d->data.bytes = d->rsrc.bytes = d->finfo.bytes = 0;
@@ -471,7 +513,7 @@ static int uu_scan_doc(UncCtx *c, UncBufIn *in, uint32_t base, UuLine *l,
     }
 
     d->start = l->start;
-    d->lock = (uint8_t)unc_uu_mode_lock(l->buf, l->len, 6);
+    d->lock = (uint8_t)unc_uu_mode_lock(l->p, l->len, 6);
     uu_name_from_begin(l, &nm, &nlen);
     if (nlen > UNC_NAME_MAX) {
         nlen = UNC_NAME_MAX;
@@ -504,9 +546,24 @@ static int uu_scan_doc(UncCtx *c, UncBufIn *in, uint32_t base, UuLine *l,
         d->name[nlen] = 0;
         d->name_len = nlen;
     }
+}
 
-    err = uu_section(c, in, base, l, UNC_FORK_DATA, 0, &d->data.bytes,
-                     &table, NULL);
+static int uu_finfo(UncBufIn *in, uint32_t base, UuLine *l, UuDoc *d);
+
+/* One document's sections, from its begin line (in `l`, its head already
+ * read) to the line after its last: each fork counted, and written when
+ * `write` is set, and the .finfo section read. Every pass over a document
+ * is this walk: the measuring one before begin_entry, the writing one
+ * after, or — for a host that takes the Finder info late — the only one
+ * (UncSink.set_info). */
+static int uu_walk(UncCtx *c, UncBufIn *in, uint32_t base, UuLine *l,
+                   UuDoc *d, int write, uint8_t *obuf)
+{
+    int err;
+    int table = UU_TBL_ANY;      /* which alphabet this document uses */
+
+    err = uu_section(c, in, base, l, UNC_FORK_DATA, write, &d->data.bytes,
+                     &table, obuf);
     if (err != UNC_OK) return err;
     d->data.present = 1;
     d->end = uu_abs(base, in);
@@ -521,37 +578,89 @@ static int uu_scan_doc(UncCtx *c, UncBufIn *in, uint32_t base, UuLine *l,
         if (!uu_is_begin(l)) { d->end = mark; return UNC_OK; }
 
         if (uu_tag_is(l, " .rsrc")) {
-            err = uu_section(c, in, base, l, UNC_FORK_RSRC, 0, &d->rsrc.bytes,
-                             &table, NULL);
+            err = uu_section(c, in, base, l, UNC_FORK_RSRC, write,
+                             &d->rsrc.bytes, &table, obuf);
             if (err != UNC_OK) return err;
             d->rsrc.present = 1;
             d->end = uu_abs(base, in);
         } else if (uu_tag_is(l, " .finfo")) {
-            /* 16 bytes: type(4), creator(4), flags(2), then the
-             * position and folder the Finder remembered. */
-            uint8_t dec[UU_DEC_MAX];
-            uint32_t got = 0;
-            for (;;) {
-                err = uu_readline(in, base, l);
-                if (err != UNC_OK) return err;
-                if (l->len == 0) { if (l->eof) return UNC_ERR_TRUNCATED; continue; }
-                if (uu_is_end(l)) break;
-                {
-                    int m;
-                    int32_t n = unc_uu_data_line(l->buf, l->len, dec, &m);
-                    int32_t k;
-                    if (n < 0) return UNC_ERR_CORRUPT;
-                    if (n == 0) continue;
-                    for (k = 0; k < n && got < 16; k++) d->info[got++] = dec[k];
-                }
-            }
-            d->finfo.present = 1;
-            d->finfo.bytes = got;
-            d->end = uu_abs(base, in);
+            err = uu_finfo(in, base, l, d);
+            if (err != UNC_OK) return err;
         } else {
             d->end = mark;      /* the next document's begin line */
             return UNC_OK;
         }
+    }
+}
+
+/* A .finfo section, its begin line read: 16 bytes, type(4), creator(4),
+ * flags(2), then the position and folder the Finder remembered. */
+static int uu_finfo(UncBufIn *in, uint32_t base, UuLine *l, UuDoc *d)
+{
+    uint8_t dec[UU_DEC_MAX];
+    uint32_t got = 0;
+    int err;
+
+    for (;;) {
+        err = uu_readline(in, base, l);
+        if (err != UNC_OK) return err;
+        if (l->len == 0) { if (l->eof) return UNC_ERR_TRUNCATED; continue; }
+        if (uu_is_end(l)) break;
+        {
+            int m;
+            int32_t n = unc_uu_data_line(l->p, l->len, dec, &m);
+            int32_t k;
+            if (n < 0) return UNC_ERR_CORRUPT;
+            if (n == 0) continue;
+            for (k = 0; k < n && got < 16; k++) d->info[got++] = dec[k];
+        }
+    }
+    d->finfo.present = 1;
+    d->finfo.bytes = got;
+    d->end = uu_abs(base, in);
+    return UNC_OK;
+}
+
+/* A document's entry, from what is known of it: the name always, and
+ * the Finder info once its .finfo section has been read. */
+static void uu_doc_entry(UncCtx *c, const UuDoc *d, UncEntryInfo *e)
+{
+    unc_entry_clear(e);
+    if (d->name_len == 0) {
+        if (c->opt.name_hint && c->opt.name_hint_len)
+            unc_entry_set_name(e, c->opt.name_hint, c->opt.name_hint_len);
+    } else {
+        unc_entry_set_name(e, d->name, d->name_len);
+        if (d->name_trunc) {
+            e->name_truncated = d->name_have_full ? 2 : 1;
+            e->name_full_len = (uint16_t)(d->name_full > 65535u ? 65535u
+                                                                : d->name_full);
+        }
+    }
+    /* Measured only for a listing: an extraction writes as it reads. */
+    e->data_size = e->rsrc_size = UNC_SIZE_UNKNOWN;
+    if (c->opt.list_only) {
+        e->data_size = d->data.bytes;
+        e->rsrc_size = d->rsrc.bytes;
+    }
+    if (d->finfo.present && d->finfo.bytes >= 8) {
+        e->type    = unc_get_u32be(d->info);
+        e->creator = unc_get_u32be(d->info + 4);
+        if (d->finfo.bytes >= 10) e->finder_flags = unc_get_u16be(d->info + 8);
+        /* All of it: UUTool's .finfo is the FInfo record whole —
+         * type, creator, flags, then fdLocation and fdFldr (the
+         * layout tools/derive_mu.py reads out of UUTool itself). */
+        if (d->finfo.bytes >= 16) {
+            uint32_t k;
+            for (k = 0; k < 16; k++) e->finder_info[k] = d->info[k];
+            e->meta |= UNC_META_FINFO;
+        }
+    } else if (!d->finfo.present) {
+        /* A plain uuencode's mode is the file's own permission. Not
+         * a UUTool document's: there it is UUTool's preference, the
+         * same 0700 in every section, and "ignored on the Mac side"
+         * (its manual, *UNIX Preferences*; see uu_tag_is). */
+        e->locked = d->lock;
     }
 }
 
@@ -601,81 +710,33 @@ int unc_uu_extract(UncCtx *c)
         }
         if (!found) break;
 
-        err = uu_scan_doc(c, &in, pos, &l, &d);
-        if (err != UNC_OK) {
-            if (any) err = UNC_OK;     /* trailing junk after a good doc */
-            break;
-        }
-
-        unc_entry_clear(&e);
-        if (d.name_len == 0) {
-            if (c->opt.name_hint && c->opt.name_hint_len)
-                unc_entry_set_name(&e, c->opt.name_hint, c->opt.name_hint_len);
-        } else {
-            unc_entry_set_name(&e, d.name, d.name_len);
-            if (d.name_trunc) {
-                e.name_truncated = d.name_have_full ? 2 : 1;
-                e.name_full_len = (uint16_t)(d.name_full > 65535u ? 65535u
-                                                                  : d.name_full);
+        /* One pass: the entry begins at the begin line with its sizes
+         * unknown, the forks are written as their sections come, and the
+         * .finfo section, which UUTool writes last, goes to the host
+         * through set_info (DECISIONS.md 2026-11-20, *the character
+         * uuencode touched five times*). A listing has nothing to fix up
+         * afterwards, so it measures the document first. */
+        uu_doc_head(&l, &d);
+        if (c->opt.list_only) {
+            err = uu_walk(c, &in, pos, &l, &d, 0, NULL);
+            if (err != UNC_OK) {
+                if (any) err = UNC_OK;  /* trailing junk after a good doc */
+                break;
             }
         }
-        e.data_size = d.data.bytes;
-        e.rsrc_size = d.rsrc.bytes;
-        if (d.finfo.present && d.finfo.bytes >= 8) {
-            e.type    = unc_get_u32be(d.info);
-            e.creator = unc_get_u32be(d.info + 4);
-            if (d.finfo.bytes >= 10) e.finder_flags = unc_get_u16be(d.info + 8);
-            /* All of it: UUTool's .finfo is the FInfo record whole —
-             * type, creator, flags, then fdLocation and fdFldr (the
-             * layout tools/derive_mu.py reads out of UUTool itself). */
-            if (d.finfo.bytes >= 16) {
-                uint32_t k;
-                for (k = 0; k < 16; k++) e.finder_info[k] = d.info[k];
-                e.meta |= UNC_META_FINFO;
-            }
-        } else if (!d.finfo.present) {
-            /* A plain uuencode's mode is the file's own permission. Not
-             * a UUTool document's: there it is UUTool's preference, the
-             * same 0700 in every section, and "ignored on the Mac side"
-             * (its manual, *UNIX Preferences*; see uu_tag_is). */
-            e.locked = d.lock;
-        }
+        uu_doc_entry(c, &d, &e);
 
         sret = c->sink->begin_entry(c->sink->ctx, &e);
         if (sret < 0) { err = UNC_ERR_SINK; break; }
+        if (!c->opt.list_only)
+            est = uu_walk(c, &in, pos, &l, &d,
+                          sret == 0 && !c->opt.test_only, iobuf + iocap);
         if (sret == 0) {
-            if (!c->opt.list_only) {
-                /* Second pass over the same document, this time writing. */
-                uint32_t n;
-                int table = UU_TBL_ANY;
-                c->ps.done = base + d.start;
-                if (c->io->seek(c->io->ctx, d.start) < 0) {
-                    est = UNC_ERR_IO;
-                } else {
-                    unc_bufin_init(&in, c->io, &c->ps, iobuf, iocap);
-                    l.eof = 0;
-                    est = uu_readline(&in, d.start, &l);
-                    if (est == UNC_OK && !uu_is_begin(&l)) est = UNC_ERR_CORRUPT;
-                    if (est == UNC_OK)
-                        est = uu_section(c, &in, d.start, &l, UNC_FORK_DATA,
-                                         !c->opt.test_only, &n, &table,
-                                         iobuf + iocap);
-                    if (est == UNC_OK && d.rsrc.present) {
-                        /* Skip to the .rsrc section's own begin line. */
-                        for (;;) {
-                            est = uu_readline(&in, d.start, &l);
-                            if (est != UNC_OK) break;
-                            if (l.len == 0) { if (l.eof) { est = UNC_ERR_TRUNCATED; break; } continue; }
-                            if (uu_is_begin(&l) && uu_tag_is(&l, " .rsrc")) {
-                                est = uu_section(c, &in, d.start, &l,
-                                                 UNC_FORK_RSRC,
-                                                 !c->opt.test_only, &n,
-                                                 &table, iobuf + iocap);
-                                break;
-                            }
-                            if (uu_is_begin(&l)) { est = UNC_ERR_CORRUPT; break; }
-                        }
-                    }
+            if (est == UNC_OK && d.finfo.present && c->sink->set_info) {
+                uu_doc_entry(c, &d, &e);
+                if (c->sink->set_info(c->sink->ctx, &e) < 0) {
+                    err = UNC_ERR_SINK;
+                    break;
                 }
             }
             if (c->sink->end_entry(c->sink->ctx, est) < 0) {
@@ -683,6 +744,7 @@ int unc_uu_extract(UncCtx *c)
                 break;
             }
         }
+        if (est != UNC_OK) { any = 1; break; }  /* a damaged document ends it */
         any = 1;
         pos = d.end;
         if (d.end <= d.start) break;      /* no forward progress */

@@ -122,11 +122,23 @@ static int w_write(void *ctx, UncFork fork, const void *buf, int32_t len)
 { (void)ctx; (void)fork; (void)buf; (void)len; return 0; }
 static int w_end(void *ctx, int status) { (void)ctx; (void)status; return 0; }
 
+/* The Finder info a format offers after the data (UncSink.set_info,
+ * uuencode's .finfo): over the entry's record, as a host applies it, so
+ * a walk is compared on what it delivered and not only on begin_entry. */
+static int w_set_info(void *ctx, const UncEntryInfo *info)
+{
+    Seq *s = (Seq *)ctx;
+    if (s->n == 0) return -1;
+    s->rec[s->n - 1].type = info->type;
+    s->rec[s->n - 1].creator = info->creator;
+    return 0;
+}
+
 static int walk(const char *path, Seq *seq, int list_only, int skip_odd)
 {
     ProbeIO pio;
     UncIO io;
-    UncSink sink;
+    UncSink sink = {0};
     UncAlloc al;
     UncOptions opt;
     long len;
@@ -146,6 +158,7 @@ static int walk(const char *path, Seq *seq, int list_only, int skip_odd)
     io.tell = p_tell; io.size = p_size;
     sink.ctx = seq; sink.begin_entry = w_begin; sink.write = w_write;
     sink.end_entry = w_end; sink.comment = NULL;
+    sink.set_info = w_set_info;
     al.ctx = NULL; al.alloc = p_alloc; al.free = p_free;
 
     memset(&opt, 0, sizeof opt);
@@ -170,8 +183,14 @@ static void diff(const Seq *a, const Seq *b, char *out, size_t outsz)
         else if (x->is_dir != y->is_dir)         what = "is_dir";
         else if (x->type != y->type)             what = "type";
         else if (x->creator != y->creator)       what = "creator";
-        else if (x->data_size != y->data_size)   what = "data_size";
-        else if (x->rsrc_size != y->rsrc_size)   what = "rsrc_size";
+        /* `b` is always the full extraction, which may offer a size
+         * as unknown where it streams the entry (uuencode since
+         * 2026-11-20, DECISIONS.md *the character uuencode touched five
+         * times*); a size it does offer must agree. */
+        else if (y->data_size != UNC_SIZE_UNKNOWN &&
+                 x->data_size != y->data_size)   what = "data_size";
+        else if (y->rsrc_size != UNC_SIZE_UNKNOWN &&
+                 x->rsrc_size != y->rsrc_size)   what = "rsrc_size";
         if (what) {
             snprintf(out, outsz, "%lu:%s", (unsigned long)i, what);
             return;

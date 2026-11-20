@@ -60,7 +60,7 @@ int main(int argc, char **argv)
     FileCtx fc;
     UncIO io;
     UncAlloc al;
-    UncSink sk;
+    UncSink sk = {0};
     UncOptions opt;
     uint8_t *tiny = NULL;
     int null_mode = 0, ret;

@@ -1531,6 +1531,19 @@ static int sink_end(void *ctx, int status)
     return 0;
 }
 
+/* The Finder info a format read after the data (UncSink.set_info). This
+ * host keeps only what end_entry reads of it. */
+static int sink_set_info(void *ctx, const UncEntryInfo *info)
+{
+    DiskSink *s = (DiskSink *)ctx;
+    s->cur.type = info->type;
+    s->cur.creator = info->creator;
+    memcpy(s->cur.finder_info, info->finder_info, 16);
+    s->cur.meta |= (uint8_t)(info->meta & UNC_META_FINFO);
+    s->cur.locked = info->locked;
+    return 0;
+}
+
 /* An archive comment belongs to the archive, not to any entry, so it
  * cannot be an entry: it is written beside the extracted items as
  * "<archive>.comment.txt" — a name derived from the archive's, so that
@@ -1728,7 +1741,7 @@ static int env_run(const char *path, EnvSink *es)
 {
     FileIO f;
     UncIO eio;
-    UncSink sk;
+    UncSink sk = {0};
     UncAlloc al;
     BudgetAlloc ba;
     UncProgress prog;
@@ -2957,6 +2970,7 @@ static void layer_sink(const CliArgs *a, LayerState *st, Layer *L)
     L->sk.write = sink_write;
     L->sk.end_entry = sink_end;
     L->sk.comment = sink_comment;
+    L->sk.set_info = sink_set_info;
     L->prog.ctx = NULL;
     L->prog.tick = prog_tick;
 }

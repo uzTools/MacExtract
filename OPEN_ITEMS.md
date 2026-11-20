@@ -193,19 +193,17 @@ a specimen:
 
 ## uuencode: what is left of the gap
 
-31.7 s on a 7 MHz Mac Plus for `speed-uu-200k.uu` against UUTool 2.3.2's
-9.1 s; 15.7 million 68000 instructions (DECISIONS.md 2026-11-20, *the
-character uuencode touched five times*). Each an ESTIMATE from the
-profile, not built:
-- **A 256-byte table** classing a character in one lookup: built and
-  measured, 27.7 s for +416 B in the text image; kept out by the
-  maintainer until it comes cheaper (a table the image already needs,
-  or bytes saved beside it).
-- **One pass instead of two**, ~4 million: a damaged document's error
-  would then come after its file was created.
-- **No line copy**, decoding in place in the input buffer: ~2.5 million.
-- **Format detection on a text file**, ~1.3 million: the zip probes'
-  backwards search runs before the text probes (`src/unc_formats.h`).
+16.5 s on a 7 MHz Mac Plus for `speed-uu-200k.uu` against UUTool 2.3.2's
+9.1 s; 8.6 million 68000 instructions, one pass (DECISIONS.md
+2026-11-20, *the character uuencode touched five times*). Each an
+ESTIMATE from the profile, not built:
+- **Format detection, 1.3 million:** the zip end record searched on the
+  uuencoded file before the text probes run (`src/unc_formats.h`), and
+  on the decoded file with the BinHex probe when it is checked for
+  another layer. A skip search was built and saved 0.13 million.
+- **A 256-byte table** classing a character: measured 4.0 s for 416 B
+  before the one pass; kept out by the maintainer until it comes
+  cheaper.
 - Parity beyond that is the assembly pass below.
 
 ## Hand-written 68000 assembly: candidates, held for one VM pass

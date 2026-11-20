@@ -631,7 +631,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-16 (the helper dated 1984) — every helper's dates are 1 January 1984, so a real program installed after the helpers keeps its own icon on System 7; on System 6 it still draws the generic icon; 0 B
 - 2026-11-17 (the disk in the drive) — on one floppy drive the part dialog opens on the disk actually in the drive and ejects it through Standard File's own Eject, the archive's resource fork is read before the parts are asked for, and the code images are read before the Toolbox needs the System disk; +208 B resident
 - 2026-11-19 (the archive read ahead) — once the first entry begins, the archive is read in blocks of the free memory, so one floppy drive swaps when a block runs out, not every 4 KB and every file; switches at 1 MB 166 → 4 for Compact Pro's 31 files
-- 2026-11-20 (the character uuencode touched five times) — a 276 KB uuencoded file took 66 s on a Mac Plus against UUTool's 9; reading, copying, checking and decoding each character separately, twice, was most of it: 34.4 → 15.7 million 68000 instructions, 69.9 → 31.7 s
+- 2026-11-20 (the character uuencode touched five times) — a 276 KB uuencoded file took 66 s on a Mac Plus against UUTool's 9; reading, copying, checking and decoding each character separately, twice, was most of it: one pass, each character read once and decoded once, 34.4 → 8.6 million 68000 instructions, 69.9 → 16.5 s
 
 ---
 
@@ -27130,7 +27130,7 @@ writes and closes): zip `ie111sep.zip` 222 → 6, StuffIt
 166 → 4, `macburger-helper.hqx` 128 → 4. `run.py -D` reaches CMake only for
 names `mac/CMakeLists.txt` lists: a probe's switch has to be in the source.
 
-## 2026-11-20 (the character uuencode touched five times) — a 276 KB uuencoded file took 66 s on a Mac Plus against UUTool's 9; reading, copying, checking and decoding each character separately, twice, was most of it: 34.4 → 15.7 million 68000 instructions, 69.9 → 31.7 s
+## 2026-11-20 (the character uuencode touched five times) — a 276 KB uuencoded file took 66 s on a Mac Plus against UUTool's 9; reading, copying, checking and decoding each character separately, twice, was most of it: one pass, each character read once and decoded once, 34.4 → 8.6 million 68000 instructions, 69.9 → 16.5 s
 
 **Claim:** UUTool 2.3.2 decodes `speed-uu-200k.uu` in 9.1 s on a 7 MHz
 Mac Plus, MacExtract in 66 s (FORMATS.md, *Each format's own program*).
@@ -27145,26 +27145,50 @@ a byte at a time (7 %), and all of it twice, once to measure each file.
 
 **Choice, measured a step at a time** (instructions, millions): the line
 read straight out of the input buffer (`unc_bufin_span`) 34.4 → 26.4; the
-decode in one function, `unc_uu_data_line`, padding in place, no copy,
-which MIME's uuencoded parts and the `.finfo` section use too, so the old
-`unc_uu_decode_line` is gone; the line decoded into the fork's own
-buffer; the measuring pass counting without decoding; the alphabet check
-(`unc_uu_line_is_data`, the probe's as well) answered by the line's
-lowest and highest character, two compares a character: 15.7. Output goes
-through `UncForkOut` in 4 KB, not a sink write per 45-byte line (that
-alone: 69.9 → 63.8 s). The lines accepted and the bytes written are the
-old ones: `tests/harness/run_uu.py` 28 of 28, and 21 of them fail with
-the final flush removed; `run_mime.py` 70 of 70.
+decode in one function, padding in place, no copy, which MIME's uuencoded
+parts and the `.finfo` section use too (`unc_uu_data_line`), the old
+`unc_uu_decode_line` gone; the line decoded into the fork's own buffer;
+the measuring pass counting without decoding; the alphabet check
+(`unc_uu_line_is_data`, the probe's as well) by the line's lowest and
+highest character: 15.7 (committed, 31.7 s). Then **one pass**, 9.9:
+UUTool writes `.finfo` last and the engine offered an entry's Finder
+info only at `begin_entry`, so the document was measured first; a sink
+callback, `UncSink.set_info`, now takes it late (the Mac shell and the
+CLI implement it; a host without it gets no Finder info from `.finfo`;
+a listing still measures, having nothing to fix up afterwards). Then the
+line read **where it lies** in the input buffer, its lowest and highest
+byte kept while its end is looked for, so the check has no loop of its
+own, and only the groups the count declares decoded — one more had made
+every full line "short", so padded, so copied: 8.6. A line shorter than
+its count is copied first, since its padding would land on the next
+one. Output goes through `UncForkOut` in 4 KB, not a sink write per
+45-byte line (that alone: 69.9 → 63.8 s). The lines accepted and the
+bytes written are the old ones: `tests/harness/run_uu.py` 28 of 28, 21
+of them failing with the final flush removed; `run_mime.py` 70 of 70;
+`test_uu` drives both sinks, and fails if `set_info` is skipped; on the
+emulated Mac, `synth-uu-mac.uu` comes out `TEXT`/`ttxt` from its
+`.finfo` (`-D UNC_AT_META`).
 
-**Rejected for now: a 256-byte table** classing a character in one
-lookup (13.6 million, 27.7 s) — 4.0 s on this file for 416 B; the
-maintainer kept it as an option for when it can come cheaper
-(OPEN_ITEMS.md, *uuencode: what is left of the gap*).
+**Rejected:**
+- **A 256-byte table** classing a character in one lookup (27.7 s
+  against 31.7 at the time) — 4.0 s for 416 B; the maintainer kept it
+  as an option (OPEN_ITEMS.md, *uuencode: what is left of the gap*).
+- **A skip search for the zip end record** (`unc_zip_scan_eocd`): 0.80
+  → 0.67 million, about 0.25 s; not worth its bytes.
 
-**Measured:** 69.9 → 31.7 s at 1x (`refspeed.py --ref ours`). The
-uuencode image +256 B; nothing resident.
+**The price, held to PuzzleGetter:** the maintainer's condition was
+that the all-resident control keep `derived-PuzzleGetter_0.8.sit` at
+sys6-512K (it needs 83,654 B). The first one-pass build left it 83,252
+(a second walker beside the measuring one, +1,184 B); one walker
+(`uu_walk`), no measuring pass for extraction, no middle path in
+`uu_readline`, a short line refused at the reader instead of
+`uu_pad_ready`, and `sink_set_info` cut to the FInfo's 16 bytes left it
+83,668. Shipped: CODE +68 B (the shell's `set_info`), A5 −4.
 
-**Left:** the measuring pass (a third: one read and check of every
-line), the line copy, and 1.3 million instructions of format detection
-(`unc_zip_scan_eocd`, `unc_binhex_probe`) — for every archive, not
-uuencode's own (inference from the profile, not split by format).
+**Measured:** 69.9 → 16.5 s at 1x (`refspeed.py --ref ours`), byte-exact.
+
+**Left:** 1.3 million instructions of format detection — the zip end
+record searched on the uuencoded file (0.4 million) and, with the
+BinHex probe, again on the decoded one when it is checked for another
+layer (0.9) — and the reader and the decode themselves (OPEN_ITEMS.md,
+*uuencode: what is left of the gap*).

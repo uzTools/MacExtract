@@ -84,6 +84,25 @@ static void cap_make(UncSink *sk, CapSink *s)
     sk->write = cap_write;
     sk->end_entry = cap_end;
     sk->comment = cap_comment;
+    sk->set_info = NULL;
+}
+
+/* UncSink.set_info: what the format says of the entry after its data,
+ * over begin_entry's copy as a host applies it — and counted, with the
+ * sizes begin_entry was offered, so a test can tell the late path ran. */
+static int cap_set_info(void *ctx, const UncEntryInfo *info)
+{
+    CapSink *s = (CapSink *)ctx;
+    UncEntryInfo *e = &s->info[s->count];
+    e->type = info->type;
+    e->creator = info->creator;
+    e->finder_flags = info->finder_flags;
+    memcpy(e->finder_info, info->finder_info, sizeof e->finder_info);
+    e->meta = (uint8_t)((e->meta & ~UNC_META_FINFO) |
+                        (info->meta & UNC_META_FINFO));
+    e->locked = info->locked;
+    s->comments += 100;     /* the late call, kept apart from comments */
+    return 0;
 }
 
 /* ------------------------------------------------------------------ */
@@ -127,7 +146,7 @@ static void test_macbinary(void)
     MemIO m;
     UncIO io;
     UncAlloc al;
-    UncSink sk;
+    UncSink sk = {0};
     CapSink cap;
 
     test_make_memio(&io, &m, arc, len);
@@ -201,7 +220,7 @@ static void mb_unpadded_run(const uint8_t *arc, uint32_t len,
     MemIO m;
     UncIO io;
     UncAlloc al;
-    UncSink sk;
+    UncSink sk = {0};
     CapSink cap;
     test_make_memio(&io, &m, arc, len);
     test_make_alloc(&al);
@@ -262,7 +281,7 @@ static void test_macbinary_meta(void)
     MemIO m;
     UncIO io;
     UncAlloc al;
-    UncSink sk;
+    UncSink sk = {0};
     CapSink cap;
     UncOptions opt;
     const UncEntryInfo *e = &cap.info[0];
@@ -504,7 +523,7 @@ static void test_comment_cut(void)
         MemIO m;
         UncIO io;
         UncAlloc al;
-        UncSink sk;
+        UncSink sk = {0};
         CapSink cap;
 
         len += len + 3 >= 1000 ? 4 : 3;   /* ' ', "comment=", '\n', digits */
@@ -547,7 +566,7 @@ static void test_applesingle(void)
     MemIO m;
     UncIO io;
     UncAlloc al;
-    UncSink sk;
+    UncSink sk = {0};
     CapSink cap;
     uint32_t off = 26 + 4 * 12;
 
@@ -619,7 +638,7 @@ static void test_appledouble_noname(void)
     MemIO m;
     UncIO io;
     UncAlloc al;
-    UncSink sk;
+    UncSink sk = {0};
     CapSink cap;
     UncOptions opt;
     static const uint8_t hint[] = "Foo";
@@ -773,7 +792,7 @@ static void test_packit(void)
     MemIO m;
     UncIO io;
     UncAlloc al;
-    UncSink sk;
+    UncSink sk = {0};
     CapSink cap;
 
     test_make_memio(&io, &m, arc, len);
@@ -1045,7 +1064,7 @@ static void test_cpt(void)
     MemIO m;
     UncIO io;
     UncAlloc al;
-    UncSink sk;
+    UncSink sk = {0};
     CapSink cap;
 
     test_make_memio(&io, &m, arc, len);
@@ -1110,7 +1129,7 @@ static void test_cpt_comment(void)
     MemIO m;
     UncIO io;
     UncAlloc al;
-    UncSink sk;
+    UncSink sk = {0};
     CapSink cap;
 
     test_make_alloc(&al);
@@ -1221,7 +1240,7 @@ static void test_sit(void)
     MemIO m;
     UncIO io;
     UncAlloc al;
-    UncSink sk;
+    UncSink sk = {0};
     CapSink cap;
 
     /* Table vs independent bitwise CRC-16/ARC + check value. */
@@ -1458,7 +1477,7 @@ static void test_gzip(void)
     MemIO m;
     UncIO io;
     UncAlloc al;
-    UncSink sk;
+    UncSink sk = {0};
     CapSink cap;
 
     memset(arc, 0, sizeof arc);
@@ -1525,7 +1544,7 @@ static void test_tar(void)
     MemIO m;
     UncIO io;
     UncAlloc al;
-    UncSink sk;
+    UncSink sk = {0};
     CapSink cap;
 
     memset(arc, 0, sizeof arc);
@@ -1647,7 +1666,7 @@ static void test_zip(void)
     MemIO m;
     UncIO io;
     UncAlloc al;
-    UncSink sk;
+    UncSink sk = {0};
     CapSink cap;
 
     len = zip_synth(arc, NULL, 0, &cd, &eocd);
@@ -1684,7 +1703,7 @@ static void test_zip_comment(void)
     MemIO m;
     UncIO io;
     UncAlloc al;
-    UncSink sk;
+    UncSink sk = {0};
     CapSink cap;
 
     test_make_alloc(&al);
@@ -1785,7 +1804,7 @@ static void test_zip_behind_a_stub(void)
     MemIO m;
     UncIO io;
     UncAlloc al;
-    UncSink sk;
+    UncSink sk = {0};
     CapSink cap;
 
     test_make_alloc(&al);
@@ -1956,7 +1975,7 @@ static void test_zip_shrink_ticks(void)
     MemIO m;
     UncIO io;
     UncAlloc al;
-    UncSink sk;
+    UncSink sk = {0};
     CapSink cap;
     UncProgress pg;
     uint32_t len;
@@ -2223,7 +2242,7 @@ static void test_lzh_macbinary_wrap(void)
     MemIO m;
     UncIO io;
     UncAlloc al;
-    UncSink sk;
+    UncSink sk = {0};
     CapSink cap;
     UncOptions opt;
 
@@ -2257,7 +2276,7 @@ static void test_lzh_extract(void)
     UncIO io;
     MemIO m;
     UncAlloc al;
-    UncSink sk;
+    UncSink sk = {0};
     CapSink cap;
 
     /* Level 0, one stored entry. */
@@ -2502,7 +2521,7 @@ static void test_sitseg(void)
     UncIO io;
     MemIO m;
     UncAlloc al;
-    UncSink sk;
+    UncSink sk = {0};
     CapSink cap;
     int i;
 
@@ -2906,7 +2925,7 @@ static void test_zipseg(void)
     UncIO io;
     MemIO m;
     UncAlloc al;
-    UncSink sk;
+    UncSink sk = {0};
     CapSink cap;
     uint32_t comment;
 
@@ -3230,7 +3249,7 @@ static void test_split(void)
     uint8_t payload[300];
     UncSegmentDesc desc;
     UncAlloc al;
-    UncSink sk;
+    UncSink sk = {0};
     CapSink cap;
     SegParts sp;
     UncVolumeSource vs;
@@ -3418,7 +3437,7 @@ static void test_binhex_multi(void)
     MemIO m;
     UncIO io;
     UncAlloc al;
-    UncSink sk;
+    UncSink sk = {0};
     CapSink cap;
 
     test_make_alloc(&al);
@@ -3594,7 +3613,7 @@ static void test_dd_stac(void)
     MemIO m;
     UncIO io;
     UncAlloc al;
-    UncSink sk;
+    UncSink sk = {0};
     CapSink cap;
     UncOptions opt;
     static const uint8_t hint[] = "Stac";
@@ -3759,7 +3778,7 @@ static void test_dd_method2(void)
     MemIO m;
     UncIO io;
     UncAlloc al;
-    UncSink sk;
+    UncSink sk = {0};
     CapSink cap;
     UncOptions opt;
     uint32_t n, i, sum = 0;
@@ -3877,7 +3896,7 @@ static void dd_one_method(int method, const uint8_t *stream, uint32_t slen)
     MemIO m;
     UncIO io;
     UncAlloc al;
-    UncSink sk;
+    UncSink sk = {0};
     CapSink cap;
     UncOptions opt;
     static const uint8_t hint[] = "M345";
@@ -3944,7 +3963,7 @@ static int dd_ddn_status(const uint8_t *stream, uint32_t slen)
     MemIO m;
     UncIO io;
     UncAlloc al;
-    UncSink sk;
+    UncSink sk = {0};
     CapSink cap;
     UncOptions opt;
     static const uint8_t hint[] = "DDN";
@@ -4066,7 +4085,7 @@ static void test_dd_archive2(void)
     MemIO m;
     UncIO io;
     UncAlloc al;
-    UncSink sk;
+    UncSink sk = {0};
     CapSink cap;
     static const char dat[] = "plain";
     static const char rsc[] = "RSC";
@@ -4205,7 +4224,7 @@ static void test_ddseg(void)
     MemIO m;
     UncIO io;
     UncAlloc al;
-    UncSink sk;
+    UncSink sk = {0};
     CapSink cap;
     static const char dat[] = "the data fork";
     static const char rsc[] = "RSRC!";
@@ -4284,7 +4303,7 @@ static void test_diskdoubler(void)
     MemIO m;
     UncIO io;
     UncAlloc al;
-    UncSink sk;
+    UncSink sk = {0};
     CapSink cap;
 
     /* Archive header: 'DDAR' + 74 bytes, CRC-16/XMODEM over the first 76. */
@@ -4455,7 +4474,7 @@ static void test_superdisk_single(void)
     MemIO m;
     UncIO io;
     UncAlloc al;
-    UncSink sk;
+    UncSink sk = {0};
     CapSink cap;
     UncOptions opt;
     static const uint8_t hint[] = "SD";
@@ -4555,7 +4574,7 @@ static void test_spacesaver(void)
     MemIO m;
     UncIO io;
     UncAlloc al;
-    UncSink sk;
+    UncSink sk = {0};
     CapSink cap;
     UncOptions opt;
 
@@ -4639,7 +4658,7 @@ static void test_spacesaver_alg4(void)
     MemIO m;
     UncIO io;
     UncAlloc al;
-    UncSink sk;
+    UncSink sk = {0};
     CapSink cap;
     UncOptions opt;
     uint32_t n = (uint32_t)sizeof ss_alg4_vec;
@@ -4719,7 +4738,7 @@ static void test_spacesaver_preset(void)
     MemIO m;
     UncIO io;
     UncAlloc al;
-    UncSink sk;
+    UncSink sk = {0};
     CapSink cap;
     UncOptions opt;
     uint32_t n = (uint32_t)sizeof vec;
@@ -4937,7 +4956,7 @@ static int abkt_run(int missing, CapSink *cap)
     SegParts sp;
     UncVolumeSource vs;
     UncSegmentDesc desc;
-    UncSink sk;
+    UncSink sk = {0};
     UncAlloc al;
     MemIO m;
     UncIO io;
@@ -5064,7 +5083,7 @@ static void test_abk(void)
     CHECK(cap.count == 4 && cap.status[3] == UNC_OK);
     abkt_build(0x11223344u);
     {
-        UncSink sk;
+        UncSink sk = {0};
         UncAlloc al;
         test_make_memio(&io, &m, abkt_d[0], ABKT_DISK);
         test_make_alloc(&al);
@@ -5117,7 +5136,7 @@ static void fgn_none(const uint8_t *data, int32_t len)
     UncIO io;
     MemIO m;
     UncAlloc al;
-    UncSink sk;
+    UncSink sk = {0};
     CapSink cap;
     test_make_memio(&io, &m, data, (uint32_t)len);
     CHECK(unc_sniff(&io) == UNC_FORMAT_UNKNOWN);
@@ -5299,7 +5318,7 @@ static void test_sqp(void)
     MemIO m;
     UncIO io;
     UncAlloc al;
-    UncSink sk;
+    UncSink sk = {0};
     CapSink cap;
 
     test_make_memio(&io, &m, pkg, len);
@@ -5473,7 +5492,7 @@ static void test_nowcompress(void)
     MemIO m;
     UncIO io;
     UncAlloc al;
-    UncSink sk;
+    UncSink sk = {0};
     CapSink cap;
 
     for (i = 0; i < sizeof arc; i++) arc[i] = 0;
@@ -5562,7 +5581,7 @@ static void test_now_distance0(void)
     MemIO m;
     UncIO io;
     UncAlloc al;
-    UncSink sk;
+    UncSink sk = {0};
     CapSink cap;
 
     /* The control: the distances the encoder chose, 4 and 4. */
@@ -5625,7 +5644,7 @@ static void test_arsenic_both_tables_refused(void)
     UncIO io;
     ArsCapAlloc ca;
     UncAlloc al;
-    UncSink sk;
+    UncSink sk = {0};
     CapSink cap;
     UncCtx c;
     static uint8_t iobuf[UNC_IOBUF], obuf[UNC_STAGE];
@@ -5689,7 +5708,7 @@ static void test_superdisk(void)
     MemIO m;
     UncIO io;
     UncAlloc al;
-    UncSink sk;
+    UncSink sk = {0};
     CapSink cap;
 
     for (i = 0; i < sizeof arc; i++) arc[i] = 0;
@@ -5820,7 +5839,7 @@ static void test_uu(void)
     MemIO m;
     UncIO io;
     UncAlloc al;
-    UncSink sk;
+    UncSink sk = {0};
     CapSink cap;
 
     for (i = 0; i < sizeof payload; i++) payload[i] = (uint8_t)(i * 7 + 1);
@@ -5849,9 +5868,48 @@ static void test_uu(void)
           memcmp(cap.data[0], payload, sizeof payload) == 0);
     CHECK(cap.rlen[0] == sizeof rsrc &&
           memcmp(cap.rsrc[0], rsrc, sizeof rsrc) == 0);
-    /* The Finder info is the whole reason a document is read twice. */
+    /* A host without set_info: the forks, but not the Finder info the
+     * .finfo section brings after them (include/macextract.h). */
+    CHECK(cap.info[0].type == 0);
+    CHECK(cap.info[0].data_size == UNC_SIZE_UNKNOWN);
+    CHECK(cap.comments == 0);
+
+    /* A listing measures the document first: sizes and Finder info at
+     * begin_entry, with or without set_info. */
+    {
+        UncOptions lo;
+        memset(&lo, 0, sizeof lo);
+        lo.list_only = 1;
+        test_make_memio(&io, &m, buf, o);
+        cap_make(&sk, &cap);
+        CHECK(unc_extract_as(UNC_FORMAT_UU, &io, &sk, &al, NULL, &lo) == UNC_OK);
+        CHECK(cap.count == 1);
+        CHECK(cap.info[0].type == 0x4150504Cu);      /* 'APPL' */
+        CHECK(cap.info[0].creator == 0x4D414353u);   /* 'MACS' */
+        CHECK(cap.info[0].data_size == sizeof payload);
+        CHECK(cap.info[0].rsrc_size == sizeof rsrc);
+        CHECK(cap.dlen[0] == 0);
+        test_make_memio(&io, &m, buf, o);
+    }
+
+    /* The same document in one pass, for a host that takes the Finder
+     * info late: begin_entry offers no sizes, set_info brings the type
+     * and creator, and the forks are the same bytes. */
+    cap_make(&sk, &cap);
+    sk.set_info = cap_set_info;
+    CHECK(unc_extract_as(UNC_FORMAT_UU, &io, &sk, &al, NULL, NULL) == UNC_OK);
+    CHECK(cap.count == 1 && cap.status[0] == UNC_OK);
+    CHECK(cap.comments == 100);                  /* set_info, once */
+    CHECK(cap.info[0].data_size == UNC_SIZE_UNKNOWN);
+    CHECK(cap.info[0].name_len == 8 &&
+          memcmp(cap.info[0].name, "Mac File", 8) == 0);
+    CHECK(cap.dlen[0] == sizeof payload &&
+          memcmp(cap.data[0], payload, sizeof payload) == 0);
+    CHECK(cap.rlen[0] == sizeof rsrc &&
+          memcmp(cap.rsrc[0], rsrc, sizeof rsrc) == 0);
     CHECK(cap.info[0].type == 0x4150504Cu);      /* 'APPL' */
     CHECK(cap.info[0].creator == 0x4D414353u);   /* 'MACS' */
+    sk.set_info = NULL;
 
     /* Two plain documents in one file, the newsgroup shape. Nothing
      * but the second document's offsets proves the base fix: with
@@ -5951,7 +6009,7 @@ static void test_arc(void)
     MemIO m;
     UncIO io;
     UncAlloc al;
-    UncSink sk;
+    UncSink sk = {0};
     CapSink cap;
 
     memset(buf, 0, sizeof buf);
@@ -6257,7 +6315,7 @@ static void test_mar(void)
     MemIO m;
     UncIO io;
     UncAlloc al;
-    UncSink sk;
+    UncSink sk = {0};
     CapSink cap;
 
     /* CRC-32 over 0x1EDC6F41, MSB first, from 0, not inverted: the check
@@ -6356,7 +6414,7 @@ static void test_mar_comment_listing(void)
     MemIO m;
     UncIO io;
     UncAlloc al;
-    UncSink sk;
+    UncSink sk = {0};
     CapSink cap;
     UncOptions opt;
     UncProgress pr;
@@ -6624,7 +6682,7 @@ static void test_tome_parts(void)
     MemIO m;
     UncIO io;
     UncAlloc al;
-    UncSink sk;
+    UncSink sk = {0};
     CapSink cap;
     UncOptions opt;
 
@@ -6702,7 +6760,7 @@ static void test_tome(void)
     MemIO m;
     UncIO io;
     UncAlloc al;
-    UncSink sk;
+    UncSink sk = {0};
     CapSink cap;
     UncOptions opt;
 
@@ -6881,7 +6939,7 @@ static void test_lz4_block_bound(void)
     MemIO m;
     UncIO io;
     UncAlloc al;
-    UncSink sk;
+    UncSink sk = {0};
     Lz4Count c;
 
     /* Magic, FLG v01 with independent blocks, BD 64 KB, and the header
@@ -6928,7 +6986,7 @@ static void test_btoa(void)
     MemIO m;
     UncIO io;
     UncAlloc al;
-    UncSink sk;
+    UncSink sk = {0};
     CapSink cap;
 
     test_make_alloc(&al);
@@ -7025,7 +7083,7 @@ static void test_base64_mime(void)
     MemIO m;
     UncIO io;
     UncAlloc al;
-    UncSink sk;
+    UncSink sk = {0};
     CapSink cap;
 
     test_make_alloc(&al);
@@ -7229,7 +7287,7 @@ static void test_malformed_regressions(void)
     MemIO m;
     UncIO io;
     UncAlloc al;
-    UncSink sk;
+    UncSink sk = {0};
     CapSink cap;
 
     test_make_alloc(&al);

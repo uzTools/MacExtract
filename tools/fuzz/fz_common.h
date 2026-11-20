@@ -132,6 +132,7 @@ static int fz_init(Fz *z, const uint8_t *data, size_t size)
     z->sink.begin_entry = fz_begin;
     z->sink.write = fz_write;
     z->sink.end_entry = fz_end;
+    z->sink.set_info = NULL;
 
     z->c.io = &z->io;
     z->c.sink = &z->sink;

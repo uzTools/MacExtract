@@ -160,6 +160,7 @@ static int EnvRun(short vol, long dir, ConstStr255Param nm, EnvSink *es,
     sk.write = env_write;
     sk.end_entry = env_end;
     sk.comment = NULL;    /* an envelope layer carries none */
+    sk.set_info = NULL;
     prog.ctx = NULL;
     prog.tick = NULL;
     rc = SS(unc_extract_as)(fmt, &eio, &sk, al, NULL, NULL);

@@ -173,6 +173,7 @@ CLASSES = {
     "write": ["unc_peek.c:ph_write", SH + "macextract_mac.c:sink_write"],
     "end_entry": ["unc_peek.c:ph_end", SH + "macextract_mac.c:sink_end"],
     "comment": [SH + "macextract_mac.c:sink_comment"],
+    "set_info": [SH + "macextract_mac.c:sink_set_info"],
     # UncAlloc, and zlib's own pair (unc_inflate.c installs unc_z*)
     # The release's peek allocator is the set's setup image's since
     # 2026-11-11 (mac/release_plan.inc.c), which is not compiled here; it

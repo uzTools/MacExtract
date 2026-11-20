@@ -512,6 +512,18 @@ typedef struct UncSink {
      * A comment the engine cannot buffer or read is DROPPED, not
      * turned into an error: it is worth less than the entries. */
     int (*comment)(void *ctx, const uint8_t *buf, uint16_t len);
+    /* What the archive says of the entry AFTER its data: called between
+     * begin_entry and end_entry, at most once, with the entry's info
+     * whole — the Finder fields (type, creator, finder_flags,
+     * finder_info, meta's UNC_META_FINFO) and `locked` are the ones that
+     * may have changed; the name and the sizes are begin_entry's. A host
+     * applies them as if begin_entry had carried them. Return 0, or <0
+     * to abort the archive.
+     * MAY BE NULL: Finder info a format finds only after the data is then
+     * not delivered (uuencode's .finfo section, which UUTool writes
+     * last); a listing still has it, at begin_entry. Set it NULL
+     * explicitly in a sink built field by field. */
+    int (*set_info)(void *ctx, const UncEntryInfo *info);
 } UncSink;
 
 /* ------------------------------------------------------------------ */

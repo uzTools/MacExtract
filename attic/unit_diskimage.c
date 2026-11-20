@@ -74,7 +74,7 @@ static void test_diskcopy(void)
     /* Detect-only: it is named, but extracting it is refused cleanly. */
     {
         UncAlloc al;
-        UncSink sk;
+        UncSink sk = {0};
         CapSink cap;
         test_make_memio(&io, &m, h, sizeof h);
         test_make_alloc(&al);
@@ -207,7 +207,7 @@ static void test_diskimage(void)
     /* Detect-only: named, and extraction refused cleanly. */
     {
         UncAlloc al;
-        UncSink sk;
+        UncSink sk = {0};
         CapSink cap;
         for (i = 0; i < (int)sizeof img; i++) img[i] = 0;
         img[1024] = 'H'; img[1025] = '+';

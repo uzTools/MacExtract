@@ -3161,6 +3161,23 @@ static int SINK_END(void *ctx, int status)
  * less than the files that can be, so every error returns 0 and the
  * walk goes on. It is not counted in fileCount either — that count is
  * what ExtractOne reads to decide whether a layer was an envelope. */
+/* The Finder info a format read after the data (UncSink.set_info:
+ * uuencode's .finfo section). Only what StampCat and the lock read at
+ * sink_end: the FInfo's 16 bytes, not finder_flags, which StampCat reads
+ * only without them; the rest of `cur` is begin_entry's. Cut to this so
+ * the all-resident control kept derived-PuzzleGetter_0.8.sit at 512 KB
+ * (DECISIONS.md 2026-11-20, *the character uuencode touched five times*). */
+static int sink_set_info(void *ctx, const UncEntryInfo *info)
+{
+    MacSink *s = (MacSink *)ctx;
+    s->cur.type = info->type;
+    s->cur.creator = info->creator;
+    BlockMoveData(info->finder_info, s->cur.finder_info, 16);
+    s->cur.meta |= (uint8_t)(info->meta & UNC_META_FINFO);
+    s->cur.locked = info->locked;
+    return 0;
+}
+
 /* The archive's own note is not an entry, so nothing counted it and
  * nothing said so when it could not be written: it was dropped in
  * silence, which is the one thing this report exists to stop. It still
@@ -4855,6 +4872,7 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
     sk.write = sink_write;
     sk.end_entry = sink_end;
     sk.comment = sink_comment;
+    sk.set_info = sink_set_info;
 
     /* Zero the WHOLE struct first, and only then say what this host has
      * to say. Until 2026-09-04 it was filled field by field, and two

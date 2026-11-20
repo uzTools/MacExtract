@@ -699,7 +699,7 @@ int main(int argc, char **argv)
     MacAlloc ma;
     UncAlloc al;
     MacSink sink;
-    UncSink sk;
+    UncSink sk = {0};
     UncOptions opt;
     int srcfd, srcslot;
     struct stat st;
