@@ -415,7 +415,11 @@ static int32_t fio_read(void *ctx, void *buf, int32_t len)
          * is there lands below it, and its going leaves one piece. A 64K
          * ROM has no MoveHHi, and gets no cache (ROM85). */
         if (!gCache && *(const short *)0x028EL > 0) {
+            /* No more than the archive has left: a block of all that is
+             * free cost every run 3.5 s on a 4 MB Mac Plus, moved to the
+             * top whatever the archive's size (DECISIONS.md 2026-11-19). */
             cnt = MaxBlock() - kCacheKeep;
+            if (cnt > (long)avail) cnt = (long)avail;
             if (cnt > 0 && (gCache = NewHandle(cnt)) != NULL) {
                 MoveHHi(gCache);
                 gCacheCap = cnt;

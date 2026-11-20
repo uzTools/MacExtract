@@ -27108,6 +27108,13 @@ cache:** it lacks `MoveHHi`, so the cache could split its heap the same
 way, and that machine extracts only onto a Hard Disk 20 (FORMATS.md, *A
 true Macintosh 512K*), where no disk is swapped.
 
+**What the speed table caught** (2026-11-20, `refspeed.py --ref ours`, a
+4 MB Mac Plus at 1x): every archive 3.5–8.6 s slower than v0.46.0, a
+2.3 s MacBinary file 5.9 s. The cache took all that was free, about 3 MB,
+and `MoveHHi` moved it, whatever the archive's size. It now takes no more
+than the archive has left: 2.4 s and 6.0 s again (`kermitut9test.bin`,
+`derived-DSKDUP.sit`; v0.46.0 2.3 and 6.0), +8 B.
+
 **Rejected: an output pool** (built 2026-11-19, +356 B, trimmed to +292):
 a fork's output held in free memory. It removed the swaps inside a file
 but left two or three a file (create, close, flush): 90 for Compact Pro's
