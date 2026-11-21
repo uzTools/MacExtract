@@ -474,7 +474,22 @@ int unc_readline(UncBufIn *in, uint8_t *buf, int32_t cap, int32_t *len,
     int32_t n = 0;
 
     for (;;) {
-        int c = unc_bufin_next(in);
+        int c;
+        /* What the buffer already holds, scanned in place: a call and a
+         * cursor store a byte were a sixth of a MIME attachment's decode,
+         * the boundary scan reading every line (tools/m68kprof.py,
+         * 2026-11-21). The byte path below takes the refill and EOF. */
+        {
+            const uint8_t *p;
+            uint32_t k, have = unc_bufin_span(in, &p);
+            for (k = 0; k < have; k++) {
+                uint8_t ch = p[k];
+                if (ch == '\n' || ch == '\r') break;
+                if (n < cap - 1) buf[n++] = ch;
+            }
+            unc_bufin_drop(in, k);
+        }
+        c = unc_bufin_next(in);
         if (c < 0) {
             if (in->err != UNC_ERR_TRUNCATED) return in->err;
             *eof = 1;

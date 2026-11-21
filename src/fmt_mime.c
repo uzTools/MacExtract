@@ -573,6 +573,29 @@ static int mime_dec_run(MimeCtx *m, const MimePart *p, UncFork fork,
     for (;;) {
         int ch;
         if (limit != UNC_SIZE_UNKNOWN && *bytes >= limit) break;
+        /* base64 a run at a time, straight out of the input buffer, when
+         * nothing is queued and no limit can cut a group: a call a
+         * character was most of an attachment's decode (2026-11-21).
+         * The byte path below takes the refill, '=' and the end. */
+        if (d.cte == MIME_CTE_B64 && d.iout >= d.nout && !d.b64.done &&
+            limit == UNC_SIZE_UNKNOWN && sizeof buf - n >= 3) {
+            const uint8_t *q;
+            uint32_t used, k, span = unc_bufin_span(&d.in, &q);
+            k = unc_b64_span(&d.b64, q, span, buf + n,
+                             (uint32_t)(sizeof buf - n), &used);
+            unc_bufin_drop(&d.in, used);
+            n += k;
+            *bytes += k;
+            if (used) {
+                if (sizeof buf - n < 3) {
+                    if (write && m->c->sink->write(m->c->sink->ctx, fork,
+                                                   buf, (int32_t)n) != 0)
+                        break;
+                    n = 0;
+                }
+                continue;
+            }
+        }
         ch = mime_dec_next(&d);
         if (ch < 0) break;
         buf[n++] = (uint8_t)ch;
@@ -696,7 +719,7 @@ static int mime_emit(MimeCtx *m, const MimeHdrs *h, const MimePart *data,
     UncEntryInfo e;
     MimeApple *a = &m->apple;
     uint8_t nbuf[16];
-    uint32_t dsize = 0;
+    uint32_t dsize;
     int have_af = 0, sret, err = UNC_OK, est = UNC_OK;
 
     /* Neither a data part nor an applefile: the walk is handing over a
@@ -707,7 +730,12 @@ static int mime_emit(MimeCtx *m, const MimeHdrs *h, const MimePart *data,
         if (mime_read_applefile(m, af, a) == UNC_OK) have_af = 1;
     }
 
-    if (data) {
+    /* The data fork's size is the one thing an extraction does not need
+     * first: it is offered as unknown and the part decoded once. A
+     * listing measures it (DECISIONS.md 2026-11-21, *the mail read
+     * twice*). */
+    dsize = data ? UNC_SIZE_UNKNOWN : 0;
+    if (data && m->c->opt.list_only) {
         err = mime_dec_run(m, data, UNC_FORK_DATA, 0, 0, UNC_SIZE_UNKNOWN,
                            &dsize);
         if (err != UNC_OK && err != UNC_ERR_TRUNCATED) return err;

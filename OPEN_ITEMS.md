@@ -190,6 +190,14 @@ a specimen:
 - **A tar sidecar written after its file** comes out as itself; bsdtar never
   writes that order. A pax header between the two is stepped over, no
   specimen (hypothesis: bsdtar writes one for a non-ASCII name).
+- **The sidecar is decoded twice** (`zip_side`): once ahead of its file
+  for the Finder info and the resource fork's size, once after its data
+  for the fork. `UncSink.set_info` could take the Finder info late and
+  drop the first; about 8 % of `MacburgerHelper.zip`'s instructions, the
+  312-file zip of `macburger-helper.hqx`'s contents with a sidecar each
+  (ESTIMATE from `tools/m68kprof.py`, 2026-11-21) — and on the Mac that
+  zip's time was mostly file work (161 of 295 s), which this does not
+  touch. Not done.
 
 ## uuencode: what is left of the gap
 

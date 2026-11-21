@@ -18,6 +18,17 @@
 #define B64_MAX_WIDTH  76
 
 int b64_val(int c);
+/* b64_val, inline, for unc_b64_span's loop alone: a call a character was
+ * a fifth of an attachment's decode (2026-11-21). The same ranges. */
+static inline int b64_val_inline(int c)
+{
+    if (c >= 'A' && c <= 'Z') return c - 'A';
+    if (c >= 'a' && c <= 'z') return c - 'a' + 26;
+    if (c >= '0' && c <= '9') return c - '0' + 52;
+    if (c == '+') return 62;
+    if (c == '/') return 63;
+    return -1;
+}
 int b64_is_begin(const uint8_t *line, int32_t len);
 int b64_line_ok(const uint8_t *line, int32_t len);
 

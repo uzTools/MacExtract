@@ -633,6 +633,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-19 (the archive read ahead) — once the first entry begins, the archive is read in blocks of the free memory, so one floppy drive swaps when a block runs out, not every 4 KB and every file; switches at 1 MB 166 → 4 for Compact Pro's 31 files
 - 2026-11-20 (the character uuencode touched five times) — a 276 KB uuencoded file took 66 s on a Mac Plus against UUTool's 9; reading, copying, checking and decoding each character separately, twice, was most of it: one pass, each character read once and decoded once, 34.4 → 8.6 million 68000 instructions, 69.9 → 16.5 s
 - 2026-11-21 (the banner a binary file was searched for) — the BinHex probe read 8 KB of any file it was asked about, half a million 68000 instructions on a binary one; a NUL now ends its scan; 0.8 s off a uuencoded file on a Mac Plus
+- 2026-11-21 (the mail read twice) — a 200 KB base64 attachment took 118 s on a Mac Plus: each part decoded once to size it and again to write it, a call a character and one a byte; one pass, a run of characters at a time: 62.6 → 15.1 million 68000 instructions, 118.3 → 26.0 s
 
 ---
 
@@ -27219,3 +27220,38 @@ all-resident control 32 B through A5 layout and
 
 **Left:** the zip end-record search, 0.4 million each time, twice on a
 uuencoded file (OPEN_ITEMS.md, *uuencode: what is left of the gap*).
+
+## 2026-11-21 (the mail read twice) — a 200 KB base64 attachment took 118 s on a Mac Plus: each part decoded once to size it and again to write it, a call a character and one a byte; one pass, a run of characters at a time: 62.6 → 15.1 million 68000 instructions, 118.3 → 26.0 s
+
+**Claim:** `speed-mime-200k.eml`, a multipart mail holding the 200,000 B
+binary of `speed-uu-200k.uu` as a base64 attachment (274,002 B, made for
+this; kept in `.tmp/mime/`, rebuilt from that subject in a few lines of
+Python), took 62.6 million instructions — 228 an input byte, twice
+uuencode's before its work: `mime_emit` decoded the data part once only
+to learn its size, then again to write it, and each pass called
+`mime_dec_next` a byte and `unc_b64_feed` a character, `b64_val` through
+a call, and the boundary scan's `unc_readline` a byte.
+
+**Choice, a step at a time** (millions): the size offered as unknown in
+an extraction, a listing still measuring — the applefile part, which
+carries the Finder info and the resource fork's size, comes before the
+data, so no `set_info` is needed — 35.7; base64 a run at a time out of
+the input buffer (`unc_b64_span`, shared with standalone base64, which
+also wrote three bytes a sink call and now 256), 20.7; `unc_readline`
+scanning in place, 16.7; the alphabet test inlined in that loop, 15.1.
+`run_mime.py` 70 of 70, failing 13 with the final write removed and 29
+with a group's last byte dropped; `run_hecx.py`, the unit tests and the
+walk test pass; both forms byte-exact on the 200 KB file.
+
+**The price:** shipped CODE +44 B (`unc_readline` is resident), A5 −12;
+the shipped tallies do not move. The all-resident control at sys6-512K
+gives 83,060 B and refuses `derived-PuzzleGetter_0.8.sit` (83,654): the
+maintainer let it go for this (2026-11-21). The sizing pass's removal
+alone cost the control 32 B.
+
+**Measured:** 118.3 → 26.0 s at 1x (`refspeed.py --ref ours --quiet
+70`): the default quiet period read 0.5 s, the sizing pass moving no
+bar, and the rest went into "quit" — a timing that stops on a still
+screen cannot see a silent pass.
+
+**Not done:** the zip sidecar peek (OPEN_ITEMS.md, *Mac OS X's sidecars*).

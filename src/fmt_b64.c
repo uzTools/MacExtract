@@ -57,6 +57,33 @@ int unc_b64_flush(UncB64 *b, uint8_t out[3])
     return 2;
 }
 
+uint32_t unc_b64_span(UncB64 *b, const uint8_t *p, uint32_t n,
+                      uint8_t *out, uint32_t room, uint32_t *used)
+{
+    uint32_t i = 0, o = 0;
+    int k = b->n;
+
+    /* A call a character, and one a decoded byte above it, were most of
+     * a base64 attachment's decode (tools/m68kprof.py, 2026-11-21). */
+    while (i < n && room - o >= 3) {
+        int ch = p[i], v;
+        if (ch == '=') break;               /* unc_b64_feed ends the data */
+        i++;
+        v = b64_val_inline(ch);
+        if (v < 0) continue;                /* newline, space, mail garbage */
+        b->q[k++] = (uint8_t)v;
+        if (k < 4) continue;
+        k = 0;
+        out[o]     = (uint8_t)((b->q[0] << 2) | (b->q[1] >> 4));
+        out[o + 1] = (uint8_t)((b->q[1] << 4) | (b->q[2] >> 2));
+        out[o + 2] = (uint8_t)((b->q[2] << 6) |  b->q[3]);
+        o += 3;
+    }
+    b->n = k;
+    *used = i;
+    return o;
+}
+
 int unc_b64_feed(UncB64 *b, int ch, uint8_t out[3])
 {
     int v;
@@ -108,7 +135,8 @@ static int b64_run(UncCtx *c, uint32_t start, int write,
 {
     UncBufIn in;
     UncB64 st;
-    uint8_t out[3];
+    uint8_t out[256];
+    uint32_t n = 0;
     int err = UNC_OK;
 
     *bytes = 0;
@@ -116,31 +144,45 @@ static int b64_run(UncCtx *c, uint32_t start, int write,
     unc_bufin_init(&in, c->io, &c->ps, iobuf, B64_IOBUF);
     unc_b64_reset(&st);
 
+    /* A run of characters at a time into `out`, written 256 bytes at a
+     * time: a sink write every three bytes, and a call a character, were
+     * most of a document's decode (2026-11-21). One character at a time
+     * only for the refill, '=' and the end. */
     for (;;) {
-        int ch = unc_bufin_next(&in);
-        int n;
-        if (ch < 0) {
-            if (in.err != UNC_ERR_TRUNCATED) err = in.err;
-            n = unc_b64_flush(&st, out);
-            if (n > 0) {
-                *bytes += (uint32_t)n;
-                if (write && c->sink->write(c->sink->ctx, UNC_FORK_DATA,
-                                            out, n) != 0)
-                    err = UNC_ERR_SINK;
-            }
-            break;
-        }
-        n = unc_b64_feed(&st, ch, out);
-        if (n > 0) {
-            *bytes += (uint32_t)n;
-            if (write && c->sink->write(c->sink->ctx, UNC_FORK_DATA,
-                                        out, n) != 0) {
+        const uint8_t *q;
+        uint32_t used, k;
+        int ch;
+        if (sizeof out - n < 3) {
+            if (write && c->sink->write(c->sink->ctx, UNC_FORK_DATA, out,
+                                        (int32_t)n) != 0) {
                 err = UNC_ERR_SINK;
                 break;
             }
+            n = 0;
         }
+        k = unc_bufin_span(&in, &q);
+        k = unc_b64_span(&st, q, k, out + n, (uint32_t)(sizeof out - n),
+                         &used);
+        unc_bufin_drop(&in, used);
+        n += k;
+        *bytes += k;
+        if (used) continue;
+        ch = unc_bufin_next(&in);
+        if (ch < 0) {
+            if (in.err != UNC_ERR_TRUNCATED) err = in.err;
+            k = (uint32_t)unc_b64_flush(&st, out + n);
+            n += k;
+            *bytes += k;
+            break;
+        }
+        k = (uint32_t)unc_b64_feed(&st, ch, out + n);
+        n += k;
+        *bytes += k;
         if (st.done) break;
     }
+    if (err == UNC_OK && n && write &&
+        c->sink->write(c->sink->ctx, UNC_FORK_DATA, out, (int32_t)n) != 0)
+        err = UNC_ERR_SINK;
 
     *endpos = start + unc_bufin_tell(&in);
     return err;

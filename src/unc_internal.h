@@ -1603,6 +1603,12 @@ void unc_b64_reset(UncB64 *b);
 int  unc_b64_feed(UncB64 *b, int ch, uint8_t out[3]);
 /* The tail of a group left over at end of stream (0..2 bytes). */
 int  unc_b64_flush(UncB64 *b, uint8_t out[3]);
+/* A run of characters at once, what unc_b64_feed does to each: decodes
+ * p[0..n) into `out` until '=' (left unread, for unc_b64_feed to end the
+ * data on) or until fewer than 3 bytes of `room` are left. Returns the
+ * bytes written; *used is the characters consumed. */
+uint32_t unc_b64_span(UncB64 *b, const uint8_t *p, uint32_t n,
+                      uint8_t *out, uint32_t room, uint32_t *used);
 
 
 /* MIME messages (fmt_mime.c). The probe scans past the mail headers,
