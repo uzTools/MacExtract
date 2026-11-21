@@ -840,11 +840,33 @@ static int sit6_packbits(UncForkOut *f, const uint8_t *seg, uint32_t seglen,
     return UNC_OK;
 }
 
+/* The tree's first 8 levels as a table: for every 8-bit prefix, the leaf
+ * it ends on (0x8000 | length << 9 | leaf ordinal) or, for a code longer
+ * than 8 bits, the internal node after them. One lookup where a bit at a
+ * time was 80 % of a method 6 fork's instructions (tools/m68kprof.py,
+ * derived-INITLoader.sit, 2026-11-21). */
+static void sit6_table(uint16_t *tab, const uint16_t *zero, const uint16_t *one)
+{
+    uint32_t p;
+    for (p = 0; p < 256; p++) {
+        uint16_t node = 0, child = 0;
+        int d;
+        for (d = 1; d <= 8; d++) {
+            child = ((p >> (8 - d)) & 1u) ? one[node] : zero[node];
+            if (child <= SIT6_LEAVES) break;
+            node = (uint16_t)(child - SIT6_LEAVES);
+        }
+        tab[p] = d <= 8 ? (uint16_t)(0x8000u | (uint32_t)d << 9 | child)
+                        : node;
+    }
+}
+
 /* Decode one Huffman-coded segment into seg[0..explen). */
 static int sit6_huffseg(UncBufIn *in, uint8_t *seg, uint32_t explen,
                         const uint8_t *leaf, uint32_t codes,
                         uint32_t segbytes, uint32_t *used,
-                        const uint16_t *sit6_zero, const uint16_t *sit6_one)
+                        const uint16_t *sit6_zero, const uint16_t *sit6_one,
+                        const uint16_t *tab)
 {
     UncBitIn bi;
     uint32_t start, got = 0;
@@ -854,6 +876,20 @@ static int sit6_huffseg(UncBufIn *in, uint8_t *seg, uint32_t explen,
     for (;;) {
         uint16_t node = 0, child = 0;
         int depth = 0;
+        /* Eight bits at once where the window holds them; a longer code
+         * goes on bit by bit from the node they reach, and so does the
+         * whole code at a window boundary, as before. */
+        if (unc_bitin_fill(&bi, 8)) {
+            uint16_t e = tab[(bi.bitbuf >> (bi.nbits - 8)) & 0xFFu];
+            if (e & 0x8000u) {
+                bi.nbits -= (int)((e >> 9) & 15u);
+                child = (uint16_t)(e & 0x1FFu);
+                goto have;
+            }
+            bi.nbits -= 8;
+            node = e;
+            depth = 8;
+        }
         do {
             int bit = unc_bitin_bit(&bi);
             if (bit < 0) return bi.err != UNC_OK ? bi.err : UNC_ERR_CORRUPT;
@@ -861,6 +897,7 @@ static int sit6_huffseg(UncBufIn *in, uint8_t *seg, uint32_t explen,
             if (child <= SIT6_LEAVES) break;             /* a leaf ordinal */
             node = (uint16_t)(child - SIT6_LEAVES);
         } while (++depth <= SIT6_DEPTH);
+have:
         if (child > SIT6_LEAVES) return UNC_ERR_CORRUPT; /* not a tree */
         if (child >= SIT6_LEAVES - 1) break;             /* terminator */
         /* A code for a leaf the segment never named stands for nothing.
@@ -873,8 +910,12 @@ static int sit6_huffseg(UncBufIn *in, uint8_t *seg, uint32_t explen,
         if (got == explen) return UNC_ERR_CORRUPT;
         seg[got++] = leaf[child - 1];
         /* Bounded by the segment's own byte count, so a bitstream that
-         * never terminates cannot read on into the next fork. */
-        if (unc_bitin_bytepos(&bi) - start > segbytes) return UNC_ERR_CORRUPT;
+         * never terminates cannot read on into the next fork: asked every
+         * 16 symbols, a call a symbol having been 7 % of the decode
+         * (2026-11-21); the end's check below is exact, and the fork's
+         * own limit holds the read meanwhile. */
+        if (!(got & 15u) && unc_bitin_bytepos(&bi) - start > segbytes)
+            return UNC_ERR_CORRUPT;
     }
     /* The terminator is REQUIRED, and it is where the declared length
      * says it is: across the corpus's 13 Huffman segments the symbol
@@ -899,9 +940,11 @@ static int sit6_fork(UncForkOut *f, UncBufIn *in, uint32_t outlen, UncAlloc *al)
 
     /* The fixed tree, built once per fork from 26 bytes (sit6_build).
      * Per-entry on failure, like every other allocation here. */
-    tree = (uint16_t *)unc_alloc(al, 2u * SIT6_INTERNAL * sizeof(uint16_t));
+    tree = (uint16_t *)unc_alloc(al, (2u * SIT6_INTERNAL + 256u) *
+                                     sizeof(uint16_t));
     if (!tree) return UNC_ERR_MEM;
     sit6_build(tree, tree + SIT6_INTERNAL);
+    sit6_table(tree + 2u * SIT6_INTERNAL, tree, tree + SIT6_INTERNAL);
 
     /* Driven by the fork length rather than by the compressed length:
      * every iteration consumes at least the 4-byte segment header, and
@@ -952,7 +995,8 @@ static int sit6_fork(UncForkOut *f, UncBufIn *in, uint32_t outlen, UncAlloc *al)
             size -= codes;
             if ((err = sit6_need(al, &seg, &segcap, explen)) != UNC_OK) goto out;
             if ((err = sit6_huffseg(in, seg, explen, leaf, codes, size,
-                                    &used, tree, tree + SIT6_INTERNAL))
+                                    &used, tree, tree + SIT6_INTERNAL,
+                                    tree + 2u * SIT6_INTERNAL))
                     != UNC_OK) goto out;
             /* The bitstream may end before the segment does. */
             for (i = used; i < size; i++) {

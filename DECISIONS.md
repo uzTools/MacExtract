@@ -635,6 +635,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-21 (the banner a binary file was searched for) — the BinHex probe read 8 KB of any file it was asked about, half a million 68000 instructions on a binary one; a NUL now ends its scan; 0.8 s off a uuencoded file on a Mac Plus
 - 2026-11-21 (the mail read twice) — a 200 KB base64 attachment took 118 s on a Mac Plus: each part decoded once to size it and again to write it, a call a character and one a byte; one pass, a run of characters at a time: 62.6 → 15.1 million 68000 instructions, 118.3 → 26.0 s
 - 2026-11-21 (the MacBinary with no dates) — the btoa/atob Translator writes a MacBinary I header with zero dates, which the probe refused, so a btoa file stopped at a 256-byte MacBinary; zero dates are now accepted when the file is as long as its forks, and creator asci gets a helper
+- 2026-11-21 (the tree walked a bit at a time) — StuffIt's method 6 decoded its fixed Huffman code one bit and one tree step at a time; a 256-entry table of the tree's first 8 levels, built once per fork: 8.4 → 3.8 million 68000 instructions, derived-INITLoader.sit 16.3 → 8.0 s on a Mac Plus (Expander 4.0.2: 3.3 s)
 
 ---
 
@@ -27292,3 +27293,27 @@ choice beside MacStamp's restamp to `TEXT`/`MExt`.
 **Measured:** the specimen now comes out as `Sample`, 81 bytes; all
 1,017 fixtures sniff as before; the differential suite grades every
 layer inside them (`ci.sh`).
+
+## 2026-11-21 (the tree walked a bit at a time) — StuffIt's method 6 decoded its fixed Huffman code one bit and one tree step at a time; a 256-entry table of the tree's first 8 levels, built once per fork: 8.4 → 3.8 million 68000 instructions, derived-INITLoader.sit 16.3 → 8.0 s on a Mac Plus (Expander 4.0.2: 3.3 s)
+
+**Claim:** the worst row of FORMATS.md's *Each format's own program*
+(0.20x): a 29 KB archive, one 34,818-byte resource fork in method 6.
+Not a fixed cost: 8.4 million instructions, 240 an output byte, 82 % in
+`sit6_huffseg` walking the tree a bit at a time — `unc_bitin_bit`'s
+refill test and bit-order branch per bit, a tree step per bit — and a
+call to `unc_bitin_bytepos` per symbol for the segment's bound.
+
+**Choice:** method 6's code is not canonical (its lengths run 3 … 10, 9,
+10, 11, 13, 12), so `unc_canon` cannot take it; `sit6_table` reads the
+built tree's first 8 levels into 256 entries — a leaf and its length, or
+the node after 8 bits — once per fork, beside the tree (+512 B of the
+fork's allocation). `sit6_huffseg` takes 8 bits at once where
+`unc_bitin_fill` finds them in the window, and walks on bit by bit for a
+longer code or at a window boundary, as before; 8.4 → 4.2. The bound is
+asked every 16 symbols, the end's check exact and the fork's limit
+holding the read meanwhile: 3.8. The differential suite 994 of 994; a
+table entry decoded to the wrong leaf fails it.
+
+**Price:** the StuffIt image +224 B; nothing resident; tallies unchanged.
+
+**Measured:** 16.3 → 8.0 s at 1x (`refspeed.py --ref ours`), byte-exact.
