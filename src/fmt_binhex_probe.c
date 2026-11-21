@@ -82,6 +82,16 @@ UncFormat unc_binhex_probe(const uint8_t *head, int32_t len, UncIO *io)
             ch = chunk[cpos++];
         }
         scanned++;
+        /* A NUL ends the scan, and before the banner that is "not
+         * BinHex": binary, not mail (after it, BinHex text has none).
+         * The 212 BinHex,
+         * .hex/.hcx and .dl fixtures have none before it, 16 of them
+         * 8-bit bytes (so those cannot be the test), and a binary file
+         * — the decoded layer sniffed again for another one — has one
+         * early: it was read to the limit, half a million 68000
+         * instructions (DECISIONS.md 2026-11-21, *the banner a binary
+         * file was searched for*). */
+        if (ch == 0) break;
         if (ch == '\r' || ch == '\n') {
             if (!banner && !dlseen && dl && ll > 40 && ll < 1023 &&
                 !(ll & 1)) {

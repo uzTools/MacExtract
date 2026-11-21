@@ -2547,7 +2547,7 @@ that grows with the output*): the ring starts at 4 KB and doubles to the
 ~8,392 B (was 69,816), a 9.9 KB payload 28,872 B, and a 191 KB one 102,600 B
 (both buffers live across the last grow). A `.mar.lz4` is named by the
 envelope peek and its layer keeps only `ovl_zipold`, the sniffer and the
-codecs (*What each format is granted*), granted <!-- grant: sys6-512K zipold sniff codecs -->218,642 B at System 6.0.8 /
+codecs (*What each format is granted*), granted <!-- grant: sys6-512K zipold sniff codecs -->218,634 B at System 6.0.8 /
 512 KB — room to spare; an LZ4 frame the peek cannot name keeps the whole
 bundle, leaving 65,712 B there, which now fits any payload under ~32 KB and
 refuses a larger one per entry (it was a flat 69,816 B, refused for all).
@@ -4289,7 +4289,7 @@ between the shipped pair against 116,720 B between the probe pair**, both
 the probe pair has not been re-measured, so the 320 B is that
 day's difference, not today's.
 
-The bundle is **211,944 B** — the nineteen images sum to 211,698 B, so its
+The bundle is **211,952 B** — the nineteen images sum to 211,706 B, so its
 index costs **246 B** (`tools/budgets.txt` `BUNDLE`, `IMAGE_*`): a
 4-byte header, 12 bytes of directory per image and padding of each image to
 a multiple of 4 — the padding is why the index is not a constant. The
@@ -4399,9 +4399,9 @@ since 2026-10-09 with `run_tiers.py --check` moving no tally.
 | Installer Tome | zipold, codecs | <!-- gain: zipold codecs -->+153,766 B (arithmetic: no Tome is in the Mac sample) |
 | StuffIt, StuffIt 5 | stuffit, ciphers, codecs | <!-- gain: stuffit crypt codecs -->**+141,746 B** (measured), and <!-- gain: stuffit codecs -->**+151,018 B** for a StuffIt 5 archive whose header carries no password hash (measured, 2026-11-03) |
 | Zip, spanned zip | exo, zipold, ciphers, codecs | <!-- gain: exo zipold crypt codecs -->+114,198 B (arithmetic), <!-- gain: exo zipold codecs -->**+123,470 B** unencrypted (measured) |
-| an envelope whose payload's first bytes name its format (`unc_envelope_peek`), since 2026-11-03 | its own reader, the sniffer, and what that format keeps | <!-- gain: exo sniff zipold codecs -->**+104,678 B** for a `.tar.Z` or `.tar.gz`, and an LZW-compressed MAR, which keeps the same (arithmetic), <!-- gain: zipold sniff codecs -->**+134,974 B** for a `.mar.lz4` (arithmetic), <!-- gain: binhex sniff stuffit crypt codecs -->**+115,310 B** for a StuffIt archive in BinHex or MacBinary (measured) |
-| an envelope whose payload's first bytes name nothing, since 2026-11-12 (DECISIONS.md 2026-11-11, *the head that named nothing*) | its own reader, the sniffer, cptdd and superdisk (the two formats only an end names), the ciphers, codecs | <!-- gain: exo sniff cptdd superdisk crypt codecs -->**+99,594 B** for a `.gz` or `.Z`, <!-- gain: zipold sniff cptdd superdisk crypt codecs -->+103,806 B for an `.lz4`, <!-- gain: binhex sniff cptdd superdisk crypt codecs -->+122,246 B for BinHex or MacBinary, <!-- gain: text sniff cptdd superdisk crypt codecs -->+117,962 B for uuencode or base64, <!-- gain: btoa sniff cptdd superdisk crypt codecs -->+127,382 B for btoa (arithmetic) |
-| any other envelope, and every segment scheme that joins to a file | the whole bundle, kept | <!-- gain: bundle -->**−26,066 B** (−29,118 B measured, before 2026-11-07) |
+| an envelope whose payload's first bytes name its format (`unc_envelope_peek`), since 2026-11-03 | its own reader, the sniffer, and what that format keeps | <!-- gain: exo sniff zipold codecs -->**+104,670 B** for a `.tar.Z` or `.tar.gz`, and an LZW-compressed MAR, which keeps the same (arithmetic), <!-- gain: zipold sniff codecs -->**+134,966 B** for a `.mar.lz4` (arithmetic), <!-- gain: binhex sniff stuffit crypt codecs -->**+115,302 B** for a StuffIt archive in BinHex or MacBinary (measured) |
+| an envelope whose payload's first bytes name nothing, since 2026-11-12 (DECISIONS.md 2026-11-11, *the head that named nothing*) | its own reader, the sniffer, cptdd and superdisk (the two formats only an end names), the ciphers, codecs | <!-- gain: exo sniff cptdd superdisk crypt codecs -->**+99,586 B** for a `.gz` or `.Z`, <!-- gain: zipold sniff cptdd superdisk crypt codecs -->+103,798 B for an `.lz4`, <!-- gain: binhex sniff cptdd superdisk crypt codecs -->+122,238 B for BinHex or MacBinary, <!-- gain: text sniff cptdd superdisk crypt codecs -->+117,954 B for uuencode or base64, <!-- gain: btoa sniff cptdd superdisk crypt codecs -->+127,374 B for btoa (arithmetic) |
+| any other envelope, and every segment scheme that joins to a file | the whole bundle, kept | <!-- gain: bundle -->**−26,074 B** (−29,118 B measured, before 2026-11-07) |
 
 A change to resident code moves every row by the control's growth less the
 shipped build's; a change to an image moves only the rows that keep it — so a
@@ -4412,12 +4412,12 @@ left*).
 
 **The last row is the one no tally had shown**: a wrapper that keeps the
 bundle runs with **less** memory than a resident build would give it —
-211,944 B held against 186,288 B saved. Until 2026-11-12 that was every
+211,952 B held against 186,288 B saved. Until 2026-11-12 that was every
 envelope whose payload the peek could not name (the row above it since;
 DECISIONS.md 2026-11-11, *the head that named nothing*), and until
 2026-11-03 every envelope, and it refused `a2ps.V4.3.tar.Z` and
 `popper-1.7.tar.Z` at System 6.0.8 / 512 KB; the peek names Tar from the first
-512 bytes and the `.Z` layer is granted <!-- grant: sys6-512K exo sniff zipold codecs -->188,346 B there instead of <!-- grant: sys6-512K bundle -->57,602 B
+512 bytes and the `.Z` layer is granted <!-- grant: sys6-512K exo sniff zipold codecs -->188,338 B there instead of <!-- grant: sys6-512K bundle -->57,594 B
 (DECISIONS.md 2026-11-03, *the envelope that said what it held*). The
 heaviest envelope decode in the Mac sample is `popper-1.7.tar.Z`'s LZW at
 147,764 B.
@@ -6816,7 +6816,7 @@ table). Ratio is the program's time ÷ ours; above 1, ours is faster.
 | `derived-PCCTS.tar` | tar (49 files) | 287 KB | 8.7 s | tar 4.0b | **7.0 s** | 0.81x |
 | `aminet-lha_68k.lha` | LHA, -lh5- | 168 KB | **51.4 s** | MacLHa 2.00 | 405.0 s | 7.9x |
 | `im2-DD3.7.7AuxFiles.dd` | DiskDoubler `DDAR` | 187 KB | 30.4 s | DD Expand 3.7.7 | **9.6 s** | 0.31x |
-| `speed-uu-200k.uu` ✱ | uuencode | 276 KB | 16.5 s | UUTool 2.3.2 | **9.1 s** | 0.55x |
+| `speed-uu-200k.uu` ✱ | uuencode | 276 KB | 15.7 s | UUTool 2.3.2 | **9.1 s** | 0.58x |
 | `shrink-wild-titanic.zip` | zip, Shrink | 173 KB | **56.2 s** | UnZip 1.01 | 86.1 s | 1.53x |
 | `4alnch11.zip` | zip, Implode | 42 KB | **18.4 s** | UnZip 1.01 | 38.1 s | 2.07x |
 | `reduce-wild-america.zip` | zip, Reduce 3 | 26 KB | **5.8 s** | UnZip 1.01 | 10.9 s | 1.87x |
@@ -6839,7 +6839,8 @@ as it writes nothing with 23 MB free.
 
 **Corrected 2026-11-20**: the uuencode row was 66.3 s (0.14x) before the
 decoder's work per character and its second pass were cut (DECISIONS.md 2026-11-20, *the
-character uuencode touched five times*).
+character uuencode touched five times*), and the BinHex probe's scan of
+the decoded file (2026-11-21, *the banner a binary file was searched for*).
 
 ✱ **A uuencoded file made for this table**: the first 200,000 B of a Linux
 binary, `uuencode` alphabet, CR line ends, sha256 `687942003df7…2757e8`

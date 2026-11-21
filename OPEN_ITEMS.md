@@ -193,14 +193,15 @@ a specimen:
 
 ## uuencode: what is left of the gap
 
-16.5 s on a 7 MHz Mac Plus for `speed-uu-200k.uu` against UUTool 2.3.2's
-9.1 s; 8.6 million 68000 instructions, one pass (DECISIONS.md
-2026-11-20, *the character uuencode touched five times*). Each an
-ESTIMATE from the profile, not built:
-- **Format detection, 1.3 million:** the zip end record searched on the
-  uuencoded file before the text probes run (`src/unc_formats.h`), and
-  on the decoded file with the BinHex probe when it is checked for
-  another layer. A skip search was built and saved 0.13 million.
+15.7 s on a 7 MHz Mac Plus for `speed-uu-200k.uu` against UUTool 2.3.2's
+9.1 s; 8.1 million 68000 instructions, one pass (DECISIONS.md
+2026-11-20, *the character uuencode touched five times*; 2026-11-21, *the
+banner a binary file was searched for*). Each an ESTIMATE from the
+profile, not built:
+- **The zip end-record search, 0.8 million:** on the uuencoded file
+  before the text probes run (`src/unc_formats.h`), and again on the
+  decoded file when it is checked for another layer. A skip search was
+  built and saved 0.13 million.
 - **A 256-byte table** classing a character: measured 4.0 s for 416 B
   before the one pass; kept out by the maintainer until it comes
   cheaper.

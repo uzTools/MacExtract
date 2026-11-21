@@ -632,6 +632,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-17 (the disk in the drive) — on one floppy drive the part dialog opens on the disk actually in the drive and ejects it through Standard File's own Eject, the archive's resource fork is read before the parts are asked for, and the code images are read before the Toolbox needs the System disk; +208 B resident
 - 2026-11-19 (the archive read ahead) — once the first entry begins, the archive is read in blocks of the free memory, so one floppy drive swaps when a block runs out, not every 4 KB and every file; switches at 1 MB 166 → 4 for Compact Pro's 31 files
 - 2026-11-20 (the character uuencode touched five times) — a 276 KB uuencoded file took 66 s on a Mac Plus against UUTool's 9; reading, copying, checking and decoding each character separately, twice, was most of it: one pass, each character read once and decoded once, 34.4 → 8.6 million 68000 instructions, 69.9 → 16.5 s
+- 2026-11-21 (the banner a binary file was searched for) — the BinHex probe read 8 KB of any file it was asked about, half a million 68000 instructions on a binary one; a NUL now ends its scan; 0.8 s off a uuencoded file on a Mac Plus
 
 ---
 
@@ -27192,3 +27193,29 @@ record searched on the uuencoded file (0.4 million) and, with the
 BinHex probe, again on the decoded one when it is checked for another
 layer (0.9) — and the reader and the decode themselves (OPEN_ITEMS.md,
 *uuencode: what is left of the gap*).
+
+## 2026-11-21 (the banner a binary file was searched for) — the BinHex probe read 8 KB of any file it was asked about, half a million 68000 instructions on a binary one; a NUL now ends its scan; 0.8 s off a uuencoded file on a Mac Plus
+
+**Claim:** after an envelope layer comes off, the one file it yields is
+sniffed again for another layer, and every probe runs on it. On a
+decoded binary — `speed-uu-200k.uu`'s Linux executable — the BinHex
+probe read its whole 8 KB looking for the banner (0.5 million
+instructions, `tools/m68kprof.py`), as it does on any file no earlier
+probe claims.
+
+**Choice:** a NUL ends the scan; before a banner that answers "not
+BinHex", after one what the end of the scan would. Mail is text: of the
+212 fixtures sniffed as BinHex 4, `.hex`/`.hcx` or `.dl`, none has a NUL
+before its banner or decision point, while 16 have 8-bit bytes there —
+so a byte above 0x7f could not be the test. Every one of the 1,017
+fixtures sniffs as before; `run_hecx.py` 8 of 8; a unit case pins a NUL
+before the banner (fails without the check) and 8-bit mail before it.
+`break` rather than a `return` of its own: the first form cost the
+all-resident control 32 B through A5 layout and
+`derived-PuzzleGetter_0.8.sit` with it; this one nets 0.
+
+**Measured:** `speed-uu-200k.uu` 16.5 → 15.7 s at 1x, byte-exact; 8.59 →
+8.09 million instructions.
+
+**Left:** the zip end-record search, 0.4 million each time, twice on a
+uuencoded file (OPEN_ITEMS.md, *uuencode: what is left of the gap*).

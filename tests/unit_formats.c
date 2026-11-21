@@ -3446,6 +3446,21 @@ static void test_binhex_multi(void)
     one = bh_synth(arc, "first.txt", d1, sizeof d1, r1, sizeof r1);
     test_make_memio(&io, &m, arc, one);
     CHECK(unc_sniff(&io) == UNC_FORMAT_BINHEX);
+    /* Before the banner, 8-bit mail is still mail and a NUL is binary:
+     * the probe stops at a NUL (fmt_binhex_probe.c). */
+    {
+        static uint8_t pre[8192];
+        static const char mail[] = "Subject: caf\xe9\n\n";
+        uint32_t ml = (uint32_t)(sizeof mail - 1);
+        memcpy(pre, mail, ml);
+        memcpy(pre + ml, arc, one);
+        test_make_memio(&io, &m, pre, ml + one);
+        CHECK(unc_sniff(&io) == UNC_FORMAT_BINHEX);
+        pre[3] = 0;
+        test_make_memio(&io, &m, pre, ml + one);
+        CHECK(unc_sniff(&io) != UNC_FORMAT_BINHEX);
+        test_make_memio(&io, &m, arc, one);
+    }
     cap_make(&sk, &cap);
     CHECK(unc_extract_as(UNC_FORMAT_BINHEX, &io, &sk, &al, NULL, NULL) == UNC_OK);
     CHECK(cap.count == 1 && cap.status[0] == UNC_OK);
