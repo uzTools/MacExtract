@@ -44,3 +44,4 @@ kakc	Tome	Apple's Installer (its Tomes)	idcp,ircp	the maintainer (2026-11-10); i
 BNHQ	BinHex4	BinHex 4.0	TEXT	the maintainer (2026-11-15); census 24 TEXT/BNHQ; BinHex 4.0's bundle claims TEXT alone (app-bundles.tsv)
 BnHq	BinHex5	BinHex 5.0	TEXT	the maintainer (2026-11-15); census 5 TEXT/BnHq, MacBinary as BinHex 5.0 writes it (macstamp DECISIONS 2026-10-14); its bundle claims TEXT alone (app-bundles.tsv)
 TAR 	MacTar	MacTar	TARF	the maintainer (2026-11-16); MacStamp's tar pair is TARF/S691; MacTar's bundle and tar 4.0b's (derived-tar.sit) claim TARF beside APPL and PREF (app-bundles.tsv); census 3 APPL/TAR , no document
+asci	btoa	btoa/atob Translator (Raymond Lau, Aladdin)	TEXT	the maintainer (2026-11-21); MacStamp read TEXT/asci off the btoa file the Translator 3.0 wrote inside StuffIt Deluxe 3.0.7 (its specimen, fixtures/corpora/specimens/btoa); no application owns asci

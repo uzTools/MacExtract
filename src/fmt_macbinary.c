@@ -98,7 +98,7 @@ int unc_macbinary_extract(UncCtx *c)
     if (err != UNC_OK) return err;
     /* The probe, which is mb_version > 0: on the Macintosh it is in the
      * host vector and mb_version is not. */
-    if (unc_macbinary_probe(hdr, MB_HDR, NULL) == UNC_FORMAT_UNKNOWN)
+    if (unc_macbinary_probe(hdr, MB_HDR, c->io) == UNC_FORMAT_UNKNOWN)
         return UNC_ERR_FORMAT;
 
     datasize = unc_get_u32be(hdr + 83);

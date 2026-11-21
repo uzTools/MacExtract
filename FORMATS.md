@@ -2547,7 +2547,7 @@ that grows with the output*): the ring starts at 4 KB and doubles to the
 ~8,392 B (was 69,816), a 9.9 KB payload 28,872 B, and a 191 KB one 102,600 B
 (both buffers live across the last grow). A `.mar.lz4` is named by the
 envelope peek and its layer keeps only `ovl_zipold`, the sniffer and the
-codecs (*What each format is granted*), granted <!-- grant: sys6-512K zipold sniff codecs -->218,602 B at System 6.0.8 /
+codecs (*What each format is granted*), granted <!-- grant: sys6-512K zipold sniff codecs -->218,310 B at System 6.0.8 /
 512 KB — room to spare; an LZ4 frame the peek cannot name keeps the whole
 bundle, leaving 65,712 B there, which now fits any payload under ~32 KB and
 refuses a larger one per entry (it was a flat 69,816 B, refused for all).
@@ -2645,7 +2645,7 @@ the engine table's row and name and the keep set's two bytes; the `idcp`
 type in the bundle is a map entry outside that unit, 12 B by LZ4's
 measurement, not re-measured on the probe. `ovl_zipold` 18,720 → 21,934 B,
 `ovl_sniff` +168, the bundle 204,520 B. A Tome keeps `ovl_zipold` and the
-codecs (*What each format is granted*): <!-- grant: sys6-512K zipold codecs -->237,402 B at System 6.0.8 / 512 KB,
+codecs (*What each format is granted*): <!-- grant: sys6-512K zipold codecs -->237,274 B at System 6.0.8 / 512 KB,
 three times its peak. Deepest chain 944 B (`tools/stack_depth.py`).
 
 **'part' resources** (since 2026-11-11; DECISIONS.md 2026-11-11, *the
@@ -4289,7 +4289,7 @@ between the shipped pair against 116,720 B between the probe pair**, both
 the probe pair has not been re-measured, so the 320 B is that
 day's difference, not today's.
 
-The bundle is **212,488 B** — the nineteen images sum to 212,242 B, so its
+The bundle is **212,652 B** — the nineteen images sum to 212,406 B, so its
 index costs **246 B** (`tools/budgets.txt` `BUNDLE`, `IMAGE_*`): a
 4-byte header, 12 bytes of directory per image and padding of each image to
 a multiple of 4 — the padding is why the index is not a constant. The
@@ -4399,9 +4399,9 @@ since 2026-10-09 with `run_tiers.py --check` moving no tally.
 | Installer Tome | zipold, codecs | <!-- gain: zipold codecs -->+154,342 B (arithmetic: no Tome is in the Mac sample) |
 | StuffIt, StuffIt 5 | stuffit, ciphers, codecs | <!-- gain: stuffit crypt codecs -->**+142,322 B** (measured), and <!-- gain: stuffit codecs -->**+151,594 B** for a StuffIt 5 archive whose header carries no password hash (measured, 2026-11-03) |
 | Zip, spanned zip | exo, zipold, ciphers, codecs | <!-- gain: exo zipold crypt codecs -->+114,774 B (arithmetic), <!-- gain: exo zipold codecs -->**+124,046 B** unencrypted (measured) |
-| an envelope whose payload's first bytes name its format (`unc_envelope_peek`), since 2026-11-03 | its own reader, the sniffer, and what that format keeps | <!-- gain: exo sniff zipold codecs -->**+105,246 B** for a `.tar.Z` or `.tar.gz`, and an LZW-compressed MAR, which keeps the same (arithmetic), <!-- gain: zipold sniff codecs -->**+135,542 B** for a `.mar.lz4` (arithmetic), <!-- gain: binhex sniff stuffit crypt codecs -->**+115,878 B** for a StuffIt archive in BinHex or MacBinary (measured) |
-| an envelope whose payload's first bytes name nothing, since 2026-11-12 (DECISIONS.md 2026-11-11, *the head that named nothing*) | its own reader, the sniffer, cptdd and superdisk (the two formats only an end names), the ciphers, codecs | <!-- gain: exo sniff cptdd superdisk crypt codecs -->**+100,162 B** for a `.gz` or `.Z`, <!-- gain: zipold sniff cptdd superdisk crypt codecs -->+104,374 B for an `.lz4`, <!-- gain: binhex sniff cptdd superdisk crypt codecs -->+122,814 B for BinHex or MacBinary, <!-- gain: text sniff cptdd superdisk crypt codecs -->+117,994 B for uuencode or base64, <!-- gain: btoa sniff cptdd superdisk crypt codecs -->+127,950 B for btoa (arithmetic) |
-| any other envelope, and every segment scheme that joins to a file | the whole bundle, kept | <!-- gain: bundle -->**−26,034 B** (−29,118 B measured, before 2026-11-07) |
+| an envelope whose payload's first bytes name its format (`unc_envelope_peek`), since 2026-11-03 | its own reader, the sniffer, and what that format keeps | <!-- gain: exo sniff zipold codecs -->**+105,082 B** for a `.tar.Z` or `.tar.gz`, and an LZW-compressed MAR, which keeps the same (arithmetic), <!-- gain: zipold sniff codecs -->**+135,378 B** for a `.mar.lz4` (arithmetic), <!-- gain: binhex sniff stuffit crypt codecs -->**+115,714 B** for a StuffIt archive in BinHex or MacBinary (measured) |
+| an envelope whose payload's first bytes name nothing, since 2026-11-12 (DECISIONS.md 2026-11-11, *the head that named nothing*) | its own reader, the sniffer, cptdd and superdisk (the two formats only an end names), the ciphers, codecs | <!-- gain: exo sniff cptdd superdisk crypt codecs -->**+99,998 B** for a `.gz` or `.Z`, <!-- gain: zipold sniff cptdd superdisk crypt codecs -->+104,210 B for an `.lz4`, <!-- gain: binhex sniff cptdd superdisk crypt codecs -->+122,650 B for BinHex or MacBinary, <!-- gain: text sniff cptdd superdisk crypt codecs -->+117,830 B for uuencode or base64, <!-- gain: btoa sniff cptdd superdisk crypt codecs -->+127,786 B for btoa (arithmetic) |
+| any other envelope, and every segment scheme that joins to a file | the whole bundle, kept | <!-- gain: bundle -->**−26,198 B** (−29,118 B measured, before 2026-11-07) |
 
 A change to resident code moves every row by the control's growth less the
 shipped build's; a change to an image moves only the rows that keep it — so a
@@ -4412,12 +4412,12 @@ left*).
 
 **The last row is the one no tally had shown**: a wrapper that keeps the
 bundle runs with **less** memory than a resident build would give it —
-212,488 B held against 186,864 B saved. Until 2026-11-12 that was every
+212,652 B held against 186,864 B saved. Until 2026-11-12 that was every
 envelope whose payload the peek could not name (the row above it since;
 DECISIONS.md 2026-11-11, *the head that named nothing*), and until
 2026-11-03 every envelope, and it refused `a2ps.V4.3.tar.Z` and
 `popper-1.7.tar.Z` at System 6.0.8 / 512 KB; the peek names Tar from the first
-512 bytes and the `.Z` layer is granted <!-- grant: sys6-512K exo sniff zipold codecs -->188,306 B there instead of <!-- grant: sys6-512K bundle -->57,026 B
+512 bytes and the `.Z` layer is granted <!-- grant: sys6-512K exo sniff zipold codecs -->188,014 B there instead of <!-- grant: sys6-512K bundle -->56,734 B
 (DECISIONS.md 2026-11-03, *the envelope that said what it held*). The
 heaviest envelope decode in the Mac sample is `popper-1.7.tar.Z`'s LZW at
 147,764 B.

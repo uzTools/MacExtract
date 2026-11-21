@@ -634,6 +634,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-20 (the character uuencode touched five times) — a 276 KB uuencoded file took 66 s on a Mac Plus against UUTool's 9; reading, copying, checking and decoding each character separately, twice, was most of it: one pass, each character read once and decoded once, 34.4 → 8.6 million 68000 instructions, 69.9 → 16.5 s
 - 2026-11-21 (the banner a binary file was searched for) — the BinHex probe read 8 KB of any file it was asked about, half a million 68000 instructions on a binary one; a NUL now ends its scan; 0.8 s off a uuencoded file on a Mac Plus
 - 2026-11-21 (the mail read twice) — a 200 KB base64 attachment took 118 s on a Mac Plus: each part decoded once to size it and again to write it, a call a character and one a byte; one pass, a run of characters at a time: 62.6 → 15.1 million 68000 instructions, 118.3 → 26.0 s
+- 2026-11-21 (the MacBinary with no dates) — the btoa/atob Translator writes a MacBinary I header with zero dates, which the probe refused, so a btoa file stopped at a 256-byte MacBinary; zero dates are now accepted when the file is as long as its forks, and creator asci gets a helper
 
 ---
 
@@ -27255,3 +27256,39 @@ bar, and the rest went into "quit" — a timing that stops on a still
 screen cannot see a silent pass.
 
 **Not done:** the zip sidecar peek (OPEN_ITEMS.md, *Mac OS X's sidecars*).
+
+## 2026-11-21 (the MacBinary with no dates) — the btoa/atob Translator writes a MacBinary I header with zero dates, which the probe refused, so a btoa file stopped at a 256-byte MacBinary; zero dates are now accepted when the file is as long as its forks, and creator asci gets a helper
+
+**Claim** (MacStamp, 2026-11-21, measured): Raymond Lau's btoa/atob
+Translator 3.0, inside StuffIt Deluxe 3.0.7 on System 6.0.8, writes a
+btoa file of a MacBinary, `TEXT`/`asci`; no program owns `asci`. On
+System 7.0.1 MacExtract decoded the btoa and left the MacBinary inside
+it as a 256-byte file. So did the CLI: the decoded file sniffed as
+nothing. Its header is MacBinary I — no CRC, 99..125 zero, `Sample`,
+`TEXT`/`ttxt`, 81 bytes of data — with both dates zero, and the probe
+requires non-zero dates of a header with no checksum: XADMaster's test,
+in no standard (OPEN_ITEMS.md, Part 1's five tolerances, kept
+2026-10-23 until "the writer that made such files").
+
+**Choice:** a header that passes every MacBinary I test but the dates is
+one when the file's length fits its forks — at least the header and
+the two forks unpadded (the writer that left the padding out after the
+data fork, `mb_unpadded`, 2026-11-04), at most both padded to 128
+(`mb_length_fits`). A first version took the data fork as padded and
+would have refused that writer's files; caught by the maintainer's
+question about short MacBinary files: of the 238 MacBinary fixtures, 6
+"short" ones are that writer's, complete, and 1 is truly cut
+(`guysmaccontacts.sea`, which fails "file is truncated", reported). The reader, which called the probe with no file,
+passes its own. Not the date test dropped: without it the evidence is a
+handful of zero bytes; with the length, two of the header's fields must
+add up to the file. A false match would extract a slice of the file
+under the header's name, and inside a chain delete the decoded file it
+replaced (the maintainer asked, 2026-11-21).
+
+**And a helper for `asci`** (`companion/helpers.tsv`, `btoa`, claiming
+`TEXT`, which MacExtract's bundle already claims), the maintainer's
+choice beside MacStamp's restamp to `TEXT`/`MExt`.
+
+**Measured:** the specimen now comes out as `Sample`, 81 bytes; all
+1,017 fixtures sniff as before; the differential suite grades every
+layer inside them (`ci.sh`).

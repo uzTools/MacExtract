@@ -170,6 +170,21 @@ static void test_macbinary(void)
     CHECK(unc_extract_as(UNC_FORMAT_MACBINARY, &io, &sk, &al, NULL, NULL) == UNC_OK);
     CHECK(cap.count == 1 && cap.status[0] == UNC_ERR_TRUNCATED);
 
+    /* MacBinary I with zero dates (the btoa/atob Translator's): taken
+     * where the file's length fits its forks, refused where it does not
+     * (fmt_macbinary_probe.c, mb_length_fits). */
+    {
+        static uint8_t z[1024];
+        memcpy(z, arc, len);
+        memset(z + 91, 0, 8);                   /* the two dates */
+        memset(z + 99, 0, 27);                  /* 99..125: no CRC, I */
+        test_make_memio(&io, &m, z, len);
+        CHECK(unc_sniff(&io) == UNC_FORMAT_MACBINARY);
+        test_make_memio(&io, &m, z, len + 300);
+        CHECK(unc_sniff(&io) != UNC_FORMAT_MACBINARY);
+        test_make_memio(&io, &m, arc, len);
+    }
+
     /* Corrupt CRC -> not recognized. */
     arc[124] ^= 0xFF;
     test_make_memio(&io, &m, arc, len);

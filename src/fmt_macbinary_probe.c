@@ -93,15 +93,38 @@ int mb_version(const uint8_t *b, int32_t len)
      * set, and a date is zero when its four bytes are. */
     if (b[83] & 0x80) return 0;                        /* data fork size */
     if (b[87] & 0x80) return 0;                        /* rsrc fork size */
-    if ((b[91] | b[92] | b[93] | b[94]) == 0) return 0; /* creation date */
-    if ((b[95] | b[96] | b[97] | b[98]) == 0) return 0; /* mod date      */
+    /* Zero dates: everything else is a MacBinary I header, and only the
+     * file's length can settle it (unc_macbinary_probe). */
+    if ((b[91] | b[92] | b[93] | b[94]) == 0) return -1; /* creation date */
+    if ((b[95] | b[96] | b[97] | b[98]) == 0) return -1; /* mod date      */
     return 1;
+}
+
+/* A MacBinary I header with zero dates is one when the file is as long as
+ * its two forks make it: from the header and the two forks unpadded (a
+ * writer left the padding out, fmt_macbinary.c mb_unpadded) to both
+ * padded to 128. The btoa/atob Translator 3.0 writes
+ * such a header (MacStamp's specimen, 2026-11-21); without the length,
+ * the dates were the test (XADMaster's), and its file was refused
+ * (DECISIONS.md 2026-11-21, *the MacBinary with no dates*). */
+static int mb_length_fits(const uint8_t *b, UncIO *io)
+{
+    uint32_t d = unc_get_u32be(b + 83), r = unc_get_u32be(b + 87);
+    uint32_t lo, hi;
+    unc_off_t size;
+
+    if (!io || !io->size) return 0;
+    size = io->size(io->ctx);
+    if ((d | r) >= 0x40000000u) return 0;   /* no wrap below; 1 GB a fork */
+    lo = MB_HDR + d + r;
+    hi = MB_HDR + ((d + 127u) & ~127u) + ((r + 127u) & ~127u);
+    return size >= (unc_off_t)lo && size <= (unc_off_t)hi;
 }
 
 UncFormat unc_macbinary_probe(const uint8_t *head, int32_t len, UncIO *io)
 {
-    (void)io;
-    return (mb_version(head, len) > 0)
+    int v = mb_version(head, len);
+    return (v > 0 || (v < 0 && mb_length_fits(head, io)))
            ? UNC_FORMAT_MACBINARY : UNC_FORMAT_UNKNOWN;
 }
 
@@ -146,7 +169,7 @@ int unc_macbinary_meta(UncEntryInfo *e, const uint8_t *b)
 {
     int v = mb_version(b, MB_HDR), k;
     uint8_t hi;
-    if (v == 0) v = 1;
+    if (v <= 0) v = 1;
     e->type         = unc_get_u32be(b + 65);
     e->creator      = unc_get_u32be(b + 69);
     /* In a I header 73's bit 7 is the lock and nothing else: I predates

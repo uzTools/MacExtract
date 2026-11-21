@@ -149,7 +149,7 @@ SPDX line, in the same commit.
 | `fmt_sitseg.c`, `fmt_sitseg_probe.c` — the StuffIt split header | Aladdin never published it; nothing else in `reference/` reads it (NOTICE) | its offsets measured off sets StuffIt cuts, as the B0 56 bytes were |
 | `unc_sidecar.c` — which names are Mac OS X sidecars, and the pairing rule | — | not looked for |
 | `unc_segment.c` — the part names of a spanned zip (`NAME.zNN`, `NAME.zip` last) and a `.NNN` split, since 2026-11-08 | facts, not code (NOTICE) | not looked for |
-| five tolerances no specification supports — the MacBinary CRC-16/0xA001 fallback and its nonzero-date test, the byte-swapped AppleSingle header, DiskDoubler's stored header CRC of zero (with the split header above) | deark is a checked negative for all four; the two MacBinary ones are unexercised; kept, the maintainer's decision 2026-10-23 (DECISIONS.md 2026-10-23, *the probes next door*) | the writer that made such files, or the tolerance dropped |
+| five tolerances no specification supports — the MacBinary CRC-16/0xA001 fallback and its nonzero-date test (zero dates accepted since 2026-11-21 where the file's length fits the forks: the btoa/atob Translator writes them; DECISIONS.md 2026-11-21, *the MacBinary with no dates*), the byte-swapped AppleSingle header, DiskDoubler's stored header CRC of zero (with the split header above) | deark is a checked negative for all four; the two MacBinary ones are unexercised; kept, the maintainer's decision 2026-10-23 (DECISIONS.md 2026-10-23, *the probes next door*) | the writer that made such files, or the tolerance dropped |
 | `fmt_hecx.c` (**code**), `fmt_binhex_probe.c` — hexbin's | *BinHex before 4.0*, below | BinHex 2.0's own `CODE`, as that item says |
 
 ## A later archive's destination dialog opens where Standard File last was
@@ -378,11 +378,11 @@ those swaps. Not a requirement; nothing is measured. Open:
 
 `companion/` works (DECISIONS.md 2026-10-11, *the stub that hands it on*);
 its helpers are in `dist/` and on both disk images since
-2026-11-04 (twenty-one since 2026-11-16: Apple Backup's and the Installer Tome's since 2026-11-10, BinHex 4.0's and 5.0's since 2026-11-15, MacTar's since 2026-11-16), released in v0.46.0 (DECISIONS.md 2026-11-04, *the helpers in
+2026-11-04 (twenty-two since 2026-11-21: Apple Backup's and the Installer Tome's since 2026-11-10, BinHex 4.0's and 5.0's since 2026-11-15, MacTar's since 2026-11-16, the btoa/atob Translator's since 2026-11-21; twenty-one were released in v0.46.0) (DECISIONS.md 2026-11-04, *the helpers in
 dist*). Left:
 
 - **Each helper carries the same code: one shared file would hold it.**
-  Twenty-one helpers of 6,912 B differ only in creator and bundle (and,
+  Twenty-two helpers of 6,912 B differ only in creator and bundle (and,
   later, icons). Proposed: a "Helper Code" file in the MacExtract Helpers
   folder holds the common code; each helper keeps its bundle, its icons and
   a small loader that opens that file from its own folder and jumps to the
@@ -411,7 +411,7 @@ dist*). Left:
   helper's, then whether a desktop rebuild or Expander's next launch
   takes it back; deleting the Helpers folder and unzipping it again.
   Whichever works goes in the stub, or in one reclaimer app that walks
-  all twenty-one creators in a launch (in the helpers zip, no byte of
+  all twenty-two creators in a launch (in the helpers zip, no byte of
   MacExtract's) — the maintainer's choice, later.
 - **A helper launches under a bare program name.** On System 6 the
   Finder's launch screen shows the launching file's name alone in the
@@ -424,7 +424,7 @@ dist*). Left:
   `check_helpers.py`, MacStamp's records) and the 31-character limit.
 - **An icon per document type, drawn by the maintainer.** Every helper's
   bundle points all its types at one family, MacExtract's archive icon
-  (`companion/make_stub.py`); the twenty-one helpers claim 83 types between
+  (`companion/make_stub.py`); the twenty-two helpers claim 84 types between
   them (`DDAP` 44, `SIT!` 8, `SITx` 5, `MARc` 4, the rest 1 or 2;
   `companion/helpers.tsv`). The Finder draws a file's icon from the
   application that owns its creator, so these show on archives that keep
