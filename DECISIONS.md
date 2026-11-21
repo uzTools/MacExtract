@@ -636,6 +636,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-21 (the mail read twice) — a 200 KB base64 attachment took 118 s on a Mac Plus: each part decoded once to size it and again to write it, a call a character and one a byte; one pass, a run of characters at a time: 62.6 → 15.1 million 68000 instructions, 118.3 → 26.0 s
 - 2026-11-21 (the MacBinary with no dates) — the btoa/atob Translator writes a MacBinary I header with zero dates, which the probe refused, so a btoa file stopped at a 256-byte MacBinary; zero dates are now accepted when the file is as long as its forks, and creator asci gets a helper
 - 2026-11-21 (the tree walked a bit at a time) — StuffIt's method 6 decoded its fixed Huffman code one bit and one tree step at a time; a 256-entry table of the tree's first 8 levels, built once per fork: 8.4 → 3.8 million 68000 instructions, derived-INITLoader.sit 16.3 → 8.0 s on a Mac Plus (Expander 4.0.2: 3.3 s)
+- 2026-11-21 (the byte DiskDoubler handed over one call at a time) — every decoded byte went through dd_out_byte and a put, and ADn read each field through a call; a span for runs, and a whole ADn token from the bit buffer: 13.9 → 5.7 million 68000 instructions, im2-DD3.7.7AuxFiles.dd 30.4 → 12.1 s on a Mac Plus (DD Expand 3.7.7: 9.6 s)
 
 ---
 
@@ -27317,3 +27318,28 @@ table entry decoded to the wrong leaf fails it.
 **Price:** the StuffIt image +224 B; nothing resident; tallies unchanged.
 
 **Measured:** 16.3 → 8.0 s at 1x (`refspeed.py --ref ours`), byte-exact.
+
+## 2026-11-21 (the byte DiskDoubler handed over one call at a time) — every decoded byte went through dd_out_byte and a put, and ADn read each field through a call; a span for runs, and a whole ADn token from the bit buffer: 13.9 → 5.7 million 68000 instructions, im2-DD3.7.7AuxFiles.dd 30.4 → 12.1 s on a Mac Plus (DD Expand 3.7.7: 9.6 s)
+
+**Claim:** FORMATS.md's DiskDoubler row was 0.31x. By `tools/m68kprof.py`,
+13.9 million instructions for about 220 KB out: 43 % in `dd_out_byte`
+(a call a byte: the fork's length, its 16-bit sum and XOR, the delta
+filter's test, then `unc_fork_put`), 39 % in the decoders, 14 % in
+`unc_bitin_bits`, which ADn's LZSS called for each field of each token.
+
+**Choice:** `dd_out_span`, what `dd_out_byte` does over a run, straight
+into the shared writer's buffer, the sum and XOR in registers and the
+delta filter tested once a run, for the two callers that hand over runs —
+a stored copy and ADn's block from its window: 6.7. Then ADn takes a
+whole token — flag, near/far, offset, length, 20 bits at most — from the
+bit buffer once `unc_bitin_fill` has 20 bits in the window: 5.7. Not in
+a block's last 3 bytes: the fill would take them from the next block's
+header, and the skip to that header goes only forward — the first build
+did, and failed 19 of the 95 DiskDoubler fixtures. The differential
+suite 994 of 994; a span that drops the sum fails
+`im2-DD3.7.7AuxFiles.dd`.
+
+**Price:** the DiskDoubler image +544 B; nothing resident; tallies
+unchanged.
+
+**Measured:** 30.4 → 12.1 s at 1x (`refspeed.py --ref ours`), byte-exact.

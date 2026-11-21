@@ -107,6 +107,59 @@ static int dd_out_byte(DdFork *o, uint8_t b)
     }
 }
 
+/* dd_out_byte over a run: straight into the shared writer's buffer, the
+ * sum and the XOR in registers. A call and a put a byte were almost half
+ * a DiskDoubler archive's instructions (tools/m68kprof.py,
+ * im2-DD3.7.7AuxFiles.dd, 2026-11-21). */
+static int dd_out_span(DdFork *o, const uint8_t *p, uint32_t n)
+{
+    UncForkOut *f = &o->out;
+    uint32_t sum = o->sum;
+    uint8_t xs = o->xsum;
+
+    if (n > o->left) n = o->left;       /* trailing filler is dropped */
+    o->left -= n;
+    while (n > 0) {
+        uint32_t k = f->cap - f->len, i;
+        uint8_t *d;
+        int err;
+        if (k == 0) {
+            if ((err = unc_fork_flush(f)) != UNC_OK) {
+                o->sum = sum & 0xFFFFu; o->xsum = xs;
+                return err;
+            }
+            continue;
+        }
+        if (k > n) k = n;
+        d = f->buf + f->len;
+        if (!o->dist) {
+            for (i = 0; i < k; i++) {
+                uint8_t b = p[i];
+                sum += b;
+                xs ^= b;
+                d[i] = b;
+            }
+        } else {
+            for (i = 0; i < k; i++) {
+                uint8_t b = p[i];
+                sum += b;
+                xs ^= b;
+                b = (uint8_t)(b + o->dbuf[(o->dpos - o->dist) & 0xFFu]);
+                o->dbuf[o->dpos & 0xFFu] = b;
+                o->dpos++;
+                d[i] = b;
+            }
+        }
+        f->len += k;
+        p += k;
+        n -= k;
+    }
+    o->sum = sum & 0xFFFFu;
+    o->xsum = xs;
+    /* unc_fork_put's invariant: never left full, a put writes first. */
+    return f->len == f->cap ? unc_fork_flush(f) : UNC_OK;
+}
+
 /* ---- method 0: stored -------------------------------------------- */
 
 static int dd_store(DdFork *o, UncBufIn *in, uint32_t complen)
@@ -128,8 +181,7 @@ static int dd_store(DdFork *o, UncBufIn *in, uint32_t complen)
         if (n > o->left) n = o->left;     /* one byte out per byte in */
         complen -= n;
         unc_bufin_drop(in, n);
-        while (n-- > 0)
-            if ((err = dd_out_byte(o, *p++)) != UNC_OK) return err;
+        if ((err = dd_out_span(o, p, n)) != UNC_OK) return err;
     }
     return UNC_OK;
 }
@@ -154,7 +206,7 @@ static int dd_adn(DdFork *o, UncBufIn *in, uint8_t *win)
     int err;
 
     while (o->left > 0) {
-        uint32_t compsize, uncompsize, i, pos = 0, blockstart;
+        uint32_t compsize, uncompsize, i, pos = 0, blockstart, blockend;
         uint8_t hx = 0;
         int flags, b;
 
@@ -183,6 +235,7 @@ static int dd_adn(DdFork *o, UncBufIn *in, uint8_t *win)
         hx ^= (uint8_t)b;
         b = unc_bufin_next(in); if (b < 0) return in->err;   /* head xor */
         if (hx != (uint8_t)b) return UNC_ERR_CORRUPT;
+        blockend = blockstart + 12 + compsize;
 
         if (flags & 1) {
             /* Stored block: a span of what the reader holds at a time
@@ -203,7 +256,45 @@ static int dd_adn(DdFork *o, UncBufIn *in, uint8_t *win)
         } else {
             unc_bitin_init(&bi, in);
             while (pos < uncompsize) {
-                int bit = unc_bitin_bit(&bi);
+                int bit;
+                /* A whole token from the bit buffer where 20 bits are in
+                 * the window — flag, near/far, offset, length — instead
+                 * of a call a field, which was a third of the decode
+                 * (2026-11-21); the calls below at the window's edge,
+                 * and in a block's last 3 bytes, which the fill would
+                 * otherwise take from the next block's header: the skip
+                 * to that header only goes forward. */
+                if (in->lenfed - (in->len - in->pos) + 3u <= blockend &&
+                    unc_bitin_fill(&bi, 20)) {
+                    uint32_t w = bi.bitbuf;
+                    int nb = bi.nbits;
+                    uint32_t offset, length;
+                    if (!((w >> --nb) & 1u)) {
+                        nb -= 8;
+                        win[pos++] = (uint8_t)(w >> nb);
+                        bi.nbits = nb;
+                        continue;
+                    }
+                    if ((w >> --nb) & 1u) {
+                        nb -= 12;
+                        offset = (w >> nb) & 0xFFFu;
+                    } else {
+                        nb -= 8;
+                        offset = (w >> nb) & 0xFFu;
+                    }
+                    if (offset > pos) return UNC_ERR_CORRUPT;
+                    if (!((w >> --nb) & 1u))      length = 2;
+                    else if (!((w >> --nb) & 1u)) length = ((w >> --nb) & 1u) ? 4u : 3u;
+                    else { nb -= 4; length = ((w >> nb) & 15u) + 5u; }
+                    bi.nbits = nb;
+                    if (pos + length > uncompsize) length = uncompsize - pos;
+                    if (length > offset) return UNC_ERR_CORRUPT;
+                    for (i = 0; i < length; i++)
+                        win[pos + i] = win[pos - offset + i];
+                    pos += length;
+                    continue;
+                }
+                bit = unc_bitin_bit(&bi);
                 if (bit < 0) return bi.err;
                 if (!bit) {
                     int32_t lit = unc_bitin_bits(&bi, 8);
@@ -239,8 +330,7 @@ static int dd_adn(DdFork *o, UncBufIn *in, uint8_t *win)
             }
         }
 
-        for (i = 0; i < pos && o->left > 0; i++)
-            if ((err = dd_out_byte(o, win[i])) != UNC_OK) return err;
+        if ((err = dd_out_span(o, win, pos)) != UNC_OK) return err;
 
         /* The block's own size decides where the next one starts, from
          * the end of its 12-byte header; the bit stream is allowed to
