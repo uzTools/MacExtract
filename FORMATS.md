@@ -6842,6 +6842,12 @@ decoder's work per character and its second pass were cut (DECISIONS.md 2026-11-
 character uuencode touched five times*), and the BinHex probe's scan of
 the decoded file (2026-11-21, *the banner a binary file was searched for*).
 
+**UUTool's copy is not the recorded one**: the `UUTool.bin` timed here
+(`$UNC_VMAC_HOME/speed/`) has no recorded origin and differs by 131
+resource-fork bytes from the Info-Mac II CD's UUTool 2.3.2 (MacStamp's
+`prog:uutool`, measured there 2026-11-21); the 9.1 s is that copy's.
+Not re-timed with the Info-Mac II one.
+
 ✱ **A uuencoded file made for this table**: the first 200,000 B of a Linux
 binary, `uuencode` alphabet, CR line ends, sha256 `687942003df7…2757e8`
 (kept in `$UNC_VMAC_HOME/speed/subjects/`). The corpus's only large

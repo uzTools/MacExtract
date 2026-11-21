@@ -115,7 +115,7 @@ ROM lacks*).
 **The test** is the one README.md (*What you need*) gives anyone who has
 the machine: write `dist/MacExtract-400K.img` (or its Disk Copy `.dsk`) to a 400K floppy, start up from
 the HD20, double-click `MacExtract-Helpers.zip` on the floppy and choose
-the HD20; a pass is twenty-three helpers in a `MacExtract Helpers` folder.
+the HD20; a pass is twenty-four helpers in a `MacExtract Helpers` folder.
 Record whether it extracts; if it bombs, the ID and the screen; the
 output's sizes and dates. A pass would not by itself move
 the floor — BLOCKERS.md's tiers would be re-run first.

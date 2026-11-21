@@ -378,11 +378,11 @@ those swaps. Not a requirement; nothing is measured. Open:
 
 `companion/` works (DECISIONS.md 2026-10-11, *the stub that hands it on*);
 its helpers are in `dist/` and on both disk images since
-2026-11-04 (twenty-three since 2026-11-21: Apple Backup's and the Installer Tome's since 2026-11-10, BinHex 4.0's and 5.0's since 2026-11-15, MacTar's since 2026-11-16, the btoa/atob Translator's and the MacBinary Translator's since 2026-11-21; twenty-one were released in v0.46.0) (DECISIONS.md 2026-11-04, *the helpers in
+2026-11-04 (twenty-four since 2026-11-21: Apple Backup's and the Installer Tome's since 2026-11-10, BinHex 4.0's and 5.0's since 2026-11-15, MacTar's since 2026-11-16, the btoa/atob Translator's, the MacBinary Translator's and UUTool's since 2026-11-21; twenty-one were released in v0.46.0) (DECISIONS.md 2026-11-04, *the helpers in
 dist*). Left:
 
 - **Each helper carries the same code: one shared file would hold it.**
-  Twenty-three helpers of 6,912 B differ only in creator and bundle (and,
+  Twenty-four helpers of 6,912 B differ only in creator and bundle (and,
   later, icons). Proposed: a "Helper Code" file in the MacExtract Helpers
   folder holds the common code; each helper keeps its bundle, its icons and
   a small loader that opens that file from its own folder and jumps to the
@@ -411,7 +411,7 @@ dist*). Left:
   helper's, then whether a desktop rebuild or Expander's next launch
   takes it back; deleting the Helpers folder and unzipping it again.
   Whichever works goes in the stub, or in one reclaimer app that walks
-  all twenty-three creators in a launch (in the helpers zip, no byte of
+  all twenty-four creators in a launch (in the helpers zip, no byte of
   MacExtract's) — the maintainer's choice, later.
 - **A helper launches under a bare program name.** On System 6 the
   Finder's launch screen shows the launching file's name alone in the
@@ -424,7 +424,7 @@ dist*). Left:
   `check_helpers.py`, MacStamp's records) and the 31-character limit.
 - **An icon per document type, drawn by the maintainer.** Every helper's
   bundle points all its types at one family, MacExtract's archive icon
-  (`companion/make_stub.py`); the twenty-three helpers claim 85 types between
+  (`companion/make_stub.py`); the twenty-four helpers claim 86 types between
   them (`DDAP` 44, `SIT!` 8, `SITx` 5, `MARc` 4, the rest 1 or 2;
   `companion/helpers.tsv`). The Finder draws a file's icon from the
   application that owns its creator, so these show on archives that keep

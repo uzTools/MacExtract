@@ -239,7 +239,7 @@ def sidecar_fork(ad):
 
 
 def check_dist(stub):
-    """The twenty-three helpers dist/ ships: every row of companion/helpers.tsv
+    """The twenty-four helpers dist/ ships: every row of companion/helpers.tsv
     stamped from this tree's stub passes check() for its own creator and
     types; dist/MacExtract-Helpers.zip is byte for byte the zip
     make_helpers.py writes from them (it is reproducible: fixed times), so a
