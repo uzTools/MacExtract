@@ -206,6 +206,9 @@ OSErr GetFPos(short ref, long *pos);
 OSErr GetEOF(short ref, long *eof);
 OSErr SetEOF(short ref, long eof);
 OSErr PBGetCatInfoSync(CInfoPBRec *pb);
+/* Multiverse.h's is a macro over the low-memory global Time; a fixed
+ * clock here, which is what a new file's record is built with. */
+void GetDateTime(unsigned long *secs);
 OSErr PBSetCatInfoSync(CInfoPBRec *pb);
 OSErr PBDirCreateSync(HParamBlockRec *pb);
 OSErr FlushVol(ConstStringPtr volName, short vRefNum);

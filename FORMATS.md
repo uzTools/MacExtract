@@ -2547,7 +2547,7 @@ that grows with the output*): the ring starts at 4 KB and doubles to the
 ~8,392 B (was 69,816), a 9.9 KB payload 28,872 B, and a 191 KB one 102,600 B
 (both buffers live across the last grow). A `.mar.lz4` is named by the
 envelope peek and its layer keeps only `ovl_zipold`, the sniffer and the
-codecs (*What each format is granted*), granted <!-- grant: sys6-512K zipold sniff codecs -->218,106 B at System 6.0.8 /
+codecs (*What each format is granted*), granted <!-- grant: sys6-512K zipold sniff codecs -->217,786 B at System 6.0.8 /
 512 KB — room to spare; an LZ4 frame the peek cannot name keeps the whole
 bundle, leaving 65,712 B there, which now fits any payload under ~32 KB and
 refuses a larger one per entry (it was a flat 69,816 B, refused for all).
@@ -2645,7 +2645,7 @@ the engine table's row and name and the keep set's two bytes; the `idcp`
 type in the bundle is a map entry outside that unit, 12 B by LZ4's
 measurement, not re-measured on the probe. `ovl_zipold` 18,720 → 21,934 B,
 `ovl_sniff` +168, the bundle 204,520 B. A Tome keeps `ovl_zipold` and the
-codecs (*What each format is granted*): <!-- grant: sys6-512K zipold codecs -->237,014 B at System 6.0.8 / 512 KB,
+codecs (*What each format is granted*): <!-- grant: sys6-512K zipold codecs -->236,694 B at System 6.0.8 / 512 KB,
 three times its peak. Deepest chain 944 B (`tools/stack_depth.py`).
 
 **'part' resources** (since 2026-11-11; DECISIONS.md 2026-11-11, *the
@@ -4284,7 +4284,7 @@ Measured 2026-09-27:
 whose tallies it is quoted beside. It cancels in a difference taken from
 one probe pair (*What it buys, against the control*): **117,040 B saved
 between the shipped pair against 116,720 B between the probe pair**, both
-2026-09-27. The shipped pair is **190,288 B** (`OVL_SAVED`,
+2026-09-27. The shipped pair is **190,320 B** (`OVL_SAVED`,
 `tools/run_tiers.py`) since 2026-11-12 (*VISE parked*);
 the probe pair has not been re-measured, so the 320 B is that
 day's difference, not today's.
@@ -4350,7 +4350,7 @@ carries, and they were read again from the floppy (DECISIONS.md 2026-11-04,
 
 A tier's budget for a format is the resident build's budget for that tier
 (`TIERS`; *512 KB machines*, *Floor target verification*), plus
-the 190,288 B of `CODE` and A5 the shipped build does not carry (`OVL_SAVED`;
+the 190,320 B of `CODE` and A5 the shipped build does not carry (`OVL_SAVED`;
 *Three configurations, one tree*), less the images the format keeps, each
 aligned to 4 B with a 12 B directory entry, and 12 B for the one block they
 are kept in (DECISIONS.md 2026-11-11, *the copies that moved down*), less a
@@ -4384,24 +4384,24 @@ since 2026-10-09 with `run_tiers.py --check` moving no tally.
 
 | sniffed format | images kept | granted, against the control |
 |---|---|---|
-| **AppleLink package** | **sqp, codecs** | <!-- gain: sqp codecs -->**+181,938 B** (arithmetic: no `.pkg` is in the Mac sample) — the largest grant, because `ovl_sqp` is the smallest decoder image at 1,736 B |
-| Now Compress | now, codecs | <!-- gain: now codecs -->**+178,726 B** (measured) |
-| SuperDisk! | superdisk, codecs | <!-- gain: superdisk codecs -->+177,046 B (arithmetic: no SuperDisk! fixture is in the Mac sample) |
-| LZH | lzh, codecs | <!-- gain: lzh codecs -->**+173,070 B** (measured) |
-| PackIt | packit, ciphers, codecs | <!-- gain: packit crypt codecs -->**+172,122 B** (measured) |
-| DiskDoubler | cptdd, codecs | <!-- gain: cptdd codecs -->**+167,278 B** (measured) |
-| StuffIt SpaceSaver | spacesaver, codecs | <!-- gain: spacesaver codecs -->+167,438 B (arithmetic: no SpaceSaver fixture is in the Mac sample) |
-| ARC | arc, ciphers, codecs | <!-- gain: arc crypt codecs -->**+166,478 B** (measured) |
-| Compact Pro, Compact Pro segment | cptdd, ciphers, codecs | <!-- gain: cptdd crypt codecs -->+158,006 B (arithmetic), and <!-- gain: cptdd codecs -->**+167,278 B** where the directory says no entry is encrypted (measured) |
-| Tar | zipold, codecs | <!-- gain: zipold codecs -->**+157,602 B** (measured) |
-| MAR | zipold, codecs | <!-- gain: zipold codecs -->+157,602 B (arithmetic: no MAR fixture is in the Mac sample) |
-| Apple Backup | zipold, codecs | <!-- gain: zipold codecs -->+157,602 B (arithmetic: no Apple Backup set is in the Mac sample) |
-| Installer Tome | zipold, codecs | <!-- gain: zipold codecs -->+157,602 B (arithmetic: no Tome is in the Mac sample) |
-| StuffIt, StuffIt 5 | stuffit, ciphers, codecs | <!-- gain: stuffit crypt codecs -->**+143,206 B** (measured), and <!-- gain: stuffit codecs -->**+152,478 B** for a StuffIt 5 archive whose header carries no password hash (measured, 2026-11-03) |
-| Zip, spanned zip | exo, zipold, ciphers, codecs | <!-- gain: exo zipold crypt codecs -->+118,034 B (arithmetic), <!-- gain: exo zipold codecs -->**+127,306 B** unencrypted (measured) |
-| an envelope whose payload's first bytes name its format (`unc_envelope_peek`), since 2026-11-03 | its own reader, the sniffer, and what that format keeps | <!-- gain: exo sniff zipold codecs -->**+108,398 B** for a `.tar.Z` or `.tar.gz`, and an LZW-compressed MAR, which keeps the same (arithmetic), <!-- gain: zipold sniff codecs -->**+138,694 B** for a `.mar.lz4` (arithmetic), <!-- gain: binhex sniff stuffit crypt codecs -->**+116,654 B** for a StuffIt archive in BinHex or MacBinary (measured) |
-| an envelope whose payload's first bytes name nothing, since 2026-11-12 (DECISIONS.md 2026-11-11, *the head that named nothing*) | its own reader, the sniffer, cptdd and superdisk (the two formats only an end names), the ciphers, codecs | <!-- gain: exo sniff cptdd superdisk crypt codecs -->**+102,162 B** for a `.gz` or `.Z`, <!-- gain: zipold sniff cptdd superdisk crypt codecs -->+106,374 B for an `.lz4`, <!-- gain: binhex sniff cptdd superdisk crypt codecs -->+124,814 B for BinHex or MacBinary, <!-- gain: text sniff cptdd superdisk crypt codecs -->+119,914 B for uuencode or base64, <!-- gain: btoa sniff cptdd superdisk crypt codecs -->+129,950 B for btoa (arithmetic) |
-| any other envelope, and every segment scheme that joins to a file | the whole bundle, kept | <!-- gain: bundle -->**−26,490 B** (−29,118 B measured, before 2026-11-07) |
+| **AppleLink package** | **sqp, codecs** | <!-- gain: sqp codecs -->**+181,970 B** (arithmetic: no `.pkg` is in the Mac sample) — the largest grant, because `ovl_sqp` is the smallest decoder image at 1,736 B |
+| Now Compress | now, codecs | <!-- gain: now codecs -->**+178,758 B** (measured) |
+| SuperDisk! | superdisk, codecs | <!-- gain: superdisk codecs -->+177,078 B (arithmetic: no SuperDisk! fixture is in the Mac sample) |
+| LZH | lzh, codecs | <!-- gain: lzh codecs -->**+173,102 B** (measured) |
+| PackIt | packit, ciphers, codecs | <!-- gain: packit crypt codecs -->**+172,154 B** (measured) |
+| DiskDoubler | cptdd, codecs | <!-- gain: cptdd codecs -->**+167,310 B** (measured) |
+| StuffIt SpaceSaver | spacesaver, codecs | <!-- gain: spacesaver codecs -->+167,470 B (arithmetic: no SpaceSaver fixture is in the Mac sample) |
+| ARC | arc, ciphers, codecs | <!-- gain: arc crypt codecs -->**+166,510 B** (measured) |
+| Compact Pro, Compact Pro segment | cptdd, ciphers, codecs | <!-- gain: cptdd crypt codecs -->+158,038 B (arithmetic), and <!-- gain: cptdd codecs -->**+167,310 B** where the directory says no entry is encrypted (measured) |
+| Tar | zipold, codecs | <!-- gain: zipold codecs -->**+157,634 B** (measured) |
+| MAR | zipold, codecs | <!-- gain: zipold codecs -->+157,634 B (arithmetic: no MAR fixture is in the Mac sample) |
+| Apple Backup | zipold, codecs | <!-- gain: zipold codecs -->+157,634 B (arithmetic: no Apple Backup set is in the Mac sample) |
+| Installer Tome | zipold, codecs | <!-- gain: zipold codecs -->+157,634 B (arithmetic: no Tome is in the Mac sample) |
+| StuffIt, StuffIt 5 | stuffit, ciphers, codecs | <!-- gain: stuffit crypt codecs -->**+143,238 B** (measured), and <!-- gain: stuffit codecs -->**+152,510 B** for a StuffIt 5 archive whose header carries no password hash (measured, 2026-11-03) |
+| Zip, spanned zip | exo, zipold, ciphers, codecs | <!-- gain: exo zipold crypt codecs -->+118,066 B (arithmetic), <!-- gain: exo zipold codecs -->**+127,338 B** unencrypted (measured) |
+| an envelope whose payload's first bytes name its format (`unc_envelope_peek`), since 2026-11-03 | its own reader, the sniffer, and what that format keeps | <!-- gain: exo sniff zipold codecs -->**+108,430 B** for a `.tar.Z` or `.tar.gz`, and an LZW-compressed MAR, which keeps the same (arithmetic), <!-- gain: zipold sniff codecs -->**+138,726 B** for a `.mar.lz4` (arithmetic), <!-- gain: binhex sniff stuffit crypt codecs -->**+116,686 B** for a StuffIt archive in BinHex or MacBinary (measured) |
+| an envelope whose payload's first bytes name nothing, since 2026-11-12 (DECISIONS.md 2026-11-11, *the head that named nothing*) | its own reader, the sniffer, cptdd and superdisk (the two formats only an end names), the ciphers, codecs | <!-- gain: exo sniff cptdd superdisk crypt codecs -->**+102,194 B** for a `.gz` or `.Z`, <!-- gain: zipold sniff cptdd superdisk crypt codecs -->+106,406 B for an `.lz4`, <!-- gain: binhex sniff cptdd superdisk crypt codecs -->+124,846 B for BinHex or MacBinary, <!-- gain: text sniff cptdd superdisk crypt codecs -->+119,946 B for uuencode or base64, <!-- gain: btoa sniff cptdd superdisk crypt codecs -->+129,982 B for btoa (arithmetic) |
+| any other envelope, and every segment scheme that joins to a file | the whole bundle, kept | <!-- gain: bundle -->**−26,458 B** (−29,118 B measured, before 2026-11-07) |
 
 A change to resident code moves every row by the control's growth less the
 shipped build's; a change to an image moves only the rows that keep it — so a
@@ -4412,12 +4412,12 @@ left*).
 
 **The last row is the one no tally had shown**: a wrapper that keeps the
 bundle runs with **less** memory than a resident build would give it —
-216,368 B held against 190,288 B saved. Until 2026-11-12 that was every
+216,368 B held against 190,320 B saved. Until 2026-11-12 that was every
 envelope whose payload the peek could not name (the row above it since;
 DECISIONS.md 2026-11-11, *the head that named nothing*), and until
 2026-11-03 every envelope, and it refused `a2ps.V4.3.tar.Z` and
 `popper-1.7.tar.Z` at System 6.0.8 / 512 KB; the peek names Tar from the first
-512 bytes and the `.Z` layer is granted <!-- grant: sys6-512K exo sniff zipold codecs -->187,810 B there instead of <!-- grant: sys6-512K bundle -->52,922 B
+512 bytes and the `.Z` layer is granted <!-- grant: sys6-512K exo sniff zipold codecs -->187,490 B there instead of <!-- grant: sys6-512K bundle -->52,602 B
 (DECISIONS.md 2026-11-03, *the envelope that said what it held*). The
 heaviest envelope decode in the Mac sample is `popper-1.7.tar.Z`'s LZW at
 147,764 B.
@@ -6772,8 +6772,10 @@ file into the System Folder, and leaves the intermediate `MacburgerHelper.sit`
 on the volume, where the shell deletes each envelope once the next layer is
 out.
 
-**Our figures include a `FlushVol` after every fork and Expander's include
-none** (measured 2026-08-30 off the image being written): when the screen
+**Our figures include a `FlushVol` at the end of the run and Expander's
+include none** (measured 2026-08-30 off the image being written; a
+`FlushVol` after every fork until 2026-11-22, DECISIONS.md *the folders
+looked up again*): when the screen
 stops changing, Expander's files are not on the volume; Command-Q commits them
 within a second, 1.5–1.6 s on the screen clock in every 2026-10-19 run. On
 this emulator's seek-free disk that costs little; a real Mac Plus is not
@@ -6810,10 +6812,10 @@ table). Ratio is the program's time ÷ ours; above 1, ours is faster.
 | `derived-DSKDUP.sit` | StuffIt, 8 MW | 14 KB | **4.1 s** | Expander 4.0.2 | 5.5 s | 1.34x |
 | `derived-FirstClass_Demo.cpt` | Compact Pro, LZH+RLE | 249 KB | 56.3 s | Compact Pro 1.51 | **46.3 s** | 0.82x |
 | | | | | Expander 4.0.2 | 155.2 s | 2.76x |
-| `macburger-helper.hqx` | BinHex → StuffIt (312 entries) | 307 KB | **214.7 s** | Expander 4.0.2 | 423.7 s | 1.97x |
+| `macburger-helper.hqx` | BinHex → StuffIt (312 entries) | 307 KB | **167.2 s** | Expander 4.0.2 | 423.7 s | 2.53x |
 | `kermitut9test.bin` | MacBinary | 304 KB | **2.3 s** | Expander 4.0.2 | 2.4–2.5 s | 1.07x |
 | `derived-PackIt.pit` | PackIt, stored | 62 KB | **4.1 s** | PackIt III 1.3 | 26.6–26.7 s | 6.5x |
-| `derived-PCCTS.tar` | tar (49 files) | 287 KB | 8.1 s | tar 4.0b | **7.0 s** | 0.86x |
+| `derived-PCCTS.tar` | tar (49 files) | 287 KB | **6.9 s** | tar 4.0b | 7.0 s | 1.01x |
 | `aminet-lha_68k.lha` | LHA, -lh5- | 168 KB | **51.4 s** | MacLHa 2.00 | 405.0 s | 7.9x |
 | `im2-DD3.7.7AuxFiles.dd` | DiskDoubler `DDAR` | 187 KB | **9.5 s** | DD Expand 3.7.7 | 9.6 s | 1.01x |
 | `speed-uu-200k.uu` ✱ | uuencode | 276 KB | 12.0 s | UUTool 2.3.2 | **9.1 s** | 0.76x |
@@ -6826,11 +6828,11 @@ Huffman rows, Compact Pro, BinHex, MacBinary, PackIt, tar and LHA, and each
 pair of runs agrees within two ticks; the other rows ran once. Host ÷ Mac
 seconds 0.997–1.003 on every run.
 
-**Faster on 13 of 18 pairs, slower on 4.** Expander beats ours on one of
+**Faster on 14 of 18 pairs, slower on 3.** Expander beats ours on one of
 StuffIt's six methods, fixed Huffman (1.6x); ours wins on the other five.
-Compact Pro 1.51, UUTool and tar 4.0b are faster than ours; PackIt III,
-MacLHa, DD Expand (by 1 %), UnZip 1.01 on all three of its methods, and
-Expander on Compact Pro and BinHex are slower. MacBinary is a tie.
+Compact Pro 1.51 and UUTool are faster than ours; PackIt III, MacLHa, DD
+Expand and tar 4.0b (by 1 % each), UnZip 1.01 on all three of its methods,
+and Expander on Compact Pro and BinHex are slower. MacBinary is a tie.
 
 **What the grade excepted**: Expander leaves `macburger-helper.hqx`'s inner
 `MacburgerHelper.sit` on the volume (one data fork more than the engine
@@ -6853,7 +6855,8 @@ method 3 and 5 rows 46.7 and 102.2 s (0.91x, 0.85x) before both read
 their bits from locals (2026-11-22, *the count that ran into its
 sentinel*), and the method 6, 8 and 13 rows 8.0, 6.0 and 24.7 s, the
 DiskDoubler row 12.1 s, the tar row 8.7 s and the uuencode row 15.7 s
-before 2026-11-22's *the run PackBits wrote a byte at a time*; the Compact
+before 2026-11-22's *the run PackBits wrote a byte at a time*, and the
+tar and BinHex rows 8.1 and 214.7 s before *the folders looked up again*; the Compact
 Pro rows were 75.3 s (0.61x, 2.06x) before its LZH loop kept the bit
 state in locals (2026-11-22, *the bit state Compact Pro stored back every
 symbol*).

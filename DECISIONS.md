@@ -641,6 +641,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-22 (the bit state Compact Pro stored back every symbol) — a third of a Compact Pro run was unc_canon_decode's call and the bit reader's state stored back a symbol; the state in two locals for the LZH loop, the flag bit, the table hit and the offset's low bits taken from them: 40.0 → 31.8 million 68000 instructions, derived-FirstClass_Demo.cpt 75.3 → 56.3 s on a Mac Plus (Compact Pro 1.51: 46.3 s); CRC-32 as byte tables measured slower and not taken
 - 2026-11-22 (the count that ran into its sentinel) — StuffIt method 5's adaptive tree scanned for a node's new place with a bound its own sentinel made redundant, and both methods 3 and 5 read their bits through the struct; the sentinel alone, the bits in locals, method 3's table hit in its loop: derived-BitMap11.sit 102.2 → 80.4 s and derived-FastEnvelope.sit 46.7 → 26.1 s on a Mac Plus (Expander 4.0.2: 86.5 and 42.4 s)
 - 2026-11-22 (the run PackBits wrote a byte at a time) — StuffIt methods 6, 8 and 13, DiskDoubler's ADn, tar and uuencode each lost time to a put a byte, a bit reader in its struct, or a test that ran on every byte; runs, locals, a second-level table and a stride: Mystic 24.7 → 23.1 s, INITLoader 8.0 → 5.2 s, DSKDUP 6.0 → 4.1 s, DiskDoubler 12.1 → 9.5 s, tar 8.7 → 8.1 s on a Mac Plus
+- 2026-11-22 (the folders looked up again) — of a 49-member tar's 5.9 s of work on a Mac Plus, 3.9 s was the File Manager's per-file work; no FlushVol per fork, a memo of the folders the previous entries resolved, and a new file's catalog record built instead of read: derived-PCCTS.tar 8.1 → 6.9 s (tar 4.0b: 7.0 s), macburger-helper.hqx 214.7 → 167.2 s
 
 ---
 
@@ -27516,3 +27517,44 @@ still behind), uuencode 12.0 s (9.1: still behind). Without
 `StreamClose`'s per-fork `FlushVol`, a probe build only, tar is 7.4 s. tar's 5.9 s of work is 1.5 s engine and 3.9 s of create,
 close, `FlushVol` and catalog for its 49 members (`-D UNC_AT_TIMING`);
 INITLoader's is engine, 231 of 236 ticks.
+
+## 2026-11-22 (the folders looked up again) — of a 49-member tar's 5.9 s of work on a Mac Plus, 3.9 s was the File Manager's per-file work; no FlushVol per fork, a memo of the folders the previous entries resolved, and a new file's catalog record built instead of read: derived-PCCTS.tar 8.1 → 6.9 s (tar 4.0b: 7.0 s), macburger-helper.hqx 214.7 → 167.2 s
+
+**Claim:** after 2026-11-22's *the run PackBits wrote a byte at a time*
+the tar row was still 8.1 s against tar 4.0b's 7.0. `-D UNC_AT_TIMING`
+split its 353 ticks: engine 91, reads 16, writes 11, and **235** for
+create, `SetEOF`, close, `FlushVol` and catalog — about 4.8 ticks a member.
+OPEN_ITEMS.md had the same split for the 312-entry `MacburgerHelper.sit`
+(*Where a .sit.hqx's time goes*), with a folder memo measured and dropped
+on 2026-11-20.
+
+**Choice**, three, each timed at 1x with `refspeed.py`, which grades every
+file of every layer against `macextract x`:
+
+- **No `FlushVol` after each fork** (`StreamClose`), the maintainer's
+  call, knowing a crash part-way through can then lose more of what was
+  already written; the run's own `FlushVol` at the end stays. 8.1 → 7.4 s.
+- **The folder memo, built again** (`MacSink.memoPath`): the previous
+  entries' path bytes and the folder each component named, eight levels
+  and 96 bytes deep, on the stack with the sink rather than in A5. An
+  entry whose path starts with the same bytes takes those folders without
+  `EnsureDir`'s lookup; recording component k drops what the memo held
+  past it. 7.4 → 7.2 s, and the BinHex row 214.7 → 169.0 s, all 312 files
+  equal.
+- **A new file's record built, not read** (`StampCat`): a file this run
+  has just created holds zeros and two dates, so the record is the zeros,
+  the time `sink_begin` made it (`GetDateTime`, the low-memory clock) and
+  now; the archive's own fields then win as before. A folder is still
+  read, and so is a file at the top of a working-directory destination,
+  whose parent's real ID only the read gives. Skipping `StampCat` whole,
+  a probe only, was 6.55 s: the read was half of it. 7.2 → **6.87 s**.
+
+The probe order was also tried, tar ahead of the zip pair to spare it the
+64 KB EOCD scan: 7.23 → 7.20 s, not worth a detection change, reverted.
+
+**Price:** the shipped build's resident CODE +344 B, A5 −24 B; the
+shipped tallies unchanged; the sink's frame +~150 B on the stack.
+
+**Measured:** tar 6.87 s twice, `macburger-helper.hqx` 167.2 s twice
+(Expander 4.0.2: 423.7 s); `tools/vmac/sample.txt` 74/74 at 1 MB on
+System 6.0.8; `metarun.py` on System 6.0.8 and System 3.0.

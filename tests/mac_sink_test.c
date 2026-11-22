@@ -553,6 +553,10 @@ static int dir_id_for(const char *path)
  * noErr over an untouched param block — so the shell read a dir bit and
  * a directory id out of stack garbage on the one path the real File
  * Manager takes whenever a folder is already there. */
+/* The clock a new file's record is built with (StampCat): the mock's
+ * own, which is what it stamps a new record with. */
+void GetDateTime(unsigned long *secs) { *secs = gNow; }
+
 OSErr PBGetCatInfoSync(CInfoPBRec *pb)
 {
     char path[800];

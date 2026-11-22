@@ -1394,8 +1394,8 @@ moves it BEFORE the mark.
   first row is preselected, and Expand is pressed at a coordinate measured off
   this harness's frame. Return is untested, not disproved.
 - **Assign X keyboard focus** (`origin()`, not `settle()`).
-- **Expander's output is not on the image until it quits.** Our sink calls
-  `FlushVol` per fork; Expander's writes sit in the File Manager's cache, and
+- **Expander's output is not on the image until it quits.** Our run ends
+  with a `FlushVol` (one per fork until 2026-11-22); Expander's writes sit in the File Manager's cache, and
   SIGKILL loses them, so the harness sends Command-Q after the measurement.
   `live_names()` mounts a copy of the live `boot.hfv` when the screen stops,
   after the quit key and after the kill; `--json` carries

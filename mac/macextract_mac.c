@@ -1241,6 +1241,10 @@ static void unc_at_record(short vol, long dir, ConstStr255Param name)
 /* Disk sink: HFS files, both forks, then catalog info                */
 /* ------------------------------------------------------------------ */
 
+/* The folder memo's reach (MacSink.memoPath): eight levels, 96 bytes of
+ * path, which every fixture's common folders fit. */
+enum { kMemoComps = 8, kMemoPath = 96 };
+
 typedef struct {
     short        vRefNum;      /* destination volume */
     long         rootDirID;    /* destination folder */
@@ -1268,6 +1272,20 @@ typedef struct {
     /* A folder at the top of the output whose custom-icon bit (0x0400) is
      * held back until the run ends (IconFlush). 0 holds none. */
     long          iconDir;
+    /* The folders the previous entries' paths went through: the path's
+     * bytes up to the end of component k, and the folder it named, for
+     * the first kMemoComps components within kMemoPath bytes. An entry
+     * whose path starts with the same bytes is in the same folders, so
+     * they are not looked up again: `EnsureDir` was 38 s of a 312-file
+     * archive's 223 (OPEN_ITEMS.md, *Where a .sit.hqx's time goes*;
+     * DECISIONS.md 2026-11-22, *the folders looked up again*). */
+    /* When this entry's file was created (GetDateTime), for StampCat,
+     * which builds a new file's record instead of reading it back. */
+    unsigned long madeAt;
+    uint8_t       memoPath[kMemoPath];
+    uint8_t       memoEnd[kMemoComps];
+    long          memoDir[kMemoComps];
+    int           memoN;
 #ifndef UNC_MAC_STAGE_WRITES
     /* Streaming write path: each chunk goes straight to disk as the engine
      * delivers it, so the shell never holds a whole fork in RAM. Exactly one
@@ -2274,7 +2292,21 @@ static int SINK_BEGIN(void *ctx, const UncEntryInfo *info)
     for (i = 0; i <= nlen; i++) {
         if (i == nlen || nm[i] == '/') {
             Str63 comp;
-            int changed = ComponentToStr63(nm + start, i - start, comp);
+            int changed;
+            /* A folder the previous entries already resolved: the same
+             * bytes up to here, every component before this one having
+             * matched too (the memo is only read in order). */
+            if (i < nlen && comp_i < s->memoN && s->memoEnd[comp_i] == i) {
+                int j = start;
+                while (j < i && nm[j] == s->memoPath[j]) j++;
+                if (j == i) {
+                    dir = s->memoDir[comp_i];
+                    comp_i++;
+                    start = i + 1;
+                    continue;
+                }
+            }
+            changed = ComponentToStr63(nm + start, i - start, comp);
             int compLost = (lost >> (comp_i < 31 ? comp_i : 31)) & 1;
             comp_i++;
             if (i == nlen && !info->is_dir) {
@@ -2291,6 +2323,18 @@ static int SINK_BEGIN(void *ctx, const UncEntryInfo *info)
                 err = EnsureDir(s, dir, comp, h,
                                 dir == s->rootDirID, &dir,
                                 &isNew, &merged, &numbered);
+                /* Recorded for the next entry: component comp_i - 1 ends
+                 * at i. What the memo held past it described another
+                 * path, so it goes. */
+                if (err == noErr && i < nlen && comp_i <= kMemoComps &&
+                    i <= kMemoPath) {
+                    int k = comp_i - 1;
+                    BlockMoveData(nm + start, s->memoPath + start,
+                                  i - start);
+                    s->memoEnd[k] = (uint8_t)i;
+                    s->memoDir[k] = dir;
+                    s->memoN = k + 1;
+                }
                 if (err != noErr) {
                     /* Named either way: a full catalog stops the run
                      * here, before end_entry, which is where a failed
@@ -2360,7 +2404,10 @@ static int SINK_BEGIN(void *ctx, const UncEntryInfo *info)
                    info->rsrc_size - 0x80000000UL < 0x7FFFFFFFUL)
                   ? kTooBig
                   : MyHCreate(s->vRefNum, s->curDirID, s->curName);
-            if (err == noErr) break;
+            if (err == noErr) {
+                GetDateTime(&s->madeAt);
+                break;
+            }
             if (err != dupFNErr || attempt >= 99) {
                 /* One entry's name, not the archive's run: until
                  * 2026-08-29 this returned -1, which the engine reads as
@@ -2466,7 +2513,12 @@ static OSErr StreamClose(MacSink *s)
     if (s->openRef) {
         err = FSClose(s->openRef);
         s->openRef = 0;
-        FlushVol(NULL, s->vRefNum);   /* commit before anything else opens */
+        /* No FlushVol here since 2026-11-22: one a fork was 0.7 s of a
+         * 49-member tar and 5.5 s of a 312-entry StuffIt archive on a
+         * Mac Plus, and the run's own FlushVol at the end commits it all
+         * (DECISIONS.md 2026-11-22, *the folders looked up again*). The
+         * maintainer's call: a crash part-way through can lose more of
+         * what was already written. */
     }
     return err;
 }
@@ -2898,7 +2950,30 @@ static void StampCat(MacSink *s)
     pb.hFileInfo.ioVRefNum = s->vRefNum;
     pb.hFileInfo.ioDirID = s->curDirID;
     pb.hFileInfo.ioFDirIndex = 0;
-    if (PBGetCatInfoSync(&pb) == noErr) {
+    /* A file this run has just created has nothing in its record but
+     * zeros and two dates, so it is built, not read back: the creation
+     * date is when sink_begin made it, the modification date now, which
+     * is what the close that wrote it left. A catalog read a file was
+     * half of what StampCat cost a 49-member tar, 0.3 s of a Mac Plus's
+     * 7.2 (DECISIONS.md 2026-11-22, *the folders looked up again*). A
+     * folder is read: it may have been there before this run. So is a
+     * file at the top of a destination named by a working directory
+     * (curDirID 0), whose parent's real ID only the read gives. */
+    if (!s->cur.is_dir && s->curDirID != 0) {
+        unsigned long now;
+        unsigned char *b = (unsigned char *)&pb.hFileInfo.ioFlAttrib;
+        for (z = 0; z < (long)(sizeof pb.hFileInfo -
+                               ((char *)b - (char *)&pb.hFileInfo)); z++)
+            b[z] = 0;
+        GetDateTime(&now);
+        pb.hFileInfo.ioFlCrDat = s->madeAt;
+        pb.hFileInfo.ioFlMdDat = now;
+        pb.hFileInfo.ioFlParID = s->curDirID;
+        z = noErr;
+    } else {
+        z = PBGetCatInfoSync(&pb);
+    }
+    if (z == noErr) {
         /* The parent's real directory ID, for the Desktop Manager below
          * (ioDrParID sits at the same offset). */
         par = pb.hFileInfo.ioFlParID;
@@ -4860,6 +4935,7 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
     sink.lastDir = 0;
     sink.heldDir = 0;
     sink.iconDir = 0;
+    sink.memoN = 0;
     sink.pr = NULL;
     sink.wrOSErr = noErr;
     /* gLastWriteErr, gShortBy and gShortPiece are NOT reset here. They
