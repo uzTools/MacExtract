@@ -761,6 +761,11 @@ out:
 
 #include "sit6_tables.h"
 
+/* The decoder's table width: 11 bits hold 254 of the fixed code book's
+ * 257 codes (sit6_runbits: 95 of 11 bits, then two of 13 and the
+ * terminator's 12), in 2,048 entries, 4 KB of the fork's allocation. */
+#define SIT6_FAST 11u
+
 /* Build the fixed tree from `sit6_runlen`/`sit6_runbits` into two
  * 257-entry arrays the decoder walks. 26 bytes and this function stand
  * in for the 1,028-byte table that used to be compiled in; the arrays
@@ -776,7 +781,7 @@ out:
  * bit fewer than every stream here was written for. Checked over all
  * 8,192 bit paths of depth 13 against the table this replaces
  * (sit6_tables.h). */
-static void sit6_build(uint16_t *zero, uint16_t *one)
+static void sit6_build(uint16_t *zero, uint16_t *one, uint8_t *flen)
 {
     uint32_t code = 0, prev = 0, sym = 0, nodes = 1;
     uint32_t run, k, i;
@@ -786,6 +791,7 @@ static void sit6_build(uint16_t *zero, uint16_t *one)
         zero[i] = 0;
         one[i] = 0;
     }
+    for (i = 0; i < (1u << SIT6_FAST); i++) flen[i] = 0;
     for (run = 0; run < SIT6_RUNS; run++) {
         for (k = 0; k < sit6_runlen[run]; k++, sym++) {
             uint32_t node = 0;
@@ -797,6 +803,19 @@ static void sit6_build(uint16_t *zero, uint16_t *one)
             else                           code = (prev + 1) << (len - prevlen);
             prev = code;
             prevlen = len;
+
+            /* The same code in the decoder's two tables: every
+             * SIT6_FAST-bit window it starts, its length and its
+             * ordinal less one. The terminator, past 11 bits, is not. */
+            if (len <= (int)SIT6_FAST) {
+                uint32_t at = code << (SIT6_FAST - (uint32_t)len);
+                uint32_t n = 1u << (SIT6_FAST - (uint32_t)len);
+                while (n-- > 0) {
+                    flen[at] = (uint8_t)len;
+                    flen[(1u << SIT6_FAST) + at] = (uint8_t)sym;
+                    at++;
+                }
+            }
 
             for (b = len - 1; b >= 0; b--) {
                 uint32_t bit = (code >> b) & 1u;
@@ -924,151 +943,83 @@ static int sit6_packbits(UncForkOut *f, const uint8_t *seg, uint32_t seglen,
     return UNC_OK;
 }
 
-/* The tree's first 8 levels as a table: for every 8-bit prefix, the leaf
- * it ends on (0x8000 | length << 9 | leaf ordinal) or, for a code longer
- * than 8 bits, the internal node after them. One lookup where a bit at a
- * time was 80 % of a method 6 fork's instructions (tools/m68kprof.py,
- * derived-INITLoader.sit, 2026-11-21). */
-static void sit6_table(uint16_t *tab, const uint16_t *zero, const uint16_t *one)
-{
-    uint32_t p;
-    for (p = 0; p < 256; p++) {
-        uint16_t node = 0, child = 0;
-        int d;
-        for (d = 1; d <= 8; d++) {
-            child = ((p >> (8 - d)) & 1u) ? one[node] : zero[node];
-            if (child <= SIT6_LEAVES) break;
-            node = (uint16_t)(child - SIT6_LEAVES);
-        }
-        tab[p] = d <= 8 ? (uint16_t)(0x8000u | (uint32_t)d << 9 | child)
-                        : node;
-    }
-}
-
-/* Decode one Huffman-coded segment into seg[0..explen). */
-/* Second-level tables a segment may build: the fixed tree has 48 nodes at
- * depth 8; more would go on to the walk. */
-#define SIT6_SUB 64u
-
+/* Decode one Huffman-coded segment into seg[0..explen).
+ *
+ * Rewritten 2026-11-22 around one table, built with the tree from the
+ * code book (sit6_build): every SIT6_FAST-bit window -> the ordinal and
+ * length of the code it starts, 254 of the 257 codes, and 0 for the
+ * three longer ones. The loop takes a window, looks it up, and stores
+ * the byte the segment's own `leaf` list gives the ordinal; the bits in
+ * two locals, refilled two bytes at a time from what the reader holds.
+ * The terminator, a longer code, an ordinal the segment did not name and
+ * the end of the reader's window go to the walk below, one symbol at a
+ * time (DECISIONS.md 2026-11-22, *the table the code book could build*). */
 static UNC_NOINLINE UNC_HOT int sit6_huffseg(UncBufIn *in, uint8_t *seg,
                         uint32_t explen, const uint8_t *leaf, uint32_t codes,
                         uint32_t segbytes, uint32_t *used,
                         const uint16_t *sit6_zero, const uint16_t *sit6_one,
-                        const uint16_t *tab, uint16_t *st)
+                        const uint8_t *flen)
 {
     UncBitIn bi;
-    uint32_t start, got = 0, bb, i, k = 0;
+    uint32_t start, got = 0, bb;
     int32_t nb;
     int ret = UNC_OK;
-    uint16_t *st2 = st + 256;
-
-    /* The fork's table through this segment's leaves: for every 8-bit
-     * prefix, (length << 8) | the byte its leaf stands for, or 0 for
-     * anything the loop below must not take — a longer code, the
-     * terminator, a leaf the segment did not name, a tree that is not
-     * one. 256 entries a segment, against a byte decoded at ~40
-     * instructions where the loop takes ~12 (DECISIONS.md 2026-11-22,
-     * *the run PackBits wrote a byte at a time*). */
-    for (i = 0; i < 256; i++) {
-        uint32_t e = tab[i], v = 0;
-        if (e & 0x8000u) {
-            uint32_t ch = e & 0x1FFu;
-            if (ch >= 1 && ch <= codes)
-                v = ((e >> 9) & 15u) << 8 | leaf[ch - 1];
-        } else if (k < SIT6_SUB) {
-            /* A code longer than 8 bits: a second table, the node's next
-             * three bits, 0x8000 | which one. The fixed tree has 191 of
-             * its 257 codes past 8 bits and all but three within 11,
-             * so without it half the bytes walked (2026-11-22). */
-            uint32_t s3;
-            for (s3 = 0; s3 < 8; s3++) {
-                uint32_t node = e, d, w = 0, ch;
-                for (d = 1; d <= 3; d++) {
-                    ch = ((s3 >> (3 - d)) & 1u) ? sit6_one[node]
-                                                : sit6_zero[node];
-                    if (ch <= SIT6_LEAVES) {
-                        if (ch >= 1 && ch <= codes)
-                            w = d << 8 | leaf[ch - 1];
-                        break;
-                    }
-                    node = ch - SIT6_LEAVES;
-                }
-                st2[k * 8u + s3] = (uint16_t)w;
-            }
-            v = 0x8000u | k++;
-        }
-        st[i] = (uint16_t)v;
-    }
+    const uint8_t *ford = flen + (1u << SIT6_FAST);
 
     unc_bitin_init(&bi, in);
     start = unc_bitin_bytepos(&bi);
-    /* The bit state in two locals, two bytes already buffered taken
-     * below sixteen bits, as method 3 does (DECISIONS.md 2026-11-22,
-     * *the run PackBits wrote a byte at a time*); `bi` holds it only
-     * around the walk and the bound. */
     bb = bi.bitbuf;
     nb = bi.nbits;
     for (;;) {
         uint16_t node = 0, child = 0;
         int depth = 0;
-        /* The common case, a whole run of it: a byte refilled below
-         * eight bits (so the peek's shift is under 8), one lookup, one
-         * store. The bound is asked every 16 bytes as below. Anything
-         * the table answers 0 for, the end of the buffered window and
-         * the terminator after the last byte go on to the general
-         * path, one symbol at a time. */
         {
+            /* The window LEFT-aligned in `w`: the next SIT6_FAST bits are
+             * w >> (32 - SIT6_FAST), a constant shift and no mask, where
+             * the right-aligned one was a shift by a count and an
+             * `andi.l`. Refilled two bytes at a time below SIT6_FAST
+             * bits; the bits past `nb` are zero, so an OR places them. */
             const uint8_t *ip = in->buf + in->pos, *ie = in->buf + in->len;
-            uint8_t *op = seg + got, *oe = seg + explen;
-            while (op != oe) {
-                uint32_t v;
-                if (nb < 11) {
-                    if (ie - ip < 2) break;
-                    bb = bb << 16 | (uint32_t)ip[0] << 8 | ip[1];
-                    ip += 2;
-                    nb += 16;
-                }
-                v = st[(bb >> (nb - 8)) & 0xFFu];
-                if (v & 0x8000u) {
-                    v = st2[(v & 0xFFu) << 3 | ((bb >> (nb - 11)) & 7u)];
-                    if (!v) break;
-                    nb -= 8;
-                } else if (!v) break;
-                nb -= (int32_t)(v >> 8);
-                *op++ = (uint8_t)v;
-                if (!((uint32_t)(op - seg) & 15u)) {
-                    in->pos = (uint32_t)(ip - in->buf);
-                    bi.nbits = nb;
-                    if (unc_bitin_bytepos(&bi) - start > segbytes) {
-                        ret = UNC_ERR_CORRUPT;
-                        got = (uint32_t)(op - seg);
-                        goto done;
+            uint8_t *op = seg + got, *oe = seg + explen, *lim;
+            uint32_t w = nb ? bb << (32 - nb) : 0;
+            for (;;) {
+                /* One compare a byte: to the segment's end or to the
+                 * next bound check, 16 bytes on, whichever is nearer. */
+                lim = op + (16u - ((uint32_t)(op - seg) & 15u));
+                if (lim > oe) lim = oe;
+                while (op != lim) {
+                    uint32_t i, len;
+                    if (nb < (int32_t)SIT6_FAST) {
+                        if (ie - ip < 2) goto out;
+                        w |= ((uint32_t)ip[0] << 8 | ip[1]) << (16 - nb);
+                        ip += 2;
+                        nb += 16;
                     }
+                    i = w >> (32 - SIT6_FAST);
+                    len = flen[i];
+                    if (!len || ford[i] >= codes) goto out;
+                    *op++ = leaf[ford[i]];
+                    w <<= len;
+                    nb -= (int32_t)len;
+                }
+                if (op == oe) break;
+                in->pos = (uint32_t)(ip - in->buf);
+                bi.nbits = nb;
+                if (unc_bitin_bytepos(&bi) - start > segbytes) {
+                    ret = UNC_ERR_CORRUPT;
+                    got = (uint32_t)(op - seg);
+                    bb = nb ? w >> (32 - nb) : 0;
+                    goto done;
                 }
             }
+out:
             in->pos = (uint32_t)(ip - in->buf);
             got = (uint32_t)(op - seg);
+            bb = nb ? w >> (32 - nb) : 0;
         }
-        if (nb < 16 && in->pos + 2u <= in->len) {
-            const uint8_t *p = in->buf + in->pos;
-            bb = bb << 16 | (uint32_t)p[0] << 8 | p[1];
-            nb += 16;
-            in->pos += 2u;
-        }
-        /* Eight bits at once where the window holds them; a longer code
-         * goes on bit by bit from the node they reach, and so does the
-         * whole code at a window boundary, as before. */
-        if (nb >= 8) {
-            uint16_t e = tab[(bb >> (nb - 8)) & 0xFFu];
-            if (e & 0x8000u) {
-                nb -= (int32_t)((e >> 9) & 15u);
-                child = (uint16_t)(e & 0x1FFu);
-                goto have;
-            }
-            nb -= 8;
-            node = e;
-            depth = 8;
-        }
+        /* One symbol the loop did not take, a bit at a time down the
+         * tree: a longer code, the terminator, an ordinal the segment did
+         * not name, or too few bits left in the reader's window. */
         bi.bitbuf = bb; bi.nbits = nb;
         do {
             int bit = unc_bitin_bit(&bi);
@@ -1078,7 +1029,6 @@ static UNC_NOINLINE UNC_HOT int sit6_huffseg(UncBufIn *in, uint8_t *seg,
             node = (uint16_t)(child - SIT6_LEAVES);
         } while (++depth <= SIT6_DEPTH);
         bb = bi.bitbuf; nb = bi.nbits;
-have:
         if (child > SIT6_LEAVES) { ret = UNC_ERR_CORRUPT; break; } /* not a tree */
         if (child >= SIT6_LEAVES - 1) break;             /* terminator */
         /* A code for a leaf the segment never named stands for nothing.
@@ -1087,7 +1037,10 @@ have:
          * segment left there — a wrong fork rather than a refused one.
          * No segment in the corpus does it (correction 2 of
          * docs/formats/stuffit-method-6.md). */
-        if (child > codes || got == explen) { ret = UNC_ERR_CORRUPT; break; }
+        if (child > codes || child == 0 || got == explen) {
+            ret = UNC_ERR_CORRUPT;
+            break;
+        }
         seg[got++] = leaf[child - 1];
         /* Bounded by the segment's own byte count, so a bitstream that
          * never terminates cannot read on into the next fork: asked every
@@ -1107,7 +1060,6 @@ done:
      * caller's skip to the segment's end starts where the bits did:
      * unc_bitin_bytepos's ceiling. */
     bi.bitbuf = bb;
-    bi.nbits = nb;
     in->pos -= (uint32_t)nb >> 3;
     bi.nbits = nb & 7;
     if (ret != UNC_OK) return ret;
@@ -1134,11 +1086,11 @@ static int sit6_fork(UncForkOut *f, UncBufIn *in, uint32_t outlen, UncAlloc *al)
 
     /* The fixed tree, built once per fork from 26 bytes (sit6_build).
      * Per-entry on failure, like every other allocation here. */
-    tree = (uint16_t *)unc_alloc(al, (2u * SIT6_INTERNAL + 512u +
-                                      8u * SIT6_SUB) * sizeof(uint16_t));
+    tree = (uint16_t *)unc_alloc(al, 2u * SIT6_INTERNAL * sizeof(uint16_t) +
+                                     (2u << SIT6_FAST));
     if (!tree) return UNC_ERR_MEM;
-    sit6_build(tree, tree + SIT6_INTERNAL);
-    sit6_table(tree + 2u * SIT6_INTERNAL, tree, tree + SIT6_INTERNAL);
+    sit6_build(tree, tree + SIT6_INTERNAL,
+               (uint8_t *)(tree + 2u * SIT6_INTERNAL));
 
     /* Driven by the fork length rather than by the compressed length:
      * every iteration consumes at least the 4-byte segment header, and
@@ -1190,8 +1142,8 @@ static int sit6_fork(UncForkOut *f, UncBufIn *in, uint32_t outlen, UncAlloc *al)
             if ((err = sit6_need(al, &seg, &segcap, explen)) != UNC_OK) goto out;
             if ((err = sit6_huffseg(in, seg, explen, leaf, codes, size,
                                     &used, tree, tree + SIT6_INTERNAL,
-                                    tree + 2u * SIT6_INTERNAL,
-                                    tree + 2u * SIT6_INTERNAL + 256u))
+                                    (const uint8_t *)(tree +
+                                                      2u * SIT6_INTERNAL)))
                     != UNC_OK) goto out;
             /* The bitstream may end before the segment does. */
             for (i = used; i < size; i++) {

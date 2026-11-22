@@ -642,6 +642,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-22 (the count that ran into its sentinel) — StuffIt method 5's adaptive tree scanned for a node's new place with a bound its own sentinel made redundant, and both methods 3 and 5 read their bits through the struct; the sentinel alone, the bits in locals, method 3's table hit in its loop: derived-BitMap11.sit 102.2 → 80.4 s and derived-FastEnvelope.sit 46.7 → 26.1 s on a Mac Plus (Expander 4.0.2: 86.5 and 42.4 s)
 - 2026-11-22 (the run PackBits wrote a byte at a time) — StuffIt methods 6, 8 and 13, DiskDoubler's ADn, tar and uuencode each lost time to a put a byte, a bit reader in its struct, or a test that ran on every byte; runs, locals, a second-level table and a stride: Mystic 24.7 → 23.1 s, INITLoader 8.0 → 5.2 s, DSKDUP 6.0 → 4.1 s, DiskDoubler 12.1 → 9.5 s, tar 8.7 → 8.1 s on a Mac Plus
 - 2026-11-22 (the folders looked up again) — of a 49-member tar's 5.9 s of work on a Mac Plus, 3.9 s was the File Manager's per-file work; no FlushVol per fork, a memo of the folders the previous entries resolved, and a new file's catalog record built instead of read: derived-PCCTS.tar 8.1 → 6.9 s (tar 4.0b: 7.0 s), macburger-helper.hqx 214.7 → 167.2 s
+- 2026-11-22 (the table the code book could build) — method 6 rebuilt a two-level table for every segment; the canonical code book fills one 11-bit table per fork as the tree is built, two byte tables of length and ordinal, read through a left-aligned window: 1.96 → 1.69 million 68000 instructions, derived-INITLoader.sit 5.2 → 4.3 s on a Mac Plus (Expander 4.0.2: 3.3 s, still ahead), the StuffIt image 752 B smaller
 
 ---
 
@@ -27558,3 +27559,39 @@ shipped tallies unchanged; the sink's frame +~150 B on the stack.
 **Measured:** tar 6.87 s twice, `macburger-helper.hqx` 167.2 s twice
 (Expander 4.0.2: 423.7 s); `tools/vmac/sample.txt` 74/74 at 1 MB on
 System 6.0.8; `metarun.py` on System 6.0.8 and System 3.0.
+
+## 2026-11-22 (the table the code book could build) — method 6 rebuilt a two-level table for every segment; the canonical code book fills one 11-bit table per fork as the tree is built, two byte tables of length and ordinal, read through a left-aligned window: 1.96 → 1.69 million 68000 instructions, derived-INITLoader.sit 5.2 → 4.3 s on a Mac Plus (Expander 4.0.2: 3.3 s, still ahead), the StuffIt image 752 B smaller
+
+**Claim:** after 2026-11-22's *the run PackBits wrote a byte at a time*
+method 6 was still 5.2 s against Expander's 3.3, and `-D UNC_AT_TIMING`
+put 231 of its 236 ticks in the engine. Its decoder built, for every
+segment, a 256-entry table through the segment's leaves and a second
+level of 3 bits for the 48 nodes at depth 8, by walking the tree.
+
+**Choice:** the code book is canonical (`sit6_build` computes each code
+from the run lengths), so `sit6_build` fills the decoder's table as it
+goes: each code of 11 bits or fewer fills its 2^(11 − len) windows, 254
+of the 257 codes, once per FORK. Two byte tables, the length and the
+ordinal less one, 4 KB of the fork's allocation where the old tables
+took 2 KB; the segment's `leaf` list turns the ordinal into the byte at
+one load a symbol, cheaper than translating 2,048 entries a segment. The
+bits are left-aligned in a local word, so the window is `w >> 21`, a
+constant shift and no mask, and the loop makes one compare a byte, to
+the nearer of the segment's end and the next bound check. The
+terminator, the three longer codes, an ordinal the segment did not name
+and the end of the reader's window go to the walk, a bit at a time.
+
+**Measured and NOT taken:** two codes per refill test, topped up a byte
+at a time to 25 bits: 1.69 → 2.01 M, more.
+
+**Measured:** 1.96 → 1.69 M instructions; 5.2 → 4.34 s at 1x twice; the
+engine 143 of the run's 146 ticks. The differential suite 994 of 994.
+
+**What is left:** Expander's whole run is 3.3 s, and our run outside the
+engine costs about 1.9 s, so matching it means an engine near 80 ticks,
+about 0.9 M instructions, where the CRC-16 and the PackBits copy alone
+are 0.4 M. Not reached by C of this shape; the maintainer declined
+assembly on 2026-11-22.
+
+**Price:** the StuffIt image −752 B; the fork's allocation +2,048 B; the
+shipped tallies unchanged.
