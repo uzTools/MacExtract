@@ -127,7 +127,7 @@ LGPL-2.1-or-later, through the four files that hold transcribed code
 (`CODE` in `tools/check_provenance.py`, **code** below). The other rows are
 facts read in somebody else's code, 0BSD already, and stay listed because
 leaving XADMaster is about where the knowledge came from (DECISIONS.md
-2026-11-08, *the code we wrote*). Of the 11 `CARRIES` files, 6 owe
+2026-11-08, *the code we wrote*). Of the 9 `CARRIES` files, 4 owe
 XADMaster, 3 owe libxad, the Amiga library XADMaster carries them from
 (`unc_lzdyn.c`, `sit14.c`, `fmt_dd.c`; same licence), and
 `fmt_hecx.c` and `fmt_binhex_probe.c` owe macutils' hexbin, whose README
@@ -141,7 +141,6 @@ SPDX line, in the same commit.
 | what | known | what would close it |
 |---|---|---|
 | `unc_lzdyn.c` — `-lh2-` and `-lh3-`, libxad's, **code** | lhasa implements neither; LHa for UNIX has its own licence (DECISIONS.md, *the 3,504 bytes that stay*) | a description written from what the original DOS LHA emits under DOSBox |
-| `unc_lzah.c`, `unc_internal.h` — the `-lh1-`/method-5 window preload | StuffIt Expander 4.0.2 reads method 5 from a window of spaces, and LHa for UNIX's decoder fills `-lh1-`'s so; no writer here reaches past the window's last 60 bytes, where XADMaster's pattern is spaces too: LHa for UNIX and Deluxe 2.0.1, eleven files (DECISIONS.md 2026-11-22, *the window Aladdin's reader starts with*) | the maintainer's call: spaces adopted (about −90 B, no real file changes), or the pattern kept |
 | `src/sit14.c` — StuffIt 5's method 14, libxad's, **code** | libxad's `SIT_14` is the only implementation (FORMATS.md, *StuffIt 5's method 14*) | a description written from StuffIt 5's own engine; the largest row, not priced |
 | `fmt_arc.c` — Crunch 5/6/7, Crush, the method numbers, **code** | no other implementation of 7 or Crush; not taken 2026-09-22 | the DOS originals as encoders, and a description |
 | `fmt_dd.c` — the per-method rules, and the DDAR 0x20 raw-fork shape, libxad's, facts | methods 2, 5 and 7's codecs left 2026-11-09 for DiskDoubler 3.1.2's own decoders (`docs/formats/diskdoubler-splay-stac.md`; DECISIONS.md 2026-11-09, *the decoders DiskDoubler shipped*) | the per-method rules: DiskDoubler's own expander on each; the 0x20 test: the maintainer's call, since DD Expand 3.7.7 ignores the flag on a DDAP record (DECISIONS.md 2026-11-22, *the flag DiskDoubler never read*) and no record here sets it |

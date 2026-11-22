@@ -27808,6 +27808,10 @@ the last XADMaster fact out of `unc_lzah.c`, and cost about −90 B
 `mkoverlay.sh`, and a decoder size change re-takes every budget).
 `better` is 5 or 8, whichever is smaller (FORMATS.md corrected).
 
+**Adopted the same day, the maintainer's call:** spaces for `-lh1-` and
+method 5, zeros for Trimmed, one fill loop. `unc_lzah.c` and
+`unc_internal.h` leave `CARRIES`. The re-taken budgets are in the commit.
+
 ## 2026-11-22 (the flag DiskDoubler never read) — DD Expand 3.7.7 ignores DDAR's 0x20 flag on a DDAP record and expands it, where XADMaster, macutils and this engine read the forks raw; no record here sets it, so the engine is left for the maintainer; each record carries a CRC-16/XMODEM at +122
 
 The note asked for "a DDAR archive with the flag set". DD Expand 3.7.7

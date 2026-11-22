@@ -203,68 +203,34 @@ static void lzah_update(Lzah *h, uint32_t c)
     } while (c != 0);
 }
 
-/* Window preload, per mode. Zeros for everyone; then, for -lh1- and
- * StuffIt method 5 only, XADMaster's pattern
- * (reference/XADMaster/XADLZHDynamicHandle.m, resetLZSSHandle; the
- * doubt is XADStuffItParser.m's, at case 5: "TODO: Figure out if the
- * initialization of the window differs between LHArc and StuffIt" —
- * we follow what the oracle runs and the archives agree with). LHa
- * for UNIX writes the same five steps for LArc's -lz5- and not for
- * -lh1- (reference/lha/src/larc.c, decode_start_lz5) and lhasa fills
- * the -lh1- buffer with spaces (lh1_decoder.c), so this pattern here
- * is XADMaster's alone and is in NOTICE's inventory.
- * Source: reference/XADMaster/XADLZHDynamicHandle.m (resetLZSSHandle).
+/* Window preload, per mode: SPACES for -lh1- and StuffIt method 5,
+ * zeros for ARC's Trimmed.
  *
- * WHAT THE CORPUS CAN AND CANNOT SAY, measured 2026-09-28 by building
- * five fills and running the whole differential suite on each:
+ * Source: reference/lha/src/slide.c, decode(): LHa for UNIX fills the
+ * whole dictionary with 0x20 before a method's start routine, and
+ * -lh1-'s (shuf.c, decode_start_fix) leaves it; the runs-and-ramps
+ * pattern is LArc's -lz5- alone (larc.c, decode_start_lz5). Measured
+ * 2026-11-22 on StuffIt Expander 4.0.2, Aladdin's reader of method 5: a
+ * fork whose five matches reach that pattern's runs, ramps, zeros and
+ * spaces comes back as spaces for all five, and Expander's own CRC check
+ * agrees (tools/vmac/lzahexp.py). lhasa fills -lh1- with spaces too.
+ * XADMaster carries the -lz5- pattern for both, which this followed
+ * until that day; no writer here reaches the difference — LHa for
+ * UNIX and StuffIt Deluxe 2.0.1 never match past the last 60 bytes
+ * (DECISIONS.md 2026-11-22, *the window Aladdin's reader starts with*;
+ * *the preload nothing reaches*, 2026-09-28, for what the corpus said).
  *
- *   the pattern, as below      933/933
- *   all spaces (lhasa's -lh1-) 933/933
- *   all zeros                  932/933
- *   all 0xAA                   932/933
- *   the pattern, tail bent     932/933
- *
- * ONE fixture of 933 touches the preload — derived-BitMap11.sit, 29
- * method-5 entries — and it touches only the LAST step, the trailing
- * spaces. So this corpus proves the window is not zero-filled and
- * cannot distinguish XADMaster's pattern from lhasa's all-spaces fill:
- * the two agree exactly where anything here reads. The ramps and the
- * 13-byte runs are unexercised. Settling it wants a stream whose first
- * match reaches back more than ~110 bytes from the window end
- * (DECISIONS.md 2026-09-28, *the preload nothing reaches*).
- *
- * MEASURED 2026-11-22 against the writers' own programs: StuffIt
- * Expander 4.0.2 fed a method-5 fork whose five matches reach the runs,
- * both ramps, the zeros and the spaces writes SPACES for all five, and
- * its CRC check agrees (tools/vmac/lzahexp.py); LHa for UNIX's decode()
- * fills the whole dictionary with 0x20 before -lh1-'s start routine,
- * which leaves it (reference/lha/src/slide.c). Neither LHa for UNIX's
- * -lh1- nor Deluxe 2.0.1's method 5 reached past the last 60 bytes over
- * eleven files, five led by 2,000 spaces, so this fill and spaces give
- * the same bytes on everything they write (DECISIONS.md 2026-11-22, *the
- * window Aladdin's reader starts with*).
- *
- * ARC's Trimmed takes the zeros and NOT the pattern: deark
- * passes history_fill_val = 0 and its ring buffer starts zeroed
- * (reference/deark/foreign/lzhuf.h, lzhuf_Decode_init); a Trimmed
- * member whose first match reaches back past the start of the data is
- * what tells THAT pair apart, and the entry's CRC is what says so. */
+ * ARC's Trimmed takes the zeros: deark passes history_fill_val = 0 and
+ * its ring buffer starts zeroed (reference/deark/foreign/lzhuf.h,
+ * lzhuf_Decode_init); a Trimmed member whose first match reaches back
+ * past the start of the data is what tells that pair apart, and the
+ * entry's CRC is what says so. */
 static void lzah_preload(Lzah *h, int mode)
 {
-    uint32_t i;
-    {   /* a long at a time: the window's offset in Lzah is even */
-        uint32_t *p = (uint32_t *)(void *)h->window;
-        for (i = 0; i < LZAH_WINDOW / 4u; i++) p[i] = 0;
-    }
-    if (mode == UNC_LZAH_TRIMMED) return;
-    for (i = 0; i < 256; i++) {
-        uint32_t j;
-        for (j = 0; j < 13; j++) h->window[i * 13 + 18 + j] = (uint8_t)i;
-    }
-    for (i = 0; i < 256; i++) h->window[256 * 13 + 18 + i] = (uint8_t)i;
-    for (i = 0; i < 256; i++) h->window[256 * 13 + 256 + 18 + i] = (uint8_t)(255 - i);
-    for (i = 0; i < 128; i++) h->window[256 * 13 + 512 + 18 + i] = 0;
-    for (i = 0; i < 128 - 18; i++) h->window[256 * 13 + 512 + 128 + 18 + i] = ' ';
+    /* a long at a time: the window's offset in Lzah is even */
+    uint32_t *p = (uint32_t *)(void *)h->window;
+    uint32_t i, v = mode == UNC_LZAH_TRIMMED ? 0u : 0x20202020u;
+    for (i = 0; i < LZAH_WINDOW / 4u; i++) p[i] = v;
 }
 
 /* Output leaves through the window itself, a run at a time. Bytes

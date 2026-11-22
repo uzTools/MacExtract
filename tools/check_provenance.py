@@ -66,11 +66,9 @@ CARRIES = {
     "sit14.c":          "StuffIt 5's method 14, the whole file (libxad's SIT_14)",
     "fmt_dd.c":         "the per-method rules and the DDAR 0x20 raw-fork shape (libxad's DiskDoubler.c)",
     "fmt_arc.c":        "Crunch 5/6/7 and Crush, and the method numbers",
-    "unc_lzah.c":       "the -lh1-/method-5 window preload (resetLZSSHandle)",
     "fmt_macbinary_probe.c": "the CRC-16/0xA001 fallback and the nonzero-date test",
     "fmt_applesingle.c": "the byte-swapped header",
     "fmt_dd_probe.c":   "the zero header CRC old files carry (XADDiskDoublerParser.m)",
-    "unc_internal.h":   "the LZAH preload",
     "fmt_hecx.c":       "BinHex before 4.0 and .dl, the whole decoder (hexbin's hecx.c, dl.c)",
     "fmt_binhex_probe.c": "the .hex/.hcx header-line rule and the .dl first line (hexbin's hecx.c, hexbin.c)",
 }
@@ -99,6 +97,7 @@ HISTORICAL = {
     "unc_sidecar.c",  # left 2026-11-22 for copyfile, libarchive, Eclectic Light
     "fmt_sitseg.c", "fmt_sitseg_probe.c",  # measured off StuffIt's sets 2026-11-22
     "fmt_sit.c",  # method 8's edge left libxad 2026-11-22 for Expander 4.0.2
+    "unc_lzah.c", "unc_internal.h",  # the preload: spaces, 2026-11-22
 }
 
 MENTION = re.compile(r"XAD|libxad|macutils")

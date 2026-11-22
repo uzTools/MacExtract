@@ -31,17 +31,6 @@ hand.
                        unchanged. No permissive implementation
                        of either method exists: lhasa has neither and
                        LHa for UNIX is under its own licence.
-  src/unc_lzah.c       the window preload for -lh1- and StuffIt method
-                       5 (resetLZSSHandle), restated in
-                       src/unc_internal.h. LHa for UNIX writes the same
-                       five steps for LArc's -lz5-, not for -lh1-, and
-                       lhasa fills the buffer with spaces instead, so
-                       the PATTERN is published and its APPLICATION is
-                       XADMaster's. Measured 2026-09-28: no archive
-                       here can tell that application from lhasa's, the
-                       two agreeing everywhere the corpus reads — so
-                       the citation stands on XADMaster's word and not
-                       on evidence.
   src/fmt_arc.c        Crunch 5/6/7 and Crush (PAK's LZW), the method
                        numbers and the CRC contract —
                        XADARCCrunchHandle.m and XADARCCrushHandle.m.
@@ -99,23 +88,6 @@ hand.
                        Stanford). No code of SUMacC's is in this
                        project; its tohex and fromhex are built from
                        reference/ only to grade against.
-  src/unc_internal.h   the LZAH preload above. The MIME line rule left
-                       on 2026-10-05 for deark's dbuf_find_line, which
-                       is in the same file this header already cited
-                       for the bit reader. Both were stated without the
-                       Source: marker the inventory check reads until
-                       2026-10-06, when the file's third item left and
-                       the check said so.
-                       DiskDoubler method 8 is no longer here. That it
-                       IS Compact Pro's two stages stopped being
-                       XADDiskDoublerParser.m's on 2026-09-27, and the
-                       Huffman block size of 0xfff0 on 2026-10-06: two
-                       wild forks reach a block flush, and 0xfff0 is
-                       the only size of eleven swept whose output
-                       satisfies the CRC-16 those forks' own headers
-                       state — the archives adjudicate it, with no
-                       reference implementation in the loop
-                       (tools/derive_dd8.py).
 
 Everything else this engine does that these references also do is
 written from a published description or measured here; the rest of
@@ -369,15 +341,10 @@ This project's decoders are transcriptions/ports of algorithms from:
     that program's tree machinery (freq/son/prnt, reconst, update,
     the 256-entry distance lookup derived from the 64 code lengths)
     rather than XADMaster's transcription of it; the modes and
-    everything around the tree are this project's. **The window
-    preload for -lh1- and StuffIt method 5 is not**, and this notice
-    said it was until 2026-09-26: that pattern — 13 copies of each
-    byte, then 0..255, then 255..0, then zeros, then spaces — is
-    XADLZHDynamicHandle.m's `resetLZSSHandle`. LHa for UNIX states the
-    same five steps in `larc.c`'s `decode_start_lz5`, but for LArc's
-    -lz5- and not for -lh1-, and lhasa fills the -lh1- buffer with
-    spaces instead (`lh1_decoder.c`), so neither is a second statement
-    of what this file does. The
+    everything around the tree are this project's. Its window preload, spaces, is LHa for UNIX's
+    (`slide.c`) and what StuffIt Expander 4.0.2 does, since 2026-11-22;
+    until then it was XADLZHDynamicHandle.m's `resetLZSSHandle`
+    pattern, which is LArc's -lz5- preload. The
     change was made for speed and heap, not licence: the files that
     still carry XADMaster's code stay LGPL-2.1-or-later.
 

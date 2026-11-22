@@ -1465,13 +1465,10 @@ int unc_lzst0_decode(UncAlloc *al, UncBitIn *bi, uint32_t outlen,
  * the window starts as:
  *
  *   UNC_LZAH_LH1      LHarc's -lh1- and StuffIt method 5: 0x100 is a
- *                     match of 3, and the window carries XADMaster's
- *                     preload (value runs, ramps, zeros, spaces).
- *                     Source: reference/XADMaster/
- *                     XADLZHDynamicHandle.m, resetLZSSHandle, which
- *                     is where the preload is written — the same citation
- *                     src/unc_lzah.c carries, marked here too on
- *                     2026-10-06.
+ *                     match of 3, and the window starts as spaces
+ *                     (src/unc_lzah.c, lzah_preload, and its sources;
+ *                     XADMaster's runs-and-ramps pattern until
+ *                     2026-11-22).
  *   UNC_LZAH_TRIMMED  ARC 7.x's "Trimmed": 0x100 is a STOP code, 0x101
  *                     is a match of 3 (so 3..59, one shorter than
  *                     -lh1-), and the window starts as zeros.
