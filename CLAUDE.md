@@ -32,10 +32,10 @@ BLOCKERS.md's (*Status*). The interactive UI is driven end to end on System
 | `tools/vmac/README.md` | how to run the emulator harnesses and probes | before booting anything |
 | `MANUAL_TESTS.md` | what only somebody outside this machine can do — hardware, a copy of the software, an account to post from | when something needs one of those |
 
-That session-start reading is **~14.9k tokens** (PROGRESS 3.6k,
-OPEN_ITEMS 8.0k, BLOCKERS' first two sections 3.3k); BLOCKERS'
-withdrawn-claims archive is another **~42.4k** and is reference, not
-orientation. All five are ESTIMATES (characters ÷ 3.93, ±5 %, 2026-11-14; no
+That session-start reading is **~15.9k tokens** (PROGRESS 3.6k,
+OPEN_ITEMS 9.1k, BLOCKERS' first two sections 3.3k); BLOCKERS'
+withdrawn-claims archive is another **~42.6k** and is reference, not
+orientation. All five are ESTIMATES (characters ÷ 3.93, ±5 %, 2026-11-22; no
 tokenizer is installed). `tools/check_docs.py` only fails at 25 % drift, and
 every one of them has gone stale before, so **re-measure them whenever you
 touch these files.** What makes them grow is table cells turning into

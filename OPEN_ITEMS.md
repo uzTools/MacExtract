@@ -148,7 +148,6 @@ SPDX line, in the same commit.
 | `fmt_dd.c` — the per-method rules, and the DDAR 0x20 raw-fork shape, libxad's, facts | methods 2, 5 and 7's codecs left 2026-11-09 for DiskDoubler 3.1.2's own decoders (`docs/formats/diskdoubler-splay-stac.md`; DECISIONS.md 2026-11-09, *the decoders DiskDoubler shipped*) | DiskDoubler's own expander on a fork of the 0x20 shape |
 | `fmt_sitseg.c`, `fmt_sitseg_probe.c` — the StuffIt split header | Aladdin never published it; nothing else in `reference/` reads it (NOTICE) | its offsets measured off sets StuffIt cuts, as the B0 56 bytes were |
 | `unc_sidecar.c` — which names are Mac OS X sidecars, and the pairing rule | — | not looked for |
-| `unc_segment.c` — the part names of a spanned zip (`NAME.zNN`, `NAME.zip` last) and a `.NNN` split, since 2026-11-08 | facts, not code (NOTICE) | not looked for |
 | five tolerances no specification supports — the MacBinary CRC-16/0xA001 fallback and its nonzero-date test (zero dates accepted since 2026-11-21 where the file's length fits the forks: the btoa/atob Translator writes them; DECISIONS.md 2026-11-21, *the MacBinary with no dates*), the byte-swapped AppleSingle header, DiskDoubler's stored header CRC of zero (with the split header above) | deark is a checked negative for all four; the two MacBinary ones are unexercised; kept, the maintainer's decision 2026-10-23 (DECISIONS.md 2026-10-23, *the probes next door*) | the writer that made such files, or the tolerance dropped |
 | `fmt_hecx.c` (**code**), `fmt_binhex_probe.c` — hexbin's | *BinHex before 4.0*, below | BinHex 2.0's own `CODE`, as that item says |
 
@@ -304,6 +303,16 @@ converted*).
 |---|---|---|
 | a segmented archive whose segments the user named freely (ZipIt asks "Save segment #%d as:") | not joined: parts are placed by `.zNN`/`.zip` (FORMATS.md, *Segments*); renamed, the set extracts byte for byte | an order read off the segments themselves, or the user's |
 | a ZipIt-encrypted archive, byte for byte | **the cipher is known, the engine reads it**: ZipIt 2.2.2's `decrypt_byte`/`crypthead`/`UnzipCryptHeader` are standard PKWARE ZipCrypto, which `unc_zip_extract` already decrypts (DECISIONS.md 2026-11-06, *what ZipIt does with a Macintosh file*) | one ZipIt-made encrypted `.zip` to confirm against a real file (none here; a registered copy would write one) |
+
+## A spanned zip of more than 99 parts
+
+Info-ZIP Zip 3.0 names part 100 `NAME.z100` (measured 2026-11-22: `zip -s
+64k` of 7,000,000 bytes, 108 files); the engine reads `.zNN` only, so the
+set fails "missing segments" and the entry is left cut at 6,487,008 bytes,
+exit 1 (DECISIONS.md 2026-11-22, *the part names the writers wrote*). On
+800K floppies that is a set of about 80 MB. **What would close it:**
+`.zNNN` read as a part number, priced on both Mac configurations, or the
+limit moved to Part 1.
 
 ## The shell's own File Manager blocks, until multiversal's glue is inline
 

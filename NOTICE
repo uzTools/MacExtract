@@ -129,12 +129,6 @@ hand.
                        list from Apple's CoreFoundation (CFBinaryPList.c,
                        ForFoundationOnly.h; APSL 2.0), from which no code
                        is copied.
-  src/unc_segment.c    the names that make a set of the two schemes no
-                       part identifies — NAME.zNN with NAME.zip last
-                       (XADZipParser.m) and NAME.NNN (XADSplitFileParser.m),
-                       case-insensitive. Facts, not code. Inventoried
-                       since 2026-11-08, when the CLI's and the Mac
-                       shell's copies, outside src/, became this one.
   src/unc_internal.h   the LZAH preload above. The MIME line rule left
                        on 2026-10-05 for deark's dbuf_find_line, which
                        is in the same file this header already cited
@@ -188,6 +182,10 @@ This project's decoders are transcriptions/ports of algorithms from:
     the Now Compress probe cites `docs/formats/now-compress.md`, where
     the file header, the entry record and the byte-sum checksum it
     tests are measured off nine archives.
+    Nor the part names of a spanned zip (NAME.zNN, NAME.zip last) or
+    a plain split (NAME.NNN) since 2026-11-22: `src/unc_segment.c`
+    cites Info-ZIP Zip 3.0's manual and what Zip 3.0 and 7-Zip 25.01
+    wrote here.
     Arsenic (StuffIt method 15) no longer: since 2026-09-19
     `src/sit_arsenic.c` is written from Matthew T. Russotto's public
     description of the format (reference/notes/arsenic_russotto.md),

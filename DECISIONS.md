@@ -643,6 +643,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-22 (the run PackBits wrote a byte at a time) — StuffIt methods 6, 8 and 13, DiskDoubler's ADn, tar and uuencode each lost time to a put a byte, a bit reader in its struct, or a test that ran on every byte; runs, locals, a second-level table and a stride: Mystic 24.7 → 23.1 s, INITLoader 8.0 → 5.2 s, DSKDUP 6.0 → 4.1 s, DiskDoubler 12.1 → 9.5 s, tar 8.7 → 8.1 s on a Mac Plus
 - 2026-11-22 (the folders looked up again) — of a 49-member tar's 5.9 s of work on a Mac Plus, 3.9 s was the File Manager's per-file work; no FlushVol per fork, a memo of the folders the previous entries resolved, and a new file's catalog record built instead of read: derived-PCCTS.tar 8.1 → 6.9 s (tar 4.0b: 7.0 s), macburger-helper.hqx 214.7 → 167.2 s
 - 2026-11-22 (the table the code book could build) — method 6 rebuilt a two-level table for every segment; the canonical code book fills one 11-bit table per fork as the tree is built, two byte tables of length and ordinal, read through a left-aligned window: 1.96 → 1.69 million 68000 instructions, derived-INITLoader.sit 5.2 → 4.3 s on a Mac Plus (Expander 4.0.2: 3.3 s, still ahead), the StuffIt image 752 B smaller
+- 2026-11-22 (the part names the writers wrote) — `unc_segment.c`'s naming rules left XADMaster for Info-ZIP Zip 3.0's manual and what Zip 3.0 and 7-Zip 25.01 wrote; the same measurement found Zip numbering a 100th part `.z100`, which the engine does not join
 
 ---
 
@@ -27610,3 +27611,25 @@ shipped tallies unchanged.
   each character, and the row went 12.0 → **12.4 s**, slower, for +284 B.
   The profile is not the Mac (see *m68k instruction counts are not
   cycles*).
+
+## 2026-11-22 (the part names the writers wrote) — `unc_segment.c`'s naming rules left XADMaster for Info-ZIP Zip 3.0's manual and what Zip 3.0 and 7-Zip 25.01 wrote; the same measurement found Zip numbering a 100th part `.z100`, which the engine does not join
+
+The rules that make a set of parts no header identifies, `NAME.z01` …
+`NAME.zip` and `NAME.001` …, were cited to XADMaster's two
+`+volumesForHandle:` patterns, and OPEN_ITEMS.md listed them as "not looked
+for". Both writers were on this machine all along.
+
+**Measured:** `zip -s 64k` (Zip 3.0) wrote `Set.z01` … `Set.z04` and
+`Set.zip`, as its manual says under `-s`; 7-Zip 25.01's `-v64k` wrote
+`S7.7z.001` … `.003`. Both match the rules as built, so the code is
+unchanged and only its citation moved (NOTICE; `unc_segment.c` to
+`HISTORICAL` in `tools/check_provenance.py`, which a restored XADMaster
+`Source:` line fails).
+
+**What the writer showed that the pattern did not:** with 108 parts Zip
+goes on from `Big.z99` to `Big.z100`. XADMaster's `z[0-9]{2}` and ours
+both stop at 99, and the set fails (OPEN_ITEMS.md, *A spanned zip of more
+than 99 parts*). Citing a reader's pattern recorded what that reader
+accepts, not what the writer writes; a rule taken from somebody else's
+reader inherits its limits without saying so.
+

@@ -220,14 +220,19 @@ uint32_t unc_segment_scratch_size(void)
 /* ------------------------------------------------------------------ */
 /* The two schemes that are nothing but a naming convention            */
 /*                                                                    */
-/* Source: reference/XADMaster/XADZipParser.m +volumesForHandle:,      */
-/*   ^NAME\.(zip|z[0-9]{2})$ with REG_ICASE;                           */
-/* reference/XADMaster/XADSplitFileParser.m +volumesForHandle:,        */
-/*   ^NAME\.[0-9]{3}$ with REG_ICASE.                                  */
+/* Source: Info-ZIP Zip 3.0's manual, -s: "archive.z01, archive.z02,  */
+/*   and archive.zip", the .zip last; measured 2026-11-22, zip -s 64k  */
+/*   wrote Set.z01 ... Set.z04 and Set.zip.                            */
+/* Source: 7-Zip 25.01, measured 2026-11-22: a -v64k set is S7.7z.001, */
+/*   S7.7z.002, S7.7z.003 (the stem keeps its own extension).          */
+/* XADMaster's two +volumesForHandle: patterns agree; compared, not    */
+/* borrowed.                                                           */
 /* Both extensions are three bytes, so a member is the stem, a '.' and */
-/* three more. Two departures, both the hosts' before this function    */
-/* was theirs: there is no part zero (".000", ".z00"), and an empty    */
-/* stem (".001", ".zip") names no family.                              */
+/* three more. Three departures. Two are the hosts', before this       */
+/* function was theirs: there is no part zero (".000", ".z00"), and an */
+/* empty stem (".001", ".zip") names no family. The third is a gap:    */
+/* Zip 3.0 goes on past 99 parts to .z100, which is not joined         */
+/* (OPEN_ITEMS.md, *A spanned zip of more than 99 parts*).             */
 /*                                                                    */
 /* Case folds A-Z only, as both hosts' copies did byte for byte (the   */
 /* CLI's ascii_lower, the Mac shell's PLowerByte): a MacRoman letter   */
