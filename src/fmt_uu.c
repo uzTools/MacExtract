@@ -132,6 +132,36 @@ static int uu_readline(UncBufIn *in, uint32_t base, UuLine *l)
         uint32_t n = unc_bufin_span(in, &q), k;
         uint8_t lo = 0xFF, hi = 0;
         if (n > UU_LINE_MAX) n = UU_LINE_MAX;
+        /* Where the count says the line ends, first: a full line is
+         * ((count + 2) / 3) * 4 + 1 characters, and if the byte there
+         * ends a line the scan needs no test for the end, only the
+         * lowest and highest byte. A CR or LF inside would be the
+         * lowest, below UU_CH_MIN, and goes to the scan below, which
+         * finds where the line really ends; so does any line whose end
+         * is not where its count puts it. Two compares a character were
+         * a third of a uuencoded file's instructions (tools/m68kprof.py,
+         * 2026-11-22). */
+        if (n > 0) {
+            uint32_t want = (uint32_t)UU_DIV3(UU_SIXB(q[0]) + 2) * 4u + 1u;
+            if (want < n && (q[want] == '\n' || q[want] == '\r')) {
+                const uint8_t *r = q, *re = q + want;
+                do {
+                    uint8_t ch = *r++;
+                    if (ch < lo) lo = ch;
+                    if (ch > hi) hi = ch;
+                } while (r != re);
+                if (lo >= UU_CH_MIN) {
+                    l->p = (uint8_t *)q;
+                    l->len = (int32_t)want;
+                    l->lo = lo;
+                    l->hi = hi;
+                    unc_bufin_drop(in, want + 1);
+                    return UNC_OK;
+                }
+                lo = 0xFF;
+                hi = 0;
+            }
+        }
         for (k = 0; k < n; k++) {
             uint8_t ch = q[k];
             if (ch == '\n' || ch == '\r') {
@@ -139,7 +169,7 @@ static int uu_readline(UncBufIn *in, uint32_t base, UuLine *l)
                  * lies (uu_decode), which in the input buffer would be
                  * over the next line: such a line is copied, below. */
                 int32_t oc = UU_SIXB(q[0]);
-                if (k < (uint32_t)((oc + 2) / 3) * 4 + 1) break;
+                if (k < (uint32_t)UU_DIV3(oc + 2) * 4 + 1) break;
                 l->p = (uint8_t *)q;
                 l->len = (int32_t)k;
                 l->lo = lo;
@@ -220,7 +250,7 @@ static int uu_readline(UncBufIn *in, uint32_t base, UuLine *l)
  * too, so one pad character serves all three. */
 static void uu_decode(uint8_t *buf, int32_t len, uint8_t *out, int32_t outcount)
 {
-    int32_t i, n, last = ((outcount + 2) / 3) * 4;   /* the last char read */
+    int32_t i, n, last = UU_DIV3(outcount + 2) * 4;   /* the last char read */
 
     for (i = len; i <= last; i++) buf[i] = ' ';
     for (n = 0, i = 1; n < outcount; n += 3, i += 4) {
@@ -239,7 +269,7 @@ static int uu_mask(const UuLine *l, int32_t outcount)
 {
     int mask = UU_TBL_ANY;
     if (outcount == 0 || outcount > 45) return 0;
-    if (l->len > ((outcount / 3) + 1) * 4 + 1) return 0;
+    if (l->len > (UU_DIV3(outcount) + 1) * 4 + 1) return 0;
     if (l->lo < UU_CH_MIN || l->hi > UU_CH_MAX) return 0;
     if (l->hi > UU_PC_MAX) mask &= ~UU_TBL_PC;
     if (l->lo < UU_UNIX_MIN) mask &= ~UU_TBL_UNIX;

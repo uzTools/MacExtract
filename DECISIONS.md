@@ -640,6 +640,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-21 (the CRC shifted eight bits a byte) — StuffIt method 13 spent 46 % of its instructions in the shared canonical decoder's call, 15 % copying its window out a put at a time and 11 % in a CRC-16 that shifted the word eight bits a byte; the table hit in the loop, a span copy, the CRC as two byte tables: 21.3 → 12.9 million 68000 instructions, derived-Mystic_8-Ball.sit 44.5 → 24.7 s on a Mac Plus (Expander 4.0.2: 24.1 s)
 - 2026-11-22 (the bit state Compact Pro stored back every symbol) — a third of a Compact Pro run was unc_canon_decode's call and the bit reader's state stored back a symbol; the state in two locals for the LZH loop, the flag bit, the table hit and the offset's low bits taken from them: 40.0 → 31.8 million 68000 instructions, derived-FirstClass_Demo.cpt 75.3 → 56.3 s on a Mac Plus (Compact Pro 1.51: 46.3 s); CRC-32 as byte tables measured slower and not taken
 - 2026-11-22 (the count that ran into its sentinel) — StuffIt method 5's adaptive tree scanned for a node's new place with a bound its own sentinel made redundant, and both methods 3 and 5 read their bits through the struct; the sentinel alone, the bits in locals, method 3's table hit in its loop: derived-BitMap11.sit 102.2 → 80.4 s and derived-FastEnvelope.sit 46.7 → 26.1 s on a Mac Plus (Expander 4.0.2: 86.5 and 42.4 s)
+- 2026-11-22 (the run PackBits wrote a byte at a time) — StuffIt methods 6, 8 and 13, DiskDoubler's ADn, tar and uuencode each lost time to a put a byte, a bit reader in its struct, or a test that ran on every byte; runs, locals, a second-level table and a stride: Mystic 24.7 → 23.1 s, INITLoader 8.0 → 5.2 s, DSKDUP 6.0 → 4.1 s, DiskDoubler 12.1 → 9.5 s, tar 8.7 → 8.1 s on a Mac Plus
 
 ---
 
@@ -27453,3 +27454,64 @@ alone); the maintainer let it go (`tools/run_tiers.py` EXPECT).
 
 **Measured:** at 1x (`refspeed.py --ref ours`, twice, within a tick),
 byte-exact.
+
+## 2026-11-22 (the run PackBits wrote a byte at a time) — StuffIt methods 6, 8 and 13, DiskDoubler's ADn, tar and uuencode each lost time to a put a byte, a bit reader in its struct, or a test that ran on every byte; runs, locals, a second-level table and a stride: Mystic 24.7 → 23.1 s, INITLoader 8.0 → 5.2 s, DSKDUP 6.0 → 4.1 s, DiskDoubler 12.1 → 9.5 s, tar 8.7 → 8.1 s on a Mac Plus
+
+**Claim:** after methods 3, 5 and 13 (2026-11-21/22) the rows still
+behind their program were methods 6, 8 and 13 against Expander 4.0.2,
+DiskDoubler against DD Expand 3.7.7, tar against tar 4.0b and uuencode
+against UUTool. By `tools/m68kprof.py`, each spent its time in one of
+three ways: a byte at a time through `unc_fork_put`, bits through the
+`UncBitIn` struct, or a test on every byte that a cheaper one could
+answer.
+
+**Choice**, each measured on its own fixture, output byte-identical:
+
+- **Method 6** (`derived-INITLoader.sit`, 3.76 → 1.96 M): PackBits writes
+  a literal run through `unc_fork_write` and fills a repeat straight into
+  the writer's buffer; the Huffman segment keeps its bits in two locals,
+  and a per-segment table maps each 8-bit prefix to (length, byte), with
+  a second level of 3 bits for the 48 nodes at depth 8 — the fixed tree
+  has 191 of its 257 codes past 8 bits, all but three within 11. Whole
+  bytes the refill took are pushed back at the segment's end, so the
+  caller's skip starts where the bits did. Out of line and `UNC_HOT`:
+  inlined into `unc_sit_decode_fork` its cursors lived in the frame. The
+  first table, 8 bits and inlined, ran FEWER instructions (2.29 M) and was
+  SLOWER on the Mac, 5.6 → 6.1 s: the tick probe, not the profile.
+- **Method 8** (`derived-DSKDUP.sit`, 1.99 → 1.23 M): `mw_out` writes the
+  string into the writer's buffer, the codes come off two LSB-first
+  locals.
+- **Method 13** (11.90 M from 12.95): the window cleared a long at a
+  time, and `lim`, the nearer of the next flush and the end, makes the
+  loop's two tests a symbol one.
+- **DiskDoubler ADn** (`im2-DD3.7.7AuxFiles.dd`, 5.67 → 5.03 M): the
+  token's bits in locals for the block, refilled from buffered bytes up
+  to 3 short of the block's end as before; the match copy and
+  `dd_out_span`'s on cursors.
+- **tar** (`derived-PCCTS.tar`): `tar_checksum_ok` takes the signed sum
+  from the unsigned one and the count of high bytes, one 32-bit pass,
+  0.84 → 0.29 M, 0 B. The zip EOCD scan, which reads the last 64 KB of
+  every file the probes before it did not claim, looks at every fourth
+  byte and only checks the four starts a `P`, `K`, 5 or 6 could belong
+  to: 0.40 → 0.25 M here. Every second byte for the adjacent 5 and 6
+  alone was measured and is more, 0.33 M.
+- **uuencode** (7.8 → 5.79 M, NOT re-timed): the line reader looks first
+  where the count says the line ends, so the scan needs no test for CR
+  and LF, and a CR or LF inside shows as a lowest byte below range and
+  goes to the old scan; `x / 3` is `x * 171 >> 9`, exact below 512, where
+  the 68000 called a division a line. A pointer form of `uu_decode` and a
+  24-bit group were both measured SLOWER and not kept.
+
+The differential suite 994 of 994.
+
+**Price:** the StuffIt image +1,680 B (methods 6, 8 and 13), the text
+image +80 B, Compact Pro/DiskDoubler +2 B, the sniffer −54 B; the
+shipped build's resident CODE +52 B and A5 +12 B; the shipped tallies
+unchanged, the all-resident control still 61/74 at System 6.0.8 / 512 KB.
+
+**Measured** at 1x (`refspeed.py --ref ours`, twice, within two ticks):
+Mystic 23.1 s (Expander 24.1), INITLoader 5.2 s (Expander 3.3: still
+behind), DSKDUP 4.1 s (5.5), DiskDoubler 9.5 s (9.6), tar 8.1 s (7.0:
+still behind). tar's 5.9 s of work is 1.5 s engine and 3.9 s of create,
+close, `FlushVol` and catalog for its 49 members (`-D UNC_AT_TIMING`);
+INITLoader's is engine, 231 of 236 ticks.

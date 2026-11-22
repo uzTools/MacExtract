@@ -60,7 +60,7 @@ int unc_uu_line_is_data(const uint8_t *p, int32_t len)
     if (len < 1) return 0;
     outcount = UU_SIXB(p[0]);
     if (outcount == 0 || outcount > 45) return 0;
-    incount = ((outcount / 3) + 1) * 4;
+    incount = (UU_DIV3(outcount) + 1) * 4;
     /* Trailing spaces may have been stripped; the line may be short,
      * never long. */
     if (len > incount + 1) return 0;

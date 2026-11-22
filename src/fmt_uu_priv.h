@@ -11,6 +11,11 @@
 #define UU_DEC_MAX    UNC_UU_DEC_MAX
 #define UU_SCAN_MAX   8192u
 #define UU_SIXB(c) (((c) - 0x20) & 0x3f)
+/* x / 3 for 0 <= x < 512, without the 68000's division call: x * 171 >> 9
+ * is exact over that range (checked for every x; the first wrong one is
+ * 512). Every use here divides a count of at most 65. A call a line was
+ * 2 % of a uuencoded file's instructions (tools/m68kprof.py, 2026-11-22). */
+#define UU_DIV3(x) ((int32_t)(((uint32_t)(x) * 171u) >> 9))
 
 /* UUTool encodes with one of two alphabets, and `unc_uu_line_is_data`
  * reports which of them a line could have come from. Source: the

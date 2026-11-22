@@ -110,24 +110,38 @@ int unc_zip_scan_eocd(void *ctx, UncZipReadAt rd, uint32_t end, uint32_t *at)
          * In the topmost window there is nothing past `hiend`, so the
          * last three positions cannot hold a signature at all. */
         uint32_t hi = take >= 3u ? take - 3u : 0u;
-        const uint8_t *p;
-        uint32_t i;
+        const uint8_t *q;
 
         if (hi > span) hi = span;
         if (rd(ctx, start, win, (int32_t)take) != UNC_OK)
             return UNC_ERR_FORMAT;
-        /* Walked with a pointer rather than indexed: this is 64 KB of
-         * byte compares for every archive that is not a zip, and the
-         * indexed form recomputed win + i four times a byte. */
-        p = win + hi;
-        while (p-- > win) {
-            if (p[0] == 'P' && p[1] == 'K' && p[2] == 5 && p[3] == 6) {
-                i = (uint32_t)(p - win);
-                /* The record must fit in what is being scanned. */
-                if (start + i + ZS_EOCD_FIXED > end) continue;
-                *at = start + i;
-                return UNC_OK;
+        /* Every fourth byte, from the top: the four bytes of a signature
+         * starting anywhere in [0, hi) always include exactly one of the
+         * bytes looked at, so a byte that is none of `P`, `K`, 5 and 6
+         * rules out the four starts it could belong to at once. A hit
+         * tries those four, highest first, and the ranges go down in
+         * step, so the first record found is still the last in the
+         * file. This is 64 KB for every archive no probe before it
+         * claims; a compare a byte was 0.4 million instructions of a
+         * 49-member tar's 1.6 million (tools/m68kprof.py, 2026-11-22).
+         * Every second byte for the adjacent 5 and 6 alone was measured
+         * and is MORE: twice the probes cost more than the hits saved. */
+        for (q = win + hi + 2; hi > 0; q -= 4) {   /* the top byte a
+                                                    * start below hi reaches */
+            uint8_t b = *q;
+            if (b == 'P' || b == 'K' || b == 5 || b == 6) {
+                const uint8_t *p;
+                for (p = q; p > q - 4; p--) {
+                    if (p < win || p >= win + hi) continue;
+                    if (p[0] == 'P' && p[1] == 'K' && p[2] == 5 && p[3] == 6 &&
+                        /* The record must fit in what is being scanned. */
+                        start + (uint32_t)(p - win) + ZS_EOCD_FIXED <= end) {
+                        *at = start + (uint32_t)(p - win);
+                        return UNC_OK;
+                    }
+                }
             }
+            if (q - win < 4) break;
         }
         hiend = start;
     }

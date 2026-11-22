@@ -42,14 +42,25 @@ int tar_field_ok(const uint8_t *p, int32_t n)
 int tar_checksum_ok(const uint8_t *h)
 {
     int64_t stored = tar_octal(h + 148, 8);
-    int32_t i;
-    int64_t uns = 0, sig = 0;
-    for (i = 0; i < 512; i++) {
-        uint8_t b = (i >= 148 && i < 156) ? (uint8_t)' ' : h[i];
-        uns += b;
-        sig += (int8_t)((i >= 148 && i < 156) ? ' ' : (int8_t)h[i]);
+    /* The checksum field counts as eight spaces. The signed sum is the
+     * unsigned one less 256 for each byte of 0x80 or more, so one pass
+     * over the two spans around the field, in 32 bits (512 * 255 fits),
+     * gives both: two 64-bit sums and a range test a byte were 40 % of
+     * a 49-member tar's instructions (tools/m68kprof.py, 2026-11-22). */
+    const uint8_t *p = h, *e = h + 148;
+    uint32_t uns = 8u * (uint32_t)' ', hi = 0;
+    for (;;) {
+        while (p != e) {
+            uint32_t b = *p++;
+            uns += b;
+            hi += b >> 7;
+        }
+        if (e == h + 512) break;
+        p = h + 156;
+        e = h + 512;
     }
-    return stored == uns || stored == sig;   /* GNU tolerates signed sums */
+    return stored == (int64_t)uns ||                /* GNU tolerates */
+           stored == (int64_t)uns - 256 * (int64_t)hi; /* signed sums */
 }
 
 UncFormat unc_tar_probe(const uint8_t *head, int32_t len, UncIO *io)

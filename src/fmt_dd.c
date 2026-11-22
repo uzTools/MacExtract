@@ -133,12 +133,14 @@ static int dd_out_span(DdFork *o, const uint8_t *p, uint32_t n)
         if (k > n) k = n;
         d = f->buf + f->len;
         if (!o->dist) {
-            for (i = 0; i < k; i++) {
-                uint8_t b = p[i];
+            const uint8_t *e = p + k, *q = p;
+            do {
+                uint32_t b = *q++;
                 sum += b;
-                xs ^= b;
-                d[i] = b;
-            }
+                xs ^= (uint8_t)b;
+                *d++ = (uint8_t)b;
+            } while (q != e);
+            d -= k;
         } else {
             for (i = 0; i < k; i++) {
                 uint8_t b = p[i];
@@ -254,46 +256,63 @@ static int dd_adn(DdFork *o, UncBufIn *in, uint8_t *win)
             }
             pos = uncompsize;
         } else {
+            uint32_t bb = 0;
+            int32_t nb = 0;
             unc_bitin_init(&bi, in);
             while (pos < uncompsize) {
                 int bit;
-                /* A whole token from the bit buffer where 20 bits are in
-                 * the window — flag, near/far, offset, length — instead
-                 * of a call a field, which was a third of the decode
-                 * (2026-11-21); the calls below at the window's edge,
-                 * and in a block's last 3 bytes, which the fill would
-                 * otherwise take from the next block's header: the skip
-                 * to that header only goes forward. */
-                if (in->lenfed - (in->len - in->pos) + 3u <= blockend &&
-                    unc_bitin_fill(&bi, 20)) {
-                    uint32_t w = bi.bitbuf;
-                    int nb = bi.nbits;
+                /* A whole token from two locals where 20 bits are in hand
+                 * — flag, near/far, offset, length — instead of a call a
+                 * field (2026-11-21) or the reader's struct a token
+                 * (2026-11-22, DECISIONS.md *the run PackBits wrote a byte
+                 * at a time*). The refill takes bytes already buffered
+                 * and stops 3 bytes short of the block's end, which the
+                 * skip to the next header needs untaken: it only goes
+                 * forward. Short of 20 bits, the calls below, with the
+                 * state handed over and back. */
+                if (nb < 20) {
+                    uint32_t used = in->lenfed - (in->len - in->pos);
+                    uint32_t lp = in->len;
+                    if (used + 3u <= blockend &&
+                        blockend - 3u - used < lp - in->pos)
+                        lp = in->pos + (blockend - 3u - used);
+                    else if (used + 3u > blockend)
+                        lp = in->pos;
+                    while (nb <= 24 && in->pos < lp) {
+                        bb = bb << 8 | in->buf[in->pos++];
+                        nb += 8;
+                    }
+                }
+                if (nb >= 20) {
                     uint32_t offset, length;
-                    if (!((w >> --nb) & 1u)) {
+                    const uint8_t *sp;
+                    uint8_t *dp, *de;
+                    if (!((bb >> --nb) & 1u)) {
                         nb -= 8;
-                        win[pos++] = (uint8_t)(w >> nb);
-                        bi.nbits = nb;
+                        win[pos++] = (uint8_t)(bb >> nb);
                         continue;
                     }
-                    if ((w >> --nb) & 1u) {
+                    if ((bb >> --nb) & 1u) {
                         nb -= 12;
-                        offset = (w >> nb) & 0xFFFu;
+                        offset = (bb >> nb) & 0xFFFu;
                     } else {
                         nb -= 8;
-                        offset = (w >> nb) & 0xFFu;
+                        offset = (bb >> nb) & 0xFFu;
                     }
                     if (offset > pos) return UNC_ERR_CORRUPT;
-                    if (!((w >> --nb) & 1u))      length = 2;
-                    else if (!((w >> --nb) & 1u)) length = ((w >> --nb) & 1u) ? 4u : 3u;
-                    else { nb -= 4; length = ((w >> nb) & 15u) + 5u; }
-                    bi.nbits = nb;
+                    if (!((bb >> --nb) & 1u))      length = 2;
+                    else if (!((bb >> --nb) & 1u)) length = ((bb >> --nb) & 1u) ? 4u : 3u;
+                    else { nb -= 4; length = ((bb >> nb) & 15u) + 5u; }
                     if (pos + length > uncompsize) length = uncompsize - pos;
                     if (length > offset) return UNC_ERR_CORRUPT;
-                    for (i = 0; i < length; i++)
-                        win[pos + i] = win[pos - offset + i];
+                    sp = win + pos - offset;
+                    dp = win + pos;
+                    de = dp + length;
+                    while (dp != de) *dp++ = *sp++;
                     pos += length;
                     continue;
                 }
+                bi.bitbuf = bb; bi.nbits = nb;
                 bit = unc_bitin_bit(&bi);
                 if (bit < 0) return bi.err;
                 if (!bit) {
@@ -327,7 +346,9 @@ static int dd_adn(DdFork *o, UncBufIn *in, uint8_t *win)
                         win[pos + i] = win[pos - (uint32_t)offset + i];
                     pos += length;
                 }
+                bb = bi.bitbuf; nb = bi.nbits;
             }
+            bi.bitbuf = bb; bi.nbits = nb;
         }
 
         if ((err = dd_out_span(o, win, pos)) != UNC_OK) return err;
