@@ -6816,7 +6816,7 @@ table). Ratio is the program's time ÷ ours; above 1, ours is faster.
 | `derived-PCCTS.tar` | tar (49 files) | 287 KB | 8.1 s | tar 4.0b | **7.0 s** | 0.86x |
 | `aminet-lha_68k.lha` | LHA, -lh5- | 168 KB | **51.4 s** | MacLHa 2.00 | 405.0 s | 7.9x |
 | `im2-DD3.7.7AuxFiles.dd` | DiskDoubler `DDAR` | 187 KB | **9.5 s** | DD Expand 3.7.7 | 9.6 s | 1.01x |
-| `speed-uu-200k.uu` ✱ | uuencode | 276 KB | 15.7 s | UUTool 2.3.2 | **9.1 s** | 0.58x |
+| `speed-uu-200k.uu` ✱ | uuencode | 276 KB | 12.0 s | UUTool 2.3.2 | **9.1 s** | 0.76x |
 | `shrink-wild-titanic.zip` | zip, Shrink | 173 KB | **56.2 s** | UnZip 1.01 | 86.1 s | 1.53x |
 | `4alnch11.zip` | zip, Implode | 42 KB | **18.4 s** | UnZip 1.01 | 38.1 s | 2.07x |
 | `reduce-wild-america.zip` | zip, Reduce 3 | 26 KB | **5.8 s** | UnZip 1.01 | 10.9 s | 1.87x |
@@ -6852,8 +6852,8 @@ shifted eight bits a byte*; method 8's row did not move), and then the
 method 3 and 5 rows 46.7 and 102.2 s (0.91x, 0.85x) before both read
 their bits from locals (2026-11-22, *the count that ran into its
 sentinel*), and the method 6, 8 and 13 rows 8.0, 6.0 and 24.7 s, the
-DiskDoubler row 12.1 s and the tar row 8.7 s before 2026-11-22's *the
-run PackBits wrote a byte at a time*; the Compact
+DiskDoubler row 12.1 s, the tar row 8.7 s and the uuencode row 15.7 s
+before 2026-11-22's *the run PackBits wrote a byte at a time*; the Compact
 Pro rows were 75.3 s (0.61x, 2.06x) before its LZH loop kept the bit
 state in locals (2026-11-22, *the bit state Compact Pro stored back every
 symbol*).

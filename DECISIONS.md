@@ -27495,7 +27495,7 @@ answer.
   byte and only checks the four starts a `P`, `K`, 5 or 6 could belong
   to: 0.40 → 0.25 M here. Every second byte for the adjacent 5 and 6
   alone was measured and is more, 0.33 M.
-- **uuencode** (7.8 → 5.79 M, NOT re-timed): the line reader looks first
+- **uuencode** (7.8 → 5.79 M; 15.3 → 12.0 s, UUTool 9.1, still behind): the line reader looks first
   where the count says the line ends, so the scan needs no test for CR
   and LF, and a CR or LF inside shows as a lowest byte below range and
   goes to the old scan; `x / 3` is `x * 171 >> 9`, exact below 512, where
@@ -27512,6 +27512,7 @@ unchanged, the all-resident control still 61/74 at System 6.0.8 / 512 KB.
 **Measured** at 1x (`refspeed.py --ref ours`, twice, within two ticks):
 Mystic 23.1 s (Expander 24.1), INITLoader 5.2 s (Expander 3.3: still
 behind), DSKDUP 4.1 s (5.5), DiskDoubler 9.5 s (9.6), tar 8.1 s (7.0:
-still behind). tar's 5.9 s of work is 1.5 s engine and 3.9 s of create,
+still behind), uuencode 12.0 s (9.1: still behind). Without
+`StreamClose`'s per-fork `FlushVol`, a probe build only, tar is 7.4 s. tar's 5.9 s of work is 1.5 s engine and 3.9 s of create,
 close, `FlushVol` and catalog for its 49 members (`-D UNC_AT_TIMING`);
 INITLoader's is engine, 231 of 236 ticks.
