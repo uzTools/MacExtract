@@ -644,6 +644,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-22 (the folders looked up again) — of a 49-member tar's 5.9 s of work on a Mac Plus, 3.9 s was the File Manager's per-file work; no FlushVol per fork, a memo of the folders the previous entries resolved, and a new file's catalog record built instead of read: derived-PCCTS.tar 8.1 → 6.9 s (tar 4.0b: 7.0 s), macburger-helper.hqx 214.7 → 167.2 s
 - 2026-11-22 (the table the code book could build) — method 6 rebuilt a two-level table for every segment; the canonical code book fills one 11-bit table per fork as the tree is built, two byte tables of length and ordinal, read through a left-aligned window: 1.96 → 1.69 million 68000 instructions, derived-INITLoader.sit 5.2 → 4.3 s on a Mac Plus (Expander 4.0.2: 3.3 s, still ahead), the StuffIt image 752 B smaller
 - 2026-11-22 (the part names the writers wrote) — `unc_segment.c`'s naming rules left XADMaster for Info-ZIP Zip 3.0's manual and what Zip 3.0 and 7-Zip 25.01 wrote; the same measurement found Zip numbering a 100th part `.z100`, which the engine does not join
+- 2026-11-22 (the sidecar rules Apple's own code states) — `unc_sidecar.c`'s last XADMaster citations — the `._` and `__MACOSX` names, the header test, and the Spotlight comment's attribute name — left for copyfile.c, libarchive's zip reader and a published description; no code changed
 
 ---
 
@@ -27632,4 +27633,31 @@ both stop at 99, and the set fails (OPEN_ITEMS.md, *A spanned zip of more
 than 99 parts*). Citing a reader's pattern recorded what that reader
 accepts, not what the writer writes; a rule taken from somebody else's
 reader inherits its limits without saying so.
+
+## 2026-11-22 (the sidecar rules Apple's own code states) — `unc_sidecar.c`'s last XADMaster citations — the `._` and `__MACOSX` names, the header test, and the Spotlight comment's attribute name — left for copyfile.c, libarchive's zip reader and a published description; no code changed
+
+OPEN_ITEMS.md listed the sidecar rules as "not looked for". Everything they
+need was already in `reference/notes/`, except one name:
+
+- **`._` before the name, magic `0x00051607`, version `0x00020000`,
+  entries 9 and 2:** `copyfile.c` (`ATTR_FILE_PREFIX`, `ADH_MAGIC`,
+  `ADH_VERSION`, `copyfile_pack`). Its unpack sets the Finder info only
+  when it differs from 32 zero bytes (`emptyfinfo`).
+- **`__MACOSX/` + dir + `._` + name, and directories under it not
+  exposed:** `libarchive_read_support_format_zip.c`, and what the Finder
+  wrote in `Aqua_Candy_Two.zip` (2026-10-17).
+- **`com.apple.metadata:kMDItemFinderComment`, a string in a property
+  list:** H. Oakley, Eclectic Light, *Finder Comments: worth avoiding*
+  (2020-11-06) and *Would you like to Comment or Finder Comment?*
+  (2023-05-27), read 2026-11-22. Nothing else in `reference/` names it.
+
+**Where copyfile is stricter, this stays wider:** copyfile's reader asks
+for exactly two entries, 9 then 2; this takes either one present, as
+before. That is a choice of ours (RFC 1740 lets another writer carry one),
+not a fact borrowed from anybody. "The Spotlight comment yields to any
+other comment" is likewise the 2026-10-18 decision's.
+
+**Measured:** `tools/check_provenance.py` failed with the file still in
+`CARRIES` ("no Source-marked citation left") and passes with it in
+`HISTORICAL`. XADMaster is still named in comments, as a comparison.
 

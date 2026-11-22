@@ -23,18 +23,23 @@
  * are read too, because other writers of the same file (RFC 1740) carry
  * them; what each one means is fmt_applesingle.c's (unc_as_record).
  *
- * Which names are sidecars, and which folders are not emitted, is
- * XADMaster's rule. Source: reference/XADMaster/XADMacArchiveParser.m,
- * -parseAppleDoubleWithDictionary: (the last component starts "._",
- * an optional first component "__MACOSX" is dropped, the rest is the
- * file's path) and -addEntryWithDictionary: (a DIRECTORY whose first
- * component is "__MACOSX" is discarded). What makes a file a sidecar
- * rather than a file whose name starts "._" is XADAppleDouble.m's test:
- * magic 0x00051607, version 0x00020000, and entry 2 or entry 9 present;
- * and "Add FinderInfo ... only if it is not empty": 32 zero bytes are
- * how copyfile says it had none.
+ * Which names are sidecars, and which folders are not emitted. Source:
+ * reference/notes/copyfile.c, ATTR_FILE_PREFIX "._" before the file's
+ * own name; reference/notes/libarchive_read_support_format_zip.c, the
+ * "__MACOSX/" + dir + "._" + name it looks a file's sidecar up by, and
+ * the directories under "__MACOSX/" it does not expose; and the Finder's
+ * own zip, Aqua_Candy_Two.zip (Mac OS X 10.4), which writes exactly that
+ * (DECISIONS.md 2026-10-17, *the sidecars Mac OS X left beside the
+ * file*). What makes a file a sidecar rather than a file whose name
+ * starts "._": copyfile.c's ADH_MAGIC 0x00051607 and ADH_VERSION
+ * 0x00020000, and one of the two entries copyfile_pack writes,
+ * AD_FINDERINFO 9 or AD_RESOURCE 2, present (copyfile's own reader asks
+ * for exactly 9 then 2; either alone is taken here, as RFC 1740 lets
+ * another writer carry one). 32 zero bytes of Finder info are how
+ * copyfile says it had none: its unpack sets the Finder info only when
+ * they differ from `emptyfinfo`.
  *
- * Where the two disagree, this follows neither: XADMaster pairs a zip
+ * Where the two readers disagree, this follows neither: XADMaster pairs a zip
  * sidecar only with an ADJACENT file, and libarchive pairs it by name
  * anywhere in the directory but loses one whose file is absent
  * (reference/notes/libarchive_read_support_format_zip.c, the `tree_rsrc`
@@ -95,8 +100,8 @@ int unc_ad_feed(UncAdCap *a, const uint8_t *p, uint32_t n)
 /* The header and its table, from what was captured. Source:
  * reference/notes/rfc1740.txt, appendix A — u32 magic, u32 version, 16
  * bytes of filler, u16 count, then count × {u32 id, u32 offset, u32
- * length}. A sidecar is XADAppleDouble.m's: magic 0x00051607, version
- * 0x00020000, an entry 2 or 9; and a resource fork that fits the file. */
+ * length}. A sidecar: magic 0x00051607, version 0x00020000, an entry 2
+ * or 9 (copyfile.c, above); and a resource fork that fits the file. */
 void unc_ad_end(UncAdCap *a)
 {
     uint32_t i, n, have = 0;
@@ -133,9 +138,12 @@ static int side_eq(const uint8_t *a, const uint8_t *b, uint32_t n)
 }
 
 /* The attribute's name, NUL and all: its `namelen` counts the NUL.
- * Source: reference/XADMaster/XADArchiveParser.m, which reads this one
- * attribute as the comment; reference/notes/copyfile.c, attr_entry_t
- * ("length of name including NULL termination char"). */
+ * Source: H. Oakley, "Finder Comments: worth avoiding", Eclectic Light,
+ * 2020-11-06 (https://eclecticlight.co/2020/11/06/finder-comments-worth-
+ * avoiding/): the Finder's secondary copy of a comment is "a xattr of
+ * type com.apple.metadata:kMDItemFinderComment", its text "a String in
+ * a property list" (the same, 2023-05-27); reference/notes/copyfile.c,
+ * attr_entry_t ("length of name including NULL termination char"). */
 static const uint8_t k_spot[] = "com.apple.metadata:kMDItemFinderComment";
 
 /* A big-endian integer of 1..4 bytes. Source:
@@ -153,8 +161,8 @@ static uint32_t side_int(const uint8_t *p, uint32_t n)
  * data_start, data_length, three reserved words, u16 flags, u16
  * num_attrs (36 bytes); then each entry is u32 offset (from the start of
  * the FILE), u32 length, u16 flags, u8 namelen, the name, padded to 4.
- * XADMaster reads the block only where entry 9 is longer than 70 bytes
- * (reference/XADMaster/XADAppleDouble.m), which is 32 + 2 + 36. Where
+ * An entry 9 of 70 bytes or fewer, 32 + 2 + 36, holds no attribute
+ * (XADMaster's XADAppleDouble.m tests the same length). Where
  * the Spotlight comment's value is, out of entry 9 at `foff`: 1 if the
  * window holds the block and an entry of that name. */
 static int side_attr(const uint8_t *w, uint32_t lim, uint32_t foff,
@@ -396,11 +404,11 @@ void unc_ad_apply(UncAdCap *a, UncEntryInfo *e)
             if (id != 9 || k < take) unc_as_record(e, id, b, take);
         }
     }
-    /* The Spotlight comment only where nothing else stated one:
-     * XADMaster's rule, "if there is not already a comment"
-     * (reference/XADMaster/XADArchiveParser.m). An entry-4 comment, the
-     * zip's own per-file comment, a 0x334d Finder comment and a pax
-     * `comment` record all win over it. */
+    /* The Spotlight comment only where nothing else stated one, the
+     * Finder's secondary copy (DECISIONS.md 2026-10-18, *the comment
+     * Spotlight kept*; XADArchiveParser.m does the same). An entry-4
+     * comment, the zip's own per-file comment, a 0x334d Finder comment
+     * and a pax `comment` record all win over it. */
     if (!e->comment_len && flen) side_spot(a, e, foff, flen);
 }
 

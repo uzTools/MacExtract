@@ -113,22 +113,6 @@ hand.
                        Stanford). No code of SUMacC's is in this
                        project; its tohex and fromhex are built from
                        reference/ only to grade against.
-  src/unc_sidecar.c    Mac OS X's AppleDouble sidecars: which names are
-                       sidecars (a leaf starting "._", an optional first
-                       component "__MACOSX"), that folders under
-                       __MACOSX are not emitted, what makes the file a
-                       sidecar (magic, version, entry 2 or 9, a Finder
-                       info of 32 zero bytes stating none) and that one
-                       pairs with the file beside it — XADMacArchiveParser.m
-                       and XADAppleDouble.m; and, since 2026-10-18, which
-                       extended attribute is the Spotlight comment and
-                       that it yields to a comment stated otherwise —
-                       XADArchiveParser.m. Facts, not code; the writers
-                       they describe are cited from Apple's copyfile and
-                       libarchive (both permissive), and the property
-                       list from Apple's CoreFoundation (CFBinaryPList.c,
-                       ForFoundationOnly.h; APSL 2.0), from which no code
-                       is copied.
   src/unc_internal.h   the LZAH preload above. The MIME line rule left
                        on 2026-10-05 for deark's dbuf_find_line, which
                        is in the same file this header already cited
@@ -185,7 +169,14 @@ This project's decoders are transcriptions/ports of algorithms from:
     Nor the part names of a spanned zip (NAME.zNN, NAME.zip last) or
     a plain split (NAME.NNN) since 2026-11-22: `src/unc_segment.c`
     cites Info-ZIP Zip 3.0's manual and what Zip 3.0 and 7-Zip 25.01
-    wrote here.
+    wrote here. Nor Mac OS X's AppleDouble sidecars since 2026-11-22:
+    `src/unc_sidecar.c` takes the "._" names, the header test and the
+    empty Finder info from Apple's copyfile.c, "__MACOSX/" from
+    libarchive's zip reader and the Finder's own zips, and the Spotlight
+    comment's attribute name from Howard Oakley's published description
+    (Eclectic Light, 2020 and 2023); its property list is read from
+    Apple's CoreFoundation (CFBinaryPList.c, ForFoundationOnly.h; APSL
+    2.0), from which no code is copied.
     Arsenic (StuffIt method 15) no longer: since 2026-09-19
     `src/sit_arsenic.c` is written from Matthew T. Russotto's public
     description of the format (reference/notes/arsenic_russotto.md),

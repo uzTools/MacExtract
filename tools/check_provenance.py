@@ -76,7 +76,6 @@ CARRIES = {
     "unc_internal.h":   "the LZAH preload",
     "fmt_hecx.c":       "BinHex before 4.0 and .dl, the whole decoder (hexbin's hecx.c, dl.c)",
     "fmt_binhex_probe.c": "the .hex/.hcx header-line rule and the .dl first line (hexbin's hecx.c, hexbin.c)",
-    "unc_sidecar.c":    "which names are Mac OS X sidecars, and the pairing rule",
 }
 
 # The CARRIES files whose borrowing is CODE, transcribed, rather than facts:
@@ -100,6 +99,7 @@ HISTORICAL = {
     "fmt_packit.c", "unc_shrink.c", "fmt_sit5.c",
     "unc_crypt.c",  # StuffIt 5's key and ARC's garble left 2026-11-09
     "unc_segment.c",  # the part names left 2026-11-22 for Zip and 7-Zip
+    "unc_sidecar.c",  # left 2026-11-22 for copyfile, libarchive, Eclectic Light
 }
 
 MENTION = re.compile(r"XAD|libxad|macutils")
