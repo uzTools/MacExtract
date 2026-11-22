@@ -246,6 +246,42 @@ def find_entry(blob, name):
     return None, None
 
 
+def mw_restarts(comp, outlen):
+    """How many times a method-8 stream restarts its table: a code equal
+    to the next free one (docs/formats/stuffit-method-8-mw.md). Counted
+    with lengths only, no dictionary, so it is not a second decoder."""
+    bb = nb = ip = 0
+    lens = []
+    out, restarts = 0, 0
+    while out < outlen:
+        nxt, width, lens = 256, 9, []
+        first = True
+        while out < outlen:
+            while nb < width:
+                if ip >= len(comp):
+                    return restarts
+                bb |= comp[ip] << nb
+                ip += 1
+                nb += 8
+            c = bb & ((1 << width) - 1)
+            bb >>= width
+            nb -= width
+            if not first and c == nxt:
+                restarts += 1
+                break
+            if c > nxt or (first and c >= 256):
+                return restarts
+            n = 1 if c < 256 else lens[c - 256]
+            if not first:
+                lens.append(prev_n + n)
+                nxt += 1
+                if nxt == 1 << width:
+                    width += 1
+            prev_n, first = n, False
+            out += n
+    return restarts
+
+
 def pntg_rows(data):
     """How many rows of exactly 72 bytes a MacPaint document's PackBits
     stream decodes to, and whether it is consumed exactly.
@@ -1164,6 +1200,41 @@ def main():
         else:
             print("run_sitopt: no psfold1 specimen — a FOLDER 2.0.1 stuffed "
                   "is not graded (sitopt.py --psfold)")
+        # 14b. METHOD 8 PAST ITS FIRST TABLE. `optimal` writes method 8
+        # (FORMATS.md, *Everything else 2.0.1 writes*), and the corpus's
+        # largest method-8 fork never restarts its table; MwText's does,
+        # ten times (sitopt.py --mw). Each entry must come out as the
+        # file that went in, and MwText's stream must still be method 8
+        # with a restart in it, so a re-made specimen that no longer
+        # reaches the rule fails here rather than passing on nothing.
+        mw = os.path.join(SPECIMENS, "mw-1")
+        if os.path.exists(os.path.join(mw, "Mw.sit.bin")):
+            o = os.path.join(work, "mw")
+            rc, msg = extract(args.macextract,
+                              os.path.join(mw, "Mw.sit.bin"), o)
+            if rc != 0:
+                problems.append("Mw.sit did not extract: %s"
+                                % msg.strip()[:120])
+            for n in ("MwText", "MwHex", "MwRand"):
+                got = os.path.join(o, n)
+                want = forks(os.path.join(mw, n + ".in.bin"))[0]
+                if not os.path.exists(got) or \
+                        open(got, "rb").read() != want:
+                    problems.append("Mw.sit's %s is not the file Deluxe "
+                                    "stuffed" % n)
+            blob = forks(os.path.join(mw, "Mw.sit.bin"))[0]
+            at, h = find_entry(blob, "MwText")
+            if h is None or h[1] & 0x0F != 8:
+                problems.append("Mw.sit's MwText is not method 8")
+            elif mw_restarts(blob[at + 112 + int.from_bytes(h[92:96], "big"):
+                                  at + 112 + int.from_bytes(h[92:96], "big")
+                                  + int.from_bytes(h[96:100], "big")],
+                             int.from_bytes(h[88:92], "big")) < 1:
+                problems.append("Mw.sit's MwText restarts no table: the "
+                                "specimen no longer reaches the rule")
+        else:
+            print("run_sitopt: no mw-1 specimen — method 8's table restart "
+                  "is not graded (sitopt.py --mw)")
         # 15. THE ONLY OPTIMIZED ARCHIVES NOBODY HERE MADE.
         #
         # Everything above is 2.0.1's own output under Mini vMac, which

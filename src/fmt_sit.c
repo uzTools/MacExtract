@@ -1171,18 +1171,21 @@ out:
 /* reproduced byte for byte against the oracle                        */
 /* (tools/derive_stuffit8.py).                                        */
 /*                                                                    */
-/* THREE RULES BELOW ARE NOT IN THAT NOTE and remain                  */
+/* The table RESTART, a code equal to the next free one, is StuffIt   */
+/* Deluxe 2.0.1's own: `optimal` over 200,000 bytes of text wrote a    */
+/* fork that restarts ten times, at 1,836 to 2,030 entries and 12 bits, */
+/* and decodes to the file it was given (the note's *A writer's        */
+/* restart*; tests/harness/run_sitopt.py, 14b).                       */
+/*                                                                    */
+/* TWO RULES BELOW ARE NOT IN THAT NOTE and remain                    */
 /* Source: reference/libxad/libxad/portable/clients/StuffIt.c        */
 /* (SIT_mw, SITMW_out; Dirk Stöcker's libxad, which XADMaster's       */
-/* XADStuffItOldHandles.m carries unchanged; see NOTICE): the          */
-/* table RESTART (a code equal to the next free one) and the END of    */
-/* the stream (a code greater than it), with the 14-bit ceiling that   */
-/* goes with them. They are the only thing in this file that is still  */
-/* anybody else's, and deark names method 8 "MW" with a NULL decoder,  */
-/* so there is nothing to rewrite them from. No                       */
-/* specimen reaches any of the three — the largest fork in the corpus  */
-/* stops at 7,347 entries and 13 bits — so they are the part of this   */
-/* row a derivation could not take.                                   */
+/* XADStuffItOldHandles.m carries unchanged; see NOTICE): the END of   */
+/* the stream (a code greater than the next free one) and the 14-bit   */
+/* ceiling, the dictionary's 16,385 entries. Deluxe 2.0.1 wrote no end */
+/* code and restarted long before the ceiling, and deark names method  */
+/* 8 "MW" with a NULL decoder, so there is nothing to rewrite them     */
+/* from; they are the part of this row a derivation could not take.    */
 /* ------------------------------------------------------------------ */
 
 #define MW_DICT  16385

@@ -468,6 +468,8 @@ def main():
     ap.add_argument("--options", action="store_true")
     ap.add_argument("--map", action="store_true")
     ap.add_argument("--make", action="store_true")
+    ap.add_argument("--mw", action="store_true",
+                    help="stuff MW_SUBJECTS with optimal (method 8)")
     ap.add_argument("--segment", choices=sorted(SEG_RUNS),
                     help="have 2.0.1's Segment script command cut two "
                          "files with resource forks, in one launch")
@@ -486,6 +488,8 @@ def main():
                     help="this build already has Expert menus")
     args = ap.parse_args()
 
+    if args.mw:
+        return phase_mw(args)
     if args.segment:
         return phase_segment(args)
     if args.setup:
@@ -3626,6 +3630,111 @@ def phase_segment(args):
             print("  %-12s %8d B  0-1 %s  part %d  94 %s 96 %s 98 %s"
                   % (f[:-4], len(data), h[:2].hex(), h[3], h[94:96].hex(),
                      h[96:98].hex(), h[98:100].hex()))
+    return 0
+
+
+# Method 8, "LZ-M (Optimal/Better)" in STR# 261: the script's `optimal`
+# writes it (FORMATS.md, *Everything else 2.0.1 writes*). The corpus's
+# largest method-8 fork stops at 7,347 dictionary entries, short of the
+# table's restart, the end code and the width's ceiling (OPEN_ITEMS.md,
+# the fmt_sit.c row); these subjects are built to go past 16,384.
+def mw_hex(n, seed):
+    """`n` bytes of pseudo-random hex digits: short strings, many codes."""
+    out, x = bytearray(), seed
+    while len(out) < n:
+        x = (x * 1103515245 + 12345) & 0x7fffffff
+        out.append(b"0123456789ABCDEF"[(x >> 16) & 15])
+    return bytes(out)
+
+
+def mw_bytes(n, seed):
+    """`n` pseudo-random bytes, which MW can only expand."""
+    out, x = bytearray(), seed
+    while len(out) < n:
+        x = (x * 1103515245 + 12345) & 0x7fffffff
+        out.append((x >> 16) & 255)
+    return bytes(out)
+
+
+MW_SUBJECTS = (("MwText", lambda: seg_text(200000, 31)),
+               ("MwHex", lambda: mw_hex(300000, 37)),
+               ("MwRand", lambda: mw_bytes(60000, 41)))
+
+
+def phase_mw(args):
+    """Stuff MW_SUBJECTS with `optimal` into Mw.sit, then read the archive,
+    the status file and the subjects back into specimens/sitopt/mw-TAG."""
+    outdir = os.path.join(SPECIMENS, "mw-" + args.tag)
+    os.makedirs(outdir, exist_ok=True)
+    img = os.path.join(WORK, "run-mw-%s.hfv" % args.tag)
+    subprocess.run(["cp", "--sparse=always", BOOT, img], check=True)
+    script = "\r".join(
+        ["; written by tools/vmac/sitopt.py --mw",
+         'Write Status To "{Startup}MwStatus.out"',
+         "Continue On Error",
+         'New Archive "{Startup}Mw.sit"'] +
+        ['Stuff "{Startup}%s" with optimal' % name
+         for name, _f in MW_SUBJECTS] +
+        ["Close", "Quit", ""])
+    work = tempfile.mkdtemp(prefix="sitopt-mw-")
+    env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
+    try:
+        files = [("Run Mw", macbinary("Run Mw", "TEXT", "SIT!",
+                                     script.encode("mac_roman")))]
+        for name, make in MW_SUBJECTS:
+            files.append((name, macbinary(name, "TEXT", "ttxt", make())))
+        hfs(env, "hmount", img)
+        for name, blob in files:
+            mb = os.path.join(work, name + ".bin")
+            open(mb, "wb").write(blob)
+            if name != "Run Mw":
+                shutil.copyfile(mb, os.path.join(outdir, name + ".in.bin"))
+            got = hfs(env, "hcopy", "-m", mb, (VOL + ":").encode())
+            if got.returncode != 0:
+                raise SystemExit("sitopt: hcopy failed: %s" % got.stderr)
+        hfs(env, "humount")
+    finally:
+        shutil.rmtree(env["HOME"], ignore_errors=True)
+        shutil.rmtree(work, ignore_errors=True)
+
+    s = Session(img, [], outdir, mem=args.emu)
+    try:
+        launch(s, args)
+        s.peek(SCRIPTS_X, "scripts-menu")
+        s.mac.command_key("e")
+        s.shot("script-picker", wait=8.0)
+        s.mac._xdo("type", "--delay", "120", "Run")
+        s.shot("script-selected", wait=3.0)
+        s.mac.key("Return")
+        s.shot("script-running", wait=args.script_wait)
+        s.shot("script-done", wait=20.0)
+        s.menu(SPECIAL_X, SHUT_DOWN_Y, "special-menu")
+        s.shot("off", wait=35.0)
+        written = os.path.join(s.work, "boot.hfv")
+        env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
+        try:
+            if subprocess.run(["hmount", written], capture_output=True,
+                              env=env).returncode == 0:
+                for n in ("MwStatus.out", "Mw.sit"):
+                    subprocess.run(["hcopy", "-m", (VOL + ":" + n).encode(),
+                                    os.path.join(outdir,
+                                                 n + ".bin").encode()],
+                                   capture_output=True, env=env)
+                subprocess.run(["humount"], capture_output=True, env=env)
+        finally:
+            shutil.rmtree(env["HOME"], ignore_errors=True)
+    finally:
+        time.sleep(4)
+        s.close()
+    st = os.path.join(outdir, "MwStatus.out.bin")
+    if os.path.exists(st):
+        data, _r = forks(st)
+        print("=== MwStatus.out")
+        for line in data.decode("mac-roman", "replace").split("\r"):
+            if line.strip():
+                print("  " + line)
+    print("Mw.sit: %s" % ("read back" if os.path.exists(
+        os.path.join(outdir, "Mw.sit.bin")) else "MISSING"))
     return 0
 
 

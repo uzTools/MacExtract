@@ -646,6 +646,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-22 (the part names the writers wrote) — `unc_segment.c`'s naming rules left XADMaster for Info-ZIP Zip 3.0's manual and what Zip 3.0 and 7-Zip 25.01 wrote; the same measurement found Zip numbering a 100th part `.z100`, which the engine does not join
 - 2026-11-22 (the sidecar rules Apple's own code states) — `unc_sidecar.c`'s last XADMaster citations — the `._` and `__MACOSX` names, the header test, and the Spotlight comment's attribute name — left for copyfile.c, libarchive's zip reader and a published description; no code changed
 - 2026-11-22 (the split header StuffIt wrote) — every offset of the StuffIt segment header that still rested on XADMaster, the name, type, creator, flags, dates and fork lengths, measured off the twelve sets StuffIt cut and the file one was cut from; the same offsets, no code changed
+- 2026-11-22 (the table method 8 threw away) — StuffIt Deluxe 2.0.1's `optimal` wrote a method-8 fork that restarts its table ten times, the first in reach; the restart rule leaves libxad, the engine is byte-exact on it, and the end code and 14-bit ceiling stay, unreached by this writer
 
 ---
 
@@ -27694,4 +27695,40 @@ were already in `specimens/sitseg-real`.
 68000 code of both files byte-identical), and both files go to
 `HISTORICAL`. The probe's own limits, a name of 1-63 bytes with no NUL,
 are this engine's: 63 is the room from 5 to 68.
+
+## 2026-11-22 (the table method 8 threw away) — StuffIt Deluxe 2.0.1's `optimal` wrote a method-8 fork that restarts its table ten times, the first in reach; the restart rule leaves libxad, the engine is byte-exact on it, and the end code and 14-bit ceiling stay, unreached by this writer
+
+The row said "StuffIt made to reach them as an encoder". 2.0.1's `optimal`
+was already known to write method 8 (FORMATS.md, *Everything else 2.0.1
+writes*, 2026-10-02); nobody had given it a subject large enough.
+
+**Measured** (`tools/vmac/sitopt.py --mw`, one boot, three subjects):
+
+- **200,000 bytes of word salad: method 8, ten restarts.** Each table
+  covers 18,866-19,257 bytes of input at 1,836-2,030 entries and 12 bits;
+  the code that ends a table equals the next free one, and the next code
+  is 9 bits again. Read so, the fork decodes to its input byte for byte,
+  in a Python walk and in the engine; the engine had never run that path
+  on a real stream. No end code: the last code meets the declared length,
+  zero bits after it.
+- **300,000 random hex digits: method 3. 60,000 random bytes: stored.**
+  `optimal` keeps method 8 only where it wins, which FORMATS.md's line
+  did not say (corrected).
+
+**Hypothesis**: a table is restarted after about 18.8 KB of input, not at
+an entry count. It fits the corpus's largest fork (17,005 bytes, 7,347
+entries, no restart). If it holds, 2.0.1 cannot reach the 14-bit ceiling
+with a fork it keeps: 16,384 entries inside 19 KB means codes of about a
+byte, which method 8 expands.
+
+**Consequence.** The restart leaves libxad (`src/fmt_sit.c`, NOTICE,
+the method-8 note). The end code and the ceiling stay, the row narrowed
+to them. Deleting them is not this measurement's to do: the ceiling is
+also the dictionary's bound, and one writer's silence about an end code is
+one writer's. `tests/harness/run_sitopt.py` grades the specimen (14b),
+and fails an engine that ends the stream at a restart.
+
+**What was not done:** feeding StuffIt Expander 4.0.2 a stream with an
+end code or a full table. That would show what Aladdin's reader does
+with one, which is the other route the row leaves.
 

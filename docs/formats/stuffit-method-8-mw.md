@@ -51,28 +51,49 @@ not counter-evidence: `BitMapHelp.index`'s 286-byte resource fork is
 method per ENTRY and StuffIt chooses per FORK, so an entry named "MW"
 can carry a fork that is not.
 
+## A writer's restart
+
+**Measured 2026-11-22.** StuffIt Deluxe 2.0.1's `optimal` (STR# 261's
+"LZ-M (Optimal/Better)") over 200,000 bytes of word salad wrote a
+method-8 fork of 26,564 bytes (`tools/vmac/sitopt.py --mw`;
+`specimens/sitopt/mw-1`). It restarts its table ten times: **a code
+equal to the next free one** throws the dictionary away and the next
+code is read at 9 bits against 256 entries. Read that way, the fork
+decodes to the 200,000 bytes it was given, byte for byte.
+
+| table | input it coded | entries | widest code |
+|---|---|---|---|
+| 1-10 | 18,866 to 19,257 bytes each | 1,836 to 2,030 | 12 bits |
+| 11, the last | 9,343 bytes | 1,104 | 11 bits |
+
+The restart comes after about 19 KB of input whatever the entry count,
+so **hypothesis**: 2.0.1 restarts once a table has coded about 18.8 KB.
+The corpus's largest fork, 17,005 bytes, stops short of that. The fork
+stops at its declared length with zero bits after the last code, and no
+end code. Over 300,000 bytes of random hex digits `optimal` chose method
+3 (Huffman), and over 60,000 random bytes it stored the fork.
+
 ## What this note does NOT establish
 
 Two rules in the shipped decoder are **not exercised by any specimen
 here**, and this note does not claim them:
 
-- **The table restart.** `src/fmt_sit.c` treats a code equal to the
-  next free one as an instruction to throw the dictionary away and
-  start again at 256 codes and 9 bits. No fork above reaches it: the
-  largest, 17,005 bytes out, never fills the table.
 - **The end of the stream.** The same decoder stops on a code greater
   than the next free one.
 - **Where the width stops growing.** The shipped decoder caps it at 14
   bits and its dictionary at 16,385 entries. The widest code in any
   fork above is **13**, at 7,347 entries, so the cap is a number this
-  note cannot confirm — the same 17,005-byte fork that fails to reach
-  the restart fails to reach this.
+  note cannot confirm. Deluxe 2.0.1 restarts at about 2,000 entries
+  (*A writer's restart*), and 16,384 entries inside 19 KB of input
+  would take codes of about one byte each, which method 8 cannot
+  compress, so **hypothesis**: 2.0.1 never writes a fork that reaches
+  it.
 
 Both came from `XADStuffItOldHandles.m` and still do — libxad's
 `SIT_mw`, which that file carries unchanged (NOTICE); they are the part
-of this row that a derivation could not take. **What would close all three:** a method-8 fork whose dictionary fills
-— 16,384 entries against the 7,347 of the largest here, so something
-several times larger than anything in the corpus. Synthesising one
-here would only hold this project's two readings against each other,
-and `unar` is not independent of the rule in question, so neither
-would settle it.
+of this row that a derivation could not take. **What would close
+them:** a writer that emits an end code or fills the table, or shown
+that none does and the two rules deleted. Synthesising a stream here
+would only hold this project's two readings against each other, and
+`unar` is not independent of the rule in question; StuffIt Expander
+4.0.2, which decodes method 8, could be fed one.

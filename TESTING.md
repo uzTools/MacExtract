@@ -1026,6 +1026,13 @@ archive, a folder, and a self-extracting archive:
    fails four and two assertions; removing the pass-through fails the
    `PassLock` cases (measured 2026-10-02).
 
+**Method 8 past its first table** (14b): `Mw.sit`, three subjects under
+`optimal` (`sitopt.py --mw`), must each come out as the file that went
+in, and MwText must be method 8 with at least one restart in its stream,
+so a re-made specimen that no longer reaches the rule fails rather than
+passing. Measured able to fail: an engine that ends the stream at a
+restart fails it twice (MwText truncated, then not the file).
+
 Aladdin's own Engine decoded the `Text 1` archive and refused the
 `MacPaint 1` one (*"Please use StuffIt Deluxe instead"*); that is graded
 as a fact about the Engine.
@@ -4148,9 +4155,10 @@ an hour. All skip cleanly with a message when what they need is absent.
 - **Whether the shipped C is independent of XADMaster.** They prove a
   description is sufficient to read the format, nothing about how `src/`
   was written.
-- **Anything about a fork no fixture has.** StuffIt method 8's table
-  restart, end-of-stream code and 14-bit ceiling are unreached, so
-  `fmt_sit.c` still cites XADMaster for those three rules. Every tool
+- **Anything about a fork no fixture has.** StuffIt method 8's
+  end-of-stream code and 14-bit ceiling are unreached, so `fmt_sit.c`
+  still cites XADMaster for those two rules; its table restart is
+  graded by `run_sitopt.py` (14b) on a specimen, not by these tools. Every tool
   prints how many forks it decoded.
 - **Whether the oracle is independent.** `unar` IS XADMaster; where a second
   lineage exists it is used instead (`derive_arc.py --grid` against a real

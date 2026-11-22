@@ -141,7 +141,7 @@ SPDX line, in the same commit.
 | what | known | what would close it |
 |---|---|---|
 | `unc_lzdyn.c` — `-lh2-` and `-lh3-`, libxad's, **code** | lhasa implements neither; LHa for UNIX has its own licence (DECISIONS.md, *the 3,504 bytes that stay*) | a description written from what the original DOS LHA emits under DOSBox |
-| `fmt_sit.c` — three rules of StuffIt method 8, libxad's | no specimen reaches them; deark leaves the method NULL (DECISIONS.md, *the layout Aladdin's own output settled*) | StuffIt made to reach them as an encoder, or shown not to and the rules deleted |
+| `fmt_sit.c` — two rules of StuffIt method 8, libxad's: the end code and the 14-bit ceiling | the restart left 2026-11-22 for a fork Deluxe 2.0.1 wrote; it wrote no end code and restarted at about 2,000 entries (DECISIONS.md 2026-11-22, *the table method 8 threw away*); deark leaves the method NULL | a writer that emits an end code or fills the table, or shown that none does and the rules deleted |
 | `unc_lzah.c`, `unc_internal.h` — the `-lh1-`/method-5 window preload | the corpus cannot tell XADMaster's reading from lhasa's (DECISIONS.md 2026-09-28, *the preload nothing reaches*) | a writer's specimen that tells the two readings apart |
 | `src/sit14.c` — StuffIt 5's method 14, libxad's, **code** | libxad's `SIT_14` is the only implementation (FORMATS.md, *StuffIt 5's method 14*) | a description written from StuffIt 5's own engine; the largest row, not priced |
 | `fmt_arc.c` — Crunch 5/6/7, Crush, the method numbers, **code** | no other implementation of 7 or Crush; not taken 2026-09-22 | the DOS originals as encoders, and a description |

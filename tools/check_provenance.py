@@ -63,7 +63,7 @@ NOTICE = ROOT / "NOTICE"
 # ones with a route left.
 CARRIES = {
     "unc_lzdyn.c":      "-lh2- and -lh3- (libxad's LhA.c), whole file",
-    "fmt_sit.c":        "three method-8 rules no specimen reaches (libxad's SIT_mw)",
+    "fmt_sit.c":        "two method-8 rules no specimen reaches (libxad's SIT_mw)",
     "sit14.c":          "StuffIt 5's method 14, the whole file (libxad's SIT_14)",
     "fmt_dd.c":         "the per-method rules and the DDAR 0x20 raw-fork shape (libxad's DiskDoubler.c)",
     "fmt_arc.c":        "Crunch 5/6/7 and Crush, and the method numbers",
