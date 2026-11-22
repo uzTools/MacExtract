@@ -233,6 +233,17 @@ static void lzah_update(Lzah *h, uint32_t c)
  * match reaches back more than ~110 bytes from the window end
  * (DECISIONS.md 2026-09-28, *the preload nothing reaches*).
  *
+ * MEASURED 2026-11-22 against the writers' own programs: StuffIt
+ * Expander 4.0.2 fed a method-5 fork whose five matches reach the runs,
+ * both ramps, the zeros and the spaces writes SPACES for all five, and
+ * its CRC check agrees (tools/vmac/lzahexp.py); LHa for UNIX's decode()
+ * fills the whole dictionary with 0x20 before -lh1-'s start routine,
+ * which leaves it (reference/lha/src/slide.c). Neither LHa for UNIX's
+ * -lh1- nor Deluxe 2.0.1's method 5 reached past the last 60 bytes over
+ * eleven files, five led by 2,000 spaces, so this fill and spaces give
+ * the same bytes on everything they write (DECISIONS.md 2026-11-22, *the
+ * window Aladdin's reader starts with*).
+ *
  * ARC's Trimmed takes the zeros and NOT the pattern: deark
  * passes history_fill_val = 0 and its ring buffer starts zeroed
  * (reference/deark/foreign/lzhuf.h, lzhuf_Decode_init); a Trimmed

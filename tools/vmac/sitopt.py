@@ -470,6 +470,8 @@ def main():
     ap.add_argument("--make", action="store_true")
     ap.add_argument("--mw", action="store_true",
                     help="stuff MW_SUBJECTS with optimal (method 8)")
+    ap.add_argument("--lz", action="store_true",
+                    help="with --mw: LZ_SUBJECTS with better (method 5)")
     ap.add_argument("--segment", choices=sorted(SEG_RUNS),
                     help="have 2.0.1's Segment script command cut two "
                          "files with resource forks, in one launch")
@@ -3660,11 +3662,36 @@ MW_SUBJECTS = (("MwText", lambda: seg_text(200000, 31)),
                ("MwHex", lambda: mw_hex(300000, 37)),
                ("MwRand", lambda: mw_bytes(60000, 41)))
 
+# Method 5 ("LZ-H (Better)"): files that open with a run of spaces, which
+# an encoder whose window starts as spaces can match far back into
+# (tools/vmac/lzahexp.py; src/unc_lzah.c, lzah_preload).
+LZ_SUBJECTS = (("LzSp200", lambda: b" " * 200 + seg_text(3000, 43)),
+               ("LzSp2000", lambda: b" " * 2000 + seg_text(3000, 47)),
+               ("LzText", lambda: seg_text(3000, 53)))
+# `better` kept method 8 for all three (lz-1); data where LZ-H should win:
+# short repeats at varied distances, little that a pair-of-strings
+# dictionary builds on.
+LZ_SUBJECTS2 = (("LzHex", lambda: b" " * 2000 + mw_hex(6000, 59)),
+                ("LzRand", lambda: b" " * 2000 + mw_bytes(6000, 61)),
+                ("LzMix", lambda: b" " * 2000 + bytes(
+                    b ^ (i & 7) for i, b in enumerate(seg_text(6000, 67)))),
+                ("LzRuns", lambda: b" " * 2000 + b"".join(
+                    bytes([65 + (k * 7) % 26]) * (3 + k % 11)
+                    for k in range(600))),
+                ("LzSpRand", lambda: b"".join(
+                    b" " * (40 + k % 90) + mw_bytes(30, 71 + k)
+                    for k in range(60))),
+                ("LzBin", lambda: b" " * 2000 + b"".join(
+                    (k * 2654435761 & 0xFFFFFFFF).to_bytes(4, "big")
+                    for k in range(1500))))
+
 
 def phase_mw(args):
     """Stuff MW_SUBJECTS with `optimal` into Mw.sit, then read the archive,
     the status file and the subjects back into specimens/sitopt/mw-TAG."""
-    outdir = os.path.join(SPECIMENS, "mw-" + args.tag)
+    subjects, word = ((LZ_SUBJECTS2 if args.tag == "2" else LZ_SUBJECTS),
+                      "better") if args.lz else (MW_SUBJECTS, "optimal")
+    outdir = os.path.join(SPECIMENS, ("lz-" if args.lz else "mw-") + args.tag)
     os.makedirs(outdir, exist_ok=True)
     img = os.path.join(WORK, "run-mw-%s.hfv" % args.tag)
     subprocess.run(["cp", "--sparse=always", BOOT, img], check=True)
@@ -3673,15 +3700,15 @@ def phase_mw(args):
          'Write Status To "{Startup}MwStatus.out"',
          "Continue On Error",
          'New Archive "{Startup}Mw.sit"'] +
-        ['Stuff "{Startup}%s" with optimal' % name
-         for name, _f in MW_SUBJECTS] +
+        ['Stuff "{Startup}%s" with %s' % (name, word)
+         for name, _f in subjects] +
         ["Close", "Quit", ""])
     work = tempfile.mkdtemp(prefix="sitopt-mw-")
     env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
     try:
         files = [("Run Mw", macbinary("Run Mw", "TEXT", "SIT!",
                                      script.encode("mac_roman")))]
-        for name, make in MW_SUBJECTS:
+        for name, make in subjects:
             files.append((name, macbinary(name, "TEXT", "ttxt", make())))
         hfs(env, "hmount", img)
         for name, blob in files:

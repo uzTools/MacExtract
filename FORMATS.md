@@ -1636,7 +1636,7 @@ The last row is why the output stage does **not** round toward zero; that
 attribution to +0x3826 is withdrawn (BLOCKERS.md, *Withdrawn claims*).
 
 **Everything else 2.0.1 writes, measured 2026-10-02**: `guess` (Best
-Guess) is **method 5**, `none` 0, `fast` 2, `faster` 6, `better` 5,
+Guess) is **method 5**, `none` 0, `fast` 2, `faster` 6, `better` 5 or 8, whichever is smaller (8 on word salad, 5 on six other subjects; corrected 2026-11-22),
 `optimal` 8, or 3 (Huffman) or 0 where method 8 loses: 300,000 random hex digits and 60,000 random bytes (corrected 2026-11-22; *A writer's restart* in `docs/formats/stuffit-method-8-mw.md`). A **1.5.1-compatible** archive reads like any other. A
 **folder** is folder-start `0x20`, its entries, folder-end `0x21`. A
 **self-extracting** archive cannot be made here: 2.0.1 answers *"No

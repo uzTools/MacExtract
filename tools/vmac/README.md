@@ -2797,6 +2797,8 @@ Driving another application here:
     tools/vmac/sitopt.py --segment small|big   cut two files with resource forks
     tools/vmac/sitopt.py --mw --tag 1   method 8 over three subjects (`optimal`)
     tools/vmac/mwexp.py -o SHOTS [VARIANT ...]   Expander 4.0.2 fed method-8 streams at the edge
+    tools/vmac/lzahexp.py -o SHOTS [--crc-of spaces]   Expander 4.0.2 fed a method-5 fork into the preload
+    tools/vmac/sitopt.py --mw --lz --tag 1|2   method 5 (`better`) over files led by spaces
 
 **It installs by COPYING, not by running the installer.** Disk 1's installer
 has a DATA fork that is itself a StuffIt archive; `macextract` unwraps it, so

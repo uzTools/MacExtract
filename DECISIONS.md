@@ -648,6 +648,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-22 (the split header StuffIt wrote) — every offset of the StuffIt segment header that still rested on XADMaster, the name, type, creator, flags, dates and fork lengths, measured off the twelve sets StuffIt cut and the file one was cut from; the same offsets, no code changed
 - 2026-11-22 (the table method 8 threw away) — StuffIt Deluxe 2.0.1's `optimal` wrote a method-8 fork that restarts its table ten times, the first in reach; the restart rule leaves libxad, the engine is byte-exact on it, and the end code and 14-bit ceiling stay, unreached by this writer
 - 2026-11-22 (the edge Aladdin's reader drew) — StuffIt Expander 4.0.2, fed method-8 streams built to each rule, settles the end code and the ceiling: 15 bits at 16,384 entries, the table's last entry 16,384, a code past the next free one ends the stream; `fmt_sit.c` owes libxad nothing
+- 2026-11-22 (the window Aladdin's reader starts with) — StuffIt Expander 4.0.2 reads method 5 from a window of spaces, not XADMaster's pattern, and LHa for UNIX fills -lh1-'s so; no writer here reaches the part where they differ, so nothing real changes and the engine keeps the pattern until the maintainer decides
 
 ---
 
@@ -27768,4 +27769,41 @@ in any of 220.
 alone among StuffIt's methods. Its header still said the encrypted key
 layout was XADStuffItParser.m's, two months after the layout was
 measured; corrected, and NOTICE's paragraph with it.
+
+## 2026-11-22 (the window Aladdin's reader starts with) — StuffIt Expander 4.0.2 reads method 5 from a window of spaces, not XADMaster's pattern, and LHa for UNIX fills -lh1-'s so; no writer here reaches the part where they differ, so nothing real changes and the engine keeps the pattern until the maintainer decides
+
+The row said "a writer's specimen that tells the two readings apart".
+Expander 4.0.2 is Aladdin's reader of method 5, so it can be fed one
+instead (*the edge Aladdin's reader drew*, the same day).
+
+**Measured:**
+
+- **Expander reads spaces.** `tools/vmac/lzahexp.py` builds a method-5
+  fork of five 60-byte matches at the start, aimed at XADMaster's runs
+  of 13, both ramps, the zeros and the spaces, then 40 literals; this
+  engine reads it back as the pattern says before anything is booted.
+  Expander wrote 60 spaces for every match: the bytes lhasa's fill
+  gives, not the pattern's or deark's zeros. With the entry's CRC over
+  the pattern's output it warned the fork's integrity could not be
+  verified; over the spaces' output it extracted without a word.
+- **LHa for UNIX's `decode()` fills the dictionary with 0x20**, and
+  `-lh1-`'s start routine (`decode_start_fix`) leaves it;
+  `decode_start_lz5` writes the pattern, for LArc's `-lz5-` alone
+  (`reference/lha/src/slide.c`, `larc.c`). So XADMaster's `-lh1-` and
+  method 5 carry LArc's preload.
+- **No writer reaches the difference.** LHa for UNIX's `-lh1-` of two
+  files led by 200 and 2,000 spaces, and StuffIt Deluxe 2.0.1's method 5
+  over six files led by 2,000 spaces (`sitopt.py --mw --lz --tag 2`;
+  over three more `better` chose method 8), all extract here byte for
+  byte. **Hypothesis**, from the published LZHUF: its encoder seeds its
+  search tree with the 60 strings before its start, so a match reaches
+  at most 60 bytes into the preload, which is spaces in both readings.
+
+**Consequence: nothing real changes**, so the engine keeps the pattern
+(the observability gate) and the row stays, its route now a decision:
+adopting spaces would agree with Aladdin's reader on every stream, take
+the last XADMaster fact out of `unc_lzah.c`, and cost about −90 B
+(`unc_lzah.c` at `-Os`, 1,744 → 1,654 B; not built through
+`mkoverlay.sh`, and a decoder size change re-takes every budget).
+`better` is 5 or 8, whichever is smaller (FORMATS.md corrected).
 

@@ -156,9 +156,9 @@ def variant(name):
     raise SystemExit("mwexp: no variant %r" % name)
 
 
-def archive(entry, data, comp):
+def archive(entry, data, comp, method=8):
     h = bytearray(112)
-    h[0], h[1] = 0, 8                           # rsrc stored (empty), data MW
+    h[0], h[1] = 0, method                      # rsrc stored (empty), data
     nb = entry.encode("mac_roman")
     h[2] = len(nb)
     h[3:3 + len(nb)] = nb
@@ -182,9 +182,15 @@ def archive(entry, data, comp):
 def run_one(name, args):
     data, comp, expect = variant(name)
     entry = "Mw" + name
-    arc = archive(entry, data, comp)
+    expand(name, entry, archive(entry, data, comp), expect, len(data),
+           len(comp), args)
+
+
+def expand(name, entry, arc, expect, declared, streamlen, args):
+    """Boot Expander 4.0.2 over `arc`, expand it, and print what it wrote
+    for `entry` against `expect` (a bytes, or a dict of label -> bytes)."""
     work = R.work_tmp("mwexp-%s-" % name)
-    if args.keep_archives:
+    if getattr(args, "keep_archives", None):
         os.makedirs(args.keep_archives, exist_ok=True)
         open(os.path.join(args.keep_archives, name + ".sit"), "wb").write(arc)
     boot = os.path.join(work, "boot-in.hfv")
@@ -227,17 +233,23 @@ def run_one(name, args):
     shutil.rmtree(work, ignore_errors=True)
     files = {k.split(":")[-1]: v[0] for k, v in got.items()}
     out = files.get(entry)
+    expects = expect if isinstance(expect, dict) else {"the variant's rule": expect}
     if out is None:
         verdict = "no file (wrote %s)" % sorted(files)
-    elif out == expect:
-        verdict = "WROTE what the variant's rule gives (%d bytes)" % len(out)
     else:
-        k = next((i for i in range(min(len(out), len(expect)))
-                  if out[i] != expect[i]), min(len(out), len(expect)))
-        verdict = ("wrote %d bytes, the rule gives %d; they agree for the "
-                   "first %d" % (len(out), len(expect), k))
-    print("mwexp: %-8s declared %d, stream %d B: %s"
-          % (name, len(data), len(comp), verdict), flush=True)
+        parts = []
+        for label, e in expects.items():
+            if out == e:
+                parts.append("WROTE what %s gives (%d bytes)" % (label, len(out)))
+                continue
+            k = next((i for i in range(min(len(out), len(e)))
+                      if out[i] != e[i]), min(len(out), len(e)))
+            parts.append("wrote %d bytes, %s gives %d; they agree for the "
+                         "first %d" % (len(out), label, len(e), k))
+        verdict = "; ".join(parts)
+    print("%s: %-8s declared %d, stream %d B: %s"
+          % (os.path.basename(sys.argv[0])[:-3], name, declared, streamlen,
+             verdict), flush=True)
 
 
 def main():
