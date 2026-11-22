@@ -377,14 +377,51 @@ static UNC_HOT int sit_huffman(UncForkOut *f, UncBufIn *in, uint32_t outlen,
     unc_bitin_init(&bi, in);
     err = unc_huff_read_tree(h, &bi);
     if (err == UNC_OK) {
+        /* unc_huff_decode's table hit in the loop, the bit state in two
+         * locals and the byte straight into the writer's buffer: a call,
+         * the state through `bi` and a put a byte were three quarters of
+         * a method-3 run (tools/m68kprof.py, 2026-11-22; DECISIONS.md
+         * 2026-11-22, *the count that ran into its sentinel*). Two bytes
+         * already buffered are taken below sixteen bits (31 at most); a
+         * window boundary, a code past the table or a tree with none
+         * hands the state to the shared decoder and back. */
+        uint32_t bb = bi.bitbuf;
+        int32_t nb = bi.nbits;
+        uint8_t *d = f->buf + f->len, *de = f->buf + f->cap;
         for (i = 0; i < outlen; i++) {
-            int sym = unc_huff_decode(h, &bi);
-            if (sym < 0) {
-                err = bi.err != UNC_OK ? bi.err : UNC_ERR_CORRUPT;
-                break;
+            int sym;
+            uint32_t e = 0;
+            if (nb < 16 && in->pos + 2u <= in->len) {
+                const uint8_t *p = in->buf + in->pos;
+                bb = bb << 16 | (uint32_t)p[0] << 8 | p[1];
+                nb += 16;
+                in->pos += 2u;
             }
-            if (unc_fork_put(f, (uint8_t)sym) != UNC_OK) { err = UNC_ERR_SINK; break; }
+            if (nb >= UNC_HUFF_FAST_BITS && h->fastok)
+                e = h->fast[(bb >> (nb - UNC_HUFF_FAST_BITS))
+                            & ((1u << UNC_HUFF_FAST_BITS) - 1u)];
+            if (e) {
+                nb -= (int32_t)(e & 15u);
+                sym = (int)(e >> 4);
+            } else {
+                bi.bitbuf = bb; bi.nbits = nb;
+                sym = unc_huff_decode(h, &bi);
+                bb = bi.bitbuf; nb = bi.nbits;
+                if (sym < 0) {
+                    err = bi.err != UNC_OK ? bi.err : UNC_ERR_CORRUPT;
+                    break;
+                }
+            }
+            *d++ = (uint8_t)sym;
+            if (d == de) {
+                int ferr;
+                f->len = f->cap;
+                ferr = unc_fork_flush(f);
+                d = f->buf + f->len;
+                if (ferr != UNC_OK) { err = UNC_ERR_SINK; break; }
+            }
         }
+        f->len = (uint32_t)(d - f->buf);
     }
     unc_free(al, h);
     return err;

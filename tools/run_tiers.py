@@ -203,6 +203,8 @@ SHORT = re.compile(r"at least (\d+) bytes more memory")
 # 62 -> 63 on 2026-11-13, DERIVED: `derived-PuzzleGetter_0.8.sit` left again
 # with the folder memo's 1,600 B of A5 (below). 63 -> 62 on 2026-11-21,
 # DERIVED: it joined again with MIME's decode, the maintainer's call (below).
+# 62 -> 61 on 2026-11-22, DERIVED: `derived-unshar_1.11_folder.sit` joined
+# with StuffIt methods 3 and 5's speed work, the maintainer's call (below).
 EXPECT = {
     "floor-1M": (),
     "sys3-512K": ("derived-Cool_Tools__.sit",
@@ -245,7 +247,13 @@ EXPECT = {
                   # gives 83,060 since MIME and base64 decode a run of
                   # characters at a time (DECISIONS.md 2026-11-21, *the
                   # mail read twice*). The shipped lane does not move.
-                  "derived-PuzzleGetter_0.8.sit"),
+                  "derived-PuzzleGetter_0.8.sit",
+                  # Joined 2026-11-22, DERIVED, and let go by the
+                  # maintainer: 252 B short once methods 3 and 5 decode
+                  # from locals (+228 B StuffIt, +164 B codecs; DECISIONS.md
+                  # 2026-11-22, *the count that ran into its sentinel*).
+                  # The shipped lane does not move.
+                  "derived-unshar_1.11_folder.sit"),
                   # Five more were refused from 2026-11-12 while Installer
                   # VISE was resident in the control, and left with it the
                   # same day (DECISIONS.md 2026-11-12, *VISE parked*).

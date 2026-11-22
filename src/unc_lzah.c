@@ -175,7 +175,14 @@ static void lzah_update(Lzah *h, uint32_t c)
         k = ++h->freq[c];
         l = c + 1;
         if (k > h->freq[l]) {
-            while (l + 1 <= LZAH_T && k > h->freq[l + 1]) l++;
+            /* freq[LZAH_T] is 0xFFFF and k never passes LZAH_MAX_FREQ,
+             * so the sentinel ends the scan and no bound is tested; a
+             * pointer makes it `cmp.w (An)+`, `bhi` a step. The bound
+             * and the index were 37 % of a method-5 run (DECISIONS.md
+             * 2026-11-22, *the count that ran into its sentinel*). */
+            const uint16_t *f = &h->freq[l + 1];
+            while (k > *f) f++;
+            l = (uint32_t)(f - h->freq) - 1u;
             h->freq[c] = h->freq[l];
             h->freq[l] = (uint16_t)k;
 
@@ -283,7 +290,29 @@ int unc_lzah_decode(UncAlloc *al, UncBitIn *bi, uint32_t outlen, int mode,
 {
     Lzah *h;
     uint32_t pos = 0, flushed = 0;
+    UncBufIn *in = bi->in;
+    /* The bit reader's state for the whole call, LEFT-aligned: the next
+     * bit is w's top bit, so a bit is `w >> 31` and `w <<= 1` with no
+     * shift by a count, and nothing else reads `bi` until the end. A
+     * bit through UncBitIn was a load, a store and a shift by nbits a
+     * tree level (DECISIONS.md 2026-11-22, *the count that ran into its
+     * sentinel*). */
+    int32_t nb = bi->nbits;
+    uint32_t w = nb ? bi->bitbuf << (32 - nb) : 0;
     int err;
+
+#define LZAH_BIT(dst)                                                   \
+    do {                                                                \
+        if (nb == 0) {                                                  \
+            int b_ = unc_bufin_next_hot(in);                            \
+            if (b_ < 0) { bi->err = in->err; err = in->err; goto out; } \
+            w = (uint32_t)b_ << 24;                                     \
+            nb = 8;                                                     \
+        }                                                               \
+        (dst) = w >> 31;                                                \
+        w <<= 1;                                                        \
+        nb--;                                                           \
+    } while (0)
 
     h = (Lzah *)unc_alloc(al, (uint32_t)sizeof *h);
     if (!h) return UNC_ERR_MEM;
@@ -302,9 +331,9 @@ int unc_lzah_decode(UncAlloc *al, UncBitIn *bi, uint32_t outlen, int mode,
         /* Down from the root, one bit per level, to a leaf. */
         c = h->son[LZAH_R];
         while (c < LZAH_T) {
-            int bit = unc_bitin_bit(bi);
-            if (bit < 0) { err = bi->err; goto out; }
-            c = h->son[c + (uint32_t)bit];
+            uint32_t bit;
+            LZAH_BIT(bit);
+            c = h->son[c + bit];
         }
         c -= LZAH_T;
         lzah_update(h, c);
@@ -323,15 +352,24 @@ int unc_lzah_decode(UncAlloc *al, UncBitIn *bi, uint32_t outlen, int mode,
 
             /* The offset: eight bits looked up, of which the code was
              * dist_bits of them, then the rest of the low six bits. */
-            v = unc_bitin_bits(bi, 8);
-            if (v < 0) { err = bi->err; goto out; }
-            i = (uint32_t)v;
+            if (nb >= 8) {
+                i = w >> 24;
+                w <<= 8;
+                nb -= 8;
+            } else {
+                uint32_t bit;
+                i = 0;
+                for (v = 0; v < 8; v++) {
+                    LZAH_BIT(bit);
+                    i = (i << 1) | bit;
+                }
+            }
             high = h->dist_high[i];
             j = h->dist_bits[i] - 2u;
             while (j-- > 0) {
-                int bit = unc_bitin_bit(bi);
-                if (bit < 0) { err = bi->err; goto out; }
-                i = ((i << 1) & 0xFFu) | (uint32_t)bit;
+                uint32_t bit;
+                LZAH_BIT(bit);
+                i = ((i << 1) & 0xFFu) | bit;
             }
             moff = (high << 6) + (i & 0x3Fu) + 1u;
             from = pos - moff;
@@ -357,6 +395,9 @@ int unc_lzah_decode(UncAlloc *al, UncBitIn *bi, uint32_t outlen, int mode,
     }
 
 out:
+#undef LZAH_BIT
+    bi->nbits = nb;
+    bi->bitbuf = nb ? w >> (32 - nb) : 0;
     unc_free(al, h);
     return err;
 }

@@ -639,6 +639,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-21 (the byte DiskDoubler handed over one call at a time) — every decoded byte went through dd_out_byte and a put, and ADn read each field through a call; a span for runs, and a whole ADn token from the bit buffer: 13.9 → 5.7 million 68000 instructions, im2-DD3.7.7AuxFiles.dd 30.4 → 12.1 s on a Mac Plus (DD Expand 3.7.7: 9.6 s)
 - 2026-11-21 (the CRC shifted eight bits a byte) — StuffIt method 13 spent 46 % of its instructions in the shared canonical decoder's call, 15 % copying its window out a put at a time and 11 % in a CRC-16 that shifted the word eight bits a byte; the table hit in the loop, a span copy, the CRC as two byte tables: 21.3 → 12.9 million 68000 instructions, derived-Mystic_8-Ball.sit 44.5 → 24.7 s on a Mac Plus (Expander 4.0.2: 24.1 s)
 - 2026-11-22 (the bit state Compact Pro stored back every symbol) — a third of a Compact Pro run was unc_canon_decode's call and the bit reader's state stored back a symbol; the state in two locals for the LZH loop, the flag bit, the table hit and the offset's low bits taken from them: 40.0 → 31.8 million 68000 instructions, derived-FirstClass_Demo.cpt 75.3 → 56.3 s on a Mac Plus (Compact Pro 1.51: 46.3 s); CRC-32 as byte tables measured slower and not taken
+- 2026-11-22 (the count that ran into its sentinel) — StuffIt method 5's adaptive tree scanned for a node's new place with a bound its own sentinel made redundant, and both methods 3 and 5 read their bits through the struct; the sentinel alone, the bits in locals, method 3's table hit in its loop: derived-BitMap11.sit 102.2 → 80.4 s and derived-FastEnvelope.sit 46.7 → 26.1 s on a Mac Plus (Expander 4.0.2: 86.5 and 42.4 s)
 
 ---
 
@@ -27415,3 +27416,40 @@ the tallies unchanged.
 **Measured:** 75.3 → 56.3 s at 1x (`refspeed.py --ref ours`, twice,
 within a tick), byte-exact; `im2-DD3.7.7AuxFiles.dd`, which shares the
 image, unchanged at 12.1 s. The differential suite 994 of 994.
+
+## 2026-11-22 (the count that ran into its sentinel) — StuffIt method 5's adaptive tree scanned for a node's new place with a bound its own sentinel made redundant, and both methods 3 and 5 read their bits through the struct; the sentinel alone, the bits in locals, method 3's table hit in its loop: derived-BitMap11.sit 102.2 → 80.4 s and derived-FastEnvelope.sit 46.7 → 26.1 s on a Mac Plus (Expander 4.0.2: 86.5 and 42.4 s)
+
+**Claim:** FORMATS.md's method 5 and method 3 rows were 0.85x and 0.91x
+against Expander. By `tools/m68kprof.py`: `derived-BitMap11.sit` 64.9
+million instructions, 37 % of them `lzah_update`'s scan for the last node
+a count has overtaken, `while (l + 1 <= LZAH_T && k > freq[l + 1])`;
+`derived-FastEnvelope.sit` 22.6 M, 64 % `unc_huff_decode` and 11 %
+`unc_fork_put`.
+
+**Choice, method 5 (`src/unc_lzah.c`, shared with LZH's -lh1- and ARC's
+Trimmed):** `freq[LZAH_T]` is 0xFFFF and a count never passes
+`LZAH_MAX_FREQ`, so the sentinel ends the scan; it walks a pointer with no
+bound: 49.9 M, 86.9 s. Then the bit reader's state is a left-aligned local
+word for the whole call — nothing else reads `bi` inside it — so a tree
+level's bit is `w >> 31`, `w <<= 1`, not a load, a store and a shift by
+`nbits`: 50.6 M, MORE instructions, and **80.4 s**. Timed both ways on the
+emulator because the profile could not rank them (see *m68k instruction
+counts are not cycles*). `son` first in the struct, to save an `addi.l` a
+level, cost `freq` the same add in the update: 52.8 M, not kept.
+
+**Choice, method 3 (`sit_huffman`):** method 13's answer (2026-11-21, *the
+CRC shifted eight bits a byte*): the bit state in two locals, two bytes
+already buffered taken below sixteen bits, `unc_huff_decode`'s ten-bit
+table hit in the loop and the byte straight into the writer's buffer; a
+window boundary, a longer code or a tree without a table hands the state
+to the shared decoder and back. 16.5 M, **26.1 s**.
+
+The differential suite 994 of 994.
+
+**Price:** the StuffIt image +228 B, the codecs image +164 B; the shipped
+tallies unchanged. The all-resident control lane at System 6.0.8 / 512 KB
+loses `derived-unshar_1.11_folder.sit`, 252 B short (28 B with method 5
+alone); the maintainer let it go (`tools/run_tiers.py` EXPECT).
+
+**Measured:** at 1x (`refspeed.py --ref ours`, twice, within a tick),
+byte-exact.
