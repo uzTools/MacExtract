@@ -638,6 +638,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-21 (the tree walked a bit at a time) — StuffIt's method 6 decoded its fixed Huffman code one bit and one tree step at a time; a 256-entry table of the tree's first 8 levels, built once per fork: 8.4 → 3.8 million 68000 instructions, derived-INITLoader.sit 16.3 → 8.0 s on a Mac Plus (Expander 4.0.2: 3.3 s)
 - 2026-11-21 (the byte DiskDoubler handed over one call at a time) — every decoded byte went through dd_out_byte and a put, and ADn read each field through a call; a span for runs, and a whole ADn token from the bit buffer: 13.9 → 5.7 million 68000 instructions, im2-DD3.7.7AuxFiles.dd 30.4 → 12.1 s on a Mac Plus (DD Expand 3.7.7: 9.6 s)
 - 2026-11-21 (the CRC shifted eight bits a byte) — StuffIt method 13 spent 46 % of its instructions in the shared canonical decoder's call, 15 % copying its window out a put at a time and 11 % in a CRC-16 that shifted the word eight bits a byte; the table hit in the loop, a span copy, the CRC as two byte tables: 21.3 → 12.9 million 68000 instructions, derived-Mystic_8-Ball.sit 44.5 → 24.7 s on a Mac Plus (Expander 4.0.2: 24.1 s)
+- 2026-11-22 (the bit state Compact Pro stored back every symbol) — a third of a Compact Pro run was unc_canon_decode's call and the bit reader's state stored back a symbol; the state in two locals for the LZH loop, the flag bit, the table hit and the offset's low bits taken from them: 40.0 → 31.8 million 68000 instructions, derived-FirstClass_Demo.cpt 75.3 → 56.3 s on a Mac Plus (Compact Pro 1.51: 46.3 s); CRC-32 as byte tables measured slower and not taken
 
 ---
 
@@ -27382,3 +27383,35 @@ the tallies unchanged.
 
 **Measured:** 44.5 → 24.7 s at 1x (`refspeed.py --ref ours`, twice,
 within a tick), byte-exact.
+
+## 2026-11-22 (the bit state Compact Pro stored back every symbol) — a third of a Compact Pro run was unc_canon_decode's call and the bit reader's state stored back a symbol; the state in two locals for the LZH loop, the flag bit, the table hit and the offset's low bits taken from them: 40.0 → 31.8 million 68000 instructions, derived-FirstClass_Demo.cpt 75.3 → 56.3 s on a Mac Plus (Compact Pro 1.51: 46.3 s); CRC-32 as byte tables measured slower and not taken
+
+**Claim:** FORMATS.md's Compact Pro row was 0.61x against Compact Pro
+1.51. By `tools/m68kprof.py` on `derived-FirstClass_Demo.cpt`: 40.0
+million instructions — 33 % `unc_canon_decode` (MSB-first), 16.5 %
+`unc_crc32`, 5 % `unc_bitin_bits` for the six low offset bits, and the
+flag bit through `unc_bitin_bit`'s struct a token.
+
+**Choice:** method 13's answer (2026-11-21, *the CRC shifted eight bits
+a byte*) in the MSB direction. `unc_cpt_lzh_fork` keeps the bit buffer
+and count in locals from one block's codes to the next, synced into the
+`UncBitIn` only at the block boundary (`unc_bitin_align` pushes back the
+whole bytes held) and around a slow call. A refill takes two bytes
+already buffered below sixteen bits; the flag bit, the literal, length
+and offset codes' table hit, and the six low bits come off the locals. A
+window boundary or a code past the table hands the state to the shared
+reader and back. 31.8 M. Without the function's `UNC_HOT` (O3) it is
+33.6 M for 222 B less: kept. Only the literal code inlined, the other two
+through a call: 37.9 M for 32 B less: not kept.
+
+**Measured and NOT taken:** CRC-32 as four byte tables of the same 1 KB
+(the CRC-16 change of 2026-11-21): 6.6 → 8.5 M instructions in it and
+56.3 → 57.9 s at 1x, +40 B resident. Four bytes of state and four table
+bases do not fit the 68000's registers where two did.
+
+**Price:** the Compact Pro/DiskDoubler image +630 B; nothing resident;
+the tallies unchanged.
+
+**Measured:** 75.3 → 56.3 s at 1x (`refspeed.py --ref ours`, twice,
+within a tick), byte-exact; `im2-DD3.7.7AuxFiles.dd`, which shares the
+image, unchanged at 12.1 s. The differential suite 994 of 994.

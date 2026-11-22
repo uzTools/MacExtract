@@ -341,6 +341,46 @@ static int cpt_read_code(UncCanon *c, UncBufIn *in, int32_t nsyms)
     return unc_canon_build(c, lengths, nsyms);
 }
 
+/* The bit reader's state in two locals for the whole loop below, and
+ * what the loop does with them: a refill of two bytes already buffered
+ * below sixteen bits (so 31 at most), the flag bit and the six low
+ * offset bits taken straight off them, and unc_canon_decode's
+ * MSB-first table hit. A window boundary or a code longer than the
+ * table hands the state to the shared reader and back. A call, the
+ * state stored back and a mode test a symbol were a third of a
+ * Compact Pro run (tools/m68kprof.py, 2026-11-22; DECISIONS.md
+ * 2026-11-22, *the bit state Compact Pro stored back every symbol*). */
+static UNC_INLINE void cpt_refill(const UncBufIn *in, uint32_t *bb,
+                                  int32_t *nb, uint32_t *pos)
+{
+    if (*nb < 16 && *pos + 2u <= in->len) {
+        const uint8_t *p = in->buf + *pos;
+        *bb = *bb << 16 | (uint32_t)p[0] << 8 | p[1];
+        *nb += 16;
+        *pos += 2u;
+    }
+}
+
+static UNC_INLINE int cpt_sym(const UncCanon *c, UncBitIn *bi,
+                              uint32_t *bb, int32_t *nb)
+{
+    int sym;
+    if (*nb >= UNC_CANON_FAST_BITS) {
+        uint32_t peek = (*bb >> (*nb - UNC_CANON_FAST_BITS))
+                        & UNC_CANON_FAST_MASK;
+        int fl = c->fast.len[peek];
+        if (fl) {
+            *nb -= fl;
+            return c->sym[(int16_t)((peek >> (UNC_CANON_FAST_BITS - fl))
+                                    + c->cdelta[fl])];
+        }
+    }
+    bi->bitbuf = *bb; bi->nbits = *nb;
+    sym = unc_canon_decode(c, bi);
+    *bb = bi->bitbuf; *nb = bi->nbits;
+    return sym;
+}
+
 /* Decode one LZH-compressed fork, feeding bytes through `rle`. */
 UNC_HOT int unc_cpt_lzh_fork(CptRle *rle, UncBufIn *in, CptLzh *hz,
                      uint8_t *window, uint32_t blocksize)
@@ -350,7 +390,8 @@ UNC_HOT int unc_cpt_lzh_fork(CptRle *rle, UncBufIn *in, CptLzh *hz,
     uint32_t blockcost = blocksize;   /* force tree read on first pass */
     uint32_t blockstart = 0;
     int first = 1, err;
-    uint32_t i;
+    uint32_t i, bb = 0, pos;
+    int32_t nb = 0;
 
     {   /* a long at a time: `window` is an allocation, so even */
         uint32_t *p = (uint32_t *)(void *)window;
@@ -370,6 +411,7 @@ UNC_HOT int unc_cpt_lzh_fork(CptRle *rle, UncBufIn *in, CptLzh *hz,
              * — XADCompactProLZHHandle.m) */
             if (!first) {
                 uint32_t consumed;
+                bi.bitbuf = bb; bi.nbits = nb;
                 unc_bitin_align(&bi);
                 consumed = unc_bitin_bytepos(&bi) - blockstart;
                 if (unc_bufin_next(in) < 0 || unc_bufin_next(in) < 0 ||
@@ -383,13 +425,25 @@ UNC_HOT int unc_cpt_lzh_fork(CptRle *rle, UncBufIn *in, CptLzh *hz,
             blockcost = 0;
             unc_bitin_init(&bi, in);
             blockstart = unc_bitin_bytepos(&bi);
+            bb = bi.bitbuf; nb = bi.nbits;
         }
 
         {
-            int bit = unc_bitin_bit(&bi);
-            if (bit < 0) return bi.err;
+            int bit;
+            pos = in->pos;
+            cpt_refill(in, &bb, &nb, &pos);
+            in->pos = pos;
+            if (nb > 0) {
+                nb--;
+                bit = (int)((bb >> nb) & 1u);
+            } else {
+                bi.bitbuf = bb; bi.nbits = nb;
+                bit = unc_bitin_bit(&bi);
+                if (bit < 0) return bi.err;
+                bb = bi.bitbuf; nb = bi.nbits;
+            }
             if (bit) {
-                int sym = unc_canon_decode(&hz->lit, &bi);
+                int sym = cpt_sym(&hz->lit, &bi, &bb, &nb);
                 if (sym < 0)
                     return bi.err != UNC_OK ? bi.err : UNC_ERR_CORRUPT;
                 window[wpos++ & (CPT_WINDOW - 1)] = (uint8_t)sym;
@@ -398,14 +452,24 @@ UNC_HOT int unc_cpt_lzh_fork(CptRle *rle, UncBufIn *in, CptLzh *hz,
                 blockcost += 2;
             } else {
                 int32_t mlen, moff, low;
-                mlen = unc_canon_decode(&hz->len, &bi);
+                mlen = cpt_sym(&hz->len, &bi, &bb, &nb);
                 if (mlen < 0)
                     return bi.err != UNC_OK ? bi.err : UNC_ERR_CORRUPT;
-                moff = unc_canon_decode(&hz->off, &bi);
+                pos = in->pos;
+                cpt_refill(in, &bb, &nb, &pos);
+                in->pos = pos;
+                moff = cpt_sym(&hz->off, &bi, &bb, &nb);
                 if (moff < 0)
                     return bi.err != UNC_OK ? bi.err : UNC_ERR_CORRUPT;
-                low = unc_bitin_bits(&bi, 6);
-                if (low < 0) return bi.err;
+                if (nb >= 6) {
+                    nb -= 6;
+                    low = (int32_t)((bb >> nb) & 63u);
+                } else {
+                    bi.bitbuf = bb; bi.nbits = nb;
+                    low = unc_bitin_bits(&bi, 6);
+                    if (low < 0) return bi.err;
+                    bb = bi.bitbuf; nb = bi.nbits;
+                }
                 moff = (moff << 6) | low;
                 /* The copy out of the window and the RLE stage over what
                  * it wrote are one pass; overlap (and even offset 0,

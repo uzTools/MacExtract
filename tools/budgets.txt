@@ -12,22 +12,22 @@
 
 # ---- MEASURED: resident CODE and A5 (data + bss) per configuration, the
 # ratchets tools/build_mac.sh holds each build to
-UNC_MAC_CODE_DEFAULT=201764   # the resident control (UNC_OVL_RESIDENT)
-UNC_MAC_A5_DEFAULT=35180
+UNC_MAC_CODE_DEFAULT=202296   # the resident control (UNC_OVL_RESIDENT)
+UNC_MAC_A5_DEFAULT=35160
 UNC_MAC_CODE_EAGER=34992      # the shipped build
 UNC_MAC_A5_EAGER=14064
 UNC_MAC_CODE_LAZY=34140       # the lazy lifetime (UNC_OVL_LAZY)
 
 # ---- MEASURED: what tools/run_tiers.py computes every budget from
-TIERS_CONTROL=236944          # the control's CODE + A5
-OVL_SAVED=187888              # the control's CODE + A5 less the shipped build's
-BUNDLE=213640                 # ovl_bundle.bin
+TIERS_CONTROL=237456          # the control's CODE + A5
+OVL_SAVED=188400              # the control's CODE + A5 less the shipped build's
+BUNDLE=214272                 # ovl_bundle.bin
 # Each image, ovl_<name>.bin
 IMAGE_ARC=7924
 IMAGE_BINHEX=7630
 IMAGE_BTOA=2496
 IMAGE_CODECS=6012
-IMAGE_CPTDD=15764
+IMAGE_CPTDD=16394
 IMAGE_CRYPT=9260
 IMAGE_EXO=30284
 IMAGE_LZH=10602
@@ -45,7 +45,7 @@ IMAGE_SEGSETUP=3152
 
 # ---- MEASURED: what tools/check_app_size.py watches, within its tolerance
 APP_CODE_FILE=41728           # MacExtract.code.bin
-APP_BUNDLE_FILE=213640        # ovl_bundle.bin
+APP_BUNDLE_FILE=214272        # ovl_bundle.bin
 
 # ---- MACHINE: measured on the emulator, not from a build
 TIERS_MACHINE_SYS3_512K=414224   # System 3.0, Macintosh 512Ke
