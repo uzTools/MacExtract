@@ -130,18 +130,18 @@ bold:
 
 | Archive | MacExtract | StuffIt Expander 4.0.2 | Its own program |
 |---|---|---|---|
-| 270 KB StuffIt, LZW | **53 s** | 58 s | |
-| 220 KB StuffIt, LZ+Huffman | 25 s | **24 s** | |
-| StuffIt's four rarer methods, 14–210 KB | 6–102 s | **3–86 s** | |
+| 270 KB StuffIt, LZW | **54 s** | 58 s | |
+| 220 KB StuffIt, LZ+Huffman | 44 s | **24 s** | |
+| StuffIt's four rarer methods, 14–210 KB | 6–109 s | **3–86 s** | |
 | 300 KB BinHex with a StuffIt archive inside | **3½ min** | 7 min | |
 | 300 KB MacBinary | 2 s | 2 s | |
-| 250 KB Compact Pro | 56 s | 155 s | **46 s**, Compact Pro 1.51 |
+| 250 KB Compact Pro | 75 s | 155 s | **46 s**, Compact Pro 1.51 |
 | 60 KB PackIt | **4 s** | can't open | 27 s, PackIt III |
 | 170 KB LHA | **51 s** | can't open | 7 min, MacLHa 2.00 |
-| 190 KB DiskDoubler | 12 s | can't open | **10 s**, DD Expand 3.7.7 |
+| 190 KB DiskDoubler | 30 s | can't open | **10 s**, DD Expand 3.7.7 |
 | 170 KB zip (the old PKZIP 1 methods) | **56 s** | can't open | 86 s, UnZip 1.01 |
 | 290 KB tar | 9 s | can't open | **7 s**, tar 4.0b |
-| 280 KB uuencode | 16 s | can't open | **9 s**, UUTool 2.3.2 |
+| 280 KB uuencode | 66 s | can't open | **9 s**, UUTool 2.3.2 |
 
 Not timed: StuffIt 5, today's zip and gzip, whose programs need System 7
 or would not run here. The Deluxes do not run on a Mac Plus. Every figure
