@@ -8,10 +8,11 @@
  * bundle*). What a probe and its reader share is defined once, here, and
  * stays resident for the reader.
  *
- * Source: reference/XADMaster/XADStuffItSplitParser.m — every offset
- * below; fmt_sitseg.c's file comment states the layout, and what it
- * costs that nothing else describes it. NOT its first two bytes, which
- * it requires to be B0 56 and which StuffIt writes as a per-set value
+ * Every offset below is measured off sets StuffIt cut: fmt_sitseg.c's
+ * file comment states the layout and the measurement (DECISIONS.md
+ * 2026-11-22, *the split header StuffIt wrote*). XADMaster's
+ * XADStuffItSplitParser.m has the same offsets, and requires B0 56 in
+ * the first two bytes, which StuffIt writes as a per-set value
  * (measured 2026-10-24; below, and fmt_sitseg.c).
  *
  * SPDX-License-Identifier: 0BSD

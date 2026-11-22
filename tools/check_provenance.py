@@ -70,8 +70,6 @@ CARRIES = {
     "unc_lzah.c":       "the -lh1-/method-5 window preload (resetLZSSHandle)",
     "fmt_macbinary_probe.c": "the CRC-16/0xA001 fallback and the nonzero-date test",
     "fmt_applesingle.c": "the byte-swapped header",
-    "fmt_sitseg.c":     "the whole StuffIt split header",
-    "fmt_sitseg_probe.c": "the StuffIt split header's offsets",
     "fmt_dd_probe.c":   "the zero header CRC old files carry (XADDiskDoublerParser.m)",
     "unc_internal.h":   "the LZAH preload",
     "fmt_hecx.c":       "BinHex before 4.0 and .dl, the whole decoder (hexbin's hecx.c, dl.c)",
@@ -100,6 +98,7 @@ HISTORICAL = {
     "unc_crypt.c",  # StuffIt 5's key and ARC's garble left 2026-11-09
     "unc_segment.c",  # the part names left 2026-11-22 for Zip and 7-Zip
     "unc_sidecar.c",  # left 2026-11-22 for copyfile, libarchive, Eclectic Light
+    "fmt_sitseg.c", "fmt_sitseg_probe.c",  # measured off StuffIt's sets 2026-11-22
 }
 
 MENTION = re.compile(r"XAD|libxad|macutils")

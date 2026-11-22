@@ -645,6 +645,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-22 (the table the code book could build) — method 6 rebuilt a two-level table for every segment; the canonical code book fills one 11-bit table per fork as the tree is built, two byte tables of length and ordinal, read through a left-aligned window: 1.96 → 1.69 million 68000 instructions, derived-INITLoader.sit 5.2 → 4.3 s on a Mac Plus (Expander 4.0.2: 3.3 s, still ahead), the StuffIt image 752 B smaller
 - 2026-11-22 (the part names the writers wrote) — `unc_segment.c`'s naming rules left XADMaster for Info-ZIP Zip 3.0's manual and what Zip 3.0 and 7-Zip 25.01 wrote; the same measurement found Zip numbering a 100th part `.z100`, which the engine does not join
 - 2026-11-22 (the sidecar rules Apple's own code states) — `unc_sidecar.c`'s last XADMaster citations — the `._` and `__MACOSX` names, the header test, and the Spotlight comment's attribute name — left for copyfile.c, libarchive's zip reader and a published description; no code changed
+- 2026-11-22 (the split header StuffIt wrote) — every offset of the StuffIt segment header that still rested on XADMaster, the name, type, creator, flags, dates and fork lengths, measured off the twelve sets StuffIt cut and the file one was cut from; the same offsets, no code changed
 
 ---
 
@@ -27660,4 +27661,37 @@ other comment" is likewise the 2026-10-18 decision's.
 **Measured:** `tools/check_provenance.py` failed with the file still in
 `CARRIES` ("no Source-marked citation left") and passes with it in
 `HISTORICAL`. XADMaster is still named in comments, as a comparison.
+
+## 2026-11-22 (the split header StuffIt wrote) — every offset of the StuffIt segment header that still rested on XADMaster, the name, type, creator, flags, dates and fork lengths, measured off the twelve sets StuffIt cut and the file one was cut from; the same offsets, no code changed
+
+Bytes 0-3 and 94-99 were measured off StuffIt's sets and Deluxe 2.0.1's
+code on 2026-10-24 (*the magic StuffIt never wrote*, *the two bytes the
+writer drew*); bytes 4-93 were still cited to XADStuffItSplitParser.m,
+the row's route "its offsets measured off sets StuffIt cuts". The sets
+were already in `specimens/sitseg-real`.
+
+**Measured** (part 1 of each of the twelve sets, read by a script):
+
+- **4-93 against a known input:** `tools/vmac/sitopt.py --segment` kept
+  the file Deluxe 2.0.1 cut, `SubjA.in.bin`: `SubjA`, `TEXT`/`ttxt`,
+  323 bytes of resource fork, 50,000 of data, both dates 0. Part 1 states
+  5 at 4, `SubjA` at 5, `TEXT` at 68, `ttxt` at 72, 0 at 78 and 82, 323
+  at 86 and 50,000 at 90, and the part is 100 + 323 + 50,000 bytes. 76 is
+  `0100` where the input's flags were 0: `kHasBeenInited`
+  (reference/notes/tn1150_hfsplus.txt). Hypothesis: the Finder set it
+  on the emulated volume before Deluxe read the flags, so 76 is the
+  file's flags as they were when it was cut.
+- **86 and 90 are the fork lengths, resource first:** on eleven sets the
+  parts' payloads add up to 86 + 90 exactly; Now Utilities' two disks
+  exceed it by 56,206, the PowerPC code after its segment (2026-10-24,
+  *the length part 1 kept in its resource fork*). rsrcb (30,266 and
+  50,000) has the same order.
+- **78 before 82:** Deluxe 5.0's Save As onto two floppies (`flop`)
+  states 08:26:16 at 78 and 08:27:07 at 82; the other sets' two dates
+  are equal or zero, so this one set gives the order.
+
+**Consequence:** XADMaster's offsets were right, so no code changed (the
+68000 code of both files byte-identical), and both files go to
+`HISTORICAL`. The probe's own limits, a name of 1-63 bytes with no NUL,
+are this engine's: 63 is the room from 5 to 68.
 

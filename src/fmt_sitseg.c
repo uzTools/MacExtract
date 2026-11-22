@@ -1,18 +1,20 @@
 /*
  * fmt_sitseg.c — one part of a StuffIt segmented ("split") set.
  *
- * XADMaster is the SOLE source of this header, and the re-citation
- * that moved BinHex, MacBinary, AppleSingle, zip, tar and gzip onto
- * their own specifications (DECISIONS.md 2026-09-19, *the facts that
- * were somebody else's to state*) found nothing to move this onto:
- * Aladdin published nothing about it, and neither deark nor macutils
- * reads it. So it stays, and so does what that costs.
- *
- * Source: reference/XADMaster/XADStuffItSplitParser.m — the whole
- * layout below.
- * Layout (reference/XADMaster/XADStuffItSplitParser.m,
- * +recognizeFileWithHandle:, +volumesForHandle: and -parse; see
- * NOTICE):
+ * Aladdin published nothing about this header, and neither deark nor
+ * macutils reads it, so every offset below is measured off sets StuffIt
+ * itself cut (DECISIONS.md 2026-11-22, *the split header StuffIt wrote*).
+ * Source: the twelve sets in specimens/sitseg-real (tools/run_segments.py,
+ * REAL_SITSEG), seven writers from StuffIt Deluxe 2.0.1 (1991) to 5.0,
+ * and the file each was cut from where it was kept:
+ * tools/vmac/sitopt.py --segment's SubjA.in.bin
+ * (SubjA, TEXT/ttxt, 323 bytes of resource fork, 50,000 of data, both
+ * dates 0) is what part 1's 4..93 states, field for field; on eleven sets
+ * the parts' payloads add up to 86 + 90 exactly (the twelfth, Now
+ * Utilities, by the 56,206 bytes of PowerPC code below); and Deluxe 5.0's
+ * Save As (flop) dates its set 08:26:16 at 78 and 08:27:07 at 82, so
+ * creation comes first. XADMaster's XADStuffItSplitParser.m, the only
+ * other reader, has the same offsets; it was the source until then.
  *
  *   Every part begins with a 100-byte header:
  *      0  two bytes, the same in every part of a set: a random set
@@ -82,7 +84,7 @@
  * 2026-10-24.
  *
  * A part is matched to its set by name length + name bytes + the 26
- * bytes at offset 68 — XADMaster's memcmp, and the reason the part
+ * bytes at offset 68, as XADMaster's memcmp does — the reason the part
  * NUMBER is trustworthy while the FILENAME is not consulted at all.
  *
  * Two properties of the header carry the rest of the design:

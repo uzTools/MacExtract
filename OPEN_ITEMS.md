@@ -127,7 +127,7 @@ LGPL-2.1-or-later, through the four files that hold transcribed code
 (`CODE` in `tools/check_provenance.py`, **code** below). The other rows are
 facts read in somebody else's code, 0BSD already, and stay listed because
 leaving XADMaster is about where the knowledge came from (DECISIONS.md
-2026-11-08, *the code we wrote*). Of the 16 `CARRIES` files, 10 owe
+2026-11-08, *the code we wrote*). Of the 12 `CARRIES` files, 6 owe
 XADMaster, 4 owe libxad, the Amiga library XADMaster carries them from
 (`unc_lzdyn.c`, `fmt_sit.c`, `sit14.c`, `fmt_dd.c`; same licence), and
 `fmt_hecx.c` and `fmt_binhex_probe.c` owe macutils' hexbin, whose README
@@ -146,8 +146,7 @@ SPDX line, in the same commit.
 | `src/sit14.c` — StuffIt 5's method 14, libxad's, **code** | libxad's `SIT_14` is the only implementation (FORMATS.md, *StuffIt 5's method 14*) | a description written from StuffIt 5's own engine; the largest row, not priced |
 | `fmt_arc.c` — Crunch 5/6/7, Crush, the method numbers, **code** | no other implementation of 7 or Crush; not taken 2026-09-22 | the DOS originals as encoders, and a description |
 | `fmt_dd.c` — the per-method rules, and the DDAR 0x20 raw-fork shape, libxad's, facts | methods 2, 5 and 7's codecs left 2026-11-09 for DiskDoubler 3.1.2's own decoders (`docs/formats/diskdoubler-splay-stac.md`; DECISIONS.md 2026-11-09, *the decoders DiskDoubler shipped*) | DiskDoubler's own expander on a fork of the 0x20 shape |
-| `fmt_sitseg.c`, `fmt_sitseg_probe.c` — the StuffIt split header | Aladdin never published it; nothing else in `reference/` reads it (NOTICE) | its offsets measured off sets StuffIt cuts, as the B0 56 bytes were |
-| five tolerances no specification supports — the MacBinary CRC-16/0xA001 fallback and its nonzero-date test (zero dates accepted since 2026-11-21 where the file's length fits the forks: the btoa/atob Translator writes them; DECISIONS.md 2026-11-21, *the MacBinary with no dates*), the byte-swapped AppleSingle header, DiskDoubler's stored header CRC of zero (with the split header above) | deark is a checked negative for all four; the two MacBinary ones are unexercised; kept, the maintainer's decision 2026-10-23 (DECISIONS.md 2026-10-23, *the probes next door*) | the writer that made such files, or the tolerance dropped |
+| four tolerances no specification supports — the MacBinary CRC-16/0xA001 fallback and its nonzero-date test (zero dates accepted since 2026-11-21 where the file's length fits the forks: the btoa/atob Translator writes them; DECISIONS.md 2026-11-21, *the MacBinary with no dates*), the byte-swapped AppleSingle header, DiskDoubler's stored header CRC of zero | deark is a checked negative for all four; the two MacBinary ones are unexercised; kept, the maintainer's decision 2026-10-23 (DECISIONS.md 2026-10-23, *the probes next door*) | the writer that made such files, or the tolerance dropped |
 | `fmt_hecx.c` (**code**), `fmt_binhex_probe.c` — hexbin's | *BinHex before 4.0*, below | BinHex 2.0's own `CODE`, as that item says |
 
 ## A later archive's destination dialog opens where Standard File last was
