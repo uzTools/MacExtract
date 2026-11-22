@@ -27595,3 +27595,18 @@ assembly on 2026-11-22.
 
 **Price:** the StuffIt image −752 B; the fork's allocation +2,048 B; the
 shipped tallies unchanged.
+
+**Two more measured the same day and NOT taken:**
+
+- **The CRC-16 taken in `unc_fork_write`'s copy** (a count of the bytes
+  already covered, the flush doing the rest): the combined loop is 11
+  instructions a byte against the copy's 3 and the unrolled CRC's 6.75,
+  so derived-Mystic_8-Ball.sit went 11.90 → 11.97 M and INITLoader
+  1.69 → 1.67 M. In cycles it is even, the store being the only thing
+  the copy adds to the CRC's own load.
+- **uuencode's line scan by a 256-byte class table** (each byte's
+  alphabets, ANDed): 5.79 → 5.52 M instructions on the profiler's
+  compiler, but the shipped one spills the table's base and reloads it
+  each character, and the row went 12.0 → **12.4 s**, slower, for +284 B.
+  The profile is not the Mac (see *m68k instruction counts are not
+  cycles*).
