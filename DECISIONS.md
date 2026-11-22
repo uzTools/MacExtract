@@ -637,6 +637,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-21 (the MacBinary with no dates) — the btoa/atob Translator writes a MacBinary I header with zero dates, which the probe refused, so a btoa file stopped at a 256-byte MacBinary; zero dates are now accepted when the file is as long as its forks, and creator asci gets a helper
 - 2026-11-21 (the tree walked a bit at a time) — StuffIt's method 6 decoded its fixed Huffman code one bit and one tree step at a time; a 256-entry table of the tree's first 8 levels, built once per fork: 8.4 → 3.8 million 68000 instructions, derived-INITLoader.sit 16.3 → 8.0 s on a Mac Plus (Expander 4.0.2: 3.3 s)
 - 2026-11-21 (the byte DiskDoubler handed over one call at a time) — every decoded byte went through dd_out_byte and a put, and ADn read each field through a call; a span for runs, and a whole ADn token from the bit buffer: 13.9 → 5.7 million 68000 instructions, im2-DD3.7.7AuxFiles.dd 30.4 → 12.1 s on a Mac Plus (DD Expand 3.7.7: 9.6 s)
+- 2026-11-21 (the CRC shifted eight bits a byte) — StuffIt method 13 spent 46 % of its instructions in the shared canonical decoder's call, 15 % copying its window out a put at a time and 11 % in a CRC-16 that shifted the word eight bits a byte; the table hit in the loop, a span copy, the CRC as two byte tables: 21.3 → 12.9 million 68000 instructions, derived-Mystic_8-Ball.sit 44.5 → 24.7 s on a Mac Plus (Expander 4.0.2: 24.1 s)
 
 ---
 
@@ -27343,3 +27344,41 @@ suite 994 of 994; a span that drops the sum fails
 unchanged.
 
 **Measured:** 30.4 → 12.1 s at 1x (`refspeed.py --ref ours`), byte-exact.
+
+## 2026-11-21 (the CRC shifted eight bits a byte) — StuffIt method 13 spent 46 % of its instructions in the shared canonical decoder's call, 15 % copying its window out a put at a time and 11 % in a CRC-16 that shifted the word eight bits a byte; the table hit in the loop, a span copy, the CRC as two byte tables: 21.3 → 12.9 million 68000 instructions, derived-Mystic_8-Ball.sit 44.5 → 24.7 s on a Mac Plus (Expander 4.0.2: 24.1 s)
+
+**Claim:** FORMATS.md's method 13 row was 0.54x. By `tools/m68kprof.py`
+on `derived-Mystic_8-Ball.sit` (268 KB out, about 216,000 symbols):
+21.3 million instructions — 46 % `unc_canon_decode`, about 45 a symbol
+for a call, the direction test and the bit state stored back; 15 %
+`unc_fork_write`, which called `unc_fork_put` a byte (12 instructions a
+byte); 11 % `unc_crc16_arc`, whose word table needs `lsr.w #8` (22
+cycles on a 68000) and `andi.l #255` (16) a byte.
+
+**Choice**, in the order measured:
+
+- `unc_fork_write` copies as much as the buffer holds, a
+  `move.b (An)+,(Am)+` loop, and flushes when full: 18.9 M (the
+  pre-tested loop, 12 B smaller than a do-while with its own full-buffer
+  test, costs 0.27 M of it). Every run-handing caller shares it: StuffIt's
+  LZ methods, LZH.
+- Method 13's literal/length decode takes the LSB-first table hit in its
+  own loop, the bit state in two locals, three bytes taken below nine bits;
+  a window boundary or a ten-bit code hands the state to
+  `unc_canon_decode` and back, as do the extra bits and the offset code.
+  `sit13_fork` is out of line: inlined into `unc_sit_decode_fork`, every
+  cursor lived in the frame (`addq.l #1,d16(a6)` a byte). 13.5 M. The
+  same hit on the offset code saved 0.03 M for 108 B and was not kept.
+- CRC-16/ARC held as two bytes, its table as two byte tables of the same
+  512 B: two indexed byte loads and an XOR a byte, about 58 cycles where
+  the word table was about 88. 12.9 M. `tools/check_crc_tables.py`
+  checks the words they make.
+
+The differential suite 994 of 994; `check_crc_tables.py --selftest`
+catches a bent entry of either half.
+
+**Price:** the StuffIt image +248 B; resident +8 B (the CRC's code);
+the tallies unchanged.
+
+**Measured:** 44.5 → 24.7 s at 1x (`refspeed.py --ref ours`, twice,
+within a tick), byte-exact.

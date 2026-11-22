@@ -135,7 +135,15 @@ def check(tables, quiet=False):
 def main():
     text = SRC.read_text()
     names = ("unc_crc16_table", "unc_crc32_table", "unc_crc16_arc_table")
-    tables = {n: parse_table(text, n) for n in names}
+    tables = {n: parse_table(text, n) for n in names[:2]}
+    # CRC-16/ARC is stored as its entries' low and high bytes, two
+    # tables (src/unc_util.c); checked as the words they make.
+    lo = parse_table(text, "unc_crc16_arc_lo")
+    hi = parse_table(text, "unc_crc16_arc_hi")
+    if max(lo + hi) > 0xFF:
+        raise SystemExit("check_crc_tables: an unc_crc16_arc_lo/_hi entry "
+                         "is wider than a byte")
+    tables["unc_crc16_arc_table"] = [h << 8 | l for l, h in zip(lo, hi)]
 
     if "--selftest" in sys.argv:
         # Establish that this check CAN fail: bend one entry of each table

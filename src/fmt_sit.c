@@ -553,15 +553,16 @@ UNC_NOINLINE void unc_sit_match(uint8_t *window, uint32_t mask, uint32_t pos,
     } while (n > 0);
 }
 
-static int sit13_fork(UncForkOut *f, UncBufIn *in, uint32_t outlen,
-                      UncAlloc *al)
+static UNC_NOINLINE int sit13_fork(UncForkOut *f, UncBufIn *in, uint32_t outlen,
+                                   UncAlloc *al)
 {
     Sit13 *hz;
     uint8_t *window;
     UncBitIn bi;
     UncCanon *curr, *second;
     uint32_t pos = 0, flushed = 0;
-    uint32_t win = sit13_winsize(outlen), thresh;
+    uint32_t win = sit13_winsize(outlen), thresh, bb;
+    int32_t nb;
     int err = UNC_OK;
     int val, sel;
 
@@ -609,17 +610,41 @@ static int sit13_fork(UncForkOut *f, UncBufIn *in, uint32_t outlen,
 
     curr = &hz->first;
     thresh = win >> 2;
+    bb = bi.bitbuf;
+    nb = bi.nbits;
     while (pos < outlen) {
         int sym;
+        unsigned peek;
         if (pos - flushed >= thresh) {
             err = unc_sit_flush(f, window, win, flushed, pos);
             if (err != UNC_OK) goto out;
             flushed = pos;
         }
-        sym = unc_canon_decode(curr, &bi);
-        if (sym < 0) {
-            err = bi.err != UNC_OK ? bi.err : UNC_ERR_CORRUPT;
-            goto out;
+        /* unc_canon_decode's LSB-first table hit, in the loop with the
+         * bit state in locals: below nine bits, three bytes already
+         * buffered are taken (n <= 8, so the 24 fit). A window boundary
+         * or a code of ten bits or more is the shared decoder's, with
+         * the state handed over and back. */
+        if (nb < UNC_CANON_LE_BITS && in->pos + 3u <= in->len) {
+            const uint8_t *p = in->buf + in->pos;
+            bb |= ((uint32_t)p[0] | (uint32_t)p[1] << 8
+                   | (uint32_t)p[2] << 16) << nb;
+            nb += 24;
+            in->pos += 3u;
+        }
+        peek = nb >= UNC_CANON_LE_BITS ? curr->fast.le[bb & UNC_CANON_LE_MASK] : 0;
+        if (peek) {
+            nb -= (int32_t)(peek & 15u);
+            bb >>= peek & 15u;
+            sym = (int)(peek >> 4);
+        } else {
+            bi.bitbuf = bb; bi.nbits = nb;
+            sym = unc_canon_decode(curr, &bi);
+            bb = bi.bitbuf; nb = bi.nbits;
+            if (sym < 0) {
+                err = bi.err != UNC_OK ? bi.err : UNC_ERR_CORRUPT;
+                goto out;
+            }
         }
         if (sym < 0x100) {
             curr = &hz->first;
@@ -627,6 +652,7 @@ static int sit13_fork(UncForkOut *f, UncBufIn *in, uint32_t outlen,
         } else {
             int32_t mlen, moff, bl;
             curr = second;
+            bi.bitbuf = bb; bi.nbits = nb;
             if (sym < 0x13e) mlen = sym - 0x100 + 3;
             else if (sym == 0x13e) mlen = unc_bitin_bits_le(&bi, 10) + 65;
             else if (sym == 0x13f) mlen = unc_bitin_bits_le(&bi, 15) + 65;
@@ -642,6 +668,7 @@ static int sit13_fork(UncForkOut *f, UncBufIn *in, uint32_t outlen,
                 if (low < 0) { err = bi.err; goto out; }
                 moff = (1 << (bl - 1)) + low + 1;
             }
+            bb = bi.bitbuf; nb = bi.nbits;
 
             /* mlen >= 3 and pos < outlen here, so n >= 1. */
             {
