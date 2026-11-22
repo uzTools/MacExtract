@@ -1454,7 +1454,9 @@ static int dd_archive(UncCtx *c)
              * macunpack/dd.h stating the same offsets under its own
              * names — two readers agreeing, not a specimen.
              * docs/formats/diskdoubler-container.md, "The 0x20 flag,
-             * which nothing here has ever set", says what would settle it. */
+             * which nothing here has ever set": measured 2026-11-22, DD
+             * Expand 3.7.7 IGNORES it on a DDAP record and expands the
+             * file header behind it; no record here sets it. */
             DdFile f;
             uint8_t *fp = (uint8_t *)&f;
             uint32_t fi;

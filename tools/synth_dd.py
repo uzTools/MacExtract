@@ -27,6 +27,11 @@ skip, and the name an enddir record carries — are written as zero or as
 the folder's own name; no specimen says what DiskDoubler puts there, and
 nothing here or in the reference looks.
 
+DiskDoubler's own DD Expand 3.7.7 extracts NOTHING from these: they
+leave the archive header's length (+8) and each record's CRC-16/XMODEM
+(+122) zero (docs/formats/diskdoubler-container.md, measured
+2026-11-22).
+
 What this cannot see: whether DiskDoubler itself writes the trees this
 way. Both readers agree on what the records mean, and only a deep
 archive written by DiskDoubler could say that the records are what it

@@ -330,9 +330,23 @@ Agreement between two readers is evidence about the readers; it is not
 a specimen, and this document does not present it as one. (Called independent until 2026-11-06; libxad's file names no source,
 so whether it is independent of macutils is not known.)
 
-**What would close it:** a `DDAR` archive with the flag set, from any
-version that writes one — or a shape of file 3.7 declines that has not
-been tried.
+**Measured 2026-11-22: DD Expand 3.7.7 ignores it.** Combine's own
+`combine-raw.dd` with `0x20` set on `Empty`'s record (and the record's
+CRC at +122 repaired, below) expands exactly as the unmodified archive
+does: `Empty` from its file header, `TEXT`/`ttxt` with two empty forks,
+and the other five entries agreeing (`diskdoubler.py --ddar`, 5 of 6, 6
+of 6 unmodified). A reader taking `0x20` as "raw forks" writes the 84
+header bytes as the file, as `src/fmt_dd.c` does. With the CRC left
+stale DD Expand says *"Information for the file “Empty” in the combined
+file is damaged"* and stops.
+
+**The record's last two bytes, +122, are a CRC-16/XMODEM of its first
+122**: 55 records of 55 in the eight `DDAR` archives here (2026-11-22).
+**The archive header's +8 is the archive's length**, 8 of 8; +4 is a
+small count whose meaning is not pinned (it equals the records less
+folder-ends in 4 of 8). An archive written with these zero, as
+`tools/synth_dd.py` writes them, is opened by DD Expand and nothing in
+it extracted.
 
 **It is not 1.x or 2.x, which is what this said until 2026-09-22.**
 A 2.x DiskDoubler cannot have written a `DDAR` record of any flags:

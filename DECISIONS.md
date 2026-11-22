@@ -649,6 +649,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-22 (the table method 8 threw away) — StuffIt Deluxe 2.0.1's `optimal` wrote a method-8 fork that restarts its table ten times, the first in reach; the restart rule leaves libxad, the engine is byte-exact on it, and the end code and 14-bit ceiling stay, unreached by this writer
 - 2026-11-22 (the edge Aladdin's reader drew) — StuffIt Expander 4.0.2, fed method-8 streams built to each rule, settles the end code and the ceiling: 15 bits at 16,384 entries, the table's last entry 16,384, a code past the next free one ends the stream; `fmt_sit.c` owes libxad nothing
 - 2026-11-22 (the window Aladdin's reader starts with) — StuffIt Expander 4.0.2 reads method 5 from a window of spaces, not XADMaster's pattern, and LHa for UNIX fills -lh1-'s so; no writer here reaches the part where they differ, so nothing real changes and the engine keeps the pattern until the maintainer decides
+- 2026-11-22 (the flag DiskDoubler never read) — DD Expand 3.7.7 ignores DDAR's 0x20 flag on a DDAP record and expands it, where XADMaster, macutils and this engine read the forks raw; no record here sets it, so the engine is left for the maintainer; each record carries a CRC-16/XMODEM at +122
 
 ---
 
@@ -27806,4 +27807,25 @@ the last XADMaster fact out of `unc_lzah.c`, and cost about −90 B
 (`unc_lzah.c` at `-Os`, 1,744 → 1,654 B; not built through
 `mkoverlay.sh`, and a decoder size change re-takes every budget).
 `better` is 5 or 8, whichever is smaller (FORMATS.md corrected).
+
+## 2026-11-22 (the flag DiskDoubler never read) — DD Expand 3.7.7 ignores DDAR's 0x20 flag on a DDAP record and expands it, where XADMaster, macutils and this engine read the forks raw; no record here sets it, so the engine is left for the maintainer; each record carries a CRC-16/XMODEM at +122
+
+The note asked for "a DDAR archive with the flag set". DD Expand 3.7.7
+can be given one (`diskdoubler.py --ddar`).
+
+**Measured.** Two synthetic archives (`synth_dd.py`'s records) came back
+as an empty folder: DD Expand extracts nothing from an archive whose
+header length (+8) and record CRCs (+122) are zero, both measured since
+(the container note). So the record was flagged in Combine's own
+`combine-raw.dd` instead, one byte, its CRC repaired: DD Expand expanded
+`Empty` from its file header exactly as without the flag (5 of 6
+entries agree with this engine; 6 of 6 unmodified), where this engine
+writes the 84 header bytes raw. With the CRC stale it calls the record
+damaged and stops, which is how the CRC was found.
+
+**Consequence.** The 0x20 reading is two readers' (libxad, macutils),
+and DiskDoubler's own expander does not share it. No record of 44 sets
+it, so no real file changes, and the engine keeps the test (the
+observability gate): dropping it is the maintainer's call. What a writer
+that set 0x20 meant, if one did, is not known.
 
