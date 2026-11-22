@@ -4155,10 +4155,10 @@ an hour. All skip cleanly with a message when what they need is absent.
 - **Whether the shipped C is independent of XADMaster.** They prove a
   description is sufficient to read the format, nothing about how `src/`
   was written.
-- **Anything about a fork no fixture has.** StuffIt method 8's
-  end-of-stream code and 14-bit ceiling are unreached, so `fmt_sit.c`
-  still cites XADMaster for those two rules; its table restart is
-  graded by `run_sitopt.py` (14b) on a specimen, not by these tools. Every tool
+- **Anything about a fork no fixture has.** StuffIt method 8's table
+  restart is graded by `run_sitopt.py` (14b) on a specimen, and its
+  end code and ceiling were measured once on StuffIt Expander 4.0.2
+  (`tools/vmac/mwexp.py`); no suite grades those two. Every tool
   prints how many forks it decoded.
 - **Whether the oracle is independent.** `unar` IS XADMaster; where a second
   lineage exists it is used instead (`derive_arc.py --grid` against a real

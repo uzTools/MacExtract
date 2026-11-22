@@ -647,6 +647,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-22 (the sidecar rules Apple's own code states) — `unc_sidecar.c`'s last XADMaster citations — the `._` and `__MACOSX` names, the header test, and the Spotlight comment's attribute name — left for copyfile.c, libarchive's zip reader and a published description; no code changed
 - 2026-11-22 (the split header StuffIt wrote) — every offset of the StuffIt segment header that still rested on XADMaster, the name, type, creator, flags, dates and fork lengths, measured off the twelve sets StuffIt cut and the file one was cut from; the same offsets, no code changed
 - 2026-11-22 (the table method 8 threw away) — StuffIt Deluxe 2.0.1's `optimal` wrote a method-8 fork that restarts its table ten times, the first in reach; the restart rule leaves libxad, the engine is byte-exact on it, and the end code and 14-bit ceiling stay, unreached by this writer
+- 2026-11-22 (the edge Aladdin's reader drew) — StuffIt Expander 4.0.2, fed method-8 streams built to each rule, settles the end code and the ceiling: 15 bits at 16,384 entries, the table's last entry 16,384, a code past the next free one ends the stream; `fmt_sit.c` owes libxad nothing
 
 ---
 
@@ -27731,4 +27732,40 @@ and fails an engine that ends the stream at a restart.
 **What was not done:** feeding StuffIt Expander 4.0.2 a stream with an
 end code or a full table. That would show what Aladdin's reader does
 with one, which is the other route the row leaves.
+
+## 2026-11-22 (the edge Aladdin's reader drew) — StuffIt Expander 4.0.2, fed method-8 streams built to each rule, settles the end code and the ceiling: 15 bits at 16,384 entries, the table's last entry 16,384, a code past the next free one ends the stream; `fmt_sit.c` owes libxad nothing
+
+The same day's Deluxe 2.0.1 fork (*the table method 8 threw away*) left
+two rules no writer here reaches. The method-8 note had ruled out a
+synthetic stream as "this project's two readings against each other";
+that holds for `unar` and this engine, not for **StuffIt Expander
+4.0.2**, which is Aladdin's, decodes method 8, and has graded this
+project's StuffIt forks since 2026-11-08 (*Is there an implementation
+that could be fed*, OPEN_ITEMS.md's first question).
+
+**Measured** (`tools/vmac/mwexp.py`, one boot per stream; the table is
+the note's *What Aladdin's reader does at the edge*): every code a
+literal, so only the width can be in dispute; a 15-bit restart code at
+16,384 entries decodes where a 14-bit reader would take it as a 0; a
+table restarted by itself at 16,384 does not; 17,000 literals stop
+after code 16,129 whichever width follows; a code five past the next
+free one stops the stream with 100 bytes still after it. Each matches
+`src/fmt_sit.c`, which stops at the same code. Expander keeps the
+bytes it has and warns that the fork's integrity could not be verified;
+this engine reports the entry corrupt or truncated. The rule is the same
+and the treatment of a damaged fork differs, by design (CLAUDE.md:
+CRC mismatches are per-entry errors).
+
+**The first two boots said "This archive is damaged"** over a stream
+the engine reads. The cause was the container: the archive header's
+bytes 16-19, the header size, left 0, where all 220 corpus archives have
+22. Controls (300 literals; Deluxe's own fork in the same container)
+passed once that was set. Bytes 15 and 20-21 stay unexplained: 65
+values of 15 across the corpus, and 20-21 no CRC-16/ARC of bytes 0-19
+in any of 220.
+
+**Consequence.** `fmt_sit.c` leaves `CARRIES`; libxad keeps method 14
+alone among StuffIt's methods. Its header still said the encrypted key
+layout was XADStuffItParser.m's, two months after the layout was
+measured; corrected, and NOTICE's paragraph with it.
 

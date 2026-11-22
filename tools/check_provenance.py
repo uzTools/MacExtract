@@ -63,7 +63,6 @@ NOTICE = ROOT / "NOTICE"
 # ones with a route left.
 CARRIES = {
     "unc_lzdyn.c":      "-lh2- and -lh3- (libxad's LhA.c), whole file",
-    "fmt_sit.c":        "two method-8 rules no specimen reaches (libxad's SIT_mw)",
     "sit14.c":          "StuffIt 5's method 14, the whole file (libxad's SIT_14)",
     "fmt_dd.c":         "the per-method rules and the DDAR 0x20 raw-fork shape (libxad's DiskDoubler.c)",
     "fmt_arc.c":        "Crunch 5/6/7 and Crush, and the method numbers",
@@ -99,6 +98,7 @@ HISTORICAL = {
     "unc_segment.c",  # the part names left 2026-11-22 for Zip and 7-Zip
     "unc_sidecar.c",  # left 2026-11-22 for copyfile, libarchive, Eclectic Light
     "fmt_sitseg.c", "fmt_sitseg_probe.c",  # measured off StuffIt's sets 2026-11-22
+    "fmt_sit.c",  # method 8's edge left libxad 2026-11-22 for Expander 4.0.2
 }
 
 MENTION = re.compile(r"XAD|libxad|macutils")

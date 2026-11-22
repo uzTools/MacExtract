@@ -16,10 +16,9 @@
  * method 6's framing was the last of it, and the RLE90 filter left
  * the same day for the format's own published description,
  * reference/notes/rle90_theunarchiver.md, which states every rule it
- * implements. **The ENCRYPTED fork's key layout is still
- * XADStuffItParser.m's** and says so where it is used; this header,
- * NOTICE and OPEN_ITEMS.md all said "nothing at all" from 2026-09-22
- * until 2026-09-27 (BLOCKERS.md, *Withdrawn claims*).
+ * implements. The ENCRYPTED fork's key layout left XADStuffItParser.m
+ * on 2026-09-27 for Aladdin's own output (sit_fork_crypt; corrected
+ * here 2026-11-22, where it still said otherwise).
  *
  * Archive header (22 bytes): u32 magic ('SIT!' or installer 'ST..'
  * variants), u16 numfiles, u32 totalsize, u32 magic2 'rLau', u8
@@ -1177,15 +1176,14 @@ out:
 /* and decodes to the file it was given (the note's *A writer's        */
 /* restart*; tests/harness/run_sitopt.py, 14b).                       */
 /*                                                                    */
-/* TWO RULES BELOW ARE NOT IN THAT NOTE and remain                    */
-/* Source: reference/libxad/libxad/portable/clients/StuffIt.c        */
-/* (SIT_mw, SITMW_out; Dirk Stöcker's libxad, which XADMaster's       */
-/* XADStuffItOldHandles.m carries unchanged; see NOTICE): the END of   */
-/* the stream (a code greater than the next free one) and the 14-bit   */
-/* ceiling, the dictionary's 16,385 entries. Deluxe 2.0.1 wrote no end */
-/* code and restarted long before the ceiling, and deark names method  */
-/* 8 "MW" with a NULL decoder, so there is nothing to rewrite them     */
-/* from; they are the part of this row a derivation could not take.    */
+/* The rest of the edge is StuffIt Expander 4.0.2's, fed chosen       */
+/* streams (tools/vmac/mwexp.py; the note's *What Aladdin's reader     */
+/* does at the edge*): the width reaches 15 bits at 16,384 entries,    */
+/* where a restart code restarts the table; the code that would add a  */
+/* 16,386th entry stops it, as does a code greater than the next free  */
+/* one, so MW_DICT is 16,385 entries. libxad's SIT_mw has the same     */
+/* rules, with no bound on its 16,385-entry array; compared, not       */
+/* borrowed.                                                          */
 /* ------------------------------------------------------------------ */
 
 #define MW_DICT  16385

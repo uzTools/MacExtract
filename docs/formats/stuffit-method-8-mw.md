@@ -73,27 +73,42 @@ stops at its declared length with zero bits after the last code, and no
 end code. Over 300,000 bytes of random hex digits `optimal` chose method
 3 (Huffman), and over 60,000 random bytes it stored the fork.
 
-## What this note does NOT establish
+## What Aladdin's reader does at the edge
 
-Two rules in the shipped decoder are **not exercised by any specimen
-here**, and this note does not claim them:
+**Measured 2026-11-22.** No writer here reaches the table's ceiling or
+writes an end code, so StuffIt Expander 4.0.2 was fed streams built to a
+stated rule (`tools/vmac/mwexp.py`): one data fork each, every code a
+literal byte except where named, so only the code WIDTH can be in
+dispute.
 
-- **The end of the stream.** The same decoder stops on a code greater
-  than the next free one.
-- **Where the width stops growing.** The shipped decoder caps it at 14
-  bits and its dictionary at 16,385 entries. The widest code in any
-  fork above is **13**, at 7,347 entries, so the cap is a number this
-  note cannot confirm. Deluxe 2.0.1 restarts at about 2,000 entries
-  (*A writer's restart*), and 16,384 entries inside 19 KB of input
-  would take codes of about one byte each, which method 8 cannot
-  compress, so **hypothesis**: 2.0.1 never writes a fork that reaches
-  it.
+| stream | Expander wrote |
+|---|---|
+| `w14`: 16,000 literals, the table to 16,255 entries, codes 9 to 14 bits | all 16,000 bytes |
+| `fullrestart`: 16,129 literals (the table to 16,384 entries), then 16,384 at 15 bits, then 871 literals from 9 bits | all 17,000 bytes |
+| `grow15`: 17,000 literals, 15 bits from 16,384 entries | 16,130 bytes, then stopped |
+| `stay14`: the same, 14 bits from 16,384 entries | 16,130 bytes, then stopped |
+| `reset`: the same, the table restarting by itself at 16,384, 9 bits | wrong from byte 16,129 |
+| `endcode`: 4,000 literals, then a code five past the next free one, then 100 literals; 4,100 declared | 4,000 bytes |
 
-Both came from `XADStuffItOldHandles.m` and still do — libxad's
-`SIT_mw`, which that file carries unchanged (NOTICE); they are the part
-of this row that a derivation could not take. **What would close
-them:** a writer that emits an end code or fills the table, or shown
-that none does and the two rules deleted. Synthesising a stream here
-would only hold this project's two readings against each other, and
-`unar` is not independent of the rule in question; StuffIt Expander
-4.0.2, which decodes method 8, could be fed one.
+Where it stopped short it kept what it had and said *"The integrity of
+the data fork of this file could not be verified."* Two controls passed
+first: 300 literals, and Deluxe 2.0.1's own ten-restart fork (*A
+writer's restart*) in the same container.
+
+So:
+
+- **The width grows to 15 bits at 16,384 entries** (`fullrestart`: a
+  14-bit reader takes the restart code as a literal 0).
+- **A full table restarts like any other**; it does not restart by
+  itself (`reset`).
+- **The table's last entry is 16,384.** The code that adds it decodes;
+  the next one stops the stream (`grow15`, `stay14`: 16,130 bytes are
+  codes 0 to 16,129). This is where `src/fmt_sit.c`'s 16,385-entry
+  dictionary stops too.
+- **A code greater than the next free one ends the stream**, and what
+  follows it is not read (`endcode`).
+
+What this cannot see: whether Expander would read on past 16,385 entries
+in a stream where it had not stopped (none can be built), and anything
+about a writer: Deluxe 2.0.1 restarts at about 2,000 entries and wrote
+no end code (*A writer's restart*).
