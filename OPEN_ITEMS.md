@@ -239,15 +239,14 @@ overlay images' sizes are re-taken.
 16-bit node indices (CLAUDE.md, 68000 discipline: 32-bit arithmetic in hot
 paths).
 
-## Where a `.sit.hqx`'s time goes on a Plus: two costs not located
+## Where a `.sit.hqx`'s time goes on a Plus: the file work not located
 
-**Filed by the maintainer 2026-11-10.** Both MEASURED on one archive only,
+**Filed by the maintainer 2026-11-10.** MEASURED on one archive only,
 `macburger-helper.hqx` (312 entries) on `mv-4M-1x`; the causes are
 HYPOTHESES.
 
 | what | evidence | what would close it |
 |---|---|---|
-| **`ovl_keep`'s `high_handle` on a 128K ROM: 9.6 s** | `MoveHHi` put back on today's tree: 223.6 → 213.8 s, twice (DECISIONS.md 2026-11-10, *the 12.8 seconds that were three commits*). The call runs a few times a run, so where it leaves the block is the hypothesis, about 30 ms an entry. Not measured: other archives, the 1 MB tier, the 64K ROM | an archive of few large entries and one of many small ones timed both ways, to say whether it scales per entry; a heap dump after `ovl_keep` both ways. Then either `high_handle` places the block where `MoveHHi` would (0 resident B), or the ROM test comes back (32 B off every budget) |
 | **create, `SetEOF`, close, `FlushVol` and catalog: 80 s** | split with the tick probe on `MacburgerHelper.sit` (the archive inside, 312 files, `mv-4M-1x`, 2026-11-20): `EnsureDir`'s folder lookups 2,289 ticks (38 s), `DirHold`'s folder dates 1,134 (19 s), the creates 622, close and `FlushVol` 477 (the per-fork `FlushVol` alone 145: removed, 223.1 → 217.6 s), open and `SetEOF` 240, `StampCat` 241 | the folder lookups: a memo of the previous entries' folders, built again 2026-11-22 and kept, with the per-fork `FlushVol` gone and a new file's record built instead of read (DECISIONS.md 2026-11-22, *the folders looked up again*): the whole archive 214.7 → 167.2 s; what is left of the 38 s is presumably the 311 folders' creates; the folder dates: set and read again at every folder switch |
 
 ## Resident bytes that could leave before extraction
@@ -260,17 +259,6 @@ HYPOTHESIS until read off the builds and `tools/run_tiers.py` (FORMATS.md,
 | what | resident | what would close it |
 |---|---|---|
 | segment joining: the joiner (`unc_segment.c`), the zip end-record scan, the shims to `ovl_sniff` | 3,490 B of code on 2026-11-13 (the joiner 2,714, the zip end-record scan 234, the two stored-CRC reads 44, the shims 498), after the hooks and readers only bundle-keeping schemes call left for `ovl_sniff` (DECISIONS.md 2026-11-13, *the hooks that went to the sniffer*) | the joiner is read while a Compact Pro, spanned-zip or Apple Backup set is, which keep only their readers' images, so it stays. The zip end-record scan (234 B) in both `ovl_exo` and `ovl_sniff` would cost a bundle-keeping layer about 200 B (hypothesis, not built) |
-
-## The lazy instrument cannot run the shell's images
-
-`build/mac-lazy` links only the decoders' images, but compiles
-`UNC_SHELL_IMAGES`, because `mac/macextract_mac.c` tests a `UNC_OVL_LAZY`
-macro the build never defines (it is an environment variable to CMake). So
-its destination dialog and a set's setup and set code have no image to run
-there, since v0.45.0 (hypothesis, read off `mac/CMakeLists.txt`, not run;
-DECISIONS.md 2026-11-23, *the set code that left*). Not what ships.
-**What would close it:** the define passed with the lazy lifetime, or the
-shell images linked into it; then its budgets re-taken.
 
 ## Formats classic Mac programs wrote that nothing here opens — leads, not findings
 
