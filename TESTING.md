@@ -3634,10 +3634,12 @@ release holds (19). A stream cut short, which the format's end rule fills with z
 no stream of the 39 here needs that rule, and it stays because the
 specification's author saw forks that do. The two longest text-codec
 length codes. Tomes in 'part' resources (OPEN_ITEMS.md). With `--extra` over
-the 39 Tomes off the 7.5.5 and 8.6 media it prints five failures that are
+the 39 Tomes off the 7.5.5 and 8.6 media it prints six failures that are
 not the engine's: three forks where deark widens a distance one position
-early, and Apple Menu Options' `sysz` and MacTCP's `DRVR` 22 and `ctrp` 130,
-which differ from the installed copies and have not been looked at
+early; Apple Menu Options' `sysz` and MacTCP's `DRVR` 22 and `ctrp` 130,
+which differ from the installed copies and have not been looked at; and
+AppleTalk, whose Mac OS 9 copy has one resource the Tome's fork has not,
+`ftag` 0, and is otherwise equal (measured 2026-11-23)
 (DECISIONS.md 2026-11-10, *the archive the Installer reads*).
 
 ## MacGzip's own output (`tests/harness/run_macgzip.py`, in `ci.sh`)
