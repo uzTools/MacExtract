@@ -339,7 +339,9 @@ Tome's resource fork (FORMATS.md, *Apple Installer Tomes*). Left:
   read, 2026-11-11): deark fails them with its own errors — "Bad distance
   code" where it reads the text codec as InstaCompOne, "TODO code11" for a
   long copy it does not implement — and no installed copy of their release
-  is here. Closes with an installed Mac OS 8.6.
+  is here. Closes with a Mac OS 8.6 installed with Web Sharing and the
+  modem scripts; the one found, archive.org's `mac-os-8.6-hd.tar.gz`, has
+  neither (measured 2026-11-23, `tools/vmac/README.md`, *Mac OS 8.6 media*).
 - **deark widens InstaCompOne's long distance one output byte early** (at
   1,644; the specification and Apple's installed files say 1,645). Not
   reported upstream, and no minimal repro is written; the maintainer posts

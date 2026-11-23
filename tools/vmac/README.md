@@ -1582,9 +1582,19 @@ the last**; `--machine` picks the machine. Beside the ISO, not committed:
 
 **What would move it**: an Open Firmware providing `/rtas` (real hardware, or
 an OpenBIOS implementing it) or a `Mac OS ROM` that boots 8.6 without one.
-Nothing measured says a different 8.x image (the same host's 1.65 GB
-`mac-os-8.6-hd.tar.gz`, the 8.5 CD `mac-os-8.5-install-cd-691-2017-a`)
-carries a different ROM requirement. **It was never the route to bit 5**,
+Nothing measured says a different 8.x image (the 8.5 CD
+`mac-os-8.5-install-cd-691-2017-a`) carries a different ROM requirement.
+
+**An installed 8.6 is also on archive.org, and is read without booting**:
+item `mac-os-8.6-hd.tar.gz`, file `MacOS8.6HD.tar.gz` (1,653,799,544 B, SHA-1
+`38a8ba5804b842ad22dfb2171323f26be0c3899a`), one 6 GB HFS-wrapped HFS Plus
+volume that `tools/hfsplus.py` reads. Unpack it sparse (2.9 GB on disk):
+`tar xzOf MacOS8.6HD.tar.gz MacOS8.6HD.dsk | dd of=MacOS8.6HD.dsk bs=64K
+conv=sparse`. It is a used system, not a fresh install: System and Finder
+are 8.6, but it has third-party software and no Modem Scripts, Web Sharing,
+Seoul or AB Baghdad, so it grades none of the Tome forks OPEN_ITEMS.md
+names (measured 2026-11-23). `run_tome.py` reads it in place of the Mac OS 9
+image with `UNC_OS9_IMG=`. **It was never the route to bit 5**,
 which closed on 2026-10-06 without it (`sitcomment.py`, above).
 
 ## Mac OS 9
