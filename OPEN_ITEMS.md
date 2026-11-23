@@ -261,6 +261,17 @@ HYPOTHESIS until read off the builds and `tools/run_tiers.py` (FORMATS.md,
 |---|---|---|
 | segment joining: the joiner (`unc_segment.c`), the zip end-record scan, the shims to `ovl_sniff` | 3,490 B of code on 2026-11-13 (the joiner 2,714, the zip end-record scan 234, the two stored-CRC reads 44, the shims 498), after the hooks and readers only bundle-keeping schemes call left for `ovl_sniff` (DECISIONS.md 2026-11-13, *the hooks that went to the sniffer*) | the joiner is read while a Compact Pro, spanned-zip or Apple Backup set is, which keep only their readers' images, so it stays. The zip end-record scan (234 B) in both `ovl_exo` and `ovl_sniff` would cost a bundle-keeping layer about 200 B (hypothesis, not built) |
 
+## The lazy instrument cannot run the shell's images
+
+`build/mac-lazy` links only the decoders' images, but compiles
+`UNC_SHELL_IMAGES`, because `mac/macextract_mac.c` tests a `UNC_OVL_LAZY`
+macro the build never defines (it is an environment variable to CMake). So
+its destination dialog and a set's setup and set code have no image to run
+there, since v0.45.0 (hypothesis, read off `mac/CMakeLists.txt`, not run;
+DECISIONS.md 2026-11-23, *the set code that left*). Not what ships.
+**What would close it:** the define passed with the lazy lifetime, or the
+shell images linked into it; then its budgets re-taken.
+
 ## Formats classic Mac programs wrote that nothing here opens — leads, not findings
 
 From Macintosh Repository's *Compression & Archiving* category, read
