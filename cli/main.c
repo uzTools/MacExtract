@@ -2140,20 +2140,26 @@ static int family_member(const Family *f, const char *name)
                                  (uint32_t)strlen(name));
 }
 
+/* A member's stem: its name up to the last '.', as the Mac shell's
+ * PStemLen takes it (an extension is three bytes, or four for a zip
+ * part past 99). 0 when there is no '.'. */
+static size_t stem_len(const char *base)
+{
+    const char *dot = strrchr(base, '.');
+    return dot ? (size_t)(dot - base) : 0;
+}
+
 /* The part a file's own name makes it, its folder aside: what --part
- * has to go on when a file was given from elsewhere. A member's
- * extension is three bytes in both schemes, so its stem is all of the
- * name but the last four. */
+ * has to go on when a file was given from elsewhere. */
 static int own_part(UncFormat scheme, const char *path)
 {
     const char *slash = strrchr(path, '/');
     const char *base = slash ? slash + 1 : path;
-    size_t n = strlen(base);
 
-    if (n < 5) return 0;                       /* "x.001" is the shortest */
     return unc_segment_name_part(scheme, (const uint8_t *)base,
-                                 (uint32_t)(n - 4), (const uint8_t *)base,
-                                 (uint32_t)n);
+                                 (uint32_t)stem_len(base),
+                                 (const uint8_t *)base,
+                                 (uint32_t)strlen(base));
 }
 
 /* Fill `f` for the family of `path`: the folder it is in, and for a
@@ -2173,7 +2179,7 @@ static int family_of(Family *f, const char *path, UncFormat scheme)
     if (scheme != UNC_FORMAT_UNKNOWN) {
         self = own_part(scheme, base);
         if (!self) return 0;
-        f->stemlen = strlen(base) - 4;
+        f->stemlen = stem_len(base);
     }
     if (n + 2 >= sizeof f->dir) return 0;     /* "." and "/" take two */
     if (!slash) { f->dir[0] = '.'; f->dir[1] = 0; }

@@ -136,6 +136,16 @@ def case_many(d):
     return _finish(d, "Many", ["-0"], "src", "zmany")
 
 
+def case_hundred(d):
+    """Past 99 parts: Zip 3.0 names the 100th .z100 (measured 2026-11-22),
+    and before that day this engine stopped at .z99 and called the set
+    incomplete. 104 parts at 64 KB, stored."""
+    src = os.path.join(d, "src")
+    for i in range(7):
+        _write(os.path.join(src, "h%d.bin" % i), _rand(900 + i, 950000))
+    return _finish(d, "Hundred", ["-0"], "src", "zhundred")
+
+
 def case_solo(d):
     """`zip -s` output that did not need splitting after all.
 
@@ -182,6 +192,7 @@ CASES = {
     "zmany":    case_many,
     "zsolo":    case_solo,
     "zspancd":  case_spancd,
+    "zhundred": case_hundred,
 }
 
 

@@ -227,12 +227,12 @@ uint32_t unc_segment_scratch_size(void)
 /*   S7.7z.002, S7.7z.003 (the stem keeps its own extension).          */
 /* XADMaster's two +volumesForHandle: patterns agree; compared, not    */
 /* borrowed.                                                           */
-/* Both extensions are three bytes, so a member is the stem, a '.' and */
-/* three more. Three departures. Two are the hosts', before this       */
+/* A member is the stem, a '.' and the extension: three bytes, or four */
+/* for a zip part past 99 — Zip 3.0 goes on from .z99 to .z100         */
+/* (measured 2026-11-22) — up to .z255, the joiner's own limit         */
+/* (UNC_SEG_MAX_PARTS). Two departures, the hosts' before this         */
 /* function was theirs: there is no part zero (".000", ".z00"), and an */
-/* empty stem (".001", ".zip") names no family. The third is a gap:    */
-/* Zip 3.0 goes on past 99 parts to .z100, which is not joined         */
-/* (OPEN_ITEMS.md, *A spanned zip of more than 99 parts*).             */
+/* empty stem (".001", ".zip") names no family.                        */
 /*                                                                    */
 /* Case folds A-Z only, as both hosts' copies did byte for byte (the   */
 /* CLI's ascii_lower, the Mac shell's PLowerByte): a MacRoman letter   */
@@ -248,8 +248,9 @@ int unc_segment_name_part(UncFormat scheme,
     const uint8_t *e;
     uint32_t i;
     int n = 0;
+    uint32_t x = namelen - stemlen - 1;      /* the extension's length */
 
-    if (stemlen == 0 || namelen != stemlen + 4 || name[stemlen] != '.')
+    if (stemlen == 0 || namelen < stemlen + 4 || name[stemlen] != '.')
         return 0;
     for (i = 0; i < stemlen; i++)
         if (SEG_LOWER(name[i]) != SEG_LOWER(stem[i])) return 0;
@@ -257,16 +258,19 @@ int unc_segment_name_part(UncFormat scheme,
     i = 0;
     if (scheme == UNC_FORMAT_ZIPSEG) {
         if (SEG_LOWER(e[0]) != 'z') return 0;
-        if (SEG_LOWER(e[1]) == 'i' && SEG_LOWER(e[2]) == 'p')
+        if (x == 3 && SEG_LOWER(e[1]) == 'i' && SEG_LOWER(e[2]) == 'p')
             return UNC_SEG_NAME_LAST;
+        /* .z01-.z99, then .z100-.z255 with no leading zero */
+        if (x > 4 || (x == 4 && e[1] == '0')) return 0;
         i = 1;
-    } else if (scheme != UNC_FORMAT_SPLIT) {
+    } else if (scheme != UNC_FORMAT_SPLIT || x != 3) {
         return 0;
     }
-    for (; i < 3; i++) {
+    for (; i < x; i++) {
         if (e[i] < '0' || e[i] > '9') return 0;
         n = n * 10 + (e[i] - '0');
     }
+    if (x == 4 && n >= UNC_SEG_MAX_PARTS) return 0;
     return n;                         /* 0 for ".000" and ".z00" */
 }
 

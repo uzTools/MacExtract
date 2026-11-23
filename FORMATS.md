@@ -83,7 +83,7 @@ below it. Per-format detail is under *Table notes*.
 | Apple Backup (a set of floppies) | extract | — (stored forks; a file cut at a disk's end continues on the next under a repeat of its header; a set read with disks missing, what they held reported) | 2 complete real backups (105 disks, a restore CD) and 6 disks of 2 partial ones + 1 synthetic 3-disk set, graded by two other readers run in a sandbox (*Apple Backup*, below) | 8 KB | full |
 | Apple Installer Tome (`idcp`), and the `'part'` resources of an `ircp` file's or a Tome's resource fork | extract | stored, InstaCompOne, the text codec; the forks' checksum unidentified, so a stream must end exactly where its record says; a part's records come out at their stated ids, each `iFND` a suitcase | 4 real Tomes off the System 7.5.5 and Mac OS 8.6 media, graded by deark and by the files Apple's Installer installed, + 35 more off the same media with `run_tome.py --extra`; Installation Tome 3 with both forks, its nine font families graded by the installed suitcases (*Apple Installer Tomes*, below) | 22–79 KB | full |
 | StuffIt segment (multi-part) | extract | — (join only; the joined file is the next layer) | 7 synthetic sets, oracle-adjudicated, + 3 with each part in its own envelope (CLI only), + **11 sets StuffIt itself cut** (Deluxe 2.0.1 ×5, four of them from files with a resource fork, Lite 3.0.5 ×2, Deluxe 5.0 ×2, DropSegment 5.0, InstallerMaker 2.0), graded by their originals and the running CRCs (extracting since 2026-10-24; BLOCKERS.md, *Withdrawn claims*) | 8 KB | full |
-| Zip segment (spanned, .z01…/.zip) | extract | store, deflate — the zip reader, over the joined parts | 5 generated sets, adjudicated 4 ways (source tree, `unar`, us split, us unsplit) | 12–13 KB¶ | full |
+| Zip segment (spanned, .z01…/.zip) | extract | store, deflate — the zip reader, over the joined parts | 7 generated sets (one of 104 parts), adjudicated 4 ways (source tree, `unar`, us split, us unsplit) | 12–13 KB¶ | full |
 | Compact Pro segment (multi-part) | extract | RLE / LZH+RLE — the Compact Pro reader, over the segments | 2 generated sets + 2 cut by Compact Pro 1.51 itself | 20 KB | full |
 | DiskDoubler split (`SPLT`) | extract | — (join only; the joined file is the next layer) | 6 real parts (3 sets, cut by DiskDoubler itself, in `fixtures/`) + 8 generated sets, adjudicated against the published files they were cut from — no oracle exists | 8 KB | full |
 | Split file (plain .001/.002) | extract | — (join only; the joined file is the next layer) | 3 generated sets, adjudicated against the bytes that were cut, `unar` where it can join, and our unsplit read | 8 KB | full |
@@ -2547,7 +2547,7 @@ that grows with the output*): the ring starts at 4 KB and doubles to the
 ~8,392 B (was 69,816), a 9.9 KB payload 28,872 B, and a 191 KB one 102,600 B
 (both buffers live across the last grow). A `.mar.lz4` is named by the
 envelope peek and its layer keeps only `ovl_zipold`, the sniffer and the
-codecs (*What each format is granted*), granted <!-- grant: sys6-512K zipold sniff codecs -->217,874 B at System 6.0.8 /
+codecs (*What each format is granted*), granted <!-- grant: sys6-512K zipold sniff codecs -->217,810 B at System 6.0.8 /
 512 KB — room to spare; an LZ4 frame the peek cannot name keeps the whole
 bundle, leaving 65,712 B there, which now fits any payload under ~32 KB and
 refuses a larger one per entry (it was a flat 69,816 B, refused for all).
@@ -2645,7 +2645,7 @@ the engine table's row and name and the keep set's two bytes; the `idcp`
 type in the bundle is a map entry outside that unit, 12 B by LZ4's
 measurement, not re-measured on the probe. `ovl_zipold` 18,720 → 21,934 B,
 `ovl_sniff` +168, the bundle 204,520 B. A Tome keeps `ovl_zipold` and the
-codecs (*What each format is granted*): <!-- grant: sys6-512K zipold codecs -->236,782 B at System 6.0.8 / 512 KB,
+codecs (*What each format is granted*): <!-- grant: sys6-512K zipold codecs -->236,718 B at System 6.0.8 / 512 KB,
 three times its peak. Deepest chain 944 B (`tools/stack_depth.py`).
 
 **'part' resources** (since 2026-11-11; DECISIONS.md 2026-11-11, *the
@@ -4417,7 +4417,7 @@ envelope whose payload the peek could not name (the row above it since;
 DECISIONS.md 2026-11-11, *the head that named nothing*), and until
 2026-11-03 every envelope, and it refused `a2ps.V4.3.tar.Z` and
 `popper-1.7.tar.Z` at System 6.0.8 / 512 KB; the peek names Tar from the first
-512 bytes and the `.Z` layer is granted <!-- grant: sys6-512K exo sniff zipold codecs -->187,578 B there instead of <!-- grant: sys6-512K bundle -->53,442 B
+512 bytes and the `.Z` layer is granted <!-- grant: sys6-512K exo sniff zipold codecs -->187,514 B there instead of <!-- grant: sys6-512K bundle -->53,378 B
 (DECISIONS.md 2026-11-03, *the envelope that said what it held*). The
 heaviest envelope decode in the Mac sample is `popper-1.7.tar.Z`'s LZW at
 147,764 B.

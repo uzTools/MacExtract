@@ -3861,7 +3861,7 @@ and the same input unsplit, so each is adjudicated four ways — the source
 tree, `unar`, our CLI on the set, and our CLI on the unsplit archive (no
 joiner on that path). Skipped with a notice without `zip`.
 
-Six cases: stored entries straddling part boundaries; a deflated stream
+Seven cases: stored entries straddling part boundaries; a deflated stream
 straddling one; nested folders with an 8-bit name and an empty file; twelve
 parts (`.z09` → `.z10`); a `zip -s` archive that did not need splitting (must
 extract even under `--no-parts`); and **`zspancd`**: 1,200 entries at 64 KB
@@ -3871,6 +3871,12 @@ entries in the 26,312-byte last file. The other five passed a
 `zs_cd_is_there` (`src/fmt_zipseg.c`) that refused this; re-do the size if
 you touch that function (DECISIONS.md 2026-10-05, *the scan that was
 already being paid for*).
+
+**`zhundred`** (2026-11-22): 104 parts, so Zip 3.0 names them on to
+`.z103`. `unar` joins `.z01`-`.z99` only, so this case alone is graded
+without it (`ZIP_NO_ORACLE`, the reason in the code): the source tree,
+ours from either end, and ours unsplit. Measured able to fail: a build
+whose name rule stops at two digits fails it three ways.
 
 **The two mutations hold the scheme up** (parts are placed by FILENAME):
 two parts swapped, and one replaced by random bytes of the same length;

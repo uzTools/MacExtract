@@ -300,16 +300,6 @@ converted*).
 | a segmented archive whose segments the user named freely (ZipIt asks "Save segment #%d as:") | not joined: parts are placed by `.zNN`/`.zip` (FORMATS.md, *Segments*); renamed, the set extracts byte for byte | an order read off the segments themselves, or the user's |
 | a ZipIt-encrypted archive, byte for byte | **the cipher is known, the engine reads it**: ZipIt 2.2.2's `decrypt_byte`/`crypthead`/`UnzipCryptHeader` are standard PKWARE ZipCrypto, which `unc_zip_extract` already decrypts (DECISIONS.md 2026-11-06, *what ZipIt does with a Macintosh file*) | one ZipIt-made encrypted `.zip` to confirm against a real file (none here; a registered copy would write one) |
 
-## A spanned zip of more than 99 parts
-
-Info-ZIP Zip 3.0 names part 100 `NAME.z100` (measured 2026-11-22: `zip -s
-64k` of 7,000,000 bytes, 108 files); the engine reads `.zNN` only, so the
-set fails "missing segments" and the entry is left cut at 6,487,008 bytes,
-exit 1 (DECISIONS.md 2026-11-22, *the part names the writers wrote*). On
-800K floppies that is a set of about 80 MB. **What would close it:**
-`.zNNN` read as a part number, priced on both Mac configurations, or the
-limit moved to Part 1.
-
 ## The shell's own File Manager blocks, until multiversal's glue is inline
 
 Switching to `HOpen`/`HOpenRF`/`HDelete` costs **+160 B** shipped today

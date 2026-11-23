@@ -317,6 +317,16 @@ def zip_floor(parts):
     return state["opens"], state["back"]
 
 
+# Cases the oracle cannot read, and why: they are graded the other three
+# ways (the source tree, ours from either end, ours unsplit).
+ZIP_NO_ORACLE = {
+    # XADZipParser.m's +volumesForHandle: matches .z[0-9]{2} only, so
+    # unar stops at .z99 where Zip 3.0 goes on to .z100 (measured
+    # 2026-11-22; src/unc_segment.c, unc_segment_name_part).
+    "zhundred": "unar joins .z01-.z99 only",
+}
+
+
 def zip_case_run(macextract, case, workroot, fails):
     d = os.path.join(workroot, case)
     os.makedirs(d)
@@ -332,9 +342,13 @@ def zip_case_run(macextract, case, workroot, fails):
 
     # The oracle. Absolute path: see the ORACLE TRAP note above, which
     # is a property of XADMaster's volume scan and so applies here too.
-    rc, out = oracle_extract(last, os.path.join(d, "_oracle"))
-    fails.check(rc == 0, "%s: oracle failed: %s" % (case, out.strip()))
-    got_oracle = read_tree(os.path.join(d, "_oracle"))
+    if case in ZIP_NO_ORACLE:
+        print("  %s: no oracle (%s)" % (case, ZIP_NO_ORACLE[case]))
+        got_oracle = want
+    else:
+        rc, out = oracle_extract(last, os.path.join(d, "_oracle"))
+        fails.check(rc == 0, "%s: oracle failed: %s" % (case, out.strip()))
+        got_oracle = read_tree(os.path.join(d, "_oracle"))
 
     # Ours, from the last part and from the first. A user has whichever
     # one they double-clicked, so both have to reach the same set.

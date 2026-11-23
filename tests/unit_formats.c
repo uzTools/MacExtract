@@ -3149,6 +3149,13 @@ static void test_segment_names(void)
     CHECK(seg_np(Z, "Archive", "Archive.zip") == UNC_SEG_NAME_LAST);
     CHECK(seg_np(Z, "Archive", "Archive.z01") == 1);
     CHECK(seg_np(Z, "Archive", "Archive.z99") == 99);
+    /* Past 99, as Zip 3.0 numbers it (.z99, .z100), to the joiner's 255. */
+    CHECK(seg_np(Z, "Archive", "Archive.z100") == 100);
+    CHECK(seg_np(Z, "Archive", "Archive.z255") == 255);
+    CHECK(seg_np(Z, "Archive", "Archive.z256") == 0);
+    CHECK(seg_np(Z, "Archive", "Archive.z099") == 0);
+    CHECK(seg_np(Z, "Archive", "Archive.z1000") == 0);
+    CHECK(seg_np(S, "Archive", "Archive.0100") == 0);
     CHECK(seg_np(Z, "Archive", "Archive.z10") == 10);
     /* both cases, on either side */
     CHECK(seg_np(Z, "archive", "ARCHIVE.ZIP") == UNC_SEG_NAME_LAST);

@@ -650,6 +650,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-22 (the edge Aladdin's reader drew) — StuffIt Expander 4.0.2, fed method-8 streams built to each rule, settles the end code and the ceiling: 15 bits at 16,384 entries, the table's last entry 16,384, a code past the next free one ends the stream; `fmt_sit.c` owes libxad nothing
 - 2026-11-22 (the window Aladdin's reader starts with) — StuffIt Expander 4.0.2 reads method 5 from a window of spaces, not XADMaster's pattern, and LHa for UNIX fills -lh1-'s so; no writer here reaches the part where they differ, so nothing real changes and the engine keeps the pattern until the maintainer decides
 - 2026-11-22 (the flag DiskDoubler never read) — DD Expand 3.7.7 ignores DDAR's 0x20 flag on a DDAP record and expands it, where XADMaster, macutils and this engine read the forks raw; no record here sets it, so the engine is left for the maintainer; each record carries a CRC-16/XMODEM at +122
+- 2026-11-22 (the hundredth part) — a spanned zip joins up to .z255, the joiner's own limit, where it stopped at .z99; the rule takes three digits and both hosts find the stem at the last dot; +68 B of resident code, no extraction lost
 
 ---
 
@@ -27832,4 +27833,26 @@ and DiskDoubler's own expander does not share it. No record of 44 sets
 it, so no real file changes, and the engine keeps the test (the
 observability gate): dropping it is the maintainer's call. What a writer
 that set 0x20 meant, if one did, is not known.
+
+## 2026-11-22 (the hundredth part) — a spanned zip joins up to .z255, the joiner's own limit, where it stopped at .z99; the rule takes three digits and both hosts find the stem at the last dot; +68 B of resident code, no extraction lost
+
+Zip 3.0 numbers a spanned set's parts `.z01` to `.z99` and goes on to
+`.z100` (*the part names the writers wrote*); a 108-part set failed
+here as "missing segments". The maintainer chose 255, the joiner's
+limit (`UNC_SEG_MAX_PARTS`, one byte a part number): past that the
+joiner's per-part table would have to change, and a zip's own field
+allows 65,535.
+
+**What changed.** `unc_segment_name_part` takes `.z` and two digits, or
+three with no leading zero up to 255; `.NNN` is unchanged. The Mac shell
+already found the stem at the last dot (`PStemLen`); the CLI cut four
+characters and now does the same. Unit checks for `.z100`, `.z255`,
+`.z256`, `.z099`, `.z1000`; `run_segments.py`'s `zhundred`, 104 parts
+from `zip -s`, graded without `unar`, which stops at `.z99` too.
+
+**Price**, re-taken: resident CODE +68 B (the whole of it the rule:
+274 -> 340 B at `-Os`; a tighter rewrite came out at 342), A5 -4 B, the
+control +64 B off every grant; no extraction lost at any of the three
+tiers. **Not changed:** a set of more than 256 parts is still refused,
+and the CLI says "not a recognized archive" for it, which predates this.
 
