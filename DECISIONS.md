@@ -21929,7 +21929,9 @@ export rule; the gate is in ZipIt, not the format. So **`unc_zip_extract`
 already decrypts ZipIt-encrypted archives** — verified against a ZipCrypto
 `.zip` that `zip -e` wrote (wrong password refused, right one byte-exact);
 a real ZipIt-made encrypted specimen is the only thing still wanted, and
-needs a registered copy to write.
+needs a registered copy to write (ZipIt 1.4's own "ZipIt docs", *Shareware
+Registration*: once registered "you will also be able to encrypt and decrypt
+files within zip archives"; read 2026-11-23).
 
 **Not measured:** the MacBinary preference's other two settings; 2.2.2's
 MacBinary, linefeeds, dates and segments.
