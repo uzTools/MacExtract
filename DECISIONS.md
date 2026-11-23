@@ -652,6 +652,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-22 (the flag DiskDoubler never read) — DD Expand 3.7.7 ignores DDAR's 0x20 flag on a DDAP record and expands it, where XADMaster, macutils and this engine read the forks raw; no record here sets it, so the engine is left for the maintainer; each record carries a CRC-16/XMODEM at +122
 - 2026-11-22 (the hundredth part) — a spanned zip joins up to .z255, the joiner's own limit, where it stopped at .z99; the rule takes three digits and both hosts find the stem at the last dot; +68 B of resident code, no extraction lost
 - 2026-11-23 (the set code that left) — the shell's run-time set code (seg_need, the part dialog, the scans, SegCopyIn) is an image of its own, kept by a set alone: +4,832 B on every other format's grant, −364 B on a set's; all ten set scenarios pass at 1 MB
+- 2026-11-23 (the shell images the lazy build lacked) — the lazy instrument called the destination dialog, a set's setup and its set code as images and linked none of them, so every set failed in it; each is now its own resource there, and a Compact Pro set that failed passes
 
 ---
 
@@ -27899,10 +27900,29 @@ the one before may not be the last, and the application rightly asked for
 part 4, which `interactive.py` answered only after `--later`. It answers it
 in both now.
 
-**Not changed (hypothesis, from the build files, not run):** the lazy
-instrument links only the decoders' images (`mac/CMakeLists.txt`), yet
-compiles `UNC_SHELL_IMAGES`, because `macextract_mac.c` tests a
-`UNC_OVL_LAZY` macro the build never defines; so its destination dialog and
-a set's setup have had no image to run since v0.45.0, and now its set code
-too. It is a measuring build, not what ships.
+**Not changed here:** the lazy instrument could not run the shell's
+images, its set code included; measured and fixed the same day (*the shell
+images the lazy build lacked*, below).
+
+## 2026-11-23 (the shell images the lazy build lacked) — the lazy instrument called the destination dialog, a set's setup and its set code as images and linked none of them, so every set failed in it; each is now its own resource there, and a Compact Pro set that failed passes
+
+**Claim (measured).** The lazy lifetime (`UNC_OVL_LAZY`) compiled
+`UNC_SHELL_IMAGES`, so its shell asked for `'OVLY'` 145–147, but
+`mac/CMakeLists.txt` linked only the decoders' images into it: its resource
+map held 128–144. `macextract_mac.c` meant to exclude it with
+`!defined(UNC_OVL_LAZY)`, and no build defines that macro; CMake reads the
+switch from the environment. So since v0.45.0 the lazy build had no
+destination dialog and no set.
+
+**Evidence.** `segcheck.py --case cpt-middle --mem 1M` on the lazy autotest
+build (`run.py -D UNC_OVL_LAZY`): 0/1 with the old `CMakeLists.txt`, 1/1
+with the three images linked as resources of their own, and `mimeseg` 1/1.
+The shipped build is unchanged (its `MacExtract.code.bin` differs from the
+tree before only in the 4 build-stamp bytes two builds of one tree differ
+in), and `tools/retake_budgets.py --dry-run` moves nothing: the lazy shell
+called them as images already.
+
+**Consequence.** The test in `macextract_mac.c` is now `UNC_AT_OVERLAY`
+alone, which is what every build compiled; only the resident control links
+the shell's code in.
 

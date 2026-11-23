@@ -49,12 +49,12 @@
 #include "macextract.h"
 #include "macextract_strings.h"   /* every word the user reads */
 
-/* The destination dialog and a set's setup run as images read with the
- * bundle at launch (tools/overlay/ovl_destdlg.c, ovl_segsetup.c), so that
- * neither is resident while the engine extracts. Only the eager lifetime
- * has the bundle then; the lazy and resident instruments link the setup
- * in and keep Standard File's own Save dialog. */
-#if defined(UNC_AT_OVERLAY) && !defined(UNC_OVL_LAZY)
+/* The destination dialog, a set's setup and its set code run as images
+ * (tools/overlay/ovl_destdlg.c, ovl_segsetup.c, ovl_segrun.c), so that
+ * none is resident while the engine extracts: in the bundle in the eager
+ * lifetime, each its own resource in the lazy one. The resident control
+ * links them in and keeps Standard File's own Save dialog. */
+#if defined(UNC_AT_OVERLAY)
 #define UNC_SHELL_IMAGES 1
 #include "ovl_load.h"     /* ovl_image: the autotest build runs the setup too */
 #endif

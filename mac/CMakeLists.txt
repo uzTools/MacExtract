@@ -99,7 +99,12 @@ else()
         set(OVERLAY_R ${CMAKE_CURRENT_BINARY_DIR}/ovl_bundle.r)
     else()
         list(APPEND OVERLAY_SHIM ovl_load_lazy.c)
-        foreach(img ${OVL_FORMAT_IMAGES})
+        # The shell's three images too: the shell calls them as images in
+        # both lifetimes (mac/macextract_mac.c, UNC_SHELL_IMAGES). Linked
+        # only into the bundle until 2026-11-23, so this build had no
+        # destination dialog and no set (DECISIONS.md 2026-11-23, *the
+        # shell images the lazy build lacked*).
+        foreach(img ${OVL_FORMAT_IMAGES} destdlg segsetup segrun)
             list(APPEND OVERLAY_R ${CMAKE_CURRENT_BINARY_DIR}/ovl_${img}.r)
         endforeach()
     endif()
@@ -960,8 +965,9 @@ add_custom_command(
             ${OVL_DEPS})
 # The destination dialog and a set's setup: shell code in images of their
 # own, bundled so that they are read at launch and given back with the bundle
-# (mac/macextract_mac.c, UNC_SHELL_IMAGES). Only the eager lifetime links the
-# bundle; the lazy and resident instruments do without them.
+# (mac/macextract_mac.c, UNC_SHELL_IMAGES). The eager lifetime links them in
+# the bundle, the lazy one each as its own resource; the resident control
+# compiles their code in.
 # ovl_segrun's code has its autotest form (UNC_MAC_AUTOTEST), as the
 # application's had when it was resident.
 set(OVL_SHELL_DEFS "")
