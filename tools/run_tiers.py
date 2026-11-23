@@ -348,7 +348,8 @@ def plan_rows(text):
     names. `text` is the plan's own source, which must still build gKeepSet
     from that list (DECISIONS.md 2026-11-11, *the release decided in the
     bundle*)."""
-    if "UNC_FORMATS(KEEP_SET_ROW)" not in text:
+    if "UNC_FORMATS(KEEP_SET_ROW)" not in text or \
+            "UNC_FORMATS(KEEP_JOIN_ROW)" not in text:
         raise SystemExit("run_tiers: %s no longer builds gKeepSet from "
                          "src/unc_formats.h" % PLAN)
     out = []
@@ -362,6 +363,8 @@ def plan_rows(text):
         if fl - {"KEEP_CRYPT", "KEEP_PEEK", "KEEP_ZIPOLD"}:
             raise SystemExit("run_tiers: a release flag this model does not "
                              "know: %s" % f.keep)
+        if f.join is not None:
+            fl.add("SET")
         out.append((f.id, f.run[0], fl))
     return out
 
@@ -376,7 +379,8 @@ def keep_sets(path=PLAN):
     text = CCOMMENT.sub(" ", open(path, encoding="utf-8").read())
     # The plan's keeps, one `*k++ =` each: the format's own image, the two a
     # peeked envelope adds (peek_keep()'s), zip's old methods, the ciphers
-    # and the codecs. A keep of another shape would be an image the model
+    # the codecs, and a set scheme's shell code (gIsSet: the rows with a
+    # join). A keep of another shape would be an image the model
     # under-charges, so anything else is refused rather than skipped.
     keeps = re.findall(r"(?:if\s*\(([^;{}]*?)\)\s*)?\*k\+\+\s*=\s*([^;]+);",
                        text)
@@ -385,10 +389,12 @@ def keep_sets(path=PLAN):
             ("", "OVL_ID_SNIFF - OVL_ID_CRYPT"),
             ("row & KEEP_ZIPOLD", "OVL_ID_ZIPOLD - OVL_ID_CRYPT"),
             ("row & KEEP_CRYPT", "0"),
-            ("", "OVL_ID_CODECS - OVL_ID_CRYPT")]
+            ("", "OVL_ID_CODECS - OVL_ID_CRYPT"),
+            ("fmt < UNC_FORMAT__COUNT && gIsSet[fmt]",
+             "OVL_ID_SEGRUN - OVL_ID_CRYPT")]
     if [(c.strip(), v.strip()) for c, v in keeps] != want:
         raise SystemExit("run_tiers: the release plan's keeps changed shape "
-                         "— this model reads six, the codecs always: %r"
+                         "— this model reads seven, the codecs always: %r"
                          % keeps)
     out = {"default": frozenset()}
     for fmt, image, fl in plan_rows(text):
@@ -399,6 +405,8 @@ def keep_sets(path=PLAN):
             keep.add("OVL_ID_CRYPT")
         if "KEEP_ZIPOLD" in fl:
             keep.add("OVL_ID_ZIPOLD")
+        if "SET" in fl:
+            keep.add("OVL_ID_SEGRUN")
         out[fmt] = frozenset(keep)
     if len(out) < 15:
         raise SystemExit("run_tiers: parsed %d release rows, expected 15+"

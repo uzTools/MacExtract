@@ -2181,15 +2181,18 @@ def phase_named(args, appbin, workdir, shot):
             time.sleep(10.0)
             shot(mac, f"named-{args.named}-2b-asked.png")
             mac.click(*PART_DRIVE)           # over to the Parts floppy
-            if (args.named == "split" and os.path.getsize(parts[-1])
-                    == os.path.getsize(parts[-2])):
-                # A last part as long as the one before it may not be the
-                # last (derived-xmasbeeps.sit cuts into 3 x 95,408), so
-                # part 4 is asked for (seg_need); Cancel says it ends.
-                mac.settle(scratch, interval=5.0, quiet=EXTRACT_QUIET,
-                           timeout=args.complete_timeout)
-                shot(mac, f"named-{args.named}-2c-next-part.png")
-                mac.click(*PART_CANCEL)
+        if (args.named == "split" and os.path.getsize(parts[-1])
+                == os.path.getsize(parts[-2])):
+            # A last part as long as the one before it may not be the last
+            # (derived-xmasbeeps.sit cuts into 3 x 95,408, derived-Downer.sit
+            # into 3 x 1,408), so part 4 is asked for (seg_need), on the
+            # floppy or beside the others; Cancel says it ends. Asked only
+            # after --later until 2026-11-23, and segcheck's split-named
+            # failed on the question it did not answer.
+            mac.settle(scratch, interval=5.0, quiet=EXTRACT_QUIET,
+                       timeout=args.complete_timeout)
+            shot(mac, f"named-{args.named}-2c-next-part.png")
+            mac.click(*PART_CANCEL)
         elapsed = mac.settle(scratch, interval=5.0, quiet=EXTRACT_QUIET,
                              timeout=args.complete_timeout)
         shot(mac, f"named-{args.named}-3-complete.png")

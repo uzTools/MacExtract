@@ -15,6 +15,7 @@ typedef struct {
     uint32_t pos;
 } FileIO;
 
+#define kErrorALRT  130      /* the error alert; the set code uses it too */
 #define kSegMaxKnown 64      /* parts we can remember where to find */
 #define kSegVols 24          /* volumes the part dialog keeps track of */
 
@@ -79,6 +80,7 @@ typedef struct {
     int   famSplit, famZip;
     short inVol, origVol, outVol;
     long  inDir, origDir, outDir;
+    const struct SegRunExports *x;  /* the set code's image; NULL resident */
 } SegSetupArgs;
 
 /* What the image calls back: the application's own helpers and the
@@ -89,12 +91,6 @@ typedef struct {
 typedef struct {
     OSErr (*MyOpenFork)(short, long, ConstStr255Param, SignedByte, int, short *);
     OSErr (*MyHDelete)(short, long, ConstStr255Param);
-    int  (*SegTmpOpen)(SegHost *, int, Str255, short *);
-    void (*SegRemember)(SegHost *, int, short, long, ConstStr255Param);
-    void (*SegScanDir)(SegHost *, short, long);
-    void (*SegScanFamily)(SegHost *, short, long, int, Str63);
-    uint32_t (*SegPartLength)(SegHost *, int);
-    int  (*SegPartOf)(SegHost *, short, long, ConstStr255Param);
     UncFormat (*unc_sniff_envelope)(UncIO *);
     int  (*unc_format_is_envelope)(UncFormat);
     int  (*unc_extract_as)(UncFormat, UncIO *, UncSink *, UncAlloc *,
@@ -105,8 +101,44 @@ typedef struct {
     int       (*fio_seek)(void *, unc_off_t);
     unc_off_t (*fio_tell)(void *);
     unc_off_t (*fio_size)(void *);
-    int  (*SegAskUser)(SegHost *, int);   /* NULL in the autotest */
 } SegSetupFns;
+/* What the run-time image (ovl_segrun.c) calls back, and what it gives
+ * the application and the setup image: mac/seg_run.inc.c's functions. */
+typedef struct {
+    OSErr (*MyOpenFork)(short, long, ConstStr255Param, SignedByte, int, short *);
+    OSErr (*MyHCreate)(short, long, ConstStr255Param);
+    OSErr (*MyHDelete)(short, long, ConstStr255Param);
+    void (*PStrCat)(Str255, const char *);
+    void (*PStrCatNum)(Str255, long);
+    void (*ShowNote)(short, const unsigned char *);
+    void (*WaitForFront)(void);
+    pascal Boolean (*HideInvisible)(CInfoPBPtr);
+    int  (*unc_segment_describe_as)(UncIO *, UncFormat, UncSegmentDesc *);
+    uint32_t (*unc_segment_first_end)(const UncSegmentDesc *, UncIO *, uint32_t);
+    int  (*unc_segment_match)(const UncSegmentDesc *, const uint8_t *, int32_t);
+    int  (*unc_segment_name_part)(UncFormat, const uint8_t *, uint32_t,
+                                  const uint8_t *, uint32_t);
+    int32_t   (*fio_read)(void *, void *, int32_t);
+    int       (*fio_seek)(void *, unc_off_t);
+    unc_off_t (*fio_tell)(void *);
+    unc_off_t (*fio_size)(void *);
+    void (*StackSample)(void);            /* NULL but in UNC_AT_STACK */
+    Boolean *pSegShort, *pBackground;
+} SegRunFns;
+
+typedef struct SegRunExports {
+    int  (*SegTmpOpen)(SegHost *, int, Str255, short *);
+    void (*SegRemember)(SegHost *, int, short, long, ConstStr255Param);
+    void (*SegScanDir)(SegHost *, short, long);
+    void (*SegScanFamily)(SegHost *, short, long, int, Str63);
+    uint32_t (*SegPartLength)(SegHost *, int);
+    int  (*SegPartOf)(SegHost *, short, long, ConstStr255Param);
+    int  (*SegAskUser)(SegHost *, int);   /* NULL in the autotest */
+    int  (*seg_need)(void *, const UncSegmentDesc *, int, UncIO *);
+    uint32_t (*seg_part_size)(void *, const UncSegmentDesc *, int);
+    void (*seg_release)(void *, UncIO *);
+    void (*SegPeelClean)(SegHost *);
+} SegRunExports;
 #endif
 
 #endif

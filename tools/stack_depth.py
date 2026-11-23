@@ -72,9 +72,9 @@ What it CANNOT see:
   * library code: memcpy, memset and libgcc's arithmetic (__mulsi3,
     __divsi3...) are charged the frames in LIBRARY below, read off
     their disassembly, not compiled here.
-  * the two shell images (ovl_destdlg, ovl_segsetup): the dialogs they
-    hold run from the shell, not under the engine, and are not compiled
-    here; the run lists the calls into them it did not follow.
+  * the three shell images (ovl_destdlg, ovl_segsetup, ovl_segrun): the
+    dialogs and the set code they hold run from the shell, not under the
+    engine, and are not compiled here; the run lists the calls into them it did not follow.
   * a fact EDGE_RULES gets wrong. Each rule removes paths; a wrong one
     removes real ones, and nothing here can tell.
 
@@ -121,6 +121,15 @@ OVERLAY_FLAGS = ["-Os", "-mcpu=68000", "-mpcrel", "-ffunction-sections",
 HOST_FLAGS = ["-mcpu=68000", "-Os", "-std=c99", "-ffunction-sections"]
 
 SHELL_SRC = ["mac/macextract_mac.c", "mac/mac_start.c"]
+# The shell image the engine calls into: a set's code (mac/seg_run.inc.c),
+# whose seg_need is the joiner's `need`. Compiled with --shell, as the
+# image is; the other two shell images run before the engine.
+SHELL_IMAGES = {"segrun": ["tools/overlay/ovl_segrun.c"]}
+# What it calls in the shell, by the names it uses (ovl_segrun.c's
+# defines, each a SegRunFns entry).
+SEGRUN_CALLS = ["MyOpenFork", "MyHCreate", "MyHDelete", "PStrCat",
+                "PStrCatNum", "ShowNote", "WaitForFront", "fio_read",
+                "fio_seek", "fio_tell", "fio_size"]
 GLUE_SRC = ["mac/ovl_shim.c", "mac/ovl_reloc.c", "mac/ovl_load_eager.c"]
 # mac/ovl_shim.c's helpers that call an image for several shims. Each maps
 # a shim to the (image, function) pairs it reaches; a shim not named
@@ -185,9 +194,9 @@ CLASSES = {
     # UncProgress, UncPasswordAsk, UncVolumeSource
     "tick": ["fmt_mime.c:mime_relay", SH + "macextract_mac.c:prog_tick"],
     "ask": [SH + "macextract_mac.c:MacAskPassword"],
-    "need": [SH + "macextract_mac.c:seg_need"],
-    "release": [SH + "macextract_mac.c:seg_release"],
-    "vs.size": [SH + "macextract_mac.c:seg_part_size"],
+    "need": [SH + "ovl_segrun.c:seg_need"],
+    "release": [SH + "ovl_segrun.c:seg_release"],
+    "vs.size": [SH + "ovl_segrun.c:seg_part_size"],
     # OverlayHost's own crc32, for the crypt image (tools/overlay/overlay.h)
     "crc32": ["ovl_shim.c:ovl_host_crc32"],
     # the segment map a joined set hands its decoder (src/unc_internal.h)
@@ -294,6 +303,14 @@ SITE_CLASS = {
     ("unc_segment.c", "j->cur.seek"): "base.seek",
 }
 CLASSES["peekhead.seek"] = ["unc_peek.c:ph_seek"]
+for _n in SEGRUN_CALLS:
+    CLASSES[_n] = [SH + "macextract_mac.c:" + _n]
+CLASSES["seg_release"] = CLASSES["release"]
+CLASSES["SegPeelClean"] = [SH + "ovl_segrun.c:SegPeelClean"]
+# and the engine's, through the same table
+for _n in ("unc_segment_describe_as", "unc_segment_first_end",
+           "unc_segment_match", "unc_segment_name_part"):
+    CLASSES[_n] = [_n]
 # Direct calls that stand for a class: in the shipped build every reader is
 # one dispatch on UncCtx.fmt (mac/ovl_shim.c), so the engine's two calls
 # through a pointer are calls to ovl_run, from unc_run_file (a format read
@@ -307,7 +324,12 @@ DIRECT_CLASS = {
 NOT_FOLLOWED = {
     "RETRO68_RELOCATE": "the startup relocation, before main",
     "e@macextract_mac.c": "the shell's dialog images (ovl_destdlg, "
-                          "ovl_segsetup), not compiled here",
+                          "ovl_segsetup), not compiled here, and the set "
+                          "code's table (ovl_segrun's OVL_SEGRUN_INIT)",
+    "StackSample@ovl_segrun.c": "the stack probe's sample, NULL but in "
+                                "UNC_AT_STACK builds",
+    "HideInvisible@ovl_segrun.c": "a Standard File filter, handed to the "
+                                  "ROM, not called",
     "e@ovl_load_eager.c": "the release's plan, in the set's setup image "
                           "(ovl_segsetup), not compiled here; it runs "
                           "before the engine",
@@ -323,6 +345,12 @@ TAKEN_OK = [
     ("macextract_mac.c", r"^[A-Z0-9]+$", "a Toolbox filter or user-item "
      "proc (pascal, upper case): called by the ROM, not modelled"),
     ("mac_start.c", r".", "the startup's own entry"),
+    ("ovl_segrun.c", r"^(Seg|seg_)", "gX: the set code's exports to the "
+     "application and the setup image"),
+    ("ovl_segrun.c", r"^[A-Z0-9]+$", "a Toolbox filter or hook proc "
+     "(pascal): called by the ROM, not modelled"),
+    ("macextract_mac.c", r"^(My|PStr|ShowNote|WaitForFront|HideInvisible|"
+     r"fio_|unc_|StackSample)", "gSegRunFns: the set code image's host table"),
 ]
 
 def die(msg):
@@ -456,7 +484,9 @@ def build(config, out, with_shell):
         for s in resident_engine() + GLUE_SRC + (
                 SHELL_SRC if with_shell else []):
             units.append(Unit("resident", s, RESIDENT_FLAGS, inc, out))
-        for img, srcs in sorted(images.items()):
+        shell_images = SHELL_IMAGES if with_shell else {}
+        for img, srcs in sorted(list(images.items()) +
+                                list(shell_images.items())):
             for s in srcs + ["tools/overlay/ovl_rt.c"]:
                 units.append(Unit(img, s, OVERLAY_FLAGS,
                                   ["tools/overlay", "include", "src"], out))
@@ -601,6 +631,9 @@ def callee_expr(loc):
     p = path if os.path.isabs(path) else os.path.join(ROOT, path)
     with open(p) as fh:
         text = fh.readlines()[int(line) - 1][int(col) - 1:]
+    # SX(f)(...): the shell's call to the set code image's export f
+    # (mac/macextract_mac.c), read as a call to f
+    text = re.sub(r"^SX\((\w+)\)", r"\1", text)
     m = re.match(r"\(?\s*\*?\s*([A-Za-z_][\w.\->\[\]]*)\s*\)?\s*\(", text)
     if not m:
         die("cannot read the callee at %s: %r" % (loc, text[:60]))
@@ -640,7 +673,9 @@ class Graph:
         return os.path.basename(f.unit.src) if f.unit else ""
 
     def is_shell(self, f):
-        return f.unit is not None and f.unit.src in SHELL_SRC
+        return f.unit is not None and (
+            f.unit.src in SHELL_SRC or
+            any(f.unit.src in v for v in SHELL_IMAGES.values()))
 
     def is_forward(self, f):
         return f.unit is not None and "ovl_forwards" in f.unit.src

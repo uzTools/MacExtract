@@ -651,6 +651,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-22 (the window Aladdin's reader starts with) — StuffIt Expander 4.0.2 reads method 5 from a window of spaces, not XADMaster's pattern, and LHa for UNIX fills -lh1-'s so; no writer here reaches the part where they differ, so nothing real changes and the engine keeps the pattern until the maintainer decides
 - 2026-11-22 (the flag DiskDoubler never read) — DD Expand 3.7.7 ignores DDAR's 0x20 flag on a DDAP record and expands it, where XADMaster, macutils and this engine read the forks raw; no record here sets it, so the engine is left for the maintainer; each record carries a CRC-16/XMODEM at +122
 - 2026-11-22 (the hundredth part) — a spanned zip joins up to .z255, the joiner's own limit, where it stopped at .z99; the rule takes three digits and both hosts find the stem at the last dot; +68 B of resident code, no extraction lost
+- 2026-11-23 (the set code that left) — the shell's run-time set code (seg_need, the part dialog, the scans, SegCopyIn) is an image of its own, kept by a set alone: +4,832 B on every other format's grant, −364 B on a set's; all ten set scenarios pass at 1 MB
 
 ---
 
@@ -27857,4 +27858,51 @@ from `zip -s`, graded without `unar`, which stops at `.z99` too.
 control +64 B off every grant; no extraction lost at any of the three
 tiers. **Not changed:** a set of more than 256 parts is still refused,
 and the CLI says "not a recognized archive" for it, which predates this.
+
+## 2026-11-23 (the set code that left) — the shell's run-time set code (seg_need, the part dialog, the scans, SegCopyIn) is an image of its own, kept by a set alone: +4,832 B on every other format's grant, −364 B on a set's; all ten set scenarios pass at 1 MB
+
+**The code that finds, asks for and opens a set's parts left the resident
+link (measured).** `mac/seg_run.inc.c` is what `macextract_mac.c` held from
+`SegPartOf` to `seg_release`, moved unchanged; `tools/overlay/ovl_segrun.c`
+builds it as `OVL_ID_SEGRUN` with every resident name it uses (`MyOpenFork`,
+`ShowNote`, `fio_read`, the four `unc_segment_*` calls, `gSegShort`…) a
+`SegRunFns` entry, and hands back a `SegRunExports` table that `ExtractOne`
+and the setup image call through (`SX(f)`). The release plan keeps it for
+every row with a join (`gIsSet`, from `src/unc_formats.h`). It was the
+second row of OPEN_ITEMS.md's *Resident bytes that could leave*; the first
+answer there, keeping `ovl_segsetup` for sets, was priced at −2,844 B on a
+set and not taken.
+
+**What it bought (measured, `tools/retake_budgets.py`).** Resident `CODE`
+−4,740 B and A5 −92 B in the shipped build, so every format's grant but a
+set's grows 4,832 B; the image is 5,086 B and a set pays its directory
+entry and alignment, −364 B on its grant. `tools/run_tiers.py --check`:
+no tier's tally moved.
+
+**Two things it needed.** The release packs the kept images down the
+bundle's block, which moves this one, so `ExtractOne` asks for its table
+again after the release and only then hands the engine `seg_need`. And the
+image is built with the application's `UNC_MAC_AUTOTEST` (`OVL_DEFS`,
+`mkoverlay.sh`), because the code it holds has an autotest form and an
+image is otherwise built one way for every configuration.
+
+**The stack is still measured (measured).** `tools/stack_depth.py --shell`
+now compiles the image (`SHELL_IMAGES`): the deepest shell chain is
+8,098 B, through `segrun:seg_need` → `SegAskUser` → `SegScanDir` →
+`SegPartOf` → the MIME set's `mseg_scan`; the same tool on the tree before
+gave 8,122 B (FORMATS.md, *Stack*, corrected from 7,990 B).
+
+**On the emulator (measured).** `tools/vmac/segcheck.py --mem 1M`: 10 of
+10. `split-named` failed first, and the tree before this failed it the same
+way: Downer.sit cuts into three parts of 1,408 B, a last part as long as
+the one before may not be the last, and the application rightly asked for
+part 4, which `interactive.py` answered only after `--later`. It answers it
+in both now.
+
+**Not changed (hypothesis, from the build files, not run):** the lazy
+instrument links only the decoders' images (`mac/CMakeLists.txt`), yet
+compiles `UNC_SHELL_IMAGES`, because `macextract_mac.c` tests a
+`UNC_OVL_LAZY` macro the build never defines; so its destination dialog and
+a set's setup have had no image to run since v0.45.0, and now its set code
+too. It is a measuring build, not what ships.
 

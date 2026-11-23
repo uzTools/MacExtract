@@ -70,6 +70,16 @@ static const unsigned char gKeepSet[UNC_FORMAT__COUNT] = {
  * record (src/unc_peek.c) — the ciphers Compact Pro may want, and the
  * codecs. A layer that is anything else reads the bundle again, as under a
  * peek that was wrong (mac/ovl_load_eager.c). Each an offset from 128. */
+/* A set scheme, which keeps its run-time shell code (ovl_segrun.c): the
+ * rows with a join (src/unc_formats.h). */
+#define KEEP_JOINS_JOIN_READ(flags, reader) 1
+#define KEEP_JOINS_JOIN_EMIT(flags)         1
+#define KEEP_JOINS_NOJOIN                   0
+#define KEEP_JOIN_ROW(f, n, k, x, run, keep, join) [f] = KEEP_JOINS_##join,
+static const unsigned char gIsSet[UNC_FORMAT__COUNT] = {
+    UNC_FORMATS(KEEP_JOIN_ROW)
+};
+
 static const unsigned char gUnnamed[] = {
     OVL_ID_SNIFF - OVL_ID_CRYPT, OVL_ID_CPTDD - OVL_ID_CRYPT,
     OVL_ID_SUPERDISK - OVL_ID_CRYPT, 0, OVL_ID_CODECS - OVL_ID_CRYPT
@@ -174,5 +184,9 @@ static int release_plan(const OverlayHost *host, OverlayEntry sniff,
      * every decoder stub failed at ovl_codecs_ready() and the archive
      * produced nothing. */
     *k++ = OVL_ID_CODECS - OVL_ID_CRYPT;
+    /* And a set its own shell code, which asks for and opens each part as
+     * the join reaches it (mac/seg_run.inc.c). */
+    if (fmt < UNC_FORMAT__COUNT && gIsSet[fmt])
+        *k++ = OVL_ID_SEGRUN - OVL_ID_CRYPT;
     return (int)(k - (out + 2));
 }

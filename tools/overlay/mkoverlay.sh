@@ -50,11 +50,13 @@ OVL_ID=$(python3 tools/overlay/ovlid.py "${OVL_ID:-OVL_ID_CRYPT}") || exit 1
 # and RLE stages arrived here (DECISIONS.md 2026-09-19, *the byte that
 # went to two places at once*). The loop is then emitted as written,
 # and every one of them zeroes a window once per fork.
+# OVL_DEFS: a shell image's build switches, as the application's
+# (mac/CMakeLists.txt, OVL_SHELL_DEFS); empty for every other image.
 ovl_cc() {
     "${OVL_TOOL}gcc" -c -Os -mcpu=68000 -mpcrel \
         -ffunction-sections -fdata-sections -fno-builtin \
         -fno-tree-loop-distribute-patterns \
-        -Itools/overlay -Iinclude -Isrc ${OVL_INC:+-I$OVL_INC} \
+        -Itools/overlay -Iinclude -Isrc ${OVL_INC:+-I$OVL_INC} ${OVL_DEFS} \
         "$1" -o "$2"
 }
 

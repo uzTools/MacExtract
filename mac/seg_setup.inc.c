@@ -8,7 +8,9 @@
  *
  * SS(f) is how this file reaches anything resident: the function itself
  * when it is compiled into the application, the entry in SegSetupFns when
- * it is an image, which cannot name an application symbol. The File
+ * it is an image, which cannot name an application symbol. SX(f) is the
+ * same for mac/seg_run.inc.c's, which are in an image of their own
+ * (ovl_segrun.c) in the shipped build: the entry in its SegRunExports. The File
  * Manager calls are made directly: both expand them (mac/fm_inline.h).
  *
  * SPDX-License-Identifier: 0BSD
@@ -57,7 +59,7 @@ static int SegDescribeLast(SegHost *h, short vol, long dir,
     FSClose(ref);
     if (!ok) return 0;
     h->desc = cand;
-    SS(SegRemember)(h, (int)cand.nparts, vol, dir, nm);
+    SX(SegRemember)(h, (int)cand.nparts, vol, dir, nm);
     if ((int)cand.nparts > h->highest) h->highest = (int)cand.nparts;
     return 1;
 }
@@ -181,7 +183,7 @@ static int SegHaveAll(SegHost *h)
 
     if (h->desc.total == UNC_SIZE_UNKNOWN) return 0;
     for (p = 1; p <= kSegMaxKnown && h->loc[p].name[0]; p++) {
-        uint32_t len = SS(SegPartLength)(h, p);
+        uint32_t len = SX(SegPartLength)(h, p);
         if (len == UNC_SIZE_UNKNOWN || len <= h->desc.head_len) return 0;
         sum += len - h->desc.head_len;
         if (sum >= h->desc.total) return 1;
@@ -210,7 +212,7 @@ static int SegWrappedPartOf(SegHost *h, short vol, long dir,
     if (part < 1) return 0;
     if (h->loc[part].name[0]) return part;      /* already have that one */
 
-    if (!SS(SegTmpOpen)(h, part, tmp, &ref)) return 0;
+    if (!SX(SegTmpOpen)(h, part, tmp, &ref)) return 0;
     for (z = 0; z < (long)sizeof es; z++) ((char *)&es)[z] = 0;
     es.outRef = ref;
     if (!EnvRun(vol, dir, nm, &es, al) || es.err) {
@@ -220,7 +222,7 @@ static int SegWrappedPartOf(SegHost *h, short vol, long dir,
     }
     FSClose(ref);
     FlushVol(NULL, h->tmpVol);
-    SS(SegRemember)(h, part, h->tmpVol, h->tmpDir, tmp);
+    SX(SegRemember)(h, part, h->tmpVol, h->tmpDir, tmp);
     h->peeled = 1;
     return part;
 }
@@ -244,7 +246,7 @@ static void SegScanWrapped(SegHost *h, short vol, long dir, UncAlloc *al)
         pb.hFileInfo.ioFDirIndex = idx;
         if (PBGetCatInfoSync(&pb) != noErr) break;
         if (pb.hFileInfo.ioFlAttrib & 0x10) continue;          /* a folder */
-        if (SS(SegPartOf)(h, vol, dir, nm)) continue;      /* a part in its own right */
+        if (SX(SegPartOf)(h, vol, dir, nm)) continue;      /* a part in its own right */
         SegWrappedPartOf(h, vol, dir, nm, al);
         if (SegHaveAll(h)) break;
     }
@@ -319,7 +321,7 @@ static int SegSetup(const SegSetupArgs *A)
                 Str63 lastName;
                 for (i = 0; i < famStemLen; i++) sh->stem[i] = famStem[i];
                 sh->stemlen = famStemLen;
-                SS(SegScanFamily)(sh, inVol, inDir, famSplit, lastName);
+                SX(SegScanFamily)(sh, inVol, inDir, famSplit, lastName);
                 if (famZip) {
                     /* Only the ".zip" member carries the part count, so
                      * it has to be read before anything else can be.
@@ -341,11 +343,11 @@ static int SegSetup(const SegSetupArgs *A)
                         } while (sh->loc[want].name[0]);
                         sh->desc.scheme = UNC_FORMAT_ZIPSEG;  /* by name */
                         sh->desc.nparts = (uint16_t)want;
-                        if (!SS(SegAskUser) || !SS(SegAskUser)(sh, want))
+                        if (!SX(SegAskUser) || !SX(SegAskUser)(sh, want))
                             return UNC_ERR_SEGMENTED;
                         v = sh->loc[want].vRefNum;
                         d = sh->loc[want].dirID;
-                        SS(SegScanFamily)(sh, v, d, 0, lastName);
+                        SX(SegScanFamily)(sh, v, d, 0, lastName);
                     }
                     /* A ".zip" taken as a part it is not: forgotten,
                      * and the real one asked for when the join needs
@@ -393,7 +395,7 @@ static int SegSetup(const SegSetupArgs *A)
                         return UNC_ERR_SEGMENTED;
                     }
                     for (p = 1; p <= run; p++) {
-                        uint32_t len = SS(SegPartLength)(sh, p);
+                        uint32_t len = SX(SegPartLength)(sh, p);
                         if (len == UNC_SIZE_UNKNOWN) { total = UNC_SIZE_UNKNOWN; break; }
                         total += len;
                     }
@@ -426,13 +428,13 @@ static int SegSetup(const SegSetupArgs *A)
             sh->tmpDir = outDir;
             /* The file we were opened on is a part, at the number its
              * own header states — so opening part 3 of a set works. */
-            SS(SegRemember)(sh, (int)sh->desc.part, inVol, inDir, name);
-            SS(SegScanDir)(sh, inVol, inDir);
+            SX(SegRemember)(sh, (int)sh->desc.part, inVol, inDir, name);
+            SX(SegScanDir)(sh, inVol, inDir);
             /* A part that arrived wrapped was unwrapped into the OUTPUT
              * folder, so the rest of the set is not there: it is still
              * where the user left it. */
             if (origVol != inVol || origDir != inDir)
-                SS(SegScanDir)(sh, origVol, origDir);
+                SX(SegScanDir)(sh, origVol, origDir);
             /* Only now, and only if something is still missing, is it
              * worth taking envelopes off to look — which is how a real
              * download arrives, and also how a half-unstuffed one does.
@@ -470,7 +472,7 @@ static int SegSetup(const SegSetupArgs *A)
                     do {
                         if (++want > kSegMaxKnown) return UNC_ERR_SEGMENTED;
                     } while (sh->loc[want].name[0]);
-                    if (!SS(SegAskUser) || !SS(SegAskUser)(sh, want))
+                    if (!SX(SegAskUser) || !SX(SegAskUser)(sh, want))
                         return UNC_ERR_SEGMENTED;
                     SegFindLast(sh, want);
                     asked = 1;
@@ -487,7 +489,7 @@ static int SegSetup(const SegSetupArgs *A)
                     long z;
                     for (z = 0; z < (long)sizeof sh->loc; z++)
                         ((char *)sh->loc)[z] = 0;
-                    SS(SegScanDir)(sh, inVol, inDir);
+                    SX(SegScanDir)(sh, inVol, inDir);
                 }
             }
             }

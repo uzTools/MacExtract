@@ -21,6 +21,8 @@
  * (mkoverlay.sh), so it starts non-zero and is set on every entry. */
 static const SegSetupFns *gF = (const SegSetupFns *)1;
 #define SS(f) (gF->f)
+static const SegRunExports *gX = (const SegRunExports *)1;
+#define SX(f) (gX->f)
 
 #include "../../mac/seg_setup.inc.c"
 #include "unc_internal.h"             /* UNC_ENC_*, for the release's plan */
@@ -35,5 +37,6 @@ int32_t ovl_main(const OverlayHost *host, int32_t which, void *a, void *b)
     }
     if (which != OVL_SEGSETUP_RUN) return UNC_ERR_IO;
     gF = (const SegSetupFns *)b;
+    gX = ((const SegSetupArgs *)a)->x;
     return SegSetup((const SegSetupArgs *)a);
 }

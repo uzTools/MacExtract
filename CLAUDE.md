@@ -5,7 +5,7 @@
 ## Mission
 
 1. **`libmacextract`** — a portable, dependency-free C99 extraction engine for classic Macintosh archive and encoding formats, plus a Linux CLI (`macextract`).
-2. **A Retro68 Toolbox application** wrapping the same engine. Floor target: **System 3.0, 68000, 1 MB RAM** (a January 1986 Macintosh Plus); it also runs in **512 KB**, refusing the heaviest archives per entry, and the same binary runs unchanged through Mac OS 9. Its decoders and its sniffer ship as **seventeen `'OVLY'` images**, and two of its dialogs' code as two more, read at launch and released once the archive's format is known (FORMATS.md, *Overlays*).
+2. **A Retro68 Toolbox application** wrapping the same engine. Floor target: **System 3.0, 68000, 1 MB RAM** (a January 1986 Macintosh Plus); it also runs in **512 KB**, refusing the heaviest archives per entry, and the same binary runs unchanged through Mac OS 9. Its decoders and its sniffer ship as **seventeen `'OVLY'` images**, and the shell code of its two dialogs and of a set as three more, read at launch and released once the archive's format is known (FORMATS.md, *Overlays*).
 
 The engine is the product. The Mac app is a thin shell.
 

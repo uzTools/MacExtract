@@ -132,6 +132,8 @@ typedef int32_t (*OverlayEntry)(const OverlayHost *host, int32_t which,
                                     * before the release, in no keep set */
 #define OVL_ID_SEGSETUP      146   /* a segmented set's
                                    * setup, before the join (seg_setup.inc.c). */
+#define OVL_ID_SEGRUN        147   /* a set's run-time shell code
+                                   * (seg_run.inc.c): kept by a set */
 #define OVL_IMAGE_MAX         20
 
 #define OVL_SPACESAVER_EXTRACT 30
@@ -187,6 +189,7 @@ typedef int32_t (*OverlayEntry)(const OverlayHost *host, int32_t which,
 #define OVL_SITSEG_EMIT        72  /* a = OvlArgs* (obj c, in desc, len base, pos data_first, out ioerr) */
 #define OVL_DDSEG_PAYLOAD      73  /* a = OvlArgs* (obj desc, in head, len, pos part, extra size, off_out) */
 #define OVL_MIMESEG_HEAD       74  /* a = OvlArgs* (obj desc, in io, pos part, extra size, off_out) */
+#define OVL_SEGRUN_INIT        75  /* a = NULL, b = SegRunFns*; returns its SegRunExports* */
 /* The release plan's out[0] for an envelope whose payload's first bytes name
  * nothing (mac/release_plan.inc.c): no format's number. */
 #define OVL_PEEK_UNNAMED       0xFF

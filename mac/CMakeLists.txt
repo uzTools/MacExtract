@@ -962,18 +962,26 @@ add_custom_command(
 # own, bundled so that they are read at launch and given back with the bundle
 # (mac/macextract_mac.c, UNC_SHELL_IMAGES). Only the eager lifetime links the
 # bundle; the lazy and resident instruments do without them.
-foreach(img destdlg segsetup)
+# ovl_segrun's code has its autotest form (UNC_MAC_AUTOTEST), as the
+# application's had when it was resident.
+set(OVL_SHELL_DEFS "")
+if("$ENV{UNC_MAC_AUTOTEST}")
+    set(OVL_SHELL_DEFS "-DUNC_MAC_AUTOTEST")
+endif()
+foreach(img destdlg segsetup segrun)
     string(TOUPPER ${img} IMG)
     add_custom_command(
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/ovl_${img}.r
         COMMAND ${CMAKE_COMMAND} -E env OVL_ID=OVL_ID_${IMG}
                 OVL_INC=${CMAKE_CURRENT_BINARY_DIR}
+                "OVL_DEFS=${OVL_SHELL_DEFS}"
                 sh ${ENGINE_DIR}/tools/overlay/mkoverlay.sh
                 ${CMAKE_CURRENT_BINARY_DIR}/ovl_${img}.r
                 ${ENGINE_DIR}/tools/overlay/ovl_${img}.c
         DEPENDS ${ENGINE_DIR}/tools/overlay/ovl_${img}.c
                 ${CMAKE_CURRENT_SOURCE_DIR}/macextract_strings.h
                 ${CMAKE_CURRENT_SOURCE_DIR}/seg_setup.inc.c
+                ${CMAKE_CURRENT_SOURCE_DIR}/seg_run.inc.c
                 ${CMAKE_CURRENT_SOURCE_DIR}/release_plan.inc.c
                 ${CMAKE_CURRENT_SOURCE_DIR}/seg_types.h
                 ${CMAKE_CURRENT_SOURCE_DIR}/fm_inline.h
@@ -1003,10 +1011,12 @@ add_custom_command(
             ${OVL_BUNDLE_ARGS}
             OVL_ID_DESTDLG:${CMAKE_CURRENT_BINARY_DIR}/ovl_destdlg.bin
             OVL_ID_SEGSETUP:${CMAKE_CURRENT_BINARY_DIR}/ovl_segsetup.bin
+            OVL_ID_SEGRUN:${CMAKE_CURRENT_BINARY_DIR}/ovl_segrun.bin
     DEPENDS
             ${OVL_BUNDLE_DEPS}
             ${CMAKE_CURRENT_BINARY_DIR}/ovl_destdlg.r
             ${CMAKE_CURRENT_BINARY_DIR}/ovl_segsetup.r
+            ${CMAKE_CURRENT_BINARY_DIR}/ovl_segrun.r
             ${ENGINE_DIR}/tools/overlay/mkbundle.py
             ${ENGINE_DIR}/tools/overlay/ovlid.py
             ${ENGINE_DIR}/tools/overlay/overlay.h)
