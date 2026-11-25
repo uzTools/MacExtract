@@ -296,7 +296,6 @@ converted*).
 | what | status | what would close it |
 |---|---|---|
 | a segmented archive whose segments the user named freely (ZipIt asks "Save segment #%d as:") | not joined: parts are placed by `.zNN`/`.zip` (FORMATS.md, *Segments*); renamed, the set extracts byte for byte | an order read off the segments themselves, or the user's |
-| a ZipIt-encrypted archive, byte for byte | **the cipher is known, the engine reads it**: ZipIt 2.2.2's `decrypt_byte`/`crypthead`/`UnzipCryptHeader` are standard PKWARE ZipCrypto, which `unc_zip_extract` already decrypts (DECISIONS.md 2026-11-06, *what ZipIt does with a Macintosh file*) | one ZipIt-made encrypted `.zip` to confirm against a real file (none here; a registered copy would write one) |
 
 ## The shell's own File Manager blocks, until multiversal's glue is inline
 

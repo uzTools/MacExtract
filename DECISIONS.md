@@ -653,6 +653,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-22 (the hundredth part) — a spanned zip joins up to .z255, the joiner's own limit, where it stopped at .z99; the rule takes three digits and both hosts find the stem at the last dot; +68 B of resident code, no extraction lost
 - 2026-11-23 (the set code that left) — the shell's run-time set code (seg_need, the part dialog, the scans, SegCopyIn) is an image of its own, kept by a set alone: +4,832 B on every other format's grant, −364 B on a set's; all ten set scenarios pass at 1 MB
 - 2026-11-23 (the shell images the lazy build lacked) — the lazy instrument called the destination dialog, a set's setup and its set code as images and linked none of them, so every set failed in it; each is now its own resource there, and a Compact Pro set that failed passes
+- 2026-11-25 (the ZipIt cipher not waited on) — a ZipIt-made encrypted archive is no longer wanted; the open item is closed on ZipIt 2.2.2's own code and a ZipCrypto fixture, not on a ZipIt file
 
 ---
 
@@ -27925,4 +27926,20 @@ called them as images already.
 **Consequence.** The test in `macextract_mac.c` is now `UNC_AT_OVERLAY`
 alone, which is what every build compiled; only the resident control links
 the shell's code in.
+
+## 2026-11-25 (the ZipIt cipher not waited on) — a ZipIt-made encrypted archive is no longer wanted; the open item is closed on ZipIt 2.2.2's own code and a ZipCrypto fixture, not on a ZipIt file
+
+**Decision (the maintainer's).** There is no registration key to make
+ZipIt write one, and ZipIt was written to be PKZIP-compatible, so the
+specimen OPEN_ITEMS.md carried (*ZipIt archives*) is dropped.
+
+**What it rests on.** Not the compatibility claim alone: the cipher was
+read from ZipIt 2.2.2's `decrypt_byte`/`crypthead`/`UnzipCryptHeader`
+(2026-11-06, *what ZipIt does with a Macintosh file*) and the engine
+decrypts a `zip -e` ZipCrypto file byte-exact — measured.
+
+**Not measured, and accepted:** that ZipIt encrypts a `0x2605` entry
+(both forks in one stream) the way it encrypts any other, and which
+check byte (CRC or time, flag bit 3) its writer emits — hypothesis.
+A ZipIt-encrypted archive that fails would reopen this.
 
