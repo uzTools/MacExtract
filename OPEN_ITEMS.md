@@ -127,7 +127,7 @@ LGPL-2.1-or-later, through the four files that hold transcribed code
 (`CODE` in `tools/check_provenance.py`, **code** below). The other rows are
 facts read in somebody else's code, 0BSD already, and stay listed because
 leaving XADMaster is about where the knowledge came from (DECISIONS.md
-2026-11-08, *the code we wrote*). Of the 9 `CARRIES` files, 4 owe
+2026-11-08, *the code we wrote*). Of the 10 `CARRIES` files, 5 owe
 XADMaster, 3 owe libxad, the Amiga library XADMaster carries them from
 (`unc_lzdyn.c`, `sit14.c`, `fmt_dd.c`; same licence), and
 `fmt_hecx.c` and `fmt_binhex_probe.c` owe macutils' hexbin, whose README
