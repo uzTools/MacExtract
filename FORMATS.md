@@ -4286,12 +4286,12 @@ Measured 2026-09-27:
 whose tallies it is quoted beside. It cancels in a difference taken from
 one probe pair (*What it buys, against the control*): **117,040 B saved
 between the shipped pair against 116,720 B between the probe pair**, both
-2026-09-27. The shipped pair is **194,512 B** (`OVL_SAVED`,
+2026-09-27. The shipped pair is **194,544 B** (`OVL_SAVED`,
 `tools/run_tiers.py`) since 2026-11-12 (*VISE parked*);
 the probe pair has not been re-measured, so the 320 B is that
 day's difference, not today's.
 
-The bundle is **220,808 B** — the twenty images sum to 220,550 B, so its
+The bundle is **220,844 B** — the twenty images sum to 220,586 B, so its
 index costs **258 B** (`tools/budgets.txt` `BUNDLE`, `IMAGE_*`): a
 4-byte header, 12 bytes of directory per image and padding of each image to
 a multiple of 4 — the padding is why the index is not a constant. The
@@ -4352,7 +4352,7 @@ carries, and they were read again from the floppy (DECISIONS.md 2026-11-04,
 
 A tier's budget for a format is the resident build's budget for that tier
 (`TIERS`; *512 KB machines*, *Floor target verification*), plus
-the 194,512 B of `CODE` and A5 the shipped build does not carry (`OVL_SAVED`;
+the 194,544 B of `CODE` and A5 the shipped build does not carry (`OVL_SAVED`;
 *Three configurations, one tree*), less the images the format keeps, each
 aligned to 4 B with a 12 B directory entry, and 12 B for the one block they
 are kept in (DECISIONS.md 2026-11-11, *the copies that moved down*), less a
@@ -4386,24 +4386,24 @@ since 2026-10-09 with `run_tiers.py --check` moving no tally.
 
 | sniffed format | images kept | granted, against the control |
 |---|---|---|
-| **AppleLink package** | **sqp, codecs** | <!-- gain: sqp codecs -->**+186,250 B** (arithmetic: no `.pkg` is in the Mac sample) — the largest grant, because `ovl_sqp` is the smallest decoder image at 1,736 B |
-| Now Compress | now, codecs | <!-- gain: now codecs -->**+183,038 B** (measured) |
-| SuperDisk! | superdisk, codecs | <!-- gain: superdisk codecs -->+181,358 B (arithmetic: no SuperDisk! fixture is in the Mac sample) |
-| LZH | lzh, codecs | <!-- gain: lzh codecs -->**+177,298 B** (measured) |
-| PackIt | packit, ciphers, codecs | <!-- gain: packit crypt codecs -->**+176,434 B** (measured) |
-| DiskDoubler | cptdd, codecs | <!-- gain: cptdd codecs -->**+171,590 B** (measured) |
-| StuffIt SpaceSaver | spacesaver, codecs | <!-- gain: spacesaver codecs -->+171,750 B (arithmetic: no SpaceSaver fixture is in the Mac sample) |
-| ARC | arc, ciphers, codecs | <!-- gain: arc crypt codecs -->**+170,790 B** (measured) |
-| Compact Pro, Compact Pro segment | cptdd, ciphers, codecs | <!-- gain: cptdd crypt codecs -->+162,318 B (arithmetic), and <!-- gain: cptdd codecs -->**+171,590 B** where the directory says no entry is encrypted (measured) |
-| Tar | zipold, codecs | <!-- gain: zipold codecs -->**+161,914 B** (measured) |
-| MAR | zipold, codecs | <!-- gain: zipold codecs -->+161,914 B (arithmetic: no MAR fixture is in the Mac sample) |
-| Apple Backup | zipold, codecs | <!-- gain: zipold codecs -->+161,914 B (arithmetic: no Apple Backup set is in the Mac sample) |
-| Installer Tome | zipold, codecs | <!-- gain: zipold codecs -->+161,914 B (arithmetic: no Tome is in the Mac sample) |
-| StuffIt, StuffIt 5 | stuffit, ciphers, codecs | <!-- gain: stuffit crypt codecs -->**+148,270 B** (measured), and <!-- gain: stuffit codecs -->**+157,542 B** for a StuffIt 5 archive whose header carries no password hash (measured, 2026-11-03) |
-| Zip, spanned zip | exo, zipold, ciphers, codecs | <!-- gain: exo zipold crypt codecs -->+122,346 B (arithmetic), <!-- gain: exo zipold codecs -->**+131,618 B** unencrypted (measured) |
-| an envelope whose payload's first bytes name its format (`unc_envelope_peek`), since 2026-11-03 | its own reader, the sniffer, and what that format keeps | <!-- gain: exo sniff zipold codecs -->**+112,710 B** for a `.tar.Z` or `.tar.gz`, and an LZW-compressed MAR, which keeps the same (arithmetic), <!-- gain: zipold sniff codecs -->**+143,006 B** for a `.mar.lz4` (arithmetic), <!-- gain: binhex sniff stuffit crypt codecs -->**+121,718 B** for a StuffIt archive in BinHex or MacBinary (measured) |
-| an envelope whose payload's first bytes name nothing, since 2026-11-12 (DECISIONS.md 2026-11-11, *the head that named nothing*) | its own reader, the sniffer, cptdd and superdisk (the two formats only an end names), the ciphers, codecs | <!-- gain: exo sniff cptdd superdisk crypt codecs -->**+106,474 B** for a `.gz` or `.Z`, <!-- gain: zipold sniff cptdd superdisk crypt codecs -->+110,686 B for an `.lz4`, <!-- gain: binhex sniff cptdd superdisk crypt codecs -->+129,126 B for BinHex or MacBinary, <!-- gain: text sniff cptdd superdisk crypt codecs -->+124,226 B for uuencode or base64, <!-- gain: btoa sniff cptdd superdisk crypt codecs -->+134,262 B for btoa (arithmetic) |
-| any other envelope, and every segment scheme that joins to a file | the whole bundle, kept | <!-- gain: bundle -->**−26,706 B** (−29,118 B measured, before 2026-11-07) |
+| **AppleLink package** | **sqp, codecs** | <!-- gain: sqp codecs -->**+186,282 B** (arithmetic: no `.pkg` is in the Mac sample) — the largest grant, because `ovl_sqp` is the smallest decoder image at 1,736 B |
+| Now Compress | now, codecs | <!-- gain: now codecs -->**+183,070 B** (measured) |
+| SuperDisk! | superdisk, codecs | <!-- gain: superdisk codecs -->+181,390 B (arithmetic: no SuperDisk! fixture is in the Mac sample) |
+| LZH | lzh, codecs | <!-- gain: lzh codecs -->**+177,294 B** (measured) |
+| PackIt | packit, ciphers, codecs | <!-- gain: packit crypt codecs -->**+176,466 B** (measured) |
+| DiskDoubler | cptdd, codecs | <!-- gain: cptdd codecs -->**+171,622 B** (measured) |
+| StuffIt SpaceSaver | spacesaver, codecs | <!-- gain: spacesaver codecs -->+171,782 B (arithmetic: no SpaceSaver fixture is in the Mac sample) |
+| ARC | arc, ciphers, codecs | <!-- gain: arc crypt codecs -->**+170,822 B** (measured) |
+| Compact Pro, Compact Pro segment | cptdd, ciphers, codecs | <!-- gain: cptdd crypt codecs -->+162,350 B (arithmetic), and <!-- gain: cptdd codecs -->**+171,622 B** where the directory says no entry is encrypted (measured) |
+| Tar | zipold, codecs | <!-- gain: zipold codecs -->**+161,946 B** (measured) |
+| MAR | zipold, codecs | <!-- gain: zipold codecs -->+161,946 B (arithmetic: no MAR fixture is in the Mac sample) |
+| Apple Backup | zipold, codecs | <!-- gain: zipold codecs -->+161,946 B (arithmetic: no Apple Backup set is in the Mac sample) |
+| Installer Tome | zipold, codecs | <!-- gain: zipold codecs -->+161,946 B (arithmetic: no Tome is in the Mac sample) |
+| StuffIt, StuffIt 5 | stuffit, ciphers, codecs | <!-- gain: stuffit crypt codecs -->**+148,302 B** (measured), and <!-- gain: stuffit codecs -->**+157,574 B** for a StuffIt 5 archive whose header carries no password hash (measured, 2026-11-03) |
+| Zip, spanned zip | exo, zipold, ciphers, codecs | <!-- gain: exo zipold crypt codecs -->+122,378 B (arithmetic), <!-- gain: exo zipold codecs -->**+131,650 B** unencrypted (measured) |
+| an envelope whose payload's first bytes name its format (`unc_envelope_peek`), since 2026-11-03 | its own reader, the sniffer, and what that format keeps | <!-- gain: exo sniff zipold codecs -->**+112,742 B** for a `.tar.Z` or `.tar.gz`, and an LZW-compressed MAR, which keeps the same (arithmetic), <!-- gain: zipold sniff codecs -->**+143,038 B** for a `.mar.lz4` (arithmetic), <!-- gain: binhex sniff stuffit crypt codecs -->**+121,750 B** for a StuffIt archive in BinHex or MacBinary (measured) |
+| an envelope whose payload's first bytes name nothing, since 2026-11-12 (DECISIONS.md 2026-11-11, *the head that named nothing*) | its own reader, the sniffer, cptdd and superdisk (the two formats only an end names), the ciphers, codecs | <!-- gain: exo sniff cptdd superdisk crypt codecs -->**+106,506 B** for a `.gz` or `.Z`, <!-- gain: zipold sniff cptdd superdisk crypt codecs -->+110,718 B for an `.lz4`, <!-- gain: binhex sniff cptdd superdisk crypt codecs -->+129,158 B for BinHex or MacBinary, <!-- gain: text sniff cptdd superdisk crypt codecs -->+124,258 B for uuencode or base64, <!-- gain: btoa sniff cptdd superdisk crypt codecs -->+134,294 B for btoa (arithmetic) |
+| any other envelope, and every segment scheme that joins to a file | the whole bundle, kept | <!-- gain: bundle -->**−26,710 B** (−29,118 B measured, before 2026-11-07) |
 
 A change to resident code moves every row by the control's growth less the
 shipped build's; a change to an image moves only the rows that keep it — so a
@@ -4414,12 +4414,12 @@ left*).
 
 **The last row is the one no tally had shown**: a wrapper that keeps the
 bundle runs with **less** memory than a resident build would give it —
-220,808 B held against 194,512 B saved. Until 2026-11-12 that was every
+220,844 B held against 194,544 B saved. Until 2026-11-12 that was every
 envelope whose payload the peek could not name (the row above it since;
 DECISIONS.md 2026-11-11, *the head that named nothing*), and until
 2026-11-03 every envelope, and it refused `a2ps.V4.3.tar.Z` and
 `popper-1.7.tar.Z` at System 6.0.8 / 512 KB; the peek names Tar from the first
-512 bytes and the `.Z` layer is granted <!-- grant: sys6-512K exo sniff zipold codecs -->192,346 B there instead of <!-- grant: sys6-512K bundle -->52,930 B
+512 bytes and the `.Z` layer is granted <!-- grant: sys6-512K exo sniff zipold codecs -->192,346 B there instead of <!-- grant: sys6-512K bundle -->52,894 B
 (DECISIONS.md 2026-11-03, *the envelope that said what it held*). The
 heaviest envelope decode in the Mac sample is `popper-1.7.tar.Z`'s LZW at
 147,764 B.

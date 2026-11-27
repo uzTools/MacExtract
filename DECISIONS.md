@@ -655,6 +655,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-23 (the shell images the lazy build lacked) — the lazy instrument called the destination dialog, a set's setup and its set code as images and linked none of them, so every set failed in it; each is now its own resource there, and a Compact Pro set that failed passes
 - 2026-11-25 (the ZipIt cipher not waited on) — a ZipIt-made encrypted archive is no longer wanted; the open item is closed on ZipIt 2.2.2's own code and a ZipCrypto fixture, not on a ZipIt file
 - 2026-11-27 (the creation date OS/2 put in 0x7f) — LZH's 0x7f extended header carries a creation date that was dropped; read, with 0x41's winning: +88 B of CODE, 0 heap, the maintainer's call
+- 2026-11-27 (the name split at a 5C) — `lzh_add_path` took every `\` for a separator; a Shift-JIS lead byte now takes the next byte with it: +36 B of CODE, 0 heap, the maintainer's call
 
 ---
 
@@ -27947,3 +27948,7 @@ A ZipIt-encrypted archive that fails would reopen this.
 ## 2026-11-27 (the creation date OS/2 put in 0x7f) — LZH's 0x7f extended header carries a creation date that was dropped; read, with 0x41's winning: +88 B of CODE, 0 heap, the maintainer's call
 
 **Claim.** `fmt_lzh.c` reads 0x7f's creation time into `xctime` (Source: XADMaster XADLZHParser.m, case 0x7f); if 0x41 also appears its date wins (no specimen has both, hypothesis). **Evidence (measured).** `lhasa-os2` fixture: lsar agrees on 2011-12-03 21:29:04; 7 more ctimes graded by `run_meta.py --corpus`, which now fails when lsar gives an LZH creation date and the engine none (read disabled: 7 FAILED; enabled: OK). **Cost.** IMAGE_LZH 10,602 to 10,686 B, shipped CODE +88 B, A5 +8 B, 0 heap, no 512 KB refusal changes; the maintainer's call: it is code, not heap.
+
+## 2026-11-27 (the name split at a 5C) — `lzh_add_path` took every `\` for a separator; a Shift-JIS lead byte now takes the next byte with it: +36 B of CODE, 0 heap, the maintainer's call
+
+**Claim.** With no dirname header (level 0/1, or level 2 without 0x02), 表示.txt (`95 5C 8E A6 .txt`) became folder `\x95` holding `\x8E\xA6.txt`. **Evidence (measured).** Now one file, equal to LHa for UNIX 1.14 built with `MULTIBYTE_CHAR` (`SJC_FIRST_P`/`convdelim`, run in tools/sandbox.py); all 176 LZH/LHA files on this machine list identically before and after; run_diff LZH 8/8, run_meta OK; `run_lzh.py`'s `sjis` case fails without the fix and passes with it. **Cost.** IMAGE_LZH 10686 → 10722, CODE +36, A5 -4, bundle +36, OVL_SAVED/TIERS_CONTROL +32, heap 0; `run_tiers --check`: no refusal moved. **The trade-off, unexercised (hypothesis).** A lead-range byte (MacRoman é 0x8E) right before `\` or `/` in such a name now stays one name; no specimen has one. **Rebuild the repro:** `tests/harness/run_lzh.py`'s `sjis()` writes the level-0 `-lh0-` archive (name bytes above, "hello\n") by hand; extract with `build/macextract`. **The call.** The maintainer's, 2026-11-27.

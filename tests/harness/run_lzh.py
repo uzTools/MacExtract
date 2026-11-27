@@ -393,6 +393,46 @@ def generated(macextract, problems):
     return ran
 
 
+def sjis(macextract, problems):
+    """A level-0 name whose Shift-JIS second byte is 0x5C stays one name.
+
+    Written by hand (no encoder here emits a raw Shift-JIS name): 表示.txt
+    is `95 5C 8E A6 .txt`. Before 2026-11-27 it became a folder `\\x95`
+    holding `\\x8E\\xA6.txt` (DECISIONS.md, *the name split at a 5C*).
+    The expected result is LHa for UNIX 1.14 built with MULTIBYTE_CHAR's,
+    read off its source (`convdelim`), not run here.
+    """
+    name = bytes([0x95, 0x5C, 0x8E, 0xA6]) + b".txt"
+    data = b"hello\n"
+    crc = 0
+    for b in data:
+        crc ^= b
+        for _ in range(8):
+            crc = (crc >> 1) ^ 0xA001 if crc & 1 else crc >> 1
+    body = (b"-lh0-" + struct.pack("<II", len(data), len(data))
+            + struct.pack("<HH", 0x0021, 0x5C21) + bytes([0x20, 0])
+            + bytes([len(name)]) + name + struct.pack("<H", crc))
+    arc_bytes = (bytes([len(body), sum(body) & 255]) + body + data + b"\0")
+    work = tempfile.mkdtemp()
+    out = tempfile.mkdtemp()
+    try:
+        arc = os.path.join(work, "sjis.lzh")
+        open(arc, "wb").write(arc_bytes)
+        us_extract(macextract, arc, out)
+        got = []
+        for d, _, fs in os.walk(out):
+            got += [os.path.relpath(os.path.join(d, f), out) for f in fs]
+        # The CLI writes the name MacRoman-to-UTF-8, so only the shape is
+        # compared: one file, no folder (its `\\` is kept as a character).
+        if len(got) != 1 or os.sep in got[0]:
+            problems.append("sjis name: %r, wanted one file, no folder"
+                            % (got,))
+    finally:
+        shutil.rmtree(work, ignore_errors=True)
+        shutil.rmtree(out, ignore_errors=True)
+    return 1
+
+
 LH2_BIN = os.path.abspath(os.path.join(ROOT, "build", "lha-lh2", "src", "lha"))
 LH2_REV = "16619b066b189ef289bb8b07b37d1c38d550da99"
 LH2_TAR = os.path.join(ROOT, "reference", "lha-lh2-%s.tar.gz" % LH2_REV)
@@ -925,6 +965,7 @@ def main():
     else:
         print("run_lzh: no reference/lha — the generated cases are skipped")
 
+    sjis(macextract, problems)
     old = lh2(macextract, problems)
     old3 = lh3(macextract, problems)
 

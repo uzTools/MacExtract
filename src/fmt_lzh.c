@@ -702,8 +702,17 @@ static void lzh_add_path(UncEntryInfo *e, const uint8_t *p, uint32_t len,
 {
     uint32_t i, start = 0;
     for (i = 0; i <= len; i++) {
-        int sep = i == len ? 1 :
-                  (p[i] == 0xff || (seps_all && (p[i] == '\\' || p[i] == '/')));
+        int sep;
+        /* A Shift-JIS lead byte takes the next with it: its second byte
+         * may be 0x5c. Source: reference/lha/src/lha_macro.h,
+         * SJC_FIRST_P, as used by convdelim in src/util.c. */
+        if (seps_all && i + 1 < len && p[i] >= 0x80 &&
+            (p[i] < 0xa0 || (p[i] >= 0xe0 && p[i] < 0xfd))) {
+            i++;
+            continue;
+        }
+        sep = i == len ? 1 :
+              (p[i] == 0xff || (seps_all && (p[i] == '\\' || p[i] == '/')));
         if (!sep) continue;
         if (i > start) unc_entry_path_append(e, p + start, i - start);
         start = i + 1;
