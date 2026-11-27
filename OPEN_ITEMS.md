@@ -198,8 +198,16 @@ reader (LHa for UNIX with `MULTIBYTE_CHAR`, in `tools/sandbox.py`), or a
 run on a KanjiTalk System. One exists (measured 2026-11-27, its listing):
 an installed KanjiTalk 7.5 System Folder, a trial build (試用版), on
 MACLIFE 77's CD (January 1995, HFS; archive.org `maclife-kanjitalk-75`,
-`MACLIFE-KT75.ISO.7z`, 216,497,349 B, SHA-1 `14b301b59a574cf7769e761b7f7570713a20657f`); not
-downloaded, not booted, any expiry of the trial not read.
+`MACLIFE-KT75.ISO.7z`, 216,497,349 B, SHA-1 `14b301b59a574cf7769e761b7f7570713a20657f`); downloaded and verified. **Measured 2026-11-27:** it boots under Basilisk II
+(Quadra 650 ROM, 68040, 8 MB) to the Finder, but only with the host clock set
+back: dated 2026 it shows the Japanese expiry dialog (有効期限が終了しました)
+and shuts the machine down on OK; at 1995-01-10 it boots. The system script
+stays Roman, not Japanese: the menu bar and Standard File read as MacRoman
+mojibake, so this is no Japanese tier, and MacExtract's File menu there reads
+`Open…` with a real ellipsis, which says nothing about the `0xC9` row (still
+hypothesis). Untried: a Japanese ROM (none on this machine), the 30 files in
+the extension folder's subfolders that `hcopy` would not nest. Rebuild:
+tools/vmac/README.md, *A KanjiTalk 7.5 boot volume*.
 
 ## Mac OS X's sidecars: what they hold and the engine does not read
 

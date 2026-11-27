@@ -3563,3 +3563,30 @@ five ciphers here show the prompt, the masked password, then the refusal.
 **What it cannot see.** The alert TEXT, which is read off the frames. 4.0.2
 with DropStuff with Expander Enhancer, which this machine does not have
 installed. And a wrong password, which it never types.
+
+## A KanjiTalk 7.5 boot volume
+
+Measured 2026-11-27, Basilisk II (`Quadra650.ROM` from a sibling project's
+`bii/`, `modelid 14`, `cpu 4`, 8 MB, `nosound`/`nocdrom`/`nogui`). Not a
+Japanese tier: the system script comes up Roman (OPEN_ITEMS.md, *Two-byte
+scripts*).
+
+1. `curl -L https://archive.org/download/maclife-kanjitalk-75/MACLIFE-KT75.ISO.7z`
+   into `~/.cache/macextract/kanjitalk75/`; the .7z's SHA-1 is
+   `14b301b59a574cf7769e761b7f7570713a20657f`; `7z x`; the ISO's sha256 is
+   `5497537b86356355dce05b2230d815220c018c268b4fe107523b669c9a7ef256`.
+2. `hformat -f -l KT kt.hfv` on a 60 MB file. The ISO has an Apple partition
+   map and no boot blocks. `hcopy` has no `-R`, and reads a source from the
+   current volume only to a host path: walk the tree with `hls -1 -F` under
+   `LC_ALL=C`, per file `hcopy -m name stage.bin`, then with `kt.hfv`
+   current `hcopy -m stage.bin KT:dir:`. Names are raw Shift-JIS; escape
+   `\ [ ] * ? { }` in them (a second byte can be 0x5C or 0x5B). Folders
+   nested under the extension folder failed (30 of 271 files).
+3. `hattrib -b :SYS`, and `dd` the first 1,024 bytes of `Sys7.img` onto
+   `kt.hfv` for the boot blocks.
+4. Basilisk takes the Mac's clock from the host, and the trial's expiry
+   dialog quits the machine on OK: preload a shim for `time`,
+   `gettimeofday` and `clock_gettime(CLOCK_REALTIME)` that subtracts a
+   constant to land on 1995-01-10 (no `faketime` here). A second volume
+   holds `dist/MacExtract.bin`.
+
