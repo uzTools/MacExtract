@@ -325,7 +325,7 @@ Tome's resource fork (FORMATS.md, *Apple Installer Tomes*). Left:
   Installer may never check it. Without it 1,308 of 3,704 single-byte
   changes are noticed (`tests/harness/run_tome.py`). Closes with the routine that
   writes it: Apple's Installer SDK packer, not on this machine.
-- **10 of MacStamp's 16 `ircp` census files were not kept** (measured: not on El Mac 7); the six that are, are fixtures (`ircp-wild-*`), graded once, in no suite.
+- **10 of MacStamp's 16 `ircp` census files were not kept** (measured: not on El Mac 7); the six that are, are fixtures (`ircp-wild-*`): `run_diff.py` grades their MacBinary forks; the fonts and drivers they expand to were graded once by hand (2026-11-11), in no suite.
 - **19 forks graded by their exact end alone**, of `tome-wild-modemscripts`
   and `tome-wild-websharing` (81 until Mac OS 9's installed copies were
   read, 2026-11-11): deark fails them with its own errors — "Bad distance
