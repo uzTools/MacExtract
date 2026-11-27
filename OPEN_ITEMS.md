@@ -172,6 +172,32 @@ or measurement before it is read.**
 Closing a row: the reader delivers the field with a `Source:` and a grade,
 and `tools/run_meta.py` holds it.
 
+## Two-byte scripts: Japanese names on either System
+
+Names reach HFS as the archive's bytes, so a Japanese Mac's MacJapanese
+(Shift-JIS) names should read right on KanjiTalk and as MacRoman on a
+Roman System, recoverable on a Japanese Mac (hypothesis: no KanjiTalk
+tier). What breaks is wherever a byte is read alone: Shift-JIS second
+bytes run 0x40–0xFC, so `\` (0x5C) and `a`–`z` fall inside a character;
+`/` and `:` cannot. Every Mini vMac and QEMU tier boots an English System.
+
+| what | on a Japanese System | on a Roman System | status |
+|---|---|---|---|
+| **LZH names split at a `5C` second byte** (`lzh_add_path`, when no dirname header: level 0/1, or level 2 without 0x02) | 表示.txt (`95 5C 8E A6 .txt`, level 0, `-lh0-`) becomes folder `\x95` holding `\x8E\xA6.txt` | the same: it is the engine | **measured** 2026-11-27, Linux CLI; `lsar` splits it the same, so `run_diff` cannot see it. LHa for UNIX 1.14 built with `MULTIBYTE_CHAR` skips the byte after a lead byte (`convdelim`, `reference/lha`); doing so here would stop a split after a DOS code-page letter in 0x81–0x9F or 0xE0–0xFC |
+| **LZH 0x46** (LHMelt 1.65, UNLHA32 2.67a: 1252 in all six of Lhasa's) | | | hypothesis: the writer's code page; a 932 would name Shift-JIS. Level 2 only; no 932 specimen, UNLHA32's header list not read |
+| **a name cut to 31 bytes**, and the stem shortened for `~N` (`ComponentToStr63`, the numbering in `mac/macextract_mac.c`) | can end on a lone lead byte | invisible, but broken once moved to a Japanese Mac | read in the code, not run |
+| **UTF-8 names folded to MacRoman** (StuffIt 5; DECISIONS.md 2026-09-22, *a name an HFS volume can hold*) | a kana or kanji name has no MacRoman form: lost | lost, not recoverable | read in the code; what the name becomes not measured. Writing such a name as MacJapanese would be decided by the name, not the System (one behaviour everywhere: DECISIONS.md 2026-10-12, *the application nobody could leave*); a Unicode-to-JIS X 0208 table is ~14 KB, an image of its own (ESTIMATE, not built) |
+| **the menus' ellipsis** (`0xC9` in `mac/macextract_strings.h`: Open…, Find…, About…) | `0xC9` alone is the half-width katakana ﾉ | right | hypothesis |
+| **a Finder comment cut to the Desktop Manager's length** | can end on a lone lead byte | invisible | hypothesis |
+| **two names HFS folds into one** (its case-insensitive Roman compare, on every System) | names differing only in a folded byte (0x41/0x61) collide; the shell numbers the second `~1`, nothing overwritten | the same | hypothesis, not built |
+| **a set's part names matched with `EqualString`** | a second byte in `a`–`z` folded | — | hypothesis, unlikely to matter |
+
+Safe, read in the code: the `/`↔`:` swaps (both below 0x40); zip, which
+never splits on `\`. **Closes** row by row: a fix graded against a second
+reader (LHa for UNIX with `MULTIBYTE_CHAR`, in `tools/sandbox.py`), or a
+run on a KanjiTalk System; whether a KanjiTalk 7.5 image is on the
+archive.org Apple FTP mirror is not checked.
+
 ## Mac OS X's sidecars: what they hold and the engine does not read
 
 `__MACOSX/…/._name` and tar `._name` sidecars are put back on their file
