@@ -195,8 +195,11 @@ bytes run 0x40–0xFC, so `\` (0x5C) and `a`–`z` fall inside a character;
 Safe, read in the code: the `/`↔`:` swaps (both below 0x40); zip, which
 never splits on `\`. **Closes** row by row: a fix graded against a second
 reader (LHa for UNIX with `MULTIBYTE_CHAR`, in `tools/sandbox.py`), or a
-run on a KanjiTalk System; whether a KanjiTalk 7.5 image is on the
-archive.org Apple FTP mirror is not checked.
+run on a KanjiTalk System. One exists (measured 2026-11-27, its listing):
+an installed KanjiTalk 7.5 System Folder, a trial build (試用版), on
+MACLIFE 77's CD (January 1995, HFS; archive.org `maclife-kanjitalk-75`,
+`MACLIFE-KT75.ISO.7z`, 216,497,349 B, SHA-1 `14b301b59a574cf7769e761b7f7570713a20657f`); not
+downloaded, not booted, any expiry of the trial not read.
 
 ## Mac OS X's sidecars: what they hold and the engine does not read
 
