@@ -1,0 +1,19 @@
+{
+ "entries": [
+  {
+   "creator": "kakc",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1280,
+   "name": "Actualización Tomo 1",
+   "rsrc_sha256": "f69d50a2aae94d53d9fbda261889fd38f2d46ca5b4365d20702987acf062804f",
+   "rsrc_size": 217255,
+   "type": "ircp"
+  }
+ ],
+ "fixture": "ircp-wild-update1.bin",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "sha256": "bbb0d67333137043db2d6ed81ae3f5efd8f46613515e6d3059abfb68c56e9f94",
+ "size": 217472
+}

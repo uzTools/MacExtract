@@ -1548,6 +1548,12 @@ uses, one 304 MB download:
 `hdir` lists `System Folder`, `Install Mac OS 8.6`, `Utilities` and `CD
 Extras` (volume `Mac OS 8.6`, created 1999-04-16). Not committed.
 
+**El Mac 7's image is restorable too** (the six `ircp-wild-*` fixtures'
+`derived:hfsvol:../elmac7/El Mac 7.iso` rows read it): 669,188,096 B, one HFS
+volume "El Mac 7", from https://archive.org/details/el_mac_7_spain_dump,
+sha256 7b3a67e3ca5167cbcd2c134c3682f877cee43838c49f54b082c8e4f3acda3858,
+kept at `~/.cache/macextract/elmac7/El Mac 7.iso`. Not committed.
+
 **It does not boot, and the reason is the firmware** (DECISIONS.md
 2026-10-06, *the platform the ROM would not admit to*). Four refusals, in the
 order a boot meets them:

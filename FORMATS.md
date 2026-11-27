@@ -2157,7 +2157,7 @@ decoder, `src/fmt_sqp_probe.c` the sniffer, `tests/harness/run_sqp.py` the suite
 (TESTING.md, *AppleLink packages: SqueezePlay*). Every LZW fork is a Unix
 `compress` code stream, decoded identically by **`gzip`** (*The codec*).
 The sniffer answers
-*AppleLink package* for **exactly the 7 of 1,016 corpus files that are
+*AppleLink package* for **exactly the 7 of 1,022 corpus files that are
 packages and for nothing else** (re-measured 2026-11-10 with Apple Backup's
 probe in the sniffer; no file's answer changed but the six Apple Backup
 disks'), a sweep
@@ -2631,7 +2631,7 @@ every stream ends with its output complete and no bit left; 1,030 forks
 equal deark's, 3 differ where deark's distance widens one position early,
 168 deark cannot decode; 161 installed files equal resource for resource,
 6 installed from another release, 2 differ in `sysz` and MacTCP's `DRVR` 22
-and `ctrp` 130 (not looked at). No other of the 1,016 corpus files sniffs
+and `ctrp` 130 (not looked at). No other of the 1,022 corpus files sniffs
 differently, nor any of 6,009 other files (`reference/`, this tree, the
 specimen cache); none of 5,639 non-archives is a Tome.
 
@@ -2658,8 +2658,8 @@ after its data fork, on both hosts.
 | from | parts | out | graded by |
 |---|---|---|---|
 | `tomeparts-wild-install3.bin` (Installation Tome 3, both forks) | 64 | 9 suitcases | the 7.5.5 disk's Fonts folder: every `sfnt` and `NFNT`, each FOND but for its association ids and their order |
-| 4 GX `ircp` files (`~/.cache/macextract/specimens/ircp/`, El Mac 7; no fixture) | 12 | 4 files | QuickDraw GX 1.1.3 installed: Apple Chancery, Skia, Hoefler Text; Tekton Plus not installed |
-| `Compressed Network Items` (`ircp`, same source) | 15, 32 records | 3 files | 16 records equal what the update installed, 15 installed from another file's newer copy, 1 not installed |
+| 4 GX `ircp` files (`ircp-wild-{applechancery,skia,hoeflertext,tektonplus}.bin`; El Mac 7; graded once, not in a suite) | 12 | 4 files | QuickDraw GX 1.1.3 installed: Apple Chancery, Skia, Hoefler Text; Tekton Plus not installed |
+| `Compressed Network Items` (`ircp-wild-networkitems.bin`, same source) | 15, 32 records | 3 files | 16 records equal what the update installed, 15 installed from another file's newer copy, 1 not installed |
 
 **Peak heap** 79,397 B (Tome 3's fork), 72,500 B (Hoefler Text's). **Cost**
 `ovl_zipold` +4,100, `ovl_sniff` +400, shipped CODE +272 and A5 +16: 288 B
@@ -2878,7 +2878,7 @@ Archives written and read back by libNeoAppleArchive; StuffIt X, the three
 RAR signatures, Cabinet, Zoo, ARJ and lzip headers identified by deark;
 Zstandard and lrzip on their published magics; and `synth-os9-rar.rar`.
 **No fixture changes format in
-1,016 corpus files**: each manifest's fixture sniffs as its oracle names it,
+1,022 corpus files**: each manifest's fixture sniffs as its oracle names it,
 and the only one that went to `unknown` is that RAR. The CLI before the
 change fails 52 of the 97 checks (TESTING.md, *Archives this engine does
 not have*).
@@ -3157,7 +3157,7 @@ joiner matches on all 26 identity bytes anyway.
 
 ## Hardening
 
-- Differential: 994 fixtures byte-exact against `unar` manifests (both
+- Differential: 1,000 fixtures byte-exact against `unar` manifests (both
   forks + type/creator + Finder flags), `./ci.sh`; the DiskDoubler corpus's
   manifests are built from the files it was made from rather than from a
   decoder (TESTING.md). `run_diff.py` prints the number it ran, plus two
@@ -5875,7 +5875,7 @@ compressor chose, not the format: the sample's other five StuffIt 5 fixtures
 pass, `derived-Troi-ClipSave-Plug-in1.1.sit` needing 144,690 B.
 
 **The whole corpus at both 512 KB tiers** (`run_tiers.py --shipped --list`
-over all 994 fixtures; `main` at a6668bd, 2026-11-04, re-taken the same day
+over all 1,000 fixtures; `main` at a6668bd, 2026-11-04, re-taken the same day
 with Arsenic's 2.5-byte table and the launch that purges nothing — grants
 298 B lower, needs up to 16 B higher,
 no tally moved — and again with MacBinary I read without padding, which
@@ -6440,7 +6440,7 @@ StuffIt Engine to work with this archive."*
 | System 7 conveniences | drag-and-drop of files, folders and whole disks; watch folders; background expansion; Apple events | an archive dropped on the application's icon opens it, whatever its type (System 7 and later, measured: DECISIONS.md 2026-08-31, *the drop the Finder does not make*); otherwise Standard File, one archive at a time; no watch folders, background expansion or Apple events |
 | Self-mounting disk images (`.img`, `.smi`) | **no, read from its own files 2026-10-11**: the `open` 128 resource lists the 21 types it accepts (`SIT!`, `SITD`, `PACT`, `HBSF`, `TEXT`, five segment types, `SPSV`, `mArc`, `m@rc`, `ZIVU`, `ZIVM`, `Gzip`, `pZIP`, `ZIP `, `fold`, `disk`, `****`) and none is a disk image; no disk-image string occurs in the application or its documents. Not run on a `.img` | no — disk images are out of scope (OPEN_ITEMS.md, Part 1) |
 | StuffIt Deluxe 2.0's Optimizers and ciphers | **measured 2026-10-11**: `Text 1` extracts, byte-identical to this engine's; the other four Optimizers and all five ciphers are refused with *"Unable to decompress some items due to use of optimizers."* | all ten (*StuffIt 2.0's pluggable modules*, above) |
-| Verification | none published | 994 fixtures byte-exact against `unar`/`macunpack` — bar the three uuencode fixtures, which `unar` cannot read at all: one is its generator's input with `hexbin` agreeing, and the two wild ones are graded by `hexbin` and by the CRCs of the archive one of them decodes to |
+| Verification | none published | 1,000 fixtures byte-exact against `unar`/`macunpack` — bar the three uuencode fixtures, which `unar` cannot read at all: one is its generator's input with `hexbin` agreeing, and the two wild ones are graded by `hexbin` and by the CRCs of the archive one of them decodes to |
 | Licence | free, closed | free, 0BSD; the files NOTICE lists LGPL-2.1-or-later |
 | Memory partition | **512 KB preferred, 384 KB minimum** (`SIZE` (-1), measured 2026-08-29; BLOCKERS.md) | 2,048 KB preferred, 400 KB minimum (`SIZE` (-1) of `dist/MacExtract.bin`, re-read 2026-10-25); engine peak heap per format in the matrix above |
 

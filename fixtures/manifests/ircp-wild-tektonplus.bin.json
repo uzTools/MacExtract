@@ -1,0 +1,19 @@
+{
+ "entries": [
+  {
+   "creator": "kakc",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 256,
+   "name": "Tekton Plus",
+   "rsrc_sha256": "2677f4c4360da89c3a8c7a807c881b96f52bed30d4845157fd434bf9fa1f3c33",
+   "rsrc_size": 109678,
+   "type": "ircp"
+  }
+ ],
+ "fixture": "ircp-wild-tektonplus.bin",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "sha256": "4d9d9cc450823caaec4533fbd67c7d844d8dca012befca86e800c37570f35eac",
+ "size": 109824
+}

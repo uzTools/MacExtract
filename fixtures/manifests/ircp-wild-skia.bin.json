@@ -1,0 +1,19 @@
+{
+ "entries": [
+  {
+   "creator": "kakc",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 256,
+   "name": "Skia",
+   "rsrc_sha256": "94bbaa4e42a6fb9b04c600449f61731dcd8b40751027e761150f61aa335b61fe",
+   "rsrc_size": 309142,
+   "type": "ircp"
+  }
+ ],
+ "fixture": "ircp-wild-skia.bin",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "sha256": "f22e89584b3b631b78051aa2148a9593d65f26d0ac3bae1ec5bf90cb7d42703b",
+ "size": 309376
+}

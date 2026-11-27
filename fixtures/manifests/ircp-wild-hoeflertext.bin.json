@@ -1,0 +1,19 @@
+{
+ "entries": [
+  {
+   "creator": "kakc",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 256,
+   "name": "Hoefler Text",
+   "rsrc_sha256": "2f663c4d30243ecc5ddb0b8ce91b97234c67caa0ce638919e62ba190d26f87e3",
+   "rsrc_size": 579074,
+   "type": "ircp"
+  }
+ ],
+ "fixture": "ircp-wild-hoeflertext.bin",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "sha256": "bb3813f9cb068999c3c945e345d9c73db8a7ce1320e799ef658771f0772e454a",
+ "size": 579328
+}

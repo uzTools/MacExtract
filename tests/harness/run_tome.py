@@ -49,7 +49,7 @@ fixtures' modem scripts and Web Sharing's text forks): only the exact end
 grades it. The two longest text-codec length codes, which no stream here
 uses. Dates, which run_diff.py does not compare either. In section 4, the
 'part's of an `ircp` file — QuickDraw GX's fonts, AppleTalk's drivers —
-whose source disk is not here (DECISIONS.md 2026-11-11, *the parts the
+whose fixtures (`ircp-wild-*`) no suite here grades; the source disk is El Mac 7's (DECISIONS.md 2026-11-11, *the parts the
 Installer expands*, has the one-off grading); the resources' attributes,
 which a record does not carry; and whether the fonts render, which the
 emulator settled once.

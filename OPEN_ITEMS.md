@@ -7,7 +7,7 @@
    withdrawn claim to BLOCKERS.md, numbers to FORMATS.md).
 
 Nothing here stops the engine or the CLI, which are byte-exact against the
-oracle across 994 fixtures in `./ci.sh`.
+oracle across 1,000 fixtures in `./ci.sh`.
 
 **Filing something here is a decision to stop looking, so ask first.** Each
 of these questions has emptied a row at least once (BLOCKERS.md, *Withdrawn
@@ -103,7 +103,7 @@ not move the licence; only the second does.
 
 ### What grades a fork
 
-`unar` 1.10.8 grades most of the 994 fixtures' manifests; `macunpack` and
+`unar` 1.10.8 grades most of the 1,000 fixtures' manifests; `macunpack` and
 deark grade the forks it fails (TESTING.md, *The oracle*). The writers' own
 readers already grade StuffIt Deluxe 2.0.1's output, SuperDisk!'s modules,
 DiskDoubler's methods 3–5, Now Compress, Private File, AppleLink packages
@@ -325,12 +325,7 @@ Tome's resource fork (FORMATS.md, *Apple Installer Tomes*). Left:
   Installer may never check it. Without it 1,308 of 3,704 single-byte
   changes are noticed (`tests/harness/run_tome.py`). Closes with the routine that
   writes it: Apple's Installer SDK packer, not on this machine.
-- **No `ircp` file is a fixture**: the 6 here (`~/.cache/macextract/specimens/ircp/`, off El Mac 7's
-  Spanish System 7.5 Update 2.0, from MacStamp) were graded once
-  (DECISIONS.md 2026-11-11, *the parts the Installer expands*), and El Mac
-  7's image is not in the cache, so no SOURCES row can restore one; the
-  other 10 of MacStamp's census were not kept. Closes with that image
-  cached and a `derived:hfsvol` row for each.
+- **10 of MacStamp's 16 `ircp` census files were not kept** (measured: not on El Mac 7); the six that are, are fixtures (`ircp-wild-*`), graded once, in no suite.
 - **19 forks graded by their exact end alone**, of `tome-wild-modemscripts`
   and `tome-wild-websharing` (81 until Mac OS 9's installed copies were
   read, 2026-11-11): deark fails them with its own errors — "Bad distance

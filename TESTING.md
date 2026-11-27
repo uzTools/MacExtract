@@ -3607,7 +3607,7 @@ fixtures came from (FORMATS.md, *Apple Installer Tomes*).
    `NFNT` byte for byte and its FOND but for the association table's ids
    and order. Controls: a changed font byte, and an association id naming
    nothing. **Made to fail** (2026-11-11): the family rule narrowed (exit 1).
-   It cannot see an `ircp` file's parts (no fixture), attributes, or
+   It cannot see an `ircp` file's parts (the six `ircp-wild-*` fixtures are restorable but no suite grades them), attributes, or
    whether the fonts render.
 
 **Controls**: a record claiming one byte more than its stream's tokens use
@@ -4253,7 +4253,7 @@ short-circuited and subtract — the instrument sees only the total.
   instructions use `tools/m68kprof.py`; for real cost, the tick probe on an
   emulated Mac.
 - **The Macintosh's own I/O** (stdio is not the File Manager).
-- **Any file it is not handed**: the corpus is 1,016 files, and the
+- **Any file it is not handed**: the corpus is 1,022 files, and the
   population that matters for REJECTION cost is non-archives —
   `reference/`, this repository's trees, the specimen cache; 8,364 were
   swept on 2026-10-05 (BLOCKERS.md, *Withdrawn claims*).

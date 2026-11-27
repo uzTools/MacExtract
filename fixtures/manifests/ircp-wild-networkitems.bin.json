@@ -1,0 +1,19 @@
+{
+ "entries": [
+  {
+   "creator": "kakc",
+   "data_sha256": "1d80249a29e1d871264cdea0ee69813b9ce523611756e806964b0f75d1a15daf",
+   "data_size": 73644,
+   "finder_flags": 256,
+   "name": "Compressed Network Items",
+   "rsrc_sha256": "d52c90280bf2274f9e0c4e83e23d3e9022eabf01359b1910e50a1fe159923279",
+   "rsrc_size": 96232,
+   "type": "ircp"
+  }
+ ],
+ "fixture": "ircp-wild-networkitems.bin",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "sha256": "b02585e365d6d6317dabc4cbe8e65ab43e221edd0cfbaa468858829744d0b15d",
+ "size": 170112
+}
