@@ -654,6 +654,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-23 (the set code that left) — the shell's run-time set code (seg_need, the part dialog, the scans, SegCopyIn) is an image of its own, kept by a set alone: +4,832 B on every other format's grant, −364 B on a set's; all ten set scenarios pass at 1 MB
 - 2026-11-23 (the shell images the lazy build lacked) — the lazy instrument called the destination dialog, a set's setup and its set code as images and linked none of them, so every set failed in it; each is now its own resource there, and a Compact Pro set that failed passes
 - 2026-11-25 (the ZipIt cipher not waited on) — a ZipIt-made encrypted archive is no longer wanted; the open item is closed on ZipIt 2.2.2's own code and a ZipCrypto fixture, not on a ZipIt file
+- 2026-11-27 (the creation date OS/2 put in 0x7f) — LZH's 0x7f extended header carries a creation date that was dropped; read, with 0x41's winning: +88 B of CODE, 0 heap, the maintainer's call
 
 ---
 
@@ -27943,3 +27944,6 @@ decrypts a `zip -e` ZipCrypto file byte-exact — measured.
 check byte (CRC or time, flag bit 3) its writer emits — hypothesis.
 A ZipIt-encrypted archive that fails would reopen this.
 
+## 2026-11-27 (the creation date OS/2 put in 0x7f) — LZH's 0x7f extended header carries a creation date that was dropped; read, with 0x41's winning: +88 B of CODE, 0 heap, the maintainer's call
+
+**Claim.** `fmt_lzh.c` reads 0x7f's creation time into `xctime` (Source: XADMaster XADLZHParser.m, case 0x7f); if 0x41 also appears its date wins (no specimen has both, hypothesis). **Evidence (measured).** `lhasa-os2` fixture: lsar agrees on 2011-12-03 21:29:04; 7 more ctimes graded by `run_meta.py --corpus`, which now fails when lsar gives an LZH creation date and the engine none (read disabled: 7 FAILED; enabled: OK). **Cost.** IMAGE_LZH 10,602 to 10,686 B, shipped CODE +88 B, A5 +8 B, 0 heap, no 512 KB refusal changes; the maintainer's call: it is code, not heap.

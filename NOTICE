@@ -49,6 +49,10 @@ hand.
                        and the block-length wrap — and the four
                        departures are measured against `unar` over
                        every fork in reach.
+  src/fmt_lzh.c        one fact, since 2026-11-27: the OS/2 0x7f extended
+                       header's creation time sits 8 bytes in, after four
+                       u16s (XADLZHParser.m, case 0x7f). Nothing is
+                       transcribed; lsar agrees on the lhasa-os2 fixture.
   src/fmt_dd.c         XADDiskDoublerParser.m's per-method rules for
                        methods 1, 2, 5, 7 and 8; and the `DDAR` 0x20
                        raw-fork shape, four offsets nothing reachable

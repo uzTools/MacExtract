@@ -69,6 +69,7 @@ CARRIES = {
     "fmt_macbinary_probe.c": "the CRC-16/0xA001 fallback and the nonzero-date test",
     "fmt_applesingle.c": "the byte-swapped header",
     "fmt_dd_probe.c":   "the zero header CRC old files carry (XADDiskDoublerParser.m)",
+    "fmt_lzh.c":        "the OS/2 0x7f extended header's creation-date offset (XADLZHParser.m)",
     "fmt_hecx.c":       "BinHex before 4.0 and .dl, the whole decoder (hexbin's hecx.c, dl.c)",
     "fmt_binhex_probe.c": "the .hex/.hcx header-line rule and the .dl first line (hexbin's hecx.c, hexbin.c)",
 }

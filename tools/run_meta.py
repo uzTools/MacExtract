@@ -978,6 +978,13 @@ def archive_corpus(cli):
             inst = None                 # cannot be paired by position
         for i, (name, r) in enumerate(rows.items()):
             o = oracle.get(name)
+            if (fmt == "LZH" and o is not None and not o["mac"]
+                    and o.get("ctime", "-") != "-"
+                    and r.get("ctime", "-") == "-"):
+                # A creation date lsar gives and the engine drops (the
+                # 0x7f read disabled passed every other check here).
+                bad.append("%s: %s: ctime dropped, lsar %s"
+                           % (os.path.relpath(p, REPO), name, o["ctime"]))
             # lhasa lower-cases a name that is all capitals (fix_msdos_allcaps).
             if lha is not None and name not in lha and name.lower() in lha:
                 lha[name] = lha[name.lower()]

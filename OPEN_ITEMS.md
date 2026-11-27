@@ -166,7 +166,7 @@ or measurement before it is read.**
 
 | format | stored, not read | oracle |
 |---|---|---|
-| LZH | OS/2's 0x7f/0xff headers; a level 0/1 name's bytes after a NUL | `lsar`; no specimen of the second |
+| LZH | OS/2's 0xff header; a level 0/1 name's bytes after a NUL | `lsar`; no specimen of the second |
 | AppleSingle entry 11 | ProDOS's access word | none; RFC 1740 gives its size, not its bits |
 
 Closing a row: the reader delivers the field with a `Source:` and a grade,

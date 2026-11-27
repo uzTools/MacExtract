@@ -31,8 +31,8 @@
  *       from lhasa for the four things it does not cover — level 3,
  *       OS-9/68k's short level 2 size, -lhd-, and LHArk. Read as a
  *       table, with the evidence: docs/formats/lzh-header.md.
- *       **Nothing in this file is XADMaster's since 2026-09-22**, bar
- *       one rule with no specimen, marked where it is.
+ *       **Nothing in this file is XADMaster's since 2026-09-22**, bar two facts
+ *       (0x7f's date offset, and one rule with no specimen), marked where each is.
  *
  * What is NOT here, and why:
  *   -lhx-, PMarc (-pm0-/-pm1-/-pm2-)  A different container family
@@ -754,6 +754,13 @@ static int lzh_ext(UncCtx *c, uint32_t at, uint32_t size, uint8_t *name,
                 return UNC_ERR_TRUNCATED;
             le->xctime = lzh_filetime(b);
             le->xmtime = lzh_filetime(b + 8);
+        } else if (type == 0x7f && n >= 16) {
+            /* Source: XADMaster XADLZHParser.m, case 0x7f (OS/2): DOS
+             * attr u16, mode u16, gid u16, uid u16, creation u32,
+             * modification u32, Unix times, little-endian. 0x41 wins. */
+            if (unc_read_at(c->io, at + 1, b, 12) != UNC_OK)
+                return UNC_ERR_TRUNCATED;
+            if (!le->xctime) le->xctime = unc_unix_to_mac(unc_get_u32le(b + 8));
         }
         return UNC_OK;
     }
