@@ -166,7 +166,7 @@ or measurement before it is read.**
 
 | format | stored, not read | oracle |
 |---|---|---|
-| LZH | OS/2's 0xff header; a level 0/1 name's bytes after a NUL | `lsar`; no specimen of the second |
+| LZH | 0xff (mode, owner, creation and modification dates) and 0x71 (a comment), as XADMaster reads them; a level 0/1 name's bytes after a NUL; 0x46 (Lhasa's `lhmelt_16536` and `unlha32` sets) and 0xcc (`lha_os9_211c`), which nothing here reads or identifies | `lsar` for 0xff and 0x71; no specimen here of either, nor of the NUL name (measured: 155 LZH/LHA files, 2026-11-27) |
 | AppleSingle entry 11 | ProDOS's access word | none; RFC 1740 gives its size, not its bits |
 
 Closing a row: the reader delivers the field with a `Source:` and a grade,
