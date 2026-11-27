@@ -203,10 +203,12 @@ MACLIFE 77's CD (January 1995, HFS; archive.org `maclife-kanjitalk-75`,
 back: dated 2026 it shows the Japanese expiry dialog (有効期限が終了しました)
 and shuts the machine down on OK; at 1995-01-10 it boots. The system script
 stays Roman, not Japanese: the menu bar and Standard File read as MacRoman
-mojibake, so this is no Japanese tier, and MacExtract's File menu there reads
+mojibake (its Japanese strings, shown in a Roman font), so it is not yet a
+Japanese tier, cause not located; MacExtract's File menu there reads
 `Open…` with a real ellipsis, which says nothing about the `0xC9` row (still
-hypothesis). Untried: a Japanese ROM (none on this machine), the 30 files in
-the extension folder's subfolders that `hcopy` would not nest. Rebuild:
+hypothesis). Untried, each a hypothesis for the Roman script: the 30 files in
+the extension folder's subfolders that `hcopy` would not nest, and the
+script setting the PRAM file starts with. Rebuild:
 tools/vmac/README.md, *A KanjiTalk 7.5 boot volume*.
 
 ## Mac OS X's sidecars: what they hold and the engine does not read
