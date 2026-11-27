@@ -40,6 +40,7 @@
  * SPDX-License-Identifier: 0BSD
  */
 #include "unc_internal.h"
+#include "fmt_ddseg_priv.h"      /* DS_CRC, for the stored CRC below */
 
 /* ------------------------------------------------------------------ */
 /* The join schemes                                                   */
@@ -85,6 +86,21 @@ typedef struct SegHooks {
      * the resource fork first; DiskDoubler's puts the data fork. */
     uint8_t   data_first;
 } SegHooks;
+
+/* The two running CRC-16/ARCs a part stores (the file comment): at 96
+ * over the resource fork's bytes cut so far, at 98 the data fork's.
+ * The joiner folds the same sums as the parts go past and holds each
+ * part to the one its last payload byte falls in (unc_segment.c). */
+uint16_t unc_sitseg_stored_crc(const uint8_t *head, int fork)
+{
+    return unc_get_u16be(head + 96 + fork + fork);    /* fork is 0 or 1 */
+}
+
+uint16_t unc_ddseg_stored_crc(const uint8_t *head, int fork)
+{
+    (void)fork;                      /* one sum, over the part's payload */
+    return unc_get_u16be(head + DS_CRC);
+}
 
 enum { SEG_PLAIN, SEG_HOOK_SIT, SEG_HOOK_DD, SEG_HOOK_MIME };
 

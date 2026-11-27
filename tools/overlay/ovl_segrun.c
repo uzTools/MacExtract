@@ -8,6 +8,7 @@
  *
  * SPDX-License-Identifier: 0BSD
  */
+#define UNC_AT_OVERLAY 1     /* as the application: the shell finds the reader */
 #include "overlay.h"
 #include <Files.h>
 #include "../../mac/fm_inline.h"
@@ -22,11 +23,61 @@
 #include <Windows.h>
 #include <LowMem.h>
 #include "macextract.h"
+#include "unc_internal.h"
 #include "../../mac/macextract_strings.h"
 #include "../../mac/seg_types.h"
 
 /* In .data, not .bss (mkoverlay.sh): set on every entry. */
 static const SegRunFns *gR = (const SegRunFns *)1;
+
+/* The joiner (src/unc_segment.c) is this image's too: only a set reaches it,
+ * after the release plan has kept this image. What it calls in the engine
+ * is a SegRunFns entry, and the sniffer's three hooks go through one. Its
+ * statics that share a name with the set code's are renamed for the
+ * length of the include. */
+#define unc_run                 (gR->unc_run)
+#define unc_read_at             (gR->unc_read_at)
+#define unc_io_size32           (gR->unc_io_size32)
+/* In the joiner's table of hooks, which a constant initialiser fills. */
+static uint16_t jn_crc_arc(uint16_t crc, const uint8_t *b, int32_t n)
+{
+    return gR->unc_crc16_arc(crc, b, n);
+}
+static uint16_t jn_crc_xmodem(uint16_t crc, const uint8_t *b, int32_t n)
+{
+    return gR->unc_crc16_xmodem(crc, b, n);
+}
+#define unc_crc16_arc           jn_crc_arc
+#define unc_crc16_xmodem        jn_crc_xmodem
+int unc_sitseg_emit(UncCtx *c, const UncSegmentDesc *desc, uint32_t base,
+                    int data_first, const int *ioerr)
+{
+    OvlArgs g;
+    g.obj = c; g.in = desc; g.len = base; g.pos = (uint32_t)data_first;
+    g.out = (void *)ioerr;
+    return (int)gR->ovl_seg_hook(OVL_SITSEG_EMIT, &g);
+}
+int unc_ddseg_payload(const UncSegmentDesc *desc, const uint8_t *head,
+                      int32_t len, int part, uint32_t size, uint32_t *payload)
+{
+    OvlArgs g;
+    g.obj = (void *)desc; g.in = head; g.len = (uint32_t)len;
+    g.pos = (uint32_t)part; g.extra = size; g.off_out = payload;
+    return (int)gR->ovl_seg_hook(OVL_DDSEG_PAYLOAD, &g);
+}
+int unc_mimeseg_head(const UncSegmentDesc *d, UncIO *io, int part,
+                     uint32_t size, uint32_t *out)
+{
+    OvlArgs g;
+    g.obj = (void *)d; g.in = io; g.pos = (uint32_t)part; g.extra = size;
+    g.off_out = out;
+    return (int)gR->ovl_seg_hook(OVL_MIMESEG_HEAD, &g);
+}
+#define seg_release  join_release
+#define seg_part_size join_part_size
+#include "../../src/unc_segment.c"
+#undef seg_release
+#undef seg_part_size
 
 #define MyHCreate               (gR->MyHCreate)
 #define MyHDelete               (gR->MyHDelete)
@@ -59,7 +110,8 @@ static const SegRunExports gX = {
 #else
     SegAskUser,
 #endif
-    seg_need, seg_part_size, seg_release, SegPeelClean
+    seg_need, seg_part_size, seg_release, SegPeelClean,
+    unc_extract_segments
 };
 
 int32_t ovl_main(const OverlayHost *host, int32_t which, void *a, void *b)

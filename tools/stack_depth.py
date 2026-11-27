@@ -120,6 +120,17 @@ OVERLAY_FLAGS = ["-Os", "-mcpu=68000", "-mpcrel", "-ffunction-sections",
 # 2026-11-09 on every src/*.c) and puts every call behind a relocation.
 HOST_FLAGS = ["-mcpu=68000", "-Os", "-std=c99", "-ffunction-sections"]
 
+# src/unc_segment.c's own functions, which ovl_segrun.c includes (its
+# statics that share a name with the set code's are renamed by #define
+# there: JOINER_RENAMED, source name -> object name).
+JOINER_RENAMED = {"seg_release": "join_release",
+                  "seg_part_size": "join_part_size"}
+JOINER_NAMES = set(re.findall(
+    r"^(?:static )?[\w ]+?[ *](\w+)\([^;]*$",
+    open(os.path.join(ROOT, "src", "unc_segment.c")).read(), re.M))
+JOINER_NAMES = {JOINER_RENAMED.get(n, n) for n in JOINER_NAMES} | \
+    {"jn_crc_arc", "jn_crc_xmodem", "seg_size"}
+
 SHELL_SRC = ["mac/macextract_mac.c", "mac/mac_start.c"]
 # The shell image the engine calls into: a set's code (mac/seg_run.inc.c),
 # whose seg_need is the joiner's `need`. Compiled with --shell, as the
@@ -139,7 +150,6 @@ GLUE_SRC = ["mac/ovl_shim.c", "mac/ovl_reloc.c", "mac/ovl_load_eager.c"]
 _MATCH = {i: m for i, _d, m in unc_formats.segids() if m}
 SHARED_SHIMS = {
     "ovl_run": {},
-    "seg_hook": {},
     "seg_id": {"unc_segment_match": [("sniff", "unc_segment_match")] + [
         (f.run[0][len("OVL_ID_"):].lower(), _MATCH[f.id])
         for f in unc_formats.formats()
@@ -308,6 +318,14 @@ for _n in SEGRUN_CALLS:
 CLASSES["seg_release"] = CLASSES["release"]
 CLASSES["SegPeelClean"] = [SH + "ovl_segrun.c:SegPeelClean"]
 # and the engine's, through the same table
+# what the joiner (in ovl_segrun) calls through SegRunFns, and the shell
+# calls through SegRunExports
+CLASSES["ovl_seg_hook"] = ["ovl_shim.c:ovl_seg_hook"]
+CLASSES["unc_run"] = ["ovl_shim.c:unc_run"]
+CLASSES["unc_extract_segments"] = ["unc_segment.c:unc_extract_segments"]
+for _n in ("unc_read_at", "unc_io_size32", "unc_crc16_arc",
+           "unc_crc16_xmodem"):
+    CLASSES[_n] = [_n]
 for _n in ("unc_segment_describe_as", "unc_segment_first_end",
            "unc_segment_match", "unc_segment_name_part"):
     CLASSES[_n] = [_n]
@@ -345,12 +363,14 @@ TAKEN_OK = [
     ("macextract_mac.c", r"^[A-Z0-9]+$", "a Toolbox filter or user-item "
      "proc (pascal, upper case): called by the ROM, not modelled"),
     ("mac_start.c", r".", "the startup's own entry"),
-    ("ovl_segrun.c", r"^(Seg|seg_)", "gX: the set code's exports to the "
+    ("ovl_segrun.c", r"^(Seg|seg_|unc_extract_segments)", "gX: the set code's exports to the "
      "application and the setup image"),
     ("ovl_segrun.c", r"^[A-Z0-9]+$", "a Toolbox filter or hook proc "
      "(pascal): called by the ROM, not modelled"),
+    ("ovl_segrun.c", r"^jn_crc_", "the joiner's hook table: its crc "
+     "folds, calling the engine's through SegRunFns"),
     ("macextract_mac.c", r"^(My|PStr|ShowNote|WaitForFront|HideInvisible|"
-     r"fio_|unc_|StackSample)", "gSegRunFns: the set code image's host table"),
+     r"fio_|unc_|ovl_seg_hook|StackSample)", "gSegRunFns: the set code image's host table"),
 ]
 
 def die(msg):
@@ -436,7 +456,11 @@ def resident_engine():
                   if f.endswith(".c"))
     if not gone:
         die("no ENGINE_SRC filters found in mac/CMakeLists.txt")
-    return ["src/" + f for f in srcs if f[:-2] not in gone]
+    # unc_segment.c stays in the link for the two leaves the shell calls
+    # (its scratch size, its stats); the joiner is ovl_segrun's, and
+    # --gc-sections drops the resident copy (nothing resident calls it).
+    return ["src/" + f for f in srcs
+            if f[:-2] not in gone and f != "unc_segment.c"]
 
 
 class Unit:
@@ -484,7 +508,10 @@ def build(config, out, with_shell):
         for s in resident_engine() + GLUE_SRC + (
                 SHELL_SRC if with_shell else []):
             units.append(Unit("resident", s, RESIDENT_FLAGS, inc, out))
-        shell_images = SHELL_IMAGES if with_shell else {}
+        # The joiner (src/unc_segment.c) is compiled into ovl_segrun.c, so
+        # that image is built in every shipped run; only --shell counts the
+        # set code (is_shell) beside it.
+        shell_images = SHELL_IMAGES
         for img, srcs in sorted(list(images.items()) +
                                 list(shell_images.items())):
             for s in srcs + ["tools/overlay/ovl_rt.c"]:
@@ -670,10 +697,16 @@ class Graph:
     # -- naming
     @staticmethod
     def file_of(f):
+        """The file a function was written in: the joiner's functions are
+        src/unc_segment.c's though ovl_segrun.c includes them."""
+        if f.unit and f.unit.src in SHELL_IMAGES["segrun"] and \
+                f.name in JOINER_NAMES:
+            return "unc_segment.c"
         return os.path.basename(f.unit.src) if f.unit else ""
 
     def is_shell(self, f):
-        return f.unit is not None and (
+        # the joiner is the engine's, though ovl_segrun's image carries it
+        return f.unit is not None and f.name not in JOINER_NAMES and (
             f.unit.src in SHELL_SRC or
             any(f.unit.src in v for v in SHELL_IMAGES.values()))
 
@@ -690,6 +723,9 @@ class Graph:
         shell = spec.startswith(SH)
         spec = spec[len(SH):] if shell else spec
         fname, _, name = spec.rpartition(":")
+        if fname == "unc_segment.c" and name in JOINER_RENAMED and \
+                self.config == "shipped":
+            name = JOINER_RENAMED[name]
         keys = [k for k in self.by_name.get(name, ())
                 if not fname or self.file_of(self.fns[k]) == fname]
         keys = [k for k in keys if not self.is_forward(self.fns[k])]
@@ -807,6 +843,11 @@ class Graph:
             if k not in self.fns:
                 die("forward %s in %s: no %s in %s" % (n, f.image, n, img))
             return [(k, "vector")]
+        if fil == "ovl_shim.c" and f.name == "ovl_seg_hook":
+            # the sniffer's three hooks, which the joiner (ovl_segrun) calls
+            return [(self.dispatch("sniff", n), "image") for n in
+                    ("unc_sitseg_emit", "unc_ddseg_payload",
+                     "unc_mimeseg_head")]
         if fil == "ovl_shim.c" and last in ("e", "OVL_CALL", "VOID_KEYED",
                                             "INT_KEYED_AL"):
             if f.name in SHARED_SHIMS:
@@ -1073,7 +1114,7 @@ def main():
     print("\nEach format's extractor, from its own entry:")
     ext = {}
     for k, f in g.fns.items():
-        if re.match(r"unc_\w+_extract$", f.name) and not g.is_forward(f) \
+        if re.match(r"unc_(\w+_extract|extract_segments)$", f.name) and not g.is_forward(f) \
                 and f.unit and "ovl_shim" not in f.unit.src and k[0] != "dispatch":
             ext[f.name] = max(ext.get(f.name, (0, None)), (g.memo[k], k))
     for name, (d, k) in sorted(ext.items(), key=lambda x: -x[1][0])[:a.top]:

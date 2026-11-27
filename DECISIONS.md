@@ -656,6 +656,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-11-25 (the ZipIt cipher not waited on) — a ZipIt-made encrypted archive is no longer wanted; the open item is closed on ZipIt 2.2.2's own code and a ZipCrypto fixture, not on a ZipIt file
 - 2026-11-27 (the creation date OS/2 put in 0x7f) — LZH's 0x7f extended header carries a creation date that was dropped; read, with 0x41's winning: +88 B of CODE, 0 heap, the maintainer's call
 - 2026-11-27 (the name split at a 5C) — `lzh_add_path` took every `\` for a separator; a Shift-JIS lead byte now takes the next byte with it: +36 B of CODE, 0 heap, the maintainer's call
+- 2026-11-27 (the joiner that left) — the segment joiner (`unc_extract_segments`, both stored-CRC reads, the three hook shims) is `OVL_ID_SEGRUN`'s too: CODE −2,724 B, A5 −60 B, every format's grant +2,784 B, a set's −152 B
 
 ---
 
@@ -27952,3 +27953,37 @@ A ZipIt-encrypted archive that fails would reopen this.
 ## 2026-11-27 (the name split at a 5C) — `lzh_add_path` took every `\` for a separator; a Shift-JIS lead byte now takes the next byte with it: +36 B of CODE, 0 heap, the maintainer's call
 
 **Claim.** With no dirname header (level 0/1, or level 2 without 0x02), 表示.txt (`95 5C 8E A6 .txt`) became folder `\x95` holding `\x8E\xA6.txt`. **Evidence (measured).** Now one file, equal to LHa for UNIX 1.14 built with `MULTIBYTE_CHAR` (`SJC_FIRST_P`/`convdelim`, run in tools/sandbox.py); all 176 LZH/LHA files on this machine list identically before and after; run_diff LZH 8/8, run_meta OK; `run_lzh.py`'s `sjis` case fails without the fix and passes with it. **Cost.** IMAGE_LZH 10686 → 10722, CODE +36, A5 -4, bundle +36, OVL_SAVED/TIERS_CONTROL +32, heap 0; `run_tiers --check`: no refusal moved. **The trade-off, unexercised (hypothesis).** A lead-range byte (MacRoman é 0x8E) right before `\` or `/` in such a name now stays one name; no specimen has one. **Rebuild the repro:** `tests/harness/run_lzh.py`'s `sjis()` writes the level-0 `-lh0-` archive (name bytes above, "hello\n") by hand; extract with `build/macextract`. **The call.** The maintainer's, 2026-11-27.
+
+## 2026-11-27 (the joiner that left) — the segment joiner (`unc_extract_segments`, both stored-CRC reads, the three hook shims) is `OVL_ID_SEGRUN`'s too: CODE −2,724 B, A5 −60 B, every format's grant +2,784 B, a set's −152 B
+
+**The joiner is in the set code's image (measured).** `tools/overlay/ovl_segrun.c`
+includes `src/unc_segment.c` (its two statics that share a name with the
+set code's renamed for the include), and `unc_extract_segments` is a
+`SegRunExports` entry that `ExtractOne` calls through `SX`. What it calls in
+the engine is a `SegRunFns` entry (`unc_run`, `unc_read_at`,
+`unc_io_size32`, the two CRC-16 folds); the three hooks are wrappers over
+`ovl_seg_hook`, a 46 B resident function in `mac/ovl_shim.c` that calls the
+sniffer. Only a set reaches the joiner, after the release plan has kept this
+image (*the set code that left*), so no other format pays for it.
+
+**What it bought (`tools/retake_budgets.py`).** `CODE` −2,724 B, A5 −60 B;
+every format's grant +2,784 B, a set's −152 B (the image 5,086 → 8,022 B);
+the bundle +2,936 B. `tools/run_tiers.py --check`: no tier's tally moved.
+
+**Stack (measured).** `tools/stack_depth.py` takes the joiner's functions as
+the engine's though the image carries them (`JOINER_NAMES`). `--shell`:
+8,228 B (8,224 B on the tree before); the engine's deepest chain 3,456 B,
+under 4,096 B, through the hook union (`ovl_seg_hook` is followed to all
+three of the sniffer's hooks).
+
+**On the emulator (measured).** `segcheck.py --mem 1M`: 10 of 10, the spanned
+zip, the `SPLT` set and the other eight; four `run.py` cases at `mv-512Ke`:
+4 of 4.
+
+**The host lanes** link `src/unc_segment.c` resident, so
+`tests/ovlbox/ovlbox_seghooks.c` gives them the three hooks over
+`ovl_seg_hook` (`tests/run_overlay_host.sh` failed to link without them).
+
+**Left resident:** the zip end-record scan (284 B), which the exo and sniff
+images reach through the host vector (OPEN_ITEMS.md, *Resident bytes that
+could leave before extraction*).

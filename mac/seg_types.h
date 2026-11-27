@@ -104,6 +104,8 @@ typedef struct {
 } SegSetupFns;
 /* What the run-time image (ovl_segrun.c) calls back, and what it gives
  * the application and the setup image: mac/seg_run.inc.c's functions. */
+struct OvlArgs;
+struct UncCtx;
 typedef struct {
     OSErr (*MyOpenFork)(short, long, ConstStr255Param, SignedByte, int, short *);
     OSErr (*MyHCreate)(short, long, ConstStr255Param);
@@ -124,6 +126,14 @@ typedef struct {
     unc_off_t (*fio_size)(void *);
     void (*StackSample)(void);            /* NULL but in UNC_AT_STACK */
     Boolean *pSegShort, *pBackground;
+    /* The joiner (src/unc_segment.c), which the image carries, calls these
+     * engine names; the hook is the sniffer's, for the three a scheme has. */
+    int       (*unc_run)(struct UncCtx *);
+    int       (*unc_read_at)(UncIO *, unc_off_t, void *, int32_t);
+    uint32_t  (*unc_io_size32)(UncIO *);
+    uint16_t  (*unc_crc16_arc)(uint16_t, const uint8_t *, int32_t);
+    uint16_t  (*unc_crc16_xmodem)(uint16_t, const uint8_t *, int32_t);
+    int32_t   (*ovl_seg_hook)(int32_t, struct OvlArgs *);
 } SegRunFns;
 
 typedef struct SegRunExports {
@@ -138,6 +148,9 @@ typedef struct SegRunExports {
     uint32_t (*seg_part_size)(void *, const UncSegmentDesc *, int);
     void (*seg_release)(void *, UncIO *);
     void (*SegPeelClean)(SegHost *);
+    int  (*unc_extract_segments)(const UncSegmentDesc *, UncVolumeSource *,
+                                 void *, UncSink *, UncAlloc *, UncProgress *,
+                                 const UncOptions *);
 } SegRunExports;
 #endif
 

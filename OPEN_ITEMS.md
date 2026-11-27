@@ -287,7 +287,7 @@ HYPOTHESIS until read off the builds and `tools/run_tiers.py` (FORMATS.md,
 
 | what | resident | what would close it |
 |---|---|---|
-| segment joining: the joiner (`unc_segment.c`), the zip end-record scan, the shims to `ovl_sniff` | 3,490 B of code on 2026-11-13 (the joiner 2,714, the zip end-record scan 234, the two stored-CRC reads 44, the shims 498), after the hooks and readers only bundle-keeping schemes call left for `ovl_sniff` (DECISIONS.md 2026-11-13, *the hooks that went to the sniffer*) | the joiner is read while a Compact Pro, spanned-zip or Apple Backup set is, which keep only their readers' images, so it stays. The zip end-record scan (234 B) in both `ovl_exo` and `ovl_sniff` would cost a bundle-keeping layer about 200 B (hypothesis, not built) |
+| the zip end-record scan, in both `ovl_exo` and `ovl_sniff` | 284 B of code (MEASURED 2026-11-27, after the joiner left); it stays resident because the exo and sniff images reach it through the host vector | one copy in each image would cost a bundle-keeping layer about 200 B (hypothesis, not built) |
 
 ## Formats classic Mac programs wrote that nothing here opens — leads, not findings
 

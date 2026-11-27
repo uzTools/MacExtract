@@ -988,6 +988,7 @@ foreach(img destdlg segsetup segrun)
                 ${CMAKE_CURRENT_SOURCE_DIR}/macextract_strings.h
                 ${CMAKE_CURRENT_SOURCE_DIR}/seg_setup.inc.c
                 ${CMAKE_CURRENT_SOURCE_DIR}/seg_run.inc.c
+                ${ENGINE_DIR}/src/unc_segment.c
                 ${CMAKE_CURRENT_SOURCE_DIR}/release_plan.inc.c
                 ${CMAKE_CURRENT_SOURCE_DIR}/seg_types.h
                 ${CMAKE_CURRENT_SOURCE_DIR}/fm_inline.h

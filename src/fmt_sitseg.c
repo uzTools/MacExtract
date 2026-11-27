@@ -132,15 +132,6 @@ int unc_sitseg_match(const UncSegmentDesc *desc,
     return (int)cand.part;
 }
 
-/* The two running CRC-16/ARCs a part stores (the file comment): at 96
- * over the resource fork's bytes cut so far, at 98 the data fork's.
- * The joiner folds the same sums as the parts go past and holds each
- * part to the one its last payload byte falls in (unc_segment.c). */
-uint16_t unc_sitseg_stored_crc(const uint8_t *head, int fork)
-{
-    return unc_get_u16be(head + 96 + fork + fork);    /* fork is 0 or 1 */
-}
-
 /* ------------------------------------------------------------------ */
 /* Extraction                                                         */
 /*                                                                    */

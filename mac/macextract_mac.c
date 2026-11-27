@@ -3404,6 +3404,8 @@ static pascal Boolean HideInvisible(CInfoPBPtr pb)
 #else
 #define SEG_INTERACTIVE(f) f
 #endif
+struct OvlArgs;
+int32_t ovl_seg_hook(int32_t which, struct OvlArgs *g);   /* mac/ovl_shim.c */
 static const SegRunFns gSegRunFns = {
     MyOpenFork, MyHCreate, MyHDelete, PStrCat, PStrCatNum,
     SEG_INTERACTIVE(ShowNote), SEG_INTERACTIVE(WaitForFront),
@@ -3415,7 +3417,9 @@ static const SegRunFns gSegRunFns = {
 #else
     NULL,
 #endif
-    &gSegShort, &gBackground
+    &gSegShort, &gBackground,
+    unc_run, unc_read_at, unc_io_size32, unc_crc16_arc, unc_crc16_xmodem,
+    ovl_seg_hook
 };
 
 /* Its functions, for this set; NULL if the image is not there. SX(f)
@@ -4169,7 +4173,7 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
         vs.need = SX(seg_need);
         vs.release = SX(seg_release);
         vs.size = SX(seg_part_size);
-        ret = unc_extract_segments(&sh->desc, &vs, segScratch, &sk, &al,
+        ret = SX(unc_extract_segments)(&sh->desc, &vs, segScratch, &sk, &al,
                                    prog, &opt);
         SX(seg_release)(sh, NULL);
         SX(SegPeelClean)(sh);

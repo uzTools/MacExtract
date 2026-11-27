@@ -128,7 +128,7 @@ build_loadtest() {   # <out> <loader.c> <extra-defs> <cc...>
     out=$1; loader=$2; extra=$3; shift 3
     eval "$* -std=gnu99 $INC $DEFS $extra \
         tests/ovlbox/ovl_load_test.c tests/ovlbox/ovlbox.c tests/ovlbox/ovlbox_plan.c \
-        mac/ovl_shim.c mac/ovl_reloc.c $loader $RESIDENT_SRC -o $out" \
+        mac/ovl_shim.c tests/ovlbox/ovlbox_seghooks.c mac/ovl_reloc.c $loader $RESIDENT_SRC -o $out" \
         2>$B/cc.log || { grep -v multi-char $B/cc.log | head -20; \
                          fail "building $out"; }
 }
@@ -210,8 +210,8 @@ build_sink() {  # <out> <loader.c|""> <defs>
         || { grep -v multi-char $B/cc.log | head -20; fail "building $out"; }
 }
 echo "overlay-host: extraction through the images (qemu-m68k)"
-build_sink $B/sink_eager "tests/ovlbox/ovlbox.c tests/ovlbox/ovlbox_plan.c mac/ovl_shim.c mac/ovl_reloc.c mac/ovl_load_eager.c $RESIDENT_SRC" "$SINK_DEFS"
-build_sink $B/sink_lazy  "tests/ovlbox/ovlbox.c mac/ovl_shim.c mac/ovl_reloc.c mac/ovl_load_lazy.c $RESIDENT_SRC"  "$SINK_DEFS"
+build_sink $B/sink_eager "tests/ovlbox/ovlbox.c tests/ovlbox/ovlbox_plan.c mac/ovl_shim.c tests/ovlbox/ovlbox_seghooks.c mac/ovl_reloc.c mac/ovl_load_eager.c $RESIDENT_SRC" "$SINK_DEFS"
+build_sink $B/sink_lazy  "tests/ovlbox/ovlbox.c mac/ovl_shim.c tests/ovlbox/ovlbox_seghooks.c mac/ovl_reloc.c mac/ovl_load_lazy.c $RESIDENT_SRC"  "$SINK_DEFS"
 # The control: the same engine with every decoder LINKED, which is the only
 # oracle for an image no manifest covers.
 build_sink $B/sink_resident "src/*.c third_party/zlib/*.c" ""
@@ -322,7 +322,7 @@ if [ "$1" = "--mutate" ]; then
         eval "$NATIVE -std=gnu99 -I$MUT $INC $DEFS $extra \
             tests/ovlbox/ovl_load_test.c tests/ovlbox/ovlbox.c \
             tests/ovlbox/ovlbox_plan.c \
-            mac/ovl_shim.c $MUT/ovl_reloc.c $MUT/$(basename $loader) \
+            mac/ovl_shim.c tests/ovlbox/ovlbox_seghooks.c $MUT/ovl_reloc.c $MUT/$(basename $loader) \
             $RESIDENT_SRC -o $B/mut_bin" 2>$B/cc.log \
             || { grep -v multi-char $B/cc.log | head; fail "building mutant $name"; }
         if OVLBOX_IMAGES=$man $B/mut_bin $IMG >$B/mut.log 2>&1; then
