@@ -28,7 +28,7 @@
  ],
  "fixture": "derived-Domino_v1.4.sit",
  "format": "StuffIt 5",
- "oracle": "unar -nr -D -f -q -k hidden -e utf-8 (v1.10.8)",
+ "oracle": "StuffIt Expander 5.5 reproduces this archive's forks (tools/vmac/sit5exp.py; TESTING.md, *StuffIt 5 against StuffIt Expander 5.5*): every data fork matches this manifest as a set, every resource fork masked-equal; the bytes recorded by unar -nr -D -f -q -k hidden -e utf-8 (v1.10.8).",
  "sha256": "ce98273f691d383e8eede9945d74c7be05f4c2ffc68f1df64bdf0c4181b4e660",
  "size": 161906
 }

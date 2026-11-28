@@ -325,7 +325,7 @@
  ],
  "fixture": "derived-PuzzleGetter_0.8.sit",
  "format": "StuffIt 5",
- "oracle": "unar -nr -D -f -q -k hidden -e utf-8 (v1.10.8)",
+ "oracle": "StuffIt Expander 5.5 reproduces this archive's forks (tools/vmac/sit5exp.py; TESTING.md, *StuffIt 5 against StuffIt Expander 5.5*): every data fork matches this manifest as a set, every resource fork masked-equal; the bytes recorded by unar -nr -D -f -q -k hidden -e utf-8 (v1.10.8).",
  "sha256": "2d39e630fed1bc3152c47f92a334025db20aa2c2dea226d8c16848e3adb9bca1",
  "size": 92510
 }

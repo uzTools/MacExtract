@@ -119,7 +119,7 @@
  ],
  "fixture": "derived-YP_Circuits_CC__.sit",
  "format": "StuffIt 5",
- "oracle": "unar -nr -D -f -q -k hidden -e utf-8 (v1.10.8)",
+ "oracle": "StuffIt Expander 5.5 reproduces this archive's forks (tools/vmac/sit5exp.py; TESTING.md, *StuffIt 5 against StuffIt Expander 5.5*): every data fork matches this manifest as a set, every resource fork masked-equal; the bytes recorded by unar -nr -D -f -q -k hidden -e utf-8 (v1.10.8).",
  "sha256": "91d5f35cbecb15b62f90a07239b256480b10e3b38140b950bc83af654d638f47",
  "size": 203171
 }

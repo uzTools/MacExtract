@@ -13,7 +13,7 @@
  ],
  "fixture": "derived-XMenu.dmg.sit",
  "format": "StuffIt 5",
- "oracle": "unar -nr -D -f -q -k hidden -e utf-8 (v1.10.8)",
+ "oracle": "StuffIt Expander 5.5 reproduces this archive's forks (tools/vmac/sit5exp.py; TESTING.md, *StuffIt 5 against StuffIt Expander 5.5*): every data fork matches this manifest as a set, every resource fork masked-equal; the bytes recorded by unar -nr -D -f -q -k hidden -e utf-8 (v1.10.8).",
  "sha256": "a6b0f57d15c449044254bb40067227fb8caa4a623c767fa9c42e4f1a175d77f3",
  "size": 110807
 }

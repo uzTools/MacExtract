@@ -108,13 +108,17 @@ deark grade the forks it fails (TESTING.md, *The oracle*). The writers' own
 readers already grade StuffIt Deluxe 2.0.1's output, SuperDisk!'s modules,
 DiskDoubler's methods 3–5, Now Compress, Private File, AppleLink packages
 and the Finder metadata each expander puts back; StuffIt Expander 4.0.2, both
-forks of classic StuffIt and Compact Pro (TESTING.md; FORMATS.md).
+forks of classic StuffIt and Compact Pro, and Expander 5.5, both forks of
+StuffIt 5 (TESTING.md; FORMATS.md).
 
-- **Counted** 2026-11-08 (TESTING.md, *What `unar` alone vouches for, per
-  format*): now 2,662 of 7,633 forks have `unar` as their sole oracle, the
-  largest block StuffIt 5's 820 — with a reader on this machine (Expander
-  5.5), so none goes to MANUAL_TESTS.md. No writer is missing for any format
-  with committed fixtures.
+- **Counted** 2026-11-08, StuffIt 5 re-graded 2026-11-28 (TESTING.md, *What
+  `unar` alone vouches for, per format*): now 1,860 forks have `unar` as
+  their sole oracle (arithmetic, not a recount), the largest block Zip's
+  598. StuffIt 5 is done: Expander 5.5 corroborates 31 of 33 archives (810
+  forks); `synth-sit14.sit` (Expander wrote nothing) and
+  `sit5v3-stuff520.sit` (four files, same names and sizes, other bytes) are
+  undecided (TESTING.md, *StuffIt 5 against StuffIt Expander 5.5*). No
+  writer is missing for any format with committed fixtures.
 - **Then per format:** its manifests re-recorded with the writer's own
   reader in `oracle`, one emulator at a time, each run under two hours; a
   writer this machine has no copy of goes to MANUAL_TESTS.md. Where that

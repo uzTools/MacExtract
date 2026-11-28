@@ -625,7 +625,7 @@
  ],
  "fixture": "derived-Orbit3d_1.0..sit",
  "format": "StuffIt 5",
- "oracle": "unar -nr -D -f -q -k hidden -e utf-8 (v1.10.8)",
+ "oracle": "StuffIt Expander 5.5 reproduces this archive's forks (tools/vmac/sit5exp.py; TESTING.md, *StuffIt 5 against StuffIt Expander 5.5*): every data fork matches this manifest as a set, every resource fork masked-equal; the bytes recorded by unar -nr -D -f -q -k hidden -e utf-8 (v1.10.8).",
  "sha256": "48f0baad32d3dc6eb3578353b8a2f4d6a05be6f8ea0a3aff9fb064240b6cdebc",
  "size": 177396
 }

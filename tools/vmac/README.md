@@ -203,6 +203,7 @@ back **38/69** on 2026-09-05, every "failure" a missing oracle.
 | `sitzip.py` | the same for StuffIt Deluxe 5.5 and 7.0.3 on Mac OS 9, placed with no installer |
 | `sitcomment.py` | StuffIt 5's archive flag byte, bit 5 |
 | `expander.py` | **the yardstick**: StuffIt Expander 4.0.2 against this application, timed |
+| `sit5exp.py` | Expander 5.5 over the StuffIt 5 corpus on Mac OS 9.2 (QEMU), both forks against the record (TESTING.md); one boot per archive, ~9 min each; `--offset`/`--limit` keep a run under two hours |
 | `macclock.py` | **the stopwatch** `expander.py` times with; `clockcal/` is its known duration |
 | `refspeed.py` | **each format's own program** against this application, timed and graded; the drives in `refspeed_progs.py` |
 | `sitmeta.py` | which header bytes become Finder info, read back with `hfscat.py`; `ddmeta.py`, `nowmeta.py`, `sdmeta.py` are its siblings |

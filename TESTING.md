@@ -480,7 +480,7 @@ manifest does not show.
 |---|---|---|---|
 | StuffIt | 2,731 | 13 | **StuffIt Expander 4.0.2** corroborates 230 of 233 archives on both forks (`sitexp.py`); recorded in the manifests' `oracle` 2026-11-08. Deluxe 2.0.1 grades the Optimizer subset's forks (`run_sitopt.py`) |
 | Compact Pro | 1,470 | 0 | **StuffIt Expander 4.0.2** corroborates all 108 archives fork-for-fork (`cptexp.py`); recorded in the manifests' `oracle` 2026-11-07 |
-| StuffIt 5 | 820 | 820 | Expander 5.5 (`exp55`, `sitzip.py`) — present, metadata only so far |
+| StuffIt 5 | 828 | 18 | **StuffIt Expander 5.5** corroborates 31 of 33 archives on both forks (`sit5exp.py`); recorded in the manifests' `oracle` 2026-11-28; the other 2 (18 forks) stay `unar`'s, *StuffIt 5 against StuffIt Expander 5.5* |
 | Zip | 646 | 598 | cross-platform (Info-ZIP, ZipIt); 48 forks deark |
 | MacBinary | 474 | 466 | lossless framing; 8 forks by container arithmetic, payloads by `unar` |
 | BinHex (4.0) | 408 | 408 | macutils `hexbin` (second impl, present); not a Mac writer |
@@ -499,11 +499,11 @@ manifest does not show.
 | BinHex `.hex`/`.hcx` | 14 | 0 | `hexbin`; BinHex 2.0 itself (`binhex2.py`) |
 | uuencode / LZ4 / SUMacC `.dl` | 12 | 0 | `hexbin` / liblz4 / SUMacC's own `tohex` |
 
-**What it says.** The largest `unar`-sole block is now StuffIt 5 (820) —
-Compact Pro (1,470) left it 2026-11-07 and StuffIt (2,695 of 2,708)
-2026-11-08, Expander 4.0.2 recorded in their manifests' `oracle` (below).
-StuffIt 5 has a reader ON THIS MACHINE (Expander 5.5), so its forks can be
-re-graded here rather than filed to MANUAL_TESTS.md. PackIt (38) and LZH (24) likewise (Expander, MacLHA).
+**What it says.** Compact Pro (1,470) left the `unar`-sole count 2026-11-07,
+StuffIt (2,695 of 2,708) 2026-11-08 and StuffIt 5 (810 of 828) 2026-11-28,
+each with the writer's Expander recorded in its manifests' `oracle` (below);
+the total is now 1,860 (arithmetic: 2,662 + the 8 forks `sit5v3-stuff520.sit`
+added − 810). The largest block is Zip's 598. PackIt (38) and LZH (24) have a reader on this machine too (Expander, MacLHA).
 The cross-platform formats — Zip, Tar, Compress, Gzip, MacBinary payloads,
 AppleSingle — have no Mac writer and `unar` is their natural oracle. The
 formats already carrying a writer's own fork grade (Compact Pro, DiskDoubler,
@@ -3265,6 +3265,45 @@ had hidden.
 manifests' `oracle` leads with Expander 4.0.2 and names `unar` second, so
 `make_manifests.py` keeps them and 2,695 forks leave `unar`-sole (*What
 `unar` alone vouches for, per format*).
+
+## StuffIt 5 against StuffIt Expander 5.5 (`tools/vmac/sit5exp.py`, by hand)
+
+`sitexp.py`'s comparison for StuffIt 5: one QEMU boot of Mac OS 9.2 per
+archive with Expander 5.5 placed as `sitzip.py` places it, the fixture typed
+`SIT5`/`SITx`, opened with ⌘E (`sitmeta.py --sit5 --plain`'s drive), what it
+wrote read back off the transfer volume (`superdisk.read_forks`). Data forks
+by sha256 as a multiset against the manifest, resource forks masked
+(`compare_rsrc`); the Finder's own `TheVolumeSettingsFolder` and `Desktop
+DB/DF` are not archived files. Every result also holds a control, one
+reference hash replaced, which must read as a difference: it did in 33 of
+33. About 9 minutes an archive; run in chunks of 11 (under two hours each).
+
+**2026-11-28, 33 archives: 31 agree on both forks (810 forks), 2 differ.**
+Five of the 31 differ in NAMES only, contents equal (Japanese and French
+names come back as MacRoman mojibake, a 31-character name cut, a `/` in
+`ReadMe/Leerme`, a wrapper folder `Rsentinel Folder` for an archive with no
+top-level folder); names are what this cannot see. The two that differ, not
+decided here (DECISIONS.md 2026-11-08, *the reader that disagrees*):
+
+- `synth-sit14.sit`: Expander wrote no file; 5 data forks (`unar` hashes
+  `96d0501c...`, `a4892710...`, `2959a730...`, `cc6fde4c...`, `5ff7cde3...`
+  are the manifest's) are un-corroborated.
+- `sit5v3-stuff520.sit` (Aladdin's `stuff` 5.2 for Linux, entry version 3):
+  all 4 files come back with the manifest's names and sizes and different
+  bytes. Manifest / Expander 16-hex prefixes: `Bigger file` `eab95ba0` /
+  one of `af7a090c 74eb360e 7dd92016 1fa0ebe5`, `Folder/Inner file`
+  `0597af90`, `Folder/Nested/Deep file` `0c2acc35`, `Top file` `6972fee3`
+  (the Expander side is a multiset: which hash belongs to which file was
+  not kept; the files are 3000, 20, 25 and 34 bytes).
+
+**What it cannot see:** names and Finder metadata (`sitmeta.py --sit5`'s),
+the resource fork's bytes 16..127, a fork both readers decode wrong the same
+way, and which of an archive's files an Expander hash belongs to when the
+multiset differs.
+
+**Recorded 2026-11-28** (OPEN_ITEMS.md, *What grades a fork*): the 31
+manifests' `oracle` leads with Expander 5.5 and names `unar` second; the two
+above are unchanged.
 
 ## PKZIP's own distributions (`tools/specimens/implode.tsv`, one of three in `ci.sh`)
 
