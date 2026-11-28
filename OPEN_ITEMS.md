@@ -206,10 +206,13 @@ stays Roman, not Japanese: the menu bar and Standard File read as MacRoman
 mojibake (its Japanese strings, shown in a Roman font), so it is not yet a
 Japanese tier, cause not located; MacExtract's File menu there reads
 `Open…` with a real ellipsis, which says nothing about the `0xC9` row (still
-hypothesis). Untried, each a hypothesis for the Roman script: the 30 files in
-the extension folder's subfolders that `hcopy` would not nest, and the
-script setting the PRAM file starts with. Rebuild:
-tools/vmac/README.md, *A KanjiTalk 7.5 boot volume*.
+hypothesis). **Measured 2026-11-28:** still Roman with all 271 files
+copied (the 30 nested ones included) and with fresh PRAM (no xpram file), so
+neither was the cause. The System's `itlc` resource names script 1
+(Japanese) and `itl0/1/2` 16384 exist, so the file asks for Japanese; why
+the Quadra 650 ROM comes up Roman is unexplained (hypothesis: the trial
+wants a Japanese ROM; untested). The CD's Read Me says nothing about
+non-Japanese Macs. Not a Japanese tier. tools/vmac/README.md, *A KanjiTalk 7.5 boot volume*.
 
 ## Mac OS X's sidecars: what they hold and the engine does not read
 
